@@ -19,7 +19,6 @@
 import type { Connector, Port } from "@semio/js";
 import {
   applyKitDiff,
-  areDesignsInSameFamily,
   asKitInstance,
   arePortsCompatible,
   areSameConnection,
@@ -37,18 +36,13 @@ import {
   ConnectionId,
   Coord,
   createClusteredDesign,
-  deletePiecesAndConnectionsInDesign,
   Design,
   DesignDiff,
   DesignShallow,
   DiffStatus,
-  dragPiecesInDesign,
   expandDesignPieces,
   exportKit,
   FileDiff,
-  findModel,
-  findPieceInDesign,
-  fixPieceInDesign,
   flattenFileTree,
   Folder,
   FolderDiff,
@@ -78,8 +72,6 @@ import {
   Piece,
   PieceDiff,
   PieceId,
-  piecesMetadata,
-  piecesMetadataCached,
   type FlatMerkleCacheEntry,
   Plane,
   planeToMatrix,
@@ -91,7 +83,6 @@ import {
   selectBestModel,
   File as SemioFile,
   sqliteToKit,
-  sumQualityInDesign,
   Tag,
   TagDiff,
   TOLERANCE,
@@ -9469,7 +9460,7 @@ export type PieceMetadata = {
 };
 
 /**
- * 🧠Cache of per-piece merkle flatten entries, keyed by designGuid, held across renders so piecesMetadataCached can skip recomputing plane/center/attributes for pieces whose merkle inputs are unchanged. On design switch we fall back to an empty cache for that designGuid; prior designs stay cached.
+ * 🧠Cache of per-piece merkle flatten entries, keyed by designGuid, held across renders so {@link Kit.piecesMetadataCachedFor} can skip recomputing plane/center/attributes for pieces whose merkle inputs are unchanged. On design switch we fall back to an empty cache for that designGuid; prior designs stay cached.
  */
 const flatMerkleCacheByDesignRef: { current: Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }> } = {
   current: new Map(),
@@ -9482,10 +9473,10 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
     if (!kit || !designScope) return new Map<string, PieceMetadata>();
     try {
       const prevCache = flatMerkleCacheByDesignRef.current.get(designScope.guid);
-      const { result, cache } = piecesMetadataCached(kit, designScope.guid, prevCache);
+      const { result, cache } = asKitInstance(kit).designAt(designScope.guid).piecesMetadataCached(prevCache);
       flatMerkleCacheByDesignRef.current.set(designScope.guid, cache);
       if (!result.ok) {
-        console.error("[PiecesMetadata] piecesMetadataCached failed:", result.errors);
+        console.error("[PiecesMetadata] piecesMetadataCachedFor failed:", result.errors);
         return new Map<string, PieceMetadata>();
       }
       const metadata = result.diff;
@@ -20023,7 +20014,7 @@ export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
   const designScope = useDesignScope();
   if (!designScope) throw new Error("useDiffedDesign must be called within a DesignScopeProvider");
-  return findDesignInKit(kit, designScope.guid);
+  return asKitInstance(kit).requireDesign( designScope.guid);
 }
 
 // #endregion 📌Design
@@ -22366,7 +22357,7 @@ export const SketchpadScopeProvider = (props: {
     if (typeof window !== "undefined") {
       (window as any).__SEMIO_STORE__ = store;
       (window as any).__SEMIO_ACTOR__ = actor;
-      (window as any).__piecesMetadata = piecesMetadata;
+      (window as any).__piecesMetadata = (k: Kit, designGuid: string) => asKitInstance(k).piecesMetadataFor(designGuid);
     }
   }
 
@@ -30121,7 +30112,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     if (selectedPieces.length === 0 && selectedConnections.length === 0) {
       return { diff: {} };
     }
-    const deleteResult = deletePiecesAndConnectionsInDesign(context.kit, context.design, selectedPieces, selectedConnections);
+    const deleteResult = context.design.deletePiecesAndConnectionsDiff(selectedPieces, selectedConnections);
     if (!deleteResult.ok) {
       return { diff: {} };
     }
@@ -30757,7 +30748,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     const removedGuids = new Set<string>();
     for (const id of candidateIds) {
       try {
-        const diff = fixPieceInDesign(context.kit, context.design.guid, id);
+        const diff = context.design.fixPieceDiff(id);
         const guid = diff.connections?.removed?.[0]?.guid;
         if (guid) removedGuids.add(guid);
       } catch {
@@ -34697,14 +34688,14 @@ const PiecesSectionForm: FC = () => {
     if (!entry?.type) return null;
     if (typeof entry.type === "string") {
       try {
-        return findTypeInKit(kit, entry.type);
+        return asKitInstance(kit).requireType( entry.type);
       } catch (_error) {
         return null;
       }
     }
     if (typeof entry.type === "object" && "guid" in entry.type && entry.type.guid) {
       try {
-        return findTypeInKit(kit, entry.type.guid);
+        return asKitInstance(kit).requireType( entry.type.guid);
       } catch (_error) {
         return null;
       }
@@ -34730,7 +34721,7 @@ const PiecesSectionForm: FC = () => {
   const resolveDesignInKitSafe = (designGuid?: string): Design | null => {
     if (!designGuid) return null;
     try {
-      return findDesignInKit(kit, designGuid);
+      return asKitInstance(kit).requireDesign( designGuid);
     } catch (_error) {
       return null;
     }
@@ -34770,7 +34761,7 @@ const PiecesSectionForm: FC = () => {
     };
 
     if (isSingle && piece && isRealPiece(piece)) {
-      const currentType = piece.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type) : piece.type && typeof piece.type === "object" && "guid" in piece.type ? findTypeInKit(kit, piece.type.guid) : null;
+      const currentType = piece.type && typeof piece.type === "string" ? asKitInstance(kit).requireType( piece.type) : piece.type && typeof piece.type === "object" && "guid" in piece.type ? asKitInstance(kit).requireType( piece.type.guid) : null;
       if (!currentType) return;
       const match = resolveType(currentType.name, variantValue);
       if (!match) return;
@@ -34783,7 +34774,7 @@ const PiecesSectionForm: FC = () => {
     const updates = pieces
       .filter(isRealPiece)
       .map((p) => {
-        const currentType = p.type && typeof p.type === "string" ? findTypeInKit(kit, p.type) : p.type && typeof p.type === "object" && "guid" in p.type ? findTypeInKit(kit, p.type.guid) : null;
+        const currentType = p.type && typeof p.type === "string" ? asKitInstance(kit).requireType( p.type) : p.type && typeof p.type === "object" && "guid" in p.type ? asKitInstance(kit).requireType( p.type.guid) : null;
         if (!currentType) return null;
         const match = resolveType(currentType.name, variantValue);
         if (!match) return null;
@@ -35371,7 +35362,7 @@ const PiecesSectionForm: FC = () => {
                     value: name,
                     label: name,
                   }))}
-                  value={isSingle && piece && piece.type && "guid" in piece.type ? findTypeInKit(kit, piece.type.guid)?.name || "" : commonTypeName || ""}
+                  value={isSingle && piece && piece.type && "guid" in piece.type ? asKitInstance(kit).requireType( piece.type.guid)?.name || "" : commonTypeName || ""}
                   placeholder={!isSingle && commonTypeName === undefined ? mixedValuesLabel : selectTypeLabel}
                   onValueChange={handleTypeNameChange}
                   showLabel
@@ -35385,7 +35376,7 @@ const PiecesSectionForm: FC = () => {
                       value: variant,
                       label: variant,
                     }))}
-                    value={isSingle && piece && piece.type && "guid" in piece.type ? (findTypeInKit(kit, piece.type.guid) as any)?.variant || "" : commonTypeVariant || ""}
+                    value={isSingle && piece && piece.type && "guid" in piece.type ? (asKitInstance(kit).requireType( piece.type.guid) as any)?.variant || "" : commonTypeVariant || ""}
                     placeholder={!isSingle && commonTypeVariant === undefined ? mixedValuesLabel : selectVariantLabel}
                     onValueChange={handleTypeVariantChange}
                     allowClear={true}
@@ -35939,13 +35930,13 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 
   const piece = (() => {
     try {
-      return findPieceInDesign(design, pieceGuid);
+      return design.requirePiece(pieceGuid);
     } catch {
       return null;
     }
   })();
 
-  const type = piece?.type ? findTypeInKit(kit, piece.type.guid) : null;
+  const type = piece?.type ? asKitInstance(kit).requireType( piece.type.guid) : null;
   const connector = type?.connectors?.find((p) => p.guid === connectorGuid);
 
   if (!piece || !type || !connector) {
@@ -36314,7 +36305,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
         const boundingBox = getBoundingBoxForNode(node);
         const piece = node.data.piece as Piece;
         const designGuid = piece.type?.guid;
-        const design = designGuid ? findDesignInKit(kit, designGuid) : null;
+        const design = designGuid ? asKitInstance(kit).requireDesign( designGuid) : null;
         const designName = design?.name ?? "";
 
         return (
@@ -38478,7 +38469,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           scale = 1;
         } else {
           const parentPiece = (baseDesign.pieces ?? []).find((p) => p.guid === parentPieceGuid);
-          const parentKind = parentPiece?.type?.guid ? findTypeInKit(kit, parentPiece.type.guid) : undefined;
+          const parentKind = parentPiece?.type?.guid ? asKitInstance(kit).requireType( parentPiece.type.guid) : undefined;
           const parentConnectorGuid = conn.connected?.connector?.guid;
           const parentConnector = parentKind?.connectors?.find((c) => c.guid === parentConnectorGuid);
           const isVerticalConnection = Math.abs(parentConnector?.direction?.z ?? 0) > 0.5;
@@ -38583,7 +38574,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragDescendantOffsetsRef.current = offsets;
       dragDescendantNodeIdsRef.current = descNodeIds;
       dragPreviewPieceIdsRef.current = updatedSelectedIds.length > 0 ? updatedSelectedIds : [pieceId];
-      // Store the current design by reference (no clone). dragPiecesInDesign, applyDesignDiff,
+      // Store the current design by reference (no clone). Design.dragBySelection, applyDesignDiff,
       // and scaleConnectionDiffsForDrag only read from it; during drag `design` is stable
       // because edge recompute is suppressed and the transaction stack buffers updates.
       dragPreviewBaseDesignRef.current = design ?? null;
@@ -39143,7 +39134,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       // Drag is a pure translation: every affected piece shifts by the same (dx, dy) in
       // pixel space. Skip JSON.parse/stringify clone, applyDesignDiff, and piecesMetadata
       // (which re-flattens the whole design). Compute new visual positions from the
-      // baseline captured at drag start. dragPiecesInDesign is cheap (O(pieces+connections))
+      // baseline captured at drag start. Design.dragBySelection is cheap (O(pieces+connections))
       // and still needed to produce the diff recorded into the transaction stack.
       const previewBaseDesign = dragPreviewBaseDesignRef.current;
       const previewPieceIds = dragPreviewPieceIdsRef.current;
@@ -39155,7 +39146,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         const offsetU = deltaX / ICON_WIDTH;
         const offsetV = -deltaY / ICON_WIDTH;
         const piecesDesign = { guid: "", name: "", pieces: previewPieceIds.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const dragDiff = Design.prototype.dragBySelection.call(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
         const scaledConnectionDiffs = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
         if (dragDiff.connections?.updated) {
           dragDiff.connections.updated = scaledConnectionDiffs;
@@ -39236,7 +39227,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         const offsetU = deltaX / ICON_WIDTH;
         const offsetV = -deltaY / ICON_WIDTH;
         const piecesDesign = { guid: "", name: "", pieces: previewPieceIds.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const dragDiff = Design.prototype.dragBySelection.call(previewBaseDesign, piecesDesign, { u: offsetU, v: offsetV });
         const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
         const scaledConnectionDiffs = scaleConnectionDiffsForDrag(dragDiff.connections?.updated ?? [], previewBaseDesign);
         if (dragDiff.connections?.updated) {
@@ -39873,7 +39864,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
     } else {
       const conceptGuids = typeConcepts?.map((concept) => concept.guid) ?? [];
       if (conceptGuids.length > 0) {
-        model = findModel(type.models, conceptGuids);
+        model = Model.strongestJaccardMatch(type.models, conceptGuids);
         reason = "type-concepts";
       } else {
         const defaultModel = type.models.find((entry) => !entry.tags || entry.tags.length === 0);
@@ -41073,7 +41064,7 @@ const DesignWindowApp: FC<AppProps> = () => {
       return designs.map((workbenchDesign) => {
         const children = workbenchDesigns?.filter((child) => resolveParentGuid(child.parent) === workbenchDesign.guid) || [];
 
-        const isDisabled = design && kit ? areDesignsInSameFamily(kit, design.guid, workbenchDesign.guid) : false;
+        const isDisabled = design && kit ? asKitInstance(kit).areDesignsInSameFamily(design.guid, workbenchDesign.guid) : false;
         return (
           <div
             key={workbenchDesign.guid}
@@ -43009,7 +43000,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
     } else {
       const conceptGuids = typeConcepts?.map((c) => c.guid) ?? [];
       if (conceptGuids.length > 0) {
-        model = findModel(typeModels, conceptGuids);
+        model = Model.strongestJaccardMatch(typeModels, conceptGuids);
         reason = "type-concepts";
       } else {
         const defaultRep = typeModels.find((r) => !r.tags || r.tags.length === 0);
@@ -45762,7 +45753,7 @@ export const formulaFunctions: Record<string, FormulaFunction> = {
     arity: 3,
     icon: "sigma",
     description: "Sum the values of a quality across all pieces in a design",
-    calculate: (kit: any, designGuid: string, qualityGuid: string) => sumQualityInDesign(kit, designGuid, qualityGuid),
+    calculate: (kit: any, designGuid: string, qualityGuid: string) => asKitInstance(kit).requireDesign(designGuid).sumQuality(qualityGuid),
     toLatex: (kit: string, designGuid: string, qualityGuid: string) => `\\sum_{\\text{pieces}} \\text{Quality}(${qualityGuid})`,
   },
 };

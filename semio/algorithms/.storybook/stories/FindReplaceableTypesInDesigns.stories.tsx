@@ -6,7 +6,6 @@
 // #endregion 🧲Header
 
 import type { Design } from "@semio/js";
-import { findReplaceableTypesInDesignsForPiecesInDesign } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -89,7 +88,7 @@ const CompatibleTypesAndDesignsWindow: React.FC = () => {
   const { kit, design, selectedPieceGuids } = useAlgorithm();
   const allTypes = (kit.types ?? []) as { guid: string; name?: string }[];
   const allDesigns = (kit.designs ?? []) as Design[];
-  const result = React.useMemo(() => findReplaceableTypesInDesignsForPiecesInDesign(design, allDesigns, kit.types ?? [], kit.ports ?? [], { pieces: selectedPieceGuids }), [allDesigns, design, kit.ports, selectedPieceGuids]);
+  const result = React.useMemo(() => design.replacableCatalogCandidates(allDesigns, kit.types ?? [], kit.ports ?? [], { pieces: selectedPieceGuids }), [allDesigns, design, kit.ports, selectedPieceGuids]);
   const typeByGuid = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.guid, nextType] as const)), [allTypes]);
   const visibleDesignGuids = React.useMemo(() => new Set(result.designs), [result.designs]);
   const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignGuids), [allDesigns, visibleDesignGuids]);

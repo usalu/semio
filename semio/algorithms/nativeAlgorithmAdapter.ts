@@ -6,7 +6,7 @@
 // #endregion Header
 
 import type { Coord, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, DesignPlain, FlatMerkleCacheEntry, Kit, MoveVector, OperationResult } from "@semio/js";
-import { asKitInstance, Design as DesignEntity, normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
+import { Design as DesignEntity, Kit as KitRuntime, normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
 
 // #region 🧠Flatten Merkle Cache (TS path only)
 // Per-designGuid cache reused across nativeFlattenDesign / nativeDragPieces / nativeMovePieces (all TS path)
@@ -88,7 +88,7 @@ function asDesignDiff(value: unknown): DesignDiff {
 }
 
 const cloneDesignWithDiff = (kit: Kit, base: Design, diff: DesignDiff): Design => {
-  const k = asKitInstance(kit);
+  const k = KitRuntime.ensure(kit);
   const plain = (base as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(base)) as DesignPlain);
   const d = new DesignEntity(plain, k);
   d.applyDiff(diff);
@@ -100,7 +100,7 @@ const cloneDesignWithDiff = (kit: Kit, base: Design, diff: DesignDiff): Design =
  */
 export async function nativeFlattenDesign(kit: Kit, designGuid: string, language: NativeAlgorithmLanguage): Promise<DesignOperationResult> {
   if (language === "ts") {
-    const { result, cache } = asKitInstance(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
+    const { result, cache } = KitRuntime.ensure(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
     setFlatMerkleCache(designGuid, cache);
     return result;
   }
@@ -125,8 +125,8 @@ export async function nativeFlattenDesign(kit: Kit, designGuid: string, language
  */
 export async function nativeDeletePieces(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<DesignDiffOperationResult> {
   if (language === "ts") {
-    const { deletePiecesAndConnectionsInDesign } = await import("@semio/js");
-    return deletePiecesAndConnectionsInDesign(kit, design, [...pieceGuids], [...connectionGuids]);
+    const d = design instanceof DesignEntity ? design : new DesignEntity(design as DesignPlain, KitRuntime.ensure(kit));
+    return d.deletePiecesAndConnectionsDiff([...pieceGuids], [...connectionGuids]);
   }
   const raw = await postNativeAlgorithm({
     language,
@@ -169,25 +169,24 @@ export async function nativeFlattenedDesign(kit: Kit, designGuid: string, langua
 }
 
 /**
- * Runs drag in-process: flattens, applies {@link dragPiecesInDesign}, re-flattens, and returns
+ * Runs drag in-process: flattens, applies {@link Design.dragBySelection}, re-flattens, and returns
  * the flat input (pre-drag), the flat output (post-drag), and the drag diff. Drag's diff only
  * updates piece centers, so both flat designs keep their connections for display by applying
  * only the piece updates from the (re-)flatten diff.
  */
 export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
-  const { dragPiecesInDesign } = await import("@semio/js");
   const designGuid = rawDesign.guid;
-  const preFlat = asKitInstance(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
+  const preFlat = KitRuntime.ensure(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
   if (!preFlat.result.ok) {
     throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, preFlat.cache);
   const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: preFlat.result.diff.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, offset);
+  const dragDiff = DesignEntity.prototype.dragBySelection.call(flatDesign, piecesDesign, offset);
   const updatedRaw = cloneDesignWithDiff(kit, rawDesign, dragDiff);
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === designGuid ? updatedRaw : d)) };
-  const postFlat = asKitInstance(updatedKit).flattenDesignCachedOp(designGuid, preFlat.cache);
+  const postFlat = KitRuntime.ensure(updatedKit).flattenDesignCachedOp(designGuid, preFlat.cache);
   if (!postFlat.result.ok) {
     throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
   }
@@ -197,25 +196,24 @@ export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: 
 }
 
 /**
- * Runs move in-process: flattens, applies {@link movePiecesInDesign} (needs kit types for parent connector frames), re-flattens, and returns
+ * Runs move in-process: flattens, applies {@link Kit.structuralMove} (needs kit types for parent connector frames), re-flattens, and returns
  * the flat input (pre-move), the flat output (post-move), and the move diff. Move's diff only
  * updates piece planes/centers, so both flat designs keep their connections for display by
  * applying only the piece updates from the (re-)flatten diff.
  */
 export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], vector: MoveVector, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
-  const { movePiecesInDesign } = await import("@semio/js");
   const designGuid = rawDesign.guid;
-  const preFlat = asKitInstance(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
+  const preFlat = KitRuntime.ensure(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
   if (!preFlat.result.ok) {
     throw new Error(preFlat.result.errors.map((e) => e.message).join("; "));
   }
   setFlatMerkleCache(designGuid, preFlat.cache);
   const flatDesign = cloneDesignWithDiff(kit, rawDesign, { pieces: preFlat.result.diff.forward.pieces });
   const piecesDesign: Design = { guid: flatDesign.guid, name: flatDesign.name, pieces: (flatDesign.pieces ?? []).filter((p) => pieceGuids.includes(p.guid)) };
-  const moveDiff = movePiecesInDesign(kit, flatDesign, piecesDesign, vector);
+  const moveDiff = KitRuntime.ensure(kit).structuralMove(flatDesign, piecesDesign, vector);
   const updatedRaw = cloneDesignWithDiff(kit, rawDesign, moveDiff);
   const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === designGuid ? updatedRaw : d)) };
-  const postFlat = asKitInstance(updatedKit).flattenDesignCachedOp(designGuid, preFlat.cache);
+  const postFlat = KitRuntime.ensure(updatedKit).flattenDesignCachedOp(designGuid, preFlat.cache);
   if (!postFlat.result.ok) {
     throw new Error(postFlat.result.errors.map((e) => e.message).join("; "));
   }
@@ -229,8 +227,7 @@ export async function nativeMovePieces(kit: Kit, rawDesign: Design, pieceGuids: 
  */
 export async function nativeCopyDesign(kit: Kit, design: Design, pieceGuids: readonly string[], connectionGuids: readonly string[], language: NativeAlgorithmLanguage): Promise<OperationResult<Design>> {
   if (language === "ts") {
-    const { copyDesign } = await import("@semio/js");
-    return copyDesign(kit, design, [...pieceGuids], [...connectionGuids]);
+    return KitRuntime.ensure(kit).copyDesignOp(design, [...pieceGuids], [...connectionGuids]);
   }
   const raw = await postNativeAlgorithm({
     language,
@@ -249,8 +246,7 @@ export async function nativeCopyDesign(kit: Kit, design: Design, pieceGuids: rea
  */
 export async function nativePasteDesign(kit: Kit, source: Design, target: Design, anchoring: string, coord: Coord | undefined, language: NativeAlgorithmLanguage): Promise<DesignDiff> {
   if (language === "ts") {
-    const { pasteDesign } = await import("@semio/js");
-    return pasteDesign(kit, source, target, anchoring, coord);
+    return KitRuntime.ensure(kit).pasteDesignOp(source, target, anchoring, coord);
   }
   const raw = await postNativeAlgorithm({
     language,

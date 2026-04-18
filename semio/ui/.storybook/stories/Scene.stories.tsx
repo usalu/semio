@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { asKitInstance, Design, type Connection, type Design as DesignType, type DesignPlain, type Kit, type Piece } from "@semio/js";
+import { Design, Kit, type Connection, type Design as DesignType, type DesignPlain, type Piece } from "@semio/js";
 import { SemioScene as Scene } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -14,7 +14,7 @@ import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.
 
 // #region 🖥️Data
 
-const kit = asKitInstance(metabolismKit as unknown as Kit);
+const kit = Kit.ensure(metabolismKit as unknown as Kit);
 const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
 const flatOp = kit.runFlattenDesign(rawDesign.guid);
 if (!flatOp.ok) throw new Error(flatOp.errors.map((e) => e.message).join("; "));

@@ -6,7 +6,7 @@
 // #endregion 🧲Header
 
 import type { Design, DesignDiff, DesignPlain, Kit } from "@semio/js";
-import { asKitInstance, Design as DesignEntity } from "@semio/js";
+import { Design as DesignEntity, Kit } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -73,7 +73,7 @@ function DeleteFrame() {
   const outputDesign = React.useMemo(() => {
     if (!flatInputDesign) return rawDesign as Design;
     if (!designDiff) return flatInputDesign as Design;
-    const k = asKitInstance(kit as Kit);
+    const k = Kit.ensure(kit as Kit);
     const plain = (flatInputDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatInputDesign)) as DesignPlain);
     const next = new DesignEntity(plain, k);
     next.applyDiff(designDiff);

@@ -16,14 +16,11 @@ import { Grid } from "@react-three/drei/core/Grid.js";
 import { OrbitControls } from "@react-three/drei/core/OrbitControls.js";
 import { Canvas as ThreeCanvas, useFrame, useThree } from "@react-three/fiber";
 import {
-  asKitInstance,
   Design as DesignEntity,
-  designWithDiff,
   DiffStatus,
   type FlatMerkleCacheEntry,
-  planeToMatrix,
-  selectBestModel,
-  toThreeRotation,
+  Kit,
+  Type,
   type Attribute,
   type Camera,
   type Connection,
@@ -32,15 +29,14 @@ import {
   type DesignDiff,
   type DesignPlain,
   type Design,
-  type Kit,
   type MoveVector,
   type Piece,
   type Plane,
   type Port as SemioPort,
   type File as SemioFile,
-  type Type as SemioKind,
   type Vector as SemioVector,
 } from "@semio/js";
+import type { Type as SemioKind } from "@semio/js";
 import * as React from "react";
 import * as THREE from "three";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -1331,14 +1327,23 @@ const cloneDesignApplyDiff = (d: Design, diff: DesignDiff): Design => {
   return copy;
 };
 
+/** Connection rows for a live {@link Design} or plain design-shaped objects (tests / MCP payloads). */
+const snapshotDesignConnections = (design: Design): Connection[] => {
+  if (typeof (design as DesignEntity).getConnections === "function") {
+    return [...(design as DesignEntity).getConnections()];
+  }
+  const raw = (design as unknown as { connections?: unknown }).connections;
+  return Array.isArray(raw) ? (raw as Connection[]) : [];
+};
+
 const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: DesignDiff, layoutDiff?: DesignDiff): DiagramSnapshot => {
-  const merged = designDiff ? designWithDiff(design, designDiff) : design;
+  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
   const layoutGeometry = designDiff ? cloneDesignApplyDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
   const geometryCentersByGuid = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0).map((p) => [p.guid, p.center] as const));
 
   const pointMap = new Map<string, DiagramPoint>();
-  (merged.pieces ?? []).forEach((piece) => {
+  (merged.pieces ?? []).forEach((piece: Piece) => {
     if (!piece.guid) return;
     const center = geometryCentersByGuid.get(piece.guid) ?? piece.center ?? layoutCenters.get(piece.guid);
     if (!center) return;
@@ -1348,7 +1353,7 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
 
   const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
   const lineMap = new Map<string, DiagramLine>();
-  (merged.connections ?? []).forEach((connection) => {
+  snapshotDesignConnections(merged).forEach((connection) => {
     if (!connection.guid) return;
     const source = pointsByGuid.get(connection.connected.piece.guid);
     const target = pointsByGuid.get(connection.connecting.piece.guid);
@@ -2002,7 +2007,7 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   if (!hasDiff && hasSelection) {
     // 🔌No diff, selection present: copy selected pieces and connections
     const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
-    const connections = (design.connections ?? []).filter((c) => selectedConnectionGuids.has(c.guid));
+    const connections = snapshotDesignConnections(design).filter((c) => selectedConnectionGuids.has(c.guid));
     return {
       design: {
         ...design,
@@ -2449,7 +2454,7 @@ const resolveSceneColor = (cssValue: string, fallback: string): string => {
   if (cssValue === "currentColor") return fallback;
   return cssValue;
 };
-const SEMIO_TO_THREE_BASIS = toThreeRotation();
+const SEMIO_TO_THREE_BASIS = Kit.semioToThreeRootBasis();
 const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
 
 interface ScenePieceAsset {
@@ -2518,7 +2523,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
       kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
     }
     let file: SemioFile | undefined;
-    let selectedModel = kind?.models?.length ? selectBestModel(kind.models, []) : undefined;
+    let selectedModel = kind?.models?.length ? Type.pickBestModel(kind.models ?? [], []) : undefined;
     if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
     if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
       for (const m of kind.models) {
@@ -2543,10 +2548,10 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
 const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
-  const merged = designDiff ? designWithDiff(design, designDiff) : design;
+  const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
 
   const pieceMap = new Map<string, ScenePieceAsset>();
-  (merged.pieces ?? []).forEach((piece) => {
+  (merged.pieces ?? []).forEach((piece: Piece) => {
     if (!piece.guid) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
     const existing = pieceMap.get(piece.guid);
@@ -2559,7 +2564,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 
   const piecesByGuid = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.guid, asset.piece] as const));
   const connectionMap = new Map<string, SceneConnectionAsset>();
-  (merged.connections ?? []).forEach((connection) => {
+  snapshotDesignConnections(merged).forEach((connection) => {
     if (!connection.guid) return;
     const sourcePiece = piecesByGuid.get(connection.connected.piece.guid);
     const targetPiece = piecesByGuid.get(connection.connecting.piece.guid);
@@ -2589,7 +2594,7 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 };
 
 const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
-  const planeMatrix = planeToMatrix(plane);
+  const planeMatrix = plane.toMatrix();
   return new THREE.Matrix4().multiplyMatrices(SEMIO_TO_THREE_BASIS, planeMatrix).multiply(THREE_TO_SEMIO_BASIS);
 };
 
@@ -3505,7 +3510,7 @@ const buildTypeModelAsset = (kind: SemioKind, kit?: Kit): TypeModelAsset => {
 
   const filesByGuid = new Map((kit?.files ?? []).map((file) => [file.guid, file] as const));
 
-  let selectedModel = selectBestModel(models, []);
+  let selectedModel = Type.pickBestModel(models, []);
   let file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
   if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
     for (const candidateModel of models) {
@@ -3862,8 +3867,8 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
   const resolvedDesignDiff = useResolvedValue(designDiff, defaultDesignDiff);
   const hasPlanes = React.useMemo(() => {
     const effectiveDiff = diffEnabled ? resolvedDesignDiff : undefined;
-    const merged = effectiveDiff ? designWithDiff(design, effectiveDiff) : design;
-    return (merged.pieces ?? []).some((p) => p.plane && p.center);
+    const merged = effectiveDiff ? DesignEntity.previewWithDiff(design, effectiveDiff) : design;
+    return (merged.pieces ?? []).some((p: Piece) => p.plane && p.center);
   }, [design, resolvedDesignDiff, diffEnabled]);
 
   const showSceneColumn = semioDesignShowSceneColumn(splitLayout, hasPlanes);
@@ -4055,7 +4060,7 @@ const normalizeMcpDiagramPayload = (raw: Record<string, unknown>): McpDiagramPay
 const mcpDesignRichness = (p: McpDiagramPayload): number => {
   const d = p.design;
   if (!d || typeof d !== "object") return 0;
-  const o = d as { pieces?: unknown[]; connections?: unknown[] };
+  const o = d as unknown as { pieces?: unknown[]; connections?: unknown[] };
   const pieces = Array.isArray(o.pieces) ? o.pieces.length : 0;
   const conns = Array.isArray(o.connections) ? o.connections.length : 0;
   return pieces * 20 + conns * 10;
@@ -4488,7 +4493,7 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
     } as Kit;
 
     const prev = mcpFlattenMerkleCacheByDesign.get(merged.guid);
-    const { result, cache } = asKitInstance(kitForFlatten).flattenDesignCachedOp(merged.guid, prev);
+    const { result, cache } = Kit.ensure(kitForFlatten).flattenDesignCachedOp(merged.guid, prev);
     mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
     if (!result.ok) return merged;
     const piecesDiff = result.diff?.forward?.pieces;
@@ -6768,7 +6773,7 @@ if ((import.meta as any).vitest) {
         ],
       } as unknown as Design;
 
-      // Only the connection is in the diff (like dragPiecesInDesign for a connected piece)
+      // Only the connection is in the diff (like Design.dragBySelection for a connected piece)
       const diff: DesignDiff = {
         connections: {
           updated: [{ connection: { guid: "conn-ab" }, diff: { u: 2, v: 1 } }],
@@ -6900,14 +6905,14 @@ if ((import.meta as any).vitest) {
     it("copies selected pieces and connections when no diff and selection present", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1", "p2"], connectionGuids: ["c1"] });
       expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1", "p2"]);
-      expect(result.design?.connections?.map((c) => c.guid)).toEqual(["c1"]);
+      expect(snapshotDesignConnections(result.design!).map((c) => c.guid)).toEqual(["c1"]);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("omits pieces/connections arrays when none are selected in a no-diff selection", () => {
       const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1"], connectionGuids: [] });
       expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1"]);
-      expect(result.design?.connections).toBeUndefined();
+      expect((result.design as unknown as { connections?: unknown }).connections).toBeUndefined();
     });
 
     it("copies the full diff when diff present and no selection", () => {
@@ -7203,10 +7208,10 @@ const buildAlgorithmPieceUpdateDiffDetail = (item: unknown, entryId: string): Re
 
 const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connectionLike: unknown, fallbackIndex: number): string => {
   const connectionGuid = resolveAlgorithmConnectionDiffGuid(connectionLike, fallbackIndex);
-  const sourceConnection = design?.connections?.find((connection) => {
+  const sourceConnection = design ? snapshotDesignConnections(design).find((connection) => {
     if (connection.guid && connection.guid === connectionGuid) return true;
     return false;
-  });
+  }) : undefined;
   const connectedPieceGuid =
     (connectionLike &&
     typeof connectionLike === "object" &&
@@ -7734,7 +7739,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
         <TreeRow id="algorithm.details.design.connections" label={null}>
           <div className="flex items-center justify-between w-full px-2 py-0.5">
             <span className="text-xs text-muted-foreground">connections</span>
-            <span className="text-xs font-mono">{design?.connections?.length ?? 0}</span>
+            <span className="text-xs font-mono">{design ? snapshotDesignConnections(design).length : 0}</span>
           </div>
         </TreeRow>
       </TreeSection>

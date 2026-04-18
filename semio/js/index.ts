@@ -260,7 +260,7 @@ export type StatId = { guid: Guid };
  **/
 export type DesignId = { guid: Guid };
 /**
- * Identifier type for Kit entities.
+ * Identifier type for KitImpl entities.
  **/
 export type KitId = { guid: Guid };
 /**
@@ -345,7 +345,7 @@ export const StatIdSchema = z.object({ guid: z.string() });
  **/
 export const DesignIdSchema = z.object({ guid: z.string() });
 /**
- * Zod schema for validating Kit identifiers.
+ * Zod schema for validating KitImpl identifiers.
  **/
 export const KitIdSchema = z.object({ guid: z.string() });
 /**
@@ -430,7 +430,7 @@ export const createStatId = (guid: Guid): StatId => ({ guid });
  **/
 export const createDesignId = (guid: Guid): DesignId => ({ guid });
 /**
- * Factory for creating Kit identifiers.
+ * Factory for creating KitImpl identifiers.
  **/
 export const createKitId = (guid: Guid): KitId => ({ guid });
 /**
@@ -515,7 +515,7 @@ export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.gui
  **/
 export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
 /**
- * Equality check for Kit identifiers.
+ * Equality check for KitImpl identifiers.
  **/
 export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
 /**
@@ -600,7 +600,7 @@ export const getStatGuid = (id: StatId): Guid => id.guid;
  **/
 export const getDesignGuid = (id: DesignId): Guid => id.guid;
 /**
- * Extracts the GUID from a Kit identifier.
+ * Extracts the GUID from a KitImpl identifier.
  **/
 export const getKitGuid = (id: KitId): Guid => id.guid;
 /**
@@ -4275,7 +4275,7 @@ export class Type {
   #parentGuid?: string;
 
   /** True private field — avoids enumerable kit ↔ types cycles in diffs and deep equality. */
-  #kit?: Kit;
+  #kit?: KitImpl;
 
   /** Resolved parent type in the kit graph (lazy). */
   get parent(): Type | undefined {
@@ -4283,7 +4283,7 @@ export class Type {
     return this.#kit.findType(this.#parentGuid);
   }
 
-  constructor(plain: TypePlain, kit?: Kit) {
+  constructor(plain: TypePlain, kit?: KitImpl) {
     const p = TypeSchema.parse(plain);
     this.#parentGuid = p.parent?.guid;
     const { parent: _p, ...rest } = p;
@@ -4292,12 +4292,17 @@ export class Type {
     this.connectors = p.connectors?.map((c) => new Connector(c));
     this.props = p.props?.map((x) => new Prop(x));
     this.attributes = p.attributes?.map((a) => new Attribute(a));
-    if (kit !== undefined && !(kit instanceof Kit)) throw new Error("Type must be wired to a Kit class instance");
+    if (kit !== undefined && !(kit instanceof KitImpl)) throw new Error("Type must be wired to a KitImpl class instance");
     this.#kit = kit;
   }
 
-  static from(plain: TypePlain, kit?: Kit): Type {
+  static from(plain: TypePlain, kit?: KitImpl): Type {
     return new Type(plain, kit);
+  }
+
+  /** Pick a representative model for the given tag ids (UI / scene helpers). */
+  static pickBestModel(models: Model[], tagGuids: string[]): Model | undefined {
+    return selectBestModel(models, tagGuids);
   }
 
   // #region ✏️Methods
@@ -4305,7 +4310,7 @@ export class Type {
    * 📛Rename this type via the kit graph pipeline
    */
   rename(newName: string): KitChange {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     const diff: KitDiff = {
       types: {
         updated: [
@@ -4323,7 +4328,7 @@ export class Type {
    * 🗑️Delete this type via the kit graph pipeline
    */
   delete(opts?: KitChangeOptions): KitChange {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return this.#kit.removeType(this, opts);
   }
 
@@ -4334,32 +4339,32 @@ export class Type {
     return this.connectors?.find((c) => c.guid === connectorGuid);
   }
 
-  getKit(): Kit | undefined {
+  getKit(): KitImpl | undefined {
     return this.#kit;
   }
 
   getPrimitiveType(): Type {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).getPrimitiveTypeFor(this.guid);
   }
 
   getTypeFamily(): Type[] {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).getTypeFamilyFor(this.guid);
   }
 
   getTypeSiblings(): Type[] {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).getTypeSiblingsFor(this.guid);
   }
 
   getTypeChildren(): Type[] {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).getTypeChildrenFor(this.guid);
   }
 
   isInSameFamilyAsType(otherTypeGuid: string): boolean {
-    if (!this.#kit) throw new Error("Type not attached to a Kit");
+    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).areTypesInSameFamily(this.guid, otherTypeGuid);
   }
   // #endregion ✏️Methods
@@ -4378,7 +4383,7 @@ export class Type {
   }
 
   /** 🧭Deserialize a wire type into a stateful instance. */
-  static deserialize(json: string, kit?: Kit): Type {
+  static deserialize(json: string, kit?: KitImpl): Type {
     return new Type(TypeSchema.parse(JSON.parse(json)), kit);
   }
 
@@ -4844,7 +4849,7 @@ export class Piece {
 
   /** Not enumerable — avoids JSON / diff cycles (piece ↔ design ↔ kit). */
   #hostDesign?: Design;
-  #hostKit?: Kit;
+  #hostKit?: KitImpl;
 
   /** Semio {@link Type} for this piece (kit graph pointer, not an id blob). */
   get type(): Type | undefined {
@@ -4868,11 +4873,11 @@ export class Piece {
     return this.#designAsPieceObj;
   }
 
-  #resolveKit(): Kit | undefined {
+  #resolveKit(): KitImpl | undefined {
     return this.#hostKit ?? this.#hostDesign?.getKit();
   }
 
-  constructor(plain: PiecePlain, hostDesign?: Design, hostKit?: Kit) {
+  constructor(plain: PiecePlain, hostDesign?: Design, hostKit?: KitImpl) {
     const p = PieceSchema.parse(plain);
     this.#typeGuid = p.type?.guid;
     this.#designAsPieceGuid = p.design?.guid;
@@ -4885,7 +4890,7 @@ export class Piece {
     this.attributes = p.attributes?.map((a) => new Attribute(a));
     this.#hostDesign = hostDesign;
     const wireKit = hostKit ?? hostDesign?.getKit();
-    if (wireKit !== undefined && !(wireKit instanceof Kit)) throw new Error("Piece must be wired to a Kit class instance");
+    if (wireKit !== undefined && !(wireKit instanceof KitImpl)) throw new Error("Piece must be wired to a KitImpl class instance");
     this.#hostKit = wireKit;
     const k = this.#resolveKit();
     if (k) {
@@ -4951,14 +4956,43 @@ export class Piece {
   /**
    * Deletes this piece and stale connections, and fixes child pieces (see {@link Design.deletePiecesAndConnectionsDiff}).
    */
-  delete(): KitChange {
+  delete(opts?: KitChangeOptions): KitChange {
     const design = this.#hostDesign;
     const kit = this.#hostKit ?? design?.getKit();
-    if (!design || !kit) throw new Error("Piece not attached to a Design/Kit");
-    return design.deletePieces(this);
+    if (!design || !kit) throw new Error("Piece not attached to a Design/KitImpl");
+    return design.deletePieces(this, opts);
   }
 
-  static from(plain: PiecePlain, hostDesign?: Design, hostKit?: Kit): Piece {
+  /** Compatible replacement {@link Type}s for this piece (connector-aware), via the host design. */
+  alternativeTypes(): Type[] {
+    const design = this.#hostDesign;
+    if (!design) throw new Error("Piece not attached to a Design");
+    return design.findReplacableTypesForPiece(this.guid);
+  }
+
+  /** Change this piece’s type (validated kit pipeline; respects active/open transaction). */
+  changeType(type: Type, opts?: KitChangeOptions): KitChange {
+    const design = this.#hostDesign;
+    const kit = this.#hostKit ?? design?.getKit();
+    if (!design || !kit) throw new Error("Piece not attached to a Design/KitImpl");
+    const diff: KitDiff = {
+      designs: {
+        updated: [
+          {
+            design: { guid: design.guid },
+            diff: {
+              pieces: {
+                updated: [{ piece: { guid: this.guid }, diff: { type: { guid: type.guid } } }],
+              },
+            },
+          },
+        ],
+      },
+    };
+    return kit._applyDiff(diff, opts ?? {});
+  }
+
+  static from(plain: PiecePlain, hostDesign?: Design, hostKit?: KitImpl): Piece {
     return new Piece(plain, hostDesign, hostKit);
   }
 
@@ -5057,7 +5091,7 @@ export class Piece {
   }
 
   /** 🧭Deserialize a wire piece into a stateful instance. */
-  static deserialize(json: string, hostDesign?: Design, hostKit?: Kit): Piece {
+  static deserialize(json: string, hostDesign?: Design, hostKit?: KitImpl): Piece {
     return new Piece(PieceSchema.parse(JSON.parse(json)), hostDesign, hostKit);
   }
 
@@ -6099,7 +6133,8 @@ export class Design {
   isAbstract?: boolean;
   folder?: string;
   pieces?: Piece[];
-  connections?: Connection[];
+  /** @internal Graph storage; use {@link connections}() for the spec OO snapshot. */
+  _connections?: Connection[];
   stats?: Stat[];
   props?: Prop[];
   layers?: Layer[];
@@ -6122,7 +6157,7 @@ export class Design {
   #parentDesignGuid?: string;
 
   /** True private field — avoids enumerable kit ↔ designs cycles in diffs and deep equality. */
-  #kit?: Kit;
+  #kit?: KitImpl;
 
   /** Parent design in the kit hierarchy (lazy). */
   get parent(): Design | undefined {
@@ -6130,15 +6165,16 @@ export class Design {
     return this.#kit.findDesign(this.#parentDesignGuid);
   }
 
-  constructor(plain: DesignPlain, kit?: Kit) {
-    const p = DesignSchema.parse(plain);
-    if (kit !== undefined && !(kit instanceof Kit)) throw new Error("Design must be wired to a Kit class instance");
+  constructor(plain: DesignPlain | Design, kit?: KitImpl) {
+    const wire: DesignPlain = plain instanceof Design ? plain.toPlain() : plain;
+    const p = DesignSchema.parse(wire);
+    if (kit !== undefined && !(kit instanceof KitImpl)) throw new Error("Design must be wired to a KitImpl class instance");
     this.#parentDesignGuid = p.parent?.guid;
-    const { parent: _par, ...rest } = p;
+    const { parent: _par, connections: _wireConnections, pieces: _wirePieces, ...rest } = p;
     Object.assign(this, rest);
     this.#kit = kit;
     this.pieces = p.pieces?.map((x) => new Piece(x, this, kit));
-    this.connections = p.connections?.map((x) => new Connection(x, this));
+    this._connections = p.connections?.map((x) => new Connection(x, this));
     this.stats = p.stats?.map((x) => new Stat(x));
     this.props = p.props?.map((x) => new Prop(x));
     this.layers = p.layers?.map((x) => new Layer(x));
@@ -6146,8 +6182,18 @@ export class Design {
     this.attributes = p.attributes?.map((a) => new Attribute(a));
   }
 
-  static from(plain: DesignPlain, kit?: Kit): Design {
+  static from(plain: DesignPlain, kit?: KitImpl): Design {
     return new Design(plain, kit);
+  }
+
+  /**
+   * Non-mutating preview of applying a diff (clone wire state, then {@link applyDiff}).
+   */
+  static previewWithDiff(design: Design, diff: DesignDiff): Design {
+    const raw = JSON.parse(JSON.stringify(design.toPlain()), (_k, v) => (v === null ? undefined : v)) as DesignPlain;
+    const copy = new Design(raw, design.getKit());
+    copy.applyDiff(diff);
+    return copy;
   }
 
   // #region ✏️Methods
@@ -6155,7 +6201,7 @@ export class Design {
    * 📛Rename this design via the kit graph pipeline
    */
   rename(newName: string): KitChange {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     const diff: KitDiff = {
       designs: {
         updated: [
@@ -6173,11 +6219,11 @@ export class Design {
    * 🗑️Remove this design from the kit graph (validated pipeline).
    */
   delete(opts?: KitChangeOptions): KitChange {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return this.#kit.removeDesign(this, opts);
   }
 
-  getKit(): Kit | undefined {
+  getKit(): KitImpl | undefined {
     return this.#kit;
   }
 
@@ -6208,7 +6254,7 @@ export class Design {
     if (!arraysEqual(this.concepts, after.concepts)) diff.concepts = after.concepts;
     const piecesDiff = getCollectionDiff("piece", this.pieces ?? [], after.pieces ?? [], getPieceDiff);
     if (Object.keys(piecesDiff).length > 0) diff.pieces = piecesDiff;
-    const connectionsDiff = getCollectionDiff("connection", this.connections ?? [], after.connections ?? [], getConnectionDiff);
+    const connectionsDiff = getCollectionDiff("connection", this._connections ?? [], after._connections ?? [], getConnectionDiff);
     if (Object.keys(connectionsDiff).length > 0) diff.connections = connectionsDiff;
     const statsDiff = getCollectionDiff("stat", this.stats ?? [], after.stats ?? [], getStatDiff);
     if (Object.keys(statsDiff).length > 0) diff.stats = statsDiff;
@@ -6241,7 +6287,7 @@ export class Design {
     if (appliedDiff.authors !== undefined) inverse.authors = this.authors as any;
     if (appliedDiff.concepts !== undefined) inverse.concepts = this.concepts;
     if (appliedDiff.pieces) inverse.pieces = inverseCollectionDiff("piece", this.pieces ?? [], appliedDiff.pieces, inversePieceDiff);
-    if (appliedDiff.connections) inverse.connections = inverseCollectionDiff("connection", this.connections ?? [], appliedDiff.connections, inverseConnectionDiff);
+    if (appliedDiff.connections) inverse.connections = inverseCollectionDiff("connection", this._connections ?? [], appliedDiff.connections, inverseConnectionDiff);
     if (appliedDiff.stats) inverse.stats = inverseCollectionDiff("stat", this.stats ?? [], appliedDiff.stats, inverseStatDiff);
     if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", this.props ?? [], appliedDiff.props, inversePropDiff);
     if (appliedDiff.layers) inverse.layers = inverseCollectionDiff("layer", this.layers ?? [], appliedDiff.layers, inverseLayerDiff);
@@ -6269,10 +6315,11 @@ export class Design {
   /**
    * 🗑️Delete pieces from this design (and stale connections; fixes children that become fixed).
    */
-  deletePieces(...pieces: Piece[]): KitChange {
-    if (pieces.length === 0) throw new Error("deletePieces: pass at least one Piece");
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
-    const pieceGuids = pieces.map((p) => p.guid);
+  deletePieces(pieces: Piece | readonly Piece[], opts?: KitChangeOptions): KitChange {
+    const list = (Array.isArray(pieces) ? pieces : [pieces]) as Piece[];
+    if (list.length === 0) throw new Error("deletePieces: pass at least one Piece");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
+    const pieceGuids = list.map((p) => p.guid);
     const result = this.deletePiecesAndConnectionsDiff(pieceGuids, []);
     if (!result.ok || !result.diff) {
       throw new Error(`Delete pieces failed: ${result.errors.map((e) => e.message).join("; ")}`);
@@ -6282,7 +6329,24 @@ export class Design {
         updated: [{ design: { guid: this.guid }, diff: result.diff }],
       },
     };
-    return this.#kit._applyDiff(kitDiff);
+    return this.#kit._applyDiff(kitDiff, opts ?? {});
+  }
+
+  /**
+   * Flatten this design in the kit graph (merkle-cached); commits via {@link KitImpl._applyDiff} (respects active transaction).
+   */
+  flatten(opts?: KitChangeOptions): KitChange {
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
+    const op = this.runFlattenOptimized();
+    if (!op.ok || !op.diff) {
+      throw new Error(`flatten failed: ${op.errors.map((e) => e.message).join("; ")}`);
+    }
+    const kitDiff: KitDiff = {
+      designs: {
+        updated: [{ design: { guid: this.guid }, diff: op.diff.forward }],
+      },
+    };
+    return this.#kit._applyDiff(kitDiff, opts ?? {});
   }
 
   /**
@@ -6290,9 +6354,9 @@ export class Design {
    */
   deletePiecesAndConnectionsDiff(pieceGuids: Guid[], connectionGuids: Guid[]): DesignDiffOperationResult {
     const kit = this.#kit;
-    if (!kit) return operationErr([{ message: "Design not attached to a Kit" }]);
+    if (!kit) return operationErr([{ message: "Design not attached to a KitImpl" }]);
     const deletedPieceSet = new Set(pieceGuids);
-    const connections = this.connections ?? [];
+    const connections = this._connections ?? [];
 
     const staleConnectionGuids = new Set<string>();
     for (const conn of connections) {
@@ -6359,31 +6423,37 @@ export class Design {
   }
 
   /**
-   * 🔍Find piece by guid
+   * 🔍Find piece by guid or by {@link Piece.name} (object form matches the spec `findPiece(name=…)` style).
    */
-  findPiece(pieceGuid: string): Piece | undefined {
-    return this.pieces?.find((p) => p.guid === pieceGuid);
+  findPiece(lookup: string | { name: string }): Piece | undefined {
+    const key = typeof lookup === "string" ? lookup : lookup.name;
+    const byGuid = this.pieces?.find((p) => p.guid === key);
+    if (byGuid) return byGuid;
+    return this.pieces?.find((p) => p.name === key);
   }
 
   /**
-   * Resolves a piece by guid or throws (same as {@link findPieceInDesign}).
+   * Resolves a piece by guid/name or throws (same as {@link findPieceInDesign}).
    */
-  requirePiece(pieceGuid: string): Piece {
-    return findPiece(this.pieces ?? [], pieceGuid);
+  requirePiece(lookup: string | { name: string }): Piece {
+    const piece = this.findPiece(lookup);
+    const label = typeof lookup === "string" ? lookup : lookup.name;
+    if (!piece) throw new Error(`Piece ${label} not found in design ${this.name}`);
+    return piece;
   }
 
   /**
    * 🔍Find connection by guid
    */
   findConnection(connectionGuid: string): Connection | undefined {
-    return this.connections?.find((c) => c.guid === connectionGuid);
+    return this._connections?.find((c) => c.guid === connectionGuid);
   }
 
   /**
    * Resolves a connection by guid or throws (same as {@link findConnectionInDesign}).
    */
   requireConnection(connectionGuid: string): Connection {
-    return findConnection(this.connections ?? [], connectionGuid);
+    return findConnection(this._connections ?? [], connectionGuid);
   }
 
   /**
@@ -6397,86 +6467,94 @@ export class Design {
    * 📋Get all connections
    */
   getConnections(): readonly Connection[] {
-    return this.connections ?? [];
+    return this._connections ?? [];
+  }
+
+  /**
+   * Snapshot of connections on this design (OO spec); same array as {@link getConnections}.
+   * After async or queued graph work, call again for an up-to-date view.
+   */
+  connections(): readonly Connection[] {
+    return this.getConnections();
   }
 
   getPrimitiveDesign(): Design {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).getPrimitiveDesignFor(this.guid);
   }
 
   getDesignFamily(): Design[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).getDesignFamilyFor(this.guid);
   }
 
   getDesignSiblings(): Design[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).getDesignSiblingsFor(this.guid);
   }
 
   getDesignChildren(): Design[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).getDesignChildrenFor(this.guid);
   }
 
   isInSameFamilyAsDesign(otherDesignGuid: string): boolean {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).areDesignsInSameFamily(this.guid, otherDesignGuid);
   }
 
   canUseDesignAsPieceIn(containerDesignGuid: string): boolean {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).canUseDesignAsPiece(containerDesignGuid, this.guid);
   }
 
   findSameFamilyDesignPiecesHere(): Piece[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findSameFamilyDesignPiecesIn(this.guid);
   }
 
   runFlatten(): DesignOperationResult {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).runFlattenDesign(this.guid);
   }
 
   runFlattenOptimized(): DesignOperationResult {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).flattenDesignMerkle(this.guid);
   }
 
   previewRemovePiecesAndConnections(pieceIds: string[], connectionIds: string[]): DesignOperationResult {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).previewRemovePiecesAndConnections(this.guid, pieceIds, connectionIds);
   }
 
   fixPieceDiff(pieceId: string): DesignDiff {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).fixPieceInDesignDiff(this.guid, pieceId);
   }
 
   fixPiecesDiff(pieceIds: string[]): DesignDiff {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).fixPiecesInDesignDiff(this.guid, pieceIds);
   }
 
   movePieces(pieces: Design, vector: MoveVector): DesignDiff {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).movePiecesInDesignOp(this, pieces, vector);
   }
 
   copyToClipboard(pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).copyDesignOp(this, pieceGuids, connectionGuids);
   }
 
   pasteFrom(source: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).pasteDesignOp(source, this, anchoring, coord);
   }
 
   piecesMetadata(): OperationResult<Map<string, PiecePlacementMetadata>> {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).piecesMetadataFor(this.guid);
   }
 
@@ -6484,47 +6562,47 @@ export class Design {
     result: OperationResult<Map<string, PiecePlacementMetadata>>;
     cache: { [pieceGuid: string]: FlatMerkleCacheEntry };
   } {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).piecesMetadataCachedFor(this.guid, cache);
   }
 
   findPieceType(pieceGuid: string): Type {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findPieceTypeInDesign(this.guid, pieceGuid);
   }
 
   findParentPiece(pieceGuid: string): Piece {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findParentPieceInDesign(this.guid, pieceGuid);
   }
 
   findParentConnectionForPiece(pieceGuid: string): Connection {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findParentConnectionForPieceInDesign(this.guid, pieceGuid);
   }
 
   findChildrenPieces(pieceGuid: string): Piece[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findChildrenPiecesInDesign(this.guid, pieceGuid);
   }
 
   findUsedConnectorsByPiece(pieceGuid: string): Connector[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findUsedConnectorsByPieceInDesign(this.guid, pieceGuid);
   }
 
   findReplacableTypesForPiece(pieceGuid: string): Type[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findReplacableTypesForPieceInDesign(this.guid, pieceGuid);
   }
 
   findReplacableTypesForPieces(pieceGuids: string[]): Type[] {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).findReplacableTypesForPiecesInDesign(this.guid, pieceGuids);
   }
 
   sumQuality(qualityGuid: string): number {
-    if (!this.#kit) throw new Error("Design not attached to a Kit");
+    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).sumQualityInDesign(this.guid, qualityGuid);
   }
   // #endregion ✏️Methods
@@ -6549,7 +6627,7 @@ export class Design {
       ...(this as unknown as DesignPlain),
       parent: this.wireParentId(),
       pieces: this.pieces?.map((x) => x.toPlain()),
-      connections: this.connections?.map((x) => x.toPlain()),
+      connections: this._connections?.map((x) => x.toPlain()),
       stats: this.stats?.map((x) => x.toPlain()),
       props: this.props?.map((x) => x.toPlain()),
       layers: this.layers?.map((x) => x.toPlain()),
@@ -6564,7 +6642,7 @@ export class Design {
   }
 
   /** 🧭Deserialize a wire design into a stateful instance. */
-  static deserialize(json: string, kit?: Kit): Design {
+  static deserialize(json: string, kit?: KitImpl): Design {
     return new Design(DesignSchema.parse(JSON.parse(json)), kit);
   }
 
@@ -6579,7 +6657,7 @@ export class Design {
     return DesignShallowSchema.parse({
       ...plain,
       pieces: this.pieces?.map((p) => PieceMetaSchema.parse(p.toPlain())),
-      connections: this.connections?.map((c) => ConnectionMetaSchema.parse(c.toPlain())),
+      connections: this._connections?.map((c) => ConnectionMetaSchema.parse(c.toPlain())),
       stats: this.stats?.map((s) => StatMetaSchema.parse(s.toPlain())),
       props: this.props?.map((p) => PropMetaSchema.parse(p.toPlain())),
       layers: this.layers?.map((l) => LayerMetaSchema.parse(l.toPlain())),
@@ -6876,7 +6954,7 @@ const detachDesignForLocalMutation = (d: Design): Design =>
     {
       ...DesignSchema.parse(stripNullsJsonClone(d.toPlain()) as unknown),
       pieces: d.pieces?.map((p) => detachPieceForLocalMutation(p).toPlain()),
-      connections: d.connections?.map((c) => detachConnectionForLocalMutation(c).toPlain()),
+      connections: d._connections?.map((c) => detachConnectionForLocalMutation(c).toPlain()),
       stats: d.stats?.map((s) => ({ ...StatSchema.parse(stripNullsJsonClone(s) as StatPlain) })),
       props: d.props?.map((x) => ({ ...PropSchema.parse(stripNullsJsonClone(x) as PropPlain) })),
       layers: d.layers?.map((l) => ({
@@ -6943,7 +7021,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
     );
   }
 
-  const resultConns: Connection[] = (base.connections ?? []).map((c) => {
+  const resultConns: Connection[] = (base._connections ?? []).map((c) => {
     if (removedConnGuids.has(c.guid)) {
       return new Connection({ ...c.toPlain(), attributes: setStatus(c.attributes, DiffStatus.Removed) });
     }
@@ -6991,7 +7069,7 @@ export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
  **/
 export const mergeDesigns = (designs: Design[]): DesignDiff => {
   const pieces = designs.flatMap((d) => d.pieces ?? []);
-  const connections = designs.flatMap((d) => d.connections ?? []);
+  const connections = designs.flatMap((d) => d._connections ?? []);
 
   return {
     pieces: pieces.length > 0 ? { added: pieces } : undefined,
@@ -7014,18 +7092,18 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
  * Prefer {@link Design.deletePiecesAndConnectionsDiff} / {@link Design.deletePieces}.
  * @deprecated Parameter `kit` is ignored; the design's host kit is used.
  **/
-export const deletePiecesAndConnectionsInDesign = (kit: Kit, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiffOperationResult => {
+export const deletePiecesAndConnectionsInDesign = (kit: KitImpl, design: Design, pieceGuids: string[], connectionGuids: string[]): DesignDiffOperationResult => {
   void kit;
   const d = design instanceof Design ? design : new Design(design as any);
   return d.deletePiecesAndConnectionsDiff(pieceGuids, connectionGuids);
 };
 
-/** @see {@link Kit.removePiecesAndConnectionsFromDesignOp} */
+/** @see {@link KitImpl.removePiecesAndConnectionsFromDesignOp} */
 export const removePiecesAndConnectionsFromDesign = (kit: KitLike, designId: string, pieceIds: string[], connectionIds: string[]): DesignOperationResult => asKitInstance(kit).removePiecesAndConnectionsFromDesignOp(designId, pieceIds, connectionIds);
 
 /**
  * Parent-connector rotation and unit world axes for gap (local +Y), shift (+X), rise (+Z) before child orientation, matching {@link computeChildPlane}.
- * Used by flatten / move paths that need connector frames from kit types (see {@link Kit.buildConnectorResolver}).
+ * Used by flatten / move paths that need connector frames from kit types (see {@link KitImpl.buildConnectorResolver}).
  **/
 const connectionPlacementTranslationBasis = (parentConnector: Connector): { gap: THREE.Vector3; shift: THREE.Vector3; raise: THREE.Vector3; parentRotationT: THREE.Matrix4 } => {
   const parentDirection = vectorToThree(parentConnector.direction).normalize();
@@ -7351,9 +7429,9 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
     throw new Error("No pieces found matching the provided IDs");
   }
 
-  const internalConnections = (originalDesign.connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid));
+  const internalConnections = (originalDesign._connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid));
 
-  const externalConnections = (originalDesign.connections || []).filter((connection) => {
+  const externalConnections = (originalDesign._connections || []).filter((connection) => {
     const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
     const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
     return connectedInCluster !== connectingInCluster;
@@ -7381,7 +7459,7 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
 export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignChange => {
   const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
 
-  const connectionsToRemove = (originalDesign.connections || [])
+  const connectionsToRemove = (originalDesign._connections || [])
     .filter((connection) => {
       const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
       const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
@@ -7434,7 +7512,7 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
   if (selectedPieceIds.length < 2) return [];
 
   const adjacencyMap = new Map<string, Set<string>>();
-  (design.connections || []).forEach((connection) => {
+  (design._connections || []).forEach((connection) => {
     const sourceId = connection.connecting.piece.guid;
     const targetId = connection.connected.piece.guid;
 
@@ -7483,8 +7561,8 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
 
 /**
  **/
-export const expandDesignPieces = (design: Design, kit: Kit): Design => {
-  const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
+export const expandDesignPieces = (design: Design, kit: KitImpl): Design => {
+  const hasDesignConnections = design._connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
   if (!hasDesignConnections) {
     return design;
   }
@@ -7492,7 +7570,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   let expandedDesign: Design = design;
 
   const designIds = new Set<string>();
-  toArray(design.connections).forEach((conn) => {
+  toArray(design._connections).forEach((conn) => {
     if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
     if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
@@ -7519,9 +7597,9 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
         ),
     );
 
-    const transformedConnections = expandedReferencedDesign.connections || [];
+    const transformedConnections = expandedReferencedDesign._connections || [];
 
-    const updatedExternalConnections = (expandedDesign.connections || []).map((connection) => {
+    const updatedExternalConnections = (expandedDesign._connections || []).map((connection) => {
       if (connection.connected.designPiece?.guid === designName) {
         return {
           ...connection,
@@ -7577,14 +7655,14 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   const includedDesigns: IncludedDesignInfo[] = [];
 
   const designIds = new Set<string>();
-  toArray(design.connections).forEach((conn: Connection) => {
+  toArray(design._connections).forEach((conn: Connection) => {
     if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
     if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
   });
 
   Array.from(designIds).forEach((designIdString) => {
     const externalConnections =
-      design.connections?.filter((connection: Connection) => {
+      design._connections?.filter((connection: Connection) => {
         const connectedToDesign = connection.connected.designPiece?.guid === designIdString;
         const connectingToDesign = connection.connecting.designPiece?.guid === designIdString;
         return connectedToDesign || connectingToDesign;
@@ -7616,7 +7694,7 @@ export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: st
 /**
  **/
 export const isConnectionInDesign = (design: Design, connection: Connection): boolean => {
-  return design.connections?.some((c) => areSameConnection(c, connection)) ?? false;
+  return design._connections?.some((c) => areSameConnection(c, connection)) ?? false;
 };
 
 /**
@@ -7640,7 +7718,7 @@ export const findConnectionsInDesign = (design: Design, connectionGuids: string[
  * Searches for matching PieceConnectionsInDesign entry.
  **/
 export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string): Connection[] => {
-  return findPieceConnections(design.connections ?? [], pieceGuid);
+  return findPieceConnections(design._connections ?? [], pieceGuid);
 };
 
 /**
@@ -7658,7 +7736,7 @@ export const findConnectionPiecesInDesign = (design: Design, connection: Connect
  **/
 export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   return (
-    design.connections?.filter((c) => {
+    design._connections?.filter((c) => {
       try {
         findPieceInDesign(design, c.connected.piece.guid);
         findPieceInDesign(design, c.connecting.piece.guid);
@@ -7696,7 +7774,7 @@ const buildDragMoveStructuralContext = (
 } => {
   const selectedGuids = new Set((pieces.pieces ?? []).map((p) => p.guid));
   const parentMap = new Map<string, { connectionGuid: string; parentGuid: string }>();
-  for (const c of design.connections ?? []) {
+  for (const c of design._connections ?? []) {
     parentMap.set(c.connecting.piece.guid, { connectionGuid: c.guid, parentGuid: c.connected.piece.guid });
   }
   const pieceMap = new Map<string, Piece>();
@@ -7875,7 +7953,7 @@ const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnec
 /**
  * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
  * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
- * Connected movers need {@link Kit.buildConnectorResolver}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
+ * Connected movers need {@link KitImpl.buildConnectorResolver}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
  **/
 export const movePiecesInDesign = (kit: KitLike, design: Design, pieces: Design, vector: MoveVector): DesignDiff => asKitInstance(kit).movePiecesInDesignOp(design, pieces, vector);
 
@@ -7938,7 +8016,7 @@ export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchor
 export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, designs: Design[], types: Type[], ports: Port[], selection: { pieces: string[] }): { types: string[]; designs: string[] } => {
   const selectedPieceSet = new Set(selection.pieces);
   const pieces = design.pieces ?? [];
-  const connections = design.connections ?? [];
+  const connections = design._connections ?? [];
 
   const pieceMap = new Map<string, Piece>();
   for (const piece of pieces) pieceMap.set(piece.guid, piece);
@@ -8019,7 +8097,7 @@ export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, d
 
   const candidateDesignAvailablePortGuids = (candidateDesign: Design): string[] => {
     const consumedConnectorKeys = new Set<string>();
-    for (const connection of candidateDesign.connections ?? []) {
+    for (const connection of candidateDesign._connections ?? []) {
       for (const side of [connection.connected, connection.connecting]) {
         if (side.piece.guid && side.connector?.guid) consumedConnectorKeys.add(`${side.piece.guid}::${side.connector.guid}`);
       }
@@ -8058,11 +8136,11 @@ export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, d
 
 // #endregion 📐Design
 
-// #region ⏱️Kit
-// Kit entity types, schemas, and helpers MUST be defined here.
+// #region ⏱️KitImpl
+// KitImpl entity types, schemas, and helpers MUST be defined here.
 
 // #region 🧬KitKind
-// KitKind discriminates the five persistence/transport forms of a Kit.
+// KitKind discriminates the five persistence/transport forms of a KitImpl.
 
 /**
  * Zod schema for KitKind validation.
@@ -8086,7 +8164,7 @@ export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
 // #endregion 🧬KitKind
 
 /**
- * Zod schema for Kit validation.
+ * Zod schema for KitImpl validation.
  **/
 export const KitSchema = z.object({
   guid: z.string(),
@@ -8118,18 +8196,18 @@ export const KitSchema = z.object({
 export type KitData = z.infer<typeof KitSchema>;
 
 /**
- * Live {@link Kit} or wire {@link KitData}. Resolve to a class instance with {@link asKitInstance}; entity constructors accept only {@link Kit}.
+ * Live {@link KitImpl} or wire {@link KitData}. Resolve to a class instance with {@link asKitInstance}; entity constructors accept only {@link KitImpl}.
  */
-export type KitLike = Kit | KitData;
+export type KitLike = KitImpl | KitData;
 
 // #region 🔖ValidationState
-/** Last validation outcome for a conflicted {@link Kit}; same shape as {@link KitDiffValidationResult} without apply metadata. */
+/** Last validation outcome for a conflicted {@link KitImpl}; same shape as {@link KitDiffValidationResult} without apply metadata. */
 export type ValidationState = KitDiffValidationResult;
 // #endregion 🔖ValidationState
 
 // #region 🔌Backbone Interface
 /**
- * 🔌Backbone handles Kit change persistence and synchronization.
+ * 🔌Backbone handles KitImpl change persistence and synchronization.
  * Implementations support Dev (file), Local (folder), and Remote (hub) backends.
  */
 export interface Backbone {
@@ -8138,11 +8216,11 @@ export interface Backbone {
    * Optional wiring for inbound sync: the backbone calls `onInboundDiff` with remote/foreign diffs;
    * the kit applies them through the same validation pipeline (no echo to `changed` by default).
    */
-  attach?(kit: Kit, onInboundDiff: (diff: KitDiff) => void): void | Promise<void>;
+  attach?(kit: KitImpl, onInboundDiff: (diff: KitDiff) => void): void | Promise<void>;
 }
 
 /**
- * 🧠DevKitBackbone persists Kit changes to a single JSON file.
+ * 🧠DevKitBackbone persists KitImpl changes to a single JSON file.
  */
 export class DevKitBackbone implements Backbone {
   constructor(private filePath: string) {}
@@ -8152,7 +8230,7 @@ export class DevKitBackbone implements Backbone {
 }
 
 /**
- * 📁LocalKitBackbone persists Kit to folder structure with assets.
+ * 📁LocalKitBackbone persists KitImpl to folder structure with assets.
  */
 export class LocalKitBackbone implements Backbone {
   constructor(private folderPath: string) {}
@@ -8162,7 +8240,7 @@ export class LocalKitBackbone implements Backbone {
 }
 
 /**
- * 🌐RemoteKitBackbone syncs Kit changes to remote hub via WebSocket.
+ * 🌐RemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
  */
 export class RemoteKitBackbone implements Backbone {
   constructor(private websocketUrl: string) {}
@@ -8173,7 +8251,7 @@ export class RemoteKitBackbone implements Backbone {
 // #endregion 🔌Backbone Interface
 
 /**
- * 🔄KitChange represents a bidirectional change to Kit state.
+ * 🔄KitChange represents a bidirectional change to KitImpl state.
  */
 export interface KitChange {
   forward: KitDiff;
@@ -8182,14 +8260,14 @@ export interface KitChange {
   validation: KitDiffValidationResult;
 }
 
-/** Options for {@link Kit._applyDiff} (internal / kit-store pipeline). Prefer semantic entity methods for domain edits. */
+/** Options for {@link KitImpl._applyDiff} (internal / kit-store pipeline). Prefer semantic entity methods for domain edits. */
 export type KitChangeOptions = {
   origin?: string;
-  /** Record this step on an open transaction (see {@link Kit.beginTransaction}). */
+  /** Record this step on an open transaction (see {@link KitImpl.beginTransaction}). */
   transactionId?: string;
   /** When false, do not enqueue {@link Backbone.changed}. Default true. */
   notifyBackbone?: boolean;
-  /** When true, do not push to finalized local history (see {@link Kit.undo}). Default false. */
+  /** When true, do not push to finalized local history (see {@link KitImpl.undo}). Default false. */
   skipGlobalHistory?: boolean;
   /** Inbound backbone: committed external change — not part of local history; clears redo. */
   inboundCommitted?: boolean;
@@ -8251,10 +8329,46 @@ type KitRuntimeTransaction = {
 };
 
 /**
+ * Starts named open transactions ({@link KitImpl.beginTransaction}); returns uuid-v7 ids from {@link guid}.
+ */
+export class KitTransactionsCoordinator {
+  constructor(private readonly host: KitImpl) {}
+
+  start(label?: string): string {
+    return this.host.beginTransaction(label).id;
+  }
+}
+
+/**
+ * Undo/redo within the kit’s {@link KitImpl.setActiveTransaction active} open transaction.
+ */
+export class KitActiveTransactionSurface {
+  constructor(private readonly host: KitImpl) {}
+
+  undo(): void {
+    this.host.undoWithinTransaction(this.host.requireActiveTransactionId());
+  }
+
+  redo(): void {
+    this.host.redoWithinTransaction(this.host.requireActiveTransactionId());
+  }
+
+  get canUndo(): boolean {
+    const id = this.host.activeTransactionId;
+    return !!id && this.host.canUndoWithinTransaction(id);
+  }
+
+  get canRedo(): boolean {
+    const id = this.host.activeTransactionId;
+    return !!id && this.host.canRedoWithinTransaction(id);
+  }
+}
+
+/**
  * Single-threaded transactional kit runtime: live state, provisional open transactions, finalized history undo/redo,
- * backbone sync for committed changes only. Raw {@link KitDiff} application is internal ({@link Kit._applyDiff}).
+ * backbone sync for committed changes only. Raw {@link KitDiff} application is internal ({@link KitImpl._applyDiff}).
  **/
-export class Kit {
+export class KitImpl {
   guid!: string;
   name!: string;
   version?: string;
@@ -8281,6 +8395,12 @@ export class Kit {
   /** Namespaced mutations and lookups; prefer `kit.ops.types.add(…)` over removed module-level helpers. */
   readonly ops: KitOps;
 
+  /** `transactions.start(label)` → open tx id (uuid-v7); use with {@link setActiveTransaction}. */
+  readonly transactions!: KitTransactionsCoordinator;
+
+  /** Undo/redo steps on the {@link activeTransactionId} stack (open transaction only). */
+  readonly transaction!: KitActiveTransactionSurface;
+
   // #region 🔖Private State
   private backbone?: Backbone;
   private validationState: ValidationState = { ok: true, errors: [], warnings: [], infos: [] };
@@ -8291,7 +8411,7 @@ export class Kit {
   #revision = 0;
   #auditLog: KitAuditEntry[] = [];
   #openTransactions = new Map<string, KitRuntimeTransaction>();
-  /** Finalized local transactions only (public {@link Kit.undo} / {@link Kit.redo}). */
+  /** Finalized local transactions only (public {@link KitImpl.undo} / {@link KitImpl.redo}). */
   #historyDone: KitChange[] = [];
   #historyUndone: KitChange[] = [];
   #flattenMerkleByDesign = new Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }>();
@@ -8301,11 +8421,13 @@ export class Kit {
   #backboneOutboundFrozen: KitChange[] = [];
   #backboneFlushScheduled = false;
   #deferredInboundQueue: KitDiff[] = [];
+  /** When set, {@link _applyDiff} records steps on this open transaction unless `transactionId` is passed explicitly. */
+  #activeTransactionId?: string;
   // #endregion 🔖Private State
 
   /**
    * Applies a {@link KitDiff} in place with no validation — undo/redo replay, document hydration, and tests only.
-   * Domain edits must use semantic methods / {@link Kit._applyDiff} (internal pipeline).
+   * Domain edits must use semantic methods / {@link KitImpl._applyDiff} (internal pipeline).
    */
   replayChangeUnchecked(diff: KitDiff): void {
     this.#applyRawKitDiff(diff);
@@ -8392,6 +8514,43 @@ export class Kit {
     return KitDiffSchema.parse(JSON.parse(JSON.stringify(diff)));
   }
 
+  /**
+   * Empty in-memory kit (single live graph). Prefer {@link Kit}() for the spec entry point.
+   */
+  static open(backbone?: Backbone): KitImpl {
+    const now = new Date().toISOString();
+    return new KitImpl(
+      KitSchema.parse({
+        guid: guid(),
+        name: "Kit",
+        version: "0",
+        types: [],
+        designs: [],
+        tags: [],
+        concepts: [],
+        ports: [],
+        qualities: [],
+        files: [],
+        folders: [],
+        authors: [],
+        attributes: [],
+        createdAt: now,
+        updatedAt: now,
+      }),
+      backbone,
+    );
+  }
+
+  /** Coerce wire {@link KitData} or pass through a live {@link KitImpl}. */
+  static ensure(like: KitLike): KitImpl {
+    return like instanceof KitImpl ? like : new KitImpl(KitSchema.parse(stripNullsJsonClone(like) as unknown));
+  }
+
+  /** Semio world basis → three.js scene root (matches legacy {@link toThreeRotation}). */
+  static semioToThreeRootBasis(): THREE.Matrix4 {
+    return toThreeRotation();
+  }
+
   #scheduleBackboneNotify(change: KitChange): void {
     if (!this.backbone) return;
     if (this.#phase === "frozen") {
@@ -8433,6 +8592,69 @@ export class Kit {
       });
     }
     this.ops = new KitOps(this);
+    this.transactions = new KitTransactionsCoordinator(this);
+    this.transaction = new KitActiveTransactionSurface(this);
+  }
+
+  get activeTransactionId(): string | undefined {
+    return this.#activeTransactionId;
+  }
+
+  /**
+   * Select which open transaction receives domain edits when {@link KitChangeOptions.transactionId} is omitted on {@link _applyDiff}.
+   */
+  setActiveTransaction(transactionId: string): void {
+    if (!this.#openTransactions.has(transactionId)) {
+      throw new Error(`Transaction ${transactionId} is not open on this kit.`);
+    }
+    this.#activeTransactionId = transactionId;
+  }
+
+  clearActiveTransaction(): void {
+    this.#activeTransactionId = undefined;
+  }
+
+  /** Clears {@link activeTransactionId} (alias for {@link clearActiveTransaction}). */
+  unsetActiveTransaction(): void {
+    this.clearActiveTransaction();
+  }
+
+  requireActiveTransactionId(): string {
+    if (!this.#activeTransactionId) {
+      throw new Error("No active transaction; call setActiveTransaction after transactions.start.");
+    }
+    if (!this.#openTransactions.has(this.#activeTransactionId)) {
+      throw new Error(`Active transaction ${this.#activeTransactionId} is not open.`);
+    }
+    return this.#activeTransactionId;
+  }
+
+  /**
+   * Load kit JSON from a folder (`kit.json`) or a direct `.json` path (Node.js). Replaces the live graph in place.
+   */
+  async importLocal(folderPath: string): Promise<void> {
+    const isNode = typeof process !== "undefined" && process.versions?.node;
+    if (!isNode) {
+      throw new Error("Kit.importLocal requires Node.js; in the browser use importKit(blobOrUrl).");
+    }
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    const resolved = folderPath.endsWith(".json") ? folderPath : path.join(folderPath, "kit.json");
+    const text = await fs.readFile(resolved, "utf8");
+    const { kit: loaded } = await importFileKit(text);
+    const diff = computeKitGraphDiffBetween(this, loaded);
+    this.replayChangeUnchecked(diff);
+    this.#openTransactions.clear();
+    this.#activeTransactionId = undefined;
+    this.#historyDone.length = 0;
+    this.#historyUndone.length = 0;
+    this.#flattenMerkleByDesign.clear();
+    this.#revision++;
+    this.#phase = "ready";
+    this.#conflicted = false;
+    this.#conflict = undefined;
+    this.validationState = { ok: true, errors: [], warnings: [], infos: [] };
+    this.notify();
   }
 
   /**
@@ -8461,7 +8683,7 @@ export class Kit {
     const pieces = design.pieces ?? [];
     if (pieces.length === 0) return {};
     const { getType, getConnector } = this.buildConnectorResolver();
-    const connections = (design.connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
+    const connections = (design._connections ?? []).filter((c) => pieces.some((p) => p.guid === c.connected.piece.guid) && pieces.some((p) => p.guid === c.connecting.piece.guid));
     const planeHashes: { [guid: string]: string } = {};
     const centerHashes: { [guid: string]: string } = {};
     const { pieceMap, adjacency } = buildFlattenPieceAdjacency(pieces, connections);
@@ -8494,7 +8716,7 @@ export class Kit {
     return result;
   }
 
-  /** Uncached flatten implementation for {@link Kit.runFlattenDesign}. */
+  /** Uncached flatten implementation for {@link KitImpl.runFlattenDesign}. */
   #flattenDesignUncached(designId: string): DesignOperationResult {
     const design = this.findDesign(designId);
     if (!design) {
@@ -8521,7 +8743,7 @@ export class Kit {
     const flatDesign = new Design({
       ...DesignSchema.parse(stripNullsJsonClone(design.toPlain()) as unknown),
       pieces: flatPieces.map((x) => x.toPlain()),
-      connections: design.connections?.map((c) => ConnectionSchema.parse(stripNullsJsonClone(c.toPlain()) as unknown)),
+      connections: design._connections?.map((c) => ConnectionSchema.parse(stripNullsJsonClone(c.toPlain()) as unknown)),
     });
 
     const piecePlanes: { [pieceGuid: string]: Plane } = {};
@@ -8545,7 +8767,7 @@ export class Kit {
     };
 
     const filteredConnections =
-      flatDesign.connections?.filter((connection) => {
+      flatDesign._connections?.filter((connection) => {
         const sourceId = connection.connected.piece.guid;
         const targetId = connection.connecting.piece.guid;
         const sourceExists = flatPieces.some((x) => x.guid === sourceId);
@@ -8706,7 +8928,7 @@ export class Kit {
       },
     });
     flatDesign.pieces = flatDesign.pieces?.map((p) => pieceMap[p.guid ?? ""]);
-    flatDesign.connections = [];
+    flatDesign._connections = [];
 
     let piecesWithPlanes = 0;
     let piecesWithoutPlanes = 0;
@@ -8740,7 +8962,7 @@ export class Kit {
       })
       .filter((update) => update !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
 
-    const removedConnections = design.connections?.map((c) => ({ guid: c.guid })) || [];
+    const removedConnections = design._connections?.map((c) => ({ guid: c.guid })) || [];
 
     const forward = {
       pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
@@ -8767,7 +8989,7 @@ export class Kit {
   }
 
   /**
-   * Incremental flatten with optional merkle cache; see {@link Kit.flattenDesignMerkle}.
+   * Incremental flatten with optional merkle cache; see {@link KitImpl.flattenDesignMerkle}.
    */
   #flattenDesignCached(
     designGuid: string,
@@ -8794,7 +9016,7 @@ export class Kit {
 
     const pieces = design.pieces;
     const flatPieces: Piece[] = pieces.map((p) => detachPieceForLocalMutation(p));
-    const filteredConnections = (design.connections ?? []).filter((connection) => {
+    const filteredConnections = (design._connections ?? []).filter((connection) => {
       const sourceId = connection.connected.piece.guid;
       const targetId = connection.connecting.piece.guid;
       const sourceExists = flatPieces.some((x) => x.guid === sourceId);
@@ -9002,7 +9224,7 @@ export class Kit {
       })
       .filter((u) => u !== null) as Array<{ piece: PieceId; diff: PieceDiff }>;
 
-    const removedConnections = (design.connections ?? []).map((c) => ({ guid: c.guid }));
+    const removedConnections = (design._connections ?? []).map((c) => ({ guid: c.guid }));
     const forward = {
       pieces: updatedPieces.length > 0 ? { updated: updatedPieces } : undefined,
       connections: removedConnections.length > 0 ? { removed: removedConnections } : undefined,
@@ -9026,7 +9248,7 @@ export class Kit {
     const selectedConnectionSet = new Set(connectionGuids);
 
     const kitDesign = design.guid ? this.findDesign(design.guid) : undefined;
-    const connections = design.connections && design.connections.length > 0 ? design.connections : (kitDesign?.connections ?? []);
+    const connections = design._connections && design._connections.length > 0 ? design._connections : (kitDesign?._connections ?? []);
     const pieces = design.pieces ?? [];
 
     const parentMap = new Map<string, { parentGuid: string; connection: Connection }>();
@@ -9187,7 +9409,7 @@ export class Kit {
     for (const p of this.ports ?? []) portsMap.set(p.guid, p);
 
     const sourcePieces = source.pieces ?? [];
-    const sourceConnections = source.connections ?? [];
+    const sourceConnections = source._connections ?? [];
     const targetPieces = target.pieces ?? [];
 
     const externalOriginGuids = new Set<string>();
@@ -9468,7 +9690,7 @@ export class Kit {
     for (const d of this.designs ?? []) {
       const piece = d.pieces?.find((p) => p.guid === entityGuid);
       if (piece) return hashPiece(piece);
-      const conn = d.connections?.find((c) => c.guid === entityGuid);
+      const conn = d._connections?.find((c) => c.guid === entityGuid);
       if (conn) return hashConnection(conn);
     }
     const ty = this.findType(entityGuid);
@@ -9491,11 +9713,11 @@ export class Kit {
   }
 
   /**
-   * Opens a named transaction context (multiple may be open). Steps use {@link Kit._applyDiff}(…, { transactionId: tx.id }).
+   * Opens a named transaction context (multiple may be open). Steps use {@link KitImpl._applyDiff}(…, { transactionId: tx.id }).
    */
   beginTransaction(label?: string): Transaction {
     if (this.#phase === "frozen" || this.#conflicted) {
-      throw new Error("Kit has unresolved validation conflicts; call resolveConflict() before starting a transaction.");
+      throw new Error("KitImpl has unresolved validation conflicts; call resolveConflict() before starting a transaction.");
     }
     const id = guid();
     this.#openTransactions.set(id, {
@@ -9513,7 +9735,7 @@ export class Kit {
     return new Transaction(this, id, label);
   }
 
-  /** @deprecated Prefer {@link Kit.beginTransaction}. */
+  /** @deprecated Prefer {@link KitImpl.beginTransaction}. */
   startTransaction(): string {
     return this.beginTransaction().id;
   }
@@ -9526,7 +9748,7 @@ export class Kit {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
     if (this.#phase === "frozen" || this.#conflicted) {
-      throw new Error("Kit is conflicted; call resolveConflict() before finalizing a transaction.");
+      throw new Error("KitImpl is conflicted; call resolveConflict() before finalizing a transaction.");
     }
     if (tx.done.length === 0) {
       tx.status = "finalized";
@@ -9534,7 +9756,7 @@ export class Kit {
       this.notify();
       return undefined;
     }
-    const sk = new Kit(tx.startPlain);
+    const sk = new KitImpl(tx.startPlain);
     const validation = validateKitGraphDiff(sk, tx.netForward, false);
     if (!validation.ok || validation.errors.length > 0) {
       this.#freezeConflict("LocalChange", validation, { txId: transactionId, diff: tx.netForward });
@@ -9561,7 +9783,7 @@ export class Kit {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx) throw new Error(`Unknown transaction ${transactionId}`);
     if (this.#phase === "frozen" || this.#conflicted) {
-      throw new Error("Kit is conflicted; call resolveConflict() before aborting a transaction.");
+      throw new Error("KitImpl is conflicted; call resolveConflict() before aborting a transaction.");
     }
     if (tx.done.length === 0) {
       tx.status = "aborted";
@@ -9592,7 +9814,7 @@ export class Kit {
   _transactionUndo(transactionId: string): void {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx || tx.done.length === 0) return;
-    if (this.#phase === "frozen" || this.#conflicted) throw new Error("Kit is conflicted.");
+    if (this.#phase === "frozen" || this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = tx.done.pop()!;
     const validation = validateKitGraphDiff(this, ch.backward, false);
     if (!validation.ok || validation.errors.length > 0) {
@@ -9618,7 +9840,7 @@ export class Kit {
   _transactionRedo(transactionId: string): void {
     const tx = this.#openTransactions.get(transactionId);
     if (!tx || tx.undone.length === 0) return;
-    if (this.#phase === "frozen" || this.#conflicted) throw new Error("Kit is conflicted.");
+    if (this.#phase === "frozen" || this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = tx.undone.pop()!;
     const validation = validateKitGraphDiff(this, ch.forward, false);
     if (!validation.ok || validation.errors.length > 0) {
@@ -9692,12 +9914,9 @@ export class Kit {
     return this.#phase;
   }
 
-  /** Undo last finalized local change (requires no open transactions). */
+  /** Undo last finalized local change (open transactions may still be in progress; they do not block this). */
   undo(): void {
-    if (this.#openTransactions.size > 0) {
-      throw new Error("Cannot undo history while transactions are open; finalize or abort them first.");
-    }
-    if (this.#conflicted) throw new Error("Kit is conflicted.");
+    if (this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = this.#historyDone.pop();
     if (!ch) return;
     const validation = validateKitGraphDiff(this, ch.backward, false);
@@ -9723,10 +9942,7 @@ export class Kit {
   }
 
   redo(): void {
-    if (this.#openTransactions.size > 0) {
-      throw new Error("Cannot redo history while transactions are open; finalize or abort them first.");
-    }
-    if (this.#conflicted) throw new Error("Kit is conflicted.");
+    if (this.#conflicted) throw new Error("KitImpl is conflicted.");
     const ch = this.#historyUndone.pop();
     if (!ch) return;
     const validation = validateKitGraphDiff(this, ch.forward, false);
@@ -9787,7 +10003,7 @@ export class Kit {
 
   #applyDiff(diff: KitDiff, opts: KitChangeOptions): KitChange {
     if (this.#phase === "frozen" || this.#conflicted) {
-      throw new Error("Kit has unresolved validation conflicts; call resolveConflict() before applying further changes.");
+      throw new Error("KitImpl has unresolved validation conflicts; call resolveConflict() before applying further changes.");
     }
 
     const normalized = DiffComposer.normalize(diff);
@@ -9795,12 +10011,12 @@ export class Kit {
 
     if (!validation.ok || validation.errors.length > 0) {
       this.#freezeConflict("LocalChange", validation, { diff: normalized });
-      throw new Error(`Kit validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
+      throw new Error(`KitImpl validation failed: ${validation.errors.map((e) => e.message).join("; ")}`);
     }
 
     if (this.strictMode && validation.warnings.length > 0) {
       this.#freezeConflict("LocalChange", validation, { diff: normalized });
-      throw new Error(`Kit validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
+      throw new Error(`KitImpl validation warnings (strict): ${validation.warnings.map((e) => e.message).join("; ")}`);
     }
 
     const diffToApply = validation.diff ?? normalized;
@@ -9812,10 +10028,10 @@ export class Kit {
 
     const change: KitChange = { forward: diffToApply, backward, validation };
 
-    const txId = opts.transactionId;
-    if (txId) {
-      const tx = this.#openTransactions.get(txId);
-      if (!tx) throw new Error(`Unknown transaction ${txId}`);
+    const resolvedTxId = opts.transactionId ?? this.#activeTransactionId;
+    if (resolvedTxId) {
+      const tx = this.#openTransactions.get(resolvedTxId);
+      if (!tx) throw new Error(`Unknown transaction ${resolvedTxId}`);
       tx.done.push(change);
       tx.undone.length = 0;
       tx.netForward = mergeKitGraphDiff(tx.netForward, change.forward);
@@ -9838,7 +10054,7 @@ export class Kit {
       }
     }
 
-    const notifyBackbone = opts.notifyBackbone !== false && !txId;
+    const notifyBackbone = opts.notifyBackbone !== false && !resolvedTxId;
     if (notifyBackbone) {
       this.#scheduleBackboneNotify(change);
     }
@@ -9890,13 +10106,13 @@ export class Kit {
   }
 
   /** 🧭Deserialize a wire kit into a stateful kit graph. */
-  static deserialize(json: string, backbone?: Backbone): Kit {
-    return new Kit(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))), backbone);
+  static deserialize(json: string, backbone?: Backbone): KitImpl {
+    return new KitImpl(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))), backbone);
   }
 
   /** 🧬Create an isolated stateful copy of this kit graph. */
-  duplicateForIsolation(): Kit {
-    return Kit.deserialize(this.serialize());
+  duplicateForIsolation(): KitImpl {
+    return KitImpl.deserialize(this.serialize());
   }
 
   /** 🪪Project this kit into its metadata wire shape. */
@@ -9924,8 +10140,8 @@ export class Kit {
   /**
    * Validates and wraps a plain kit data object.
    */
-  static fromData(data: KitData, backbone?: Backbone): Kit {
-    return new Kit(data, backbone);
+  static fromData(data: KitData, backbone?: Backbone): KitImpl {
+    return new KitImpl(data, backbone);
   }
 
   /**
@@ -9945,8 +10161,18 @@ export class Kit {
     return this.types?.find((t) => t.guid === guid);
   }
 
-  findDesign(guid: Guid): Design | undefined {
-    return this.designs?.find((d) => d.guid === guid);
+  findDesign(lookup: Guid | { name: string; parent?: string }): Design | undefined {
+    if (typeof lookup === "object" && lookup !== null && "name" in lookup) {
+      const { name, parent: parentName } = lookup;
+      return this.designs?.find((d) => {
+        if (d.name !== name) return false;
+        if (parentName === undefined) return !d.parent;
+        return d.parent?.name === parentName;
+      });
+    }
+    const byGuid = this.designs?.find((d) => d.guid === lookup);
+    if (byGuid) return byGuid;
+    return this.designs?.find((d) => d.name === lookup);
   }
 
   findPiece(designGuid: Guid, pieceGuid: Guid): Piece | undefined {
@@ -9956,7 +10182,7 @@ export class Kit {
 
   findConnection(designGuid: Guid, connectionGuid: Guid): Connection | undefined {
     const design = this.findDesign(designGuid);
-    return design?.connections?.find((c) => c.guid === connectionGuid);
+    return design?._connections?.find((c) => c.guid === connectionGuid);
   }
 
   requireType(typeGuid: string): Type {
@@ -10011,7 +10237,7 @@ export class Kit {
   }
   // #endregion 🔍Finders
 
-  // #region 🧰Kit graph CRUD (validated {@link Kit._applyDiff})
+  // #region 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
   addType(type: Type, opts?: KitChangeOptions): KitChange {
     return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
@@ -10081,17 +10307,17 @@ export class Kit {
   removeConcept(concept: Concept, opts?: KitChangeOptions): KitChange {
     return this.#applyDiff({ concepts: { removed: [{ guid: concept.guid }] } }, opts ?? {});
   }
-  // #endregion 🧰Kit graph CRUD (validated {@link Kit._applyDiff})
+  // #endregion 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
 
-  // #region 📐Kit queries & algorithms (see module exports for plain-kit fallbacks)
-  filter(filter: KitFilter): Kit {
+  // #region 📐KitImpl queries & algorithms (see module exports for plain-kit fallbacks)
+  filter(filter: KitFilter): KitImpl {
     const hasGlobFilters = !!(filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
     if (!filter.designGuid && !hasGlobFilters) return this;
 
     const baseData: KitData = filter.designGuid ? filterKitByDesign(this, filter.designGuid, filter.modelTags) : this.toData();
 
     if (!hasGlobFilters) {
-      return new Kit(KitSchema.parse(stripNullsJsonClone(baseData)));
+      return new KitImpl(KitSchema.parse(stripNullsJsonClone(baseData)));
     }
 
     const filtered: KitData = {
@@ -10106,7 +10332,7 @@ export class Kit {
       authors: (baseData.authors ?? []).filter((a) => matchesGlobFilter(a.name, filter.authors)),
       folders: (baseData.folders ?? []).filter((f) => matchesGlobFilter(f.name, filter.folders)),
     };
-    return new Kit(KitSchema.parse(stripNullsJsonClone(filtered)));
+    return new KitImpl(KitSchema.parse(stripNullsJsonClone(filtered)));
   }
 
   getPrimitiveDesignFor(designGuid: string): Design {
@@ -10244,7 +10470,7 @@ export class Kit {
     return this.#flattenDesignUncached(designGuid);
   }
 
-  /** Flatten using this kit’s merkle cache ({@link Kit.flattenDesignMerkle}). */
+  /** Flatten using this kit’s merkle cache ({@link KitImpl.flattenDesignMerkle}). */
   runFlattenDesignOptimized(designGuid: string): DesignOperationResult {
     return this.flattenDesignMerkle(designGuid);
   }
@@ -10319,7 +10545,7 @@ export class Kit {
       if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
       const parent = parentMap.get(guid);
       if (!parent) continue;
-      const connection = design.connections?.find((c) => c.guid === parent.connectionGuid);
+      const connection = design._connections?.find((c) => c.guid === parent.connectionGuid);
       if (!connection) continue;
       const parentPiece = pieceMap.get(parent.parentGuid);
       const childPiece = pieceMap.get(guid);
@@ -10564,10 +10790,10 @@ export class Kit {
     }
     return sum;
   }
-  // #endregion 📐Kit queries & algorithms
+  // #endregion 📐KitImpl queries & algorithms
 
   // #region 🔗Getters
-  getDiff(other: Kit): KitDiff {
+  getDiff(other: KitImpl): KitDiff {
     return computeKitGraphDiffBetween(this, asKitInstance(other));
   }
 
@@ -10601,11 +10827,44 @@ export class Kit {
   // #endregion 🔗Getters
 }
 
+function _isKitDataShape(x: unknown): x is KitData {
+  return typeof x === "object" && x !== null && "guid" in x && typeof (x as KitData).guid === "string";
+}
+
+type KitCallable = (this: unknown, arg0?: KitData | Backbone, arg1?: Backbone) => InstanceType<typeof KitImpl>;
+
 /**
- * Object-oriented entry for type rows on a {@link Kit} (replaces removed `*TypeToKit` / `findTypeInKit` helpers).
+ * Primary kit factory from the object model spec: `Kit()` opens an empty graph; `Kit(plainData)` hydrates; `new Kit(plain, backbone)` is supported. Static methods match {@link KitImpl}.
+ */
+const _kitFactory: KitCallable = function (this: unknown, arg0?: KitData | Backbone, arg1?: Backbone): InstanceType<typeof KitImpl> {
+  if (new.target !== undefined) {
+    if (!_isKitDataShape(arg0)) {
+      throw new Error("new Kit() requires kit data; use Kit() for an empty in-memory kit.");
+    }
+    return new KitImpl(arg0, arg1);
+  }
+  if (arg0 !== undefined && _isKitDataShape(arg0)) {
+    return new KitImpl(arg0, arg1 as Backbone | undefined);
+  }
+  return KitImpl.open(arg0 as Backbone | undefined);
+};
+
+export const Kit = _kitFactory as KitCallable & typeof KitImpl;
+for (const key of Object.getOwnPropertyNames(KitImpl)) {
+  if (key === "prototype") continue;
+  const d = Object.getOwnPropertyDescriptor(KitImpl, key);
+  if (d) Object.defineProperty(Kit, key, d);
+}
+Kit.prototype = KitImpl.prototype;
+
+/** Live kit graph instance (returned by {@link Kit}, {@link KitImpl.open}, etc.). */
+export type Kit = InstanceType<typeof KitImpl>;
+
+/**
+ * Object-oriented entry for type rows on a {@link KitImpl} (replaces removed `*TypeToKit` / `findTypeInKit` helpers).
  */
 export class KitTypesOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(type: Type, opts?: KitChangeOptions): KitChange {
     return this.kit.addType(type, opts);
@@ -10629,10 +10888,10 @@ export class KitTypesOps {
 }
 
 /**
- * Object-oriented entry for design rows on a {@link Kit}.
+ * Object-oriented entry for design rows on a {@link KitImpl}.
  */
 export class KitDesignsOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(design: Design, opts?: KitChangeOptions): KitChange {
     return this.kit.addDesign(design, opts);
@@ -10664,10 +10923,10 @@ export class KitDesignsOps {
 }
 
 /**
- * Object-oriented entry for port rows on a {@link Kit}.
+ * Object-oriented entry for port rows on a {@link KitImpl}.
  */
 export class KitPortsOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(iface: Port, opts?: KitChangeOptions): KitChange {
     return this.kit.addPort(iface, opts);
@@ -10691,10 +10950,10 @@ export class KitPortsOps {
 }
 
 /**
- * Object-oriented entry for file rows on a {@link Kit}.
+ * Object-oriented entry for file rows on a {@link KitImpl}.
  */
 export class KitFilesOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(file: File, opts?: KitChangeOptions): KitChange {
     return this.kit.addFile(file, opts);
@@ -10714,10 +10973,10 @@ export class KitFilesOps {
 }
 
 /**
- * Object-oriented entry for tag rows on a {@link Kit}.
+ * Object-oriented entry for tag rows on a {@link KitImpl}.
  */
 export class KitTagsOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(tag: Tag, opts?: KitChangeOptions): KitChange {
     return this.kit.addTag(tag, opts);
@@ -10737,10 +10996,10 @@ export class KitTagsOps {
 }
 
 /**
- * Object-oriented entry for concept rows on a {@link Kit}.
+ * Object-oriented entry for concept rows on a {@link KitImpl}.
  */
 export class KitConceptsOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   add(concept: Concept, opts?: KitChangeOptions): KitChange {
     return this.kit.addConcept(concept, opts);
@@ -10763,7 +11022,7 @@ export class KitConceptsOps {
  * Object-oriented entry for top-level kit attributes.
  */
 export class KitAttributesOps {
-  constructor(private readonly kit: Kit) {}
+  constructor(private readonly kit: KitImpl) {}
 
   set(attribute: Attribute, opts?: KitChangeOptions): KitChange {
     return this.kit.setAttribute(attribute, opts);
@@ -10782,7 +11041,7 @@ export class KitOps {
   readonly concepts: KitConceptsOps;
   readonly attributes: KitAttributesOps;
 
-  constructor(kit: Kit) {
+  constructor(kit: KitImpl) {
     this.types = new KitTypesOps(kit);
     this.designs = new KitDesignsOps(kit);
     this.ports = new KitPortsOps(kit);
@@ -10794,11 +11053,11 @@ export class KitOps {
 }
 
 /**
- * Open transactional editing context on a {@link Kit}. Provisional steps apply live; finalize commits history + backbone.
+ * Open transactional editing context on a {@link KitImpl}. Provisional steps apply live; finalize commits history + backbone.
  */
 export class Transaction {
   constructor(
-    private readonly host: Kit,
+    private readonly host: KitImpl,
     readonly id: string,
     readonly label?: string,
   ) {}
@@ -10824,9 +11083,9 @@ export class Transaction {
   }
 }
 
-/** OO snapshot for I/O: only valid on a live {@link Kit} (nested {@link toPlain}). */
-const kitGraphToPlainData = (kit: Kit): KitData => {
-  if (!(kit instanceof Kit)) throw new Error("kitGraphToPlainData requires a Kit class instance");
+/** OO snapshot for I/O: only valid on a live {@link KitImpl} (nested {@link toPlain}). */
+const kitGraphToPlainData = (kit: KitImpl): KitData => {
+  if (!(kit instanceof KitImpl)) throw new Error("kitGraphToPlainData requires a KitImpl class instance");
   return KitSchema.parse({
     guid: kit.guid,
     name: kit.name,
@@ -10853,36 +11112,36 @@ const kitGraphToPlainData = (kit: Kit): KitData => {
   } as KitData);
 };
 
-/** Wire / {@link KitData} → live {@link Kit}; identity on class instances. */
-export const asKitInstance = (kit: KitLike): Kit => (kit instanceof Kit ? kit : new Kit(KitSchema.parse(stripNullsJsonClone(kit) as unknown)));
+/** Wire / {@link KitData} → live {@link KitImpl}; identity on class instances. */
+export const asKitInstance = (kit: KitLike): KitImpl => (kit instanceof KitImpl ? kit : new KitImpl(KitSchema.parse(stripNullsJsonClone(kit) as unknown)));
 
-/** Merkle-cached flatten on a resolved {@link Kit} instance (accepts wire data via {@link asKitInstance}). */
+/** Merkle-cached flatten on a resolved {@link KitImpl} instance (accepts wire data via {@link asKitInstance}). */
 export function flattenDesignOptimizedForKit(kit: KitLike, designId: string): DesignOperationResult {
   return asKitInstance(kit).flattenDesignMerkle(designId);
 }
 
-function requireKit(k: Kit): Kit {
-  if (!(k instanceof Kit)) throw new Error("Expected a Kit class instance");
+function requireKit(k: KitImpl): KitImpl {
+  if (!(k instanceof KitImpl)) throw new Error("Expected a KitImpl class instance");
   return k;
 }
 
 /**
- * Serializes Kit for transport.
+ * Serializes KitImpl for transport.
  **/
-export const serializeKit = (kit: Kit): string => JSON.stringify(kitGraphToPlainData(requireKit(kit)));
+export const serializeKit = (kit: KitLike): string => JSON.stringify(kitGraphToPlainData(asKitInstance(kit)));
 /**
  **/
-export const deserializeKit = (json: string): Kit => new Kit(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))));
+export const deserializeKit = (json: string): KitImpl => new KitImpl(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))));
 
 /**
  * Round-trips a kit through JSON so tests (or callers) can mutate without touching shared fixtures.
  **/
-export const duplicateKitForIsolation = (kit: Kit): Kit => deserializeKit(serializeKit(kit));
+export const duplicateKitForIsolation = (kit: KitImpl): KitImpl => deserializeKit(serializeKit(kit));
 
 /**
  * 📐Computes the diff between two kits.
  */
-export const getKitDiff = (before: KitLike, after: KitLike): KitDiff => asKitInstance(before).diffTo(after);
+export const getKitDiff = (before: KitLike, after: KitLike): KitDiff => asKitInstance(before).getDiff(asKitInstance(after));
 
 /**
  * 🔄Computes the inverse of an applied diff relative to the original kit.
@@ -10897,12 +11156,12 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => mergeKi
 /**
  * 🔄Computes the full change (forward + backward + validation) between two kits.
  */
-export const getKitChange = (before: Kit, after: Kit): KitChange => Kit.changeBetween(before, after);
+export const getKitChange = (before: KitImpl, after: KitImpl): KitChange => KitImpl.changeBetween(before, after);
 
 /**
- * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link Kit._applyDiff} for validated edits.
+ * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link KitImpl._applyDiff} for validated edits.
  */
-export const applyKitDiff = (kit: Kit, diff: KitDiff): void => {
+export const applyKitDiff = (kit: KitImpl, diff: KitDiff): void => {
   requireKit(kit).replayChangeUnchecked(diff);
 };
 
@@ -10981,13 +11240,13 @@ export const toDesignShallow = (design: Design): DesignShallow => {
   return DesignShallowSchema.parse(result);
 };
 /**
- * Converts a Kit to KitMeta.
+ * Converts a KitImpl to KitMeta.
  **/
-export const toKitMeta = (kit: Kit): KitMeta => KitMetaSchema.parse(kit);
+export const toKitMeta = (kit: KitImpl): KitMeta => KitMetaSchema.parse(kit);
 /**
- * Converts a Kit to KitShallow.
+ * Converts a KitImpl to KitShallow.
  **/
-export const toKitShallow = (kit: Kit): KitShallow => {
+export const toKitShallow = (kit: KitImpl): KitShallow => {
   const result: any = { ...kit };
   if (result.types) result.types = result.types.map((t: Type) => TypeMetaSchema.parse(t));
   if (result.designs) result.designs = result.designs.map((d: Design) => DesignMetaSchema.parse(d));
@@ -11002,7 +11261,7 @@ export const toKitShallow = (kit: Kit): KitShallow => {
   return KitShallowSchema.parse(result);
 };
 /**
- * Zod schema for Kit diff validation.
+ * Zod schema for KitImpl diff validation.
  **/
 export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
   types: TypesDiffSchema.optional(),
@@ -11024,7 +11283,7 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   preview: z.string().nullable().optional(),
 });
 /**
- * Diff type for tracking Kit changes.
+ * Diff type for tracking KitImpl changes.
  **/
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 
@@ -11126,8 +11385,8 @@ function applyDesignDiffCore(target: Design, diff: DesignDiff): void {
     applyCollectionDiff("piece", target.pieces, diff.pieces, applyPieceDiff, (raw) => new Piece(raw as PiecePlain, target, target.getKit()));
   }
   if (diff.connections) {
-    if (!target.connections) target.connections = [];
-    applyCollectionDiff("connection", target.connections, diff.connections, applyConnectionDiff, (raw) => new Connection(raw as ConnectionPlain, target));
+    if (!target._connections) target._connections = [];
+    applyCollectionDiff("connection", target._connections, diff.connections, applyConnectionDiff, (raw) => new Connection(raw as ConnectionPlain, target));
   }
   if (diff.stats) {
     if (!target.stats) target.stats = [];
@@ -11173,7 +11432,7 @@ const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(en
 /**
  * Computes the structural diff from `before` to `after` (both kit graphs).
  */
-function computeKitGraphDiffBetween(before: Kit, after: Kit): KitDiff {
+function computeKitGraphDiffBetween(before: KitImpl, after: KitImpl): KitDiff {
   before = asKitInstance(before);
   after = asKitInstance(after);
   const diff: KitDiff = {};
@@ -11209,7 +11468,7 @@ function computeKitGraphDiffBetween(before: Kit, after: Kit): KitDiff {
   return diff;
 }
 
-function inverseKitGraphDiff(original: Kit, appliedDiff: KitDiff): KitDiff {
+function inverseKitGraphDiff(original: KitImpl, appliedDiff: KitDiff): KitDiff {
   const inverse: KitDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.version !== undefined) inverse.version = original.version;
@@ -11305,7 +11564,7 @@ export class DiffComposer {
     return mergeKitGraphDiff(a, b);
   }
   static normalize(diff: KitDiff): KitDiff {
-    return Kit.cloneGraphDiff(diff);
+    return KitImpl.cloneGraphDiff(diff);
   }
   static touchedEntities(diff: KitDiff): Set<string> {
     return collectEntityGuidsFromKitDiff(diff);
@@ -11322,21 +11581,21 @@ export type SemioCommandKind =
   | "NormalizeStaleConnections";
 
 /**
- * Mutable kit document: holds a single Kit graph and applies diffs in place.
- * Prefer passing this (or the underlying `Kit`) by reference instead of cloning.
+ * Mutable kit document: holds a single KitImpl graph and applies diffs in place.
+ * Prefer passing this (or the underlying `KitImpl`) by reference instead of cloning.
  **/
 export class KitDocument {
-  constructor(public readonly root: Kit) {}
+  constructor(public readonly root: KitImpl) {}
   apply(diff: KitDiff): void {
     this.root.replayChangeUnchecked(diff);
   }
   /** Computes the diff from another kit snapshot to this document's current state. */
-  diffSince(other: Kit): KitDiff {
+  diffSince(other: KitImpl): KitDiff {
     return asKitInstance(other).getDiff(this.root);
   }
 }
 
-// #endregion ⏱️Kit
+// #endregion ⏱️KitImpl
 
 // #region 🖥️Hash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
@@ -12308,9 +12567,9 @@ export const hashDesign = (d: Design): string => {
     w.writeString("concepts");
     w.writeGuidList(d.concepts.map((c) => c.guid));
   }
-  if (d.connections && d.connections.length > 0) {
+  if (d._connections && d._connections.length > 0) {
     w.writeString("connections");
-    w.writeHashList(d.connections.map(hashConnection));
+    w.writeHashList(d._connections.map(hashConnection));
   }
   if (d.description != null) {
     w.writeString("description");
@@ -12372,12 +12631,12 @@ export const hashDesign = (d: Design): string => {
 };
 
 /**
- * Computes SHA-256 Merkle hash of a Kit entity.
+ * Computes SHA-256 Merkle hash of a KitImpl entity.
  * Calls hashDesign, hashType, etc. for all children.
  **/
-export const hashKit = (k: Kit): string => {
+export const hashKit = (k: KitImpl): string => {
   const w = new HashWriter();
-  w.writeString("Kit");
+  w.writeString("KitImpl");
   if (k.attributes && k.attributes.length > 0) {
     w.writeString("attributes");
     w.writeHashList(k.attributes.map(hashAttribute));
@@ -12899,7 +13158,7 @@ export const hashDesignDiff = (d: DesignDiff): string => {
   writeNullableBool(w, "canMirror", d.canMirror);
   writeNullableBool(w, "canScale", d.canScale);
   writeNullableIdArray(w, "concepts", d.concepts);
-  writeNullableHash(w, "connections", d.connections, hashConnectionsDiff);
+  writeNullableHash(w, "connections", d._connections, hashConnectionsDiff);
   writeNullableString(w, "description", d.description);
   writeNullableString(w, "folder", d.folder);
   writeNullableHash(w, "groups", d.groups, hashGroupsDiff);
@@ -12968,10 +13227,10 @@ export const KitsDiffSchema = z.object({
   added: z.array(z.any()).optional(),
 });
 
-// Kit graph mutations and entity resolution: use `kit.ops.*` (see {@link KitOps}) or entity methods such as {@link Type.delete}.
+// KitImpl graph mutations and entity resolution: use `kit.ops.*` (see {@link KitOps}) or entity methods such as {@link Type.delete}.
 
 /**
- * Equality check for Kit values.
+ * Equality check for KitImpl values.
  **/
 export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
   return kitGuid === otherGuid;
@@ -13144,7 +13403,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
  * When designGuid is set, first performs transitive design-scoped subset extraction.
  * Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
  **/
-export const filterKit = (kit: KitLike, filter: KitFilter): Kit => asKitInstance(kit).filter(filter);
+export const filterKit = (kit: KitLike, filter: KitFilter): KitImpl => asKitInstance(kit).filter(filter);
 
 // #region 📻Design Family Helpers
 // Design family traversal helpers MUST be defined here.
@@ -13350,7 +13609,7 @@ export interface DesignChange {
   backward: DesignDiff;
 }
 
-// #region 📦Kit Diff Validation
+// #region 📦KitImpl Diff Validation
 // Validates kit diffs before apply; optional heal trims ineffective operations.
 
 /**
@@ -13567,7 +13826,7 @@ const previewConnectionSidesAfterDiff = (conn: Connection, d: ConnectionDiff, ho
 
 const validateDesignDiffNested = (
   ctx: KitDiffValidationCtx,
-  kit: Kit,
+  kit: KitImpl,
   path: string,
   design: Design,
   diff: DesignDiff,
@@ -13611,7 +13870,7 @@ const validateDesignDiffNested = (
   const pieceGuids = simulatePieceGuidSetForDesign(design, diff.pieces);
 
   if (diff.connections) {
-    validateGuidCollectionDiff(ctx, `${path}.connections`, "connection", design.connections ?? [], diff.connections, (item, cDiff, p) => {
+    validateGuidCollectionDiff(ctx, `${path}.connections`, "connection", design._connections ?? [], diff.connections, (item, cDiff, p) => {
       if ((cDiff as ConnectionDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (cDiff as ConnectionDiff).attributes);
     });
     const checkSide = (side: Side | SidePlain, label: string, cpath: string) => {
@@ -13626,7 +13885,7 @@ const validateDesignDiffNested = (
       checkSide(a.connecting, "connecting", cp);
     }
     for (const u of diff.connections.updated ?? []) {
-      const conn = design.connections?.find((c) => c.guid === (u as any).connection.guid);
+      const conn = design._connections?.find((c) => c.guid === (u as any).connection.guid);
       const cp = `${path}.connections.updated[${(u as any).connection.guid}]`;
       if (conn) {
         const { connected, connecting } = previewConnectionSidesAfterDiff(conn, u.diff as ConnectionDiff, design);
@@ -13677,10 +13936,10 @@ const validateDesignDiffNested = (
 };
 
 /**
- * Validates a {@link KitDiff} against a base {@link Kit}. Errors mean apply would skip or mis-apply operations; warnings flag redundant or suspicious edits.
+ * Validates a {@link KitDiff} against a base {@link KitImpl}. Errors mean apply would skip or mis-apply operations; warnings flag redundant or suspicious edits.
  * With `heal`, trims invalid operations on the provided `diff` **in place** (same object reference) and returns it in `result.diff`.
  **/
-function validateKitGraphDiff(kit: Kit, diff: KitDiff, heal: boolean): KitDiffValidationResult {
+function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDiffValidationResult {
   const working: KitDiff = diff;
   const ctx: KitDiffValidationCtx = { errors: [], warnings: [], heal, diff: working };
 
@@ -13720,7 +13979,7 @@ function validateKitGraphDiff(kit: Kit, diff: KitDiff, heal: boolean): KitDiffVa
   return heal ? { ok, errors: ctx.errors, warnings: ctx.warnings, infos: [], diff: ctx.diff } : { ok, errors: ctx.errors, warnings: ctx.warnings, infos: [] };
 }
 
-// #endregion 📦Kit Diff Validation
+// #endregion 📦KitImpl Diff Validation
 
 // #region 🛡️Validation
 
@@ -13729,7 +13988,7 @@ function validateKitGraphDiff(kit: Kit, diff: KitDiff, heal: boolean): KitDiffVa
 /**
  * Enumeration of EntityKind values.
  **/
-export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+export type EntityKind = "KitImpl" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
 /**
  * Interface defining DomainLocation structure.
@@ -13780,7 +14039,7 @@ export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
  * Interface defining ValidationContext structure.
  **/
 export interface ValidationContext {
-  kit: Kit;
+  kit: KitImpl;
   typesByGuid: Map<Guid, Type>;
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
@@ -13828,7 +14087,7 @@ export interface ValidationConfig {
 export let defaultConstraints: Constraint[] = [];
 
 /**
- * Validates Kit against constraints.
+ * Validates KitImpl against constraints.
  **/
 export const validateKit = (kit: KitLike, cfg: ValidationConfig = {}): ValidationResult => {
   const ctx = buildValidationContext(kit);
@@ -13844,7 +14103,7 @@ export const validateKit = (kit: KitLike, cfg: ValidationConfig = {}): Validatio
 
 /**
  **/
-export const semioMakeFix = (ctx: ValidationContext, title: string, buildDiff: (kit: Kit) => KitDiff): Fix => ({
+export const semioMakeFix = (ctx: ValidationContext, title: string, buildDiff: (kit: KitImpl) => KitDiff): Fix => ({
   title,
   diff: buildDiff(ctx.kit),
 });
@@ -13875,12 +14134,12 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
     };
     problems.push(problem);
   };
-  check("Kit", ctx.kit.guid);
+  check("KitImpl", ctx.kit.guid);
   toArray(ctx.kit.types).forEach((t) => check("Type", t.guid));
   toArray(ctx.kit.designs).forEach((d) => {
     check("Design", d.guid);
     toArray(d.pieces).forEach((p) => check("Piece", p.guid));
-    toArray(d.connections).forEach((c) => check("Connection", c.guid));
+    toArray(d._connections).forEach((c) => check("Connection", c.guid));
     toArray(d.stats).forEach((s) => check("Stat", s.guid));
   });
   toArray(ctx.kit.qualities).forEach((q) => check("Quality", q.guid));
@@ -14371,7 +14630,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
         const piecePrimitive = getPrimitiveDesignFromContext(ctx, piece.design.guid);
 
         if (containerPrimitive === piecePrimitive) {
-          const conns = toArray(design.connections);
+          const conns = toArray(design._connections);
           const removedConnGuids = conns.filter((c) => c.connected.piece.guid === piece.guid || c.connecting.piece.guid === piece.guid).map((c) => ({ guid: c.guid }));
           const fix = semioMakeFix(ctx, `Remove design piece "${piece.name || piece.guid}"`, () => ({
             designs: {
@@ -14576,14 +14835,14 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
   };
 };
 
-// #region 🧿Kit Import/Export
-// Kit serialization and deserialization functions MUST be defined here.
+// #region 🧿KitImpl Import/Export
+// KitImpl serialization and deserialization functions MUST be defined here.
 
 /**
  * Interface defining KitImportResult structure.
  **/
 export interface KitImportResult {
-  kit: Kit;
+  kit: KitImpl;
   kind?: KitKind;
   files?: Record<string, Uint8Array>;
 }
@@ -14621,7 +14880,7 @@ export const getSqlJs = async () => {
 };
 // buildFolderPath builds a slash-separated folder path from root to the given folder guid.
 // 📁Uses proper mime type inferred from file extension.
-const buildFolderPath = (kit: Kit, folderGuid: string): string => {
+const buildFolderPath = (kit: KitImpl, folderGuid: string): string => {
   const findFolder = (guid: string): Folder | undefined => (kit.folders || []).find((f) => f.guid === guid);
   const parts: string[] = [];
   let current = findFolder(folderGuid);
@@ -14633,7 +14892,7 @@ const buildFolderPath = (kit: Kit, folderGuid: string): string => {
 };
 // buildFilePath builds the full path of a kit file including its folder hierarchy.
 // 🏗️Uses proper mime type inferred from file extension.
-const buildFilePath = (kit: Kit, file: File): string => {
+const buildFilePath = (kit: KitImpl, file: File): string => {
   if (file.folder?.guid) {
     const folderPath = buildFolderPath(kit, file.folder.guid);
     if (folderPath) return `${folderPath}/${file.name}`;
@@ -14642,7 +14901,7 @@ const buildFilePath = (kit: Kit, file: File): string => {
 };
 const bytesToUtf8 = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
 const hasZipSignature = (bytes: Uint8Array): boolean => bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
-const collectKitFiles = (kit: Kit): Record<string, Uint8Array> => {
+const collectKitFiles = (kit: KitImpl): Record<string, Uint8Array> => {
   const files: Record<string, Uint8Array> = {};
   for (const file of kit.files || []) {
     if (!file.blob) continue;
@@ -14676,7 +14935,7 @@ export const importFileKit = async (source: string | ArrayBuffer | Buffer | Blob
   }
   return { kind: "dev", kit: deserializeKit(json), files: {} };
 };
-export const exportFileKit = (kit: Kit): string => serializeKit(kit);
+export const exportFileKit = (kit: KitImpl): string => serializeKit(kit);
 export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
 
@@ -14698,7 +14957,7 @@ export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | B
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const dbFile = zip.file(".semio/kit.db");
-  let kit: Kit;
+  let kit: KitImpl;
   if (dbFile) {
     const dbArrayBuffer = await dbFile.async("arraybuffer");
     const SQL = await getSqlJs();
@@ -14779,21 +15038,21 @@ export const importRemoteKit = async (url: string): Promise<KitImportResult> => 
  * Applies `diff` to `kit` in place and returns the same kit reference.
  * Callers that need an immutable snapshot should copy explicitly (e.g. serialize/deserialize).
  **/
-export const editTemporaryKit = (kit: Kit, diff: KitDiff): Kit => {
+export const editTemporaryKit = (kit: KitImpl, diff: KitDiff): KitImpl => {
   applyKitDiff(kit, diff);
   return kit;
 };
 
-// #region 🏷️Kit Kind Classes
-// Typed Kit wrappers scoped by KitKind. Each class carries a `kind` discriminator and
-// wraps a plain Kit value. SyncKit is an interface for kits that support bi-directional sync.
+// #region 🏷️KitImpl Kind Classes
+// Typed KitImpl wrappers scoped by KitKind. Each class carries a `kind` discriminator and
+// wraps a plain KitImpl value. SyncKit is an interface for kits that support bi-directional sync.
 
 /**
  * 🚚 Transport kit – ephemeral, in-memory only, never persisted.
  **/
 export class TransportKit {
   readonly kind = "transport" as const;
-  constructor(public kit: Kit) {}
+  constructor(public kit: KitImpl) {}
 }
 
 /**
@@ -14801,7 +15060,7 @@ export class TransportKit {
  **/
 export class ArchiveKit {
   readonly kind = "archive" as const;
-  constructor(public kit: Kit) {}
+  constructor(public kit: KitImpl) {}
 }
 
 /**
@@ -14809,7 +15068,7 @@ export class ArchiveKit {
  **/
 export interface SyncKit {
   readonly kind: KitKind;
-  kit: Kit;
+  kit: KitImpl;
   apply(diff: KitDiff): void;
 }
 
@@ -14818,7 +15077,7 @@ export interface SyncKit {
  **/
 export class DevKit implements SyncKit {
   readonly kind = "dev" as const;
-  constructor(public kit: Kit) {}
+  constructor(public kit: KitImpl) {}
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
@@ -14829,7 +15088,7 @@ export class DevKit implements SyncKit {
  **/
 export class LocalKit implements SyncKit {
   readonly kind = "local" as const;
-  constructor(public kit: Kit) {}
+  constructor(public kit: KitImpl) {}
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
@@ -14840,15 +15099,15 @@ export class LocalKit implements SyncKit {
  **/
 export class RemoteKit implements SyncKit {
   readonly kind = "remote" as const;
-  constructor(public kit: Kit) {}
+  constructor(public kit: KitImpl) {}
   apply(diff: KitDiff): void {
     applyKitDiff(this.kit, diff);
   }
 }
-// #endregion 🏷️Kit Kind Classes
+// #endregion 🏷️KitImpl Kind Classes
 
 /**
- * Imports Kit from external source.
+ * Imports KitImpl from external source.
  **/
 export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   if (typeof source === "string") {
@@ -14889,9 +15148,9 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
 };
 
 /**
- * Exports Kit to external format.
+ * Exports KitImpl to external format.
  **/
-export const exportKit = async (kit: Kit): Promise<Blob> => {
+export const exportKit = async (kit: KitImpl): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
 
   const SQL = await getSqlJs();
@@ -14915,7 +15174,7 @@ export const exportKit = async (kit: Kit): Promise<Blob> => {
 /**
  * Deep equality check for Kits entities.
  **/
-export const areKitsEqual = (a: Kit, b: Kit): boolean => {
+export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
   const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
     if (!arr) return [];
     if (Array.isArray(arr)) return arr;
@@ -15130,7 +15389,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (normalizeValue(designA.image) !== normalizeValue(designB.image)) return false;
       if (!arraysEqual(normalizeArray(designA.concepts), normalizeArray(designB.concepts))) return false;
       if (!arePiecesEqual(designA.pieces, designB.pieces)) return false;
-      if (!areConnectionsEqual(designA.connections, designB.connections)) return false;
+      if (!areConnectionsEqual(designA._connections, designB._connections)) return false;
       if (!areAttributesEqual(designA.attributes, designB.attributes)) return false;
     }
     return true;
@@ -15859,7 +16118,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   return true;
 };
 // 📦sqliteToKit converts a SQLite database into a kit object.
-export const sqliteToKit = async (db: any): Promise<Kit> => {
+export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   const existingTables = new Set<string>();
   const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
   while (tableStmt.step()) {
@@ -15905,9 +16164,9 @@ export const sqliteToKit = async (db: any): Promise<Kit> => {
   };
   const mapOrUndefined = <T, R>(arr: T[], mapper: (item: T) => R): R[] | undefined => (arr.length > 0 ? arr.map(mapper) : undefined);
 
-  const kit: Kit = {
+  const kit: KitImpl = {
     guid: kitRow.guid || kitRow.uri || guid(),
-    name: kitRow.name || "Unnamed Kit",
+    name: kitRow.name || "Unnamed KitImpl",
     version: kitRow.version || "0.0.0",
     description: toUndefined(kitRow.description),
     icon: toUndefined(kitRow.icon),
@@ -16741,7 +17000,7 @@ CREATE TABLE attribute (
 `;
 
 // 📦kitToSqlite converts a kit object into a SQLite database.
-export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
+export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
   db.exec(KIT_SQLITE_SCHEMA);
 
   const toISOString = (date: Date | string | undefined): string => {
@@ -17055,7 +17314,7 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
       });
     });
 
-    toArray(design.connections).forEach((connection) => {
+    toArray(design._connections).forEach((connection) => {
       if (!connection.guid || !connection.connected?.piece?.guid || !connection.connecting?.piece?.guid || !connection.connected?.connector?.guid || !connection.connecting?.connector?.guid) {
         return;
       }
@@ -17107,9 +17366,9 @@ export const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   });
 };
 
-// #endregion 🧿Kit Import/Export
+// #endregion 🧿KitImpl Import/Export
 
-// #region 🔩Kit Model Export
+// #region 🔩KitImpl Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
 /**
@@ -17135,7 +17394,7 @@ const semioMatrixToGltfMatrix = (matrix: THREE.Matrix4): number[] => {
 const planeToGlbTransform = (plane: Plane): number[] => {
   return semioMatrixToGltfMatrix(planeToMatrix(plane));
 };
-const findMatchingModel = (kit: Kit, type: Type, tags: string[]): Model | undefined => {
+const findMatchingModel = (kit: KitImpl, type: Type, tags: string[]): Model | undefined => {
   if (!type.models || type.models.length === 0) return undefined;
   const kitTags = kit.tags ?? [];
   const selectedTagGuids = tags.flatMap((tagValue) => {
@@ -17382,11 +17641,11 @@ const createBoxMesh = (name: string, doc: GltfDocument, buffer: GltfBuffer): Glt
  * Exports the 3D model of a design to a specified format.
  * Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
  **/
-export const exportDesignModel = async (kit: Kit, designId: string, format: string = ".glb", tags: string[] = [], options: Record<string, unknown> = {}): Promise<ArrayBuffer> => {
+export const exportDesignModel = async (kit: KitImpl, designId: string, format: string = ".glb", tags: string[] = [], options: Record<string, unknown> = {}): Promise<ArrayBuffer> => {
   const io = new NodeIO();
   const design = kit.requireDesign(designId);
   const pieces = design.pieces ?? [];
-  const connections = design.connections ?? [];
+  const connections = design._connections ?? [];
   const types = kit.types ?? [];
 
   if (pieces.length === 0) {
@@ -17570,7 +17829,7 @@ export const exportDesignModel = async (kit: Kit, designId: string, format: stri
   return glb.buffer as ArrayBuffer;
 };
 
-// #endregion 🔩Kit Model Export
+// #endregion 🔩KitImpl Model Export
 
 // #region ❄️Geometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
@@ -17811,10 +18070,10 @@ export type KitSyncState = {
  * Immutable snapshot of kit data and sync state.
  *
  * Specs: Returned by KitStore.getSnapshot(). kit is the full domain
- * Kit object. sync describes the current synchronization state.
+ * KitImpl object. sync describes the current synchronization state.
  **/
 export type KitStoreSnapshot = {
-  kit: Kit;
+  kit: KitImpl;
   sync: KitSyncState;
 };
 
@@ -17841,7 +18100,7 @@ export interface KitStore {
 
   transact<T>(label: string, run: () => T): T;
   apply(diff: KitDiff, meta?: { origin?: string }): void;
-  replace(next: Kit, meta?: { origin?: string }): void;
+  replace(next: KitImpl, meta?: { origin?: string }): void;
 
   save(): Promise<void>;
   reload(): Promise<void>;
@@ -17849,7 +18108,7 @@ export interface KitStore {
 }
 
 /**
- * Kit store with undo/redo capability.
+ * KitImpl store with undo/redo capability.
  *
  * Specs: Extends KitStore with reversible transaction support.
  * Undo/redo semantics are provider-specific (CRDT-native, command stack, etc.)
@@ -17890,21 +18149,21 @@ export interface ObservablePathStore {
 // #region 🖥️InMemoryKitStore
 // In-memory kit store implementation for testing and fake backends.
 
-// Specs: InMemoryKitStore implements UndoableKitStore using a plain Kit object
+// Specs: InMemoryKitStore implements UndoableKitStore using a plain KitImpl object
 // in memory with a command-stack undo model. No persistence, no sync, no CRDT.
 // Used for: unit tests, integration tests, fake backends, storybook.
 
 /**
  * In-memory kit store for testing and local editing without persistence.
  *
- * Specs: Holds a Kit in memory. apply() uses applyKitDiff to merge diffs.
- * replace() swaps the Kit wholesale. transact() groups mutations.
+ * Specs: Holds a KitImpl in memory. apply() uses applyKitDiff to merge diffs.
+ * replace() swaps the KitImpl wholesale. transact() groups mutations.
  * Undo/redo uses a command stack of KitChange (forward+backward diffs).
  * subscribe() notifies listeners on every mutation.
  * save()/reload() are no-ops (no backend).
  **/
 export class InMemoryKitStore implements UndoableKitStore {
-  private kit: Kit;
+  private kit: KitImpl;
   private listeners: Set<() => void> = new Set();
   private undoStack: KitUndoEntry[] = [];
   private redoStack: KitUndoEntry[] = [];
@@ -17914,7 +18173,7 @@ export class InMemoryKitStore implements UndoableKitStore {
   private transacting: boolean = false;
   private transactionBuffer: KitChange[] = [];
 
-  constructor(kit: Kit) {
+  constructor(kit: KitImpl) {
     this.kit = asKitInstance(kit);
   }
 
@@ -17970,7 +18229,7 @@ export class InMemoryKitStore implements UndoableKitStore {
     this.notify();
   }
 
-  replace(next: Kit, meta?: { origin?: string }): void {
+  replace(next: KitImpl, meta?: { origin?: string }): void {
     void meta;
     const before = this.kit;
     const nextInst = asKitInstance(next);
@@ -18130,7 +18389,7 @@ export const piecesMetadataCached = (kit: KitLike, designGuid: string, cache?: {
 /**
  * Searches for matching AttributeValue entry.
  **/
-export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
+export const findAttributeValue = (entity: KitImpl | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;
@@ -18444,7 +18703,7 @@ if (shouldRunEmbeddedJsTests) {
     return Math.abs(c1.u - c2.u) < TEST_TOLERANCE && Math.abs(c1.v - c2.v) < TEST_TOLERANCE;
   };
 
-  const findDesign = (kit: Kit, name: string, parentName?: string) => {
+  const findDesign = (kit: KitImpl, name: string, parentName?: string) => {
     let parentGuid: string | undefined;
     if (parentName) {
       const p = kit.designs?.find((d) => d.name === parentName);
@@ -18619,7 +18878,7 @@ if (shouldRunEmbeddedJsTests) {
         warningCodes: string[];
       }>;
     };
-    const tinyKit = new Kit(KitSchema.parse(cases.tinyKit) as KitData);
+    const tinyKit = new KitImpl(KitSchema.parse(cases.tinyKit) as KitData);
     for (const tc of cases.cases) {
       it(`asset case ${tc.id}`, () => {
         const r = validateKitGraphDiff(tinyKit, tc.diff as KitDiff, false);
@@ -18648,17 +18907,89 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
+  describe("Kit object model (spec API)", () => {
+    it("Kit(), transactions.start (uuid v7), setActiveTransaction, findDesign/findPiece objects, connections(), piece ops, history undo", () => {
+      const kit = Kit(MetabolismKit as KitData);
+
+      const t1 = kit.transactions.start("One transaction");
+      const t2 = kit.transactions.start("Another concurrent transaction");
+      expect(t1).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+      expect(t2).not.toBe(t1);
+
+      kit.setActiveTransaction(t1);
+
+      const nct = kit.findDesign({ name: "Nakagin Capsule Tower" });
+      expect(nct).toBeDefined();
+      if (!nct) throw new Error("missing design");
+
+      nct.flatten();
+      const oldConnections = nct.connections();
+      expect(Array.isArray(oldConnections)).toBe(true);
+
+      const primary =
+        nct.getPieces().find((p) => {
+          try {
+            return p.alternativeTypes().length > 1;
+          } catch {
+            return false;
+          }
+        }) ?? nct.getPieces()[1];
+      expect(primary).toBeDefined();
+      if (!primary) throw new Error("missing primary piece");
+
+      const c1TA = primary.alternativeTypes();
+      expect(c1TA.length).toBeGreaterThan(1);
+
+      const primaryGuid = primary.guid;
+
+      primary.delete();
+      expect(nct.findPiece(primaryGuid)).toBeUndefined();
+
+      kit.transaction.undo();
+      expect(nct.findPiece(primaryGuid)).toBeDefined();
+
+      kit.setActiveTransaction(t2);
+      const anotherPiece = nct.getPieces().find((p) => p.guid !== primaryGuid) ?? nct.getPieces()[0];
+      expect(anotherPiece).toBeDefined();
+      if (!anotherPiece) throw new Error("missing secondary piece");
+
+      const typeBefore = anotherPiece.type?.guid;
+      anotherPiece.changeType(c1TA[1]);
+      expect(anotherPiece.type?.guid).toBe(c1TA[1].guid);
+      expect(anotherPiece.type?.guid).not.toBe(typeBefore);
+
+      kit.unsetActiveTransaction();
+
+      kit.finalizeTransaction(t1);
+      kit.finalizeTransaction(t2);
+
+      kit.undo();
+      const secondaryAfterUndo = nct.findPiece(anotherPiece.guid);
+      expect(secondaryAfterUndo?.type?.guid).toBe(typeBefore);
+    });
+
+    it("importLocal loads kit JSON from a path (Node)", async () => {
+      const path = await import("node:path");
+      const { fileURLToPath } = await import("node:url");
+      const kitJsonPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "assets", "semio", "metabolism.kit.semio.json");
+      const kit = Kit();
+      await kit.importLocal(kitJsonPath);
+      const d = kit.findDesign({ name: "Nakagin Capsule Tower" });
+      expect(d).toBeDefined();
+    });
+  });
+
   describe("Change", () => {
     describe("Metabolism", () => {
-      const kitOriginal = new Kit({
+      const kitOriginal = new KitImpl({
         ...(MetabolismKit as any),
         designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent),
       } as KitData);
       const kitDiff = MetabolismKitDiff as any;
       const kitDiffInverted = MetabolismKitDiffInverted as any;
-      const kitDiffed = new Kit(MetabolismKitDiffed as KitData);
+      const kitDiffed = new KitImpl(MetabolismKitDiffed as KitData);
 
-      it("Kit + Change.Forward = DiffedKit & DiffedKit + Change.Backward = Kit", () => {
+      it("KitImpl + Change.Forward = DiffedKit & DiffedKit + Change.Backward = KitImpl", () => {
         const change = getKitChange(kitOriginal, kitDiffed);
         const computedDiff = getKitDiff(kitOriginal, kitDiffed);
         if (!areKitDiffsEqual(computedDiff, kitDiff)) {
@@ -18703,12 +19034,12 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #region 🏰Kit Filter Tests
+  // #region 🏰KitImpl Filter Tests
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
-  describe("Kit/Filter/Design", () => {
+  describe("KitImpl/Filter/Design", () => {
     const filterDesignCase0 = ((FilterKitCases as any).cases as Array<{ designName: string }>)[0];
-    const kit = MetabolismKit as Kit;
+    const kit = MetabolismKit as KitImpl;
     const expected = NakaginCapsuleTowerFilteredKit as any;
     const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase0.designName && !d.parent);
 
@@ -18760,7 +19091,7 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  describe("Kit/Filter/Glob", () => {
+  describe("KitImpl/Filter/Glob", () => {
     const filterKitGlobCases = (FilterKitCases as any).globCases as Array<{
       name: string;
       typeInclude?: string[];
@@ -18793,7 +19124,7 @@ if (shouldRunEmbeddedJsTests) {
 
     for (const gc of filterKitGlobCases) {
       it(`filterKit glob case: ${gc.name}`, () => {
-        const kit = MetabolismKit as Kit;
+        const kit = MetabolismKit as KitImpl;
         const totalTypes = kit.types?.length ?? 0;
         const filter: any = {};
         if (gc.typeInclude) filter.types = { ...filter.types, include: gc.typeInclude };
@@ -18840,7 +19171,7 @@ if (shouldRunEmbeddedJsTests) {
     }
   });
 
-  // #endregion 🏰Kit Filter Tests
+  // #endregion 🏰KitImpl Filter Tests
 
   // #region 🛡️KitKind Tests
   // Tests for KitKind enum MUST verify the five kit kinds.
@@ -18878,8 +19209,8 @@ if (shouldRunEmbeddedJsTests) {
       expect([dev, local, archive, remote, transport]).toEqual(["dev", "local", "archive", "remote", "transport"]);
     });
 
-    it("Kit/File: roundtrips through JSON serialize/deserialize", () => {
-      const kit: Kit = {
+    it("KitImpl/File: roundtrips through JSON serialize/deserialize", () => {
+      const kit: KitImpl = {
         guid: "file-kit-guid",
         name: "FileKit Test",
         createdAt: new Date().toISOString(),
@@ -18891,8 +19222,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(restored.name).toBe(kit.name);
     });
 
-    it("Kit/File: imports, exports and edits with file kit helpers", async () => {
-      const kit: Kit = {
+    it("KitImpl/File: imports, exports and edits with file kit helpers", async () => {
+      const kit: KitImpl = {
         guid: "file-kit-helper-guid",
         name: "FileKit Helper Test",
         createdAt: new Date().toISOString(),
@@ -18908,8 +19239,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(edited).toBe(imported.kit);
     });
 
-    it("Kit/Folder: roundtrips through SQLite via FolderKitStore adapter", async () => {
-      const kit: Kit = {
+    it("KitImpl/Folder: roundtrips through SQLite via FolderKitStore adapter", async () => {
+      const kit: KitImpl = {
         guid: "folder-kit-guid",
         name: "FolderKit Test",
         createdAt: "2026-01-01T00:00:00.000Z",
@@ -18930,8 +19261,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(restored.types![0].name).toBe("Wall");
     });
 
-    it("Kit/Archive: roundtrips through zip export/import", async () => {
-      const kit: Kit = {
+    it("KitImpl/Archive: roundtrips through zip export/import", async () => {
+      const kit: KitImpl = {
         guid: "archive-kit-guid",
         name: "ArchiveKit Test",
         createdAt: "2026-01-01T00:00:00.000Z",
@@ -18946,8 +19277,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(result.kit.types![0].name).toBe("Beam");
     });
 
-    it("Kit/Remote: validates remote URL field on kit", () => {
-      const kit: Kit = {
+    it("KitImpl/Remote: validates remote URL field on kit", () => {
+      const kit: KitImpl = {
         guid: "remote-kit-guid",
         name: "RemoteKit Test",
         remote: "https://example.com/metabolism.kit.json",
@@ -18961,16 +19292,16 @@ if (shouldRunEmbeddedJsTests) {
       expect(restored.remote).toBe(kit.remote);
     });
 
-    it("Kit/Remote: imports remote JSON and archive sources", async () => {
-      const remoteJsonKit: Kit = {
+    it("KitImpl/Remote: imports remote JSON and archive sources", async () => {
+      const remoteJsonKit: KitImpl = {
         guid: "remote-json-kit-guid",
-        name: "Remote JSON Kit",
+        name: "Remote JSON KitImpl",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const remoteArchiveKit: Kit = {
+      const remoteArchiveKit: KitImpl = {
         guid: "remote-archive-kit-guid",
-        name: "Remote Archive Kit",
+        name: "Remote Archive KitImpl",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -19003,8 +19334,8 @@ if (shouldRunEmbeddedJsTests) {
       }
     });
 
-    it("Kit/Temporary: InMemoryKitStore roundtrip without persistence", () => {
-      const kit: Kit = {
+    it("KitImpl/Temporary: InMemoryKitStore roundtrip without persistence", () => {
+      const kit: KitImpl = {
         guid: "temp-kit-guid",
         name: "TemporaryKit Test",
         createdAt: new Date().toISOString(),
@@ -19018,28 +19349,28 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().kit.name).toBe("TemporaryKit Test");
     });
 
-    it("Kit/Temporary: editTemporaryKit applies a diff in place and returns the same reference", () => {
-      const kit: Kit = {
+    it("KitImpl/Temporary: editTemporaryKit applies a diff in place and returns the same reference", () => {
+      const kit: KitImpl = {
         guid: "temp-edit-kit-guid",
-        name: "Temporary Editable Kit",
+        name: "Temporary Editable KitImpl",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      const edited = editTemporaryKit(kit, { name: "Temporary Editable Kit Edited" });
-      expect(edited.name).toBe("Temporary Editable Kit Edited");
-      expect(kit.name).toBe("Temporary Editable Kit Edited");
+      const edited = editTemporaryKit(kit, { name: "Temporary Editable KitImpl Edited" });
+      expect(edited.name).toBe("Temporary Editable KitImpl Edited");
+      expect(kit.name).toBe("Temporary Editable KitImpl Edited");
       expect(edited).toBe(kit);
     });
   });
 
   // #endregion 🛡️KitKind Tests
 
-  // #region 🏰Kit Filter Tests
+  // #region 🏰KitImpl Filter Tests
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
-  describe("Kit/Filter/Design", () => {
+  describe("KitImpl/Filter/Design", () => {
     const filterDesignCases = (FilterKitCases as any).cases as Array<{ name: string; designName: string; designParent: string | null }>;
-    const kit = MetabolismKit as Kit;
+    const kit = MetabolismKit as KitImpl;
     const expected = MetabolismKitFilteredNakaginCapsuleTower as any;
     const filterDesignCase = filterDesignCases[0];
     const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase.designName && !d.parent);
@@ -19098,10 +19429,10 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion 🏰Kit Filter Tests
+  // #endregion 🏰KitImpl Filter Tests
 
   describe("Flatten", () => {
-    const kit = MetabolismKit as Kit;
+    const kit = MetabolismKit as KitImpl;
     const flattenCasesData = (FlattenCases as any).cases as Array<{ name: string; designPath: string[] }>;
 
     const testFlatten = (designName: string, parentName?: string) => {
@@ -19125,7 +19456,7 @@ if (shouldRunEmbeddedJsTests) {
     };
 
     for (const fc of flattenCasesData) {
-      it(`${fc.name}: Kit -> Flatten -> Diff -> Apply = Flat`, () => {
+      it(`${fc.name}: KitImpl -> Flatten -> Diff -> Apply = Flat`, () => {
         const designName = fc.designPath[fc.designPath.length - 1];
         const parentName = fc.designPath.length > 1 ? fc.designPath[fc.designPath.length - 2] : undefined;
         testFlatten(designName, parentName);
@@ -19134,20 +19465,20 @@ if (shouldRunEmbeddedJsTests) {
 
     it("forward diff lists every connection removal by guid and apply clears connections", () => {
       const design = findDesign(kit, flattenCasesData[0].designPath[0]);
-      const origConnCount = design.connections?.length ?? 0;
+      const origConnCount = design._connections?.length ?? 0;
       expect(origConnCount).toBeGreaterThan(0);
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const removed = flatOp.diff.forward.connections?.removed ?? [];
+      const removed = flatOp.diff.forward._connections?.removed ?? [];
       expect(removed.length).toBe(origConnCount);
       const removedSet = new Set(removed.map((r) => r.guid));
-      for (const c of design.connections ?? []) {
+      for (const c of design._connections ?? []) {
         expect(removedSet.has(c.guid)).toBe(true);
       }
       const flatDesign = detachDesignForLocalMutation(design);
       flatDesign.applyDiff(flatOp.diff.forward);
-      expect(flatDesign.connections?.length ?? 0).toBe(0);
+      expect(flatDesign._connections?.length ?? 0).toBe(0);
     });
 
     it("warns when a connected clump has no fixed piece and still flattens", () => {
@@ -19168,7 +19499,7 @@ if (shouldRunEmbeddedJsTests) {
         createdAt: "2025-01-01T00:00:00.000Z",
         updatedAt: "2025-01-01T00:00:00.000Z",
       };
-      const miniKit: Kit = {
+      const miniKit: KitImpl = {
         guid: "k1",
         name: "k",
         designs: [design],
@@ -19228,7 +19559,7 @@ if (shouldRunEmbeddedJsTests) {
           if (!piece) throw new Error(`Piece ${mutation.pieceGuid} not found`);
           setPath(piece, mutation.path, mutation.value);
         } else if (mutation.kind === "connectionField") {
-          const conn = design.connections?.find((c: any) => c.guid === mutation.connectionGuid);
+          const conn = design._connections?.find((c: any) => c.guid === mutation.connectionGuid);
           if (!conn) throw new Error(`Connection ${mutation.connectionGuid} not found`);
           setPath(conn, mutation.path, mutation.value);
         } else {
@@ -19240,7 +19571,7 @@ if (shouldRunEmbeddedJsTests) {
     it("shared asset mutation cases produce expected hash changes", () => {
       const cases = (FlattenMerkleCases as any).cases as any[];
       for (const testCase of cases) {
-        const kitBefore = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+        const kitBefore = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
         const designBefore = findDesignByPath(kitBefore, testCase.designPath);
         const beforeHashes = asKitInstance(kitBefore).getFlatMerkleHashes(designBefore.guid);
 
@@ -19279,7 +19610,7 @@ if (shouldRunEmbeddedJsTests) {
     it("cross-language parity reference hashes", () => {
       const parity = (FlattenMerkleCases as any).parity;
       expect(parity).toBeDefined();
-      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+      const kit = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
       const design = findDesignByPath(kit, parity.designPath);
       const hashes = asKitInstance(kit).getFlatMerkleHashes(design.guid);
       for (const expected of parity.expectedHashes) {
@@ -19291,7 +19622,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten reuses cached plane/center when hashes match", () => {
-      const kit = MetabolismKit as Kit;
+      const kit = MetabolismKit as KitImpl;
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
       expect(Object.keys(first.cache).length).toBeGreaterThan(0);
@@ -19305,7 +19636,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten returns a structurally identical forward diff vs fresh flattenDesign (ignoring non-deterministic attribute guids)", () => {
-      const kit = MetabolismKit as Kit;
+      const kit = MetabolismKit as KitImpl;
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       // flattenDesign's setAttributes mints new attribute guids via guid() on every run, so
       // we strip those guids before comparing to focus on the geometric/attribute values that
@@ -19331,7 +19662,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten preserves exact Piece object reference when merkle hash is unchanged", () => {
-      const kit = MetabolismKit as Kit;
+      const kit = MetabolismKit as KitImpl;
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
       const second = asKitInstance(kit).flattenDesignCachedOp(design.guid, first.cache);
@@ -19348,7 +19679,7 @@ if (shouldRunEmbeddedJsTests) {
       const parity = (FlattenMerkleCases as any).parity;
       const rootGuid: string = parity.expectedHashes[0].pieceGuid;
       const childGuid: string = parity.expectedHashes[1].pieceGuid;
-      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+      const kit = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
       const design = findDesignByPath(kit, parity.designPath);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
       expect(first.cache[rootGuid]).toBeDefined();
@@ -19377,7 +19708,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("on connection center mutation only the affected subtree's centers are recomputed", () => {
       const parity = (FlattenMerkleCases as any).parity;
-      const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+      const kit = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
       const design = findDesignByPath(kit, parity.designPath);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
 
@@ -19386,7 +19717,7 @@ if (shouldRunEmbeddedJsTests) {
       // scenario: dragging a piece nudges its parent connection u/v → only its subtree rehydrates.
       const mutatedKit = duplicateKitForIsolation(kit);
       const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
-      const firstConn = mutatedDesign.connections?.[0];
+      const firstConn = mutatedDesign._connections?.[0];
       expect(firstConn).toBeDefined();
       if (!firstConn) return;
       firstConn.u = (firstConn.u ?? 0) + 2.5;
@@ -19414,7 +19745,7 @@ if (shouldRunEmbeddedJsTests) {
         const path = await import("node:path");
         const { __dirname } = await getTestNodePaths();
 
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const serializedKit = serializeKit(kit);
         const deserializedKit = deserializeKit(serializedKit);
         expect(areKitsEqual(kit, deserializedKit)).toBe(true);
@@ -19433,22 +19764,22 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Validation", () => {
     describe("Metabolism", () => {
-      it("Metabolism Kit -> Validate = Empty report", () => {
-        const validKit = MetabolismKit as unknown as Kit;
+      it("Metabolism KitImpl -> Validate = Empty report", () => {
+        const validKit = MetabolismKit as unknown as KitImpl;
         expect(hasErrors(validateKit(validKit))).toBe(false);
       });
     });
 
     describe("Invalid", () => {
-      it("Invalid Kit -> Validate = Invalid Report", () => {
-        const invalidKit = InvalidKit as unknown as Kit;
+      it("Invalid KitImpl -> Validate = Invalid Report", () => {
+        const invalidKit = InvalidKit as unknown as KitImpl;
         const result = validateKit(invalidKit);
         const expected = InvalidKitValidation as unknown as ValidationResult;
         expect(areValidationResultsEqual(result, expected)).toBe(true);
       });
 
       it("Plain descriptions do not create emoji validation problems", () => {
-        const kit = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+        const kit = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
         kit.description = "Plain kit summary";
         kit.types = (kit.types ?? []).map((entry, index) => ({
           ...entry,
@@ -19494,7 +19825,7 @@ if (shouldRunEmbeddedJsTests) {
       const updatedDesign = detachDesignForLocalMutation(design);
       updatedDesign.applyDiff(change.forward);
 
-      const clusterConnection = updatedDesign.connections?.find((c) => c.guid === "conn-bc");
+      const clusterConnection = updatedDesign._connections?.find((c) => c.guid === "conn-bc");
       expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);
       expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();
 
@@ -19531,14 +19862,14 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower flattened piece drag uses piece center diff (flat design has no connections)", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
       const flatDesign = detachDesignForLocalMutation(design);
       flatDesign.applyDiff(flatOp.diff.forward);
-      expect((flatDesign.connections ?? []).length).toBe(0);
+      expect((flatDesign._connections ?? []).length).toBe(0);
       const pieceGuid = "9d18882e-d90b-40de-a171-47cb4564ffa6";
       const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
       const pieces = { ...flatDesign, pieces: [flatPiece] } as Design;
@@ -19554,9 +19885,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin sketchpad flow: drag root piece with connections preserved moves all descendants", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
-      expect((design.connections ?? []).length).toBeGreaterThan(0);
+      expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata (simulates usePiecesMetadataMap)
       const metaResult = piecesMetadata(kit, design.guid);
@@ -19629,7 +19960,7 @@ if (shouldRunEmbeddedJsTests) {
       updatedDesign.applyDiff(dragDiff);
 
       // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
-      const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
       const postMetaResult = piecesMetadata(updatedKit, design.guid);
       expect(postMetaResult.ok).toBe(true);
       if (!postMetaResult.ok) return;
@@ -19655,11 +19986,11 @@ if (shouldRunEmbeddedJsTests) {
       // This test simulates the EXACT sketchpad store flow:
       // 1. onNodeDragStop calls dragPiecesInDesign → gets dragDiff
       // 2. updatePieces sends ONLY the piece updates from dragDiff to the kit store
-      // 3. Kit store applies piece-only kitDiff via applyKitDiff
+      // 3. KitImpl store applies piece-only kitDiff via applyKitDiff
       // 4. Reactive chain recomputes piecesMetadata → descendants should have new positions
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      expect((design.connections ?? []).length).toBeGreaterThan(0);
+      expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
       const metaResult = piecesMetadata(kit, design.guid);
@@ -19771,7 +20102,7 @@ if (shouldRunEmbeddedJsTests) {
       // This is the key test — if these differ, the useEffect overwrites with wrong positions
       const localUpdatedDesign = detachDesignForLocalMutation(design);
       localUpdatedDesign.applyDiff(dragDiff);
-      const localUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
+      const localUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
       const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
       expect(localMetaResult.ok).toBe(true);
       if (!localMetaResult.ok) return;
@@ -19787,9 +20118,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin leaf drag: dragging a leaf node (parent, no children) offsets through parent connection and matches nativeDragPieces", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
-      expect((design.connections ?? []).length).toBeGreaterThan(0);
+      expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
       const metaResult = piecesMetadata(kit, design.guid);
@@ -19856,7 +20187,7 @@ if (shouldRunEmbeddedJsTests) {
       // Step 5a: Sketchpad re-flatten
       const sketchpadUpdatedDesign = detachDesignForLocalMutation(design);
       sketchpadUpdatedDesign.applyDiff(sketchpadDragDiff);
-      const sketchpadUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
+      const sketchpadUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
       const sketchpadPostMeta = piecesMetadata(sketchpadUpdatedKit, design.guid);
       expect(sketchpadPostMeta.ok).toBe(true);
       if (!sketchpadPostMeta.ok) return;
@@ -19864,7 +20195,7 @@ if (shouldRunEmbeddedJsTests) {
       // Step 5b: nativeDragPieces re-flatten
       const nativeUpdatedDesign = detachDesignForLocalMutation(design);
       nativeUpdatedDesign.applyDiff(nativeDragDiff);
-      const nativeUpdatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
+      const nativeUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
       const nativePostMeta = piecesMetadata(nativeUpdatedKit, design.guid);
       expect(nativePostMeta.ok).toBe(true);
       if (!nativePostMeta.ok) return;
@@ -19905,7 +20236,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin center-space to connection-space scaling: pixel offset scales by horizontalScale for horizontal connections", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
@@ -19958,7 +20289,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(rawConnDiff.v).toBeCloseTo(centerOffsetV, 6);
 
       // Find the parent connector to determine the scale
-      const conn = (design.connections ?? []).find((c) => c.guid === dragDiff.connections!.updated![0].connection.guid)!;
+      const conn = (design._connections ?? []).find((c) => c.guid === dragDiff.connections!.updated![0].connection.guid)!;
       expect(conn).toBeDefined();
       const parentPieceGuid = conn.connected.piece.guid;
       const parentMeta = metadata.get(parentPieceGuid)!;
@@ -19981,7 +20312,7 @@ if (shouldRunEmbeddedJsTests) {
       };
       const updatedDesign = detachDesignForLocalMutation(design);
       updatedDesign.applyDiff(scaledDragDiff);
-      const updatedKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
       const postMeta = piecesMetadata(updatedKit, design.guid);
       expect(postMeta.ok).toBe(true);
       if (!postMeta.ok) return;
@@ -20000,7 +20331,7 @@ if (shouldRunEmbeddedJsTests) {
         };
         const unscaledDesign = detachDesignForLocalMutation(design);
         unscaledDesign.applyDiff(unscaledDragDiff);
-        const unscaledKit: Kit = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
+        const unscaledKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
         const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
         expect(unscaledMeta.ok).toBe(true);
         if (!unscaledMeta.ok) return;
@@ -20012,7 +20343,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("findParentConnectionForPieceInDesign and fixPieceInDesign use the connection to the parent piece, not the parent piece id as connection id", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
@@ -20041,7 +20372,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Move", () => {
     it("same drag fixture: roots get plane translation; connected mover gets connector-frame split (gap/shift/rise + residual u/v)", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
@@ -20077,7 +20408,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("vertical parent connector: world move decomposes into shift, gap, rise on connection (not diagram u/v only)", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = { gap: 2, shift: -1, rise: 0.5 };
@@ -20101,7 +20432,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Delete", () => {
     it("Nakagin Capsule Tower delete third tambour and first small tower connection", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const selection = NakaginCapsuleTowerDeletedSelection as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerDeletedDesignDiff as any;
@@ -20147,7 +20478,7 @@ if (shouldRunEmbeddedJsTests) {
   // #region 📋Copy And Paste Tests
   describe("CopyAndPaste", () => {
     it("Nakagin Capsule Tower copy selected pieces and connections", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const selection = NakaginCapsuleTowerCopySelection as any;
       const expectedCopy = NakaginCapsuleTowerCopyDesign as unknown as Design;
@@ -20180,7 +20511,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower paste without coord", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerPasteDesignDiff as any;
@@ -20210,7 +20541,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower paste with coord", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerPasteWithCoordDesignDiff as any;
@@ -20243,7 +20574,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("pasteDesign accepts every built-in anchoring string for Nakagin clipboard", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       for (const kind of PASTE_DESIGN_ANCHORING_KINDS) {
@@ -20255,7 +20586,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coord", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -20270,12 +20601,12 @@ if (shouldRunEmbeddedJsTests) {
       expect(copyOp2.ok).toBe(true);
       if (!copyOp2.ok) return;
       const copied = copyOp2.diff;
-      const srcConn = copied.connections!.find((c) => c.guid === connInternal)!;
+      const srcConn = copied._connections!.find((c) => c.guid === connInternal)!;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const withoutCoord = pasteDesign(kit, copied, pasteTarget, "original");
       const withCoord = pasteDesign(kit, copied, pasteTarget, "original", { u: 10, v: 5 });
-      const connWo = withoutCoord.connections?.added?.find((c) => c.guid === connInternal);
-      const connWi = withCoord.connections?.added?.find((c) => c.guid === connInternal);
+      const connWo = withoutCoord._connections?.added?.find((c) => c.guid === connInternal);
+      const connWi = withCoord._connections?.added?.find((c) => c.guid === connInternal);
       expect(connWo).toBeDefined();
       expect(connWi).toBeDefined();
       expect(connWi!.u).toBeCloseTo(srcConn.u ?? 0, 6);
@@ -20285,7 +20616,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin paste remaps t_f2–t_f1 onto target t_f1 when t_f1 is external stub only", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const flatOp3 = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp3.ok).toBe(true);
@@ -20316,11 +20647,11 @@ if (shouldRunEmbeddedJsTests) {
 
       const t2 = "9d18882e-d90b-40de-a171-47cb4564ffa6";
       const childBelowT2Conn = "bb5449be-247b-498e-b8c8-309697ddea7b";
-      const srcInternal = copied.connections!.find((c) => c.guid === childBelowT2Conn);
+      const srcInternal = copied._connections!.find((c) => c.guid === childBelowT2Conn);
       expect(srcInternal).toBeDefined();
       const coord = { u: 10, v: -3.25 };
       const diffCoord = pasteDesign(kit, copied, pasteTarget, "original", coord);
-      const remappedCoord = diffCoord.connections?.added?.find((c) => c.guid === t2t1Conn);
+      const remappedCoord = diffCoord._connections?.added?.find((c) => c.guid === t2t1Conn);
       expect(remappedCoord).toBeDefined();
       const t2Piece = copied.pieces!.find((p) => p.guid === t2)!;
       let childU = t2Piece.center?.u ?? 0;
@@ -20336,18 +20667,18 @@ if (shouldRunEmbeddedJsTests) {
       const anchor = { u: 0, v: 0 };
       expect(remappedCoord!.u).toBeCloseTo(parentU - (coord.u + (anchor.u - childU)), 6);
       expect(remappedCoord!.v).toBeCloseTo(parentV - (coord.v + (anchor.v - childV)), 6);
-      const internalAfter = diffCoord.connections?.added?.find((c) => c.guid === childBelowT2Conn);
+      const internalAfter = diffCoord._connections?.added?.find((c) => c.guid === childBelowT2Conn);
       expect(internalAfter).toBeDefined();
       expect(internalAfter!.u).toBeCloseTo(srcInternal!.u ?? 0, 6);
       expect(internalAfter!.v).toBeCloseTo(srcInternal!.v ?? 0, 6);
     });
 
     it("copyDesign single connected piece selected alone becomes free fixed root and auto-pulls source descendants", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const tF0BC0 = "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952";
 
-      const sourceConns = design.connections ?? [];
+      const sourceConns = design._connections ?? [];
       const sourcePieces = design.pieces ?? [];
       const childMap = new Map<string, Array<{ childGuid: string; connectionGuid: string }>>();
       for (const c of sourceConns) {
@@ -20374,7 +20705,7 @@ if (shouldRunEmbeddedJsTests) {
       if (!copyOp.ok) return;
       const copied = copyOp.diff;
       expect((copied.pieces ?? []).length).toBe(1 + expectedDescPieces.size);
-      expect((copied.connections ?? []).length).toBe(expectedDescConns.size);
+      expect((copied._connections ?? []).length).toBe(expectedDescConns.size);
 
       const root = copied.pieces!.find((p) => p.guid === tF0BC0)!;
       expect(root.plane).toBeDefined();
@@ -20392,7 +20723,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((desc!.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(false);
       }
       for (const guid of expectedDescConns) {
-        const conn = copied.connections!.find((c) => c.guid === guid);
+        const conn = copied._connections!.find((c) => c.guid === guid);
         expect(conn).toBeDefined();
       }
 
@@ -20410,9 +20741,9 @@ if (shouldRunEmbeddedJsTests) {
       const addedRootCoord = addedCoord.find((p) => p.guid === tF0BC0)!;
       expect(addedRootCoord.center!.u).toBeCloseTo(root.center!.u + 7, 6);
       expect(addedRootCoord.center!.v).toBeCloseTo(root.center!.v - 3, 6);
-      const addedConnsCoord = diffCoord.connections?.added ?? [];
+      const addedConnsCoord = diffCoord._connections?.added ?? [];
       for (const expConnGuid of expectedDescConns) {
-        const sourceConn = copied.connections!.find((c) => c.guid === expConnGuid)!;
+        const sourceConn = copied._connections!.find((c) => c.guid === expConnGuid)!;
         const targetConn = addedConnsCoord.find((c) => c.guid === expConnGuid)!;
         expect(targetConn).toBeDefined();
         expect(targetConn.u ?? 0).toBeCloseTo(sourceConn.u ?? 0, 6);
@@ -20446,7 +20777,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
       const bc = findReplCases.boundaryCases;
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === bc.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -20492,7 +20823,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
       const selAssetCase = findReplCases.cases.find((c: any) => c.name === "selection_asset_returns_compatible_guids");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName && !d.parent)!;
       const kindItems = kit.types ?? [];
       const linkItems = kit.ports ?? [];
@@ -20510,7 +20841,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
       const connCase = findReplCases.cases.find((c: any) => c.name === "connected_piece_yields_only_exact_design_matches");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === connCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -20525,7 +20856,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: isolated piece with no connections suggests types with compatible ports", () => {
       const isoCase = findReplCases.cases.find((c: any) => c.name === "isolated_piece");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const parentDesign = kit.designs!.find((d) => d.name === isoCase.designParentName && !d.parent)!;
       const flatDesign = kit.designs!.find((d) => d.name === isoCase.designName && d.parent?.guid === parentDesign.guid)!;
       const types = kit.types ?? [];
@@ -20543,7 +20874,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: Capital piece with single connection", () => {
       const capCase = findReplCases.cases.find((c: any) => c.name === "capital_piece");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === capCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -20562,7 +20893,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
       const multiCase = findReplCases.cases.find((c: any) => c.name === "multiple_selected_pieces");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === multiCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -20577,7 +20908,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Returns empty when no pieces selected", () => {
       const emptyCase = findReplCases.cases.find((c: any) => c.name === "empty_selection");
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const design = kit.designs!.find((d) => d.name === emptyCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -20601,14 +20932,14 @@ if (shouldRunEmbeddedJsTests) {
     }>;
     for (const tc of designWithDiffCases) {
       it(`${tc.name} with-diff preserves old entities and annotates status`, () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const design = kit.designs!.find((d) => d.name === tc.designName && !d.parent)!;
         const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
         const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
         const computed = designWithDiff(design, diff);
 
         expect(computed.pieces!.length).toBe(expected.pieces!.length);
-        expect(computed.connections!.length).toBe(expected.connections!.length);
+        expect(computed._connections!.length).toBe(expected._connections!.length);
 
         const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
 
@@ -20620,7 +20951,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(pieceStatuses.filter((s) => s === "added").length).toBe(tc.expectedPieceCounts.added);
 
         // 🔗Verify connection status counts
-        const connStatuses = computed.connections!.map((c) => getStatus(c.attributes));
+        const connStatuses = computed._connections!.map((c) => getStatus(c.attributes));
         expect(connStatuses.filter((s) => s === "unchanged").length).toBe(tc.expectedConnectionCounts.unchanged);
         expect(connStatuses.filter((s) => s === "modified").length).toBe(tc.expectedConnectionCounts.modified);
         expect(connStatuses.filter((s) => s === "removed").length).toBe(tc.expectedConnectionCounts.removed);
@@ -20818,7 +21149,7 @@ if (shouldRunEmbeddedJsTests) {
   });
 
   describe("Design/Quality/Sum", () => {
-    const kit = MetabolismKit as Kit;
+    const kit = MetabolismKit as KitImpl;
     const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; qualityName: string; expected: number; tolerance: number }>;
     for (const tc of qualitySumCases) {
       it(`${tc.name}: sums ${tc.qualityName} to ~${tc.expected}`, () => {
@@ -20835,7 +21166,7 @@ if (shouldRunEmbeddedJsTests) {
   describe("ExportDesignModel", () => {
     const exportCases = (ExportDesignModelCases as any).cases as Array<{ name: string; designName: string }>;
     const exportCase = exportCases[0];
-    const kit = MetabolismKit as Kit;
+    const kit = MetabolismKit as KitImpl;
     const design = kit.designs?.find((d) => d.name === exportCase.designName && !d.parent)!;
 
     it("exports .glb format with valid GLB header", async () => {
@@ -20981,9 +21312,9 @@ if (shouldRunEmbeddedJsTests) {
   // Contract tests for InMemoryKitStore MUST verify the full KitStore interface.
 
   describe("InMemoryKitStore", () => {
-    const makeKit = (overrides?: Partial<Kit>): Kit => ({
+    const makeKit = (overrides?: Partial<KitImpl>): KitImpl => ({
       guid: "test-kit-guid",
-      name: "Test Kit",
+      name: "Test KitImpl",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...overrides,
@@ -20994,7 +21325,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = new InMemoryKitStore(kit);
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBe("test-kit-guid");
-      expect(snapshot.kit.name).toBe("Test Kit");
+      expect(snapshot.kit.name).toBe("Test KitImpl");
       expect(snapshot.sync.status).toBe("ready");
       expect(snapshot.sync.dirty).toBe(false);
       expect(snapshot.sync.readonly).toBe(false);
@@ -21006,10 +21337,10 @@ if (shouldRunEmbeddedJsTests) {
       let notified = 0;
       store.subscribe(() => notified++);
 
-      const diff: KitDiff = { name: "Updated Kit" };
+      const diff: KitDiff = { name: "Updated KitImpl" };
       store.apply(diff);
 
-      expect(store.getSnapshot().kit.name).toBe("Updated Kit");
+      expect(store.getSnapshot().kit.name).toBe("Updated KitImpl");
       expect(store.getSnapshot().sync.dirty).toBe(true);
       expect(notified).toBe(1);
     });
@@ -21020,11 +21351,11 @@ if (shouldRunEmbeddedJsTests) {
       let notified = 0;
       store.subscribe(() => notified++);
 
-      const newKit = makeKit({ guid: "new-guid", name: "Replaced Kit" });
+      const newKit = makeKit({ guid: "new-guid", name: "Replaced KitImpl" });
       store.replace(newKit);
 
       expect(store.getSnapshot().kit.guid).toBe("new-guid");
-      expect(store.getSnapshot().kit.name).toBe("Replaced Kit");
+      expect(store.getSnapshot().kit.name).toBe("Replaced KitImpl");
       expect(store.getSnapshot().sync.dirty).toBe(true);
       expect(notified).toBe(1);
     });
@@ -21063,7 +21394,7 @@ if (shouldRunEmbeddedJsTests) {
 
       store.undo();
       const undone = store.getSnapshot();
-      expect(undone.kit.name).toBe("Test Kit");
+      expect(undone.kit.name).toBe("Test KitImpl");
       expect(undone.kit.types ?? []).toHaveLength(0);
     });
 
@@ -21077,7 +21408,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.canRedo()).toBe(false);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("Test Kit");
+      expect(store.getSnapshot().kit.name).toBe("Test KitImpl");
       expect(store.canUndo()).toBe(false);
       expect(store.canRedo()).toBe(true);
     });
@@ -21088,7 +21419,7 @@ if (shouldRunEmbeddedJsTests) {
 
       store.apply({ name: "Changed" });
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("Test Kit");
+      expect(store.getSnapshot().kit.name).toBe("Test KitImpl");
 
       store.redo();
       expect(store.getSnapshot().kit.name).toBe("Changed");
@@ -21154,10 +21485,10 @@ if (shouldRunEmbeddedJsTests) {
       const store = new InMemoryKitStore(kit);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("Test Kit");
+      expect(store.getSnapshot().kit.name).toBe("Test KitImpl");
 
       store.redo();
-      expect(store.getSnapshot().kit.name).toBe("Test Kit");
+      expect(store.getSnapshot().kit.name).toBe("Test KitImpl");
     });
   });
 
@@ -21168,15 +21499,15 @@ if (shouldRunEmbeddedJsTests) {
   // including file I/O, save, reload, undo/redo, and external update handling.
 
   describe("JsonFileKitStore", () => {
-    const makeKit = (overrides?: Partial<Kit>): Kit => ({
+    const makeKit = (overrides?: Partial<KitImpl>): KitImpl => ({
       guid: "file-kit-guid",
-      name: "File Kit",
+      name: "File KitImpl",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
       ...overrides,
     });
 
-    const makeAdapter = (initialKit?: Kit): KitJsonFileAdapter & { stored: string | null } => {
+    const makeAdapter = (initialKit?: KitImpl): KitJsonFileAdapter & { stored: string | null } => {
       const adapter = {
         stored: initialKit ? JSON.stringify(initialKit) : null,
         async read(): Promise<string | null> {
@@ -21195,7 +21526,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createJsonFileKitStore(adapter);
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBe("file-kit-guid");
-      expect(snapshot.kit.name).toBe("File Kit");
+      expect(snapshot.kit.name).toBe("File KitImpl");
       expect(snapshot.sync.status).toBe("ready");
       expect(snapshot.sync.dirty).toBe(false);
       expect(snapshot.sync.lastSyncedAt).toBeDefined();
@@ -21206,7 +21537,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createJsonFileKitStore(adapter);
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBeDefined();
-      expect(snapshot.kit.name).toBe("New Kit");
+      expect(snapshot.kit.name).toBe("New KitImpl");
       expect(snapshot.sync.status).toBe("ready");
     });
 
@@ -21255,7 +21586,7 @@ if (shouldRunEmbeddedJsTests) {
       const adapter = makeAdapter(kit);
       const store = await createJsonFileKitStore(adapter);
 
-      store.apply({ name: "Saved Kit" });
+      store.apply({ name: "Saved KitImpl" });
       expect(store.getSnapshot().sync.dirty).toBe(true);
 
       await store.save();
@@ -21263,7 +21594,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().sync.status).toBe("ready");
 
       const savedKit = JSON.parse(adapter.stored!);
-      expect(savedKit.name).toBe("Saved Kit");
+      expect(savedKit.name).toBe("Saved KitImpl");
     });
 
     it("reload re-reads kit from adapter and resets state", async () => {
@@ -21291,7 +21622,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.canUndo()).toBe(true);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("File Kit");
+      expect(store.getSnapshot().kit.name).toBe("File KitImpl");
       expect(store.canRedo()).toBe(true);
     });
 
@@ -21324,7 +21655,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().kit.types).toHaveLength(1);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("File Kit");
+      expect(store.getSnapshot().kit.name).toBe("File KitImpl");
       expect(store.getSnapshot().kit.types ?? []).toHaveLength(0);
     });
 
@@ -21548,15 +21879,15 @@ if (shouldRunEmbeddedJsTests) {
 
   // #region 🔊FolderKitStore Tests
   describe("FolderKitStore", () => {
-    const makeKit = (overrides?: Partial<Kit>): Kit => ({
+    const makeKit = (overrides?: Partial<KitImpl>): KitImpl => ({
       guid: "folder-kit-guid",
-      name: "Folder Kit",
+      name: "Folder KitImpl",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-01T00:00:00.000Z",
       ...overrides,
     });
 
-    const kitToBytes = async (kit: Kit): Promise<Uint8Array> => {
+    const kitToBytes = async (kit: KitImpl): Promise<Uint8Array> => {
       const SQL = await getSqlJs();
       const db = new SQL.Database();
       await kitToSqlite(kit, db);
@@ -21565,7 +21896,7 @@ if (shouldRunEmbeddedJsTests) {
       return data;
     };
 
-    const bytesToKit = async (data: Uint8Array): Promise<Kit> => {
+    const bytesToKit = async (data: Uint8Array): Promise<KitImpl> => {
       const SQL = await getSqlJs();
       const db = new SQL.Database(new Uint8Array(data));
       const kit = await sqliteToKit(db);
@@ -21573,7 +21904,7 @@ if (shouldRunEmbeddedJsTests) {
       return kit;
     };
 
-    const makeAdapter = (initialKit?: Kit): KitFolderAdapter & { stored: Uint8Array | null; files: Map<string, Blob>; initPromise: Promise<void> } => {
+    const makeAdapter = (initialKit?: KitImpl): KitFolderAdapter & { stored: Uint8Array | null; files: Map<string, Blob>; initPromise: Promise<void> } => {
       const adapter = {
         stored: null as Uint8Array | null,
         files: new Map<string, Blob>(),
@@ -21612,7 +21943,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createFolderKitStore(adapter);
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBe("folder-kit-guid");
-      expect(snapshot.kit.name).toBe("Folder Kit");
+      expect(snapshot.kit.name).toBe("Folder KitImpl");
       expect(snapshot.sync.status).toBe("ready");
       expect(snapshot.sync.dirty).toBe(false);
     });
@@ -21621,7 +21952,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createFolderKitStore(makeAdapter());
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBeDefined();
-      expect(snapshot.kit.name).toBe("New Kit");
+      expect(snapshot.kit.name).toBe("New KitImpl");
       expect(snapshot.sync.status).toBe("ready");
     });
 
@@ -21668,7 +21999,7 @@ if (shouldRunEmbeddedJsTests) {
       await adapter.initPromise;
       const store = await createFolderKitStore(adapter);
 
-      store.apply({ name: "Saved Kit" });
+      store.apply({ name: "Saved KitImpl" });
       expect(store.getSnapshot().sync.dirty).toBe(true);
 
       await store.save();
@@ -21676,7 +22007,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().sync.status).toBe("ready");
 
       const savedKit = await bytesToKit(adapter.stored!);
-      expect(savedKit.name).toBe("Saved Kit");
+      expect(savedKit.name).toBe("Saved KitImpl");
     });
 
     it("reload re-reads kit from adapter and resets state", async () => {
@@ -21706,7 +22037,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.canUndo()).toBe(true);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("Folder Kit");
+      expect(store.getSnapshot().kit.name).toBe("Folder KitImpl");
       expect(store.canRedo()).toBe(true);
     });
 
@@ -21743,7 +22074,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().kit.types).toHaveLength(1);
 
       store.undo();
-      expect(store.getSnapshot().kit.name).toBe("Folder Kit");
+      expect(store.getSnapshot().kit.name).toBe("Folder KitImpl");
       expect(store.getSnapshot().kit.types ?? []).toHaveLength(0);
     });
 
@@ -21855,14 +22186,14 @@ if (shouldRunEmbeddedJsTests) {
   });
   // #endregion 🔊FolderKitStore Tests
 
-  // #region 🚪Open Synchronized Kit E2E Tests
+  // #region 🚪Open Synchronized KitImpl E2E Tests
   // End-to-end tests for opening synchronized kits across all three supported source kinds:
   // file (*.kit.semio.json with embedded base64 blobs), folder (.semio/kit.db + binary files on disk),
   // and remote (SessionKitStore over HTTP + WebSocket against semio/hub).
   // Specs: These tests MUST verify the full open → mutate → save/sync → reload cycle using real file
   // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
 
-  describe("Open Synchronized Kit E2E", () => {
+  describe("Open Synchronized KitImpl E2E", () => {
     const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/sketchpad"))() as any;
 
     const loadStudio = async () => {
@@ -21968,7 +22299,7 @@ if (shouldRunEmbeddedJsTests) {
       };
     };
 
-    describe("File Kit (JsonFileKitStore)", () => {
+    describe("File KitImpl (JsonFileKitStore)", () => {
       it("opens metabolism.kit.semio.json with embedded blob files preserved", async () => {
         const studio = await loadStudio();
         const filePath = await getMetabolismKitJsonPath();
@@ -22024,9 +22355,9 @@ if (shouldRunEmbeddedJsTests) {
         const nodePath = await import("node:path");
         const tmpDir = await fs.mkdtemp(nodePath.join(os.tmpdir(), "semio-file-kit-edit-"));
         const tmpPath = nodePath.join(tmpDir, "mini.kit.semio.json");
-        const initial: Kit = {
+        const initial: KitImpl = {
           guid: "mini-kit-guid",
-          name: "Mini Kit",
+          name: "Mini KitImpl",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
           types: [],
@@ -22057,14 +22388,14 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
 
-    describe("Folder Kit (FolderKitStore)", () => {
+    describe("Folder KitImpl (FolderKitStore)", () => {
       beforeAll(async () => {
         // Regenerate kit.db from metabolism.kit.semio.json to ensure schema compatibility
         const kitJsonPath = await getMetabolismKitJsonPath();
         const nodeFs = await import("node:fs/promises");
         const nodePath = await import("node:path");
         const kitJson = await nodeFs.readFile(kitJsonPath, "utf-8");
-        const kit = JSON.parse(kitJson) as Kit;
+        const kit = JSON.parse(kitJson) as KitImpl;
         const SQL = await getSqlJs();
         const db = new SQL.Database();
         await kitToSqlite(kit, db);
@@ -22153,7 +22484,7 @@ if (shouldRunEmbeddedJsTests) {
           const initial = await studio.createFolderKitStore(adapter);
           initial.replace({
             guid: "seeded-folder-kit",
-            name: "Seeded Folder Kit",
+            name: "Seeded Folder KitImpl",
             createdAt: "2026-01-01T00:00:00.000Z",
             updatedAt: "2026-01-01T00:00:00.000Z",
             types: [{ guid: "seed-type", name: "Seed", createdAt: "2026-01-01T00:00:00.000Z", updatedAt: "2026-01-01T00:00:00.000Z" }],
@@ -22173,7 +22504,7 @@ if (shouldRunEmbeddedJsTests) {
 
           const reopened = await studio.createFolderKitStore(await makeNodeFolderAdapter(tmpDir));
           const snap = reopened.getSnapshot();
-          expect(snap.kit.name).toBe("Seeded Folder Kit");
+          expect(snap.kit.name).toBe("Seeded Folder KitImpl");
           expect((snap.kit.types ?? []).map((t: any) => t.name).sort()).toEqual(["Added", "Seed"]);
         } finally {
           await fs.rm(tmpDir, { recursive: true, force: true });
@@ -22181,7 +22512,7 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
 
-    describe("Remote Kit (SessionKitStore)", () => {
+    describe("Remote KitImpl (SessionKitStore)", () => {
       const makeMockWebSocket = () => {
         const instances: any[] = [];
         class MockWebSocket {
@@ -22220,7 +22551,7 @@ if (shouldRunEmbeddedJsTests) {
 
         const snapshotKit = {
           guid: "remote-session-kit",
-          name: "Remote Session Kit",
+          name: "Remote Session KitImpl",
           types: [],
           designs: [],
           createdAt: "2026-01-01T00:00:00.000Z",
@@ -22247,9 +22578,9 @@ if (shouldRunEmbeddedJsTests) {
         }) as typeof fetch;
 
         try {
-          const store = await studio.createSessionKitStore({ serverUrl: "http://localhost:12345", kitName: "Remote Session Kit" });
+          const store = await studio.createSessionKitStore({ serverUrl: "http://localhost:12345", kitName: "Remote Session KitImpl" });
           expect(store.sessionId).toBe("session-42");
-          expect(store.getSnapshot().kit.name).toBe("Remote Session Kit");
+          expect(store.getSnapshot().kit.name).toBe("Remote Session KitImpl");
           expect(store.getSnapshot().sync.status).toBe("ready");
 
           // Wait for mock ws to fire onopen
@@ -22280,12 +22611,12 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
   });
-  // #endregion 🚪Open Synchronized Kit E2E Tests
+  // #endregion 🚪Open Synchronized KitImpl E2E Tests
 
   // #region 🎀Meta And Shallow Tests
   // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.
   describe("Meta/Shallow", () => {
-    describe("Kit/Meta", () => {
+    describe("KitImpl/Meta", () => {
       it("parses metabolism.meta.kit.semio.json with KitMetaSchema", () => {
         const parsed = KitMetaSchema.parse(MetabolismMetaKit);
         expect(parsed.name).toBe("Metabolism");
@@ -22295,7 +22626,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).files).toBeUndefined();
       });
       it("toKitMeta strips collections from full kit", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const meta = toKitMeta(kit);
         expect(meta.name).toBe("Metabolism");
         expect((meta as any).types).toBeUndefined();
@@ -22303,7 +22634,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((meta as any).files).toBeUndefined();
       });
       it("roundtrips KitMeta through serialize/deserialize", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const meta = toKitMeta(kit);
         const serialized = serializeKitMeta(meta);
         const deserialized = deserializeKitMeta(serialized);
@@ -22312,7 +22643,7 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
 
-    describe("Kit/Shallow", () => {
+    describe("KitImpl/Shallow", () => {
       it("parses metabolism.shallow.kit.semio.json with KitShallowSchema", () => {
         const parsed = KitShallowSchema.parse(MetabolismShallowKit);
         expect(parsed.name).toBe("Metabolism");
@@ -22324,7 +22655,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(firstType.connectors).toBeUndefined();
       });
       it("toKitShallow converts full kit to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const shallow = toKitShallow(kit);
         expect(shallow.name).toBe("Metabolism");
         expect(shallow.types).toBeDefined();
@@ -22334,7 +22665,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(firstType.connectors).toBeUndefined();
       });
       it("roundtrips KitShallow through serialize/deserialize", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const shallow = toKitShallow(kit);
         const serialized = serializeKitShallow(shallow);
         const deserialized = deserializeKitShallow(serialized);
@@ -22353,7 +22684,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).props).toBeUndefined();
       });
       it("toTypeMeta strips collections from full type", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const meta = toTypeMeta(tambour);
         expect(meta.name).toBe("Tambour");
@@ -22372,7 +22703,7 @@ if (shouldRunEmbeddedJsTests) {
         }
       });
       it("toTypeShallow converts full type to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const shallow = toTypeShallow(tambour);
         expect(shallow.name).toBe("Tambour");
@@ -22386,7 +22717,7 @@ if (shouldRunEmbeddedJsTests) {
     describe("Design/Meta", () => {
       it("parses nakagin-capsule-tower.meta.design.semio.json with DesignMetaSchema", () => {
         const parsed = DesignMetaSchema.parse(NakaginCapsuleTowerMetaDesign);
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const expectedGuid = kit.designs?.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)?.guid;
         expect(parsed.name).toBe(NAKAGIN_DESIGN_NAME);
         expect(expectedGuid).toBeDefined();
@@ -22395,7 +22726,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).connections).toBeUndefined();
       });
       it("toDesignMeta strips collections from full design", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const meta = toDesignMeta(nct);
         expect(meta.name).toBe(NAKAGIN_DESIGN_NAME);
@@ -22414,7 +22745,7 @@ if (shouldRunEmbeddedJsTests) {
         }
       });
       it("toDesignShallow converts full design to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as Kit;
+        const kit = MetabolismKit as unknown as KitImpl;
         const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const shallow = toDesignShallow(nct);
         expect(shallow.name).toBe(NAKAGIN_DESIGN_NAME);
@@ -22428,7 +22759,7 @@ if (shouldRunEmbeddedJsTests) {
   // #endregion 🎀Meta And Shallow Tests
 
   // #region 🗝️Hash Tests
-  describe("Kit/Hash", () => {
+  describe("KitImpl/Hash", () => {
     const hashCases = HashCases as {
       kitHash: { expected: string };
       kitDiffHash: { json: string; expected: string };
@@ -22438,38 +22769,38 @@ if (shouldRunEmbeddedJsTests) {
     };
 
     it("hashKit produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const h = hashKit(kit);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("hashKit matches expected canonical value from shared asset", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       expect(hashKit(kit)).toBe(hashCases.kitHash.expected);
     });
 
     it("hashKit is deterministic (same input produces same output)", () => {
-      const kitA = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
-      const kitB = duplicateKitForIsolation(new Kit(MetabolismKit as KitData));
+      const kitA = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
+      const kitB = duplicateKitForIsolation(new KitImpl(MetabolismKit as KitData));
       expect(hashKit(kitA)).toBe(hashKit(kitB));
     });
 
     it("hashDesign produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const h = hashDesign(nct);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("hashType produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const t = kit.types![0];
       const h = hashType(t);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("different kits produce different hashes", () => {
-      const kit1 = MetabolismKit as unknown as Kit;
+      const kit1 = MetabolismKit as unknown as KitImpl;
       const kit2 = { ...kit1, name: "Different Name" };
       expect(hashKit(kit1)).not.toBe(hashKit(kit2));
     });
@@ -22485,7 +22816,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashPiece is deterministic", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const piece = nct.pieces![0];
       const h1 = hashPiece(piece);
@@ -22495,9 +22826,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashConnection is deterministic", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
-      const conn = nct.connections![0];
+      const conn = nct.connections()[0];
       const h1 = hashConnection(conn);
       const h2 = hashConnection(conn);
       expect(h1).toBe(h2);
@@ -22505,7 +22836,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashConnector is deterministic", () => {
-      const kit = MetabolismKit as unknown as Kit;
+      const kit = MetabolismKit as unknown as KitImpl;
       const t = kit.types!.find((t: Type) => t.connectors && t.connectors.length > 0)!;
       const conn = t.connectors![0];
       const h1 = hashConnector(conn);
@@ -22515,8 +22846,8 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashKitDiff is deterministic and produces valid hash", () => {
-      const kit = new Kit(MetabolismKit as KitData);
-      const modified = new Kit({ ...(MetabolismKit as any), name: "Modified Kit", description: "New description" } as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
+      const modified = new KitImpl({ ...(MetabolismKit as any), name: "Modified KitImpl", description: "New description" } as KitData);
       const diff = getKitDiff(kit, modified);
       const h1 = hashKitDiff(diff);
       const h2 = hashKitDiff(diff);
@@ -22525,16 +22856,16 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashKitDiff produces different hashes for different diffs", () => {
-      const kit = new Kit(MetabolismKit as KitData);
-      const mod1 = new Kit({ ...(MetabolismKit as any), name: "Modified1" } as KitData);
-      const mod2 = new Kit({ ...(MetabolismKit as any), name: "Modified2" } as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
+      const mod1 = new KitImpl({ ...(MetabolismKit as any), name: "Modified1" } as KitData);
+      const mod2 = new KitImpl({ ...(MetabolismKit as any), name: "Modified2" } as KitData);
       const diff1 = getKitDiff(kit, mod1);
       const diff2 = getKitDiff(kit, mod2);
       expect(hashKitDiff(diff1)).not.toBe(hashKitDiff(diff2));
     });
 
     it("hashKitDiff empty diff produces a consistent hash", () => {
-      const kit = new Kit(MetabolismKit as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
       const diff = getKitDiff(kit, kit);
       const h = hashKitDiff(diff);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
@@ -22557,9 +22888,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashTypeDiff with collection diffs is deterministic", () => {
-      const kit = new Kit(MetabolismKit as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
       if (kit.types && kit.types.length >= 2) {
-        const modified = new Kit({
+        const modified = new KitImpl({
           ...(MetabolismKit as any),
           types: (MetabolismKit as any).types.map((t: any, i: number) => (i === 0 ? { ...t, description: "Updated type description" } : t)),
         } as KitData);
@@ -22574,9 +22905,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashDesignDiff is deterministic", () => {
-      const kit = new Kit(MetabolismKit as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
       if (kit.designs && kit.designs.length >= 1) {
-        const modified = new Kit({
+        const modified = new KitImpl({
           ...(MetabolismKit as any),
           designs: (MetabolismKit as any).designs.map((d: any, i: number) => (i === 0 ? { ...d, description: "Updated design" } : d)),
         } as KitData);
@@ -22626,9 +22957,9 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashKitDiff with type addition produces valid hash", () => {
-      const kit = new Kit(MetabolismKit as KitData);
+      const kit = new KitImpl(MetabolismKit as KitData);
       const newType: Type = new Type({ guid: hashCases.kitDiffTypeAddition.newTypeGuid, name: hashCases.kitDiffTypeAddition.newTypeName } as any);
-      const modified = new Kit({ ...(MetabolismKit as any), types: [...((MetabolismKit as any).types ?? []), newType] } as KitData);
+      const modified = new KitImpl({ ...(MetabolismKit as any), types: [...((MetabolismKit as any).types ?? []), newType] } as KitData);
       const diff = getKitDiff(kit, modified);
       const h = hashKitDiff(diff);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
@@ -22752,9 +23083,9 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
 
-    describe("Kit Roundtrip", () => {
-      it("Kit with maxChildren roundtrips through JSON", () => {
-        const kit = new Kit({
+    describe("KitImpl Roundtrip", () => {
+      it("KitImpl with maxChildren roundtrips through JSON", () => {
+        const kit = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
           ports: [{ guid: "p1", name: "Port1", maxChildren: 3 }],
@@ -22780,8 +23111,8 @@ if (shouldRunEmbeddedJsTests) {
         expect(deserialized.types![0].connectors![0].maxChildren).toBe(5);
       });
 
-      it("Kit diff captures maxChildren changes on both port and connector", () => {
-        const before = new Kit({
+      it("KitImpl diff captures maxChildren changes on both port and connector", () => {
+        const before = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
           ports: [{ guid: "p1", name: "Port1", maxChildren: 1 }],
@@ -22801,7 +23132,7 @@ if (shouldRunEmbeddedJsTests) {
             },
           ],
         });
-        const after = new Kit({
+        const after = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
           ports: [{ guid: "p1", name: "Port1", maxChildren: 10 }],
@@ -23142,7 +23473,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("kit diff roundtrip: apply then inverse restores original state", () => {
-      const original: Kit = {
+      const original: KitImpl = {
         guid: "undo-kit-1",
         name: "UndoKit",
         types: [
@@ -23168,7 +23499,7 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
         },
       };
-      const afterForward = duplicateKitForIsolation(new Kit(original as KitData));
+      const afterForward = duplicateKitForIsolation(new KitImpl(original as KitData));
       applyKitDiff(afterForward, diff);
       expect(afterForward.types).toHaveLength(2);
       expect(afterForward.types![0].description).toBe("Modified wall");
@@ -23275,16 +23606,16 @@ async function runBenchmarks() {
   const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
-  const kitMetabolism = BenchMetabolismKit as unknown as Kit;
+  const kitMetabolism = BenchMetabolismKit as unknown as KitImpl;
   const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
-  const kitDiffed = BenchKitDiffed as unknown as Kit;
-  const kitInvalid = BenchInvalidKit as unknown as Kit;
+  const kitDiffed = BenchKitDiffed as unknown as KitImpl;
+  const kitInvalid = BenchInvalidKit as unknown as KitImpl;
   const metabolismChange = getKitChange(kitOriginal, kitDiffed);
   const diffForward = metabolismChange.forward;
   const diffInverse = metabolismChange.backward;
   const benchJsonNullToUndefined = (_key: string, value: unknown) => (value === null ? undefined : value);
 
-  const findBenchDesign = (kit: Kit, name: string, parentName?: string) => {
+  const findBenchDesign = (kit: KitImpl, name: string, parentName?: string) => {
     let parentGuid: string | undefined;
     if (parentName) {
       const p = kit.designs?.find((d) => d.name === parentName);
@@ -23298,12 +23629,12 @@ async function runBenchmarks() {
 
   await bench("Roundtrip/Metabolism", async () => {
     const serialized = JSON.stringify(kitMetabolism, null, 2);
-    const restored = JSON.parse(serialized, benchJsonNullToUndefined) as Kit;
+    const restored = JSON.parse(serialized, benchJsonNullToUndefined) as KitImpl;
     if (!areKitsEqual(restored, kitMetabolism)) throw new Error("Roundtrip/Metabolism output does not match test expectation");
   });
 
   await bench("Diff/Metabolism", () => {
-    const k2 = duplicateKitForIsolation(new Kit(kitOriginal as KitData));
+    const k2 = duplicateKitForIsolation(new KitImpl(kitOriginal as KitData));
     applyKitDiff(k2, diffForward);
     if (!areKitsEqual(k2, kitDiffed)) throw new Error("Diff/Metabolism forward output does not match test expectation");
     const restored = duplicateKitForIsolation(k2);
@@ -23341,9 +23672,9 @@ async function runBenchmarks() {
     if (!r.ok) throw new Error(r.errors.map((e) => e.message).join("; "));
   });
 
-  await bench("Validation/Invalid Kit", () => {
+  await bench("Validation/Invalid KitImpl", () => {
     const result = validateKit(kitInvalid);
-    if (result.problems.length === 0) throw new Error("Validation/Invalid Kit output does not match test expectation");
+    if (result.problems.length === 0) throw new Error("Validation/Invalid KitImpl output does not match test expectation");
   });
 
   await bench("Validation/Metabolism", () => {
