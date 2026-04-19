@@ -1,4 +1,4 @@
-"""Regenerate per-entity DTO newtypes inside semio/rs/lib.rs (mod `oop`).
+"""Regenerate per-entity DTO newtypes inside semio/rs/lib.rs.
 
 Run from repo root or from this directory:
   python semio/rs/gen_dto_wrappers.py
@@ -33,10 +33,8 @@ ENTITY_NAMES = [
     "Design",
 ]
 
-REGION_BEGIN = (
-    "        // region generated oop_dto_entities (semio/rs/gen_dto_wrappers.py)\n"
-)
-REGION_END = "        // endregion generated oop_dto_entities\n"
+REGION_BEGIN = "// region generated oop_dto_entities (semio/rs/gen_dto_wrappers.py)\n"
+REGION_END = "// endregion generated oop_dto_entities\n"
 
 
 def emit_entities_source() -> str:
@@ -62,17 +60,6 @@ pub struct {name}FullDto(pub FullRecord);
     return "".join(lines)
 
 
-def indent_for_mod_oop(s: str) -> str:
-    """Match `mod oop` body indentation (8 spaces) for DTO newtype block."""
-    out: list[str] = []
-    for line in s.splitlines(True):
-        if line.strip():
-            out.append("        " + line)
-        else:
-            out.append(line)
-    return "".join(out)
-
-
 def main() -> None:
     root = Path(__file__).resolve().parent
     lib = root / "lib.rs"
@@ -84,7 +71,7 @@ def main() -> None:
         )
     before, _mid, tail = text.partition(REGION_BEGIN)
     _inner, _end, after = tail.partition(REGION_END)
-    new_inner = indent_for_mod_oop(emit_entities_source()).rstrip() + "\n"
+    new_inner = emit_entities_source().rstrip() + "\n"
     new_text = before + REGION_BEGIN + new_inner + REGION_END + after
     lib.write_text(new_text, encoding="utf-8")
     print(f"Updated {lib}")

@@ -1156,7 +1156,6 @@ type ConnectorMeta struct {
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Parent      *TypeId     `json:"parent,omitempty"`
 	Families    []TypeId    `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
@@ -1177,10 +1176,9 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ⚒️TypeDiff represents a partial update to a type's name, parent, models, connectors or props.
+// ⚒️TypeDiff represents a partial update to a type's name, models, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
-	Parent      *TypeId         `json:"parent,omitempty"`
 	Families    []TypeId        `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
@@ -1241,7 +1239,6 @@ type TypesDiff struct {
 type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Parent      *TypeId     `json:"parent,omitempty"`
 	Families    []TypeId    `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
@@ -1260,7 +1257,6 @@ type TypeMeta struct {
 type TypeShallow struct {
 	Guid        string          `json:"guid"`
 	Name        string          `json:"name"`
-	Parent      *TypeId         `json:"parent,omitempty"`
 	Families    []TypeId        `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
@@ -1578,7 +1574,6 @@ type StatMeta struct {
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
-	Parent      *DesignId    `json:"parent,omitempty"`
 	Families    []DesignId   `json:"families,omitempty"`
 	IsAbstract  *bool        `json:"isAbstract,omitempty"`
 	Unit        *string      `json:"unit,omitempty"`
@@ -1614,7 +1609,6 @@ type CameraDiff struct {
 // ✒️DesignDiff represents a partial update to a design's name, pieces, connections or layers.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
-	Parent      *DesignId        `json:"parent,omitempty"`
 	Families    []DesignId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
@@ -1712,7 +1706,6 @@ type DesignsDiff struct {
 type DesignMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Parent      *DesignId   `json:"parent,omitempty"`
 	Families    []DesignId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1733,7 +1726,6 @@ type DesignMeta struct {
 type DesignShallow struct {
 	Guid        string           `json:"guid"`
 	Name        string           `json:"name"`
-	Parent      *DesignId        `json:"parent,omitempty"`
 	Families    []DesignId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
@@ -1974,16 +1966,16 @@ type Kit struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 
 	// Runtime session (json:"-"). Graph mutation APIs use *Kit.
-	graphMu            sync.Mutex                                 `json:"-"`
-	backbone           Backbone                                   `json:"-"`
-	strictMode         bool                                       `json:"-"`
-	conflicted         bool                                       `json:"-"`
-	conflictErrors     []KitDiffValidationNote                    `json:"-"`
-	conflictWarnings   []KitDiffValidationNote                    `json:"-"`
-	openTransactions   map[string]*kitOpenTransaction             `json:"-"`
-	historyPast        []KitGraphChange                           `json:"-"`
-	historyFuture      []KitGraphChange                           `json:"-"`
-	flattenMerkle      map[string]map[string]FlatMerkleCacheEntry `json:"-"`
+	graphMu          sync.Mutex                                 `json:"-"`
+	backbone         Backbone                                   `json:"-"`
+	strictMode       bool                                       `json:"-"`
+	conflicted       bool                                       `json:"-"`
+	conflictErrors   []KitDiffValidationNote                    `json:"-"`
+	conflictWarnings []KitDiffValidationNote                    `json:"-"`
+	openTransactions map[string]*kitOpenTransaction             `json:"-"`
+	historyPast      []KitGraphChange                           `json:"-"`
+	historyFuture    []KitGraphChange                           `json:"-"`
+	flattenMerkle    map[string]map[string]FlatMerkleCacheEntry `json:"-"`
 }
 
 // 🔏KitDiff represents a partial update to a kit's name, version, entities or metadata.
@@ -2414,7 +2406,7 @@ func ToStatMeta(s Stat) StatMeta {
 
 // 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
 func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeMeta{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
@@ -2435,12 +2427,12 @@ func ToTypeShallow(t Type) TypeShallow {
 	for i, a := range t.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 📐ToDesignMeta converts a Design to its scalar-only Meta view.
 func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignMeta{Guid: d.Guid, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
@@ -2473,7 +2465,7 @@ func ToDesignShallow(d Design) DesignShallow {
 	for i, a := range d.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignShallow{Guid: d.Guid, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 📦ToKitMeta converts a Kit to its scalar-only Meta view.
@@ -5925,7 +5917,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 }
 
 func isTypeDiffEmpty(diff TypeDiff) bool {
-	return diff.Name == nil && diff.Parent == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
 }
 
 func getDesignsDiff(before, after []Design) DesignsDiff {
@@ -6035,7 +6027,7 @@ func getDesignDiff(before, after Design) DesignDiff {
 }
 
 func isDesignDiffEmpty(diff DesignDiff) bool {
-	return diff.Name == nil && diff.Parent == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
 }
 
 func getTagsDiff(before, after []Tag) TagsDiff {
@@ -9337,16 +9329,6 @@ func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, 
 	typeGuids := refs["typeGuids"]
 	designGuids := refs["designGuids"]
 	authorGuids := refs["authorGuids"]
-	if p, ok := diff["parent"].(map[string]any); ok {
-		if pg, ok := p["guid"].(string); ok {
-			if pg != "" && !designGuids[pg] {
-				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-missing", path+": parent design "+pg+" not in kit")
-			}
-			if dg, ok := design["guid"].(string); ok && pg == dg {
-				kitdiffPush(ctx, "errors", "kitdiff.ref.design-parent-self", path+": design cannot be its own parent")
-			}
-		}
-	}
 	if da, ok := diff["authors"]; ok {
 		if arr, ok := da.([]any); ok {
 			for _, a := range arr {
@@ -10378,15 +10360,9 @@ func applyAuthorDiff(item *Author, diff *AuthorDiff) {
 	}
 }
 
-// 🧹FilterDesignsWithoutParent returns only root-level designs with no parent.
+// 🧹FilterDesignsWithoutParent returns all designs (Parent field removed).
 func FilterDesignsWithoutParent(designs []Design) []Design {
-	result := make([]Design, 0)
-	for _, d := range designs {
-		if d.Parent == nil {
-			result = append(result, d)
-		}
-	}
-	return result
+	return designs
 }
 
 func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model {
@@ -12129,9 +12105,6 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 		if t.Guid == oldGuid {
 			t.Guid = newGuid
 		}
-		if t.Parent != nil && t.Parent.Guid == oldGuid {
-			t.Parent.Guid = newGuid
-		}
 		for j := range t.Families {
 			if t.Families[j].Guid == oldGuid {
 				t.Families[j].Guid = newGuid
@@ -12152,9 +12125,6 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 		d := &kit.Designs[i]
 		if d.Guid == oldGuid {
 			d.Guid = newGuid
-		}
-		if d.Parent != nil && d.Parent.Guid == oldGuid {
-			d.Parent.Guid = newGuid
 		}
 		for j := range d.Families {
 			if d.Families[j].Guid == oldGuid {
@@ -12227,11 +12197,7 @@ func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Type)
 	for _, t := range ctx.Kit.Types {
-		parentGuid := ""
-		if t.Parent != nil {
-			parentGuid = t.Parent.Guid
-		}
-		byParent[parentGuid] = append(byParent[parentGuid], t)
+		byParent[""] = append(byParent[""], t)
 	}
 	for _, siblings := range byParent {
 		names := make(map[string][]Type)
@@ -12282,11 +12248,7 @@ func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Design)
 	for _, d := range ctx.Kit.Designs {
-		parentGuid := ""
-		if d.Parent != nil {
-			parentGuid = d.Parent.Guid
-		}
-		byParent[parentGuid] = append(byParent[parentGuid], d)
+		byParent[""] = append(byParent[""], d)
 	}
 	for _, siblings := range byParent {
 		names := make(map[string][]Design)
@@ -15435,7 +15397,7 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 
 // 🏷️loadTypes loads all types belonging to a kit from the database
 func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
-	rows, err := db.Query("SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = ?", kitGuid)
+	rows, err := db.Query("SELECT guid, name, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = ?", kitGuid)
 	if err != nil {
 		return nil, err
 	}
@@ -15444,14 +15406,11 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 	var types []Type
 	for rows.Next() {
 		var t Type
-		var parentGuid, folder, unit, description, icon, image sql.NullString
+		var folder, unit, description, icon, image sql.NullString
 		var stock sql.NullInt32
 		var isAbstract, virtual sql.NullBool
-		if err := rows.Scan(&t.Guid, &t.Name, &parentGuid, &isAbstract, &folder, &stock, &virtual, &unit, &description, &icon, &image); err != nil {
+		if err := rows.Scan(&t.Guid, &t.Name, &isAbstract, &folder, &stock, &virtual, &unit, &description, &icon, &image); err != nil {
 			return nil, err
-		}
-		if parentGuid.Valid {
-			t.Parent = &TypeId{Guid: parentGuid.String}
 		}
 		if folder.Valid {
 			t.Folder = &folder.String
@@ -15493,7 +15452,7 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 
 // ➕loadDesigns loads all designs belonging to a kit from the database
 func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
-	rows, err := db.Query(`SELECT guid, name, parent_guid, unit, folder, 
+	rows, err := db.Query(`SELECT guid, name, unit, folder, 
         is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
         FROM design WHERE kit_guid = ?`, kitGuid)
 	if err != nil {
@@ -15504,15 +15463,12 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 	var designs []Design
 	for rows.Next() {
 		var d Design
-		var parentGuid, unit, folder, description, icon, image sql.NullString
+		var unit, folder, description, icon, image sql.NullString
 		var isAbstract, canScale, canMirror sql.NullBool
 		var created, updated string
-		if err := rows.Scan(&d.Guid, &d.Name, &parentGuid, &unit, &folder,
+		if err := rows.Scan(&d.Guid, &d.Name, &unit, &folder,
 			&isAbstract, &canScale, &canMirror, &description, &icon, &image, &created, &updated); err != nil {
 			return nil, err
-		}
-		if parentGuid.Valid {
-			d.Parent = &DesignId{Guid: parentGuid.String}
 		}
 		if unit.Valid {
 			d.Unit = &unit.String
@@ -15728,11 +15684,6 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 	}
 
 	for _, t := range kit.Types {
-		var parentGuid *string
-		if t.Parent != nil {
-			parentGuid = &t.Parent.Guid
-		}
-
 		virtualVal := false
 		if t.Virtual != nil {
 			virtualVal = *t.Virtual
@@ -15741,9 +15692,9 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 		if t.IsAbstract != nil {
 			isAbstractVal = *t.IsAbstract
 		}
-		if _, err := db.Exec(`INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			t.Guid, t.Name, parentGuid, isAbstractVal, t.Folder, t.Stock, virtualVal, t.Unit, t.Description, t.Icon, t.Image, kit.Guid); err != nil {
+		if _, err := db.Exec(`INSERT INTO type (guid, name, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
+			t.Guid, t.Name, isAbstractVal, t.Folder, t.Stock, virtualVal, t.Unit, t.Description, t.Icon, t.Image, kit.Guid); err != nil {
 			return fmt.Errorf("failed to insert type %s: %w", t.Guid, err)
 		}
 		for _, c := range t.Connectors {
@@ -15760,13 +15711,9 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 	}
 
 	for _, d := range kit.Designs {
-		var parentGuid *string
-		if d.Parent != nil {
-			parentGuid = &d.Parent.Guid
-		}
-		if _, err := db.Exec(`INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			d.Guid, d.Name, parentGuid, d.Unit, d.Folder, d.IsAbstract, d.CanScale, d.CanMirror, d.Description, d.Icon, d.Image, kit.Guid); err != nil {
+		if _, err := db.Exec(`INSERT INTO design (guid, name, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
+			d.Guid, d.Name, d.Unit, d.Folder, d.IsAbstract, d.CanScale, d.CanMirror, d.Description, d.Icon, d.Image, kit.Guid); err != nil {
 			return fmt.Errorf("failed to insert design %s: %w", d.Guid, err)
 		}
 		for _, p := range d.Pieces {
