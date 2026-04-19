@@ -737,6 +737,15 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🟨js
 
+### 🦀rs
+
+Refactor semio/rs to be object-oriented and performant instead of pure functions.
+Requirements:
+
+- Never pass ids, just instance pointers
+- All methods are implemented inside the class (not just facade to pure function)
+  Here is the target:
+
 ### ✏️sketchpad
 
 semio/sketchpad:

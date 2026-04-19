@@ -346,6 +346,20 @@ impl KitGraphSession {
         g.history_past.push(ch);
         Ok(())
     }
+
+    pub fn can_undo_history(&self) -> Result<bool> {
+        let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+            message: "KitGraphSession mutex poisoned".into(),
+        })?;
+        Ok(!g.history_past.is_empty())
+    }
+
+    pub fn can_redo_history(&self) -> Result<bool> {
+        let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+            message: "KitGraphSession mutex poisoned".into(),
+        })?;
+        Ok(!g.history_future.is_empty())
+    }
 }
 
 impl KitGraphSessionInner {

@@ -663,10 +663,15 @@ kit : !Kit{
 classDiagram
 direction TB
 
-class Entity {
+class EntityStore {
   <<abstract>>
   +getName()
   +updateDescription(description: String)
+  +toIdDto() IdDto
+  +toInputDto() InputDto
+  +toMetadataDto() MetadataDto
+  +toShallowDto() ShallowDto
+  +toDto() Dto
 }
 
 class Actor {
@@ -681,7 +686,7 @@ class User {
 }
 
 class Agent {
-  +execute(commandKind: KitCommandKind, target: Entity)
+  +execute(commandKind: KitCommandKind, target: EntityStore)
 }
 
 class KitClient {
@@ -702,10 +707,10 @@ class KitClient {
 }
 
 class KitOperation {
-  +addToSelection(entity: Entity)
-  +addManyToSelection(entities: Entity[])
-  +removeFromSelection(entity: Entity)
-  +removeManyFromSelection(entities: Entity[])
+  +addToSelection(entity: EntityStore)
+  +addManyToSelection(entities: EntityStore[])
+  +removeFromSelection(entity: EntityStore)
+  +removeManyFromSelection(entities: EntityStore[])
   +clearSelection()
   +undo()
   +canUndo()
@@ -713,181 +718,181 @@ class KitOperation {
   +canRedo()
 }
 
-class Kit {
-  +createTag(tag: Tag)
-  +createTags(tags: Tag[])
-  +createConcept(concept: Concept)
-  +createConcepts(concepts: Concept[])
-  +createPort(port: Port)
-  +createPorts(ports: Port[])
-  +createQuality(quality: Quality)
-  +createQualities(qualities: Quality[])
-  +createType(type: Type)
-  +createTypes(types: Type[])
-  +createDesign(design: Design)
-  +createDesigns(designs: Design[])
-  +deleteTag(tag: Tag)
-  +deleteTags(tags: Tag[])
-  +deleteConcept(concept: Concept)
-  +deleteConcepts(concepts: Concept[])
-  +deletePort(port: Port)
-  +deletePorts(ports: Port[])
-  +deleteQuality(quality: Quality)
-  +deleteQualities(qualities: Quality[])
-  +deleteType(type: Type)
-  +deleteTypes(types: Type[])
-  +deleteDesign(design: Design)
-  +deleteDesigns(designs: Design[])
+class KitStore {
+  +createTag(tag: TagStore)
+  +createTags(tags: TagStore[])
+  +createConcept(concept: ConceptStore)
+  +createConcepts(concepts: ConceptStore[])
+  +createPort(port: PortStore)
+  +createPorts(ports: PortStore[])
+  +createQuality(quality: QualityStore)
+  +createQualities(qualities: QualityStore[])
+  +createType(type: TypeStore)
+  +createTypes(types: TypeStore[])
+  +createDesign(design: DesignStore)
+  +createDesigns(designs: DesignStore[])
+  +deleteTag(tag: TagStore)
+  +deleteTags(tags: TagStore[])
+  +deleteConcept(concept: ConceptStore)
+  +deleteConcepts(concepts: ConceptStore[])
+  +deletePort(port: PortStore)
+  +deletePorts(ports: PortStore[])
+  +deleteQuality(quality: QualityStore)
+  +deleteQualities(qualities: QualityStore[])
+  +deleteType(type: TypeStore)
+  +deleteTypes(types: TypeStore[])
+  +deleteDesign(design: DesignStore)
+  +deleteDesigns(designs: DesignStore[])
 }
 
-class Attribute {
+class AttributeStore {
   +rename(key: String)
   +setValue(value: String)
   +setDefinition(definition: String)
 }
 
-class Author {
+class AuthorStore {
   +rename(name: String)
   +changeEmail(email: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Location {
+class LocationStore {
   +setCoordinates(longitude: Float, latitude: Float, altitude: Float)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Folder {
+class FolderStore {
   +rename(name: String)
-  +setParent(parentFolder: Folder)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +setParent(parentFolder: FolderStore)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class File {
+class FileStore {
   +rename(name: String)
-  +setFolder(folder: Folder)
+  +setFolder(folder: FolderStore)
   +setRemote(remote: String)
   +replaceBlob(blob: String, size: Float, hash: String)
 }
 
-class Concept {
+class ConceptStore {
   +rename(name: String)
   +updateDescription(description: String)
   +updateIcon(icon: String)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
-class Quality {
+class QualityStore {
   +rename(name: String)
   +updateDescription(description: String)
   +updateIcon(icon: String)
   +setRange(min: Float, isMinExcluded: Boolean, max: Float, isMaxExcluded: Boolean)
   +setUnit(unit: String)
-  +addBenchmark(benchmark: Benchmark)
-  +removeBenchmark(benchmark: Benchmark)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +addBenchmark(benchmark: BenchmarkStore)
+  +removeBenchmark(benchmark: BenchmarkStore)
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
-class Benchmark {
+class BenchmarkStore {
   +rename(name: String)
   +updateIcon(icon: String)
   +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Stat {
-  +setQuality(quality: Quality)
+class StatStore {
+  +setQuality(quality: QualityStore)
   +setUnit(unit: String)
   +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
 }
 
-class Tag {
+class TagStore {
   +rename(name: String)
   +updateDescription(description: String)
   +updateIcon(icon: String)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
-class Model {
+class ModelStore {
   +rename(name: String)
-  +setFile(file: File)
-  +setTags(tags: Tag[])
+  +setFile(file: FileStore)
+  +setTags(tags: TagStore[])
   +updateDescription(description: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Port {
+class PortStore {
   +rename(name: String)
   +updateDescription(description: String)
   +updateIcon(icon: String)
-  +setCompatiblePorts(ports: Port[])
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +setCompatiblePorts(ports: PortStore[])
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
-class Connector {
+class ConnectorStore {
   +rename(name: String)
   +setPlacement(t: Float, point: Point, direction: Vector)
-  +setPort(port: Port)
+  +setPort(port: PortStore)
   +setMandatory(mandatory: Boolean)
   +updateDescription(description: String)
-  +addProp(prop: Prop)
-  +removeProp(prop: Prop)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addProp(prop: PropStore)
+  +removeProp(prop: PropStore)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Prop {
-  +setQuality(quality: Quality)
+class PropStore {
+  +setQuality(quality: QualityStore)
   +setValue(value: String)
   +setUnit(unit: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Layer {
+class LayerStore {
   +setPath(path: String)
   +setHidden(isHidden: Boolean)
   +setLocked(isLocked: Boolean)
   +setColor(color: String)
   +updateDescription(description: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Group {
+class GroupStore {
   +rename(name: String)
-  +setPieces(pieces: Piece[])
+  +setPieces(pieces: PieceStore[])
   +setColor(color: String)
   +updateDescription(description: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Piece {
+class PieceStore {
   +rename(name: String)
-  +setType(type: Type)
-  +setDesign(design: Design)
+  +setType(type: TypeStore)
+  +setDesign(design: DesignStore)
   +setPlane(plane: Plane)
   +setCenter(center: Coordinate)
   +setScale(scale: Float)
@@ -899,104 +904,104 @@ class Piece {
   +drag(targetPlane: Plane)
   +move(center: Coordinate)
   +fix()
-  +changeToType(type: Type)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +changeToType(type: TypeStore)
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
 class Side {
-  +setPiece(piece: Piece)
-  +setDesignPiece(designPiece: Piece)
-  +setConnector(connector: Connector)
+  +setPiece(piece: PieceStore)
+  +setDesignPiece(designPiece: PieceStore)
+  +setConnector(connector: ConnectorStore)
 }
 
-class Connection {
+class ConnectionStore {
   +reconnect(connected: Side, connecting: Side)
   +adjustAlignment(gap: Float, shift: Float, rise: Float, rotation: Float, turn: Float, tilt: Float, u: Float, v: Float)
   +updateDescription(description: String)
-  +addAttribute(attribute: Attribute)
-  +removeAttribute(attribute: Attribute)
+  +addAttribute(attribute: AttributeStore)
+  +removeAttribute(attribute: AttributeStore)
 }
 
-class Type {
+class TypeStore {
   +rename(name: String)
-  +setParent(parentType: Type)
+  +setParent(parentType: TypeStore)
   +setAbstract(isAbstract: Boolean)
-  +setFolder(folder: Folder)
+  +setFolder(folder: FolderStore)
   +setStock(stock: Int)
   +setVirtual(isVirtual: Boolean)
   +setUnit(unit: String)
-  +setLocation(location: Location)
-  +setAuthors(authors: Author[])
-  +setConcepts(concepts: Concept[])
+  +setLocation(location: LocationStore)
+  +setAuthors(authors: AuthorStore[])
+  +setConcepts(concepts: ConceptStore[])
   +updateIcon(icon: String)
   +updateDescription(description: String)
-  +addModel(model: Model)
-  +removeModel(model: Model)
-  +addConnector(connector: Connector)
-  +removeConnector(connector: Connector)
-  +addProp(prop: Prop)
-  +removeProp(prop: Prop)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +addModel(model: ModelStore)
+  +removeModel(model: ModelStore)
+  +addConnector(connector: ConnectorStore)
+  +removeConnector(connector: ConnectorStore)
+  +addProp(prop: PropStore)
+  +removeProp(prop: PropStore)
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
-class Design {
+class DesignStore {
   +rename(name: String)
-  +setParent(parentDesign: Design)
+  +setParent(parentDesign: DesignStore)
   +setAbstract(isAbstract: Boolean)
-  +setFolder(folder: Folder)
-  +setActiveLayer(layer: Layer)
+  +setFolder(folder: FolderStore)
+  +setActiveLayer(layer: LayerStore)
   +setScalable(canScale: Boolean)
   +setMirrorable(canMirror: Boolean)
   +setUnit(unit: String)
-  +setLocation(location: Location)
-  +setAuthors(authors: Author[])
-  +setConcepts(concepts: Concept[])
+  +setLocation(location: LocationStore)
+  +setAuthors(authors: AuthorStore[])
+  +setConcepts(concepts: ConceptStore[])
   +updateIcon(icon: String)
   +updateDescription(description: String)
   +flatten()
-  +addFixedPiece(name: String, type: Type, center: Coordinate, plane: Plane, designPiece: Piece, attributes: Attribute[])
-  +addFixedPieces(pieces: Piece[])
-  +addChildPiece(piece: Piece, connection: Connection)
-  +addChildPieces(pieces: Piece[], connections: Connection[])
-  +addHangingChildPiece(piece: Piece, connection: Connection)
-  +addHangingChildPieces(pieces: Piece[], connections: Connection[])
-  +readPiece(piece: Piece)
-  +getAlternativePieceKind(piece: Piece)
-  +renamePiece(piece: Piece, name: String)
-  +updatePieceDescription(piece: Piece, description: String)
-  +dragPiece(piece: Piece, targetPlane: Plane)
-  +dragPieces(pieces: Piece[], targetPlane: Plane)
-  +movePiece(piece: Piece, center: Coordinate)
-  +movePieces(pieces: Piece[], offset: Offset)
-  +fixPiece(piece: Piece)
-  +fixPieces(pieces: Piece[])
-  +changePieceToType(piece: Piece, type: Type)
-  +changePiecesToType(pieces: Piece[], type: Type)
-  +deletePiece(piece: Piece)
-  +deletePieces(pieces: Piece[])
-  +deletePiecesAndConnections(pieces: Piece[])
-  +addConnection(connection: Connection)
-  +removeConnection(connection: Connection)
-  +addLayer(layer: Layer)
-  +removeLayer(layer: Layer)
-  +addGroup(group: Group)
-  +removeGroup(group: Group)
-  +addStat(stat: Stat)
-  +removeStat(stat: Stat)
-  +addProp(prop: Prop)
-  +removeProp(prop: Prop)
-  +addAttribute(attribute: Attribute)
-  +addAttributes(attributes: Attribute[])
-  +removeAttribute(attribute: Attribute)
-  +removeAttributes(attributes: Attribute[])
+  +addFixedPiece(name: String, type: TypeStore, center: Coordinate, plane: Plane, designPiece: PieceStore, attributes: AttributeStore[])
+  +addFixedPieces(pieces: PieceStore[])
+  +addChildPiece(piece: PieceStore, connection: ConnectionStore)
+  +addChildPieces(pieces: PieceStore[], connections: ConnectionStore[])
+  +addHangingChildPiece(piece: PieceStore, connection: ConnectionStore)
+  +addHangingChildPieces(pieces: PieceStore[], connections: ConnectionStore[])
+  +readPiece(piece: PieceStore)
+  +getAlternativePieceKind(piece: PieceStore)
+  +renamePiece(piece: PieceStore, name: String)
+  +updatePieceDescription(piece: PieceStore, description: String)
+  +dragPiece(piece: PieceStore, targetPlane: Plane)
+  +dragPieces(pieces: PieceStore[], targetPlane: Plane)
+  +movePiece(piece: PieceStore, center: Coordinate)
+  +movePieces(pieces: PieceStore[], offset: Offset)
+  +fixPiece(piece: PieceStore)
+  +fixPieces(pieces: PieceStore[])
+  +changePieceToType(piece: PieceStore, type: TypeStore)
+  +changePiecesToType(pieces: PieceStore[], type: TypeStore)
+  +deletePiece(piece: PieceStore)
+  +deletePieces(pieces: PieceStore[])
+  +deletePiecesAndConnections(pieces: PieceStore[])
+  +addConnection(connection: ConnectionStore)
+  +removeConnection(connection: ConnectionStore)
+  +addLayer(layer: LayerStore)
+  +removeLayer(layer: LayerStore)
+  +addGroup(group: GroupStore)
+  +removeGroup(group: GroupStore)
+  +addStat(stat: StatStore)
+  +removeStat(stat: StatStore)
+  +addProp(prop: PropStore)
+  +removeProp(prop: PropStore)
+  +addAttribute(attribute: AttributeStore)
+  +addAttributes(attributes: AttributeStore[])
+  +removeAttribute(attribute: AttributeStore)
+  +removeAttributes(attributes: AttributeStore[])
   +delete()
 }
 
@@ -1022,66 +1027,115 @@ class Plane {
   +rotate(xAxis: Vector, yAxis: Vector)
 }
 
+class IdDto {
+  +asGuid() String
+  +isEmpty() Boolean
+}
+
+class InputDto {
+  +set(field: String, value: Object)
+  +addReference(field: String, reference: IdDto)
+  +addChild(field: String, child: InputDto)
+  +validate() Boolean
+}
+
+class MetadataDto {
+  +addReference(field: String, reference: IdDto)
+  +hasReference(field: String) Boolean
+  +validate() Boolean
+}
+
+class ShallowDto {
+  +addReference(field: String, reference: IdDto)
+  +addChildView(field: String, child: MetadataDto)
+  +flattenChildren() MetadataDto[]
+  +validate() Boolean
+}
+
+class Dto {
+  +addReference(field: String, reference: IdDto)
+  +addChild(field: String, child: Dto)
+  +addDerived(key: String, value: Object)
+  +computeDerived()
+  +validate() Boolean
+}
+
 Actor <|.. User
 Actor <|.. Agent
 
-Attribute --|> Entity
-Author --|> Entity
-Location --|> Entity
-Folder --|> Entity
-File --|> Entity
-Concept --|> Entity
-Quality --|> Entity
-Benchmark --|> Entity
-Stat --|> Entity
-Tag --|> Entity
-Model --|> Entity
-Port --|> Entity
-Connector --|> Entity
-Prop --|> Entity
-Layer --|> Entity
-Group --|> Entity
-Piece --|> Entity
-Connection --|> Entity
-Type --|> Entity
-Design --|> Entity
+AttributeStore --|> EntityStore
+AuthorStore --|> EntityStore
+LocationStore --|> EntityStore
+FolderStore --|> EntityStore
+FileStore --|> EntityStore
+ConceptStore --|> EntityStore
+QualityStore --|> EntityStore
+BenchmarkStore --|> EntityStore
+StatStore --|> EntityStore
+TagStore --|> EntityStore
+ModelStore --|> EntityStore
+PortStore --|> EntityStore
+ConnectorStore --|> EntityStore
+PropStore --|> EntityStore
+LayerStore --|> EntityStore
+GroupStore --|> EntityStore
+PieceStore --|> EntityStore
+ConnectionStore --|> EntityStore
+TypeStore --|> EntityStore
+DesignStore --|> EntityStore
+KitStore --|> EntityStore
 
 KitClient --> Actor : actor
-KitClient --> Kit : worksOn
+KitClient --> KitStore : worksOn
 KitClient *-- KitOperation : operations
 
-Kit *-- Tag
-Kit *-- Concept
-Kit *-- Port
-Kit *-- Quality
-Kit *-- Type
-Kit *-- Design
-Kit *-- File
-Kit *-- Folder
-Kit *-- Author
+KitStore *-- TagStore
+KitStore *-- ConceptStore
+KitStore *-- PortStore
+KitStore *-- QualityStore
+KitStore *-- TypeStore
+KitStore *-- DesignStore
+KitStore *-- FileStore
+KitStore *-- FolderStore
+KitStore *-- AuthorStore
 
-Quality *-- Benchmark
-Type *-- Model
-Type *-- Connector
-Type *-- Prop
-Design *-- Piece
-Design *-- Connection
-Design *-- Layer
-Design *-- Group
-Design *-- Stat
-Design *-- Prop
+QualityStore *-- BenchmarkStore
+TypeStore *-- ModelStore
+TypeStore *-- ConnectorStore
+TypeStore *-- PropStore
+DesignStore *-- PieceStore
+DesignStore *-- ConnectionStore
+DesignStore *-- LayerStore
+DesignStore *-- GroupStore
+DesignStore *-- StatStore
+DesignStore *-- PropStore
 
-Model --> File
-Model o-- Tag
-Connector --> Port
-Connector *-- Prop
-Piece --> Type
-Piece --> Design
-Connection *-- Side
-Side --> Piece
-Side --> Connector
+ModelStore --> FileStore
+ModelStore o-- TagStore
+ConnectorStore --> PortStore
+ConnectorStore *-- PropStore
+GroupStore o-- PieceStore
+PieceStore --> TypeStore
+PieceStore --> DesignStore
+ConnectionStore *-- Side
+Side --> PieceStore
+Side --> ConnectorStore
 Plane *-- Point
 Plane *-- Vector
+
+EntityStore ..> IdDto : toIdDto
+EntityStore ..> InputDto : toInputDto
+EntityStore ..> MetadataDto : toMetadataDto
+EntityStore ..> ShallowDto : toShallowDto
+EntityStore ..> Dto : toDto
+
+InputDto --> IdDto : all references
+InputDto --> InputDto : all children
+MetadataDto --> IdDto : references only
+ShallowDto --> IdDto : cross references
+ShallowDto --> MetadataDto : child metadata
+Dto --> IdDto : cross references
+Dto --> Dto : deep children
 ```
 
 ## 📛 Entities
