@@ -1,5 +1,5 @@
 // @ts-nocheck
-// #region 🧲Header
+// #region ­ƒº▓Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -7,9 +7,9 @@
 
 // Core domain model types, schemas and utilities for the semio platform.
 
-// #endregion 🧲Header
+// #endregion ­ƒº▓Header
 
-// #region ⛩️Imports
+// #region Ôø®´©ÅImports
 // External dependency imports MUST be declared here.
 import { Accessor as GltfAccessor, Buffer as GltfBuffer, Document as GltfDocument, Material as GltfMaterial, Mesh as GltfMesh, Node as GltfNode, Texture as GltfTexture, NodeIO } from "@gltf-transform/core";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json" with { type: "json" };
@@ -20,9 +20,9 @@ import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 
-// #endregion ⛩️Imports
+// #endregion Ôø®´©ÅImports
 
-// #region 🎞️Constants
+// #region ­ƒÄ×´©ÅConstants
 // Global constants MUST define shared numeric parameters.
 
 /** Standard icon width in pixels.
@@ -33,9 +33,9 @@ export const ICON_WIDTH = 50;
  **/
 export const TOLERANCE = 1e-5;
 
-// #endregion 🎞️Constants
+// #endregion ­ƒÄ×´©ÅConstants
 
-// #region 📦Utilities
+// #region ­ƒôªUtilities
 // General-purpose utility functions MUST be defined here.
 
 /**
@@ -47,7 +47,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  **/
 export const guid = () => uuidv7();
-// 🎲SeededRandom provides deterministic pseudo-random number generation.
+// ­ƒÄ▓SeededRandom provides deterministic pseudo-random number generation.
 class SeededRandom {
   private seed: number;
   constructor(seed: number) {
@@ -182,9 +182,9 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
  **/
 export type Guid = string;
 
-// #endregion 📦Utilities
+// #endregion ­ƒôªUtilities
 
-// #region 🐍Entity IDs
+// #region ­ƒÉìEntity IDs
 // Entity identifier types and comparison functions MUST be defined here.
 
 /**
@@ -632,11 +632,11 @@ export const getConceptGuid = (id: ConceptId): Guid => id.guid;
  **/
 export const getFamilyGuid = (id: FamilyId): Guid => id.guid;
 
-// #endregion 🐍Entity IDs
+// #endregion ­ƒÉìEntity IDs
 
-// #region 🖥️Weak Entities
+// #region ­ƒûÑ´©ÅWeak Entities
 
-// #region 📺Coord
+// #region ­ƒô║Coord
 // Coord weak entity types and schemas MUST be defined here.
 
 /**
@@ -659,27 +659,27 @@ export class Coord implements CoordPlain {
   toPlain(): CoordPlain {
     return CoordSchema.parse(this as unknown as CoordPlain);
   }
-  /** 📺Serialize this coord for transport. */
+  /** ­ƒô║Serialize this coord for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📺Deserialize a coord from transport JSON. */
+  /** ­ƒô║Deserialize a coord from transport JSON. */
   static deserialize(json: string): Coord {
     return new Coord(CoordSchema.parse(JSON.parse(json)));
   }
-  /** 📺Compute a coordinate delta from this coordinate to another coordinate. */
+  /** ­ƒô║Compute a coordinate delta from this coordinate to another coordinate. */
   diffTo(after: Coord): CoordDiff {
     return { u: after.u - this.u, v: after.v - this.v };
   }
-  /** 📺Build the reverse coordinate delta for an already-applied delta. */
+  /** ­ƒô║Build the reverse coordinate delta for an already-applied delta. */
   inverseDiff(appliedDiff: CoordDiff): CoordDiff {
     return { u: this.u - (appliedDiff.u ?? 0), v: this.v - (appliedDiff.v ?? 0) };
   }
-  /** 📺Merge two coordinate deltas. */
+  /** ­ƒô║Merge two coordinate deltas. */
   static mergeDiff(first: CoordDiff, second: CoordDiff): CoordDiff {
     return { u: (first.u ?? 0) + (second.u ?? 0), v: (first.v ?? 0) + (second.v ?? 0) };
   }
-  /** 📺Apply a coordinate delta to this coordinate. */
+  /** ­ƒô║Apply a coordinate delta to this coordinate. */
   applyDiff(diff: CoordDiff): void {
     if (diff.u !== undefined) this.u += diff.u;
     if (diff.v !== undefined) this.v += diff.v;
@@ -726,9 +726,9 @@ export const applyCoordDiff = (target: Coord, diff: CoordDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion 📺Coord
+// #endregion ­ƒô║Coord
 
-// #region ➡️Vec
+// #region Ô×í´©ÅVec
 // Vec weak entity types and schemas MUST be defined here.
 
 /**
@@ -751,27 +751,27 @@ export class Vec implements VecPlain {
   toPlain(): VecPlain {
     return VecSchema.parse(this as unknown as VecPlain);
   }
-  /** ➡️Serialize this vector coordinate for transport. */
+  /** Ô×í´©ÅSerialize this vector coordinate for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ➡️Deserialize a vector coordinate from transport JSON. */
+  /** Ô×í´©ÅDeserialize a vector coordinate from transport JSON. */
   static deserialize(json: string): Vec {
     return new Vec(VecSchema.parse(JSON.parse(json)));
   }
-  /** ➡️Compute a vector-coordinate delta. */
+  /** Ô×í´©ÅCompute a vector-coordinate delta. */
   diffTo(after: Vec): VecDiff {
     return { u: after.u - this.u, v: after.v - this.v };
   }
-  /** ➡️Build the reverse vector-coordinate delta for an already-applied delta. */
+  /** Ô×í´©ÅBuild the reverse vector-coordinate delta for an already-applied delta. */
   inverseDiff(appliedDiff: VecDiff): VecDiff {
     return { u: this.u - (appliedDiff.u ?? 0), v: this.v - (appliedDiff.v ?? 0) };
   }
-  /** ➡️Merge two vector-coordinate deltas. */
+  /** Ô×í´©ÅMerge two vector-coordinate deltas. */
   static mergeDiff(first: VecDiff, second: VecDiff): VecDiff {
     return { u: (first.u ?? 0) + (second.u ?? 0), v: (first.v ?? 0) + (second.v ?? 0) };
   }
-  /** ➡️Apply a vector-coordinate delta to this vector coordinate. */
+  /** Ô×í´©ÅApply a vector-coordinate delta to this vector coordinate. */
   applyDiff(diff: VecDiff): void {
     if (diff.u !== undefined) this.u += diff.u;
     if (diff.v !== undefined) this.v += diff.v;
@@ -818,9 +818,9 @@ export const applyVecDiff = (target: Vec, diff: VecDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion ➡️Vec
+// #endregion Ô×í´©ÅVec
 
-// #region ✖️Point
+// #region Ô£û´©ÅPoint
 // Point weak entity types and schemas MUST be defined here.
 
 /**
@@ -848,27 +848,27 @@ export class Point implements PointPlain {
   toPlain(): PointPlain {
     return PointSchema.parse(this as unknown as PointPlain);
   }
-  /** ✖️Serialize this point for transport. */
+  /** Ô£û´©ÅSerialize this point for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ✖️Deserialize a point from transport JSON. */
+  /** Ô£û´©ÅDeserialize a point from transport JSON. */
   static deserialize(json: string): Point {
     return new Point(PointSchema.parse(JSON.parse(json)));
   }
-  /** ✖️Compute a point delta from this point to another point. */
+  /** Ô£û´©ÅCompute a point delta from this point to another point. */
   diffTo(after: Point): PointDiff {
     return { x: after.x - this.x, y: after.y - this.y, z: after.z - this.z };
   }
-  /** ✖️Build the reverse point delta for an already-applied delta. */
+  /** Ô£û´©ÅBuild the reverse point delta for an already-applied delta. */
   inverseDiff(appliedDiff: PointDiff): PointDiff {
     return { x: -(appliedDiff.x ?? 0), y: -(appliedDiff.y ?? 0), z: -(appliedDiff.z ?? 0) };
   }
-  /** ✖️Merge two point deltas. */
+  /** Ô£û´©ÅMerge two point deltas. */
   static mergeDiff(first: PointDiff, second: PointDiff): PointDiff {
     return { x: (first.x ?? 0) + (second.x ?? 0), y: (first.y ?? 0) + (second.y ?? 0), z: (first.z ?? 0) + (second.z ?? 0) };
   }
-  /** ✖️Apply a point delta to this point. */
+  /** Ô£û´©ÅApply a point delta to this point. */
   applyDiff(diff: PointDiff): void {
     if (diff.x !== undefined) this.x += diff.x;
     if (diff.y !== undefined) this.y += diff.y;
@@ -916,9 +916,9 @@ export const applyPointDiff = (target: Point, diff: PointDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion ✖️Point
+// #endregion Ô£û´©ÅPoint
 
-// #region ↗️Vector
+// #region Ôåù´©ÅVector
 // Vector weak entity types and schemas MUST be defined here.
 
 /**
@@ -946,27 +946,27 @@ export class Vector implements VectorPlain {
   toPlain(): VectorPlain {
     return VectorSchema.parse(this as unknown as VectorPlain);
   }
-  /** ↗️Serialize this vector for transport. */
+  /** Ôåù´©ÅSerialize this vector for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ↗️Deserialize a vector from transport JSON. */
+  /** Ôåù´©ÅDeserialize a vector from transport JSON. */
   static deserialize(json: string): Vector {
     return new Vector(VectorSchema.parse(JSON.parse(json)));
   }
-  /** ↗️Compute a vector delta from this vector to another vector. */
+  /** Ôåù´©ÅCompute a vector delta from this vector to another vector. */
   diffTo(after: Vector): VectorDiff {
     return { x: after.x - this.x, y: after.y - this.y, z: after.z - this.z };
   }
-  /** ↗️Build the reverse vector delta for an already-applied delta. */
+  /** Ôåù´©ÅBuild the reverse vector delta for an already-applied delta. */
   inverseDiff(appliedDiff: VectorDiff): VectorDiff {
     return { x: -(appliedDiff.x ?? 0), y: -(appliedDiff.y ?? 0), z: -(appliedDiff.z ?? 0) };
   }
-  /** ↗️Merge two vector deltas. */
+  /** Ôåù´©ÅMerge two vector deltas. */
   static mergeDiff(first: VectorDiff, second: VectorDiff): VectorDiff {
     return { x: (first.x ?? 0) + (second.x ?? 0), y: (first.y ?? 0) + (second.y ?? 0), z: (first.z ?? 0) + (second.z ?? 0) };
   }
-  /** ↗️Apply a vector delta to this vector. */
+  /** Ôåù´©ÅApply a vector delta to this vector. */
   applyDiff(diff: VectorDiff): void {
     if (diff.x !== undefined) this.x += diff.x;
     if (diff.y !== undefined) this.y += diff.y;
@@ -1014,9 +1014,9 @@ export const applyVectorDiff = (target: Vector, diff: VectorDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion ↗️Vector
+// #endregion Ôåù´©ÅVector
 
-// #region ◻️Plane
+// #region Ôù╗´©ÅPlane
 // Plane weak entity types and schemas MUST be defined here.
 
 /**
@@ -1047,15 +1047,15 @@ export class Plane implements PlanePlain {
   toPlain(): PlanePlain {
     return PlaneSchema.parse(this as unknown as PlanePlain);
   }
-  /** ◻️Serialize this plane for transport. */
+  /** Ôù╗´©ÅSerialize this plane for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ◻️Deserialize a plane from transport JSON. */
+  /** Ôù╗´©ÅDeserialize a plane from transport JSON. */
   static deserialize(json: string): Plane {
     return new Plane(PlaneSchema.parse(JSON.parse(json)));
   }
-  /** ◻️Convert this plane to a three.js matrix. */
+  /** Ôù╗´©ÅConvert this plane to a three.js matrix. */
   toMatrix(): THREE.Matrix4 {
     const origin = new THREE.Vector3(this.origin.x, this.origin.y, this.origin.z);
     const xAxis = new THREE.Vector3(this.xAxis.x, this.xAxis.y, this.xAxis.z);
@@ -1064,7 +1064,7 @@ export class Plane implements PlanePlain {
     const orthoYAxis = new THREE.Vector3().crossVectors(zAxis, xAxis).normalize();
     return new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
   }
-  /** ◻️Create a plane from a three.js matrix. */
+  /** Ôù╗´©ÅCreate a plane from a three.js matrix. */
   static fromMatrix(matrix: THREE.Matrix4): Plane {
     const origin = new THREE.Vector3();
     const xAxis = new THREE.Vector3();
@@ -1078,11 +1078,11 @@ export class Plane implements PlanePlain {
       yAxis: { x: yAxis.x, y: yAxis.y, z: yAxis.z },
     });
   }
-  /** ◻️Average this plane with other planes while preserving the first orientation. */
+  /** Ôù╗´©ÅAverage this plane with other planes while preserving the first orientation. */
   averageWith(planes: Plane[]): Plane {
     return Plane.average([this, ...planes]) ?? this;
   }
-  /** ◻️Average a plane collection. */
+  /** Ôù╗´©ÅAverage a plane collection. */
   static average(planes: Plane[]): Plane | null {
     if (planes.length === 0) return null;
     if (planes.length === 1) return planes[0];
@@ -1096,7 +1096,7 @@ export class Plane implements PlanePlain {
     );
     return new Plane({ origin: avgOrigin, xAxis: planes[0].xAxis, yAxis: planes[0].yAxis });
   }
-  /** ◻️Round plane components to tolerance. */
+  /** Ôù╗´©ÅRound plane components to tolerance. */
   rounded(): Plane {
     return new Plane({
       origin: { x: round(this.origin.x), y: round(this.origin.y), z: round(this.origin.z) },
@@ -1104,11 +1104,11 @@ export class Plane implements PlanePlain {
       yAxis: { x: round(this.yAxis.x), y: round(this.yAxis.y), z: round(this.yAxis.z) },
     });
   }
-  /** ◻️Compute a plane delta from this plane to another plane. */
+  /** Ôù╗´©ÅCompute a plane delta from this plane to another plane. */
   diffTo(after: Plane): PlaneDiff {
     return { origin: this.origin.diffTo(after.origin), xAxis: this.xAxis.diffTo(after.xAxis), yAxis: this.yAxis.diffTo(after.yAxis) };
   }
-  /** ◻️Build the reverse plane delta for an already-applied delta. */
+  /** Ôù╗´©ÅBuild the reverse plane delta for an already-applied delta. */
   inverseDiff(appliedDiff: PlaneDiff): PlaneDiff {
     return {
       origin: this.origin.inverseDiff(appliedDiff.origin ?? { x: 0, y: 0, z: 0 }),
@@ -1116,7 +1116,7 @@ export class Plane implements PlanePlain {
       yAxis: this.yAxis.inverseDiff(appliedDiff.yAxis ?? { x: 0, y: 0, z: 0 }),
     };
   }
-  /** ◻️Merge two plane deltas. */
+  /** Ôù╗´©ÅMerge two plane deltas. */
   static mergeDiff(first: PlaneDiff, second: PlaneDiff): PlaneDiff {
     return {
       origin: first.origin && second.origin ? Point.mergeDiff(first.origin, second.origin) : (second.origin ?? first.origin),
@@ -1124,7 +1124,7 @@ export class Plane implements PlanePlain {
       yAxis: first.yAxis && second.yAxis ? Vector.mergeDiff(first.yAxis, second.yAxis) : (second.yAxis ?? first.yAxis),
     };
   }
-  /** ◻️Apply a plane delta to this plane. */
+  /** Ôù╗´©ÅApply a plane delta to this plane. */
   applyDiff(diff: PlaneDiff): void {
     if (diff.origin) this.origin.applyDiff(diff.origin);
     if (diff.xAxis) this.xAxis.applyDiff(diff.xAxis);
@@ -1154,7 +1154,7 @@ export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
 export const averagePlane = (planes: Plane[]): Plane | null => {
   return Plane.average(planes);
 };
-// ◻️roundPlane rounds plane components to a specified number of decimal places.
+// Ôù╗´©ÅroundPlane rounds plane components to a specified number of decimal places.
 const roundPlane = (plane: Plane): Plane => plane.rounded();
 
 /**
@@ -1196,9 +1196,9 @@ export const applyPlaneDiff = (target: Plane, diff: PlaneDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion ◻️Plane
+// #endregion Ôù╗´©ÅPlane
 
-// #region 🎥Camera
+// #region ­ƒÄÑCamera
 
 // Camera weak entity types and schemas MUST be defined here.
 
@@ -1227,18 +1227,18 @@ export class Camera implements CameraPlain {
   static from(plain: CameraPlain): Camera {
     return new Camera(plain);
   }
-  /** 📦Serialize this camera for wire transport. */
+  /** ­ƒôªSerialize this camera for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🧭Deserialize a wire camera into a stateful instance. */
+  /** ­ƒº¡Deserialize a wire camera into a stateful instance. */
   static deserialize(json: string): Camera {
     return new Camera(CameraSchema.parse(JSON.parse(json)));
   }
   toPlain(): CameraPlain {
     return CameraSchema.parse(this as unknown as CameraPlain);
   }
-  /** 🧮Compute the additive camera delta from this camera to another camera. */
+  /** ­ƒº«Compute the additive camera delta from this camera to another camera. */
   diffTo(after: Camera): CameraDiff {
     return {
       position: this.position.diffTo(after.position),
@@ -1246,7 +1246,7 @@ export class Camera implements CameraPlain {
       up: this.up.diffTo(after.up),
     };
   }
-  /** ↩️Compute the inverse additive camera delta for an already-applied delta. */
+  /** Ôå®´©ÅCompute the inverse additive camera delta for an already-applied delta. */
   inverseDiff(appliedDiff: CameraDiff): CameraDiff {
     return {
       position: appliedDiff.position ? this.position.inverseDiff(appliedDiff.position) : this.position,
@@ -1254,7 +1254,7 @@ export class Camera implements CameraPlain {
       up: appliedDiff.up ? this.up.inverseDiff(appliedDiff.up) : this.up,
     };
   }
-  /** 🧬Merge two additive camera deltas. */
+  /** ­ƒº¼Merge two additive camera deltas. */
   static mergeDiff(first: CameraDiff, second: CameraDiff): CameraDiff {
     return {
       position: first.position && second.position ? Point.mergeDiff(first.position, second.position) : (second.position ?? first.position),
@@ -1262,7 +1262,7 @@ export class Camera implements CameraPlain {
       up: first.up && second.up ? Vector.mergeDiff(first.up, second.up) : (second.up ?? first.up),
     };
   }
-  /** ✍️Apply an additive camera delta in place. */
+  /** Ô£ì´©ÅApply an additive camera delta in place. */
   applyDiff(diff: CameraDiff): void {
     if (diff.position) this.position.applyDiff(diff.position);
     if (diff.forward) this.forward.applyDiff(diff.forward);
@@ -1317,13 +1317,13 @@ export const applyCameraDiff = (target: Camera, diff: CameraDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion 🎥Camera
+// #endregion ­ƒÄÑCamera
 
-// #endregion 🖥️Weak Entities
+// #endregion ­ƒûÑ´©ÅWeak Entities
 
-// #region 💎Attribute
+// #region ­ƒÆÄAttribute
 // Attribute entity types, schemas, and helper functions MUST be defined here.
-// 📅DateProperty represents a date-time value as ISO string.
+// ­ƒôàDateProperty represents a date-time value as ISO string.
 const DateProperty = () => z.string().optional();
 
 /**
@@ -1353,15 +1353,15 @@ export class Attribute implements AttributePlain {
   toPlain(): AttributePlain {
     return AttributeSchema.parse(this as unknown as AttributePlain);
   }
-  /** 📦Serialize this attribute for wire transport. */
+  /** ­ƒôªSerialize this attribute for wire transport. */
   toJson(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🧭Deserialize a wire attribute into a stateful instance. */
+  /** ­ƒº¡Deserialize a wire attribute into a stateful instance. */
   static fromJson(json: string): Attribute {
     return new Attribute(AttributeSchema.parse(JSON.parse(json)));
   }
-  /** 🧮Compute the replacement-style attribute delta from this attribute to another attribute. */
+  /** ­ƒº«Compute the replacement-style attribute delta from this attribute to another attribute. */
   diffTo(after: Attribute): AttributeDiff {
     const diff: AttributeDiff = {};
     if (this.key !== after.key) diff.key = after.key;
@@ -1369,7 +1369,7 @@ export class Attribute implements AttributePlain {
     if (this.definition !== after.definition) diff.definition = after.definition;
     return diff;
   }
-  /** ↩️Compute the inverse replacement-style attribute delta for an already-applied delta. */
+  /** Ôå®´©ÅCompute the inverse replacement-style attribute delta for an already-applied delta. */
   inverseDiff(appliedDiff: AttributeDiff): AttributeDiff {
     return {
       key: appliedDiff.key ? this.key : "",
@@ -1377,7 +1377,7 @@ export class Attribute implements AttributePlain {
       definition: appliedDiff.definition ? this.definition : "",
     };
   }
-  /** 🧬Merge two replacement-style attribute deltas. */
+  /** ­ƒº¼Merge two replacement-style attribute deltas. */
   static mergeDiff(first: AttributeDiff, second: AttributeDiff): AttributeDiff {
     return {
       key: second.key ?? first.key,
@@ -1385,7 +1385,7 @@ export class Attribute implements AttributePlain {
       definition: second.definition ?? first.definition,
     };
   }
-  /** ✍️Apply a replacement-style attribute delta in place. */
+  /** Ô£ì´©ÅApply a replacement-style attribute delta in place. */
   applyDiff(diff: AttributeDiff): void {
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.value !== undefined) this.value = diff.value;
@@ -1477,7 +1477,7 @@ export const AttributesDiffSchema = z.object({
  **/
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
-// 💎getAttributesDiff computes the diff between two attribute collections.
+// ­ƒÆÄgetAttributesDiff computes the diff between two attribute collections.
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
   const beforeGuids = new Set(before.map((a) => a.guid));
   const afterGuids = new Set(after.map((a) => a.guid));
@@ -1543,9 +1543,9 @@ export const applyAttributesDiff = (items: Attribute[], diff: AttributesDiff): v
   }
 };
 
-// #endregion 💎Attribute
+// #endregion ­ƒÆÄAttribute
 
-// #region 📍Location
+// #region ­ƒôìLocation
 // Location entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1579,15 +1579,15 @@ export class Location implements LocationPlain {
   toPlain(): LocationPlain {
     return LocationSchema.parse(this as unknown as LocationPlain);
   }
-  /** 📍Serialize this location for transport. */
+  /** ­ƒôìSerialize this location for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📍Deserialize a location from transport JSON. */
+  /** ­ƒôìDeserialize a location from transport JSON. */
   static deserialize(json: string): Location {
     return new Location(LocationSchema.parse(JSON.parse(json)));
   }
-  /** 📍Compute a location delta from this location to another location. */
+  /** ­ƒôìCompute a location delta from this location to another location. */
   diffTo(after: Location): LocationDiff {
     const diff: LocationDiff = {};
     if (this.longitude !== after.longitude) diff.longitude = after.longitude - this.longitude;
@@ -1596,7 +1596,7 @@ export class Location implements LocationPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 📍Build the reverse location delta for an already-applied delta. */
+  /** ­ƒôìBuild the reverse location delta for an already-applied delta. */
   inverseDiff(appliedDiff: LocationDiff): LocationDiff {
     const inverse: LocationDiff = {};
     if (appliedDiff.longitude !== undefined) inverse.longitude = this.longitude;
@@ -1605,11 +1605,11 @@ export class Location implements LocationPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 📍Merge two location deltas. */
+  /** ­ƒôìMerge two location deltas. */
   static mergeDiff(first: LocationDiff, second: LocationDiff): LocationDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 📍Apply a location delta to this location. */
+  /** ­ƒôìApply a location delta to this location. */
   applyDiff(diff: LocationDiff): void {
     if (diff.longitude !== undefined) this.longitude = diff.longitude;
     if (diff.latitude !== undefined) this.latitude = diff.latitude;
@@ -1663,9 +1663,9 @@ export const applyLocationDiff = (target: Location, diff: LocationDiff): void =>
   target.applyDiff(diff);
 };
 
-// #endregion 📍Location
+// #endregion ­ƒôìLocation
 
-// #region ✍️Author
+// #region Ô£ì´©ÅAuthor
 // Author entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1692,15 +1692,15 @@ export class Author implements AuthorPlain {
   toPlain(): AuthorPlain {
     return AuthorSchema.parse(this as unknown as AuthorPlain);
   }
-  /** ✍️Serialize this author for transport. */
+  /** Ô£ì´©ÅSerialize this author for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ✍️Deserialize an author from transport JSON. */
+  /** Ô£ì´©ÅDeserialize an author from transport JSON. */
   static deserialize(json: string): Author {
     return new Author(AuthorSchema.parse(JSON.parse(json)));
   }
-  /** ✍️Compute an author delta from this author to another author. */
+  /** Ô£ì´©ÅCompute an author delta from this author to another author. */
   diffTo(after: Author): AuthorDiff {
     const diff: AuthorDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -1708,7 +1708,7 @@ export class Author implements AuthorPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** ✍️Build the reverse author delta for an already-applied delta. */
+  /** Ô£ì´©ÅBuild the reverse author delta for an already-applied delta. */
   inverseDiff(appliedDiff: AuthorDiff): AuthorDiff {
     const inverse: AuthorDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -1716,11 +1716,11 @@ export class Author implements AuthorPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** ✍️Merge two author deltas. */
+  /** Ô£ì´©ÅMerge two author deltas. */
   static mergeDiff(first: AuthorDiff, second: AuthorDiff): AuthorDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** ✍️Apply an author delta to this author. */
+  /** Ô£ì´©ÅApply an author delta to this author. */
   applyDiff(diff: AuthorDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.email !== undefined) this.email = diff.email;
@@ -1817,9 +1817,9 @@ export const AuthorsDiffSchema = z.object({
  **/
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
-// #endregion ✍️Author
+// #endregion Ô£ì´©ÅAuthor
 
-// #region 📄File
+// #region ­ƒôäFile
 // File entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -1865,15 +1865,15 @@ export class File implements FilePlain {
   toPlain(): FilePlain {
     return FileSchema.parse(this as unknown as FilePlain);
   }
-  /** 📄Serialize this file for transport. */
+  /** ­ƒôäSerialize this file for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📄Deserialize a file from transport JSON. */
+  /** ­ƒôäDeserialize a file from transport JSON. */
   static deserialize(json: string): File {
     return new File(FileSchema.parse(JSON.parse(json)));
   }
-  /** 📄Compute a file delta from this file to another file. */
+  /** ­ƒôäCompute a file delta from this file to another file. */
   diffTo(after: File): FileDiff {
     const diff: FileDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -1889,7 +1889,7 @@ export class File implements FilePlain {
     if (this.folder?.guid !== after.folder?.guid) diff.folder = after.folder;
     return diff;
   }
-  /** 📄Build the reverse file delta for an already-applied delta. */
+  /** ­ƒôäBuild the reverse file delta for an already-applied delta. */
   inverseDiff(appliedDiff: FileDiff): FileDiff {
     const inverse: FileDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -1905,11 +1905,11 @@ export class File implements FilePlain {
     if (appliedDiff.folder !== undefined) inverse.folder = this.folder;
     return inverse;
   }
-  /** 📄Merge two file deltas. */
+  /** ­ƒôäMerge two file deltas. */
   static mergeDiff(first: FileDiff, second: FileDiff): FileDiff {
     return { ...first, ...second };
   }
-  /** 📄Apply a file delta to this file. */
+  /** ­ƒôäApply a file delta to this file. */
   applyDiff(diff: FileDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.description !== undefined) this.description = diff.description;
@@ -1975,13 +1975,15 @@ export type FileDiff = z.infer<typeof FileDiffSchema>;
  * Retrieves the FileDiff value.
  **/
 export const getFileDiff = (before: File, after: File): FileDiff => {
-  return before.diffTo(after);
+  const b = before instanceof File ? before : new File(before);
+  return b.diffTo(after);
 };
 /**
  * Diff type for tracking inverseFile changes.
  **/
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
-  return original.inverseDiff(appliedDiff);
+  const o = original instanceof File ? original : new File(original);
+  return o.inverseDiff(appliedDiff);
 };
 /**
  * Diff type for tracking mergeFile changes.
@@ -2009,9 +2011,9 @@ export const FilesDiffSchema = z.object({
  **/
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
-// #endregion 📄File
+// #endregion ­ƒôäFile
 
-// #region 📁Folder
+// #region ­ƒôüFolder
 // Folder entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2053,15 +2055,15 @@ export class Folder implements FolderPlain {
   toPlain(): FolderPlain {
     return FolderSchema.parse(this as unknown as FolderPlain);
   }
-  /** 📁Serialize this folder for transport. */
+  /** ­ƒôüSerialize this folder for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📁Deserialize a folder from transport JSON. */
+  /** ­ƒôüDeserialize a folder from transport JSON. */
   static deserialize(json: string): Folder {
     return new Folder(FolderSchema.parse(JSON.parse(json)));
   }
-  /** 📁Compute a folder delta from this folder to another folder. */
+  /** ­ƒôüCompute a folder delta from this folder to another folder. */
   diffTo(after: Folder): FolderDiff {
     const diff: FolderDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -2074,7 +2076,7 @@ export class Folder implements FolderPlain {
     if (this.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
     return diff;
   }
-  /** 📁Build the reverse folder delta for an already-applied delta. */
+  /** ­ƒôüBuild the reverse folder delta for an already-applied delta. */
   inverseDiff(appliedDiff: FolderDiff): FolderDiff {
     const inverse: FolderDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -2087,11 +2089,11 @@ export class Folder implements FolderPlain {
     if (appliedDiff.updatedBy !== undefined) inverse.updatedBy = this.updatedBy;
     return inverse;
   }
-  /** 📁Merge two folder deltas. */
+  /** ­ƒôüMerge two folder deltas. */
   static mergeDiff(first: FolderDiff, second: FolderDiff): FolderDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 📁Apply a folder delta to this folder. */
+  /** ­ƒôüApply a folder delta to this folder. */
   applyDiff(diff: FolderDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.parent !== undefined) this.parent = diff.parent;
@@ -2193,9 +2195,9 @@ export const FoldersDiffSchema = z.object({
  **/
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
-// #endregion 📁Folder
+// #endregion ­ƒôüFolder
 
-// #region 📏Benchmark
+// #region ­ƒôÅBenchmark
 // Benchmark entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2338,7 +2340,7 @@ export const BenchmarksDiffSchema = z.object({
  * Diff type for tracking Benchmarks changes.
  **/
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
-// 📏getBenchmarksDiff computes the diff between two benchmark collections.
+// ­ƒôÅgetBenchmarksDiff computes the diff between two benchmark collections.
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
   const beforeGuids = new Set(before.map((b) => b.guid));
   const afterGuids = new Set(after.map((b) => b.guid));
@@ -2359,7 +2361,7 @@ const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksD
   return diff;
 };
 
-// 📏inverseBenchmarksDiff inverts a benchmark diff to reverse its effect.
+// ­ƒôÅinverseBenchmarksDiff inverts a benchmark diff to reverse its effect.
 const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDiff): BenchmarksDiff => {
   const addedGuids = appliedDiff.added?.map((b) => b.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -2374,12 +2376,12 @@ const inverseBenchmarksDiff = (original: Benchmark[], appliedDiff: BenchmarksDif
     }),
   };
 };
-// 📏mergeBenchmarksDiff merges two benchmark diffs into one.
+// ­ƒôÅmergeBenchmarksDiff merges two benchmark diffs into one.
 const mergeBenchmarksDiff = (first: BenchmarksDiff, second: BenchmarksDiff): BenchmarksDiff => {
   return { ...first, ...second };
 };
 
-// 📏applyBenchmarksDiff applies a benchmark diff to a collection.
+// ­ƒôÅapplyBenchmarksDiff applies a benchmark diff to a collection.
 const applyBenchmarksDiff = (items: Benchmark[], diff: BenchmarksDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
@@ -2398,9 +2400,9 @@ const applyBenchmarksDiff = (items: Benchmark[], diff: BenchmarksDiff): void => 
   }
 };
 
-// #endregion 📏Benchmark
+// #endregion ­ƒôÅBenchmark
 
-// #region 🔬Quality
+// #region ­ƒö¼Quality
 // Quality entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2467,15 +2469,15 @@ export class Quality implements QualityPlain {
   toPlain(): QualityPlain {
     return QualitySchema.parse(this as unknown as QualityPlain);
   }
-  /** 🔬Serialize this quality for transport. */
+  /** ­ƒö¼Serialize this quality for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🔬Deserialize a quality from transport JSON. */
+  /** ­ƒö¼Deserialize a quality from transport JSON. */
   static deserialize(json: string): Quality {
     return new Quality(QualitySchema.parse(JSON.parse(json)));
   }
-  /** 🔬Compute a quality delta from this quality to another quality. */
+  /** ­ƒö¼Compute a quality delta from this quality to another quality. */
   diffTo(after: Quality): QualityDiff {
     const diff: QualityDiff = {};
     if (this.key !== after.key) diff.key = after.key;
@@ -2499,7 +2501,7 @@ export class Quality implements QualityPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 🔬Build the reverse quality delta for an already-applied delta. */
+  /** ­ƒö¼Build the reverse quality delta for an already-applied delta. */
   inverseDiff(appliedDiff: QualityDiff): QualityDiff {
     const inverse: QualityDiff = {};
     if (appliedDiff.key !== undefined) inverse.key = this.key;
@@ -2523,7 +2525,7 @@ export class Quality implements QualityPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 🔬Merge two quality deltas. */
+  /** ­ƒö¼Merge two quality deltas. */
   static mergeDiff(first: QualityDiff, second: QualityDiff): QualityDiff {
     return {
       ...first,
@@ -2532,7 +2534,7 @@ export class Quality implements QualityPlain {
       attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
     };
   }
-  /** 🔬Apply a quality delta to this quality. */
+  /** ­ƒö¼Apply a quality delta to this quality. */
   applyDiff(diff: QualityDiff): void {
     if (diff.key !== undefined) this.key = diff.key;
     if (diff.name !== undefined) this.name = diff.name;
@@ -2646,9 +2648,9 @@ export const QualitiesDiffSchema = z.object({
 });
 export type QualitiesDiff = z.infer<typeof QualitiesDiffSchema>;
 
-// #endregion 🔬Quality
+// #endregion ­ƒö¼Quality
 
-// #region ⚓Port
+// #region ÔÜôPort
 // Port entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2686,15 +2688,15 @@ export class Port implements PortPlain {
   toPlain(): PortPlain {
     return PortSchema.parse(this as unknown as PortPlain);
   }
-  /** ⚓Serialize this port for transport. */
+  /** ÔÜôSerialize this port for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ⚓Deserialize a port from transport JSON. */
+  /** ÔÜôDeserialize a port from transport JSON. */
   static deserialize(json: string): Port {
     return new Port(PortSchema.parse(JSON.parse(json)));
   }
-  /** ⚓Compute a port delta from this port to another port. */
+  /** ÔÜôCompute a port delta from this port to another port. */
   diffTo(after: Port): PortDiff {
     const diff: PortDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -2705,7 +2707,7 @@ export class Port implements PortPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** ⚓Build the reverse port delta for an already-applied delta. */
+  /** ÔÜôBuild the reverse port delta for an already-applied delta. */
   inverseDiff(appliedDiff: PortDiff): PortDiff {
     const inverse: PortDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -2716,7 +2718,7 @@ export class Port implements PortPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** ⚓Merge two port deltas. */
+  /** ÔÜôMerge two port deltas. */
   static mergeDiff(first: PortDiff, second: PortDiff): PortDiff {
     return {
       ...first,
@@ -2724,7 +2726,7 @@ export class Port implements PortPlain {
       attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
     };
   }
-  /** ⚓Apply a port delta to this port. */
+  /** ÔÜôApply a port delta to this port. */
   applyDiff(diff: PortDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if ("description" in diff) {
@@ -2917,9 +2919,9 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
   return iface1Compatible.some((c) => c.guid === iface2.guid) || iface2Compatible.some((c) => c.guid === iface1.guid);
 };
 
-// #endregion ⚓Port
+// #endregion ÔÜôPort
 
-// #region �Family
+// #region ´┐¢Family
 // Family entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -2956,15 +2958,15 @@ export class Family implements FamilyPlain {
   toPlain(): FamilyPlain {
     return FamilySchema.parse(this as unknown as FamilyPlain);
   }
-  /** 👪Serialize this family for transport. */
+  /** ­ƒæ¬Serialize this family for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 👪Deserialize a family from transport JSON. */
+  /** ­ƒæ¬Deserialize a family from transport JSON. */
   static deserialize(json: string): Family {
     return new Family(FamilySchema.parse(JSON.parse(json)));
   }
-  /** 👪Compute a family delta from this family to another family. */
+  /** ­ƒæ¬Compute a family delta from this family to another family. */
   diffTo(after: Family): FamilyDiff {
     const diff: FamilyDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -2974,7 +2976,7 @@ export class Family implements FamilyPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 👪Build the reverse family delta for an already-applied delta. */
+  /** ­ƒæ¬Build the reverse family delta for an already-applied delta. */
   inverseDiff(appliedDiff: FamilyDiff): FamilyDiff {
     const inverse: FamilyDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -2984,7 +2986,7 @@ export class Family implements FamilyPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 👪Merge two family deltas. */
+  /** ­ƒæ¬Merge two family deltas. */
   static mergeDiff(first: FamilyDiff, second: FamilyDiff): FamilyDiff {
     return {
       ...first,
@@ -2993,7 +2995,7 @@ export class Family implements FamilyPlain {
       attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
     };
   }
-  /** 👪Apply a family delta to this family. */
+  /** ­ƒæ¬Apply a family delta to this family. */
   applyDiff(diff: FamilyDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if ("description" in diff) {
@@ -3173,9 +3175,9 @@ export const applyFamiliesDiff = (families: Family[], diff: FamiliesDiff): void 
   }
 };
 
-// #endregion 👪Family
+// #endregion ­ƒæ¬Family
 
-// #region �📊Prop
+// #region ´┐¢­ƒôèProp
 // Prop entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3209,15 +3211,15 @@ export class Prop implements PropPlain {
   toPlain(): PropPlain {
     return PropSchema.parse(this as unknown as PropPlain);
   }
-  /** 📊Serialize this prop for transport. */
+  /** ­ƒôèSerialize this prop for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📊Deserialize a prop from transport JSON. */
+  /** ­ƒôèDeserialize a prop from transport JSON. */
   static deserialize(json: string): Prop {
     return new Prop(PropSchema.parse(JSON.parse(json)));
   }
-  /** 📊Compute a prop delta from this prop to another prop. */
+  /** ­ƒôèCompute a prop delta from this prop to another prop. */
   diffTo(after: Prop): PropDiff {
     const diff: PropDiff = {};
     if (this.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
@@ -3226,7 +3228,7 @@ export class Prop implements PropPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 📊Build the reverse prop delta for an already-applied delta. */
+  /** ­ƒôèBuild the reverse prop delta for an already-applied delta. */
   inverseDiff(appliedDiff: PropDiff): PropDiff {
     const inverse: PropDiff = {};
     if (appliedDiff.quality !== undefined) inverse.quality = this.quality;
@@ -3235,11 +3237,11 @@ export class Prop implements PropPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 📊Merge two prop deltas. */
+  /** ­ƒôèMerge two prop deltas. */
   static mergeDiff(first: PropDiff, second: PropDiff): PropDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 📊Apply a prop delta to this prop. */
+  /** ­ƒôèApply a prop delta to this prop. */
   applyDiff(diff: PropDiff): void {
     if (diff.quality !== undefined) this.quality = diff.quality;
     if (diff.value !== undefined) this.value = diff.value;
@@ -3336,7 +3338,7 @@ export const PropsDiffSchema = z.object({
  * Diff type for tracking Props changes.
  **/
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
-// 📊getPropsDiff computes the diff between two prop collections.
+// ­ƒôègetPropsDiff computes the diff between two prop collections.
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -3356,7 +3358,7 @@ const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
   if (added.length > 0) diff.added = added;
   return diff;
 };
-// 📊inversePropsDiff inverts a prop diff to reverse its effect.
+// ­ƒôèinversePropsDiff inverts a prop diff to reverse its effect.
 const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff => {
   const addedGuids = appliedDiff.added?.map((p) => p.guid) ?? [];
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -3371,11 +3373,11 @@ const inversePropsDiff = (original: Prop[], appliedDiff: PropsDiff): PropsDiff =
     }),
   };
 };
-// 📊mergePropsDiff merges two prop diffs into one.
+// ­ƒôèmergePropsDiff merges two prop diffs into one.
 const mergePropsDiff = (first: PropsDiff, second: PropsDiff): PropsDiff => {
   return { ...first, ...second };
 };
-// 📊applyPropsDiff applies a prop diff to a collection.
+// ­ƒôèapplyPropsDiff applies a prop diff to a collection.
 const applyPropsDiff = (items: Prop[], diff: PropsDiff): void => {
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
@@ -3394,9 +3396,9 @@ const applyPropsDiff = (items: Prop[], diff: PropsDiff): void => {
   }
 };
 
-// #endregion 📊Prop
+// #endregion ­ƒôèProp
 
-// #region 🏷️Tag
+// #region ­ƒÅÀ´©ÅTag
 // Tag entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3430,15 +3432,15 @@ export class Tag implements TagPlain {
   toPlain(): TagPlain {
     return TagSchema.parse(this as unknown as TagPlain);
   }
-  /** 🏷️Serialize this tag for transport. */
+  /** ­ƒÅÀ´©ÅSerialize this tag for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🏷️Deserialize a tag from transport JSON. */
+  /** ­ƒÅÀ´©ÅDeserialize a tag from transport JSON. */
   static deserialize(json: string): Tag {
     return new Tag(TagSchema.parse(JSON.parse(json)));
   }
-  /** 🏷️Compute a tag delta from this tag to another tag. */
+  /** ­ƒÅÀ´©ÅCompute a tag delta from this tag to another tag. */
   diffTo(after: Tag): TagDiff {
     const diff: TagDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -3447,7 +3449,7 @@ export class Tag implements TagPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 🏷️Build the reverse tag delta for an already-applied delta. */
+  /** ­ƒÅÀ´©ÅBuild the reverse tag delta for an already-applied delta. */
   inverseDiff(appliedDiff: TagDiff): TagDiff {
     const inverse: TagDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -3456,11 +3458,11 @@ export class Tag implements TagPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 🏷️Merge two tag deltas. */
+  /** ­ƒÅÀ´©ÅMerge two tag deltas. */
   static mergeDiff(first: TagDiff, second: TagDiff): TagDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 🏷️Apply a tag delta to this tag. */
+  /** ­ƒÅÀ´©ÅApply a tag delta to this tag. */
   applyDiff(diff: TagDiff): void {
     if ("name" in diff && diff.name !== undefined) this.name = diff.name;
     if ("description" in diff) {
@@ -3650,9 +3652,9 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
   return tag;
 };
 
-// #endregion 🏷️Tag
+// #endregion ­ƒÅÀ´©ÅTag
 
-// #region 💡Concept
+// #region ­ƒÆíConcept
 // Concept entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3686,15 +3688,15 @@ export class Concept implements ConceptPlain {
   toPlain(): ConceptPlain {
     return ConceptSchema.parse(this as unknown as ConceptPlain);
   }
-  /** 💡Serialize this concept for transport. */
+  /** ­ƒÆíSerialize this concept for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 💡Deserialize a concept from transport JSON. */
+  /** ­ƒÆíDeserialize a concept from transport JSON. */
   static deserialize(json: string): Concept {
     return new Concept(ConceptSchema.parse(JSON.parse(json)));
   }
-  /** 💡Compute a concept delta from this concept to another concept. */
+  /** ­ƒÆíCompute a concept delta from this concept to another concept. */
   diffTo(after: Concept): ConceptDiff {
     const diff: ConceptDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -3703,7 +3705,7 @@ export class Concept implements ConceptPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 💡Build the reverse concept delta for an already-applied delta. */
+  /** ­ƒÆíBuild the reverse concept delta for an already-applied delta. */
   inverseDiff(appliedDiff: ConceptDiff): ConceptDiff {
     const inverse: ConceptDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -3712,11 +3714,11 @@ export class Concept implements ConceptPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 💡Merge two concept deltas. */
+  /** ­ƒÆíMerge two concept deltas. */
   static mergeDiff(first: ConceptDiff, second: ConceptDiff): ConceptDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 💡Apply a concept delta to this concept. */
+  /** ­ƒÆíApply a concept delta to this concept. */
   applyDiff(diff: ConceptDiff): void {
     if ("name" in diff && diff.name !== undefined) this.name = diff.name;
     if ("description" in diff) {
@@ -3906,9 +3908,9 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
   return concept;
 };
 
-// #endregion 💡Concept
+// #endregion ­ƒÆíConcept
 
-// #region 🗿Model
+// #region ­ƒù┐Model
 // Model entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -3944,15 +3946,15 @@ export class Model implements ModelPlain {
   toPlain(): ModelPlain {
     return ModelSchema.parse(this as unknown as ModelPlain);
   }
-  /** 🗿Serialize this model for transport. */
+  /** ­ƒù┐Serialize this model for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🗿Deserialize a model from transport JSON. */
+  /** ­ƒù┐Deserialize a model from transport JSON. */
   static deserialize(json: string): Model {
     return new Model(ModelSchema.parse(JSON.parse(json)));
   }
-  /** 🗿Compute a model delta from this model to another model. */
+  /** ­ƒù┐Compute a model delta from this model to another model. */
   diffTo(after: Model): ModelDiff {
     const diff: ModelDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -3962,7 +3964,7 @@ export class Model implements ModelPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 🗿Build the reverse model delta for an already-applied delta. */
+  /** ­ƒù┐Build the reverse model delta for an already-applied delta. */
   inverseDiff(appliedDiff: ModelDiff): ModelDiff {
     const inverse: ModelDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -3972,11 +3974,11 @@ export class Model implements ModelPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 🗿Merge two model deltas. */
+  /** ­ƒù┐Merge two model deltas. */
   static mergeDiff(first: ModelDiff, second: ModelDiff): ModelDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 🗿Apply a model delta to this model. */
+  /** ­ƒù┐Apply a model delta to this model. */
   applyDiff(diff: ModelDiff): void {
     if (diff.file !== undefined) this.file = diff.file;
     if (diff.name !== undefined) this.name = diff.name;
@@ -4238,9 +4240,9 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
   return { isValid: true, extension: ext };
 };
 
-// #endregion 🗿Model
+// #endregion ­ƒù┐Model
 
-// #region 🔌Connector
+// #region ­ƒöîConnector
 // Connector entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4289,15 +4291,15 @@ export class Connector implements ConnectorPlain {
   toPlain(): ConnectorPlain {
     return ConnectorSchema.parse(this as unknown as ConnectorPlain);
   }
-  /** 🔌Serialize this connector for transport. */
+  /** ­ƒöîSerialize this connector for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🔌Deserialize a connector from transport JSON. */
+  /** ­ƒöîDeserialize a connector from transport JSON. */
   static deserialize(json: string): Connector {
     return new Connector(ConnectorSchema.parse(JSON.parse(json)));
   }
-  /** 🔌Compute a connector delta from this connector to another connector. */
+  /** ­ƒöîCompute a connector delta from this connector to another connector. */
   diffTo(after: Connector): ConnectorDiff {
     const diff: ConnectorDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -4312,7 +4314,7 @@ export class Connector implements ConnectorPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 🔌Build the reverse connector delta for an already-applied delta. */
+  /** ­ƒöîBuild the reverse connector delta for an already-applied delta. */
   inverseDiff(appliedDiff: ConnectorDiff): ConnectorDiff {
     const inverse: ConnectorDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -4327,7 +4329,7 @@ export class Connector implements ConnectorPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 🔌Merge two connector deltas. */
+  /** ­ƒöîMerge two connector deltas. */
   static mergeDiff(first: ConnectorDiff, second: ConnectorDiff): ConnectorDiff {
     return {
       ...first,
@@ -4338,7 +4340,7 @@ export class Connector implements ConnectorPlain {
       attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
     };
   }
-  /** 🔌Apply a connector delta to this connector. */
+  /** ­ƒöîApply a connector delta to this connector. */
   applyDiff(diff: ConnectorDiff): void {
     if (diff.t !== undefined) this.t = diff.t;
     if (diff.point) this.point.applyDiff(diff.point);
@@ -4450,7 +4452,7 @@ export const ConnectorsDiffSchema = z.object({
  * Diff type for tracking Connectors changes.
  **/
 export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
-// 🔌getConnectorsDiff computes the diff between two connector collections.
+// ­ƒöîgetConnectorsDiff computes the diff between two connector collections.
 const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsDiff => {
   const beforeGuids = new Set(before.map((p) => p.guid));
   const afterGuids = new Set(after.map((p) => p.guid));
@@ -4492,9 +4494,9 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
   return connector;
 };
 
-// #endregion 🔌Connector
+// #endregion ­ƒöîConnector
 
-// #region 🧱Type
+// #region ­ƒº▒Type
 // Type entity types, schemas, and helpers MUST be defined here.
 
 /** Lifecycle for tombstones and collaborative conflict detection. */
@@ -4561,7 +4563,7 @@ export class Type {
   deletedAt?: string;
   deletedInChangeId?: string;
 
-  /** True private field — avoids enumerable kit ↔ types cycles in diffs and deep equality. */
+  /** True private field ÔÇö avoids enumerable kit Ôåö types cycles in diffs and deep equality. */
   #kit?: KitImpl;
 
   constructor(plain: TypePlain, kit?: KitImpl) {
@@ -4584,9 +4586,9 @@ export class Type {
     return selectBestModel(models, tagGuids);
   }
 
-  // #region ✏️Methods
+  // #region Ô£Å´©ÅMethods
   /**
-   * 📛Rename this type via the kit graph pipeline
+   * ­ƒôøRename this type via the kit graph pipeline
    */
   rename(newName: string): KitGraphChange {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
@@ -4610,7 +4612,7 @@ export class Type {
   }
 
   /**
-   * 🗑️Delete this type via the kit graph pipeline
+   * ­ƒùæ´©ÅDelete this type via the kit graph pipeline
    */
   delete(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
@@ -4618,7 +4620,7 @@ export class Type {
   }
 
   /**
-   * 🔍Find connector by guid
+   * ­ƒöìFind connector by guid
    */
   findConnector(connectorGuid: string): Connector | undefined {
     return this.connectors?.find((c) => c.guid === connectorGuid);
@@ -4637,14 +4639,14 @@ export class Type {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).areTypesInSameFamily(this.guid, otherTypeGuid);
   }
-  // #endregion ✏️Methods
+  // #endregion Ô£Å´©ÅMethods
 
-  /** 📦Serialize this type for wire transport. */
+  /** ­ƒôªSerialize this type for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
 
-  /** 🧭Deserialize a wire type into a stateful instance. */
+  /** ­ƒº¡Deserialize a wire type into a stateful instance. */
   static deserialize(json: string, kit?: KitImpl): Type {
     return new Type(TypeSchema.parse(JSON.parse(json)), kit);
   }
@@ -4655,12 +4657,12 @@ export class Type {
     });
   }
 
-  /** 🪪Project this type into its metadata wire shape. */
+  /** ­ƒ¬¬Project this type into its metadata wire shape. */
   toMeta(): TypeMeta {
     return TypeMetaSchema.parse(this.toPlain());
   }
 
-  /** 🧾Project this type into its shallow wire shape. */
+  /** ­ƒº¥Project this type into its shallow wire shape. */
   toShallow(): TypeShallow {
     const plain = this.toPlain();
     return TypeShallowSchema.parse({
@@ -4672,7 +4674,7 @@ export class Type {
     });
   }
 
-  /** 🧱Compute a type delta from this type to another type. */
+  /** ­ƒº▒Compute a type delta from this type to another type. */
   diffTo(after: Type): TypeDiff {
     const diff: TypeDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -4702,7 +4704,7 @@ export class Type {
     return diff;
   }
 
-  /** 🧱Build the reverse type delta for an already-applied delta. */
+  /** ­ƒº▒Build the reverse type delta for an already-applied delta. */
   inverseDiff(appliedDiff: TypeDiff): TypeDiff {
     const inverse: TypeDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -4732,7 +4734,7 @@ export class Type {
     return inverse;
   }
 
-  /** 🧱Merge two type deltas. */
+  /** ­ƒº▒Merge two type deltas. */
   static mergeDiff(first: TypeDiff, second: TypeDiff): TypeDiff {
     return {
       ...first,
@@ -4741,7 +4743,7 @@ export class Type {
     };
   }
 
-  /** 🧱Apply a type delta to this type. */
+  /** ­ƒº▒Apply a type delta to this type. */
   applyDiff(diff: TypeDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.families !== undefined) this.families = diff.families ?? undefined;
@@ -4898,9 +4900,9 @@ export type TypesDiff = z.infer<typeof TypesDiffSchema>;
  **/
 export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
-// #endregion 🧱Type
+// #endregion ­ƒº▒Type
 
-// #region 🎨Layer
+// #region ­ƒÄ¿Layer
 // Layer entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -4938,15 +4940,15 @@ export class Layer implements LayerPlain {
   toPlain(): LayerPlain {
     return LayerSchema.parse(this as unknown as LayerPlain);
   }
-  /** 🎨Serialize this layer for transport. */
+  /** ­ƒÄ¿Serialize this layer for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 🎨Deserialize a layer from transport JSON. */
+  /** ­ƒÄ¿Deserialize a layer from transport JSON. */
   static deserialize(json: string): Layer {
     return new Layer(LayerSchema.parse(JSON.parse(json)));
   }
-  /** 🎨Compute a layer delta from this layer to another layer. */
+  /** ­ƒÄ¿Compute a layer delta from this layer to another layer. */
   diffTo(after: Layer): LayerDiff {
     const diff: LayerDiff = {};
     if (this.path !== after.path) diff.path = after.path;
@@ -4957,7 +4959,7 @@ export class Layer implements LayerPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** 🎨Build the reverse layer delta for an already-applied delta. */
+  /** ­ƒÄ¿Build the reverse layer delta for an already-applied delta. */
   inverseDiff(appliedDiff: LayerDiff): LayerDiff {
     const inverse: LayerDiff = {};
     if (appliedDiff.path !== undefined) inverse.path = this.path;
@@ -4968,11 +4970,11 @@ export class Layer implements LayerPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 🎨Merge two layer deltas. */
+  /** ­ƒÄ¿Merge two layer deltas. */
   static mergeDiff(first: LayerDiff, second: LayerDiff): LayerDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** 🎨Apply a layer delta to this layer. */
+  /** ­ƒÄ¿Apply a layer delta to this layer. */
   applyDiff(diff: LayerDiff): void {
     if (diff.path !== undefined) this.path = diff.path;
     if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
@@ -5073,9 +5075,9 @@ export const LayersDiffSchema = z.object({
  **/
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
-// #endregion 🎨Layer
+// #endregion ­ƒÄ¿Layer
 
-// #region 🧩Piece
+// #region ­ƒº®Piece
 // Piece entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -5121,7 +5123,7 @@ export class Piece {
   #typeObj?: Type;
   #designAsPieceObj?: Design;
 
-  /** Not enumerable — avoids JSON / diff cycles (piece ↔ design ↔ kit). */
+  /** Not enumerable ÔÇö avoids JSON / diff cycles (piece Ôåö design Ôåö kit). */
   #hostDesign?: Design;
   #hostKit?: KitImpl;
 
@@ -5244,7 +5246,7 @@ export class Piece {
     return design.findReplacableTypesForPiece(this.guid);
   }
 
-  /** Change this piece’s type (validated kit pipeline; respects active/open transaction). */
+  /** Change this pieceÔÇÖs type (validated kit pipeline; respects active/open transaction). */
   changeType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     const design = this.#hostDesign;
     const kit = this.#hostKit ?? design?.getKit();
@@ -5270,7 +5272,7 @@ export class Piece {
     return new Piece(plain, hostDesign, hostKit);
   }
 
-  /** 🧮Compute the replacement-style piece delta from this piece to another piece. */
+  /** ­ƒº«Compute the replacement-style piece delta from this piece to another piece. */
   diffTo(after: Piece): PieceDiff {
     const beforeTypeId = this.wireTypeId();
     const afterTypeId = after.wireTypeId();
@@ -5293,7 +5295,7 @@ export class Piece {
     return diff;
   }
 
-  /** ↩️Compute the inverse piece delta for an already-applied delta. */
+  /** Ôå®´©ÅCompute the inverse piece delta for an already-applied delta. */
   inverseDiff(appliedDiff: PieceDiff): PieceDiff {
     const inverse: PieceDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -5312,7 +5314,7 @@ export class Piece {
     return inverse;
   }
 
-  /** 🧮Merge two piece deltas. */
+  /** ­ƒº«Merge two piece deltas. */
   static mergeDiff(first: PieceDiff, second: PieceDiff): PieceDiff {
     return {
       ...first,
@@ -5322,7 +5324,7 @@ export class Piece {
     };
   }
 
-  /** ✍️Apply a piece delta in place. */
+  /** Ô£ì´©ÅApply a piece delta in place. */
   applyDiff(diff: PieceDiff): void {
     if (diff.plane) {
       const diffPlane = diff.plane as any;
@@ -5359,12 +5361,12 @@ export class Piece {
     }
   }
 
-  /** 📦Serialize this piece for wire transport. */
+  /** ­ƒôªSerialize this piece for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
 
-  /** 🧭Deserialize a wire piece into a stateful instance. */
+  /** ­ƒº¡Deserialize a wire piece into a stateful instance. */
   static deserialize(json: string, hostDesign?: Design, hostKit?: KitImpl): Piece {
     return new Piece(PieceSchema.parse(JSON.parse(json)), hostDesign, hostKit);
   }
@@ -5535,9 +5537,9 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
   return piece;
 };
 
-// #endregion 🧩Piece
+// #endregion ­ƒº®Piece
 
-// #region 👥Group
+// #region ­ƒæÑGroup
 // Group entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -5573,15 +5575,15 @@ export class Group implements GroupPlain {
   toPlain(): GroupPlain {
     return GroupSchema.parse(this as unknown as GroupPlain);
   }
-  /** 👥Serialize this group for transport. */
+  /** ­ƒæÑSerialize this group for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 👥Deserialize a group from transport JSON. */
+  /** ­ƒæÑDeserialize a group from transport JSON. */
   static deserialize(json: string): Group {
     return new Group(GroupSchema.parse(JSON.parse(json)));
   }
-  /** 👥Compute a group delta from this group to another group. */
+  /** ­ƒæÑCompute a group delta from this group to another group. */
   diffTo(after: Group): GroupDiff {
     const diff: GroupDiff = {};
     if (!arraysEqual(this.pieces, after.pieces)) diff.pieces = after.pieces;
@@ -5592,7 +5594,7 @@ export class Group implements GroupPlain {
     if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
     return diff;
   }
-  /** 👥Build the reverse group delta for an already-applied delta. */
+  /** ­ƒæÑBuild the reverse group delta for an already-applied delta. */
   inverseDiff(appliedDiff: GroupDiff): GroupDiff {
     const inverse: GroupDiff = {};
     if (appliedDiff.pieces !== undefined) inverse.pieces = this.pieces;
@@ -5602,7 +5604,7 @@ export class Group implements GroupPlain {
     if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** 👥Merge two group deltas. */
+  /** ­ƒæÑMerge two group deltas. */
   static mergeDiff(first: GroupDiff, second: GroupDiff): GroupDiff {
     return {
       ...first,
@@ -5610,7 +5612,7 @@ export class Group implements GroupPlain {
       attributes: first.attributes || second.attributes ? mergeAttributesDiff(first.attributes ?? {}, second.attributes ?? {}) : undefined,
     };
   }
-  /** 👥Apply a group delta to this group. */
+  /** ­ƒæÑApply a group delta to this group. */
   applyDiff(diff: GroupDiff): void {
     if (diff.pieces !== undefined) this.pieces = diff.pieces;
     if (diff.color !== undefined) this.color = diff.color;
@@ -5704,9 +5706,9 @@ export const serializeGroupShallow = (group: GroupShallow): string => JSON.strin
  **/
 export const deserializeGroupShallow = (json: string): GroupShallow => GroupShallowSchema.parse(JSON.parse(json));
 
-// #endregion 👥Group
+// #endregion ­ƒæÑGroup
 
-// #region ↔️Side
+// #region Ôåö´©ÅSide
 // Side entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -5780,7 +5782,7 @@ export class Side {
     this.#hostDesign = design;
   }
 
-  /** ↔️Compute a side endpoint delta from this side to another side. */
+  /** Ôåö´©ÅCompute a side endpoint delta from this side to another side. */
   diffTo(after: Side): SideDiff {
     const diff: SideDiff = {};
     if (this.wirePieceId().guid !== after.wirePieceId().guid) diff.piece = after.wirePieceId();
@@ -5791,7 +5793,7 @@ export class Side {
     return diff;
   }
 
-  /** ↔️Build the reverse side delta for an already-applied delta. */
+  /** Ôåö´©ÅBuild the reverse side delta for an already-applied delta. */
   inverseDiff(appliedDiff: SideDiff): SideDiff {
     const inverse: SideDiff = {};
     if (appliedDiff.piece !== undefined) inverse.piece = this.wirePieceId();
@@ -5800,19 +5802,19 @@ export class Side {
     return inverse;
   }
 
-  /** ↔️Apply a side delta to this side endpoint. */
+  /** Ôåö´©ÅApply a side delta to this side endpoint. */
   applyDiff(diff: SideDiff): void {
     if (diff.piece !== undefined) this.syncPieceFromWire(diff.piece);
     if (diff.designPiece !== undefined) this.syncDesignPieceFromWire(diff.designPiece);
     if (diff.connector !== undefined) this.syncConnectorFromWire(diff.connector);
   }
 
-  /** ↔️Serialize this side endpoint for transport. */
+  /** Ôåö´©ÅSerialize this side endpoint for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
 
-  /** ↔️Deserialize a side endpoint from transport JSON. */
+  /** Ôåö´©ÅDeserialize a side endpoint from transport JSON. */
   static deserialize(json: string, hostDesign?: Design): Side {
     return new Side(SideSchema.parse(JSON.parse(json)), hostDesign);
   }
@@ -5907,9 +5909,9 @@ export const deserializeSide = (json: string): Side => Side.deserialize(json);
  **/
 export const areSameSide = (a: Side, b: Side): boolean => a.wirePieceId().guid === b.wirePieceId().guid && a.wireDesignPieceId()?.guid === b.wireDesignPieceId()?.guid && a.connector?.guid === b.connector?.guid;
 
-// #endregion ↔️Side
+// #endregion Ôåö´©ÅSide
 
-// #region 🔗Connection
+// #region ­ƒöùConnection
 // Connection entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -5970,7 +5972,7 @@ export class Connection implements ConnectionPlain {
     this.connecting.bindHostDesign(design);
   }
 
-  /** 🔗Compute a connection delta from this connection to another connection. */
+  /** ­ƒöùCompute a connection delta from this connection to another connection. */
   diffTo(after: Connection): ConnectionDiff {
     const diff: ConnectionDiff = {};
     if (!deepEqual(this.connected.toPlain(), after.connected.toPlain())) diff.connected = this.connected.diffTo(after.connected);
@@ -5988,7 +5990,7 @@ export class Connection implements ConnectionPlain {
     return diff;
   }
 
-  /** 🔗Build the reverse connection delta for an already-applied delta. */
+  /** ­ƒöùBuild the reverse connection delta for an already-applied delta. */
   inverseDiff(appliedDiff: ConnectionDiff): ConnectionDiff {
     const inverse: ConnectionDiff = {};
     if (appliedDiff.connected !== undefined) inverse.connected = this.connected.inverseDiff(appliedDiff.connected);
@@ -6010,7 +6012,7 @@ export class Connection implements ConnectionPlain {
     return inverse;
   }
 
-  /** 🔗Apply a connection delta to this connection. */
+  /** ­ƒöùApply a connection delta to this connection. */
   applyDiff(diff: ConnectionDiff): void {
     if (diff.connected) this.connected.applyDiff(diff.connected);
     if (diff.connecting) this.connecting.applyDiff(diff.connecting);
@@ -6029,12 +6031,12 @@ export class Connection implements ConnectionPlain {
     }
   }
 
-  /** 🔗Serialize this connection for transport. */
+  /** ­ƒöùSerialize this connection for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
 
-  /** 🔗Deserialize a connection from transport JSON. */
+  /** ­ƒöùDeserialize a connection from transport JSON. */
   static deserialize(json: string, hostDesign?: Design): Connection {
     return new Connection(ConnectionSchema.parse(JSON.parse(json)), hostDesign);
   }
@@ -6201,9 +6203,9 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
   return findConnectorInType(type, connectorGuid);
 };
 
-// #endregion 🔗Connection
+// #endregion ­ƒöùConnection
 
-// #region 📈Stat
+// #region ­ƒôêStat
 // Stat entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -6239,15 +6241,15 @@ export class Stat implements StatPlain {
   toPlain(): StatPlain {
     return StatSchema.parse(this as unknown as StatPlain);
   }
-  /** 📈Serialize this stat for transport. */
+  /** ­ƒôêSerialize this stat for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** 📈Deserialize a stat from transport JSON. */
+  /** ­ƒôêDeserialize a stat from transport JSON. */
   static deserialize(json: string): Stat {
     return new Stat(StatSchema.parse(JSON.parse(json)));
   }
-  /** 📈Compute a stat delta from this stat to another stat. */
+  /** ­ƒôêCompute a stat delta from this stat to another stat. */
   diffTo(after: Stat): StatDiff {
     const diff: StatDiff = {};
     if (this.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
@@ -6258,7 +6260,7 @@ export class Stat implements StatPlain {
     if (this.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
     return diff;
   }
-  /** 📈Build the reverse stat delta for an already-applied delta. */
+  /** ­ƒôêBuild the reverse stat delta for an already-applied delta. */
   inverseDiff(appliedDiff: StatDiff): StatDiff {
     const inverse: StatDiff = {};
     if (appliedDiff.quality !== undefined) inverse.quality = this.quality;
@@ -6269,11 +6271,11 @@ export class Stat implements StatPlain {
     if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = this.maxExcluded;
     return inverse;
   }
-  /** 📈Merge two stat deltas. */
+  /** ­ƒôêMerge two stat deltas. */
   static mergeDiff(first: StatDiff, second: StatDiff): StatDiff {
     return { ...first, ...second };
   }
-  /** 📈Apply a stat delta to this stat. */
+  /** ­ƒôêApply a stat delta to this stat. */
   applyDiff(diff: StatDiff): void {
     if (diff.quality !== undefined) this.quality = diff.quality;
     if (diff.unit !== undefined) this.unit = diff.unit;
@@ -6363,9 +6365,9 @@ export const serializeStatShallow = (stat: StatShallow): string => JSON.stringif
  **/
 export const deserializeStatShallow = (json: string): StatShallow => StatShallowSchema.parse(JSON.parse(json));
 
-// #endregion 📈Stat
+// #endregion ­ƒôêStat
 
-// #region 📐Design
+// #region ­ƒôÉDesign
 // Design entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -6428,7 +6430,7 @@ export class Design {
   createdAt?: string;
   updatedAt?: string;
 
-  /** True private field — avoids enumerable kit ↔ designs cycles in diffs and deep equality. */
+  /** True private field ÔÇö avoids enumerable kit Ôåö designs cycles in diffs and deep equality. */
   #kit?: KitImpl;
 
   constructor(plain: DesignPlain | Design, kit?: KitImpl) {
@@ -6461,9 +6463,9 @@ export class Design {
     return copy;
   }
 
-  // #region ✏️Methods
+  // #region Ô£Å´©ÅMethods
   /**
-   * 📛Rename this design via the kit graph pipeline
+   * ­ƒôøRename this design via the kit graph pipeline
    */
   rename(newName: string): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
@@ -6481,7 +6483,7 @@ export class Design {
   }
 
   /**
-   * 🗑️Remove this design from the kit graph (validated pipeline).
+   * ­ƒùæ´©ÅRemove this design from the kit graph (validated pipeline).
    */
   delete(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
@@ -6493,14 +6495,14 @@ export class Design {
   }
 
   /**
-   * Applies a {@link DesignDiff} in place (mutates this design’s collections and scalars).
+   * Applies a {@link DesignDiff} in place (mutates this designÔÇÖs collections and scalars).
    */
   applyDiff(diff: DesignDiff): this {
     applyDesignDiffCore(this, diff);
     return this;
   }
 
-  /** 📐Compute a design delta from this design to another design. */
+  /** ­ƒôÉCompute a design delta from this design to another design. */
   diffTo(after: Design): DesignDiff {
     const diff: DesignDiff = {};
     if (this.name !== after.name) diff.name = after.name;
@@ -6534,7 +6536,7 @@ export class Design {
     return diff;
   }
 
-  /** 📐Build the reverse design delta for an already-applied delta. */
+  /** ­ƒôÉBuild the reverse design delta for an already-applied delta. */
   inverseDiff(appliedDiff: DesignDiff): DesignDiff {
     const inverse: DesignDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
@@ -6561,7 +6563,7 @@ export class Design {
     return inverse;
   }
 
-  /** 📐Merge two design deltas. */
+  /** ­ƒôÉMerge two design deltas. */
   static mergeDiff(first: DesignDiff, second: DesignDiff): DesignDiff {
     return {
       ...first,
@@ -6578,7 +6580,7 @@ export class Design {
   }
 
   /**
-   * 🗑️Delete pieces from this design (and stale connections; fixes children that become fixed).
+   * ­ƒùæ´©ÅDelete pieces from this design (and stale connections; fixes children that become fixed).
    */
   deletePieces(pieces: Piece | readonly Piece[], opts?: KitChangeOptions): KitGraphChange {
     const list = (Array.isArray(pieces) ? pieces : [pieces]) as Piece[];
@@ -6599,7 +6601,7 @@ export class Design {
 
   /**
    * Persist a full flatten to the kit (forward {@link DesignDiff}, removes connections): the rare explicit layout commit.
-   * For rendering / hit-testing, use {@link Piece.flatPlane}, {@link Piece.flatCenter}, {@link KitImpl.ensureFlattenGeometryCache}, or {@link KitImpl.piecesMetadataFor} instead — those update only the in-memory geometry cache without building a persist diff.
+   * For rendering / hit-testing, use {@link Piece.flatPlane}, {@link Piece.flatCenter}, {@link KitImpl.ensureFlattenGeometryCache}, or {@link KitImpl.piecesMetadataFor} instead ÔÇö those update only the in-memory geometry cache without building a persist diff.
    */
   flatten(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
@@ -6689,7 +6691,7 @@ export class Design {
   }
 
   /**
-   * 🔍Find piece by guid or by {@link Piece.name} (object form matches the spec `findPiece(name=…)` style).
+   * ­ƒöìFind piece by guid or by {@link Piece.name} (object form matches the spec `findPiece(name=ÔÇª)` style).
    */
   findPiece(lookup: string | { name: string }): Piece | undefined {
     const key = typeof lookup === "string" ? lookup : lookup.name;
@@ -6709,7 +6711,7 @@ export class Design {
   }
 
   /**
-   * 🔍Find connection by guid
+   * ­ƒöìFind connection by guid
    */
   findConnection(connectionGuid: string): Connection | undefined {
     return this._connections?.find((c) => c.guid === connectionGuid);
@@ -6723,14 +6725,14 @@ export class Design {
   }
 
   /**
-   * 📋Get all pieces
+   * ­ƒôïGet all pieces
    */
   getPieces(): readonly Piece[] {
     return this.pieces ?? [];
   }
 
   /**
-   * 📋Get all connections
+   * ­ƒôïGet all connections
    */
   getConnections(): readonly Connection[] {
     return this._connections ?? [];
@@ -6856,7 +6858,7 @@ export class Design {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).sumQualityInDesign(this.guid, qualityGuid);
   }
-  // #endregion ✏️Methods
+  // #endregion Ô£Å´©ÅMethods
 
   /**
    * Ensures the kit's flatten geometry cache is populated for this design (no persist diff).
@@ -6881,22 +6883,22 @@ export class Design {
     });
   }
 
-  /** 📦Serialize this design for wire transport. */
+  /** ­ƒôªSerialize this design for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
 
-  /** 🧭Deserialize a wire design into a stateful instance. */
+  /** ­ƒº¡Deserialize a wire design into a stateful instance. */
   static deserialize(json: string, kit?: KitImpl): Design {
     return new Design(DesignSchema.parse(JSON.parse(json)), kit);
   }
 
-  /** 🪪Project this design into its metadata wire shape. */
+  /** ­ƒ¬¬Project this design into its metadata wire shape. */
   toMeta(): DesignMeta {
     return DesignMetaSchema.parse(this.toPlain());
   }
 
-  /** 🧾Project this design into its shallow wire shape. */
+  /** ­ƒº¥Project this design into its shallow wire shape. */
   toShallow(): DesignShallow {
     const plain = this.toPlain();
     return DesignShallowSchema.parse({
@@ -7158,7 +7160,7 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
   };
 };
 
-// #region 🧷Local detach (no structuredClone)
+// #region ­ƒºÀLocal detach (no structuredClone)
 // Algorithms that must not mutate the live kit graph allocate detached copies via these helpers.
 
 const stripNullsJsonClone = <T>(x: T): T => JSON.parse(JSON.stringify(x), (_k, v) => (v === null ? undefined : v));
@@ -7215,7 +7217,7 @@ const detachDesignForLocalMutation = (d: Design): Design =>
     },
     d.getKit(),
   );
-// #endregion 🧷Local detach
+// #endregion ­ƒºÀLocal detach
 
 /**
  * Creates a mixed design for visualization, annotating entities with diff status.
@@ -7226,9 +7228,10 @@ const detachDesignForLocalMutation = (d: Design): Design =>
  * Added entities are appended marked as added.
  **/
 export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
+  const baseDesign = base instanceof Design ? base : new Design(DesignSchema.parse(stripNullsJsonClone(base) as unknown));
   const DIFF_STATUS_KEY = "semio.diffStatus";
   const setStatus = (attrs: Attribute[] | undefined, status: DiffStatus): AttributePlain[] => {
-    const result = [...(attrs ?? [])].map((a) => a.toPlain());
+    const result = [...(attrs ?? [])].map((a) => (typeof a.toPlain === "function" ? a.toPlain() : a));
     result.push(new Attribute({ guid: `${DIFF_STATUS_KEY}.${status}`, key: DIFF_STATUS_KEY, value: status }).toPlain());
     return result;
   };
@@ -7238,7 +7241,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
   const removedConnGuids = new Set((diff.connections?.removed ?? []).map((r) => r.guid));
   const updatedConnMap = new Map((diff.connections?.updated ?? []).map((u) => [(u as any).connection.guid, u.diff]));
 
-  const resultPieces: Piece[] = (base.pieces ?? []).map((p) => {
+  const resultPieces: Piece[] = (baseDesign.pieces ?? []).map((p) => {
     if (removedPieceGuids.has(p.guid)) {
       return new Piece({ ...p.toPlain(), attributes: setStatus(p.attributes, DiffStatus.Removed) });
     }
@@ -7266,7 +7269,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
     );
   }
 
-  const resultConns: Connection[] = (base._connections ?? []).map((c) => {
+  const resultConns: Connection[] = (baseDesign._connections ?? []).map((c) => {
     if (removedConnGuids.has(c.guid)) {
       return new Connection({ ...c.toPlain(), attributes: setStatus(c.attributes, DiffStatus.Removed) });
     }
@@ -7290,7 +7293,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
 
   return new Design(
     DesignSchema.parse({
-      ...DesignSchema.parse(base.toPlain()),
+      ...DesignSchema.parse(baseDesign.toPlain()),
       pieces: resultPieces.map((x) => x.toPlain()),
       connections: resultConns.map((x) => x.toPlain()),
     }),
@@ -7361,7 +7364,7 @@ const connectionPlacementTranslationBasis = (parentConnector: Connector): { gap:
   return { gap: gapDirection, shift: shiftDirection, raise: raiseDirection, parentRotationT };
 };
 
-// ◻️computeChildPlane computes a child plane from parent plane and connection parameters.
+// Ôù╗´©ÅcomputeChildPlane computes a child plane from parent plane and connection parameters.
 const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector, connection: Connection): Plane => {
   const parentMatrix = planeToMatrix(parentPlane);
   const parentPoint = vectorToThree(parentConnector.point);
@@ -7424,8 +7427,8 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
   return matrixToPlane(finalMatrix);
 };
 
-// #subregion 🧭Flatten placement walk
-/** 🔖Single undirected adjacency entry for flatten BFS (matches Go FlattenDesign traversal order). */
+// #subregion ­ƒº¡Flatten placement walk
+/** ­ƒöûSingle undirected adjacency entry for flatten BFS (matches Go FlattenDesign traversal order). */
 type FlattenAdjacencyEntry = { neighborGuid: string; connection: Connection };
 
 const flattenPlaneCenterTol = 1e-4;
@@ -7502,7 +7505,7 @@ type FlattenEdgeVisit = {
   childPiece: Piece;
 };
 
-/** 🔖Breadth-first placement walk: one BFS tree per connected component; root = first fixed (plane+center) piece in design.pieces order, else earliest piece in that order (matches .NET QuickGraph connected-component ordering). */
+/** ­ƒöûBreadth-first placement walk: one BFS tree per connected component; root = first fixed (plane+center) piece in design.pieces order, else earliest piece in that order (matches .NET QuickGraph connected-component ordering). */
 const flattenPlacementWalkDesignOrderRoots = (
   pieceMap: { [guid: string]: Piece },
   adjacency: Map<string, FlattenAdjacencyEntry[]>,
@@ -7566,9 +7569,9 @@ const flattenPlacementWalkDesignOrderRoots = (
     }
   }
 };
-// #endregion 🧭Flatten placement walk
+// #endregion ­ƒº¡Flatten placement walk
 
-// #region 🌳Flatten Merkle Hashes
+// #region ­ƒî│Flatten Merkle Hashes
 /**
  * Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.
  **/
@@ -7646,7 +7649,7 @@ const hashCenterChain = (parentHash: string, parentConnector: Connector, connect
 };
 
 /**
- * 🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center/flat piece so incremental flatten calls can reuse unchanged values without redoing the matrix math or attribute bookkeeping.
+ * ­ƒºáFlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center/flat piece so incremental flatten calls can reuse unchanged values without redoing the matrix math or attribute bookkeeping.
  **/
 export type FlatMerkleCacheEntry = {
   planeHash: string;
@@ -7656,7 +7659,7 @@ export type FlatMerkleCacheEntry = {
   flatPiece?: Piece;
 };
 
-// #endregion 🌳Flatten Merkle Hashes
+// #endregion ­ƒî│Flatten Merkle Hashes
 
 /**
  **/
@@ -8003,7 +8006,7 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
  **/
 export type MoveVector = { gap: number; shift: number; rise: number };
 
-// #region 🔖DragMoveStructuralSelection
+// #region ­ƒöûDragMoveStructuralSelection
 /**
  * Shared parent graph and fixed/selection sets for {@link dragPiecesInDesign} and {@link movePiecesInDesign}.
  * Specs: "Fixed" pieces are selected pieces that never appear as the connecting (child) side of a connection.
@@ -8087,7 +8090,7 @@ const childConnectorOriginWorld = (parentPlane: Plane, parentConnector: Connecto
 };
 
 /**
- * Minimum-norm δ with Jδ = t for 3×n Jacobian J whose columns are cols[i] = ∂origin/∂param_i; δ = Jᵀ(JJᵀ)⁻¹t.
+ * Minimum-norm ╬┤ with J╬┤ = t for 3├ùn Jacobian J whose columns are cols[i] = Ôêéorigin/Ôêéparam_i; ╬┤ = JßÁÇ(JJßÁÇ)Ôü╗┬╣t.
  **/
 const solveConnectionOriginMinNorm = (cols: THREE.Vector3[], t: THREE.Vector3): number[] | undefined => {
   if (cols.length === 0) return undefined;
@@ -8148,7 +8151,7 @@ const connectionDiffTranslationFallback = (parentPlane: Plane, parentConnector: 
 /**
  * Converts a move vector (connecting piece plane) into connection diffs using a numerical Jacobian of {@link computeChildPlane}
  * w.r.t. gap, shift, rise, rotation, turn, tilt (degrees for angles), then puts the remaining translation into u/v on the parent plane.
- * Specs: One Gauss–Newton step; matches flatten placement when child connector exists. Falls back to translation-only basis if singular.
+ * Specs: One GaussÔÇôNewton step; matches flatten placement when child connector exists. Falls back to translation-only basis if singular.
  **/
 const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnector: Connector, childConnector: Connector | undefined, connection: Connection, childPlane: Plane | undefined, vector: MoveVector): ConnectionDiff => {
   const child = childPlane ?? identityPlaneForStructuralMove();
@@ -8226,7 +8229,7 @@ export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord
 };
 
 /**
- * 📋Extracts selected pieces and connections from a design into a new Design (clipboard).
+ * ­ƒôïExtracts selected pieces and connections from a design into a new Design (clipboard).
  * Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
  * Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
  * Non-internal connections include their external pieces marked with semio.piece.origin = "external".
@@ -8239,14 +8242,14 @@ export const PASTE_DESIGN_ANCHORING_KINDS = ["original", "middle", "centroid", "
 export type PasteDesignAnchoringKind = (typeof PASTE_DESIGN_ANCHORING_KINDS)[number];
 
 /**
- * 📋Pastes a copied design into a target design, returning a DesignDiff.
+ * ­ƒôïPastes a copied design into a target design, returning a DesignDiff.
  * Specs: Anchoring determines the reference point within the bounding rectangle of the source.
- * External stub parents are remapped to matching target pieces (name + connector) when possible—even if the child
+ * External stub parents are remapped to matching target pieces (name + connector) when possibleÔÇöeven if the child
  * has a plane (flattened pp-excl). If rematch is impossible, fall back to center/plane from attributes then anchor/coord.
  * Other pieces with a plane alone get -anchor then +coord on diagram center.
  * Fully internal source connections keep cloned u/v when coord only affects stub-bridge remapping as above.
- * With coord, only the remapped child–stub parent bridge updates u/v: target matched parent’s diagram center minus
- * (coord + (anchor − child flat center)). Descendant internal connections keep deep-cloned u/v.
+ * With coord, only the remapped childÔÇôstub parent bridge updates u/v: target matched parentÔÇÖs diagram center minus
+ * (coord + (anchor ÔêÆ child flat center)). Descendant internal connections keep deep-cloned u/v.
  **/
 export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coord);
 
@@ -8379,12 +8382,12 @@ export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, d
   };
 };
 
-// #endregion 📐Design
+// #endregion ­ƒôÉDesign
 
-// #region ⏱️KitImpl
+// #region ÔÅ▒´©ÅKitImpl
 // KitImpl entity types, schemas, and helpers MUST be defined here.
 
-// #region 🧬KitKind
+// #region ­ƒº¼KitKind
 // KitKind discriminates the five persistence/transport forms of a KitImpl.
 
 /**
@@ -8406,7 +8409,7 @@ export type KitKind = z.infer<typeof KitKindSchema>;
  * All valid KitKind values as a readonly tuple.
  **/
 export const ALL_KIT_KINDS: readonly KitKind[] = KitKindSchema.options;
-// #endregion 🧬KitKind
+// #endregion ­ƒº¼KitKind
 
 /**
  * Zod schema for KitImpl validation.
@@ -8445,14 +8448,14 @@ export type KitData = z.infer<typeof KitSchema>;
  */
 export type KitLike = KitImpl | KitData;
 
-// #region 🔖ValidationState
+// #region ­ƒöûValidationState
 /** Last validation outcome for a conflicted {@link KitImpl}; same shape as {@link KitDiffValidationResult} without apply metadata. */
 export type ValidationState = KitDiffValidationResult;
-// #endregion 🔖ValidationState
+// #endregion ­ƒöûValidationState
 
-// #region 🔌Backbone Interface
+// #region ­ƒöîBackbone Interface
 /**
- * 🔌Backbone handles KitImpl change persistence and synchronization.
+ * ­ƒöîBackbone handles KitImpl change persistence and synchronization.
  * Implementations support Dev (file), Local (folder), and Remote (hub) backends.
  */
 export interface Backbone {
@@ -8465,7 +8468,7 @@ export interface Backbone {
 }
 
 /**
- * 🧠DevKitBackbone persists KitImpl changes to a single JSON file.
+ * ­ƒºáDevKitBackbone persists KitImpl changes to a single JSON file.
  */
 export class DevKitBackbone implements Backbone {
   constructor(private filePath: string) {}
@@ -8475,7 +8478,7 @@ export class DevKitBackbone implements Backbone {
 }
 
 /**
- * 📁LocalKitBackbone persists KitImpl to folder structure with assets.
+ * ­ƒôüLocalKitBackbone persists KitImpl to folder structure with assets.
  */
 export class LocalKitBackbone implements Backbone {
   constructor(private folderPath: string) {}
@@ -8485,7 +8488,7 @@ export class LocalKitBackbone implements Backbone {
 }
 
 /**
- * 🌐RemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
+ * ­ƒîÉRemoteKitBackbone syncs KitImpl changes to remote hub via WebSocket.
  */
 export class RemoteKitBackbone implements Backbone {
   constructor(private websocketUrl: string) {}
@@ -8493,10 +8496,10 @@ export class RemoteKitBackbone implements Backbone {
     void this.websocketUrl;
   }
 }
-// #endregion 🔌Backbone Interface
+// #endregion ­ƒöîBackbone Interface
 
 /**
- * 🔄KitGraphChange represents a bidirectional change to KitImpl state.
+ * ­ƒöäKitGraphChange represents a bidirectional change to KitImpl state.
  */
 export interface KitGraphChange {
   forward: KitDiff;
@@ -8528,7 +8531,7 @@ export type KitChangeOptions = {
   notifyBackbone?: boolean;
   /** When true, do not push to finalized local history (see {@link KitImpl.undo}). Default false. */
   skipGlobalHistory?: boolean;
-  /** Inbound backbone: committed external change — not part of local history; clears redo. */
+  /** Inbound backbone: committed external change ÔÇö not part of local history; clears redo. */
   inboundCommitted?: boolean;
   inboundActor?: { changeId?: string; actorId?: string; actorDisplayName?: string };
 };
@@ -8566,7 +8569,7 @@ export type TransactionView = {
   conflicts?: readonly ConcurrentDeleteConflict[];
 };
 
-// #region 🪪KitEntity wire DTOs & ledger KitChange
+// #region ­ƒ¬¬KitEntity wire DTOs & ledger KitChange
 /** Plain string identifiers on the {@link KitEntity} surface (contrast with object-shaped {@link TypeId}). */
 export type KitEntityUUID = string;
 export type KitEntityTypeId = string;
@@ -8696,7 +8699,7 @@ export interface KitBackbone {
   submitCommittedChange(change: KitChange): Promise<void>;
 }
 
-// #endregion 🪪KitEntity wire DTOs & ledger KitChange
+// #endregion ­ƒ¬¬KitEntity wire DTOs & ledger KitChange
 
 type KitAuditEntry = {
   revision: number;
@@ -8731,7 +8734,7 @@ export class KitTransactionsCoordinator {
 }
 
 /**
- * Undo/redo within the kit’s {@link KitImpl.setActiveTransaction active} open transaction.
+ * Undo/redo within the kitÔÇÖs {@link KitImpl.setActiveTransaction active} open transaction.
  */
 export class KitActiveTransactionSurface {
   constructor(private readonly host: KitImpl) {}
@@ -8783,16 +8786,16 @@ export class KitImpl {
   createdAt!: string;
   updatedAt!: string;
 
-  /** Namespaced mutations and lookups; prefer `kit.ops.types.add(…)` over removed module-level helpers. */
+  /** Namespaced mutations and lookups; prefer `kit.ops.types.add(ÔÇª)` over removed module-level helpers. */
   readonly ops: KitOps;
 
-  /** `transactions.start(label)` → open tx id (uuid-v7); use with {@link setActiveTransaction}. */
+  /** `transactions.start(label)` ÔåÆ open tx id (uuid-v7); use with {@link setActiveTransaction}. */
   readonly transactions!: KitTransactionsCoordinator;
 
   /** Undo/redo steps on the {@link activeTransactionId} stack (open transaction only). */
   readonly transaction!: KitActiveTransactionSurface;
 
-  // #region 🔖Private State
+  // #region ­ƒöûPrivate State
   private backbone?: Backbone;
   private validationState: ValidationState = { ok: true, errors: [], warnings: [], infos: [] };
   #phase: KitPhase = "ready";
@@ -8819,10 +8822,10 @@ export class KitImpl {
    * The live graph is the effective view: {@link #reprojectEffectiveView} = committed + composed {@link #openTransactions} nets.
    */
   #committedPlain!: KitData;
-  // #endregion 🔖Private State
+  // #endregion ­ƒöûPrivate State
 
   /**
-   * Applies a {@link KitDiff} in place with no validation — undo/redo replay, document hydration, and tests only.
+   * Applies a {@link KitDiff} in place with no validation ÔÇö undo/redo replay, document hydration, and tests only.
    * Domain edits must use semantic methods / {@link KitImpl._applyDiff} (internal pipeline).
    * Not allowed while interactions are open (would break committed vs overlay invariant).
    */
@@ -8947,7 +8950,7 @@ export class KitImpl {
     return like instanceof KitImpl ? like : new KitImpl(KitSchema.parse(stripNullsJsonClone(like) as unknown));
   }
 
-  /** Semio world basis → three.js scene root (matches legacy {@link toThreeRotation}). */
+  /** Semio world basis ÔåÆ three.js scene root (matches legacy {@link toThreeRotation}). */
   static semioToThreeRootBasis(): THREE.Matrix4 {
     return toThreeRotation();
   }
@@ -9650,6 +9653,7 @@ export class KitImpl {
     const { flatPieces, nextCache, warnings, infos, placementErrors } = walk;
     const pieces = design.pieces;
 
+    let piecesWithPlanes = 0;
     let piecesWithoutPlanes = 0;
     const updatedPieces = flatPieces
       .map((flatPiece) => {
@@ -10251,7 +10255,7 @@ export class KitImpl {
   }
 
   /**
-   * Effective kit graph = {@link #committedPlain} + each open interaction’s squashed net forward (Map insertion order).
+   * Effective kit graph = {@link #committedPlain} + each open interactionÔÇÖs squashed net forward (Map insertion order).
    */
   #reprojectEffectiveView(): void {
     const base = KitSchema.parse(stripNullsJsonClone(this.#committedPlain));
@@ -10265,7 +10269,7 @@ export class KitImpl {
   }
 
   /**
-   * Opens a named transaction context (multiple may be open). Steps use {@link KitImpl._applyDiff}(…, { transactionId: tx.id }).
+   * Opens a named transaction context (multiple may be open). Steps use {@link KitImpl._applyDiff}(ÔÇª, { transactionId: tx.id }).
    */
   beginTransaction(label?: string): Transaction {
     if (this.#phase === "frozen" || this.#conflicted) {
@@ -10757,47 +10761,47 @@ export class KitImpl {
   }
 
   /**
-   * 🔍Validation - check constraints before applying diff.
+   * ­ƒöìValidation - check constraints before applying diff.
    */
   private validate(diff: KitDiff): KitDiffValidationResult {
     return validateKitGraphDiff(this, diff, false);
   }
 
   /**
-   * 📸Snapshot as plain data for serialization.
+   * ­ƒô©Snapshot as plain data for serialization.
    */
   toData(): KitData {
     return kitGraphToPlainData(this);
   }
 
   /**
-   * 📸JSON.stringify hook – returns plain data without circular refs.
+   * ­ƒô©JSON.stringify hook ÔÇô returns plain data without circular refs.
    */
   toJSON(): KitData {
     return kitGraphToPlainData(this);
   }
 
-  /** 📦Serialize this kit for wire transport. */
+  /** ­ƒôªSerialize this kit for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toData());
   }
 
-  /** 🧭Deserialize a wire kit into a stateful kit graph. */
+  /** ­ƒº¡Deserialize a wire kit into a stateful kit graph. */
   static deserialize(json: string, backbone?: Backbone): KitImpl {
     return new KitImpl(KitSchema.parse(JSON.parse(json, (_key, value) => (value === null ? undefined : value))), backbone);
   }
 
-  /** 🧬Create an isolated stateful copy of this kit graph. */
+  /** ­ƒº¼Create an isolated stateful copy of this kit graph. */
   duplicateForIsolation(): KitImpl {
     return KitImpl.deserialize(this.serialize());
   }
 
-  /** 🪪Project this kit into its metadata wire shape. */
+  /** ­ƒ¬¬Project this kit into its metadata wire shape. */
   toMeta(): KitMeta {
     return KitMetaSchema.parse(this.toData());
   }
 
-  /** 🧾Project this kit into its shallow wire shape. */
+  /** ­ƒº¥Project this kit into its shallow wire shape. */
   toShallow(): KitShallow {
     return KitShallowSchema.parse({
       ...this.toData(),
@@ -10822,7 +10826,7 @@ export class KitImpl {
   }
 
   /**
-   * 📋Subscribe to changes.
+   * ­ƒôïSubscribe to changes.
    */
   subscribe(listener: () => void): () => void {
     this.#listeners.add(listener);
@@ -10833,7 +10837,7 @@ export class KitImpl {
     for (const listener of this.#listeners) listener();
   }
 
-  // #region 🔍Finders
+  // #region ­ƒöìFinders
   findType(guid: Guid): Type | undefined {
     return this.types?.find((t) => t.guid === guid);
   }
@@ -10914,9 +10918,9 @@ export class KitImpl {
       return true;
     });
   }
-  // #endregion 🔍Finders
+  // #endregion ­ƒöìFinders
 
-  // #region 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
+  // #region ­ƒº░KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
   addType(type: Type, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ types: { added: [type] } }, opts ?? {});
   }
@@ -11034,9 +11038,9 @@ export class KitImpl {
   removeConcept(concept: Concept, opts?: KitChangeOptions): KitGraphChange {
     return this.#applyDiff({ concepts: { removed: [{ guid: concept.guid }] } }, opts ?? {});
   }
-  // #endregion 🧰KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
+  // #endregion ­ƒº░KitImpl graph CRUD (validated {@link KitImpl._applyDiff})
 
-  // #region 📐KitImpl queries & algorithms (see module exports for plain-kit fallbacks)
+  // #region ­ƒôÉKitImpl queries & algorithms (see module exports for plain-kit fallbacks)
   filter(filter: KitFilter): KitImpl {
     const hasGlobFilters = !!(filter.designs || filter.types || filter.families || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
     if (!filter.designGuid && !hasGlobFilters) return this;
@@ -11158,7 +11162,7 @@ export class KitImpl {
     return this.#flattenDesignUncached(designGuid);
   }
 
-  /** Flatten using this kit’s merkle cache ({@link KitImpl.flattenDesignMerkle}). */
+  /** Flatten using this kitÔÇÖs merkle cache ({@link KitImpl.flattenDesignMerkle}). */
   runFlattenDesignOptimized(designGuid: string): DesignOperationResult {
     return this.flattenDesignMerkle(designGuid);
   }
@@ -11482,9 +11486,9 @@ export class KitImpl {
     }
     return sum;
   }
-  // #endregion 📐KitImpl queries & algorithms
+  // #endregion ­ƒôÉKitImpl queries & algorithms
 
-  // #region 🔗Getters
+  // #region ­ƒöùGetters
   getDiff(other: KitImpl): KitDiff {
     return computeKitGraphDiffBetween(this, asKitInstance(other));
   }
@@ -11516,7 +11520,7 @@ export class KitImpl {
   setStrictMode(strict: boolean): void {
     this.strictMode = strict;
   }
-  // #endregion 🔗Getters
+  // #endregion ­ƒöùGetters
 }
 
 function _isKitDataShape(x: unknown): x is KitData {
@@ -11804,7 +11808,7 @@ const kitGraphToPlainData = (kit: KitImpl): KitData => {
   } as KitData);
 };
 
-/** Wire / {@link KitData} → live {@link KitImpl}; identity on class instances. */
+/** Wire / {@link KitData} ÔåÆ live {@link KitImpl}; identity on class instances. */
 export const asKitInstance = (kit: KitLike): KitImpl => (kit instanceof KitImpl ? kit : new KitImpl(KitSchema.parse(stripNullsJsonClone(kit) as unknown)));
 
 /** Merkle-cached flatten on a resolved {@link KitImpl} instance (accepts wire data via {@link asKitInstance}). */
@@ -11831,26 +11835,26 @@ export const deserializeKit = (json: string): KitImpl => new KitImpl(KitSchema.p
 export const duplicateKitForIsolation = (kit: KitImpl): KitImpl => deserializeKit(serializeKit(kit));
 
 /**
- * 📐Computes the diff between two kits.
+ * ­ƒôÉComputes the diff between two kits.
  */
 export const getKitDiff = (before: KitLike, after: KitLike): KitDiff => asKitInstance(before).getDiff(asKitInstance(after));
 
 /**
- * 🔄Computes the inverse of an applied diff relative to the original kit.
+ * ­ƒöäComputes the inverse of an applied diff relative to the original kit.
  */
 export const inverseKitDiff = (original: KitLike, appliedDiff: KitDiff): KitDiff => inverseKitGraphDiff(asKitInstance(original), appliedDiff);
 
 /**
- * 🔀Merges two kit diffs into one.
+ * ­ƒöÇMerges two kit diffs into one.
  */
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => mergeKitGraphDiff(diff1, diff2);
 
 /**
- * 🔄Computes the full change (forward + backward + validation) between two kits.
+ * ­ƒöäComputes the full change (forward + backward + validation) between two kits.
  */
 export const getKitChange = (before: KitImpl, after: KitImpl): KitGraphChange => KitImpl.changeBetween(before, after);
 
-// #region 🧩KitEntity (synchronized kit facade)
+// #region ­ƒº®KitEntity (synchronized kit facade)
 
 export interface SemanticCommand {
   readonly type: string;
@@ -11914,7 +11918,7 @@ function graphKitChangeFromLedger(c: KitChange): KitGraphChange {
   };
 }
 
-/** @alias {@link guid} — uuid v7 strings for {@link KitEntity} interactions. */
+/** @alias {@link guid} ÔÇö uuid v7 strings for {@link KitEntity} interactions. */
 export { guid as uuidv7 };
 
 export function emptyKitWireDto(): KitDTO {
@@ -12560,7 +12564,7 @@ export class KitEntity implements SynchronizedKit {
   }
 }
 
-// #endregion 🧩KitEntity (synchronized kit facade)
+// #endregion ­ƒº®KitEntity (synchronized kit facade)
 
 /**
  * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link KitImpl._applyDiff} for validated edits.
@@ -12698,9 +12702,9 @@ export type KitDiff = z.infer<typeof KitDiffSchema>;
  * Deep duplicate of a kit diff for tests / isolated apply simulation.
  **/
 
-// 🧬EntityIdType maps entity kind names to their ID interface types.
+// ­ƒº¼EntityIdType maps entity kind names to their ID interface types.
 type EntityIdType = { guid: string };
-// 🔀CollectionDiff represents added, removed, and changed items in a collection.
+// ­ƒöÇCollectionDiff represents added, removed, and changed items in a collection.
 // `added` is intentionally `unknown[]`: Zod-inferred kit/design diffs carry plain JSON shapes;
 // `applyCollectionDiff` hydrates entries via `hydrateAdded`.
 type CollectionDiff<K extends string, T extends { guid: string }, D> = {
@@ -12708,7 +12712,7 @@ type CollectionDiff<K extends string, T extends { guid: string }, D> = {
   updated?: Array<{ [key in K]: EntityIdType } & { diff: D }>;
   added?: unknown[];
 };
-// 🔀getCollectionDiff computes the diff between two collections by key.
+// ­ƒöÇgetCollectionDiff computes the diff between two collections by key.
 const getCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, before: T[], after: T[], getItemDiff: (before: T, after: T) => D): CollectionDiff<K, T, D> => {
   const diff: CollectionDiff<K, T, D> = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
@@ -12728,7 +12732,7 @@ const getCollectionDiff = <K extends string, T extends { guid: string }, D>(enti
   if (added.length > 0) diff.added = added;
   return diff;
 };
-// 🔀inverseCollectionDiff inverts a collection diff to reverse its effect.
+// ­ƒöÇinverseCollectionDiff inverts a collection diff to reverse its effect.
 const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, original: T[], appliedDiff: CollectionDiff<K, T, D>, inverseItemDiff: (original: T, appliedDiff: D) => D): CollectionDiff<K, T, D> => {
   const inverse: CollectionDiff<K, T, D> = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -12748,7 +12752,7 @@ const inverseCollectionDiff = <K extends string, T extends { guid: string }, D>(
   }
   return inverse;
 };
-// 🔀applyCollectionDiff applies a collection diff to produce an updated collection.
+// ­ƒöÇapplyCollectionDiff applies a collection diff to produce an updated collection.
 const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, items: T[], diff: CollectionDiff<K, T, D> | undefined, applyItemDiff: (target: T, diff: D) => void, hydrateAdded: (raw: unknown) => T): void => {
   if (!diff) return;
   if (diff.removed) {
@@ -12817,7 +12821,7 @@ function applyDesignDiffCore(target: Design, diff: DesignDiff): void {
   }
 }
 
-// 🔀mergeCollectionDiff merges two collection diffs into one.
+// ­ƒöÇmergeCollectionDiff merges two collection diffs into one.
 const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(entityKey: K, diff1: CollectionDiff<K, T, D>, diff2: CollectionDiff<K, T, D>, mergeItemDiff: (diff1: D, diff2: D) => D): CollectionDiff<K, T, D> => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
@@ -12980,7 +12984,7 @@ export class DiffComposer {
   }
 }
 
-/** Semantic command labels — each maps to one deterministic KitDiff expansion (cross-language parity). */
+/** Semantic command labels ÔÇö each maps to one deterministic KitDiff expansion (cross-language parity). */
 export type SemioCommandKind = "DeletePiece" | "MovePiece" | "RenamePiece" | "ReconnectConnection" | "DeletePiecesCascade" | "NormalizeStaleConnections";
 
 /**
@@ -12998,16 +13002,16 @@ export class KitDocument {
   }
 }
 
-// #endregion ⏱️KitImpl
+// #endregion ÔÅ▒´©ÅKitImpl
 
-// #region 🖥️Hash
+// #region ­ƒûÑ´©ÅHash
 // Merkle hash functions for all entities. Each hash function computes a deterministic
 // SHA-256 hex digest. Collections are hashed by sorting child hashes alphabetically.
 // Field order is alphabetical by JSON field name. Missing/null fields are skipped.
 // Number format: integer if no fractional part, else shortest decimal representation.
 
-// #region 🔷SHA-256
-// 🌿Pure JS SHA-256 implementation for cross-platform compatibility (Node + browser).
+// #region ­ƒöÀSHA-256
+// ­ƒî┐Pure JS SHA-256 implementation for cross-platform compatibility (Node + browser).
 const _sha256K = new Uint32Array([
   0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
   0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
@@ -13065,9 +13069,9 @@ const sha256bytes = (data: Uint8Array): string => {
     .map((v) => (v >>> 0).toString(16).padStart(8, "0"))
     .join("");
 };
-// #endregion 🔷SHA-256
+// #endregion ­ƒöÀSHA-256
 
-// #region 🌩️HashWriter
+// #region ­ƒî®´©ÅHashWriter
 /**
  * Feeds structured data into a SHA-256 hasher for deterministic hashing.
  * Uses length-prefixed strings and type tags for unambiguous encoding.
@@ -13119,7 +13123,7 @@ class HashWriter {
     return sha256bytes(buf);
   }
 }
-// #endregion 🌩️HashWriter
+// #endregion ­ƒî®´©ÅHashWriter
 
 /**
  * Formats a number deterministically for hashing.
@@ -13131,7 +13135,7 @@ export const formatNumberForHash = (n: number): string => {
   return n.toString();
 };
 
-// #region 🎵Hash Value Types
+// #region ­ƒÄÁHash Value Types
 /**
  * Computes SHA-256 hash of a Coord value.
  **/
@@ -13217,9 +13221,9 @@ export const hashCamera = (c: Camera): string => {
   w.writeHash(hashVector(c.up));
   return w.digest();
 };
-// #endregion 🎵Hash Value Types
+// #endregion ­ƒÄÁHash Value Types
 
-// #region 🎩Hash Entities
+// #region ­ƒÄ®Hash Entities
 /**
  * Computes SHA-256 hash of an Attribute entity.
  **/
@@ -14167,9 +14171,9 @@ export const hashKit = (k: KitImpl): string => {
   }
   return w.digest();
 };
-// #endregion 🎩Hash Entities
+// #endregion ­ƒÄ®Hash Entities
 
-// #region 🔗Hash Diffs
+// #region ­ƒöùHash Diffs
 // Deterministic SHA-256 Merkle hash functions for all diff types.
 // Null fields are marked with a single 0x00 byte. Undefined fields are skipped.
 
@@ -14248,7 +14252,7 @@ const hashCollectionDiffGeneric = (tag: string, updateTag: string, entityKeyName
   return w.digest();
 };
 
-// #region 🐹Hash Diff Value Types
+// #region ­ƒÉ╣Hash Diff Value Types
 
 export const hashCoordDiff = (d: CoordDiff): string => {
   const w = new HashWriter();
@@ -14302,9 +14306,9 @@ export const hashCameraDiff = (d: CameraDiff): string => {
   return w.digest();
 };
 
-// #endregion 🐹Hash Diff Value Types
+// #endregion ­ƒÉ╣Hash Diff Value Types
 
-// #region ⚗️Hash Diff Entities
+// #region ÔÜù´©ÅHash Diff Entities
 
 export const hashAttributeDiff = (d: AttributeDiff): string => {
   const w = new HashWriter();
@@ -14682,11 +14686,11 @@ export const hashKitDiff = (d: KitDiff): string => {
   return w.digest();
 };
 
-// #endregion ⚗️Hash Diff Entities
+// #endregion ÔÜù´©ÅHash Diff Entities
 
-// #endregion 🔗Hash Diffs
+// #endregion ­ƒöùHash Diffs
 
-// #endregion 🖥️Hash
+// #endregion ­ƒûÑ´©ÅHash
 
 /**
  * Computes the forward and backward diffs between two design states.
@@ -14881,7 +14885,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
         ...type,
         models: selectedModels.has(type.guid) ? [selectedModels.get(type.guid)!] : [],
       })),
-    designs: (k.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)),
+    designs: (k.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)).map((d) => d.toPlain()),
     families: (k.families ?? []).filter((family) => usedFamilyGuids.has(family.guid)),
     files: (k.files ?? []).filter((file) => usedFileGuids.has(file.guid)),
     tags: (k.tags ?? []).filter((tag) => usedTagGuids.has(tag.guid)),
@@ -14902,16 +14906,16 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
  **/
 export const filterKit = (kit: KitLike, filter: KitFilter): KitImpl => asKitInstance(kit).filter(filter);
 
-// #region 📻Design Family Helpers
+// #region ­ƒô╗Design Family Helpers
 // Design family traversal helpers MUST be defined here.
 
 /**
- * 📻 Retrieves the DesignFamily: all designs sharing any family name with the given design.
+ * ­ƒô╗ Retrieves the DesignFamily: all designs sharing any family name with the given design.
  **/
 export const getDesignFamily = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignFamilyFor(designGuid);
 
 /**
- * 📻 Checks if Designs belong to the same family (share any family name).
+ * ­ƒô╗ Checks if Designs belong to the same family (share any family name).
  **/
 export const areDesignsInSameFamily = (kit: KitLike, designGuidA: string, designGuidB: string): boolean => asKitInstance(kit).areDesignsInSameFamily(designGuidA, designGuidB);
 
@@ -14925,24 +14929,24 @@ export const canUseDesignAsPiece = (kit: KitLike, containerDesignGuid: string, p
  **/
 export const findSameFamilyDesignPieces = (kit: KitLike, designGuid: string): Piece[] => asKitInstance(kit).findSameFamilyDesignPiecesIn(designGuid);
 
-// #endregion 📻Design Family Helpers
+// #endregion ­ƒô╗Design Family Helpers
 
-// #region 🧊Type Family Helpers
+// #region ­ƒºèType Family Helpers
 // Type family traversal helpers MUST be defined here.
 
 /**
- * 🧊 Retrieves the TypeFamily: all types sharing any family name with the given type.
+ * ­ƒºè Retrieves the TypeFamily: all types sharing any family name with the given type.
  **/
 export const getTypeFamily = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeFamilyFor(typeGuid);
 
 /**
- * 👨‍👩‍👧‍👦 Checks if Types belong to the same family (share any family name).
+ * ­ƒæ¿ÔÇì­ƒæ®ÔÇì­ƒæºÔÇì­ƒæª Checks if Types belong to the same family (share any family name).
  **/
 export const areTypesInSameFamily = (kit: KitLike, typeGuidA: string, typeGuidB: string): boolean => asKitInstance(kit).areTypesInSameFamily(typeGuidA, typeGuidB);
 
-// #endregion 🧊Type Family Helpers
+// #endregion ­ƒºèType Family Helpers
 
-// #region 🎯SemioReport
+// #region ­ƒÄ»SemioReport
 /**
  * Human-readable note attached to a {@link SemioReport} (warning, info, or error).
  **/
@@ -14953,7 +14957,7 @@ export interface OperationNote {
 }
 
 /**
- * 📋Canonical semio algorithm output: always exposes diff, warnings, infos, and errors (tool-friendly).
+ * ­ƒôïCanonical semio algorithm output: always exposes diff, warnings, infos, and errors (tool-friendly).
  * When `ok` is true, `diff` is non-null; when false, `diff` is null and `errors` is non-empty.
  **/
 export interface SemioReport<TDiff = unknown> {
@@ -15060,7 +15064,7 @@ export const normalizeDesignCopyResult = (raw: unknown): SemioReport<Design> => 
   }
   return operationOk(raw as Design, [], []);
 };
-// #endregion 🎯SemioReport
+// #endregion ­ƒÄ»SemioReport
 
 /** One undo step, or a transaction batch (undo applies `backward` in reverse order). */
 export type KitUndoEntry = KitGraphChange | { batch: KitGraphChange[] };
@@ -15076,7 +15080,7 @@ export interface DesignChange {
   backward: DesignDiff;
 }
 
-// #region 📦KitImpl Diff Validation
+// #region ­ƒôªKitImpl Diff Validation
 // Validates kit diffs before apply; optional heal trims ineffective operations.
 
 /**
@@ -15439,11 +15443,11 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
   return heal ? { ok, errors: ctx.errors, warnings: ctx.warnings, infos: [], diff: ctx.diff } : { ok, errors: ctx.errors, warnings: ctx.warnings, infos: [] };
 }
 
-// #endregion 📦KitImpl Diff Validation
+// #endregion ­ƒôªKitImpl Diff Validation
 
-// #region 🛡️Validation
+// #region ­ƒøí´©ÅValidation
 
-// #region 🗡️Validation Core Types
+// #region ­ƒùí´©ÅValidation Core Types
 
 /**
  * Enumeration of EntityKind values.
@@ -15490,9 +15494,9 @@ export interface ValidationResult {
  **/
 export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
-// #endregion 🗡️Validation Core Types
+// #endregion ­ƒùí´©ÅValidation Core Types
 
-// #region 🔍Validation Context And Engine
+// #region ­ƒöìValidation Context And Engine
 // Validation context construction and engine MUST be defined here.
 
 /**
@@ -15555,9 +15559,9 @@ export const validateKit = (kit: KitLike, cfg: ValidationConfig = {}): Validatio
   return { problems: constraints.flatMap((constraint) => constraint(ctx)) };
 };
 
-// #endregion 🔍Validation Context And Engine
+// #endregion ­ƒöìValidation Context And Engine
 
-// #region 📡Fix Helper
+// #region ­ƒôíFix Helper
 // Validation fix helper functions MUST be defined here.
 // Validation fix helper functions MUST be defined here.
 
@@ -15568,9 +15572,9 @@ export const semioMakeFix = (ctx: ValidationContext, title: string, buildDiff: (
   diff: buildDiff(ctx.kit),
 });
 
-// #endregion 📡Fix Helper
+// #endregion ­ƒôíFix Helper
 
-// #region 🔑Constraint: GUID Uniqueness
+// #region ­ƒöæConstraint: GUID Uniqueness
 // GUID uniqueness constraint MUST be enforced here.
 
 /**
@@ -15612,9 +15616,9 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🔑Constraint: GUID Uniqueness
+// #endregion ­ƒöæConstraint: GUID Uniqueness
 
-// #region 🧱Constraint: Type Name Uniqueness
+// #region ­ƒº▒Constraint: Type Name Uniqueness
 // Type name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15660,9 +15664,9 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🧱Constraint: Type Name Uniqueness
+// #endregion ­ƒº▒Constraint: Type Name Uniqueness
 
-// #region 📐Constraint: Design Name Uniqueness
+// #region ­ƒôÉConstraint: Design Name Uniqueness
 // Design name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15701,9 +15705,9 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 📐Constraint: Design Name Uniqueness
+// #endregion ­ƒôÉConstraint: Design Name Uniqueness
 
-// #region 🧩Constraint: Piece Name Uniqueness
+// #region ­ƒº®Constraint: Piece Name Uniqueness
 // Piece name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15752,9 +15756,9 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🧩Constraint: Piece Name Uniqueness
+// #endregion ­ƒº®Constraint: Piece Name Uniqueness
 
-// #region 🔬Constraint: Quality Name Uniqueness
+// #region ­ƒö¼Constraint: Quality Name Uniqueness
 // Quality name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15791,9 +15795,9 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🔬Constraint: Quality Name Uniqueness
+// #endregion ­ƒö¼Constraint: Quality Name Uniqueness
 
-// #region ⚓Constraint: Port Name Uniqueness
+// #region ÔÜôConstraint: Port Name Uniqueness
 // Port name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15833,9 +15837,9 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion ⚓Constraint: Port Name Uniqueness
+// #endregion ÔÜôConstraint: Port Name Uniqueness
 
-// #region 📄Constraint: File Name Uniqueness
+// #region ­ƒôäConstraint: File Name Uniqueness
 // File name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15872,9 +15876,9 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 📄Constraint: File Name Uniqueness
+// #endregion ­ƒôäConstraint: File Name Uniqueness
 
-// #region 📁Constraint: Folder Name Uniqueness
+// #region ­ƒôüConstraint: Folder Name Uniqueness
 // Folder name uniqueness constraint MUST be enforced here.
 
 /**
@@ -15919,9 +15923,9 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 📁Constraint: Folder Name Uniqueness
+// #endregion ­ƒôüConstraint: Folder Name Uniqueness
 
-// #region 🔌Constraint: Connector Name Uniqueness Within Type
+// #region ­ƒöîConstraint: Connector Name Uniqueness Within Type
 // Connector name uniqueness within type constraint MUST be enforced here.
 
 /**
@@ -15970,9 +15974,9 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🔌Constraint: Connector Name Uniqueness Within Type
+// #endregion ­ƒöîConstraint: Connector Name Uniqueness Within Type
 
-// #region 🗿Constraint: Model Name Uniqueness Within Type
+// #region ­ƒù┐Constraint: Model Name Uniqueness Within Type
 // Model name uniqueness within type constraint MUST be enforced here.
 
 /**
@@ -16021,9 +16025,9 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🗿Constraint: Model Name Uniqueness Within Type
+// #endregion ­ƒù┐Constraint: Model Name Uniqueness Within Type
 
-// #region 🎨Constraint: Layer Path Uniqueness Within Design
+// #region ­ƒÄ¿Constraint: Layer Path Uniqueness Within Design
 // Layer path uniqueness within design constraint MUST be enforced here.
 
 /**
@@ -16071,9 +16075,9 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 🎨Constraint: Layer Path Uniqueness Within Design
+// #endregion ­ƒÄ¿Constraint: Layer Path Uniqueness Within Design
 
-// #region 📐Constraint: Design Piece Same Family Constraint
+// #region ­ƒôÉConstraint: Design Piece Same Family Constraint
 // Design piece same family constraint MUST be enforced here.
 
 /**
@@ -16123,9 +16127,9 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion 📐Constraint: Design Piece Same Family Constraint
+// #endregion ­ƒôÉConstraint: Design Piece Same Family Constraint
 
-// #region ✅Constraint Registration
+// #region Ô£àConstraint Registration
 // Constraint registration and default configurations MUST be defined here.
 
 defaultConstraints = [
@@ -16143,9 +16147,9 @@ defaultConstraints = [
   semioDesignPieceSameFamilyConstraint,
 ];
 
-// #endregion ✅Constraint Registration
+// #endregion Ô£àConstraint Registration
 
-// #region 🌧️Validation Serialization
+// #region ­ƒîº´©ÅValidation Serialization
 // Validation result serialization and deserialization MUST be defined here.
 
 /**
@@ -16204,7 +16208,7 @@ export const serializeValidationResult = (result: ValidationResult): string => {
  * Parses ValidationResult from serialized input.
  **/
 export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
-// 🔑isGuid checks whether a string is a valid GUID format.
+// ­ƒöæisGuid checks whether a string is a valid GUID format.
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 /**
@@ -16251,9 +16255,9 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
   });
 };
 
-// #endregion 🌧️Validation Serialization
+// #endregion ­ƒîº´©ÅValidation Serialization
 
-// #endregion 🛡️Validation
+// #endregion ­ƒøí´©ÅValidation
 
 /**
  **/
@@ -16286,7 +16290,7 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
   };
 };
 
-// #region 🧿KitImpl Import/Export
+// #region ­ƒº┐KitImpl Import/Export
 // KitImpl serialization and deserialization functions MUST be defined here.
 
 /**
@@ -16297,9 +16301,9 @@ export interface KitImportResult {
   kind?: KitKind;
   files?: Record<string, Uint8Array>;
 }
-// 🗄️cachedSqlJs caches the SQL.js WASM module for reuse.
+// ­ƒùä´©ÅcachedSqlJs caches the SQL.js WASM module for reuse.
 let cachedSqlJs: any = null;
-// 🗄️getSqlJs loads and returns the SQL.js WASM module.
+// ­ƒùä´©ÅgetSqlJs loads and returns the SQL.js WASM module.
 export const getSqlJs = async () => {
   if (!cachedSqlJs) {
     const initSqlJs = (await import("sql.js")).default;
@@ -16330,7 +16334,7 @@ export const getSqlJs = async () => {
   return cachedSqlJs;
 };
 // buildFolderPath builds a slash-separated folder path from root to the given folder guid.
-// 📁Uses proper mime type inferred from file extension.
+// ­ƒôüUses proper mime type inferred from file extension.
 const buildFolderPath = (kit: KitImpl, folderGuid: string): string => {
   const findFolder = (guid: string): Folder | undefined => (kit.folders || []).find((f) => f.guid === guid);
   const parts: string[] = [];
@@ -16342,7 +16346,7 @@ const buildFolderPath = (kit: KitImpl, folderGuid: string): string => {
   return parts.join("/");
 };
 // buildFilePath builds the full path of a kit file including its folder hierarchy.
-// 🏗️Uses proper mime type inferred from file extension.
+// ­ƒÅù´©ÅUses proper mime type inferred from file extension.
 const buildFilePath = (kit: KitImpl, file: File): string => {
   if (file.folder?.guid) {
     const folderPath = buildFolderPath(kit, file.folder.guid);
@@ -16495,12 +16499,12 @@ export const editTemporaryKit = (kit: KitLike, diff: KitDiff): KitImpl => {
   return k;
 };
 
-// #region 🏷️KitImpl Kind Classes
+// #region ­ƒÅÀ´©ÅKitImpl Kind Classes
 // Typed KitImpl wrappers scoped by KitKind. Each class carries a `kind` discriminator and
 // wraps a plain KitImpl value. SyncKit is an interface for kits that support bi-directional sync.
 
 /**
- * 🚚 Transport kit – ephemeral, in-memory only, never persisted.
+ * ­ƒÜÜ Transport kit ÔÇô ephemeral, in-memory only, never persisted.
  **/
 export class TransportKit {
   readonly kind = "transport" as const;
@@ -16508,7 +16512,7 @@ export class TransportKit {
 }
 
 /**
- * 📦 Archive kit – read-only snapshot loaded from an archive file.
+ * ­ƒôª Archive kit ÔÇô read-only snapshot loaded from an archive file.
  **/
 export class ArchiveKit {
   readonly kind = "archive" as const;
@@ -16516,7 +16520,7 @@ export class ArchiveKit {
 }
 
 /**
- * 🔄 SyncKit – interface for kits that support bi-directional sync.
+ * ­ƒöä SyncKit ÔÇô interface for kits that support bi-directional sync.
  **/
 export interface SyncKit {
   readonly kind: KitKind;
@@ -16525,7 +16529,7 @@ export interface SyncKit {
 }
 
 /**
- * 💻 Dev kit – local dev workspace backed by a file-system directory.
+ * ­ƒÆ╗ Dev kit ÔÇô local dev workspace backed by a file-system directory.
  **/
 export class DevKit implements SyncKit {
   readonly kind = "dev" as const;
@@ -16536,7 +16540,7 @@ export class DevKit implements SyncKit {
 }
 
 /**
- * 📁 Local kit – local SQLite-backed kit.
+ * ­ƒôü Local kit ÔÇô local SQLite-backed kit.
  **/
 export class LocalKit implements SyncKit {
   readonly kind = "local" as const;
@@ -16547,7 +16551,7 @@ export class LocalKit implements SyncKit {
 }
 
 /**
- * 🌐 Remote kit – kit synced with a remote server.
+ * ­ƒîÉ Remote kit ÔÇô kit synced with a remote server.
  **/
 export class RemoteKit implements SyncKit {
   readonly kind = "remote" as const;
@@ -16556,7 +16560,7 @@ export class RemoteKit implements SyncKit {
     applyKitDiff(this.kit, diff);
   }
 }
-// #endregion 🏷️KitImpl Kind Classes
+// #endregion ­ƒÅÀ´©ÅKitImpl Kind Classes
 
 /**
  * Imports KitImpl from external source.
@@ -16721,7 +16725,7 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
         const familiesA = typeA.families ?? [];
         const familiesB = t.families ?? [];
         if (familiesA.length !== familiesB.length) return false;
-        return familiesA.every((f) => familiesB.includes(f));
+        return familiesA.every((fA) => familiesB.some((fB) => (typeof fA === "string" ? fA === fB : fA.guid === (typeof fB === "string" ? fB : fB.guid))));
       });
       if (!typeB) return false;
       if (typeA.name !== typeB.name) return false;
@@ -16834,7 +16838,7 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
         const familiesA = designA.families ?? [];
         const familiesB = d.families ?? [];
         if (familiesA.length !== familiesB.length) return false;
-        return familiesA.every((f) => familiesB.includes(f));
+        return familiesA.every((fA) => familiesB.some((fB) => (typeof fA === "string" ? fA === fB : fA.guid === (typeof fB === "string" ? fB : fB.guid))));
       });
       if (!designB) return false;
       if (designA.name !== designB.name) return false;
@@ -17587,7 +17591,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
 
   return true;
 };
-// 📦sqliteToKit converts a SQLite database into a kit object.
+// ­ƒôªsqliteToKit converts a SQLite database into a kit object.
 export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   const existingTables = new Set<string>();
   const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
@@ -18034,7 +18038,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
 
   return asKitInstance(kit);
 };
-// 📚toArray holds the data fields for a toArray record.
+// ­ƒôÜtoArray holds the data fields for a toArray record.
 const toArray = <T>(value: T | T[] | undefined): T[] => {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
@@ -18494,7 +18498,7 @@ CREATE TABLE attribute (
 );
 `;
 
-// 📦kitToSqlite converts a kit object into a SQLite database.
+// ­ƒôªkitToSqlite converts a kit object into a SQLite database.
 export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
   db.exec(KIT_SQLITE_SCHEMA);
 
@@ -18869,9 +18873,9 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
   });
 };
 
-// #endregion 🧿KitImpl Import/Export
+// #endregion ­ƒº┐KitImpl Import/Export
 
-// #region 🔩KitImpl Model Export
+// #region ­ƒö®KitImpl Model Export
 // Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
 /**
@@ -19332,13 +19336,13 @@ export const exportDesignModel = async (kit: KitImpl, designId: string, format: 
   return glb.buffer as ArrayBuffer;
 };
 
-// #endregion 🔩KitImpl Model Export
+// #endregion ­ƒö®KitImpl Model Export
 
-// #region ❄️Geometric Insights
+// #region ÔØä´©ÅGeometric Insights
 // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
 
 /**
- * 🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+ * ­ƒöÀGeometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
  */
 export interface GeometricInsights {
   boundingBoxMin?: Point;
@@ -19382,7 +19386,7 @@ function signedTetrahedronVolume(o: THREE.Vector3, a: THREE.Vector3, b: THREE.Ve
 }
 
 /**
- * 📋Computes key performance indicators for the geometry of a GLB/GLTF model.
+ * ­ƒôïComputes key performance indicators for the geometry of a GLB/GLTF model.
  */
 export const getGeometricInsightsForModel = async (model: string | ArrayBuffer | Uint8Array): Promise<GeometricInsights> => {
   const io = new NodeIO();
@@ -19535,21 +19539,21 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
   return out;
 };
 
-// #endregion ❄️Geometric Insights
+// #endregion ÔØä´©ÅGeometric Insights
 
-// #region 🏰KitStore
+// #region ­ƒÅ░KitStore
 // Storage-agnostic kit store contracts MUST be defined here.
 // These interfaces express what a kit store DOES, not how a specific engine stores data.
 // No engine-specific primitives (map/array/doc) may appear in these contracts.
 
 // Specs: KitStoreStatus represents the lifecycle states of a kit store.
-// Providers transition through states: idle → loading → ready → saving/syncing → ready.
+// Providers transition through states: idle ÔåÆ loading ÔåÆ ready ÔåÆ saving/syncing ÔåÆ ready.
 // Error and offline are terminal-ish states that require external resolution.
 
 /**
  * Lifecycle status of a kit store.
  *
- * idle → loading → ready. saving/syncing are transient states
+ * idle ÔåÆ loading ÔåÆ ready. saving/syncing are transient states
  * that return to ready. error/offline require external recovery.
  **/
 export type KitStoreStatus = "idle" | "loading" | "ready" | "saving" | "syncing" | "offline" | "error";
@@ -19584,7 +19588,7 @@ export type KitStoreSnapshot = {
  * Storage-agnostic kit store contract.
  *
  * Specs: This is the boundary between the editor and storage backends.
- * semio/sketchpad depends ONLY on this interface — never on provider internals.
+ * semio/sketchpad depends ONLY on this interface ÔÇö never on provider internals.
  * Providers (collaborative, JSON file, folder/sqlite) implement this interface
  * and live in semio/studio. The editor consumes stores by injection.
  *
@@ -19649,7 +19653,7 @@ export interface ObservablePathStore {
   subscribePath(path: readonly string[], listener: () => void): () => void;
 }
 
-// #region 🖥️InMemoryKitStore
+// #region ­ƒûÑ´©ÅInMemoryKitStore
 // In-memory kit store implementation for testing and fake backends.
 
 // Specs: InMemoryKitStore implements UndoableKitStore using a plain KitImpl object
@@ -19813,9 +19817,9 @@ export class InMemoryKitStore implements UndoableKitStore {
   }
 }
 
-// #endregion 🖥️InMemoryKitStore
+// #endregion ­ƒûÑ´©ÅInMemoryKitStore
 
-// #endregion 🏰KitStore
+// #endregion ­ƒÅ░KitStore
 
 /**
  * Searches for matching PortInKit entry.
@@ -19879,13 +19883,13 @@ export type PiecePlacementMetadata = {
 
 export const piecesMetadata = (kit: KitLike, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> => asKitInstance(kit).piecesMetadataFor(designGuid);
 
-// #region 🧠Pieces Metadata Cached
+// #region ­ƒºáPieces Metadata Cached
 /**
- * 🧠Incremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
+ * ­ƒºáIncremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
  **/
 export const piecesMetadataCached = (kit: KitLike, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } =>
   asKitInstance(kit).piecesMetadataCachedFor(designGuid, cache);
-// #endregion 🧠Pieces Metadata Cached
+// #endregion ­ƒºáPieces Metadata Cached
 
 /**
  * Searches for matching AttributeValue entry.
@@ -19897,7 +19901,7 @@ export const findAttributeValue = (entity: KitImpl | Type | Design | Piece | Con
   return attribute?.value ?? defaultValue ?? "";
 };
 
-// 🎨getColorForText holds the data fields for a getColorForText record.
+// ­ƒÄ¿getColorForText holds the data fields for a getColorForText record.
 const getColorForText = (text?: string): string => {
   if (!text || text === "") return "var(--foreground)";
 
@@ -20001,7 +20005,7 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   return { updated };
 };
 
-// #region 🕌File Tree Utilities
+// #region ­ƒòîFile Tree Utilities
 // File tree construction and traversal utilities MUST be defined here.
 
 /**
@@ -20092,9 +20096,9 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
   return result;
 };
 
-// #endregion 🕌File Tree Utilities
+// #endregion ­ƒòîFile Tree Utilities
 
-// #region 🧪Runtime Test Flags
+// #region ­ƒº¬Runtime Test Flags
 // Test and benchmark blocks MUST compile out of browser bundles while staying runnable in Node.
 declare const __SEMIO_JS_RUN_EMBEDDED_TESTS__: boolean | undefined;
 declare const __SEMIO_JS_RUN_BENCHMARKS__: boolean | undefined;
@@ -20105,9 +20109,9 @@ const shouldRunEmbeddedJsTests =
 
 const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
-// #endregion 🧪Runtime Test Flags
+// #endregion ­ƒº¬Runtime Test Flags
 
-// #region 🧪Tests
+// #region ­ƒº¬Tests
 // Vitest test suites for domain logic. MUST NOT export any symbols.
 // Test code is guarded so it only executes under vitest, not in browser bundles.
 // Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
@@ -20528,7 +20532,7 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #region 🏰KitImpl Filter Tests
+  // #region ­ƒÅ░KitImpl Filter Tests
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("KitImpl/Filter/Design", () => {
@@ -20665,9 +20669,9 @@ if (shouldRunEmbeddedJsTests) {
     }
   });
 
-  // #endregion 🏰KitImpl Filter Tests
+  // #endregion ­ƒÅ░KitImpl Filter Tests
 
-  // #region 🛡️KitKind Tests
+  // #region ­ƒøí´©ÅKitKind Tests
   // Tests for KitKind enum MUST verify the five kit kinds.
 
   describe("KitKind", () => {
@@ -20857,9 +20861,9 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion 🛡️KitKind Tests
+  // #endregion ­ƒøí´©ÅKitKind Tests
 
-  // #region 🏰KitImpl Filter Tests
+  // #region ­ƒÅ░KitImpl Filter Tests
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("KitImpl/Filter/Design", () => {
@@ -20923,15 +20927,16 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion 🏰KitImpl Filter Tests
+  // #endregion ­ƒÅ░KitImpl Filter Tests
 
   describe("Flatten", () => {
     const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const flattenCasesData = (FlattenCases as any).cases as Array<{ name: string; designPath: string[] }>;
 
+    const resolveFamilyNames = (fids: FamilyId[] | undefined) => (fids ?? []).map((f) => kit.families?.find((fam) => fam.guid === f.guid)?.name).filter(Boolean);
     const testFlatten = (designName: string) => {
       const design = findDesign(kit, designName);
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.families?.includes(design.name));
+      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && resolveFamilyNames(d.families).includes(design.name));
       expect(expectedDesign).toBeDefined();
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -20963,7 +20968,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
-      const removed = flatOp.diff.forward._connections?.removed ?? [];
+      const removed = flatOp.diff.forward.connections?.removed ?? [];
       expect(removed.length).toBe(origConnCount);
       const removedSet = new Set(removed.map((r) => r.guid));
       for (const c of design._connections ?? []) {
@@ -21169,7 +21174,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(first.cache[rootGuid]).toBeDefined();
       expect(first.cache[childGuid]).toBeDefined();
 
-      // Mutate the root piece plane — must invalidate every descendant's planeHash but keep centerHash stable
+      // Mutate the root piece plane ÔÇö must invalidate every descendant's planeHash but keep centerHash stable
       const mutatedKit = duplicateKitForIsolation(kit);
       const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
       const mutatedRoot = mutatedDesign.pieces!.find((p: Piece) => p.guid === rootGuid)!;
@@ -21185,7 +21190,7 @@ if (shouldRunEmbeddedJsTests) {
         // center hashes must stay stable for every piece (plane change doesn't touch center chain)
         expect(second.cache[g].center, `piece ${g} center ref must stay stable when only plane changed`).toBe(first.cache[g]?.center);
       }
-      // plane change of the root cascades to every piece in the component → all recomputed
+      // plane change of the root cascades to every piece in the component ÔåÆ all recomputed
       expect(recomputedCount).toBeGreaterThan(0);
       expect(reusedCount).toBe(0);
     });
@@ -21198,7 +21203,7 @@ if (shouldRunEmbeddedJsTests) {
 
       // Mutate one connection's u (center-only). All plane hashes stay stable; only centers on
       // the child connection's downstream subtree change. This is the "drag only recomputes children"
-      // scenario: dragging a piece nudges its parent connection u/v → only its subtree rehydrates.
+      // scenario: dragging a piece nudges its parent connection u/v ÔåÆ only its subtree rehydrates.
       const mutatedKit = duplicateKitForIsolation(kit);
       const mutatedDesign = findDesignByPath(mutatedKit, parity.designPath);
       const firstConn = mutatedDesign._connections?.[0];
@@ -21467,10 +21472,10 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin store chain: updatePieces-only diff (no full dragDiff) still moves descendants via re-flatten", () => {
       // This test simulates the EXACT sketchpad store flow:
-      // 1. onNodeDragStop calls dragPiecesInDesign → gets dragDiff
+      // 1. onNodeDragStop calls dragPiecesInDesign ÔåÆ gets dragDiff
       // 2. updatePieces sends ONLY the piece updates from dragDiff to the kit store
       // 3. KitImpl store applies piece-only kitDiff via applyKitDiff
-      // 4. Reactive chain recomputes piecesMetadata → descendants should have new positions
+      // 4. Reactive chain recomputes piecesMetadata ÔåÆ descendants should have new positions
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
@@ -21532,8 +21537,8 @@ if (shouldRunEmbeddedJsTests) {
       const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
       const connectionDiffUpdates = dragDiff.connections?.updated ?? [];
 
-      // Step 5: Simulate what updatePieces does — apply ONLY pieceUpdates to kit via kitDiff
-      // This is the EXACT path: updatePieces → command handler → kitStore.change(kitDiff)
+      // Step 5: Simulate what updatePieces does ÔÇö apply ONLY pieceUpdates to kit via kitDiff
+      // This is the EXACT path: updatePieces ÔåÆ command handler ÔåÆ kitStore.change(kitDiff)
       const kitDiff: any = {};
       if (pieceDiffUpdates.length > 0) {
         kitDiff.designs = {
@@ -21582,7 +21587,7 @@ if (shouldRunEmbeddedJsTests) {
       }
 
       // Step 10: Verify local re-flatten (visualPositions) matches store re-flatten
-      // This is the key test — if these differ, the useEffect overwrites with wrong positions
+      // This is the key test ÔÇö if these differ, the useEffect overwrites with wrong positions
       const localUpdatedDesign = detachDesignForLocalMutation(design);
       localUpdatedDesign.applyDiff(dragDiff);
       const localUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
@@ -21636,7 +21641,7 @@ if (shouldRunEmbeddedJsTests) {
       const preDragCenter = { u: leafMeta.center.u, v: leafMeta.center.v };
       const offset = { u: 2, v: -1.5 };
 
-      // Step 4a: Sketchpad flow — build flatDesign with metadata centers + raw connections
+      // Step 4a: Sketchpad flow ÔÇö build flatDesign with metadata centers + raw connections
       const sketchpadFlatDesign: Design = {
         ...design,
         pieces: (design.pieces ?? []).map((p) => ({
@@ -21647,11 +21652,11 @@ if (shouldRunEmbeddedJsTests) {
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
       const sketchpadDragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
 
-      // Leaf has a parent → should produce connection update, NOT piece update
+      // Leaf has a parent ÔåÆ should produce connection update, NOT piece update
       expect(sketchpadDragDiff.pieces?.updated?.length ?? 0).toBe(0);
       expect(sketchpadDragDiff.connections?.updated?.length).toBe(1);
 
-      // Step 4b: nativeDragPieces flow — flatten, drag, apply to raw, re-flatten
+      // Step 4b: nativeDragPieces flow ÔÇö flatten, drag, apply to raw, re-flatten
       const fc = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(fc.ok).toBe(true);
       if (!fc.ok) return;
@@ -21696,7 +21701,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(skMeta.center.v).toBeCloseTo(natMeta!.center.v, 6);
       }
 
-      // Step 8: Verify store chain — applyKitDiff with connection-only updates matches
+      // Step 8: Verify store chain ÔÇö applyKitDiff with connection-only updates matches
       const connectionDiffUpdates = sketchpadDragDiff.connections?.updated ?? [];
       expect(connectionDiffUpdates.length).toBe(1);
       const kitDiff: any = {
@@ -21761,13 +21766,13 @@ if (shouldRunEmbeddedJsTests) {
         })),
       };
 
-      // Get dragPiecesInDesign result (unscaled — in center-space)
+      // Get dragPiecesInDesign result (unscaled ÔÇö in center-space)
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
       const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, { u: centerOffsetU, v: centerOffsetV });
       expect(dragDiff.connections?.updated?.length).toBe(1);
       const rawConnDiff = dragDiff.connections!.updated![0].diff;
 
-      // The raw diff has the center-space offset as connection diff — this is WRONG for visual positioning
+      // The raw diff has the center-space offset as connection diff ÔÇö this is WRONG for visual positioning
       expect(rawConnDiff.u).toBeCloseTo(centerOffsetU, 6);
       expect(rawConnDiff.v).toBeCloseTo(centerOffsetV, 6);
 
@@ -21819,7 +21824,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(unscaledMeta.ok).toBe(true);
         if (!unscaledMeta.ok) return;
         const unscaledLeaf = unscaledMeta.diff.get(leafGuid!)!;
-        // Without scaling, the visual offset is amplified by horizontalScale — the "jump" bug
+        // Without scaling, the visual offset is amplified by horizontalScale ÔÇö the "jump" bug
         expect(unscaledLeaf.center.u).toBeCloseTo(preDragCenter.u + centerOffsetU * horizontalScale, 2);
         expect(unscaledLeaf.center.v).toBeCloseTo(preDragCenter.v + centerOffsetV * horizontalScale, 2);
       }
@@ -21927,7 +21932,7 @@ if (shouldRunEmbeddedJsTests) {
       if (!delOp.ok) return;
       const computedDiff = delOp.diff;
 
-      // 🚚Verify removed pieces
+      // ­ƒÜÜVerify removed pieces
       const computedRemovedPieces = (computedDiff.pieces?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedRemovedPieces = (expectedDiff.pieces?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedRemovedPieces.length).toBe(expectedRemovedPieces.length);
@@ -21935,7 +21940,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(computedRemovedPieces[i].guid).toBe(expectedRemovedPieces[i].guid);
       }
 
-      // 🔁Verify updated (fixed) pieces
+      // ­ƒöüVerify updated (fixed) pieces
       const computedUpdated = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       const expectedUpdated = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedUpdated.length).toBe(expectedUpdated.length);
@@ -21948,7 +21953,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(computedUpdated[i].diff.center?.v).toBeCloseTo(expectedUpdated[i].diff.center.v, 3);
       }
 
-      // 🔌Verify removed connections
+      // ­ƒöîVerify removed connections
       const computedRemovedConns = (computedDiff.connections?.removed ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedRemovedConns = (expectedDiff.connections?.removed ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedRemovedConns.length).toBe(expectedRemovedConns.length);
@@ -21958,7 +21963,7 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #region 📋Copy And Paste Tests
+  // #region ­ƒôïCopy And Paste Tests
   describe("CopyAndPaste", () => {
     it("Nakagin Capsule Tower copy selected pieces and connections", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
@@ -21973,11 +21978,11 @@ if (shouldRunEmbeddedJsTests) {
       if (!copyOp.ok) return;
       const computedCopy = copyOp.diff;
 
-      // 🧩Verify piece and connection counts
+      // ­ƒº®Verify piece and connection counts
       expect((computedCopy.pieces ?? []).length).toBe((expectedCopy.pieces ?? []).length);
       expect((computedCopy.connections ?? []).length).toBe((expectedCopy.connections ?? []).length);
 
-      // 🏷️Verify external piece has semio.piece.origin = "external" and semio.center
+      // ­ƒÅÀ´©ÅVerify external piece has semio.piece.origin = "external" and semio.center
       const externalPieces = (computedCopy.pieces ?? []).filter((p) => (p.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external"));
       const expectedExternalPieces = (expectedCopy.pieces ?? []).filter((p) => (p.attributes ?? []).some((a: any) => a.key === "semio.piece.origin" && a.value === "external"));
       expect(externalPieces.length).toBe(expectedExternalPieces.length);
@@ -21985,7 +21990,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((ext.attributes ?? []).some((a) => a.key === "semio.center")).toBe(true);
       }
 
-      // 📐Verify pp-excl-pc-incl pieces have semio.center and semio.plane attributes
+      // ­ƒôÉVerify pp-excl-pc-incl pieces have semio.center and semio.plane attributes
       const ppExclPcInclPieces = (computedCopy.pieces ?? []).filter((p) => (p.attributes ?? []).some((a) => a.key === "semio.center") && !(p.attributes ?? []).some((a) => a.key === "semio.piece.origin"));
       expect(ppExclPcInclPieces.length).toBe(1);
       for (const piece of ppExclPcInclPieces) {
@@ -22001,22 +22006,22 @@ if (shouldRunEmbeddedJsTests) {
 
       const computedDiff = pasteDesign(kit, source, pasteTarget, "original");
 
-      // 🧩Verify added piece count
+      // ­ƒº®Verify added piece count
       const computedAdded = (computedDiff.pieces?.added ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedAdded = (expectedDiff.pieces?.added ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedAdded.length).toBe(expectedAdded.length);
 
-      // 🔌Verify added connection count
+      // ­ƒöîVerify added connection count
       const computedAddedConns = (computedDiff.connections?.added ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedAddedConns = (expectedDiff.connections?.added ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedAddedConns.length).toBe(expectedAddedConns.length);
 
-      // 🏷️Verify no external pieces in paste output
+      // ­ƒÅÀ´©ÅVerify no external pieces in paste output
       for (const piece of computedAdded) {
         expect((piece.attributes ?? []).some((a) => a.key === "semio.piece.origin" && a.value === "external")).toBe(false);
       }
 
-      // 🔗Verify connection u/v preserved
+      // ­ƒöùVerify connection u/v preserved
       for (let i = 0; i < computedAddedConns.length; i++) {
         expect(computedAddedConns[i].u).toBeCloseTo(expectedAddedConns[i].u, 3);
         expect(computedAddedConns[i].v).toBeCloseTo(expectedAddedConns[i].v, 3);
@@ -22031,17 +22036,17 @@ if (shouldRunEmbeddedJsTests) {
 
       const computedDiff = pasteDesign(kit, source, pasteTarget, "original", { u: 10, v: 10 });
 
-      // 🧩Verify added piece count
+      // ­ƒº®Verify added piece count
       const computedAdded = (computedDiff.pieces?.added ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedAdded = (expectedDiff.pieces?.added ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedAdded.length).toBe(expectedAdded.length);
 
-      // 🔌Verify added connection count
+      // ­ƒöîVerify added connection count
       const computedAddedConns = (computedDiff.connections?.added ?? []).sort((a, b) => a.guid.localeCompare(b.guid));
       const expectedAddedConns = (expectedDiff.connections?.added ?? []).sort((a: any, b: any) => a.guid.localeCompare(b.guid));
       expect(computedAddedConns.length).toBe(expectedAddedConns.length);
 
-      // 📐Verify fixed pieces have offset centers
+      // ­ƒôÉVerify fixed pieces have offset centers
       for (let i = 0; i < computedAdded.length; i++) {
         if (computedAdded[i].center && expectedAdded[i].center) {
           expect(computedAdded[i].center!.u).toBeCloseTo(expectedAdded[i].center.u, 3);
@@ -22049,7 +22054,7 @@ if (shouldRunEmbeddedJsTests) {
         }
       }
 
-      // 🔗Verify connection u/v
+      // ­ƒöùVerify connection u/v
       for (let i = 0; i < computedAddedConns.length; i++) {
         expect(computedAddedConns[i].u).toBeCloseTo(expectedAddedConns[i].u, 3);
         expect(computedAddedConns[i].v).toBeCloseTo(expectedAddedConns[i].v, 3);
@@ -22098,7 +22103,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(connWi!.v).toBeCloseTo(connWo!.v ?? 0, 6);
     });
 
-    it("Nakagin paste remaps t_f2–t_f1 onto target t_f1 when t_f1 is external stub only", () => {
+    it("Nakagin paste remaps t_f2ÔÇôt_f1 onto target t_f1 when t_f1 is external stub only", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const flatOp3 = asKitInstance(kit).flattenDesignMerkle(design.guid);
@@ -22234,9 +22239,9 @@ if (shouldRunEmbeddedJsTests) {
       }
     });
   });
-  // #endregion 📋Copy And Paste Tests
+  // #endregion ­ƒôïCopy And Paste Tests
 
-  // #region 🔍Find Replaceable Types In Designs Tests
+  // #region ­ƒöìFind Replaceable Types In Designs Tests
   describe("FindReplaceableTypesInDesigns", () => {
     const findReplCases = FindReplaceableTypesCases as any;
     const syntheticKit = SyntheticFindReplaceableKit as any;
@@ -22402,7 +22407,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(result.types.length).toBe(typesWithNoConnectors.length);
     });
   });
-  // #endregion 🔍Find Replaceable Types In Designs Tests
+  // #endregion ­ƒöìFind Replaceable Types In Designs Tests
 
   describe("Design/WithDiff", () => {
     const designWithDiffCases = (DesignWithDiffCases as any).cases as Array<{
@@ -22417,7 +22422,7 @@ if (shouldRunEmbeddedJsTests) {
         const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const design = kit.designs!.find((d) => d.name === tc.designName)!;
         const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
-        const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
+        const expected = new Design(NakaginCapsuleTowerWithDiffDesign as unknown as DesignPlain);
         const computed = designWithDiff(design, diff);
 
         expect(computed.pieces!.length).toBe(expected.pieces!.length);
@@ -22425,21 +22430,21 @@ if (shouldRunEmbeddedJsTests) {
 
         const getStatus = (attrs?: Attribute[]) => (attrs ?? []).find((a) => a.key === "semio.diffStatus")?.value;
 
-        // 🧩Verify piece status counts
+        // ­ƒº®Verify piece status counts
         const pieceStatuses = computed.pieces!.map((p) => getStatus(p.attributes));
         expect(pieceStatuses.filter((s) => s === "unchanged").length).toBe(tc.expectedPieceCounts.unchanged);
         expect(pieceStatuses.filter((s) => s === "modified").length).toBe(tc.expectedPieceCounts.modified);
         expect(pieceStatuses.filter((s) => s === "removed").length).toBe(tc.expectedPieceCounts.removed);
         expect(pieceStatuses.filter((s) => s === "added").length).toBe(tc.expectedPieceCounts.added);
 
-        // 🔗Verify connection status counts
+        // ­ƒöùVerify connection status counts
         const connStatuses = computed._connections!.map((c) => getStatus(c.attributes));
         expect(connStatuses.filter((s) => s === "unchanged").length).toBe(tc.expectedConnectionCounts.unchanged);
         expect(connStatuses.filter((s) => s === "modified").length).toBe(tc.expectedConnectionCounts.modified);
         expect(connStatuses.filter((s) => s === "removed").length).toBe(tc.expectedConnectionCounts.removed);
         expect(connStatuses.filter((s) => s === "added").length).toBe(tc.expectedConnectionCounts.added);
 
-        // ➖Verify removed/unchanged pieces keep their original parameters
+        // Ô×ûVerify removed/unchanged pieces keep their original parameters
         for (const piece of computed.pieces!) {
           if (getStatus(piece.attributes) === "removed" || getStatus(piece.attributes) === "unchanged") {
             const originalPiece = design.pieces!.find((p) => p.guid === piece.guid);
@@ -22449,7 +22454,7 @@ if (shouldRunEmbeddedJsTests) {
           }
         }
 
-        // 🔧Verify modified pieces have non-geometric diff applied but keep base plane/center
+        // ­ƒöºVerify modified pieces have non-geometric diff applied but keep base plane/center
         const updatedPieceMap = new Map((diff.pieces?.updated ?? []).map((u) => [(u as any).piece.guid, u.diff]));
         for (const piece of computed.pieces!) {
           if (getStatus(piece.attributes) === "modified") {
@@ -22460,7 +22465,7 @@ if (shouldRunEmbeddedJsTests) {
             else expect(piece.name).toBe(originalPiece!.name);
             if (pieceDiff?.description !== undefined) expect(piece.description).toBe(pieceDiff.description);
             else expect(piece.description).toBe(originalPiece!.description);
-            // 📌Modified pieces MUST keep base geometry so they only get recolored, not moved.
+            // ­ƒôîModified pieces MUST keep base geometry so they only get recolored, not moved.
             expect(piece.plane).toEqual(originalPiece!.plane);
             expect(piece.center).toEqual(originalPiece!.center);
           }
@@ -22536,7 +22541,7 @@ if (shouldRunEmbeddedJsTests) {
                 {
                   id: "storybook.missing.translation.key",
                   label: createElement("span", { className: "tree-explicit-label" }, "Explicit Tree Label"),
-                  icon: createElement("span", null, "∧"),
+                  icon: createElement("span", null, "Ôêº"),
                 },
               ],
             },
@@ -22790,7 +22795,7 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #region 🌊InMemoryKitStore Tests
+  // #region ­ƒîèInMemoryKitStore Tests
   // Contract tests for InMemoryKitStore MUST verify the full KitStore interface.
 
   describe("InMemoryKitStore", () => {
@@ -22974,9 +22979,9 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion 🌊InMemoryKitStore Tests
+  // #endregion ­ƒîèInMemoryKitStore Tests
 
-  // #region ⛅JsonFileKitStore Tests
+  // #region ÔøàJsonFileKitStore Tests
   // Contract tests for JsonFileKitStore MUST verify the full UndoableKitStore interface
   // including file I/O, save, reload, undo/redo, and external update handling.
 
@@ -23232,7 +23237,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("addFile diff followed by embedFileBlob embeds the blob on the newly added file", async () => {
-      // Simulates executeKitCommand("semio.kit.addFile", ...) → syncKitFileCommandResult → embedFileBlob.
+      // Simulates executeKitCommand("semio.kit.addFile", ...) ÔåÆ syncKitFileCommandResult ÔåÆ embedFileBlob.
       // Step 1: apply the addFile diff (what kitCommands["semio.kit.addFile"] returns).
       // Step 2: embedFileBlob reads the file from kit.files and applies a second diff setting blob.
       const adapter = makeAdapter(makeKit());
@@ -23271,7 +23276,7 @@ if (shouldRunEmbeddedJsTests) {
       // Regression: JsonFileKitStore.embedFileBlob awaits blob.arrayBuffer()
       // which yields to the event loop. If a scheduled save() fires during
       // that await, save() serializes the pre-embed kit and clears dirty
-      // after adapter.write — clobbering the embed apply that ran mid-save.
+      // after adapter.write ÔÇö clobbering the embed apply that ran mid-save.
       // save() MUST only clear dirty when the kit reference is unchanged, so
       // the next auto-save still runs with the embedded blob.
       let resolveFirstWrite: (() => void) | null = null;
@@ -23357,9 +23362,9 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion ⛅JsonFileKitStore Tests
+  // #endregion ÔøàJsonFileKitStore Tests
 
-  // #region 🔊FolderKitStore Tests
+  // #region ­ƒöèFolderKitStore Tests
   describe("FolderKitStore", () => {
     const makeKit = (overrides?: Partial<KitImpl>): KitImpl => ({
       guid: "folder-kit-guid",
@@ -23665,13 +23670,13 @@ if (shouldRunEmbeddedJsTests) {
       expect(store.getSnapshot().sync.status).toBe("ready");
     });
   });
-  // #endregion 🔊FolderKitStore Tests
+  // #endregion ­ƒöèFolderKitStore Tests
 
-  // #region 🚪Open Synchronized KitImpl E2E Tests
+  // #region ­ƒÜ¬Open Synchronized KitImpl E2E Tests
   // End-to-end tests for opening synchronized kits across all three supported source kinds:
   // file (*.kit.semio.json with embedded base64 blobs), folder (.semio/kit.db + binary files on disk),
   // and remote (SessionKitStore over HTTP + WebSocket against semio/hub).
-  // Specs: These tests MUST verify the full open → mutate → save/sync → reload cycle using real file
+  // Specs: These tests MUST verify the full open ÔåÆ mutate ÔåÆ save/sync ÔåÆ reload cycle using real file
   // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
 
   describe("Open Synchronized KitImpl E2E", () => {
@@ -23801,7 +23806,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(glb!.blob!.startsWith("data:")).toBe(true);
       });
 
-      it("synchronizes apply() → save() back to the JSON file on disk", async () => {
+      it("synchronizes apply() ÔåÆ save() back to the JSON file on disk", async () => {
         const fs = await import("node:fs/promises");
         const os = await import("node:os");
         const nodePath = await import("node:path");
@@ -23953,7 +23958,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(blob!.size).toBeGreaterThan(0);
       });
 
-      it("synchronizes apply() → save() back to .semio/kit.db on disk", async () => {
+      it("synchronizes apply() ÔåÆ save() back to .semio/kit.db on disk", async () => {
         const fs = await import("node:fs/promises");
         const os = await import("node:os");
         const nodePath = await import("node:path");
@@ -24092,9 +24097,9 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
   });
-  // #endregion 🚪Open Synchronized KitImpl E2E Tests
+  // #endregion ­ƒÜ¬Open Synchronized KitImpl E2E Tests
 
-  // #region 🎀Meta And Shallow Tests
+  // #region ­ƒÄÇMeta And Shallow Tests
   // Tests for Meta and Shallow schema parsing, conversion functions, and roundtrips.
   describe("Meta/Shallow", () => {
     describe("KitImpl/Meta", () => {
@@ -24130,7 +24135,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(parsed.name).toBe("Metabolism");
         expect(parsed.types).toBeDefined();
         expect(parsed.types!.length).toBeGreaterThan(0);
-        // 🏷️Shallow types should be meta (no nested collections like models)
+        // ­ƒÅÀ´©ÅShallow types should be meta (no nested collections like models)
         const firstType = parsed.types![0] as any;
         expect(firstType.models).toBeUndefined();
         expect(firstType.connectors).toBeUndefined();
@@ -24237,9 +24242,9 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
   });
-  // #endregion 🎀Meta And Shallow Tests
+  // #endregion ­ƒÄÇMeta And Shallow Tests
 
-  // #region 🗝️Hash Tests
+  // #region ­ƒùØ´©ÅHash Tests
   describe("KitImpl/Hash", () => {
     const hashCases = HashCases as {
       kitHash: { expected: string };
@@ -24452,8 +24457,8 @@ if (shouldRunEmbeddedJsTests) {
       expect(h).toBe(hashCases.kitDiffHash.expected);
     });
   });
-  // #endregion 🗝️Hash Tests
-  // #region 📊MaxChildren Tests
+  // #endregion ­ƒùØ´©ÅHash Tests
+  // #region ­ƒôèMaxChildren Tests
   describe("MaxChildren", () => {
     describe("Port", () => {
       it("Port schema accepts maxChildren", () => {
@@ -24638,15 +24643,15 @@ if (shouldRunEmbeddedJsTests) {
       });
     });
   });
-  // #endregion 📊MaxChildren Tests
+  // #endregion ­ƒôèMaxChildren Tests
 
-  // #region 🔄Transaction Undo/Redo Tests
+  // #region ­ƒöäTransaction Undo/Redo Tests
   // Tests for the transaction state machine contract used by PlainAppStore, PlainKitDiffAppStore,
   // and the event handler factories (createKeyedTransactionHandlers, createSingleKeyTransactionHandlers).
   // Invariant: finalize merges edits via first.undo + last.do; redo is cleared on commit or recordEdit;
   //            fresh start preserves redo; abort discards current stack; undo/redo move between past/redo stacks.
 
-  // #region 🔄Transaction State Helpers
+  // #region ­ƒöäTransaction State Helpers
   // Pure-function transaction state machine matching the exact behavior of the existing
   // PlainAppStore class methods and event handler factories in @semio/sketchpad.
 
@@ -24724,7 +24729,7 @@ if (shouldRunEmbeddedJsTests) {
     undo: { value: undoVal },
   });
 
-  // #endregion 🔄Transaction State Helpers
+  // #endregion ­ƒöäTransaction State Helpers
 
   describe("Transaction Undo/Redo", () => {
     it("single commit places edit in past stack", () => {
@@ -24986,21 +24991,21 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion 🔄Transaction Undo/Redo Tests
+  // #endregion ­ƒöäTransaction Undo/Redo Tests
 } // end vitest guard
-// #endregion 🧪Tests
+// #endregion ­ƒº¬Tests
 
-// #region 🏋️Benchmarks
+// #region ­ƒÅï´©ÅBenchmarks
 // Performance benchmarks for kit roundtrip, diff, flatten and validation operations.
 // MUST NOT be exported. MUST NOT auto-execute on import.
 // Run via: npx tsx index.ts --bench
 
 // Number of iterations per benchmark run.
-// ⏱️MUST be at least 1 for meaningful timing.
+// ÔÅ▒´©ÅMUST be at least 1 for meaningful timing.
 const BENCH_ITERATIONS = 3;
 
 // Runs a function multiple times, measures elapsed time and logs CSV output.
-// ⏱️MUST await async functions within the iteration loop.
+// ÔÅ▒´©ÅMUST await async functions within the iteration loop.
 async function bench(name: string, fn: () => Promise<void> | void) {
   const start = performance.now();
   for (let i = 0; i < BENCH_ITERATIONS; i++) {
@@ -25073,7 +25078,7 @@ async function appendBenchmarkCsv(language: string, name: string, durationSecond
   fs.writeFileSync(csvPath, output);
 }
 
-// 🚩Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
+// ­ƒÜ®Runs all benchmarks. MUST only be called explicitly (e.g. via CLI flag).
 async function runBenchmarks() {
   const importAtRuntime = async <TModule = any>(moduleId: string): Promise<TModule> => import(/* @vite-ignore */ moduleId);
   const BenchMetabolismKit = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.semio.json"].join("/"))).default;
@@ -25155,4 +25160,4 @@ if (shouldRunJsBenchmarks) {
   runBenchmarks();
 }
 
-// #endregion 🏋️Benchmarks
+// #endregion ­ƒÅï´©ÅBenchmarks

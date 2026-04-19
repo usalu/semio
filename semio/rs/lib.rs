@@ -150,7 +150,7 @@ mod guid_ref {
         }
     }
 
-    macro_rules! wire_id_struct {
+    macro_rules! dto_id_struct {
         ($doc:literal, $name:ident) => {
             #[doc = $doc]
             #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -188,26 +188,26 @@ mod guid_ref {
         };
     }
 
-    wire_id_struct!("🧱 Type wire reference.", TypeId);
-    wire_id_struct!("🧩 Piece wire reference.", PieceId);
-    wire_id_struct!("📐 Design wire reference.", DesignId);
-    wire_id_struct!("🔌 Connector wire reference.", ConnectorId);
-    wire_id_struct!("🎨 Layer wire reference.", LayerId);
-    wire_id_struct!("📍 Location wire reference.", LocationId);
-    wire_id_struct!("✍️ Author wire reference.", AuthorId);
-    wire_id_struct!("📄 File wire reference.", FileId);
-    wire_id_struct!("📁 Folder wire reference.", FolderId);
-    wire_id_struct!("📏 Benchmark wire reference.", BenchmarkId);
-    wire_id_struct!("🔬 Quality wire reference.", QualityId);
-    wire_id_struct!("⚓ Port wire reference.", PortId);
-    wire_id_struct!("📊 Prop wire reference.", PropId);
-    wire_id_struct!("🏷️ Tag wire reference.", TagId);
-    wire_id_struct!("💡 Concept wire reference.", ConceptId);
-    wire_id_struct!("🗿 Model wire reference.", ModelId);
-    wire_id_struct!("📈 Stat wire reference.", StatId);
-    wire_id_struct!("🔗 Connection wire reference.", ConnectionId);
-    wire_id_struct!("👥 Group wire reference.", GroupId);
-    wire_id_struct!("💎 Attribute wire reference.", AttributeId);
+    dto_id_struct!("🧱 Type id (DTO / JSON reference).", TypeId);
+    dto_id_struct!("🧩 Piece id (DTO / JSON reference).", PieceId);
+    dto_id_struct!("📐 Design id (DTO / JSON reference).", DesignId);
+    dto_id_struct!("🔌 Connector id (DTO / JSON reference).", ConnectorId);
+    dto_id_struct!("🎨 Layer id (DTO / JSON reference).", LayerId);
+    dto_id_struct!("📍 Location id (DTO / JSON reference).", LocationId);
+    dto_id_struct!("✍️ Author id (DTO / JSON reference).", AuthorId);
+    dto_id_struct!("📄 File id (DTO / JSON reference).", FileId);
+    dto_id_struct!("📁 Folder id (DTO / JSON reference).", FolderId);
+    dto_id_struct!("📏 Benchmark id (DTO / JSON reference).", BenchmarkId);
+    dto_id_struct!("🔬 Quality id (DTO / JSON reference).", QualityId);
+    dto_id_struct!("⚓ Port id (DTO / JSON reference).", PortId);
+    dto_id_struct!("📊 Prop id (DTO / JSON reference).", PropId);
+    dto_id_struct!("🏷️ Tag id (DTO / JSON reference).", TagId);
+    dto_id_struct!("💡 Concept id (DTO / JSON reference).", ConceptId);
+    dto_id_struct!("🗿 Model id (DTO / JSON reference).", ModelId);
+    dto_id_struct!("📈 Stat id (DTO / JSON reference).", StatId);
+    dto_id_struct!("🔗 Connection id (DTO / JSON reference).", ConnectionId);
+    dto_id_struct!("👥 Group id (DTO / JSON reference).", GroupId);
+    dto_id_struct!("💎 Attribute id (DTO / JSON reference).", AttributeId);
 }
 
 pub use guid_ref::{
@@ -261,8 +261,18 @@ mod has_guid_trait {
             &self.guid
         }
     }
+    impl HasGuid for AttributeDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
     /// <summary>📊HasGuid implementation for Prop.</summary>
     impl HasGuid for Prop {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    impl HasGuid for PropDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -286,6 +296,11 @@ mod has_guid_trait {
             &self.guid
         }
     }
+    impl HasGuid for ModelDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
     /// <summary>🧱HasGuid implementation for Type.</summary>
     /// <remarks>
     /// </remarks>
@@ -305,7 +320,7 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    impl HasGuid for PieceWire {
+    impl HasGuid for PieceDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -596,14 +611,45 @@ mod model_types_attribute {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>💎Attribute represents a key-value metadata entry with optional definition.</summary>
-    pub struct Attribute {
+    /// JSON / GraphQL-aligned shape for [`Attribute`] (`schema.graphql` `Attribute` / `AttributeInput`).
+    pub struct AttributeDto {
         pub guid: Guid,
         pub key: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub definition: Option<String>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>💎Attribute represents a key-value metadata entry with optional definition.</summary>
+    pub struct Attribute {
+        pub guid: Guid,
+        pub key: String,
+        pub value: Option<String>,
+        pub definition: Option<String>,
+    }
+
+    impl From<&AttributeDto> for Attribute {
+        fn from(d: &AttributeDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                key: d.key.clone(),
+                value: d.value.clone(),
+                definition: d.definition.clone(),
+            }
+        }
+    }
+
+    impl From<&Attribute> for AttributeDto {
+        fn from(a: &Attribute) -> Self {
+            Self {
+                guid: a.guid.clone(),
+                key: a.key.clone(),
+                value: a.value.clone(),
+                definition: a.definition.clone(),
+            }
+        }
     }
 } // 💎Attribute
 pub use model_types_attribute::*;
@@ -613,12 +659,31 @@ mod model_types_coord {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+    /// DTO for `Coordinate` / `CoordinateInput` in `schema.graphql`.
+    pub struct CoordDto {
+        pub u: f64,
+        pub v: f64,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Default)]
     /// <summary>📺Coord represents a 2D coordinate with U and V components.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Coord {
         pub u: f64,
         pub v: f64,
+    }
+
+    impl From<&CoordDto> for Coord {
+        fn from(d: &CoordDto) -> Self {
+            Self { u: d.u, v: d.v }
+        }
+    }
+
+    impl From<&Coord> for CoordDto {
+        fn from(c: &Coord) -> Self {
+            Self { u: c.u, v: c.v }
+        }
     }
     /// <summary>📺Coord represents a 2D coordinate with U and V components.</summary>
     /// <remarks>
@@ -654,16 +719,44 @@ mod model_types_vector {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>↗️Vector represents a 3D vector with X, Y and Z components.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Vector {
+    /// DTO for `Vector` / `VectorInput` in `schema.graphql`.
+    pub struct VectorDto {
         #[serde(default)]
         pub x: f64,
         #[serde(default)]
         pub y: f64,
         #[serde(default)]
         pub z: f64,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Default)]
+    /// <summary>↗️Vector represents a 3D vector with X, Y and Z components.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Vector {
+        pub x: f64,
+        pub y: f64,
+        pub z: f64,
+    }
+
+    impl From<&VectorDto> for Vector {
+        fn from(d: &VectorDto) -> Self {
+            Self {
+                x: d.x,
+                y: d.y,
+                z: d.z,
+            }
+        }
+    }
+
+    impl From<&Vector> for VectorDto {
+        fn from(v: &Vector) -> Self {
+            Self {
+                x: v.x,
+                y: v.y,
+                z: v.z,
+            }
+        }
     }
 
     /// <summary>↗️Vector represents a 3D vector with X, Y and Z components.</summary>
@@ -698,13 +791,40 @@ mod model_types_plane {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    /// DTO for `Plane` / `PlaneInput` in `schema.graphql`.
+    pub struct PlaneDto {
+        pub origin: VectorDto,
+        pub x_axis: VectorDto,
+        pub y_axis: VectorDto,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
     /// <summary>◻️Plane represents a plane defined by origin point and two axis vectors.</summary>
     pub struct Plane {
         pub origin: Vector,
-        #[serde(rename = "xAxis")]
         pub x_axis: Vector,
-        #[serde(rename = "yAxis")]
         pub y_axis: Vector,
+    }
+
+    impl From<&PlaneDto> for Plane {
+        fn from(d: &PlaneDto) -> Self {
+            Self {
+                origin: Vector::from(&d.origin),
+                x_axis: Vector::from(&d.x_axis),
+                y_axis: Vector::from(&d.y_axis),
+            }
+        }
+    }
+
+    impl From<&Plane> for PlaneDto {
+        fn from(p: &Plane) -> Self {
+            Self {
+                origin: VectorDto::from(&p.origin),
+                x_axis: VectorDto::from(&p.x_axis),
+                y_axis: VectorDto::from(&p.y_axis),
+            }
+        }
     }
 
     /// <summary>◻️Default implementation for Plane.</summary>
@@ -817,7 +937,7 @@ mod model_types_camera {
 
     use super::*;
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    #[derive(Debug, Clone, PartialEq)]
     /// <summary>🎥Camera represents a camera defined by position, forward and up vectors.</summary>
     /// <remarks>
     /// </remarks>
@@ -851,16 +971,58 @@ mod location {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct LocationDto {
+        pub guid: Guid,
+        pub name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub description: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
     /// <summary>📍Location represents a geographic point with longitude, latitude and optional altitude.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Location {
         pub guid: Guid,
         pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&LocationDto> for Location {
+        fn from(d: &LocationDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Location> for LocationDto {
+        fn from(l: &Location) -> Self {
+            Self {
+                guid: l.guid.clone(),
+                name: l.name.clone(),
+                description: l.description.clone(),
+                attributes: l
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for LocationDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 📍Location
 pub use location::*;
@@ -870,20 +1032,68 @@ mod author {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct AuthorDto {
+        pub guid: Guid,
+        pub name: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub email: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+        #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
+        pub created_at: Option<String>,
+        #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
+        pub updated_at: Option<String>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
     /// <summary>✍️Author represents a named contributor with email and custom attributes.</summary>
     /// <remarks>
     /// </remarks>
     pub struct Author {
         pub guid: Guid,
         pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub email: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
-        #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
         pub created_at: Option<String>,
-        #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
+    }
+
+    impl From<&AuthorDto> for Author {
+        fn from(d: &AuthorDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                email: d.email.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+                created_at: d.created_at.clone(),
+                updated_at: d.updated_at.clone(),
+            }
+        }
+    }
+
+    impl From<&Author> for AuthorDto {
+        fn from(a: &Author) -> Self {
+            Self {
+                guid: a.guid.clone(),
+                name: a.name.clone(),
+                email: a.email.clone(),
+                attributes: a
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+                created_at: a.created_at.clone(),
+                updated_at: a.updated_at.clone(),
+            }
+        }
+    }
+
+    impl HasGuid for AuthorDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // ✍️Author
 pub use author::*;
@@ -922,10 +1132,7 @@ mod folder_entity {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>📁Folder represents a named directory for organizing files.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Folder {
+    pub struct FolderDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -933,11 +1140,65 @@ mod folder_entity {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub parent: Option<FolderId>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
         #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
         pub created_at: Option<String>,
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>📁Folder represents a named directory for organizing files.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Folder {
+        pub guid: Guid,
+        pub name: String,
+        pub description: Option<String>,
+        pub parent: Option<FolderId>,
+        pub attributes: Option<Vec<Attribute>>,
+        pub created_at: Option<String>,
+        pub updated_at: Option<String>,
+    }
+
+    impl From<&FolderDto> for Folder {
+        fn from(d: &FolderDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                parent: d.parent.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+                created_at: d.created_at.clone(),
+                updated_at: d.updated_at.clone(),
+            }
+        }
+    }
+
+    impl From<&Folder> for FolderDto {
+        fn from(f: &Folder) -> Self {
+            Self {
+                guid: f.guid.clone(),
+                name: f.name.clone(),
+                description: f.description.clone(),
+                parent: f.parent.clone(),
+                attributes: f
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+                created_at: f.created_at.clone(),
+                updated_at: f.updated_at.clone(),
+            }
+        }
+    }
+
+    impl HasGuid for FolderDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 📁Folder
 pub use folder_entity::*;
@@ -947,7 +1208,7 @@ mod benchmark_entity {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct Benchmark {
+    pub struct BenchmarkDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -963,7 +1224,64 @@ mod benchmark_entity {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub definition: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct Benchmark {
+        pub guid: Guid,
+        pub name: String,
+        pub icon: Option<String>,
+        pub min: Option<f64>,
+        pub min_excluded: Option<bool>,
+        pub max: Option<f64>,
+        pub max_excluded: Option<bool>,
+        pub definition: Option<String>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&BenchmarkDto> for Benchmark {
+        fn from(d: &BenchmarkDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                icon: d.icon.clone(),
+                min: d.min,
+                min_excluded: d.min_excluded,
+                max: d.max,
+                max_excluded: d.max_excluded,
+                definition: d.definition.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Benchmark> for BenchmarkDto {
+        fn from(b: &Benchmark) -> Self {
+            Self {
+                guid: b.guid.clone(),
+                name: b.name.clone(),
+                icon: b.icon.clone(),
+                min: b.min,
+                min_excluded: b.min_excluded,
+                max: b.max,
+                max_excluded: b.max_excluded,
+                definition: b.definition.clone(),
+                attributes: b
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for BenchmarkDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 📏Benchmark
 pub use benchmark_entity::*;
@@ -1006,10 +1324,8 @@ mod quality {
         }
     }
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>🔬Quality represents a measurable property with formula, units and benchmarks.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Quality {
+    /// JSON / transport shape for [`Quality`].
+    pub struct QualityDto {
         pub guid: Guid,
         pub key: String,
         pub name: String,
@@ -1047,9 +1363,108 @@ mod quality {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub uri: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub benchmarks: Option<Vec<Benchmark>>,
+        pub benchmarks: Option<Vec<BenchmarkDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>🔬Quality represents a measurable property with formula, units and benchmarks.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Quality {
+        pub guid: Guid,
+        pub key: String,
+        pub name: String,
+        pub kind: QualityKind,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub image: Option<String>,
+        pub unit: Option<String>,
+        pub default_value: Option<f64>,
+        pub formula: Option<String>,
+        pub default_si_unit: Option<String>,
+        pub default_imperial_unit: Option<String>,
+        pub min: Option<f64>,
+        pub is_min_excluded: Option<bool>,
+        pub max: Option<f64>,
+        pub is_max_excluded: Option<bool>,
+        pub can_scale: Option<bool>,
+        pub uri: Option<String>,
+        pub benchmarks: Option<Vec<Benchmark>>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&QualityDto> for Quality {
+        fn from(d: &QualityDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                key: d.key.clone(),
+                name: d.name.clone(),
+                kind: d.kind,
+                description: d.description.clone(),
+                icon: d.icon.clone(),
+                image: d.image.clone(),
+                unit: d.unit.clone(),
+                default_value: d.default_value,
+                formula: d.formula.clone(),
+                default_si_unit: d.default_si_unit.clone(),
+                default_imperial_unit: d.default_imperial_unit.clone(),
+                min: d.min,
+                is_min_excluded: d.is_min_excluded,
+                max: d.max,
+                is_max_excluded: d.is_max_excluded,
+                can_scale: d.can_scale,
+                uri: d.uri.clone(),
+                benchmarks: d
+                    .benchmarks
+                    .as_ref()
+                    .map(|v| v.iter().map(Benchmark::from).collect()),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Quality> for QualityDto {
+        fn from(q: &Quality) -> Self {
+            Self {
+                guid: q.guid.clone(),
+                key: q.key.clone(),
+                name: q.name.clone(),
+                kind: q.kind,
+                description: q.description.clone(),
+                icon: q.icon.clone(),
+                image: q.image.clone(),
+                unit: q.unit.clone(),
+                default_value: q.default_value,
+                formula: q.formula.clone(),
+                default_si_unit: q.default_si_unit.clone(),
+                default_imperial_unit: q.default_imperial_unit.clone(),
+                min: q.min,
+                is_min_excluded: q.is_min_excluded,
+                max: q.max,
+                is_max_excluded: q.is_max_excluded,
+                can_scale: q.can_scale,
+                uri: q.uri.clone(),
+                benchmarks: q
+                    .benchmarks
+                    .as_ref()
+                    .map(|v| v.iter().map(BenchmarkDto::from).collect()),
+                attributes: q
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for QualityDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 🔬Quality
 pub use quality::*;
@@ -1059,10 +1474,8 @@ mod port {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>⚓Port represents a named connection interface with compatible ports.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Port {
+    /// JSON / transport shape for [`Port`].
+    pub struct PortDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1074,7 +1487,61 @@ mod port {
         #[serde(rename = "compatiblePorts", skip_serializing_if = "Option::is_none")]
         pub compatible_interfaces: Option<Vec<PortId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>⚓Port represents a named connection interface with compatible ports.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Port {
+        pub guid: Guid,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
+        pub max_children: Option<i32>,
+        pub compatible_interfaces: Option<Vec<PortId>>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&PortDto> for Port {
+        fn from(d: &PortDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                icon: d.icon.clone(),
+                max_children: d.max_children,
+                compatible_interfaces: d.compatible_interfaces.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Port> for PortDto {
+        fn from(p: &Port) -> Self {
+            Self {
+                guid: p.guid.clone(),
+                name: p.name.clone(),
+                description: p.description.clone(),
+                icon: p.icon.clone(),
+                max_children: p.max_children,
+                compatible_interfaces: p.compatible_interfaces.clone(),
+                attributes: p
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for PortDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // ⚓Port
 pub use port::*;
@@ -1084,6 +1551,18 @@ mod prop {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    /// DTO for `Prop` / `PropInput` in `schema.graphql`.
+    pub struct PropDto {
+        pub guid: Guid,
+        pub quality: QualityId,
+        pub value: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub unit: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
     /// <summary>📊Prop represents a quality measurement value with optional unit.</summary>
     /// <remarks>
     /// </remarks>
@@ -1091,10 +1570,35 @@ mod prop {
         pub guid: Guid,
         pub quality: QualityId,
         pub value: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&PropDto> for Prop {
+        fn from(d: &PropDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                quality: d.quality.clone(),
+                value: d.value.clone(),
+                unit: d.unit.clone(),
+                attributes: d.attributes.as_ref().map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Prop> for PropDto {
+        fn from(p: &Prop) -> Self {
+            Self {
+                guid: p.guid.clone(),
+                quality: p.quality.clone(),
+                value: p.value.clone(),
+                unit: p.unit.clone(),
+                attributes: p
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
     }
 } // 📊Prop
 pub use prop::*;
@@ -1104,10 +1608,7 @@ mod tag {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>🏷️Tag represents a named categorization label with optional description and icon.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Tag {
+    pub struct TagDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1115,7 +1616,55 @@ mod tag {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>🏷️Tag represents a named categorization label with optional description and icon.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Tag {
+        pub guid: Guid,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&TagDto> for Tag {
+        fn from(d: &TagDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                icon: d.icon.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Tag> for TagDto {
+        fn from(t: &Tag) -> Self {
+            Self {
+                guid: t.guid.clone(),
+                name: t.name.clone(),
+                description: t.description.clone(),
+                icon: t.icon.clone(),
+                attributes: t
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for TagDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 🏷️Tag
 pub use tag::*;
@@ -1125,12 +1674,7 @@ mod concept {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>💡Concept represents a named categorization concept with optional description and icon.</summary>
-    /// <remarks>
-    /// </remarks>
-    /// <remarks>
-    /// </remarks>
-    pub struct Concept {
+    pub struct ConceptDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1138,7 +1682,55 @@ mod concept {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>💡Concept represents a named categorization concept with optional description and icon.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Concept {
+        pub guid: Guid,
+        pub name: String,
+        pub description: Option<String>,
+        pub icon: Option<String>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&ConceptDto> for Concept {
+        fn from(d: &ConceptDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                icon: d.icon.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Concept> for ConceptDto {
+        fn from(c: &Concept) -> Self {
+            Self {
+                guid: c.guid.clone(),
+                name: c.name.clone(),
+                description: c.description.clone(),
+                icon: c.icon.clone(),
+                attributes: c
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for ConceptDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 💡Concept
 pub use concept::*;
@@ -1148,12 +1740,8 @@ mod model_entity {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>🗿Model represents a 3D model reference linking a file with tags and description.</summary>
-    /// <remarks>
-    /// </remarks>
-    /// <remarks>
-    /// </remarks>
-    pub struct Model {
+    /// DTO for `Model` / `ModelInput` in `schema.graphql`.
+    pub struct ModelDto {
         pub guid: Guid,
         pub file: FileId,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1163,7 +1751,54 @@ mod model_entity {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub tags: Option<Vec<TagId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>🗿Model represents a 3D model reference linking a file with tags and description.</summary>
+    /// <remarks>
+    /// </remarks>
+    /// <remarks>
+    /// </remarks>
+    pub struct Model {
+        pub guid: Guid,
+        pub file: FileId,
+        pub name: Option<String>,
+        pub description: Option<String>,
+        pub tags: Option<Vec<TagId>>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&ModelDto> for Model {
+        fn from(d: &ModelDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                file: d.file.clone(),
+                name: d.name.clone(),
+                description: d.description.clone(),
+                tags: d.tags.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Model> for ModelDto {
+        fn from(m: &Model) -> Self {
+            Self {
+                guid: m.guid.clone(),
+                file: m.file.clone(),
+                name: m.name.clone(),
+                description: m.description.clone(),
+                tags: m.tags.clone(),
+                attributes: m
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
     }
 } // 🗿Model
 pub use model_entity::*;
@@ -1172,12 +1807,12 @@ mod connector {
 
     use super::*;
 
-    /// Wire shape (port by id).
+    /// DTO / JSON shape for [`Connector`] (`schema.graphql` `Connector` / `ConnectorInput`); port by id.
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct ConnectorWire {
+    pub struct ConnectorDto {
         pub guid: Guid,
-        pub point: Vector,
-        pub direction: Vector,
+        pub point: VectorDto,
+        pub direction: VectorDto,
         pub t: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -1190,9 +1825,9 @@ mod connector {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub port: Option<PortId>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<Vec<Prop>>,
+        pub props: Option<Vec<PropDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
     }
 
     /// Connector with resolved [`Port`] pointer.
@@ -1218,11 +1853,11 @@ mod connector {
     }
 
     impl Connector {
-        pub fn from_wire(cw: &ConnectorWire, ports: &std::collections::HashMap<String, Arc<Port>>) -> Connector {
+        pub fn from_dto(cw: &ConnectorDto, ports: &std::collections::HashMap<String, Arc<Port>>) -> Connector {
             Connector {
                 guid: cw.guid.clone(),
-                point: cw.point.clone(),
-                direction: cw.direction.clone(),
+                point: Vector::from(&cw.point),
+                direction: Vector::from(&cw.direction),
                 t: cw.t,
                 name: cw.name.clone(),
                 description: cw.description.clone(),
@@ -1232,16 +1867,19 @@ mod connector {
                     .port
                     .as_ref()
                     .and_then(|pid| ports.get(&pid.guid).cloned()),
-                props: cw.props.clone(),
-                attributes: cw.attributes.clone(),
+                props: cw.props.as_ref().map(|v| v.iter().map(Prop::from).collect()),
+                attributes: cw
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
             }
         }
 
-        pub fn to_wire(&self) -> ConnectorWire {
-            ConnectorWire {
+        pub fn to_dto(&self) -> ConnectorDto {
+            ConnectorDto {
                 guid: self.guid.clone(),
-                point: self.point.clone(),
-                direction: self.direction.clone(),
+                point: VectorDto::from(&self.point),
+                direction: VectorDto::from(&self.direction),
                 t: self.t,
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -1250,22 +1888,19 @@ mod connector {
                 port: self.port.as_ref().map(|p| PortId {
                     guid: p.guid.clone(),
                 }),
-                props: self.props.clone(),
-                attributes: self.attributes.clone(),
+                props: self
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(PropDto::from).collect()),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
             }
         }
     }
 
-    impl serde::Serialize for Connector {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
-
-    impl crate::HasGuid for ConnectorWire {
+    impl crate::HasGuid for ConnectorDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -1277,9 +1912,9 @@ mod model_types_type {
 
     use super::*;
 
-    /// Wire / JSON form of [`Type`] (GUID references).
+    /// DTO / JSON form of [`Type`] (GUID references), aligned with `schema.graphql` `Type` / `TypeInput`.
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct TypeWire {
+    pub struct TypeDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1309,13 +1944,13 @@ mod model_types_type {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub authors: Option<Vec<AuthorId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<Vec<Prop>>,
+        pub props: Option<Vec<PropDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub models: Option<Vec<Model>>,
+        pub models: Option<Vec<ModelDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub connectors: Option<Vec<ConnectorWire>>,
+        pub connectors: Option<Vec<ConnectorDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
         #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
         pub created_at: Option<String>,
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
@@ -1355,8 +1990,8 @@ mod model_types_type {
     }
 
     impl Type {
-        pub fn to_wire(&self) -> TypeWire {
-            TypeWire {
+        pub fn to_dto(&self) -> TypeDto {
+            TypeDto {
                 guid: self.guid.clone(),
                 name: self.name.clone(),
                 parent: self.parent.as_ref().map(|t| TypeId {
@@ -1380,28 +2015,28 @@ mod model_types_type {
                 location: self.location.clone(),
                 concepts: self.concepts.clone(),
                 authors: self.authors.clone(),
-                props: self.props.clone(),
-                models: self.models.clone(),
+                props: self
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(PropDto::from).collect()),
+                models: self
+                    .models
+                    .as_ref()
+                    .map(|v| v.iter().map(ModelDto::from).collect()),
                 connectors: self.connectors.as_ref().map(|v| {
-                    v.iter().map(|c| c.as_ref().to_wire()).collect()
+                    v.iter().map(|c| c.as_ref().to_dto()).collect()
                 }),
-                attributes: self.attributes.clone(),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
                 created_at: self.created_at.clone(),
                 updated_at: self.updated_at.clone(),
             }
         }
     }
 
-    impl serde::Serialize for Type {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
-
-    impl crate::HasGuid for TypeWire {
+    impl crate::HasGuid for TypeDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -1414,10 +2049,7 @@ mod layer {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>🎨Layer represents a named visibility and color layer within a design.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Layer {
+    pub struct LayerDto {
         pub guid: Guid,
         pub path: String,
         #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
@@ -1429,7 +2061,61 @@ mod layer {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>🎨Layer represents a named visibility and color layer within a design.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Layer {
+        pub guid: Guid,
+        pub path: String,
+        pub is_hidden: Option<bool>,
+        pub is_locked: Option<bool>,
+        pub color: Option<String>,
+        pub description: Option<String>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&LayerDto> for Layer {
+        fn from(d: &LayerDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                path: d.path.clone(),
+                is_hidden: d.is_hidden,
+                is_locked: d.is_locked,
+                color: d.color.clone(),
+                description: d.description.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Layer> for LayerDto {
+        fn from(l: &Layer) -> Self {
+            Self {
+                guid: l.guid.clone(),
+                path: l.path.clone(),
+                is_hidden: l.is_hidden,
+                is_locked: l.is_locked,
+                color: l.color.clone(),
+                description: l.description.clone(),
+                attributes: l
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for LayerDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 🎨Layer
 pub use layer::*;
@@ -1438,9 +2124,9 @@ mod piece {
 
     use super::*;
 
-    /// JSON / persistence shape for a piece (GUID references only).
+    /// DTO / JSON shape for a piece (`schema.graphql` `Piece` / `PieceInput`); GUID references only.
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    pub struct PieceWire {
+    pub struct PieceDto {
         pub guid: Guid,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -1449,13 +2135,13 @@ mod piece {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub design: Option<DesignId>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub plane: Option<Plane>,
+        pub plane: Option<PlaneDto>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub center: Option<Coord>,
+        pub center: Option<CoordDto>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(rename = "mirrorPlane", skip_serializing_if = "Option::is_none")]
-        pub mirror_plane: Option<Plane>,
+        pub mirror_plane: Option<PlaneDto>,
         #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
         pub is_hidden: Option<bool>,
         #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
@@ -1465,9 +2151,9 @@ mod piece {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<Vec<Prop>>,
+        pub props: Option<Vec<PropDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
     }
 
     /// In-memory piece: strong refs to [`Type`] and [`super::model_types_design::Design`] via pointers.
@@ -1517,8 +2203,8 @@ mod piece {
     }
 
     impl Piece {
-        pub fn to_wire(&self) -> PieceWire {
-            PieceWire {
+        pub fn to_dto(&self) -> PieceDto {
+            PieceDto {
                 guid: self.guid.clone(),
                 name: self.name.clone(),
                 type_ref: self.type_ref.as_ref().map(|t| TypeId {
@@ -1529,26 +2215,23 @@ mod piece {
                     .as_ref()
                     .and_then(|w| w.upgrade())
                     .map(|d| DesignId { guid: d.guid.clone() }),
-                plane: self.plane.clone(),
-                center: self.center.clone(),
+                plane: self.plane.as_ref().map(PlaneDto::from),
+                center: self.center.as_ref().map(CoordDto::from),
                 scale: self.scale,
-                mirror_plane: self.mirror_plane.clone(),
+                mirror_plane: self.mirror_plane.as_ref().map(PlaneDto::from),
                 is_hidden: self.is_hidden,
                 is_locked: self.is_locked,
                 color: self.color.clone(),
                 description: self.description.clone(),
-                props: self.props.clone(),
-                attributes: self.attributes.clone(),
+                props: self
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(PropDto::from).collect()),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
             }
-        }
-    }
-
-    impl serde::Serialize for Piece {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
         }
     }
 } // 🧩Piece
@@ -1559,10 +2242,7 @@ mod group {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>👥Group represents a named collection of pieces within a design.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub struct Group {
+    pub struct GroupDto {
         pub guid: Guid,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
@@ -1573,7 +2253,58 @@ mod group {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub pieces: Option<Vec<PieceId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<Vec<AttributeDto>>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>👥Group represents a named collection of pieces within a design.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Group {
+        pub guid: Guid,
+        pub name: Option<String>,
+        pub color: Option<String>,
+        pub description: Option<String>,
+        pub pieces: Option<Vec<PieceId>>,
         pub attributes: Option<Vec<Attribute>>,
+    }
+
+    impl From<&GroupDto> for Group {
+        fn from(d: &GroupDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                name: d.name.clone(),
+                color: d.color.clone(),
+                description: d.description.clone(),
+                pieces: d.pieces.clone(),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
+            }
+        }
+    }
+
+    impl From<&Group> for GroupDto {
+        fn from(g: &Group) -> Self {
+            Self {
+                guid: g.guid.clone(),
+                name: g.name.clone(),
+                color: g.color.clone(),
+                description: g.description.clone(),
+                pieces: g.pieces.clone(),
+                attributes: g
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
+            }
+        }
+    }
+
+    impl HasGuid for GroupDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 👥Group
 pub use group::*;
@@ -1583,7 +2314,7 @@ mod side {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct SideWire {
+    pub struct SideDto {
         pub piece: PieceId,
         #[serde(rename = "designPiece", skip_serializing_if = "Option::is_none")]
         pub design_piece: Option<PieceId>,
@@ -1610,8 +2341,8 @@ mod side {
     }
 
     impl Side {
-        pub fn to_wire(&self) -> SideWire {
-            SideWire {
+        pub fn to_dto(&self) -> SideDto {
+            SideDto {
                 piece: PieceId {
                     guid: self.piece.guid.clone(),
                 },
@@ -1625,14 +2356,6 @@ mod side {
         }
     }
 
-    impl serde::Serialize for Side {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
 } // ↔️Side
 pub use side::*;
 
@@ -1641,10 +2364,10 @@ mod connection {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct ConnectionWire {
+    pub struct ConnectionDto {
         pub guid: Guid,
-        pub connected: SideWire,
-        pub connecting: SideWire,
+        pub connected: SideDto,
+        pub connecting: SideDto,
         #[serde(default)]
         pub gap: f64,
         #[serde(default)]
@@ -1664,7 +2387,7 @@ mod connection {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
     }
 
     #[derive(Debug, Clone, PartialEq)]
@@ -1685,11 +2408,11 @@ mod connection {
     }
 
     impl Connection {
-        pub fn to_wire(&self) -> ConnectionWire {
-            ConnectionWire {
+        pub fn to_dto(&self) -> ConnectionDto {
+            ConnectionDto {
                 guid: self.guid.clone(),
-                connected: self.connected.to_wire(),
-                connecting: self.connecting.to_wire(),
+                connected: self.connected.to_dto(),
+                connecting: self.connecting.to_dto(),
                 gap: self.gap,
                 shift: self.shift,
                 rise: self.rise,
@@ -1699,21 +2422,15 @@ mod connection {
                 u: self.u,
                 v: self.v,
                 description: self.description.clone(),
-                attributes: self.attributes.clone(),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
             }
         }
     }
 
-    impl serde::Serialize for Connection {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
-
-    impl crate::HasGuid for ConnectionWire {
+    impl crate::HasGuid for ConnectionDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -1726,12 +2443,7 @@ mod stat {
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// <summary>📈Stat represents a statistical quality measurement with min/max bounds and unit.</summary>
-    /// <remarks>
-    /// </remarks>
-    /// <remarks>
-    /// </remarks>
-    pub struct Stat {
+    pub struct StatDto {
         pub guid: Guid,
         pub quality: QualityId,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1744,6 +2456,54 @@ mod stat {
         pub max_excluded: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    /// <summary>📈Stat represents a statistical quality measurement with min/max bounds and unit.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub struct Stat {
+        pub guid: Guid,
+        pub quality: QualityId,
+        pub min: Option<f64>,
+        pub min_excluded: Option<bool>,
+        pub max: Option<f64>,
+        pub max_excluded: Option<bool>,
+        pub unit: Option<String>,
+    }
+
+    impl From<&StatDto> for Stat {
+        fn from(d: &StatDto) -> Self {
+            Self {
+                guid: d.guid.clone(),
+                quality: d.quality.clone(),
+                min: d.min,
+                min_excluded: d.min_excluded,
+                max: d.max,
+                max_excluded: d.max_excluded,
+                unit: d.unit.clone(),
+            }
+        }
+    }
+
+    impl From<&Stat> for StatDto {
+        fn from(s: &Stat) -> Self {
+            Self {
+                guid: s.guid.clone(),
+                quality: s.quality.clone(),
+                min: s.min,
+                min_excluded: s.min_excluded,
+                max: s.max,
+                max_excluded: s.max_excluded,
+                unit: s.unit.clone(),
+            }
+        }
+    }
+
+    impl HasGuid for StatDto {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
     }
 } // 📈Stat
 pub use stat::*;
@@ -1763,15 +2523,25 @@ mod model_types_design {
         RefCell::new(None)
     }
 
+    /// Wire shape for a design family: id plus optional inline ports (see kit JSON / GraphQL).
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct DesignFamilyDto {
+        pub guid: Guid,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub name: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub ports: Option<Vec<PortDto>>,
+    }
+
     /// JSON / transport shape for a design (GUID references only).
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct DesignWire {
+    pub struct DesignDto {
         pub guid: Guid,
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub parent: Option<DesignId>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub families: Option<Vec<DesignId>>,
+        pub families: Option<Vec<DesignFamilyDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1793,30 +2563,30 @@ mod model_types_design {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub authors: Option<Vec<AuthorId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<Vec<Prop>>,
+        pub props: Option<Vec<PropDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub pieces: Option<Vec<PieceWire>>,
+        pub pieces: Option<Vec<PieceDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub connections: Option<Vec<ConnectionWire>>,
+        pub connections: Option<Vec<ConnectionDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub layers: Option<Vec<Layer>>,
+        pub layers: Option<Vec<LayerDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub groups: Option<Vec<Group>>,
+        pub groups: Option<Vec<GroupDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub stats: Option<Vec<Stat>>,
+        pub stats: Option<Vec<StatDto>>,
         #[serde(rename = "activeLayer", skip_serializing_if = "Option::is_none")]
         pub active_layer: Option<LayerId>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub location: Option<LocationId>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
         #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
         pub created_at: Option<String>,
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
     }
 
-    impl Default for DesignWire {
+    impl Default for DesignDto {
         fn default() -> Self {
             Self {
                 guid: String::new(),
@@ -1957,12 +2727,20 @@ mod model_types_design {
             crate::hash_design(self)
         }
 
-        pub fn to_wire(&self) -> DesignWire {
-            DesignWire {
+        pub fn to_dto(&self) -> DesignDto {
+            DesignDto {
                 guid: self.guid.clone(),
                 name: self.name.clone(),
                 parent: self.parent.clone(),
-                families: self.families.clone(),
+                families: self.families.as_ref().map(|v| {
+                    v.iter()
+                        .map(|id| DesignFamilyDto {
+                            guid: id.guid.clone(),
+                            name: None,
+                            ports: None,
+                        })
+                        .collect()
+                }),
                 description: self.description.clone(),
                 icon: self.icon.clone(),
                 image: self.image.clone(),
@@ -1973,37 +2751,40 @@ mod model_types_design {
                 can_mirror: self.can_mirror,
                 concepts: self.concepts.clone(),
                 authors: self.authors.clone(),
-                props: self.props.clone(),
+                props: self
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(PropDto::from).collect()),
                 pieces: self
                     .pieces
                     .as_ref()
-                    .map(|v| v.iter().map(|p| p.as_ref().to_wire()).collect()),
+                    .map(|v| v.iter().map(|p| p.as_ref().to_dto()).collect()),
                 connections: self
                     .connections
                     .as_ref()
-                    .map(|v| v.iter().map(|c| c.to_wire()).collect()),
-                layers: self.layers.clone(),
-                groups: self.groups.clone(),
-                stats: self.stats.clone(),
+                    .map(|v| v.iter().map(|c| c.to_dto()).collect()),
+                layers: self
+                    .layers
+                    .as_ref()
+                    .map(|v| v.iter().map(LayerDto::from).collect()),
+                groups: self
+                    .groups
+                    .as_ref()
+                    .map(|v| v.iter().map(GroupDto::from).collect()),
+                stats: self.stats.as_ref().map(|v| v.iter().map(StatDto::from).collect()),
                 active_layer: self.active_layer.clone(),
                 location: self.location.clone(),
-                attributes: self.attributes.clone(),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
                 created_at: self.created_at.clone(),
                 updated_at: self.updated_at.clone(),
             }
         }
     }
 
-    impl serde::Serialize for Design {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
-
-    impl crate::HasGuid for DesignWire {
+    impl crate::HasGuid for DesignDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -2051,16 +2832,21 @@ mod model_types_kit {
     pub use kit_kind::*;
 
     use std::cell::{Cell, RefCell};
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
     use std::sync::Arc;
 
-    /// JSON / transport shape for a kit (GUID references in nested [`TypeWire`] / [`DesignWire`]).
+    /// JSON / transport shape for a kit (GUID references in nested [`TypeDto`] / [`DesignDto`]).
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    pub struct KitWire {
+    pub struct KitDto {
         pub guid: Guid,
         pub name: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        pub version: Option<String>,
+        /// GraphQL `KitInput.release`; `version` accepted for legacy JSON.
+        #[serde(
+            rename = "release",
+            alias = "version",
+            skip_serializing_if = "Option::is_none"
+        )]
+        pub release: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -2076,25 +2862,28 @@ mod model_types_kit {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub license: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub concepts: Option<Vec<Concept>>,
+        pub concepts: Option<Vec<ConceptDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub tags: Option<Vec<Tag>>,
+        pub tags: Option<Vec<TagDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub types: Option<Vec<TypeWire>>,
+        pub types: Option<Vec<TypeDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub designs: Option<Vec<DesignWire>>,
+        pub designs: Option<Vec<DesignDto>>,
+        /// Kit-level design family definitions (optional inlined ports); distinct from each design's `families` id list.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub families: Option<Vec<DesignFamilyDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub ports: Option<Vec<Port>>,
+        pub ports: Option<Vec<PortDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub qualities: Option<Vec<Quality>>,
+        pub qualities: Option<Vec<QualityDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub files: Option<Vec<File>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub folders: Option<Vec<Folder>>,
+        pub folders: Option<Vec<FolderDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub authors: Option<Vec<Author>>,
+        pub authors: Option<Vec<AuthorDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<Vec<Attribute>>,
+        pub attributes: Option<Vec<AttributeDto>>,
         #[serde(rename = "createdAt", skip_serializing_if = "Option::is_none")]
         pub created_at: Option<String>,
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
@@ -2127,18 +2916,18 @@ mod model_types_kit {
         pub updated_at: Option<String>,
     }
 
-    pub(crate) fn resolve_types_from_wire(
-        type_wires: Option<Vec<TypeWire>>,
+    pub(crate) fn resolve_types_from_dto(
+        type_dtos: Option<Vec<TypeDto>>,
         ports: &HashMap<String, Arc<Port>>,
     ) -> Result<Option<Vec<Arc<Type>>>> {
-        let Some(tw_vec) = type_wires else {
+        let Some(tw_vec) = type_dtos else {
             return Ok(None);
         };
         let mut partial: HashMap<String, Type> = HashMap::new();
         for tw in &tw_vec {
             let connectors = tw.connectors.as_ref().map(|cv| {
                 cv.iter()
-                    .map(|cw| Arc::new(Connector::from_wire(cw, ports)))
+                    .map(|cw| Arc::new(Connector::from_dto(cw, ports)))
                     .collect::<Vec<_>>()
             });
             let t = Type {
@@ -2157,10 +2946,19 @@ mod model_types_kit {
                 location: tw.location.clone(),
                 concepts: tw.concepts.clone(),
                 authors: tw.authors.clone(),
-                props: tw.props.clone(),
-                models: tw.models.clone(),
+                props: tw
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(Prop::from).collect()),
+                models: tw
+                    .models
+                    .as_ref()
+                    .map(|v| v.iter().map(Model::from).collect()),
                 connectors,
-                attributes: tw.attributes.clone(),
+                attributes: tw
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
                 created_at: tw.created_at.clone(),
                 updated_at: tw.updated_at.clone(),
             };
@@ -2197,10 +2995,10 @@ mod model_types_kit {
     }
 
     /// Append wire-defined types onto an existing catalog, resolving parent/families against
-    /// both prior entries and newly inserted rows (same ordering rules as [`resolve_types_from_wire`]).
-    pub(crate) fn merge_type_wires(
+    /// both prior entries and newly inserted rows (same ordering rules as [`resolve_types_from_dto`]).
+    pub(crate) fn merge_type_dtos(
         mut existing: Vec<Arc<Type>>,
-        added: &[TypeWire],
+        added: &[TypeDto],
         ports: &HashMap<String, Arc<Port>>,
     ) -> Result<Vec<Arc<Type>>> {
         let mut arc_map: HashMap<String, Arc<Type>> = existing
@@ -2211,14 +3009,14 @@ mod model_types_kit {
             if arc_map.contains_key(&tw.guid) {
                 return Err(SemioError::Validation {
                     message: format!(
-                        "merge_type_wires: duplicate type guid {} already in kit",
+                        "merge_type_dtos: duplicate type guid {} already in kit",
                         tw.guid
                     ),
                 });
             }
             let connectors = tw.connectors.as_ref().map(|cv| {
                 cv.iter()
-                    .map(|cw| Arc::new(Connector::from_wire(cw, ports)))
+                    .map(|cw| Arc::new(Connector::from_dto(cw, ports)))
                     .collect::<Vec<_>>()
             });
             let t = Type {
@@ -2237,10 +3035,19 @@ mod model_types_kit {
                 location: tw.location.clone(),
                 concepts: tw.concepts.clone(),
                 authors: tw.authors.clone(),
-                props: tw.props.clone(),
-                models: tw.models.clone(),
+                props: tw
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(Prop::from).collect()),
+                models: tw
+                    .models
+                    .as_ref()
+                    .map(|v| v.iter().map(Model::from).collect()),
                 connectors,
-                attributes: tw.attributes.clone(),
+                attributes: tw
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
                 created_at: tw.created_at.clone(),
                 updated_at: tw.updated_at.clone(),
             };
@@ -2270,8 +3077,8 @@ mod model_types_kit {
         Ok(existing)
     }
 
-    fn resolve_side_from_wire(
-        sw: &SideWire,
+    fn resolve_side_from_dto(
+        sw: &SideDto,
         pieces: &HashMap<String, Arc<Piece>>,
     ) -> Result<Side> {
         let piece = pieces.get(&sw.piece.guid).cloned().ok_or_else(|| {
@@ -2298,14 +3105,14 @@ mod model_types_kit {
         })
     }
 
-    pub(crate) fn connection_from_wire(
-        cw: &ConnectionWire,
+    pub(crate) fn connection_from_dto(
+        cw: &ConnectionDto,
         pieces: &HashMap<String, Arc<Piece>>,
     ) -> Result<Connection> {
         Ok(Connection {
             guid: cw.guid.clone(),
-            connected: resolve_side_from_wire(&cw.connected, pieces)?,
-            connecting: resolve_side_from_wire(&cw.connecting, pieces)?,
+            connected: resolve_side_from_dto(&cw.connected, pieces)?,
+            connecting: resolve_side_from_dto(&cw.connecting, pieces)?,
             gap: cw.gap,
             shift: cw.shift,
             rise: cw.rise,
@@ -2315,12 +3122,15 @@ mod model_types_kit {
             u: cw.u,
             v: cw.v,
             description: cw.description.clone(),
-            attributes: cw.attributes.clone(),
+            attributes: cw
+                .attributes
+                .as_ref()
+                .map(|v| v.iter().map(Attribute::from).collect()),
         })
     }
 
-    pub(crate) fn resolve_design_from_wire(
-        dw: &DesignWire,
+    pub(crate) fn resolve_design_from_dto(
+        dw: &DesignDto,
         types: &HashMap<String, Arc<Type>>,
     ) -> Result<Arc<Design>> {
         let design_arc = Arc::new_cyclic(|design_weak| {
@@ -2335,16 +3145,22 @@ mod model_types_kit {
                                 .as_ref()
                                 .and_then(|tid| types.get(&tid.guid).cloned()),
                             design: Some(design_weak.clone()),
-                            plane: pw.plane.clone(),
-                            center: pw.center.clone(),
+                            plane: pw.plane.as_ref().map(Plane::from),
+                            center: pw.center.as_ref().map(Coord::from),
                             scale: pw.scale,
-                            mirror_plane: pw.mirror_plane.clone(),
+                            mirror_plane: pw.mirror_plane.as_ref().map(Plane::from),
                             is_hidden: pw.is_hidden,
                             is_locked: pw.is_locked,
                             color: pw.color.clone(),
                             description: pw.description.clone(),
-                            props: pw.props.clone(),
-                            attributes: pw.attributes.clone(),
+                            props: pw
+                                .props
+                                .as_ref()
+                                .map(|v| v.iter().map(Prop::from).collect()),
+                            attributes: pw
+                                .attributes
+                                .as_ref()
+                                .map(|v| v.iter().map(Attribute::from).collect()),
                         })
                     })
                     .collect()
@@ -2357,7 +3173,7 @@ mod model_types_kit {
             let connections = dw.connections.as_ref().map(|cv| {
                 cv.iter()
                     .map(|cw| {
-                        connection_from_wire(cw, &piece_map).unwrap_or_else(|e| {
+                        connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
                             panic!(
                                 "design {}: failed to resolve connection {}: {}",
                                 dw.guid, cw.guid, e
@@ -2371,7 +3187,13 @@ mod model_types_kit {
                 guid: dw.guid.clone(),
                 name: dw.name.clone(),
                 parent: dw.parent.clone(),
-                families: dw.families.clone(),
+                families: dw.families.as_ref().map(|v| {
+                    v.iter()
+                        .map(|f| DesignId {
+                            guid: f.guid.clone(),
+                        })
+                        .collect()
+                }),
                 description: dw.description.clone(),
                 icon: dw.icon.clone(),
                 image: dw.image.clone(),
@@ -2382,15 +3204,27 @@ mod model_types_kit {
                 can_mirror: dw.can_mirror,
                 concepts: dw.concepts.clone(),
                 authors: dw.authors.clone(),
-                props: dw.props.clone(),
+                props: dw
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(Prop::from).collect()),
                 pieces,
                 connections,
-                layers: dw.layers.clone(),
-                groups: dw.groups.clone(),
-                stats: dw.stats.clone(),
+                layers: dw
+                    .layers
+                    .as_ref()
+                    .map(|v| v.iter().map(Layer::from).collect()),
+                groups: dw
+                    .groups
+                    .as_ref()
+                    .map(|v| v.iter().map(Group::from).collect()),
+                stats: dw.stats.as_ref().map(|v| v.iter().map(Stat::from).collect()),
                 active_layer: dw.active_layer.clone(),
                 location: dw.location.clone(),
-                attributes: dw.attributes.clone(),
+                attributes: dw
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
                 created_at: dw.created_at.clone(),
                 updated_at: dw.updated_at.clone(),
                 hash_stale: Cell::new(true),
@@ -2402,9 +3236,9 @@ mod model_types_kit {
 
     impl Type {
         /// Hydrate one type from JSON wire; parent/families only resolve if those types appear in the same batch (merge kits for full graphs).
-        pub fn from_wire(tw: TypeWire, ports: &HashMap<String, Arc<Port>>) -> Result<Self> {
+        pub fn from_dto(tw: TypeDto, ports: &HashMap<String, Arc<Port>>) -> Result<Self> {
             let guid = tw.guid.clone();
-            let resolved = resolve_types_from_wire(Some(vec![tw]), ports)?
+            let resolved = resolve_types_from_dto(Some(vec![tw]), ports)?
                 .ok_or_else(|| SemioError::Validation {
                     message: "no types resolved".to_string(),
                 })?;
@@ -2419,22 +3253,52 @@ mod model_types_kit {
     }
 
     impl Design {
-        pub fn from_wire(dw: DesignWire, types: &HashMap<String, Arc<Type>>) -> Result<Self> {
-            let arc = resolve_design_from_wire(&dw, types)?;
+        pub fn from_dto(dw: DesignDto, types: &HashMap<String, Arc<Type>>) -> Result<Self> {
+            let arc = resolve_design_from_dto(&dw, types)?;
             Ok((*arc).clone())
         }
     }
 
     impl Kit {
-        pub fn from_wire(mut kw: KitWire) -> Result<Self> {
-            let ports_owned = kw.ports.take();
+        pub fn from_dto(mut kw: KitDto) -> Result<Self> {
+            let mut port_dtos: Vec<PortDto> = kw.ports.take().unwrap_or_default();
+            let mut seen: HashSet<String> = port_dtos.iter().map(|p| p.guid.clone()).collect();
+            let mut push_ports_from_families = |families: Option<&Vec<DesignFamilyDto>>| {
+                if let Some(families) = families {
+                    for fam in families {
+                        if let Some(ref plist) = fam.ports {
+                            for p in plist {
+                                if seen.insert(p.guid.clone()) {
+                                    port_dtos.push(p.clone());
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            if let Some(ref designs) = kw.designs {
+                for d in designs {
+                    push_ports_from_families(d.families.as_ref());
+                }
+            }
+            push_ports_from_families(kw.families.as_ref());
+            let ports_owned = if port_dtos.is_empty() {
+                None
+            } else {
+                Some(
+                    port_dtos
+                        .into_iter()
+                        .map(|p| Port::from(&p))
+                        .collect::<Vec<_>>(),
+                )
+            };
             let mut ports_map: HashMap<String, Arc<Port>> = HashMap::new();
             if let Some(ref plist) = ports_owned {
                 for p in plist {
                     ports_map.insert(p.guid.clone(), Arc::new(p.clone()));
                 }
             }
-            let types_opt = resolve_types_from_wire(kw.types.take(), &ports_map)?;
+            let types_opt = resolve_types_from_dto(kw.types.take(), &ports_map)?;
             let types_map: HashMap<String, Arc<Type>> = types_opt
                 .as_ref()
                 .map(|v| v.iter().map(|t| (t.guid.clone(), t.clone())).collect())
@@ -2443,7 +3307,7 @@ mod model_types_kit {
             let designs_opt = if let Some(dw_vec) = kw.designs.take() {
                 let mut out: Vec<Arc<Design>> = Vec::new();
                 for dw in &dw_vec {
-                    out.push(resolve_design_from_wire(dw, &types_map)?);
+                    out.push(resolve_design_from_dto(dw, &types_map)?);
                 }
                 Some(out)
             } else {
@@ -2453,7 +3317,7 @@ mod model_types_kit {
             Ok(Kit {
                 guid: kw.guid,
                 name: kw.name,
-                version: kw.version,
+                version: kw.release,
                 description: kw.description,
                 icon: kw.icon,
                 image: kw.image,
@@ -2461,26 +3325,36 @@ mod model_types_kit {
                 remote: kw.remote,
                 homepage: kw.homepage,
                 license: kw.license,
-                concepts: kw.concepts,
-                tags: kw.tags,
+                concepts: kw
+                    .concepts
+                    .map(|v| v.into_iter().map(|c| Concept::from(&c)).collect()),
+                tags: kw.tags.map(|v| v.into_iter().map(|t| Tag::from(&t)).collect()),
                 types: types_opt,
                 designs: designs_opt,
                 ports: ports_owned,
-                qualities: kw.qualities,
+                qualities: kw
+                    .qualities
+                    .map(|v| v.into_iter().map(|q| Quality::from(&q)).collect()),
                 files: kw.files,
-                folders: kw.folders,
-                authors: kw.authors,
-                attributes: kw.attributes,
+                folders: kw
+                    .folders
+                    .map(|v| v.into_iter().map(|f| Folder::from(&f)).collect()),
+                authors: kw
+                    .authors
+                    .map(|v| v.into_iter().map(|a| Author::from(&a)).collect()),
+                attributes: kw
+                    .attributes
+                    .map(|v| v.into_iter().map(|a| Attribute::from(&a)).collect()),
                 created_at: kw.created_at,
                 updated_at: kw.updated_at,
             })
         }
 
-        pub fn to_wire(&self) -> KitWire {
-            KitWire {
+        pub fn to_dto(&self) -> KitDto {
+            KitDto {
                 guid: self.guid.clone(),
                 name: self.name.clone(),
-                version: self.version.clone(),
+                release: self.version.clone(),
                 description: self.description.clone(),
                 icon: self.icon.clone(),
                 image: self.image.clone(),
@@ -2488,22 +3362,41 @@ mod model_types_kit {
                 remote: self.remote.clone(),
                 homepage: self.homepage.clone(),
                 license: self.license.clone(),
-                concepts: self.concepts.clone(),
-                tags: self.tags.clone(),
+                concepts: self
+                    .concepts
+                    .as_ref()
+                    .map(|v| v.iter().map(ConceptDto::from).collect()),
+                tags: self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect()),
                 types: self
                     .types
                     .as_ref()
-                    .map(|v| v.iter().map(|t| t.as_ref().to_wire()).collect()),
+                    .map(|v| v.iter().map(|t| t.as_ref().to_dto()).collect()),
                 designs: self
                     .designs
                     .as_ref()
-                    .map(|v| v.iter().map(|d| d.as_ref().to_wire()).collect()),
-                ports: self.ports.clone(),
-                qualities: self.qualities.clone(),
+                    .map(|v| v.iter().map(|d| d.as_ref().to_dto()).collect()),
+                families: None,
+                ports: self
+                    .ports
+                    .as_ref()
+                    .map(|v| v.iter().map(PortDto::from).collect()),
+                qualities: self
+                    .qualities
+                    .as_ref()
+                    .map(|v| v.iter().map(QualityDto::from).collect()),
                 files: self.files.clone(),
-                folders: self.folders.clone(),
-                authors: self.authors.clone(),
-                attributes: self.attributes.clone(),
+                folders: self
+                    .folders
+                    .as_ref()
+                    .map(|v| v.iter().map(FolderDto::from).collect()),
+                authors: self
+                    .authors
+                    .as_ref()
+                    .map(|v| v.iter().map(AuthorDto::from).collect()),
+                attributes: self
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(AttributeDto::from).collect()),
                 created_at: self.created_at.clone(),
                 updated_at: self.updated_at.clone(),
             }
@@ -2511,29 +3404,21 @@ mod model_types_kit {
 
         /// Serialize as pretty JSON (wire / DTO transport).
         pub fn to_json_pretty(&self) -> Result<String> {
-            serde_json::to_string_pretty(&self.to_wire()).map_err(|e| SemioError::Serialization {
+            serde_json::to_string_pretty(&self.to_dto()).map_err(|e| SemioError::Serialization {
                 message: e.to_string(),
             })
         }
 
         /// Deserialize from JSON (wire / DTO transport).
         pub fn from_json_str(json: &str) -> Result<Self> {
-            let kw: KitWire =
+            let kw: KitDto =
                 serde_json::from_str(json).map_err(|e| SemioError::Serialization {
                     message: e.to_string(),
                 })?;
-            Self::from_wire(kw)
+            Self::from_dto(kw)
         }
     }
 
-    impl serde::Serialize for Kit {
-        fn serialize<S: serde::Serializer>(
-            &self,
-            serializer: S,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            self.to_wire().serialize(serializer)
-        }
-    }
 } // ⏱️Kit
 pub use model_types_kit::*;
 
@@ -2554,7 +3439,7 @@ mod serialization {
     /// <remarks>
     /// </remarks>
     pub fn serialize_design(design: &Design) -> Result<String> {
-        serde_json::to_string_pretty(&design.to_wire()).map_err(|e| SemioError::Serialization {
+        serde_json::to_string_pretty(&design.to_dto()).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
@@ -2562,18 +3447,18 @@ mod serialization {
     /// <remarks>
     /// </remarks>
     pub fn deserialize_design(json: &str) -> Result<Design> {
-        let dw: DesignWire =
+        let dw: DesignDto =
             serde_json::from_str(json).map_err(|e| SemioError::Serialization {
                 message: e.to_string(),
             })?;
-        Design::from_wire(dw, &std::collections::HashMap::new())
+        Design::from_dto(dw, &std::collections::HashMap::new())
     }
 
     /// <summary>💾serialize type.</summary>
     /// <remarks>
     /// </remarks>
     pub fn serialize_type(t: &Type) -> Result<String> {
-        serde_json::to_string_pretty(&t.to_wire()).map_err(|e| SemioError::Serialization {
+        serde_json::to_string_pretty(&t.to_dto()).map_err(|e| SemioError::Serialization {
             message: e.to_string(),
         })
     }
@@ -2581,11 +3466,11 @@ mod serialization {
     /// <remarks>
     /// </remarks>
     pub fn deserialize_type(json: &str) -> Result<Type> {
-        let tw: TypeWire =
+        let tw: TypeDto =
             serde_json::from_str(json).map_err(|e| SemioError::Serialization {
                 message: e.to_string(),
             })?;
-        Type::from_wire(tw, &std::collections::HashMap::new())
+        Type::from_dto(tw, &std::collections::HashMap::new())
     }
     /// <remarks>
     /// </remarks>
@@ -2853,7 +3738,7 @@ mod diff_types {
         )]
         pub unit: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -2863,9 +3748,9 @@ mod diff_types {
     pub struct ConnectorDiff {
         pub guid: Guid,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub point: Option<Vector>,
+        pub point: Option<VectorDto>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub direction: Option<Vector>,
+        pub direction: Option<VectorDto>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub t: Option<f64>,
         #[serde(
@@ -2900,9 +3785,9 @@ mod diff_types {
         )]
         pub port: Option<Option<PortId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<CollectionDiff<Prop, PropDiff>>,
+        pub props: Option<CollectionDiff<PropDto, PropDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -2932,7 +3817,7 @@ mod diff_types {
         )]
         pub tags: Option<Option<Vec<TagId>>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3024,13 +3909,13 @@ mod diff_types {
         )]
         pub authors: Option<Option<Vec<AuthorId>>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<CollectionDiff<Prop, PropDiff>>,
+        pub props: Option<CollectionDiff<PropDto, PropDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub models: Option<CollectionDiff<Model, ModelDiff>>,
+        pub models: Option<CollectionDiff<ModelDto, ModelDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub connectors: Option<CollectionDiff<ConnectorWire, ConnectorDiff>>,
+        pub connectors: Option<CollectionDiff<ConnectorDto, ConnectorDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3096,7 +3981,7 @@ mod diff_types {
         )]
         pub description: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3129,13 +4014,13 @@ mod diff_types {
             deserialize_with = "deserialize_some",
             skip_serializing_if = "Option::is_none"
         )]
-        pub plane: Option<Option<Plane>>,
+        pub plane: Option<Option<PlaneDto>>,
         #[serde(
             default,
             deserialize_with = "deserialize_some",
             skip_serializing_if = "Option::is_none"
         )]
-        pub center: Option<Option<Coord>>,
+        pub center: Option<Option<CoordDto>>,
         #[serde(
             default,
             deserialize_with = "deserialize_some",
@@ -3148,7 +4033,7 @@ mod diff_types {
             deserialize_with = "deserialize_some",
             skip_serializing_if = "Option::is_none"
         )]
-        pub mirror_plane: Option<Option<Plane>>,
+        pub mirror_plane: Option<Option<PlaneDto>>,
         #[serde(
             rename = "isHidden",
             default,
@@ -3176,9 +4061,9 @@ mod diff_types {
         )]
         pub description: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<CollectionDiff<Prop, PropDiff>>,
+        pub props: Option<CollectionDiff<PropDto, PropDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3216,7 +4101,7 @@ mod diff_types {
         )]
         pub description: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3250,7 +4135,7 @@ mod diff_types {
         )]
         pub pieces: Option<Option<Vec<PieceId>>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3380,17 +4265,17 @@ mod diff_types {
         )]
         pub authors: Option<Option<Vec<AuthorId>>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub props: Option<CollectionDiff<Prop, PropDiff>>,
+        pub props: Option<CollectionDiff<PropDto, PropDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub pieces: Option<CollectionDiff<PieceWire, PieceDiff>>,
+        pub pieces: Option<CollectionDiff<PieceDto, PieceDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub connections: Option<CollectionDiff<ConnectionWire, ConnectionDiff>>,
+        pub connections: Option<CollectionDiff<ConnectionDto, ConnectionDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub layers: Option<CollectionDiff<Layer, LayerDiff>>,
+        pub layers: Option<CollectionDiff<LayerDto, LayerDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub groups: Option<CollectionDiff<Group, GroupDiff>>,
+        pub groups: Option<CollectionDiff<GroupDto, GroupDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub stats: Option<CollectionDiff<Stat, StatDiff>>,
+        pub stats: Option<CollectionDiff<StatDto, StatDiff>>,
         #[serde(
             rename = "activeLayer",
             default,
@@ -3399,7 +4284,7 @@ mod diff_types {
         )]
         pub active_layer: Option<Option<LayerId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3422,6 +4307,8 @@ mod diff_types {
             skip_serializing_if = "Option::is_none"
         )]
         pub icon: Option<Option<String>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3444,6 +4331,8 @@ mod diff_types {
             skip_serializing_if = "Option::is_none"
         )]
         pub icon: Option<Option<String>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3481,7 +4370,7 @@ mod diff_types {
         )]
         pub compatible_interfaces: Option<Option<Vec<PortId>>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3563,7 +4452,7 @@ mod diff_types {
         )]
         pub uri: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3615,7 +4504,7 @@ mod diff_types {
         )]
         pub parent: Option<Option<FolderId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3633,7 +4522,7 @@ mod diff_types {
         )]
         pub email: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3694,25 +4583,25 @@ mod diff_types {
         )]
         pub license: Option<Option<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub concepts: Option<CollectionDiff<Concept, ConceptDiff>>,
+        pub concepts: Option<CollectionDiff<ConceptDto, ConceptDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub tags: Option<CollectionDiff<Tag, TagDiff>>,
+        pub tags: Option<CollectionDiff<TagDto, TagDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub types: Option<CollectionDiff<TypeWire, TypeDiff>>,
+        pub types: Option<CollectionDiff<TypeDto, TypeDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub designs: Option<CollectionDiff<DesignWire, DesignDiff>>,
+        pub designs: Option<CollectionDiff<DesignDto, DesignDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub ports: Option<CollectionDiff<Port, PortDiff>>,
+        pub ports: Option<CollectionDiff<PortDto, PortDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub qualities: Option<CollectionDiff<Quality, QualityDiff>>,
+        pub qualities: Option<CollectionDiff<QualityDto, QualityDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub files: Option<CollectionDiff<File, FileDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub folders: Option<CollectionDiff<Folder, FolderDiff>>,
+        pub folders: Option<CollectionDiff<FolderDto, FolderDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub authors: Option<CollectionDiff<Author, AuthorDiff>>,
+        pub authors: Option<CollectionDiff<AuthorDto, AuthorDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
+        pub attributes: Option<CollectionDiff<AttributeDto, AttributeDiff>>,
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -3857,16 +4746,16 @@ mod meta_and_shallow_types {
         /// AttributeMeta is identical to Attribute (no Vec fields to omit).
         use super::*;
 
-        pub type AttributeMeta = Attribute;
+        pub type AttributeMeta = AttributeDto;
 
         /// 📈StatMeta represents scalar-only view of stat excluding nested arrays.
-        pub type StatMeta = Stat;
+        pub type StatMeta = StatDto;
 
         /// 🏷️TagMeta represents scalar-only view of tag excluding nested arrays.
-        pub type TagMeta = Tag;
+        pub type TagMeta = TagDto;
 
         /// 💡ConceptMeta represents scalar-only view of concept excluding nested arrays.
-        pub type ConceptMeta = Concept;
+        pub type ConceptMeta = ConceptDto;
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
         /// 📊PropMeta represents scalar-only view of prop excluding nested arrays.
@@ -3982,8 +4871,8 @@ mod meta_and_shallow_types {
         /// 🔌ConnectorMeta represents scalar-only view of connector excluding nested arrays.
         pub struct ConnectorMeta {
             pub guid: Guid,
-            pub point: Vector,
-            pub direction: Vector,
+            pub point: VectorDto,
+            pub direction: VectorDto,
             pub t: f64,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub name: Option<String>,
@@ -4023,13 +4912,13 @@ mod meta_and_shallow_types {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub design: Option<DesignId>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            pub plane: Option<Plane>,
+            pub plane: Option<PlaneDto>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            pub center: Option<Coord>,
+            pub center: Option<CoordDto>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub scale: Option<f64>,
             #[serde(rename = "mirrorPlane", skip_serializing_if = "Option::is_none")]
-            pub mirror_plane: Option<Plane>,
+            pub mirror_plane: Option<PlaneDto>,
             #[serde(rename = "isHidden", skip_serializing_if = "Option::is_none")]
             pub is_hidden: Option<bool>,
             #[serde(rename = "isLocked", skip_serializing_if = "Option::is_none")]
@@ -4056,8 +4945,8 @@ mod meta_and_shallow_types {
         /// 🔗ConnectionMeta represents scalar-only view of connection excluding nested arrays.
         pub struct ConnectionMeta {
             pub guid: Guid,
-            pub connected: SideWire,
-            pub connecting: SideWire,
+            pub connected: SideDto,
+            pub connecting: SideDto,
             #[serde(default)]
             pub gap: f64,
             #[serde(default)]
@@ -4303,6 +5192,9 @@ mod meta_and_shallow_types {
             pub types: Option<Vec<TypeMeta>>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub designs: Option<Vec<DesignMeta>>,
+            /// Design families with optional inlined ports (shallow kit exports).
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            pub families: Option<Vec<DesignFamilyDto>>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub ports: Option<Vec<PortMeta>>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -4425,8 +5317,8 @@ mod meta_and_shallow_types {
             pub fn to_meta(&self) -> ConnectorMeta {
                 ConnectorMeta {
                     guid: self.guid.clone(),
-                    point: self.point.clone(),
-                    direction: self.direction.clone(),
+                    point: VectorDto::from(&self.point),
+                    direction: VectorDto::from(&self.direction),
                     t: self.t,
                     name: self.name.clone(),
                     description: self.description.clone(),
@@ -4465,10 +5357,10 @@ mod meta_and_shallow_types {
                         .as_ref()
                         .and_then(|w| w.upgrade())
                         .map(|d| DesignId { guid: d.guid.clone() }),
-                    plane: self.plane.clone(),
-                    center: self.center.clone(),
+                    plane: self.plane.as_ref().map(PlaneDto::from),
+                    center: self.center.as_ref().map(CoordDto::from),
                     scale: self.scale,
-                    mirror_plane: self.mirror_plane.clone(),
+                    mirror_plane: self.mirror_plane.as_ref().map(PlaneDto::from),
                     is_hidden: self.is_hidden,
                     is_locked: self.is_locked,
                     color: self.color.clone(),
@@ -4492,8 +5384,8 @@ mod meta_and_shallow_types {
             pub fn to_meta(&self) -> ConnectionMeta {
                 ConnectionMeta {
                     guid: self.guid.clone(),
-                    connected: self.connected.to_wire(),
-                    connecting: self.connecting.to_wire(),
+                    connected: self.connected.to_dto(),
+                    connecting: self.connecting.to_dto(),
                     gap: self.gap,
                     shift: self.shift,
                     rise: self.rise,
@@ -4572,7 +5464,10 @@ mod meta_and_shallow_types {
                     connectors: self.connectors.as_ref().map(|v| {
                         v.iter().map(|c| c.as_ref().to_meta()).collect()
                     }),
-                    attributes: self.attributes.clone(),
+                    attributes: self
+                        .attributes
+                        .as_ref()
+                        .map(|v| v.iter().map(AttributeDto::from).collect()),
                     created_at: self.created_at.clone(),
                     updated_at: self.updated_at.clone(),
                 }
@@ -4636,9 +5531,15 @@ mod meta_and_shallow_types {
                         .groups
                         .as_ref()
                         .map(|v| v.iter().map(|g| g.to_meta()).collect()),
-                    stats: self.stats.clone(),
+                    stats: self
+                        .stats
+                        .as_ref()
+                        .map(|v| v.iter().map(StatDto::from).collect()),
                     active_layer: self.active_layer.clone(),
-                    attributes: self.attributes.clone(),
+                    attributes: self
+                        .attributes
+                        .as_ref()
+                        .map(|v| v.iter().map(AttributeDto::from).collect()),
                     created_at: self.created_at.clone(),
                     updated_at: self.updated_at.clone(),
                 }
@@ -4675,8 +5576,11 @@ mod meta_and_shallow_types {
                     remote: self.remote.clone(),
                     homepage: self.homepage.clone(),
                     license: self.license.clone(),
-                    concepts: self.concepts.clone(),
-                    tags: self.tags.clone(),
+                    concepts: self
+                        .concepts
+                        .as_ref()
+                        .map(|v| v.iter().map(ConceptDto::from).collect()),
+                    tags: self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect()),
                     types: self
                         .types
                         .as_ref()
@@ -4685,6 +5589,7 @@ mod meta_and_shallow_types {
                         .designs
                         .as_ref()
                         .map(|v| v.iter().map(|d| d.to_meta()).collect()),
+                    families: None,
                     ports: self
                         .ports
                         .as_ref()
@@ -4705,7 +5610,10 @@ mod meta_and_shallow_types {
                         .authors
                         .as_ref()
                         .map(|v| v.iter().map(|a| a.to_meta()).collect()),
-                    attributes: self.attributes.clone(),
+                    attributes: self
+                        .attributes
+                        .as_ref()
+                        .map(|v| v.iter().map(AttributeDto::from).collect()),
                     created_at: self.created_at.clone(),
                     updated_at: self.updated_at.clone(),
                 }
@@ -4763,8 +5671,8 @@ mod apply_diff {
             .collect()
     }
 
-    fn piece_arc_from_wire(
-        pw: &PieceWire,
+    fn piece_arc_from_dto(
+        pw: &PieceDto,
         types: &HashMap<String, Arc<Type>>,
         design_weak: Option<Weak<Design>>,
     ) -> Arc<Piece> {
@@ -4776,16 +5684,22 @@ mod apply_diff {
                 .as_ref()
                 .and_then(|tid| types.get(&tid.guid).cloned()),
             design: design_weak,
-            plane: pw.plane.clone(),
-            center: pw.center.clone(),
+            plane: pw.plane.as_ref().map(Plane::from),
+            center: pw.center.as_ref().map(Coord::from),
             scale: pw.scale,
-            mirror_plane: pw.mirror_plane.clone(),
+            mirror_plane: pw.mirror_plane.as_ref().map(Plane::from),
             is_hidden: pw.is_hidden,
             is_locked: pw.is_locked,
             color: pw.color.clone(),
             description: pw.description.clone(),
-            props: pw.props.clone(),
-            attributes: pw.attributes.clone(),
+            props: pw
+                .props
+                .as_ref()
+                .map(|v| v.iter().map(Prop::from).collect()),
+            attributes: pw
+                .attributes
+                .as_ref()
+                .map(|v| v.iter().map(Attribute::from).collect()),
         })
     }
 
@@ -4802,7 +5716,7 @@ mod apply_diff {
 
     fn apply_kit_types_patch(
         kit: &mut Kit,
-        diff: Option<&CollectionDiff<TypeWire, TypeDiff>>,
+        diff: Option<&CollectionDiff<TypeDto, TypeDiff>>,
         ports_map: &HashMap<String, Arc<Port>>,
     ) {
         let Some(diff) = diff else {
@@ -4821,7 +5735,7 @@ mod apply_diff {
         }
 
         if let Some(added) = &diff.added {
-            types = merge_type_wires(types, added, ports_map)
+            types = merge_type_dtos(types, added, ports_map)
                 .unwrap_or_else(|e| panic!("apply_kit_types_patch: {}", e));
             type_map = types.iter().map(|t| (t.guid.clone(), t.clone())).collect();
         }
@@ -4847,7 +5761,7 @@ mod apply_diff {
 
     fn apply_kit_designs_patch(
         kit: &mut Kit,
-        diff: Option<&CollectionDiff<DesignWire, DesignDiff>>,
+        diff: Option<&CollectionDiff<DesignDto, DesignDiff>>,
         types_map: &HashMap<String, Arc<Type>>,
     ) {
         let Some(diff) = diff else {
@@ -4867,7 +5781,7 @@ mod apply_diff {
 
         if let Some(added) = &diff.added {
             for dw in added {
-                let d = resolve_design_from_wire(dw, types_map)
+                let d = resolve_design_from_dto(dw, types_map)
                     .unwrap_or_else(|e| panic!("apply_kit_designs_patch: {}", e));
                 design_map.insert(d.guid.clone(), d.clone());
                 designs.push(d);
@@ -4893,12 +5807,14 @@ mod apply_diff {
         };
     }
 
-    pub fn apply_collection_diff<T, D>(
+    pub fn apply_collection_diff<T, W, D>(
         collection: &mut Option<Vec<T>>,
-        diff: &Option<CollectionDiff<T, D>>,
+        diff: &Option<CollectionDiff<W, D>>,
         apply_item_diff: impl Fn(&mut T, &D),
+        from_added: impl Fn(&W) -> T,
     ) where
         T: HasGuid + Clone,
+        W: HasGuid + Clone,
         D: DiffHasGuid,
     {
         if let Some(diff) = diff {
@@ -4923,7 +5839,7 @@ mod apply_diff {
             }
 
             if let Some(added_items) = &diff.added {
-                new_items.extend(added_items.clone());
+                new_items.extend(added_items.iter().map(|w| from_added(w)));
             }
 
             *collection = if new_items.is_empty() {
@@ -4959,7 +5875,7 @@ mod apply_diff {
         if let Some(value) = &diff.unit {
             item.unit = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<summary>🔖apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
     /// <remarks>
@@ -4999,8 +5915,8 @@ mod apply_diff {
                 .as_ref()
                 .and_then(|pid| ports.get(&pid.guid).cloned());
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<remarks>
     /// </remarks>
@@ -5017,7 +5933,7 @@ mod apply_diff {
         if let Some(value) = &diff.tags {
             item.tags = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<summary>🔖apply_type_diff holds the data fields for a apply_type_diff record.</summary>
     /// <remarks>
@@ -5074,8 +5990,8 @@ mod apply_diff {
         if let Some(v) = &diff.authors {
             item.authors = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
-        apply_collection_diff(&mut item.models, &diff.models, apply_model_diff);
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
+        apply_collection_diff(&mut item.models, &diff.models, apply_model_diff, |m| Model::from(m));
 
         if let Some(cd) = &diff.connectors {
             let mut conns = item.connectors.clone().unwrap_or_default();
@@ -5094,7 +6010,7 @@ mod apply_diff {
             }
             if let Some(added) = &cd.added {
                 for cw in added {
-                    conns.push(Arc::new(Connector::from_wire(cw, ports)));
+                    conns.push(Arc::new(Connector::from_dto(cw, ports)));
                 }
             }
             item.connectors = if conns.is_empty() {
@@ -5104,7 +6020,7 @@ mod apply_diff {
             };
         }
 
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 
     /// 🔖<summary>🔖apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
@@ -5126,7 +6042,7 @@ mod apply_diff {
         if let Some(value) = &diff.description {
             item.description = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 
     /// 🔖<summary>🔖apply_group_diff holds the data fields for a apply_group_diff record.</summary>
@@ -5145,7 +6061,7 @@ mod apply_diff {
         if let Some(value) = &diff.pieces {
             item.pieces = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 
     /// 🔖<summary>🔖apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
@@ -5191,16 +6107,16 @@ mod apply_diff {
                 .flatten();
         }
         if let Some(v) = &diff.plane {
-            item.plane = v.clone();
+            item.plane = v.as_ref().map(Plane::from);
         }
         if let Some(v) = &diff.center {
-            item.center = v.clone();
+            item.center = v.as_ref().map(Coord::from);
         }
         if let Some(v) = &diff.scale {
             item.scale = v.clone();
         }
         if let Some(v) = &diff.mirror_plane {
-            item.mirror_plane = v.clone();
+            item.mirror_plane = v.as_ref().map(Plane::from);
         }
         if let Some(v) = &diff.is_hidden {
             item.is_hidden = v.clone();
@@ -5214,8 +6130,8 @@ mod apply_diff {
         if let Some(v) = &diff.description {
             item.description = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<summary>🔖apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
     /// <remarks>
@@ -5298,7 +6214,7 @@ mod apply_diff {
         if let Some(value) = &diff.description {
             item.description = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<remarks>
     /// </remarks>
@@ -5350,7 +6266,7 @@ mod apply_diff {
         if let Some(v) = &diff.active_layer {
             item.active_layer = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff);
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
 
         let self_weak = designs.get(&item.guid).map(|d| Arc::downgrade(d));
 
@@ -5362,7 +6278,7 @@ mod apply_diff {
             }
             if let Some(added) = &pd.added {
                 for pw in added {
-                    pieces_vec.push(piece_arc_from_wire(pw, types, self_weak.clone()));
+                    pieces_vec.push(piece_arc_from_dto(pw, types, self_weak.clone()));
                 }
             }
             if let Some(updated) = &pd.updated {
@@ -5395,7 +6311,7 @@ mod apply_diff {
             }
             if let Some(added) = &cd.added {
                 for cw in added {
-                    conns.push(connection_from_wire(cw, &piece_map).unwrap_or_else(|e| {
+                    conns.push(connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
                         panic!("apply_design_diff connection {}: {:?}", cw.guid, e)
                     }));
                 }
@@ -5416,10 +6332,10 @@ mod apply_diff {
             };
         }
 
-        apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff);
-        apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff);
-        apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff);
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff, |d| Layer::from(d));
+        apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff, |d| Group::from(d));
+        apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff, |d| Stat::from(d));
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
         item.invalidate_hash();
     }
 
@@ -5505,7 +6421,7 @@ mod apply_diff {
         if let Some(ref pd) = diff.pieces {
             if let Some(ref added) = pd.added {
                 for pw in added {
-                    let arc = piece_arc_from_wire(pw, &types_map, None);
+                    let arc = piece_arc_from_dto(pw, &types_map, None);
                     let mut inner = arc.as_ref().clone();
                     let mut attrs = inner.attributes.clone().unwrap_or_default();
                     attrs.push(status_attr("added"));
@@ -5544,7 +6460,7 @@ mod apply_diff {
         if let Some(ref cd) = diff.connections {
             if let Some(ref added) = cd.added {
                 for cw in added {
-                    let mut ac = connection_from_wire(cw, &piece_map).unwrap_or_else(|e| {
+                    let mut ac = connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
                         panic!("design_with_diff connection {}: {:?}", cw.guid, e)
                     });
                     let mut attrs = ac.attributes.clone().unwrap_or_default();
@@ -5574,6 +6490,9 @@ mod apply_diff {
         if let Some(value) = &diff.icon {
             item.icon = value.clone();
         }
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| {
+            Attribute::from(a)
+        });
     }
 
     /// 🔖<summary>🔖apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
@@ -5589,6 +6508,9 @@ mod apply_diff {
         if let Some(value) = &diff.icon {
             item.icon = value.clone();
         }
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| {
+            Attribute::from(a)
+        });
     }
 
     /// 🔖<summary>🔢apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
@@ -5607,7 +6529,7 @@ mod apply_diff {
         if let Some(value) = &diff.compatible_interfaces {
             item.compatible_interfaces = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 
     /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
@@ -5651,7 +6573,7 @@ mod apply_diff {
         if let Some(value) = &diff.uri {
             item.uri = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<summary>🔖apply_file_diff holds the data fields for a apply_file_diff record.</summary>
     /// <remarks>
@@ -5682,7 +6604,7 @@ mod apply_diff {
         if let Some(value) = &diff.parent {
             item.parent = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 
     /// 🔖<summary>🔖apply_author_diff holds the data fields for a apply_author_diff record.</summary>
@@ -5693,7 +6615,7 @@ mod apply_diff {
         if let Some(value) = &diff.email {
             item.email = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
     /// 🔖<summary>🔖apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
     /// <remarks>
@@ -5726,9 +6648,11 @@ mod apply_diff {
         if let Some(value) = &diff.license {
             item.license = value.clone();
         }
-        apply_collection_diff(&mut item.concepts, &diff.concepts, apply_concept_diff);
-        apply_collection_diff(&mut item.tags, &diff.tags, apply_tag_diff);
-        apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff);
+        apply_collection_diff(&mut item.concepts, &diff.concepts, apply_concept_diff, |c| {
+            Concept::from(c)
+        });
+        apply_collection_diff(&mut item.tags, &diff.tags, apply_tag_diff, |t| Tag::from(t));
+        apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff, |p| Port::from(p));
 
         let ports_map = kit_ports_arc_map(item);
         apply_kit_types_patch(item, diff.types.as_ref(), &ports_map);
@@ -5736,11 +6660,13 @@ mod apply_diff {
         let types_map = kit_types_map_index(item);
         apply_kit_designs_patch(item, diff.designs.as_ref(), &types_map);
 
-        apply_collection_diff(&mut item.qualities, &diff.qualities, apply_quality_diff);
-        apply_collection_diff(&mut item.files, &diff.files, apply_file_diff);
-        apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff);
-        apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff);
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        apply_collection_diff(&mut item.qualities, &diff.qualities, apply_quality_diff, |q| {
+            Quality::from(q)
+        });
+        apply_collection_diff(&mut item.files, &diff.files, apply_file_diff, |x| x.clone());
+        apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff, |f| Folder::from(f));
+        apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff, |a| Author::from(a));
+        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
     }
 } // ✈️ApplyDiff
 pub use apply_diff::*;
@@ -6685,12 +7611,14 @@ mod copy_paste_design {
             } else if is_pp_excl_pc_incl {
                 let mut copied = piece.as_ref().clone();
                 {
-                    let center_value =
-                        serde_json::to_string(&fd.piece(piece_guid.as_str()).flat_center())
-                            .unwrap_or_default();
-                    let plane_value =
-                        serde_json::to_string(&fd.piece(piece_guid.as_str()).flat_plane())
-                            .unwrap_or_default();
+                    let center_value = serde_json::to_string(&CoordDto::from(
+                        &fd.piece(piece_guid.as_str()).flat_center(),
+                    ))
+                    .unwrap_or_default();
+                    let plane_value = serde_json::to_string(&PlaneDto::from(
+                        &fd.piece(piece_guid.as_str()).flat_plane(),
+                    ))
+                    .unwrap_or_default();
                     let attrs = copied.attributes.get_or_insert_with(Vec::new);
                     attrs.push(Attribute {
                         guid: String::new(),
@@ -6749,9 +7677,9 @@ mod copy_paste_design {
                                 value: Some("external".to_string()),
                                 definition: None,
                             });
-                            let center_value = serde_json::to_string(
+                            let center_value = serde_json::to_string(&CoordDto::from(
                                 &fd.piece(ext_guid).flat_center(),
-                            )
+                            ))
                             .unwrap_or_default();
                             attrs.push(Attribute {
                                 guid: String::new(),
@@ -6878,7 +7806,9 @@ mod copy_paste_design {
                     .find(|a| a.key == "semio.center")
                 {
                     if let Some(val) = &attr.value {
-                        center = serde_json::from_str(val).ok();
+                        center = serde_json::from_str::<CoordDto>(val)
+                            .ok()
+                            .map(|d| Coord::from(&d));
                     }
                 }
             }
@@ -6985,8 +7915,8 @@ mod copy_paste_design {
                     .cloned()
             };
 
-        let mut added_piece_wires: Vec<PieceWire> = Vec::new();
-        let mut added_connection_wires: Vec<ConnectionWire> = Vec::new();
+        let mut added_piece_dtos: Vec<PieceDto> = Vec::new();
+        let mut added_connection_dtos: Vec<ConnectionDto> = Vec::new();
 
         // Process source pieces
         for piece in source_pieces {
@@ -7006,7 +7936,7 @@ mod copy_paste_design {
                     new_center = Coord::new(new_center.u + co.u, new_center.v + co.v);
                 }
                 copied.center = Some(new_center);
-                added_piece_wires.push(copied.to_wire());
+                added_piece_dtos.push(copied.to_dto());
             } else if is_connected {
                 let (parent_guid, parent_conn) = source_parent_map[piece.guid.as_str()];
                 if external_origin_guids.contains(parent_guid) {
@@ -7055,7 +7985,7 @@ mod copy_paste_design {
                                             find_matching_connector(&type_ref.guid, src_conn)
                                         {
                                             matched = true;
-                                            added_piece_wires.push(piece.as_ref().to_wire());
+                                            added_piece_dtos.push(piece.as_ref().to_dto());
 
                                             let mut copied_conn = parent_conn.clone();
                                             if is_parent_connected {
@@ -7112,8 +8042,9 @@ mod copy_paste_design {
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
                                                             .and_then(|v| {
-                                                                serde_json::from_str::<Coord>(v)
+                                                                serde_json::from_str::<CoordDto>(v)
                                                                     .ok()
+                                                                    .map(|d| Coord::from(&d))
                                                             });
                                                     }
                                                     if flat_parent_center.is_none() {
@@ -7125,8 +8056,9 @@ mod copy_paste_design {
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
                                                             .and_then(|v| {
-                                                                serde_json::from_str::<Coord>(v)
+                                                                serde_json::from_str::<CoordDto>(v)
                                                                     .ok()
+                                                                    .map(|d| Coord::from(&d))
                                                             });
                                                     }
                                                     if flat_parent_center.is_none() {
@@ -7142,8 +8074,9 @@ mod copy_paste_design {
                                                             .find(|a| a.key == "semio.center")
                                                             .and_then(|a| a.value.as_ref())
                                                             .and_then(|v| {
-                                                                serde_json::from_str::<Coord>(v)
+                                                                serde_json::from_str::<CoordDto>(v)
                                                                     .ok()
+                                                                    .map(|d| Coord::from(&d))
                                                             });
                                                     if flat_child_center.is_none() {
                                                         flat_child_center = piece.center.clone();
@@ -7160,7 +8093,7 @@ mod copy_paste_design {
                                                     }
                                                 }
                                             }
-                                            added_connection_wires.push(copied_conn.to_wire());
+                                            added_connection_dtos.push(copied_conn.to_dto());
                                             break;
                                         }
                                     }
@@ -7176,15 +8109,15 @@ mod copy_paste_design {
                         for attr in attrs {
                             if attr.key == "semio.center" {
                                 if let Some(val) = &attr.value {
-                                    if let Ok(c) = serde_json::from_str::<Coord>(val) {
-                                        copied.center = Some(c);
+                                    if let Ok(c) = serde_json::from_str::<CoordDto>(val) {
+                                        copied.center = Some(Coord::from(&c));
                                     }
                                 }
                             }
                             if attr.key == "semio.plane" {
                                 if let Some(val) = &attr.value {
-                                    if let Ok(p) = serde_json::from_str::<Plane>(val) {
-                                        copied.plane = Some(p);
+                                    if let Ok(p) = serde_json::from_str::<PlaneDto>(val) {
+                                        copied.plane = Some(Plane::from(&p));
                                     }
                                 }
                             }
@@ -7195,18 +8128,18 @@ mod copy_paste_design {
                             new_center = Coord::new(new_center.u + co.u, new_center.v + co.v);
                         }
                         copied.center = Some(new_center);
-                        added_piece_wires.push(copied.to_wire());
+                        added_piece_dtos.push(copied.to_dto());
                     }
                 } else {
                     // Parent is not external: add connected piece as-is
-                    added_piece_wires.push(piece.as_ref().to_wire());
+                    added_piece_dtos.push(piece.as_ref().to_dto());
                 }
             }
         }
 
         // Process source connections (non-external internal connections)
         let added_piece_guids: HashSet<&str> =
-            added_piece_wires.iter().map(|p| p.guid.as_str()).collect();
+            added_piece_dtos.iter().map(|p| p.guid.as_str()).collect();
         for conn in source_connections {
             let connected_guid = conn.connected.piece.guid.as_str();
             let connecting_guid = conn.connecting.piece.guid.as_str();
@@ -7223,23 +8156,23 @@ mod copy_paste_design {
                 continue;
             }
 
-            added_connection_wires.push(conn.to_wire());
+            added_connection_dtos.push(conn.to_dto());
         }
 
         let mut diff = DesignDiff {
             guid: String::new(),
             ..Default::default()
         };
-        if !added_piece_wires.is_empty() {
+        if !added_piece_dtos.is_empty() {
             diff.pieces = Some(CollectionDiff {
-                added: Some(added_piece_wires),
+                added: Some(added_piece_dtos),
                 removed: None,
                 updated: None,
             });
         }
-        if !added_connection_wires.is_empty() {
+        if !added_connection_dtos.is_empty() {
             diff.connections = Some(CollectionDiff {
-                added: Some(added_connection_wires),
+                added: Some(added_connection_dtos),
                 removed: None,
                 updated: None,
             });
@@ -9356,7 +10289,7 @@ mod sqlite_import_export {
                 let connectors = load_connector_wires(conn, &type_guid)?;
                 let models = load_models(conn, &type_guid)?;
 
-                wires.push(TypeWire {
+                wires.push(TypeDto {
                     guid: type_guid,
                     name,
                     parent: parent.map(|g| TypeId { guid: g }),
@@ -9376,7 +10309,7 @@ mod sqlite_import_export {
                     models: if models.is_empty() {
                         None
                     } else {
-                        Some(models)
+                        Some(models.iter().map(ModelDto::from).collect())
                     },
                     connectors: if connectors.is_empty() {
                         None
@@ -9389,22 +10322,30 @@ mod sqlite_import_export {
                 });
             }
 
-            resolve_types_from_wire(Some(wires), ports_map).map(|o| o.unwrap_or_default())
+            resolve_types_from_dto(Some(wires), ports_map).map(|o| o.unwrap_or_default())
         }
 
         pub fn load_connector_wires(
             conn: &rusqlite::Connection,
             type_guid: &str,
-        ) -> Result<Vec<ConnectorWire>> {
+        ) -> Result<Vec<ConnectorDto>> {
             let mut stmt = conn.prepare("SELECT guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description FROM connector WHERE type_guid = ?1")
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
             let rows = stmt
                 .query_map([type_guid], |row| {
-                    Ok(ConnectorWire {
+                    Ok(ConnectorDto {
                         guid: row.get(0)?,
                         name: row.get(1)?,
-                        point: Vector::new(row.get(2)?, row.get(3)?, row.get(4)?),
-                        direction: Vector::new(row.get(5)?, row.get(6)?, row.get(7)?),
+                        point: VectorDto::from(&Vector::new(
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                        )),
+                        direction: VectorDto::from(&Vector::new(
+                            row.get(5)?,
+                            row.get(6)?,
+                            row.get(7)?,
+                        )),
                         t: row.get(8)?,
                         mandatory: Some(row.get(9)?),
                         max_children: None,
@@ -9506,7 +10447,7 @@ mod sqlite_import_export {
                 let layers = load_layers(conn, &design_guid)?;
                 let groups = load_groups(conn, &design_guid)?;
 
-                let dw = DesignWire {
+                let dw = DesignDto {
                     guid: design_guid,
                     name,
                     parent: parent.map(|g| DesignId { guid: g }),
@@ -9535,12 +10476,12 @@ mod sqlite_import_export {
                     layers: if layers.is_empty() {
                         None
                     } else {
-                        Some(layers)
+                        Some(layers.iter().map(LayerDto::from).collect())
                     },
                     groups: if groups.is_empty() {
                         None
                     } else {
-                        Some(groups)
+                        Some(groups.iter().map(GroupDto::from).collect())
                     },
                     stats: None,
                     active_layer: None,
@@ -9549,7 +10490,7 @@ mod sqlite_import_export {
                     created_at: None,
                     updated_at: None,
                 };
-                designs.push(resolve_design_from_wire(&dw, types_map)?);
+                designs.push(resolve_design_from_dto(&dw, types_map)?);
             }
 
             Ok(designs)
@@ -9558,7 +10499,7 @@ mod sqlite_import_export {
         pub fn load_piece_wires(
             conn: &rusqlite::Connection,
             design_guid: &str,
-        ) -> Result<Vec<PieceWire>> {
+        ) -> Result<Vec<PieceDto>> {
             let mut stmt = conn.prepare("SELECT guid, name, type_guid, design_guid_ref, plane_origin_x, plane_origin_y, plane_origin_z, plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z, center_u, center_v, scale, is_hidden, is_locked, color, description FROM piece WHERE design_guid = ?1")
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
             let rows = stmt
@@ -9568,7 +10509,7 @@ mod sqlite_import_export {
                         row.get::<_, Option<f64>>(5)?,
                         row.get::<_, Option<f64>>(6)?,
                     ) {
-                        Some(Plane::new(
+                        Some(PlaneDto::from(&Plane::new(
                             Vector::new(ox, oy, oz),
                             Vector::new(
                                 row.get::<_, f64>(7)?,
@@ -9580,7 +10521,7 @@ mod sqlite_import_export {
                                 row.get::<_, f64>(11)?,
                                 row.get::<_, f64>(12)?,
                             ),
-                        ))
+                        )))
                     } else {
                         None
                     };
@@ -9589,12 +10530,12 @@ mod sqlite_import_export {
                         row.get::<_, Option<f64>>(13)?,
                         row.get::<_, Option<f64>>(14)?,
                     ) {
-                        Some(Coord::new(u, v))
+                        Some(CoordDto { u, v })
                     } else {
                         None
                     };
 
-                    Ok(PieceWire {
+                    Ok(PieceDto {
                         guid: row.get(0)?,
                         name: row.get(1)?,
                         type_ref: row.get::<_, Option<String>>(2)?.map(|g| TypeId { guid: g }),
@@ -9625,14 +10566,14 @@ mod sqlite_import_export {
         pub fn load_connection_wires(
             conn: &rusqlite::Connection,
             design_guid: &str,
-        ) -> Result<Vec<ConnectionWire>> {
+        ) -> Result<Vec<ConnectionDto>> {
             let mut stmt = conn.prepare("SELECT guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid, connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid, gap, shift, rise, rotation, turn, tilt, u, v, description FROM connection WHERE design_guid = ?1")
             .map_err(|e| SemioError::Database { message: e.to_string() })?;
             let rows = stmt
                 .query_map([design_guid], |row| {
-                    Ok(ConnectionWire {
+                    Ok(ConnectionDto {
                         guid: row.get(0)?,
-                        connected: SideWire {
+                        connected: SideDto {
                             piece: PieceId { guid: row.get(1)? },
                             design_piece: row
                                 .get::<_, Option<String>>(2)?
@@ -9642,7 +10583,7 @@ mod sqlite_import_export {
                                 .filter(|s| !s.is_empty())
                                 .map(|g| ConnectorId { guid: g }),
                         },
-                        connecting: SideWire {
+                        connecting: SideDto {
                             piece: PieceId { guid: row.get(4)? },
                             design_piece: row
                                 .get::<_, Option<String>>(5)?
@@ -10690,6 +11631,22 @@ mod hash {
             w.digest()
         }
 
+        pub fn hash_coord_dto(c: &CoordDto) -> String {
+            hash_coord(&Coord::from(c))
+        }
+
+        pub fn hash_point_dto(v: &VectorDto) -> String {
+            hash_point(&Vector::from(v))
+        }
+
+        pub fn hash_vector_dto(v: &VectorDto) -> String {
+            hash_vector(&Vector::from(v))
+        }
+
+        pub fn hash_plane_dto(p: &PlaneDto) -> String {
+            hash_plane(&Plane::from(p))
+        }
+
         pub fn hash_camera(c: &Camera) -> String {
             let mut w = HashWriter::new();
             w.write_string("Camera");
@@ -10725,6 +11682,10 @@ mod hash {
                 w.write_string(s);
             }
             w.digest()
+        }
+
+        pub fn hash_attribute_dto(a: &AttributeDto) -> String {
+            hash_attribute(&Attribute::from(a))
         }
 
         pub fn hash_author(a: &Author) -> String {
@@ -10976,6 +11937,10 @@ mod hash {
             w.digest()
         }
 
+        pub fn hash_prop_dto(p: &PropDto) -> String {
+            hash_prop(&Prop::from(p))
+        }
+
         pub fn hash_tag(t: &Tag) -> String {
             let mut w = HashWriter::new();
             w.write_string("Tag");
@@ -11058,6 +12023,10 @@ mod hash {
             w.digest()
         }
 
+        pub fn hash_model_dto(m: &ModelDto) -> String {
+            hash_model(&Model::from(m))
+        }
+
         pub fn hash_connector(c: &Connector) -> String {
             let mut w = HashWriter::new();
             w.write_string("Connector");
@@ -11102,13 +12071,13 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_connector_wire(c: &ConnectorWire) -> String {
+        pub fn hash_connector_dto(c: &ConnectorDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Connector");
             if let Some(v) = &c.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11117,7 +12086,7 @@ mod hash {
                 w.write_string(s);
             }
             w.write_string("direction");
-            w.write_hash(&hash_vector(&c.direction));
+            w.write_hash(&hash_vector_dto(&c.direction));
             w.write_string("guid");
             w.write_string(&c.guid);
             if let Some(b) = &c.mandatory {
@@ -11129,7 +12098,7 @@ mod hash {
                 w.write_string(s);
             }
             w.write_string("point");
-            w.write_hash(&hash_point(&c.point));
+            w.write_hash(&hash_point_dto(&c.point));
             if let Some(port) = c.port.as_ref() {
                 w.write_string("port");
                 w.write_string(&port.guid);
@@ -11137,7 +12106,7 @@ mod hash {
             if let Some(v) = &c.props {
                 if !v.is_empty() {
                     w.write_string("props");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_prop_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11146,7 +12115,7 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_side_wire(s: &SideWire) -> String {
+        pub fn hash_side_dto(s: &SideDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Side");
             if let Some(c) = s.connector.as_ref() {
@@ -11162,20 +12131,20 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_connection_wire(c: &ConnectionWire) -> String {
+        pub fn hash_connection_dto(c: &ConnectionDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Connection");
             if let Some(v) = &c.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
             w.write_string("connected");
-            w.write_hash(&hash_side_wire(&c.connected));
+            w.write_hash(&hash_side_dto(&c.connected));
             w.write_string("connecting");
-            w.write_hash(&hash_side_wire(&c.connecting));
+            w.write_hash(&hash_side_dto(&c.connecting));
             if let Some(s) = &c.description {
                 w.write_string("description");
                 w.write_string(s);
@@ -11201,19 +12170,19 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_piece_wire(p: &PieceWire) -> String {
+        pub fn hash_piece_dto(p: &PieceDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Piece");
             if let Some(v) = &p.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
             if let Some(c) = &p.center {
                 w.write_string("center");
-                w.write_hash(&hash_coord(c));
+                w.write_hash(&hash_coord_dto(c));
             }
             if let Some(s) = &p.color {
                 w.write_string("color");
@@ -11239,7 +12208,7 @@ mod hash {
             }
             if let Some(mp) = &p.mirror_plane {
                 w.write_string("mirrorPlane");
-                w.write_hash(&hash_plane(mp));
+                w.write_hash(&hash_plane_dto(mp));
             }
             if let Some(s) = &p.name {
                 w.write_string("name");
@@ -11247,12 +12216,12 @@ mod hash {
             }
             if let Some(pl) = &p.plane {
                 w.write_string("plane");
-                w.write_hash(&hash_plane(pl));
+                w.write_hash(&hash_plane_dto(pl));
             }
             if let Some(v) = &p.props {
                 if !v.is_empty() {
                     w.write_string("props");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_prop_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11267,13 +12236,13 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_type_wire(t: &TypeWire) -> String {
+        pub fn hash_type_dto(t: &TypeDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Type");
             if let Some(v) = &t.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11295,7 +12264,7 @@ mod hash {
                 if !v.is_empty() {
                     w.write_string("connectors");
                     let hashes: Vec<String> =
-                        v.iter().map(|x| hash_connector_wire(x)).collect();
+                        v.iter().map(|x| hash_connector_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11328,7 +12297,7 @@ mod hash {
             if let Some(v) = &t.models {
                 if !v.is_empty() {
                     w.write_string("models");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_model(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_model_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11348,7 +12317,7 @@ mod hash {
             if let Some(v) = &t.props {
                 if !v.is_empty() {
                     w.write_string("props");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_prop_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11367,7 +12336,7 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_design_wire(d: &DesignWire) -> String {
+        pub fn hash_design_dto(d: &DesignDto) -> String {
             let mut w = HashWriter::new();
             w.write_string("Design");
             if let Some(al) = &d.active_layer {
@@ -11377,7 +12346,7 @@ mod hash {
             if let Some(v) = &d.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_attribute_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11407,7 +12376,7 @@ mod hash {
                 if !v.is_empty() {
                     w.write_string("connections");
                     let hashes: Vec<String> =
-                        v.iter().map(|x| hash_connection_wire(x)).collect();
+                        v.iter().map(|x| hash_connection_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11422,7 +12391,8 @@ mod hash {
             if let Some(v) = &d.groups {
                 if !v.is_empty() {
                     w.write_string("groups");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_group(x)).collect();
+                    let hashes: Vec<String> =
+                        v.iter().map(|x| hash_group(&Group::from(x))).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11443,7 +12413,8 @@ mod hash {
             if let Some(v) = &d.layers {
                 if !v.is_empty() {
                     w.write_string("layers");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_layer(x)).collect();
+                    let hashes: Vec<String> =
+                        v.iter().map(|x| hash_layer(&Layer::from(x))).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -11468,21 +12439,22 @@ mod hash {
                 if !v.is_empty() {
                     w.write_string("pieces");
                     let hashes: Vec<String> =
-                        v.iter().map(|x| hash_piece_wire(x)).collect();
+                        v.iter().map(|x| hash_piece_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
             if let Some(v) = &d.props {
                 if !v.is_empty() {
                     w.write_string("props");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_prop(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_prop_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
             if let Some(v) = &d.stats {
                 if !v.is_empty() {
                     w.write_string("stats");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_stat(x)).collect();
+                    let hashes: Vec<String> =
+                        v.iter().map(|x| hash_stat(&Stat::from(x))).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12219,7 +13191,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12305,7 +13277,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12337,7 +13309,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12476,7 +13448,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12531,7 +13503,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12561,6 +13533,17 @@ mod hash {
         pub fn hash_tag_diff(d: &TagDiff) -> String {
             let mut w = HashWriter::new();
             w.write_string("TagDiff");
+            if let Some(ref coll) = d.attributes {
+                w.write_string("attributes");
+                w.write_hash(&hash_collection_diff(
+                    "AttributesDiff",
+                    "AttributeDiffUpdate",
+                    "attribute",
+                    &|a: &AttributeDto| hash_attribute_dto(a),
+                    &|d: &AttributeDiff| hash_attribute_diff(d),
+                    coll,
+                ));
+            }
             match &d.description {
                 Some(Some(s)) => {
                     w.write_string("description");
@@ -12593,6 +13576,17 @@ mod hash {
         pub fn hash_concept_diff(d: &ConceptDiff) -> String {
             let mut w = HashWriter::new();
             w.write_string("ConceptDiff");
+            if let Some(ref coll) = d.attributes {
+                w.write_string("attributes");
+                w.write_hash(&hash_collection_diff(
+                    "AttributesDiff",
+                    "AttributeDiffUpdate",
+                    "attribute",
+                    &|a: &AttributeDto| hash_attribute_dto(a),
+                    &|d: &AttributeDiff| hash_attribute_diff(d),
+                    coll,
+                ));
+            }
             match &d.description {
                 Some(Some(s)) => {
                     w.write_string("description");
@@ -12631,7 +13625,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12686,7 +13680,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12704,7 +13698,7 @@ mod hash {
             }
             if let Some(ref v) = d.direction {
                 w.write_string("direction");
-                w.write_hash(&hash_vector_diff(v));
+                w.write_hash(&hash_vector_diff(&Vector::from(v)));
             }
             match &d.mandatory {
                 Some(Some(b)) => {
@@ -12730,7 +13724,7 @@ mod hash {
             }
             if let Some(ref v) = d.point {
                 w.write_string("point");
-                w.write_hash(&hash_point_diff(v));
+                w.write_hash(&hash_point_diff(&Vector::from(v)));
             }
             match &d.port {
                 Some(Some(pid)) => {
@@ -12749,7 +13743,7 @@ mod hash {
                     "PropsDiff",
                     "PropDiffUpdate",
                     "prop",
-                    &|p: &Prop| hash_prop(p),
+                    &|p: &PropDto| hash_prop_dto(p),
                     &|d: &PropDiff| hash_prop_diff(d),
                     coll,
                 ));
@@ -12770,7 +13764,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -12805,7 +13799,7 @@ mod hash {
                     "ConnectorsDiff",
                     "ConnectorDiffUpdate",
                     "connector",
-                    &|c: &ConnectorWire| hash_connector_wire(c),
+                    &|c: &ConnectorDto| hash_connector_dto(c),
                     &|d: &ConnectorDiff| hash_connector_diff(d),
                     coll,
                 ));
@@ -12882,7 +13876,7 @@ mod hash {
                     "ModelsDiff",
                     "ModelDiffUpdate",
                     "model",
-                    &|m: &Model| hash_model(m),
+                    &|m: &ModelDto| hash_model_dto(m),
                     &|d: &ModelDiff| hash_model_diff(d),
                     coll,
                 ));
@@ -12909,7 +13903,7 @@ mod hash {
                     "PropsDiff",
                     "PropDiffUpdate",
                     "prop",
-                    &|p: &Prop| hash_prop(p),
+                    &|p: &PropDto| hash_prop_dto(p),
                     &|d: &PropDiff| hash_prop_diff(d),
                     coll,
                 ));
@@ -12991,7 +13985,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13073,7 +14067,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13081,7 +14075,7 @@ mod hash {
             match &d.center {
                 Some(Some(c)) => {
                     w.write_string("center");
-                    w.write_hash(&hash_coord_diff(c));
+                    w.write_hash(&hash_coord_diff(&Coord::from(c)));
                 }
                 Some(None) => {
                     w.write_string("center");
@@ -13147,7 +14141,7 @@ mod hash {
             match &d.mirror_plane {
                 Some(Some(p)) => {
                     w.write_string("mirrorPlane");
-                    w.write_hash(&hash_plane_diff(p));
+                    w.write_hash(&hash_plane_diff(&Plane::from(p)));
                 }
                 Some(None) => {
                     w.write_string("mirrorPlane");
@@ -13169,7 +14163,7 @@ mod hash {
             match &d.plane {
                 Some(Some(p)) => {
                     w.write_string("plane");
-                    w.write_hash(&hash_plane_diff(p));
+                    w.write_hash(&hash_plane_diff(&Plane::from(p)));
                 }
                 Some(None) => {
                     w.write_string("plane");
@@ -13183,7 +14177,7 @@ mod hash {
                     "PropsDiff",
                     "PropDiffUpdate",
                     "prop",
-                    &|p: &Prop| hash_prop(p),
+                    &|p: &PropDto| hash_prop_dto(p),
                     &|d: &PropDiff| hash_prop_diff(d),
                     coll,
                 ));
@@ -13222,7 +14216,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13287,7 +14281,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13425,7 +14419,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13482,7 +14476,7 @@ mod hash {
                     "ConnectionsDiff",
                     "ConnectionDiffUpdate",
                     "connection",
-                    &|c: &ConnectionWire| hash_connection_wire(c),
+                    &|c: &ConnectionDto| hash_connection_dto(c),
                     &|d: &ConnectionDiff| hash_connection_diff(d),
                     coll,
                 ));
@@ -13515,7 +14509,7 @@ mod hash {
                     "GroupsDiff",
                     "GroupDiffUpdate",
                     "group",
-                    &|g: &Group| hash_group(g),
+                    &|g: &GroupDto| hash_group(&Group::from(g)),
                     &|d: &GroupDiff| hash_group_diff(d),
                     coll,
                 ));
@@ -13559,7 +14553,7 @@ mod hash {
                     "LayersDiff",
                     "LayerDiffUpdate",
                     "layer",
-                    &|l: &Layer| hash_layer(l),
+                    &|l: &LayerDto| hash_layer(&Layer::from(l)),
                     &|d: &LayerDiff| hash_layer_diff(d),
                     coll,
                 ));
@@ -13586,7 +14580,7 @@ mod hash {
                     "PiecesDiff",
                     "PieceDiffUpdate",
                     "piece",
-                    &|p: &PieceWire| hash_piece_wire(p),
+                    &|p: &PieceDto| hash_piece_dto(p),
                     &|d: &PieceDiff| hash_piece_diff(d),
                     coll,
                 ));
@@ -13597,7 +14591,7 @@ mod hash {
                     "PropsDiff",
                     "PropDiffUpdate",
                     "prop",
-                    &|p: &Prop| hash_prop(p),
+                    &|p: &PropDto| hash_prop_dto(p),
                     &|d: &PropDiff| hash_prop_diff(d),
                     coll,
                 ));
@@ -13608,7 +14602,7 @@ mod hash {
                     "StatsDiff",
                     "StatDiffUpdate",
                     "stat",
-                    &|s: &Stat| hash_stat(s),
+                    &|s: &StatDto| hash_stat(&Stat::from(s)),
                     &|d: &StatDiff| hash_stat_diff(d),
                     coll,
                 ));
@@ -13636,7 +14630,7 @@ mod hash {
                     "AttributesDiff",
                     "AttributeDiffUpdate",
                     "attribute",
-                    &|a: &Attribute| hash_attribute(a),
+                    &|a: &AttributeDto| hash_attribute_dto(a),
                     &|d: &AttributeDiff| hash_attribute_diff(d),
                     coll,
                 ));
@@ -13647,7 +14641,7 @@ mod hash {
                     "AuthorsDiff",
                     "AuthorDiffUpdate",
                     "author",
-                    &|a: &Author| hash_author(a),
+                    &|a: &AuthorDto| hash_author(&Author::from(a)),
                     &|d: &AuthorDiff| hash_author_diff(d),
                     coll,
                 ));
@@ -13658,7 +14652,7 @@ mod hash {
                     "ConceptsDiff",
                     "ConceptDiffUpdate",
                     "concept",
-                    &|c: &Concept| hash_concept(c),
+                    &|c: &ConceptDto| hash_concept(&Concept::from(c)),
                     &|d: &ConceptDiff| hash_concept_diff(d),
                     coll,
                 ));
@@ -13680,7 +14674,7 @@ mod hash {
                     "DesignsDiff",
                     "DesignDiffUpdate",
                     "design",
-                    &|d: &DesignWire| hash_design_wire(d),
+                    &|d: &DesignDto| hash_design_dto(d),
                     &|d: &DesignDiff| hash_design_diff(d),
                     coll,
                 ));
@@ -13702,7 +14696,7 @@ mod hash {
                     "FoldersDiff",
                     "FolderDiffUpdate",
                     "folder",
-                    &|f: &Folder| hash_folder(f),
+                    &|f: &FolderDto| hash_folder(&Folder::from(f)),
                     &|d: &FolderDiff| hash_folder_diff(d),
                     coll,
                 ));
@@ -13761,7 +14755,7 @@ mod hash {
                     "PortsDiff",
                     "PortDiffUpdate",
                     "port",
-                    &|p: &Port| hash_port(p),
+                    &|p: &PortDto| hash_port(&Port::from(p)),
                     &|d: &PortDiff| hash_port_diff(d),
                     coll,
                 ));
@@ -13783,7 +14777,7 @@ mod hash {
                     "QualitiesDiff",
                     "QualityDiffUpdate",
                     "quality",
-                    &|q: &Quality| hash_quality(q),
+                    &|q: &QualityDto| hash_quality(&Quality::from(q)),
                     &|d: &QualityDiff| hash_quality_diff(d),
                     coll,
                 ));
@@ -13805,7 +14799,7 @@ mod hash {
                     "TagsDiff",
                     "TagDiffUpdate",
                     "tag",
-                    &|t: &Tag| hash_tag(t),
+                    &|t: &TagDto| hash_tag(&Tag::from(t)),
                     &|d: &TagDiff| hash_tag_diff(d),
                     coll,
                 ));
@@ -13816,7 +14810,7 @@ mod hash {
                     "TypesDiff",
                     "TypeDiffUpdate",
                     "type",
-                    &|t: &TypeWire| hash_type_wire(t),
+                    &|t: &TypeDto| hash_type_dto(t),
                     &|d: &TypeDiff| hash_type_diff(d),
                     coll,
                 ));
@@ -14166,10 +15160,10 @@ mod kit_diff_validation {
         }
 
         if let Some(ref pc) = diff.pieces {
-            let base: Vec<PieceWire> = design
+            let base: Vec<PieceDto> = design
                 .pieces
                 .as_ref()
-                .map(|v| v.iter().map(|p| p.as_ref().to_wire()).collect())
+                .map(|v| v.iter().map(|p| p.as_ref().to_dto()).collect())
                 .unwrap_or_default();
             let mut tmp = pc.clone();
             validate_collection_diff_entity(
@@ -14250,16 +15244,16 @@ mod kit_diff_validation {
         let refs = ref_sets_from_kit(kit);
         let mut healed = if heal { Some(diff.clone()) } else { None };
 
-        let type_wires: Vec<TypeWire> = kit
+        let type_dtos: Vec<TypeDto> = kit
             .types
             .as_ref()
-            .map(|v| v.iter().map(|t| t.as_ref().to_wire()).collect())
+            .map(|v| v.iter().map(|t| t.as_ref().to_dto()).collect())
             .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "types",
             "type",
-            &type_wires,
+            &type_dtos,
             diff.types.as_ref(),
             healed.as_mut().map(|h| &mut h.types),
             heal,
@@ -14267,16 +15261,16 @@ mod kit_diff_validation {
         );
 
         let refs_d = refs.clone();
-        let design_wires: Vec<DesignWire> = kit
+        let design_dtos: Vec<DesignDto> = kit
             .designs
             .as_ref()
-            .map(|v| v.iter().map(|d| d.as_ref().to_wire()).collect())
+            .map(|v| v.iter().map(|d| d.as_ref().to_dto()).collect())
             .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "designs",
             "design",
-            &design_wires,
+            &design_dtos,
             diff.designs.as_ref(),
             healed.as_mut().map(|h| &mut h.designs),
             heal,
@@ -14290,44 +15284,64 @@ mod kit_diff_validation {
             },
         );
 
+        let tag_dtos: Vec<TagDto> = kit
+            .tags
+            .as_ref()
+            .map(|v| v.iter().map(TagDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "tags",
             "tag",
-            kit.tags.as_deref().unwrap_or(&[]),
+            &tag_dtos,
             diff.tags.as_ref(),
             healed.as_mut().map(|h| &mut h.tags),
             heal,
             |_, _, _, _| {},
         );
 
+        let concept_dtos: Vec<ConceptDto> = kit
+            .concepts
+            .as_ref()
+            .map(|v| v.iter().map(ConceptDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "concepts",
             "concept",
-            kit.concepts.as_deref().unwrap_or(&[]),
+            &concept_dtos,
             diff.concepts.as_ref(),
             healed.as_mut().map(|h| &mut h.concepts),
             heal,
             |_, _, _, _| {},
         );
 
+        let port_dtos: Vec<PortDto> = kit
+            .ports
+            .as_ref()
+            .map(|v| v.iter().map(PortDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "ports",
             "port",
-            kit.ports.as_deref().unwrap_or(&[]),
+            &port_dtos,
             diff.ports.as_ref(),
             healed.as_mut().map(|h| &mut h.ports),
             heal,
             |_, _, _, _| {},
         );
 
+        let quality_dtos: Vec<QualityDto> = kit
+            .qualities
+            .as_ref()
+            .map(|v| v.iter().map(QualityDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "qualities",
             "quality",
-            kit.qualities.as_deref().unwrap_or(&[]),
+            &quality_dtos,
             diff.qualities.as_ref(),
             healed.as_mut().map(|h| &mut h.qualities),
             heal,
@@ -14345,22 +15359,32 @@ mod kit_diff_validation {
             |_, _, _, _| {},
         );
 
+        let folder_dtos: Vec<FolderDto> = kit
+            .folders
+            .as_ref()
+            .map(|v| v.iter().map(FolderDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "folders",
             "folder",
-            kit.folders.as_deref().unwrap_or(&[]),
+            &folder_dtos,
             diff.folders.as_ref(),
             healed.as_mut().map(|h| &mut h.folders),
             heal,
             |_, _, _, _| {},
         );
 
+        let author_dtos: Vec<AuthorDto> = kit
+            .authors
+            .as_ref()
+            .map(|v| v.iter().map(AuthorDto::from).collect())
+            .unwrap_or_default();
         merge_guid_collection(
             &mut ctx,
             "authors",
             "author",
-            kit.authors.as_deref().unwrap_or(&[]),
+            &author_dtos,
             diff.authors.as_ref(),
             healed.as_mut().map(|h| &mut h.authors),
             heal,
@@ -14368,13 +15392,17 @@ mod kit_diff_validation {
         );
 
         if let Some(ref cd) = diff.attributes {
-            let base = kit.attributes.as_deref().unwrap_or(&[]);
+            let base: Vec<AttributeDto> = kit
+                .attributes
+                .as_ref()
+                .map(|v| v.iter().map(AttributeDto::from).collect())
+                .unwrap_or_default();
             let mut tmp = cd.clone();
             validate_collection_diff_entity(
                 &mut ctx,
                 "kit.attributes",
                 "attribute",
-                base,
+                &base,
                 cd,
                 &mut tmp,
                 heal,
@@ -14956,35 +15984,16 @@ pub struct DesignFullDto(pub FullRecord);
 
 // ——— Store trait (diagram: abstract Store)
 
-pub trait Store: HasGuid + Serialize {
+pub trait Store: HasGuid {
     fn get_name(&self) -> &str;
     fn update_description(&mut self, description: &str) -> Result<()>;
     fn to_id_dto(&self) -> IdDto {
         IdDto::new(self.guid())
     }
-    fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
-    }
-    fn to_metadata_dto(&self) -> MetadataRecord {
-        MetadataRecord {
-            payload: serde_json::to_value(self).unwrap_or(Value::Null),
-            references: HashMap::new(),
-        }
-    }
-    fn to_shallow_dto(&self) -> ShallowRecord {
-        ShallowRecord {
-            meta: self.to_metadata_dto(),
-            child_views: HashMap::new(),
-        }
-    }
-    fn to_full_dto(&self) -> FullRecord {
-        FullRecord {
-            root: serde_json::to_value(self).unwrap_or(Value::Null),
-            references: HashMap::new(),
-            children: HashMap::new(),
-            derived: Map::new(),
-        }
-    }
+    fn to_input_dto(&self) -> InputDto;
+    fn to_metadata_dto(&self) -> MetadataRecord;
+    fn to_shallow_dto(&self) -> ShallowRecord;
+    fn to_full_dto(&self) -> FullRecord;
 }
 
 fn json_input_from<T: Serialize + ?Sized>(v: &T) -> InputDto {
@@ -15003,6 +16012,29 @@ fn json_input_from<T: Serialize + ?Sized>(v: &T) -> InputDto {
     }
 }
 
+fn store_metadata_from_serializable<D: Serialize>(d: &D) -> MetadataRecord {
+    MetadataRecord {
+        payload: serde_json::to_value(d).unwrap_or(Value::Null),
+        references: HashMap::new(),
+    }
+}
+
+fn store_shallow_from_serializable<D: Serialize>(d: &D) -> ShallowRecord {
+    ShallowRecord {
+        meta: store_metadata_from_serializable(d),
+        child_views: HashMap::new(),
+    }
+}
+
+fn store_full_from_serializable<D: Serialize>(d: &D) -> FullRecord {
+    FullRecord {
+        root: serde_json::to_value(d).unwrap_or(Value::Null),
+        references: HashMap::new(),
+        children: HashMap::new(),
+        derived: Map::new(),
+    }
+}
+
 impl Store for Kit {
     fn get_name(&self) -> &str {
         &self.name
@@ -15014,7 +16046,19 @@ impl Store for Kit {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15029,7 +16073,19 @@ impl Store for Concept {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&ConceptDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&ConceptDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&ConceptDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&ConceptDto::from(self))
     }
 }
 
@@ -15044,7 +16100,19 @@ impl Store for Tag {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&TagDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&TagDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&TagDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&TagDto::from(self))
     }
 }
 
@@ -15058,7 +16126,19 @@ impl Store for Attribute {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&AttributeDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&AttributeDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&AttributeDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&AttributeDto::from(self))
     }
 }
 
@@ -15072,7 +16152,19 @@ impl Store for Author {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&AuthorDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&AuthorDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&AuthorDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&AuthorDto::from(self))
     }
 }
 
@@ -15086,7 +16178,19 @@ impl Store for Folder {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&FolderDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&FolderDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&FolderDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&FolderDto::from(self))
     }
 }
 
@@ -15102,6 +16206,18 @@ impl Store for File {
     fn to_input_dto(&self) -> InputDto {
         json_input_from(self)
     }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(self)
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(self)
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(self)
+    }
 }
 
 impl Store for Quality {
@@ -15114,7 +16230,19 @@ impl Store for Quality {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&QualityDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&QualityDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&QualityDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&QualityDto::from(self))
     }
 }
 
@@ -15128,7 +16256,19 @@ impl Store for Benchmark {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&BenchmarkDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&BenchmarkDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&BenchmarkDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&BenchmarkDto::from(self))
     }
 }
 
@@ -15142,7 +16282,19 @@ impl Store for Stat {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&StatDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&StatDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&StatDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&StatDto::from(self))
     }
 }
 
@@ -15156,7 +16308,19 @@ impl Store for Port {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&PortDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&PortDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&PortDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&PortDto::from(self))
     }
 }
 
@@ -15170,7 +16334,19 @@ impl Store for Connector {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15184,7 +16360,19 @@ impl Store for Prop {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&PropDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&PropDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&PropDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&PropDto::from(self))
     }
 }
 
@@ -15198,7 +16386,19 @@ impl Store for Layer {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&LayerDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&LayerDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&LayerDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&LayerDto::from(self))
     }
 }
 
@@ -15212,7 +16412,19 @@ impl Store for Group {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&GroupDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&GroupDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&GroupDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&GroupDto::from(self))
     }
 }
 
@@ -15226,7 +16438,19 @@ impl Store for Piece {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15240,7 +16464,19 @@ impl Store for Connection {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15254,7 +16490,19 @@ impl Store for Type {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15270,7 +16518,19 @@ impl Store for Design {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&self.to_dto())
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&self.to_dto())
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&self.to_dto())
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&self.to_dto())
     }
 }
 
@@ -15284,7 +16544,19 @@ impl Store for Model {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&ModelDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&ModelDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&ModelDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&ModelDto::from(self))
     }
 }
 
@@ -15298,7 +16570,19 @@ impl Store for Location {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(self)
+        json_input_from(&LocationDto::from(self))
+    }
+
+    fn to_metadata_dto(&self) -> MetadataRecord {
+        store_metadata_from_serializable(&LocationDto::from(self))
+    }
+
+    fn to_shallow_dto(&self) -> ShallowRecord {
+        store_shallow_from_serializable(&LocationDto::from(self))
+    }
+
+    fn to_full_dto(&self) -> FullRecord {
+        store_full_from_serializable(&LocationDto::from(self))
     }
 }
 
@@ -15688,12 +16972,27 @@ impl Prop {
         if self.unit != after.unit {
             diff.unit = Some(after.unit.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -15705,14 +17004,14 @@ impl Connector {
             ..Default::default()
         };
         if self.point != after.point {
-            diff.point = Some(Vector {
+            diff.point = Some(VectorDto {
                 x: after.point.x - self.point.x,
                 y: after.point.y - self.point.y,
                 z: after.point.z - self.point.z,
             });
         }
         if self.direction != after.direction {
-            diff.direction = Some(Vector {
+            diff.direction = Some(VectorDto {
                 x: after.direction.x - self.direction.x,
                 y: after.direction.y - self.direction.y,
                 z: after.direction.z - self.direction.z,
@@ -15741,14 +17040,42 @@ impl Connector {
                     }),
             );
         }
-        diff.props =
-            CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
+            let b_dom = self
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("prop before");
+            let a_dom = after
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("prop after");
+            b_dom.diff_from(a_dom)
+        });
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 
@@ -15785,12 +17112,27 @@ impl Model {
         if self.tags != after.tags {
             diff.tags = Some(after.tags.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -15894,19 +17236,44 @@ impl Type {
         if self.authors != after.authors {
             diff.authors = Some(after.authors.clone());
         }
-        diff.props =
-            CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-        diff.models = CollectionDiff::from_optional_vecs(&self.models, &after.models, "model", |b, a| {
-            b.diff_from(a)
+        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
+            let b_dom = self
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("prop before");
+            let a_dom = after
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("prop after");
+            b_dom.diff_from(a_dom)
+        });
+        let bm = self.models.as_ref().map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
+        let am = after.models.as_ref().map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
+        diff.models = CollectionDiff::from_optional_vecs(&bm, &am, "model", |b, a| {
+            let b_dom = self
+                .models
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("model before");
+            let a_dom = after
+                .models
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("model after");
+            b_dom.diff_from(a_dom)
         });
         let bw = self.connectors.as_ref().map(|v| {
             v.iter()
-                .map(|c| c.as_ref().to_wire())
+                .map(|c| c.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         let aw = after.connectors.as_ref().map(|v| {
             v.iter()
-                .map(|c| c.as_ref().to_wire())
+                .map(|c| c.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         diff.connectors = CollectionDiff::from_optional_vecs(&bw, &aw, "connector", |bw, aw| {
@@ -15926,12 +17293,27 @@ impl Type {
                 },
             }
         });
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -15985,16 +17367,16 @@ impl Piece {
             );
         }
         if self.plane != after.plane {
-            diff.plane = Some(after.plane.clone());
+            diff.plane = Some(after.plane.as_ref().map(PlaneDto::from));
         }
         if self.center != after.center {
-            diff.center = Some(after.center.clone());
+            diff.center = Some(after.center.as_ref().map(CoordDto::from));
         }
         if self.scale != after.scale {
             diff.scale = Some(after.scale);
         }
         if self.mirror_plane != after.mirror_plane {
-            diff.mirror_plane = Some(after.mirror_plane.clone());
+            diff.mirror_plane = Some(after.mirror_plane.as_ref().map(PlaneDto::from));
         }
         if self.is_hidden != after.is_hidden {
             diff.is_hidden = Some(after.is_hidden);
@@ -16008,14 +17390,42 @@ impl Piece {
         if self.description != after.description {
             diff.description = Some(after.description.clone());
         }
-        diff.props =
-            CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
+            let b_dom = self
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("prop before");
+            let a_dom = after
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("prop after");
+            b_dom.diff_from(a_dom)
+        });
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16163,12 +17573,27 @@ impl Connection {
         if self.description != after.description {
             diff.description = Some(after.description.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16194,12 +17619,27 @@ impl Layer {
         if self.description != after.description {
             diff.description = Some(after.description.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16222,12 +17662,27 @@ impl Group {
         if self.pieces != after.pieces {
             diff.pieces = Some(after.pieces.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16275,6 +17730,27 @@ impl Tag {
         if self.icon != after.icon {
             diff.icon = Some(after.icon.clone());
         }
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16294,6 +17770,27 @@ impl Concept {
         if self.icon != after.icon {
             diff.icon = Some(after.icon.clone());
         }
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16316,12 +17813,27 @@ impl Port {
         if self.compatible_interfaces != after.compatible_interfaces {
             diff.compatible_interfaces = Some(after.compatible_interfaces.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16371,12 +17883,27 @@ impl Quality {
         if self.uri != after.uri {
             diff.uri = Some(after.uri.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16418,12 +17945,27 @@ impl Folder {
         if self.parent != after.parent {
             diff.parent = Some(after.parent.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16440,12 +17982,27 @@ impl Author {
         if self.email != after.email {
             diff.email = Some(after.email.clone());
         }
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 }
@@ -16886,7 +18443,7 @@ mod flatten {
                 if plane_needs_update || center_needs_update {
                     let path_attr = self.inner.semio_path_string(piece.guid.as_str()).map(|path| {
                         CollectionDiff {
-                            added: Some(vec![Attribute {
+                            added: Some(vec![AttributeDto {
                                 guid: SemioUtil::generate_guid(),
                                 key: "semio.path".to_string(),
                                 value: Some(path),
@@ -16902,12 +18459,12 @@ mod flatten {
                         diff: PieceDiff {
                             guid: piece.guid.clone(),
                             plane: if plane_needs_update {
-                                Some(Some(new_plane))
+                                Some(Some(PlaneDto::from(&new_plane)))
                             } else {
                                 None
                             },
                             center: if center_needs_update {
-                                Some(Some(center.clone()))
+                                Some(Some(CoordDto::from(&center)))
                             } else {
                                 None
                             },
@@ -17423,8 +18980,18 @@ impl Kit {
         if let Some(pieces_diff) = &change.forward.pieces {
             if let Some(updates) = &pieces_diff.updated {
                 for upd in updates {
-                    let plane = upd.diff.plane.clone().flatten();
-                    let center = upd.diff.center.clone().flatten();
+                    let plane = upd
+                        .diff
+                        .plane
+                        .clone()
+                        .flatten()
+                        .map(|p| Plane::from(&p));
+                    let center = upd
+                        .diff
+                        .center
+                        .clone()
+                        .flatten()
+                        .map(|c| Coord::from(&c));
                     updated_by_id.insert(upd.guid.clone(), (plane, center));
                 }
             }
@@ -17529,12 +19096,12 @@ impl Kit {
         }
         let tw = self.types.as_ref().map(|v| {
             v.iter()
-                .map(|t| t.as_ref().to_wire())
+                .map(|t| t.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         let twa = after.types.as_ref().map(|v| {
             v.iter()
-                .map(|t| t.as_ref().to_wire())
+                .map(|t| t.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         diff.types = CollectionDiff::from_optional_vecs(&tw, &twa, "type", |bw, aw| {
@@ -17556,12 +19123,12 @@ impl Kit {
         });
         let dw = self.designs.as_ref().map(|v| {
             v.iter()
-                .map(|d| d.as_ref().to_wire())
+                .map(|d| d.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         let dwa = after.designs.as_ref().map(|v| {
             v.iter()
-                .map(|d| d.as_ref().to_wire())
+                .map(|d| d.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         diff.designs = CollectionDiff::from_optional_vecs(&dw, &dwa, "design", |bw, aw| {
@@ -17581,34 +19148,143 @@ impl Kit {
                 },
             }
         });
-        diff.tags =
-            CollectionDiff::from_optional_vecs(&self.tags, &after.tags, "tag", |b, a| b.diff_from(a));
-        diff.concepts =
-            CollectionDiff::from_optional_vecs(&self.concepts, &after.concepts, "concept", |b, a| {
-                b.diff_from(a)
-            });
-        diff.ports =
-            CollectionDiff::from_optional_vecs(&self.ports, &after.ports, "port", |b, a| b.diff_from(a));
-        diff.qualities =
-            CollectionDiff::from_optional_vecs(&self.qualities, &after.qualities, "quality", |b, a| {
-                b.diff_from(a)
-            });
+        let tag_b = self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
+        let tag_a = after.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
+        diff.tags = CollectionDiff::from_optional_vecs(&tag_b, &tag_a, "tag", |b, a| {
+            let b_dom = self
+                .tags
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("tag before");
+            let a_dom = after
+                .tags
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("tag after");
+            b_dom.diff_from(a_dom)
+        });
+        let concept_b = self
+            .concepts
+            .as_ref()
+            .map(|v| v.iter().map(ConceptDto::from).collect::<Vec<_>>());
+        let concept_a = after
+            .concepts
+            .as_ref()
+            .map(|v| v.iter().map(ConceptDto::from).collect::<Vec<_>>());
+        diff.concepts = CollectionDiff::from_optional_vecs(&concept_b, &concept_a, "concept", |b, a| {
+            let b_dom = self
+                .concepts
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("concept before");
+            let a_dom = after
+                .concepts
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("concept after");
+            b_dom.diff_from(a_dom)
+        });
+        let port_b = self.ports.as_ref().map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
+        let port_a = after.ports.as_ref().map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
+        diff.ports = CollectionDiff::from_optional_vecs(&port_b, &port_a, "port", |b, a| {
+            let b_dom = self
+                .ports
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("port before");
+            let a_dom = after
+                .ports
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("port after");
+            b_dom.diff_from(a_dom)
+        });
+        let qual_b = self
+            .qualities
+            .as_ref()
+            .map(|v| v.iter().map(QualityDto::from).collect::<Vec<_>>());
+        let qual_a = after
+            .qualities
+            .as_ref()
+            .map(|v| v.iter().map(QualityDto::from).collect::<Vec<_>>());
+        diff.qualities = CollectionDiff::from_optional_vecs(&qual_b, &qual_a, "quality", |b, a| {
+            let b_dom = self
+                .qualities
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("quality before");
+            let a_dom = after
+                .qualities
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("quality after");
+            b_dom.diff_from(a_dom)
+        });
         diff.files =
             CollectionDiff::from_optional_vecs(&self.files, &after.files, "file", |b, a| b.diff_from(a));
-        diff.folders =
-            CollectionDiff::from_optional_vecs(&self.folders, &after.folders, "folder", |b, a| {
-                b.diff_from(a)
-            });
-        diff.authors =
-            CollectionDiff::from_optional_vecs(&self.authors, &after.authors, "author", |b, a| {
-                b.diff_from(a)
-            });
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let folder_b = self
+            .folders
+            .as_ref()
+            .map(|v| v.iter().map(FolderDto::from).collect::<Vec<_>>());
+        let folder_a = after
+            .folders
+            .as_ref()
+            .map(|v| v.iter().map(FolderDto::from).collect::<Vec<_>>());
+        diff.folders = CollectionDiff::from_optional_vecs(&folder_b, &folder_a, "folder", |b, a| {
+            let b_dom = self
+                .folders
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("folder before");
+            let a_dom = after
+                .folders
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("folder after");
+            b_dom.diff_from(a_dom)
+        });
+        let author_b = self
+            .authors
+            .as_ref()
+            .map(|v| v.iter().map(AuthorDto::from).collect::<Vec<_>>());
+        let author_a = after
+            .authors
+            .as_ref()
+            .map(|v| v.iter().map(AuthorDto::from).collect::<Vec<_>>());
+        diff.authors = CollectionDiff::from_optional_vecs(&author_b, &author_a, "author", |b, a| {
+            let b_dom = self
+                .authors
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("author before");
+            let a_dom = after
+                .authors
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("author after");
+            b_dom.diff_from(a_dom)
+        });
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 
@@ -17710,8 +19386,8 @@ impl Kit {
                     guid: g.clone(),
                     diff: PieceDiff {
                         guid: g.clone(),
-                        plane: Some(flat_plane),
-                        center: Some(flat_center),
+                        plane: Some(flat_plane.as_ref().map(PlaneDto::from)),
+                        center: Some(flat_center.as_ref().map(CoordDto::from)),
                         ..Default::default()
                     },
                 }
@@ -18111,16 +19787,29 @@ impl Design {
         if self.active_layer != after.active_layer {
             diff.active_layer = Some(after.active_layer.clone());
         }
-        diff.props =
-            CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
+            let b_dom = self
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("prop before");
+            let a_dom = after
+                .props
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("prop after");
+            b_dom.diff_from(a_dom)
+        });
         let pw = self.pieces.as_ref().map(|v| {
             v.iter()
-                .map(|p| p.as_ref().to_wire())
+                .map(|p| p.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         let pwa = after.pieces.as_ref().map(|v| {
             v.iter()
-                .map(|p| p.as_ref().to_wire())
+                .map(|p| p.as_ref().to_dto())
                 .collect::<Vec<_>>()
         });
         diff.pieces = CollectionDiff::from_optional_vecs(&pw, &pwa, "piece", |bw, aw| {
@@ -18143,11 +19832,11 @@ impl Design {
         let cw = self
             .connections
             .as_ref()
-            .map(|v| v.iter().map(|c| c.to_wire()).collect::<Vec<_>>());
+            .map(|v| v.iter().map(|c| c.to_dto()).collect::<Vec<_>>());
         let cwa = after
             .connections
             .as_ref()
-            .map(|v| v.iter().map(|c| c.to_wire()).collect::<Vec<_>>());
+            .map(|v| v.iter().map(|c| c.to_dto()).collect::<Vec<_>>());
         diff.connections = CollectionDiff::from_optional_vecs(&cw, &cwa, "connection", |b, a| {
             let b0 = self
                 .connections
@@ -18165,20 +19854,87 @@ impl Design {
                 },
             }
         });
-        diff.layers = CollectionDiff::from_optional_vecs(&self.layers, &after.layers, "layer", |b, a| {
-            b.diff_from(a)
+        let layer_b = self
+            .layers
+            .as_ref()
+            .map(|v| v.iter().map(LayerDto::from).collect::<Vec<_>>());
+        let layer_a = after
+            .layers
+            .as_ref()
+            .map(|v| v.iter().map(LayerDto::from).collect::<Vec<_>>());
+        diff.layers = CollectionDiff::from_optional_vecs(&layer_b, &layer_a, "layer", |b, a| {
+            let b_dom = self
+                .layers
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("layer before");
+            let a_dom = after
+                .layers
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("layer after");
+            b_dom.diff_from(a_dom)
         });
-        diff.groups = CollectionDiff::from_optional_vecs(&self.groups, &after.groups, "group", |b, a| {
-            b.diff_from(a)
+        let group_b = self
+            .groups
+            .as_ref()
+            .map(|v| v.iter().map(GroupDto::from).collect::<Vec<_>>());
+        let group_a = after
+            .groups
+            .as_ref()
+            .map(|v| v.iter().map(GroupDto::from).collect::<Vec<_>>());
+        diff.groups = CollectionDiff::from_optional_vecs(&group_b, &group_a, "group", |b, a| {
+            let b_dom = self
+                .groups
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("group before");
+            let a_dom = after
+                .groups
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("group after");
+            b_dom.diff_from(a_dom)
         });
-        diff.stats =
-            CollectionDiff::from_optional_vecs(&self.stats, &after.stats, "stat", |b, a| b.diff_from(a));
-        diff.attributes = CollectionDiff::from_optional_vecs(
-            &self.attributes,
-            &after.attributes,
-            "attribute",
-            |b, a| b.diff_from(a),
-        );
+        let stat_b = self.stats.as_ref().map(|v| v.iter().map(StatDto::from).collect::<Vec<_>>());
+        let stat_a = after
+            .stats
+            .as_ref()
+            .map(|v| v.iter().map(StatDto::from).collect::<Vec<_>>());
+        diff.stats = CollectionDiff::from_optional_vecs(&stat_b, &stat_a, "stat", |b, a| {
+            let b_dom = self
+                .stats
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("stat before");
+            let a_dom = after
+                .stats
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("stat after");
+            b_dom.diff_from(a_dom)
+        });
+        let ba = self
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        let aa = after
+            .attributes
+            .as_ref()
+            .map(|v| v.iter().map(AttributeDto::from).collect::<Vec<_>>());
+        diff.attributes = CollectionDiff::from_optional_vecs(&ba, &aa, "attribute", |b, a| {
+            let b_dom = self
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                .expect("attribute before");
+            let a_dom = after
+                .attributes
+                .as_ref()
+                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                .expect("attribute after");
+            b_dom.diff_from(a_dom)
+        });
         diff
     }
 
@@ -18288,7 +20044,7 @@ impl Design {
                     guid: guid.to_string(),
                     diff: PieceDiff {
                         guid: guid.to_string(),
-                        center: Some(Some(Coord {
+                        center: Some(Some(CoordDto {
                             u: center.u + offset.u,
                             v: center.v + offset.v,
                         })),
@@ -20757,8 +22513,10 @@ mod tests {
                         let mut applied_inverse = kit_diffed.clone();
                         apply_kit_diff(&mut applied_inverse, &change.backward);
                         // [DEBUG] Write both to files for comparison
-                        let inv_json = serde_json::to_string_pretty(&applied_inverse).unwrap();
-                        let orig_json = serde_json::to_string_pretty(&kit_original).unwrap();
+                        let inv_json =
+                            serde_json::to_string_pretty(&applied_inverse.to_dto()).unwrap();
+                        let orig_json =
+                            serde_json::to_string_pretty(&kit_original.to_dto()).unwrap();
                         let tmp_dir = std::env::temp_dir();
                         std::fs::write(tmp_dir.join("inverse_applied.json"), &inv_json).unwrap();
                         std::fs::write(tmp_dir.join("original.json"), &orig_json).unwrap();
@@ -21015,8 +22773,9 @@ mod tests {
                     // Compute copy
                     let copy_design_result =
                         copy_design(&kit, design, &piece_guids, &connection_guids);
-                    let copy_json: serde_json::Value = serde_json::to_value(&copy_design_result)
-                        .expect("Failed to serialize copy");
+                    let copy_json: serde_json::Value =
+                        serde_json::to_value(&copy_design_result.to_dto())
+                            .expect("Failed to serialize copy");
 
                     // Verify piece count
                     let copy_pieces = copy_json["pieces"].as_array().unwrap();
@@ -21126,11 +22885,11 @@ mod tests {
                         Path::new(ASSETS_DIR).join("nakagin-capsule-tower.paste.design.semio.json");
                     let paste_target_data = fs::read_to_string(&paste_target_path)
                         .expect("Failed to read paste target design");
-                    let paste_dw: DesignWire =
+                    let paste_dw: DesignDto =
                         serde_json::from_str(&paste_target_data).expect("paste target wire");
                     let paste_types = kit_types_map_index(&kit);
                     let paste_target =
-                        Design::from_wire(paste_dw, &paste_types).expect("paste target design");
+                        Design::from_dto(paste_dw, &paste_types).expect("paste target design");
 
                     // Test PasteDesign with original anchoring (no coord)
                     let paste_diff =
@@ -21715,10 +23474,10 @@ mod tests {
 
                     let diff: DesignDiff = load_asset(&case.diff);
 
-                    let expected_dw: DesignWire = load_asset(&case.expected);
+                    let expected_dw: DesignDto = load_asset(&case.expected);
                     let tm = kit_types_map_index(&kit);
                     let expected =
-                        Design::from_wire(expected_dw, &tm).expect("expected design wire");
+                        Design::from_dto(expected_dw, &tm).expect("expected design wire");
 
                     let result = design_with_diff(design.as_ref(), &diff);
 
@@ -21827,7 +23586,7 @@ mod tests {
                         fs::read_to_string(&design_path).expect("Failed to read design");
                     let v: serde_json::Value =
                         serde_json::from_str(&design_data).expect("drag design json");
-                    let mut design_dw = DesignWire::default();
+                    let mut design_dw = DesignDto::default();
                     design_dw.guid = "01900000-0000-7000-8000-00000000d2a2".into();
                     design_dw.name = "drag-test".into();
                     design_dw.pieces = v
@@ -21837,7 +23596,7 @@ mod tests {
                         .get("connections")
                         .and_then(|c| serde_json::from_value(c.clone()).ok());
                     let design =
-                        Design::from_wire(design_dw, &types_map).expect("Failed to assemble design");
+                        Design::from_dto(design_dw, &types_map).expect("Failed to assemble design");
                     let pieces_path = Path::new(ASSETS_DIR).join("drag/pieces.semio.json");
                     let pieces_data =
                         fs::read_to_string(&pieces_path).expect("Failed to read pieces");
@@ -21867,8 +23626,9 @@ mod tests {
                     let offset_path = Path::new(ASSETS_DIR).join("drag/offset.semio.json");
                     let offset_data =
                         fs::read_to_string(&offset_path).expect("Failed to read offset");
-                    let offset: Coord =
+                    let offset_dto: CoordDto =
                         serde_json::from_str(&offset_data).expect("Failed to parse offset");
+                    let offset = Coord::from(&offset_dto);
                     let diff_path = Path::new(ASSETS_DIR).join("drag/diff.design.semio.json");
                     let diff_data = fs::read_to_string(&diff_path).expect("Failed to read diff");
                     let expected: serde_json::Value =
@@ -22031,7 +23791,7 @@ mod tests {
                     #[derive(Deserialize)]
                     struct Asset {
                         #[serde(rename = "tinyKit")]
-                        tiny_kit: KitWire,
+                        tiny_kit: KitDto,
                         cases: Vec<Case>,
                     }
                     #[derive(Deserialize)]
@@ -22055,7 +23815,7 @@ mod tests {
                         let path = Path::new(ASSETS_DIR).join("validate-kit-diff.cases.semio.json");
                         let data = fs::read_to_string(&path).expect("read validate-kit-diff asset");
                         let asset: Asset = serde_json::from_str(&data).expect("parse asset");
-                        let tiny_kit = Kit::from_wire(asset.tiny_kit).expect("tiny kit wire");
+                        let tiny_kit = Kit::from_dto(asset.tiny_kit).expect("tiny kit wire");
                         for c in asset.cases {
                             let r = crate::validate_kit_diff(&tiny_kit, &c.diff, false);
                             assert_eq!(
@@ -22091,7 +23851,7 @@ mod tests {
                         let path = Path::new(ASSETS_DIR).join("validate-kit-diff.cases.semio.json");
                         let data = fs::read_to_string(&path).expect("read asset");
                         let asset: Asset = serde_json::from_str(&data).expect("parse asset");
-                        let tiny_kit = Kit::from_wire(asset.tiny_kit).expect("tiny kit wire");
+                        let tiny_kit = Kit::from_dto(asset.tiny_kit).expect("tiny kit wire");
                         let bad: KitDiff = serde_json::from_str(
                             r#"{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}"#,
                         )
@@ -22344,7 +24104,20 @@ mod tests {
                 assert!(shallow.designs.is_some());
                 assert!(shallow.tags.is_some());
                 assert!(shallow.concepts.is_some());
-                assert!(shallow.ports.is_some());
+                let has_ports = shallow.ports.as_ref().map(|p| !p.is_empty()).unwrap_or(false)
+                    || shallow
+                        .families
+                        .as_ref()
+                        .map(|fams| {
+                            fams.iter().any(|fam| {
+                                fam.ports.as_ref().map(|p| !p.is_empty()).unwrap_or(false)
+                            })
+                        })
+                        .unwrap_or(false);
+                assert!(
+                    has_ports,
+                    "shallow kit should expose ports at kit level or on design families"
+                );
                 assert!(shallow.qualities.is_some());
                 assert!(shallow.files.is_some());
                 assert!(shallow.folders.is_some());
@@ -22799,7 +24572,7 @@ mod tests {
                     created_at: None,
                     updated_at: None,
                 };
-                let json = serde_json::to_string(&kit).unwrap();
+                let json = serde_json::to_string(&kit.to_dto()).unwrap();
                 let roundtripped = Kit::from_json_str(&json).unwrap();
                 assert_eq!(kit, roundtripped);
             }
@@ -23219,9 +24992,10 @@ mod tests {
                     compatible_interfaces: None,
                     attributes: None,
                 };
-                let json = serde_json::to_string(&port).unwrap();
+                let json = serde_json::to_string(&PortDto::from(&port)).unwrap();
                 assert!(json.contains("\"maxChildren\":3"));
-                let restored: Port = serde_json::from_str(&json).unwrap();
+                let dto: PortDto = serde_json::from_str(&json).unwrap();
+                let restored = Port::from(&dto);
                 assert_eq!(restored.max_children, Some(3));
             }
 
@@ -23236,7 +25010,7 @@ mod tests {
                     compatible_interfaces: None,
                     attributes: None,
                 };
-                let json = serde_json::to_string(&port).unwrap();
+                let json = serde_json::to_string(&PortDto::from(&port)).unwrap();
                 assert!(!json.contains("maxChildren"));
             }
 
@@ -23263,11 +25037,11 @@ mod tests {
                     props: None,
                     attributes: None,
                 };
-                let json = serde_json::to_string(&connector).unwrap();
+                let json = serde_json::to_string(&connector.to_dto()).unwrap();
                 assert!(json.contains("\"maxChildren\":5"));
-                let cw: ConnectorWire = serde_json::from_str(&json).unwrap();
+                let cw: ConnectorDto = serde_json::from_str(&json).unwrap();
                 let ports = std::collections::HashMap::new();
-                let restored = Connector::from_wire(&cw, &ports);
+                let restored = Connector::from_dto(&cw, &ports);
                 assert_eq!(restored.max_children, Some(5));
             }
 
@@ -23280,7 +25054,7 @@ mod tests {
                     kit.types.as_ref().unwrap()[0].connectors.as_ref().unwrap()[0].max_children,
                     Some(5)
                 );
-                let reserialized = serde_json::to_string(&kit).unwrap();
+                let reserialized = serde_json::to_string(&kit.to_dto()).unwrap();
                 let restored = Kit::from_json_str(&reserialized).unwrap();
                 assert_eq!(restored.ports.as_ref().unwrap()[0].max_children, Some(3));
                 assert_eq!(

@@ -3365,7 +3365,177 @@
     },
     {
       "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
-      "name": "Nakagin Capsule Tower"
+      "name": "Nakagin Capsule Tower",
+      "ports": [
+        {
+          "guid": "019ab243-21f3-7380-93c6-994a9a023448",
+          "name": "core circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
+          "name": "core circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
+          "name": "core rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
+          "name": "core rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "name": "door capsule east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
+          "name": "door capsule west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
+          "name": "door tambour east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25"
+            },
+            {
+              "guid": "019ab243-21f4-73df-8cb4-58d90f95991e"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
+          "name": "door tambour west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+            },
+            {
+              "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
+          "name": "platform east",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+          "name": "platform west",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
+          "name": "roof circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
+          "name": "roof circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
+          "name": "roof rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
+          "name": "roof rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
+          "name": "tambour circular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
+          "name": "tambour circular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+          "name": "tambour rectangular bottom",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
+            }
+          ]
+        },
+        {
+          "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+          "name": "tambour rectangular top",
+          "compatiblePorts": [
+            {
+              "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
+            }
+          ]
+        }
+      ]
     },
     {
       "guid": "50812682-1e66-4fe3-8765-618bc654b098",
