@@ -125,6 +125,30 @@ func areDesignIdsEqual(a, b *DesignId) bool {
 	return a.Guid == b.Guid
 }
 
+func areTypeIdSlicesEqual(a, b []TypeId) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Guid != b[i].Guid {
+			return false
+		}
+	}
+	return true
+}
+
+func areDesignIdSlicesEqual(a, b []DesignId) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Guid != b[i].Guid {
+			return false
+		}
+	}
+	return true
+}
+
 func arePortIdsEqual(a, b *PortId) bool {
 	if a == nil && b == nil {
 		return true
@@ -1133,6 +1157,7 @@ type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
 	Parent      *TypeId     `json:"parent,omitempty"`
+	Families    []TypeId    `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1156,6 +1181,7 @@ type Type struct {
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *TypeId         `json:"parent,omitempty"`
+	Families    []TypeId        `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
 	Unit        *string         `json:"unit,omitempty"`
@@ -1216,6 +1242,7 @@ type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
 	Parent      *TypeId     `json:"parent,omitempty"`
+	Families    []TypeId    `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1234,6 +1261,7 @@ type TypeShallow struct {
 	Guid        string          `json:"guid"`
 	Name        string          `json:"name"`
 	Parent      *TypeId         `json:"parent,omitempty"`
+	Families    []TypeId        `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
 	Unit        *string         `json:"unit,omitempty"`
@@ -1551,6 +1579,7 @@ type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
 	Parent      *DesignId    `json:"parent,omitempty"`
+	Families    []DesignId   `json:"families,omitempty"`
 	IsAbstract  *bool        `json:"isAbstract,omitempty"`
 	Unit        *string      `json:"unit,omitempty"`
 	Folder      *string      `json:"folder,omitempty"`
@@ -1586,6 +1615,7 @@ type CameraDiff struct {
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
 	Parent      *DesignId        `json:"parent,omitempty"`
+	Families    []DesignId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
 	Folder      *string          `json:"folder,omitempty"`
@@ -1683,6 +1713,7 @@ type DesignMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
 	Parent      *DesignId   `json:"parent,omitempty"`
+	Families    []DesignId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
 	Folder      *string     `json:"folder,omitempty"`
@@ -1703,6 +1734,7 @@ type DesignShallow struct {
 	Guid        string           `json:"guid"`
 	Name        string           `json:"name"`
 	Parent      *DesignId        `json:"parent,omitempty"`
+	Families    []DesignId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
 	Folder      *string          `json:"folder,omitempty"`
@@ -2382,7 +2414,7 @@ func ToStatMeta(s Stat) StatMeta {
 
 // 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
 func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeMeta{Guid: t.Guid, Name: t.Name, Parent: t.Parent, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
@@ -2403,12 +2435,12 @@ func ToTypeShallow(t Type) TypeShallow {
 	for i, a := range t.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Parent: t.Parent, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 📐ToDesignMeta converts a Design to its scalar-only Meta view.
 func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignMeta{Guid: d.Guid, Name: d.Name, Parent: d.Parent, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
@@ -2441,7 +2473,7 @@ func ToDesignShallow(d Design) DesignShallow {
 	for i, a := range d.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignShallow{Guid: d.Guid, Name: d.Name, Parent: d.Parent, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 📦ToKitMeta converts a Kit to its scalar-only Meta view.
@@ -3186,9 +3218,13 @@ func HashType(t Type) string {
 	}
 	w.writeString("name")
 	w.writeString(t.Name)
-	if t.Parent != nil {
-		w.writeString("parent")
-		w.writeString(t.Parent.Guid)
+	if len(t.Families) > 0 {
+		w.writeString("families")
+		guids := make([]string, len(t.Families))
+		for i, family := range t.Families {
+			guids[i] = family.Guid
+		}
+		w.writeGuidList(guids)
 	}
 	if len(t.Props) > 0 {
 		w.writeString("props")
@@ -3535,9 +3571,13 @@ func HashDesign(d Design) string {
 	}
 	w.writeString("name")
 	w.writeString(d.Name)
-	if d.Parent != nil {
-		w.writeString("parent")
-		w.writeString(d.Parent.Guid)
+	if len(d.Families) > 0 {
+		w.writeString("families")
+		guids := make([]string, len(d.Families))
+		for i, family := range d.Families {
+			guids[i] = family.Guid
+		}
+		w.writeGuidList(guids)
 	}
 	if len(d.Pieces) > 0 {
 		w.writeString("pieces")
@@ -4442,11 +4482,15 @@ func HashTypeDiff(d TypeDiff) string {
 		w.writeHash(HashModelsDiff(*d.Models))
 	}
 	writeOptStringDiff(w, "name", d.Name)
-	if d.Parent != nil {
-		w.writeString("parent")
-		w.writeString(d.Parent.Guid)
-	} else if d.HasField("parent") {
-		w.writeString("parent")
+	if len(d.Families) > 0 {
+		w.writeString("families")
+		guids := make([]string, len(d.Families))
+		for i, family := range d.Families {
+			guids[i] = family.Guid
+		}
+		w.writeGuidList(guids)
+	} else if d.HasField("families") {
+		w.writeString("families")
 		w.writeBool(false)
 	}
 	if d.Props != nil {
@@ -4798,9 +4842,13 @@ func HashDesignDiff(d DesignDiff) string {
 		w.writeString(d.Location.Guid)
 	}
 	writeOptStringDiff(w, "name", d.Name)
-	if d.Parent != nil {
-		w.writeString("parent")
-		w.writeString(d.Parent.Guid)
+	if len(d.Families) > 0 {
+		w.writeString("families")
+		guids := make([]string, len(d.Families))
+		for i, family := range d.Families {
+			guids[i] = family.Guid
+		}
+		w.writeGuidList(guids)
 	}
 	if d.Pieces != nil {
 		w.writeString("pieces")
@@ -5817,8 +5865,9 @@ func getTypeDiff(before, after Type) TypeDiff {
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
-	if !areTypeIdsEqual(before.Parent, after.Parent) {
-		diff.Parent = after.Parent
+	if !areTypeIdSlicesEqual(before.Families, after.Families) {
+		diff.Families = after.Families
+		diff.setFields["families"] = true
 	}
 	if !optBoolEqual(before.IsAbstract, after.IsAbstract) {
 		diff.IsAbstract = after.IsAbstract
@@ -5876,7 +5925,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 }
 
 func isTypeDiffEmpty(diff TypeDiff) bool {
-	return diff.Name == nil && diff.Parent == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Parent == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
 }
 
 func getDesignsDiff(before, after []Design) DesignsDiff {
@@ -5915,8 +5964,8 @@ func getDesignDiff(before, after Design) DesignDiff {
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
-	if !areDesignIdsEqual(before.Parent, after.Parent) {
-		diff.Parent = after.Parent
+	if !areDesignIdSlicesEqual(before.Families, after.Families) {
+		diff.Families = after.Families
 	}
 	if !optBoolEqual(before.IsAbstract, after.IsAbstract) {
 		diff.IsAbstract = after.IsAbstract
@@ -5986,7 +6035,7 @@ func getDesignDiff(before, after Design) DesignDiff {
 }
 
 func isDesignDiffEmpty(diff DesignDiff) bool {
-	return diff.Name == nil && diff.Parent == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Parent == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Unit == nil && diff.Folder == nil && diff.CanScale == nil && diff.CanMirror == nil && diff.ActiveLayer == nil && diff.Location == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Pieces == nil && diff.Connections == nil && diff.Stats == nil && diff.Props == nil && diff.Layers == nil && diff.Groups == nil && diff.Attributes == nil
 }
 
 func getTagsDiff(before, after []Tag) TagsDiff {
@@ -6431,8 +6480,9 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
-	if appliedDiff.Parent != nil {
-		inverse.Parent = original.Parent
+	if appliedDiff.Families != nil {
+		inverse.Families = original.Families
+		inverse.setFields["families"] = true
 	}
 	if appliedDiff.IsAbstract != nil {
 		inverse.IsAbstract = original.IsAbstract
@@ -6522,8 +6572,8 @@ func inverseDesignDiff(original Design, appliedDiff DesignDiff) DesignDiff {
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
-	if appliedDiff.Parent != nil {
-		inverse.Parent = original.Parent
+	if appliedDiff.Families != nil {
+		inverse.Families = original.Families
 	}
 	if appliedDiff.IsAbstract != nil {
 		inverse.IsAbstract = original.IsAbstract
@@ -8363,10 +8413,7 @@ func areTypesEqual(a, b Type) bool {
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
 		return false
 	}
-	if (a.Parent == nil) != (b.Parent == nil) {
-		return false
-	}
-	if a.Parent != nil && a.Parent.Guid != b.Parent.Guid {
+	if !areTypeIdSlicesEqual(a.Families, b.Families) {
 		return false
 	}
 	if !optBoolEqual(a.IsAbstract, b.IsAbstract) {
@@ -8512,10 +8559,7 @@ func areDesignsEqual(a, b Design) bool {
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
 		return false
 	}
-	if (a.Parent == nil) != (b.Parent == nil) {
-		return false
-	}
-	if a.Parent != nil && a.Parent.Guid != b.Parent.Guid {
+	if !areDesignIdSlicesEqual(a.Families, b.Families) {
 		return false
 	}
 	if !optBoolEqual(a.IsAbstract, b.IsAbstract) {
@@ -9459,8 +9503,8 @@ func applyTypeDiff(item *Type, diff *TypeDiff) {
 	if diff.Name != nil {
 		item.Name = *diff.Name
 	}
-	if diff.Parent != nil {
-		item.Parent = diff.Parent
+	if diff.Families != nil {
+		item.Families = diff.Families
 	}
 	if diff.IsAbstract != nil {
 		item.IsAbstract = diff.IsAbstract
@@ -9664,8 +9708,8 @@ func applyDesignDiff(item *Design, diff *DesignDiff) {
 	if diff.Name != nil {
 		item.Name = *diff.Name
 	}
-	if diff.Parent != nil {
-		item.Parent = diff.Parent
+	if diff.Families != nil {
+		item.Families = diff.Families
 	}
 	if diff.IsAbstract != nil {
 		item.IsAbstract = diff.IsAbstract
@@ -10512,19 +10556,6 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	typeByGuid := make(map[string]*Type)
 	for i := range kit.Types {
 		typeByGuid[kit.Types[i].Guid] = &kit.Types[i]
-	}
-
-	var collectTypeAncestors func(typeGuid string)
-	collectTypeAncestors = func(typeGuid string) {
-		if t, ok := typeByGuid[typeGuid]; ok && t.Parent != nil && t.Parent.Guid != "" {
-			if !usedTypeGuids[t.Parent.Guid] {
-				usedTypeGuids[t.Parent.Guid] = true
-				collectTypeAncestors(t.Parent.Guid)
-			}
-		}
-	}
-	for typeGuid := range usedTypeGuids {
-		collectTypeAncestors(typeGuid)
 	}
 
 	resolvedTagGuids := make([]string, 0)
@@ -12101,6 +12132,11 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 		if t.Parent != nil && t.Parent.Guid == oldGuid {
 			t.Parent.Guid = newGuid
 		}
+		for j := range t.Families {
+			if t.Families[j].Guid == oldGuid {
+				t.Families[j].Guid = newGuid
+			}
+		}
 		for j := range t.Connectors {
 			if t.Connectors[j].Guid == oldGuid {
 				t.Connectors[j].Guid = newGuid
@@ -12119,6 +12155,11 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 		}
 		if d.Parent != nil && d.Parent.Guid == oldGuid {
 			d.Parent.Guid = newGuid
+		}
+		for j := range d.Families {
+			if d.Families[j].Guid == oldGuid {
+				d.Families[j].Guid = newGuid
+			}
 		}
 		for j := range d.Pieces {
 			p := &d.Pieces[j]
@@ -13067,21 +13108,11 @@ func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) 
 		if len(typ.Connectors) > 0 {
 			return &typ.Connectors[0]
 		}
-		if typ.Parent != nil {
-			parentType := typesDict[typ.Parent.Guid]
-			return getConnector(typesDict, parentType, connectorGuid)
-		}
 		return nil
 	}
 	for i := range typ.Connectors {
 		if typ.Connectors[i].Guid == *connectorGuid {
 			return &typ.Connectors[i]
-		}
-	}
-	if typ.Parent != nil {
-		parentType := typesDict[typ.Parent.Guid]
-		if connector := getConnector(typesDict, parentType, connectorGuid); connector != nil {
-			return connector
 		}
 	}
 	if len(typ.Connectors) > 0 {

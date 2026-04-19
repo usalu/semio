@@ -1223,6 +1223,8 @@ mod model_types_type {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub parent: Option<TypeId>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        pub families: Option<Vec<TypeId>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub icon: Option<String>,
@@ -1502,8 +1504,17 @@ mod model_types_design {
     // 📐Model Types - Design MUST provide the model types - design functionality.
 
     use super::*;
+    use std::cell::{Cell, RefCell};
 
-    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    fn design_hash_stale_default() -> Cell<bool> {
+        Cell::new(true)
+    }
+
+    fn design_hash_cache_default() -> RefCell<Option<String>> {
+        RefCell::new(None)
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
     /// <summary>📐Design represents an assembly of pieces, connections, layers and groups.</summary>
     /// <remarks>
     /// </remarks>
@@ -1512,6 +1523,8 @@ mod model_types_design {
         pub name: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub parent: Option<DesignId>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub families: Option<Vec<DesignId>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1554,6 +1567,83 @@ mod model_types_design {
         pub created_at: Option<String>,
         #[serde(rename = "updatedAt", skip_serializing_if = "Option::is_none")]
         pub updated_at: Option<String>,
+        /// Lazily recomputed by `hash_design`; mark stale via [`Design::invalidate_hash`] on semantic edits.
+        #[serde(skip, default = "design_hash_stale_default")]
+        pub(crate) hash_stale: Cell<bool>,
+        #[serde(skip, default = "design_hash_cache_default")]
+        pub(crate) content_hash_cache: RefCell<Option<String>>,
+    }
+
+    impl Clone for Design {
+        fn clone(&self) -> Self {
+            Self {
+                guid: self.guid.clone(),
+                name: self.name.clone(),
+                parent: self.parent.clone(),
+                families: self.families.clone(),
+                description: self.description.clone(),
+                icon: self.icon.clone(),
+                image: self.image.clone(),
+                folder: self.folder.clone(),
+                unit: self.unit.clone(),
+                is_abstract: self.is_abstract,
+                can_scale: self.can_scale,
+                can_mirror: self.can_mirror,
+                concepts: self.concepts.clone(),
+                authors: self.authors.clone(),
+                props: self.props.clone(),
+                pieces: self.pieces.clone(),
+                connections: self.connections.clone(),
+                layers: self.layers.clone(),
+                groups: self.groups.clone(),
+                stats: self.stats.clone(),
+                active_layer: self.active_layer.clone(),
+                location: self.location.clone(),
+                attributes: self.attributes.clone(),
+                created_at: self.created_at.clone(),
+                updated_at: self.updated_at.clone(),
+                hash_stale: Cell::new(true),
+                content_hash_cache: RefCell::new(None),
+            }
+        }
+    }
+
+    impl PartialEq for Design {
+        fn eq(&self, other: &Self) -> bool {
+            self.guid == other.guid
+                && self.name == other.name
+                && self.parent == other.parent
+                && self.families == other.families
+                && self.description == other.description
+                && self.icon == other.icon
+                && self.image == other.image
+                && self.folder == other.folder
+                && self.unit == other.unit
+                && self.is_abstract == other.is_abstract
+                && self.can_scale == other.can_scale
+                && self.can_mirror == other.can_mirror
+                && self.concepts == other.concepts
+                && self.authors == other.authors
+                && self.props == other.props
+                && self.pieces == other.pieces
+                && self.connections == other.connections
+                && self.layers == other.layers
+                && self.groups == other.groups
+                && self.stats == other.stats
+                && self.active_layer == other.active_layer
+                && self.location == other.location
+                && self.attributes == other.attributes
+                && self.created_at == other.created_at
+                && self.updated_at == other.updated_at
+        }
+    }
+
+    impl Design {
+        /// Marks the content hash stale so the next `hash_design` recomputes.
+        pub fn invalidate_hash(&self) {
+            self.hash_stale.set(true);
+            *self.content_hash_cache.borrow_mut() = None;
+        }
     }
 } // 📐Design
 pub use model_types_design::*;
@@ -2005,6 +2095,12 @@ mod diff_types {
             deserialize_with = "deserialize_some",
             skip_serializing_if = "Option::is_none"
         )]
+        pub families: Option<Option<Vec<TypeId>>>,
+        #[serde(
+            default,
+            deserialize_with = "deserialize_some",
+            skip_serializing_if = "Option::is_none"
+        )]
         pub description: Option<Option<String>>,
         #[serde(
             default,
@@ -2355,6 +2451,12 @@ mod diff_types {
             skip_serializing_if = "Option::is_none"
         )]
         pub parent: Option<Option<DesignId>>,
+        #[serde(
+            default,
+            deserialize_with = "deserialize_some",
+            skip_serializing_if = "Option::is_none"
+        )]
+        pub families: Option<Option<Vec<DesignId>>>,
         #[serde(
             default,
             deserialize_with = "deserialize_some",
@@ -3135,6 +3237,8 @@ mod meta_and_shallow_types {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub parent: Option<TypeId>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            pub families: Option<Vec<TypeId>>,
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub icon: Option<String>,
@@ -3165,6 +3269,8 @@ mod meta_and_shallow_types {
             pub name: String,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub parent: Option<TypeId>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub families: Option<Vec<TypeId>>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -3209,6 +3315,8 @@ mod meta_and_shallow_types {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub parent: Option<DesignId>,
             #[serde(skip_serializing_if = "Option::is_none")]
+            pub families: Option<Vec<DesignId>>,
+            #[serde(skip_serializing_if = "Option::is_none")]
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub icon: Option<String>,
@@ -3239,6 +3347,8 @@ mod meta_and_shallow_types {
             pub name: String,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub parent: Option<DesignId>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub families: Option<Vec<DesignId>>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub description: Option<String>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -3539,6 +3649,7 @@ mod meta_and_shallow_types {
                     guid: self.guid.clone(),
                     name: self.name.clone(),
                     parent: self.parent.clone(),
+                    families: self.families.clone(),
                     description: self.description.clone(),
                     icon: self.icon.clone(),
                     image: self.image.clone(),
@@ -3558,6 +3669,7 @@ mod meta_and_shallow_types {
                     guid: self.guid.clone(),
                     name: self.name.clone(),
                     parent: self.parent.clone(),
+                    families: self.families.clone(),
                     description: self.description.clone(),
                     icon: self.icon.clone(),
                     image: self.image.clone(),
@@ -3594,6 +3706,7 @@ mod meta_and_shallow_types {
                     guid: self.guid.clone(),
                     name: self.name.clone(),
                     parent: self.parent.clone(),
+                    families: self.families.clone(),
                     description: self.description.clone(),
                     icon: self.icon.clone(),
                     image: self.image.clone(),
@@ -3613,6 +3726,7 @@ mod meta_and_shallow_types {
                     guid: self.guid.clone(),
                     name: self.name.clone(),
                     parent: self.parent.clone(),
+                    families: self.families.clone(),
                     description: self.description.clone(),
                     icon: self.icon.clone(),
                     image: self.image.clone(),
@@ -3856,8 +3970,8 @@ mod apply_diff {
         if let Some(value) = &diff.name {
             item.name = value.clone();
         }
-        if let Some(value) = &diff.parent {
-            item.parent = value.clone();
+        if let Some(value) = &diff.families {
+            item.families = value.clone();
         }
         if let Some(value) = &diff.description {
             item.description = value.clone();
@@ -4075,8 +4189,8 @@ mod apply_diff {
         if let Some(value) = &diff.name {
             item.name = value.clone();
         }
-        if let Some(value) = &diff.parent {
-            item.parent = value.clone();
+        if let Some(value) = &diff.families {
+            item.families = value.clone();
         }
         if let Some(value) = &diff.description {
             item.description = value.clone();
@@ -4122,6 +4236,7 @@ mod apply_diff {
         apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff);
         apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff);
         apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
+        item.invalidate_hash();
     }
 
     /// 📌Creates a mixed design keeping old entities with diff status annotations.
@@ -4514,7 +4629,6 @@ mod kit_change_helpers {
         before.diff_from(after)
     }
 
-
     /// 🔖Computes the inverse of a KitDiff given the original Kit state.
     pub fn inverse_kit_diff(original: &Kit, forward: &KitDiff) -> KitDiff {
         let mut after = original.clone();
@@ -4581,7 +4695,7 @@ mod kit_change_helpers {
         }
 
         // Build the diff - flatten the design to get absolute plane and center for each piece
-        let flat_rep = flatten_design(kit, &design.guid);
+        let flat_rep = kit.flatten_for(design);
         if !flat_rep.ok {
             return SemioReport::err(flat_rep.errors);
         }
@@ -4916,25 +5030,6 @@ mod filter {
                     .collect()
             })
             .unwrap_or_default();
-        pub fn collect_type_ancestors(
-            type_by_guid: &HashMap<String, Type>,
-            used_type_guids: &mut HashSet<String>,
-            type_guid: &str,
-        ) {
-            let Some(type_item) = type_by_guid.get(type_guid) else {
-                return;
-            };
-            let Some(parent) = type_item.parent.as_ref() else {
-                return;
-            };
-            if used_type_guids.insert(parent.guid.clone()) {
-                collect_type_ancestors(type_by_guid, used_type_guids, &parent.guid);
-            }
-        }
-        let type_snapshot: Vec<String> = used_type_guids.iter().cloned().collect();
-        for type_guid in type_snapshot {
-            collect_type_ancestors(&type_by_guid, &mut used_type_guids, &type_guid);
-        }
 
         let all_tags: &[Tag] = kit.tags.as_deref().unwrap_or(&[]);
         let mut resolved_tag_guids: Vec<String> = Vec::new();
@@ -5564,6 +5659,12 @@ mod flatten_design {
         flatten_design_report_from_change(kit, design_guid, change)
     }
 
+    /// Same outcome as [`flatten_design`], but takes the in-kit [`Design`] handle (see [`Kit::flatten_for`]).
+    #[inline]
+    pub fn flatten_design_by_handle(kit: &Kit, design: &Design) -> SemioReport<DesignChange> {
+        kit.flatten_for(design)
+    }
+
     /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
     /// <remarks>
     /// </remarks>
@@ -5810,7 +5911,7 @@ mod flatten_design {
     /// <remarks>
     /// </remarks>
     pub fn get_connector_from_type<'a>(
-        types_map: &HashMap<&str, &'a Type>,
+        _types_map: &HashMap<&str, &'a Type>,
         t: &'a Type,
         connector_guid: Option<&str>,
     ) -> Option<&'a Connector> {
@@ -5819,11 +5920,6 @@ mod flatten_design {
                 if let Some(connectors) = &t.connectors {
                     if !connectors.is_empty() {
                         return Some(&connectors[0]);
-                    }
-                }
-                if let Some(parent_ref) = &t.parent {
-                    if let Some(parent) = types_map.get(parent_ref.guid.as_str()) {
-                        return get_connector_from_type(types_map, parent, connector_guid);
                     }
                 }
                 None
@@ -5835,16 +5931,6 @@ mod flatten_design {
                             return Some(c);
                         }
                     }
-                }
-                if let Some(parent_ref) = &t.parent {
-                    if let Some(parent) = types_map.get(parent_ref.guid.as_str()) {
-                        if let Some(c) = get_connector_from_type(types_map, parent, connector_guid)
-                        {
-                            return Some(c);
-                        }
-                    }
-                }
-                if let Some(connectors) = &t.connectors {
                     if !connectors.is_empty() {
                         return Some(&connectors[0]);
                     }
@@ -6858,6 +6944,7 @@ mod copy_paste_design {
             pieces: Some(copy_pieces),
             connections: Some(copy_connections),
             parent: None,
+            families: None,
             description: None,
             icon: None,
             image: None,
@@ -6877,6 +6964,8 @@ mod copy_paste_design {
             attributes: None,
             created_at: None,
             updated_at: None,
+            hash_stale: std::cell::Cell::new(true),
+            content_hash_cache: std::cell::RefCell::new(None),
         }
     }
 
@@ -9502,6 +9591,7 @@ mod sqlite_import_export {
                     guid: type_guid,
                     name,
                     parent: parent.map(|g| TypeId { guid: g }),
+                    families: None,
                     description,
                     icon,
                     image,
@@ -9647,6 +9737,7 @@ mod sqlite_import_export {
                     guid: design_guid,
                     name,
                     parent: parent.map(|g| DesignId { guid: g }),
+                    families: None,
                     description,
                     icon,
                     image,
@@ -9684,6 +9775,8 @@ mod sqlite_import_export {
                     attributes: None,
                     created_at: None,
                     updated_at: None,
+                    hash_stale: std::cell::Cell::new(true),
+                    content_hash_cache: std::cell::RefCell::new(None),
                 });
             }
 
@@ -10185,9 +10278,8 @@ mod kit_workflow {
 
             let asset_path = root_path.join(old_path);
             if asset_path.exists() {
-                std::fs::remove_file(&asset_path).map_err(|error| {
-                    io_semio_error("Failed to remove stale local asset", error)
-                })?;
+                std::fs::remove_file(&asset_path)
+                    .map_err(|error| io_semio_error("Failed to remove stale local asset", error))?;
             }
 
             let mut current = asset_path.parent();
@@ -10281,10 +10373,7 @@ mod kit_workflow {
                     }
                     Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
                     Err(error) => {
-                        return Err(io_semio_error(
-                            "Failed to read local kit asset file",
-                            error,
-                        ))
+                        return Err(io_semio_error("Failed to read local kit asset file", error))
                     }
                 }
             }
@@ -11302,9 +11391,12 @@ mod hash {
             }
             w.write_string("name");
             w.write_string(&t.name);
-            if let Some(pid) = &t.parent {
-                w.write_string("parent");
-                w.write_string(&pid.guid);
+            if let Some(v) = &t.families {
+                if !v.is_empty() {
+                    w.write_string("families");
+                    let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+                    w.write_guid_list(&guids);
+                }
             }
             if let Some(v) = &t.props {
                 if !v.is_empty() {
@@ -11546,6 +11638,22 @@ mod hash {
         }
 
         pub fn hash_design(d: &Design) -> String {
+            if !d.hash_stale.get() {
+                if let Ok(cache) = d.content_hash_cache.try_borrow() {
+                    if let Some(h) = cache.as_ref() {
+                        return h.clone();
+                    }
+                }
+            }
+            let h = hash_design_uncached(d);
+            if let Ok(mut cache) = d.content_hash_cache.try_borrow_mut() {
+                *cache = Some(h.clone());
+                d.hash_stale.set(false);
+            }
+            h
+        }
+
+        fn hash_design_uncached(d: &Design) -> String {
             let mut w = HashWriter::new();
             w.write_string("Design");
             if let Some(al) = &d.active_layer {
@@ -11630,9 +11738,12 @@ mod hash {
             }
             w.write_string("name");
             w.write_string(&d.name);
-            if let Some(pid) = &d.parent {
-                w.write_string("parent");
-                w.write_string(&pid.guid);
+            if let Some(v) = &d.families {
+                if !v.is_empty() {
+                    w.write_string("families");
+                    let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+                    w.write_guid_list(&guids);
+                }
             }
             if let Some(v) = &d.pieces {
                 if !v.is_empty() {
@@ -12608,13 +12719,14 @@ mod hash {
                 w.write_string("name");
                 w.write_string(s);
             }
-            match &d.parent {
-                Some(Some(tid)) => {
-                    w.write_string("parent");
-                    w.write_string(&tid.guid);
+            match &d.families {
+                Some(Some(v)) if !v.is_empty() => {
+                    w.write_string("families");
+                    let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+                    w.write_guid_list(&guids);
                 }
-                Some(None) => {
-                    w.write_string("parent");
+                Some(_) => {
+                    w.write_string("families");
                     w.write_bool(false);
                 }
                 None => {}
@@ -13284,13 +13396,14 @@ mod hash {
                 w.write_string("name");
                 w.write_string(s);
             }
-            match &d.parent {
-                Some(Some(did)) => {
-                    w.write_string("parent");
-                    w.write_string(&did.guid);
+            match &d.families {
+                Some(Some(v)) if !v.is_empty() => {
+                    w.write_string("families");
+                    let guids: Vec<String> = v.iter().map(|x| x.guid.clone()).collect();
+                    w.write_guid_list(&guids);
                 }
-                Some(None) => {
-                    w.write_string("parent");
+                Some(_) => {
+                    w.write_string("families");
                     w.write_bool(false);
                 }
                 None => {}
@@ -13669,6 +13782,84 @@ mod finder_functions {
     /// </remarks>
     pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
         design.stats.as_ref()?.iter().find(|s| s.guid == guid)
+    }
+
+    // ——— Handle-based (pointer identity first, then GUID for detached copies)
+
+    #[inline]
+    pub fn find_design_in_kit_by_handle<'a>(kit: &'a Kit, design: &Design) -> Option<&'a Design> {
+        kit.find_design_entity(design)
+    }
+
+    #[inline]
+    pub fn find_type_in_kit_by_handle<'a>(kit: &'a Kit, t: &Type) -> Option<&'a Type> {
+        kit.find_type_entity(t)
+    }
+
+    #[inline]
+    pub fn find_tag_in_kit_by_handle<'a>(kit: &'a Kit, tag: &Tag) -> Option<&'a Tag> {
+        kit.find_tag(tag)
+    }
+
+    #[inline]
+    pub fn find_concept_in_kit_by_handle<'a>(kit: &'a Kit, c: &Concept) -> Option<&'a Concept> {
+        kit.find_concept(c)
+    }
+
+    #[inline]
+    pub fn find_interface_in_kit_by_handle<'a>(kit: &'a Kit, p: &Port) -> Option<&'a Port> {
+        kit.find_port(p)
+    }
+
+    #[inline]
+    pub fn find_quality_in_kit_by_handle<'a>(kit: &'a Kit, q: &Quality) -> Option<&'a Quality> {
+        kit.find_quality(q)
+    }
+
+    #[inline]
+    pub fn find_file_in_kit_by_handle<'a>(kit: &'a Kit, f: &File) -> Option<&'a File> {
+        kit.find_file(f)
+    }
+
+    #[inline]
+    pub fn find_folder_in_kit_by_handle<'a>(kit: &'a Kit, f: &Folder) -> Option<&'a Folder> {
+        kit.find_folder(f)
+    }
+
+    #[inline]
+    pub fn find_author_in_kit_by_handle<'a>(kit: &'a Kit, a: &Author) -> Option<&'a Author> {
+        kit.find_author(a)
+    }
+
+    #[inline]
+    pub fn find_piece_in_design_by_handle<'a>(
+        design: &'a Design,
+        piece: &Piece,
+    ) -> Option<&'a Piece> {
+        design.find_piece(piece)
+    }
+
+    #[inline]
+    pub fn find_connection_in_design_by_handle<'a>(
+        design: &'a Design,
+        c: &Connection,
+    ) -> Option<&'a Connection> {
+        design.find_connection(c)
+    }
+
+    #[inline]
+    pub fn find_layer_in_design_by_handle<'a>(design: &'a Design, layer: &Layer) -> Option<&'a Layer> {
+        design.find_layer(layer)
+    }
+
+    #[inline]
+    pub fn find_group_in_design_by_handle<'a>(design: &'a Design, group: &Group) -> Option<&'a Group> {
+        design.find_group(group)
+    }
+
+    #[inline]
+    pub fn find_stat_in_design_by_handle<'a>(design: &'a Design, stat: &Stat) -> Option<&'a Stat> {
+        design.find_stat(stat)
     }
 
     /// ✔️For each piece, it checks piece-level props first, then falls back to type-level props.
@@ -14116,12 +14307,7 @@ mod kit_diff_validation {
             } else if let Some(dm) = da.as_object() {
                 let auth_base: Vec<Map<String, Value>> = kit_map
                     .get("authors")
-                    .map(|v| {
-                        to_map_slice(v)
-                            .into_iter()
-                            .map(|m| (*m).clone())
-                            .collect()
-                    })
+                    .map(|v| to_map_slice(v).into_iter().map(|m| (*m).clone()).collect())
                     .unwrap_or_default();
                 let nested = Value::Object(dm.clone());
                 let _ = validate_guid_collection_diff(
@@ -14137,12 +14323,7 @@ mod kit_diff_validation {
         if let Some(pd) = diff.get("pieces").and_then(|x| x.as_object()) {
             let pieces_base: Vec<Map<String, Value>> = design
                 .get("pieces")
-                .map(|v| {
-                    to_map_slice(v)
-                        .into_iter()
-                        .map(|m| (*m).clone())
-                        .collect()
-                })
+                .map(|v| to_map_slice(v).into_iter().map(|m| (*m).clone()).collect())
                 .unwrap_or_default();
             let pv = Value::Object(pd.clone());
             let _ = validate_guid_collection_diff(
@@ -14207,16 +14388,12 @@ mod kit_diff_validation {
         };
         let base_slice: Vec<Map<String, Value>> = kit_map
             .get(arr_key)
-            .map(|v| {
-                to_map_slice(v)
-                    .into_iter()
-                    .map(|m| (*m).clone())
-                    .collect()
-            })
+            .map(|v| to_map_slice(v).into_iter().map(|m| (*m).clone()).collect())
             .unwrap_or_default();
-        let fixed = validate_guid_collection_diff(ctx, key, id_key, &base_slice, part, |c, item, dm, p| {
-            on_updated(c, item, dm, p);
-        });
+        let fixed =
+            validate_guid_collection_diff(ctx, key, id_key, &base_slice, part, |c, item, dm, p| {
+                on_updated(c, item, dm, p);
+            });
         if heal {
             if let Some(od) = out_diff {
                 match fixed {
@@ -14287,11 +14464,8 @@ mod kit_diff_validation {
                 diff: None,
             };
         };
-        let mut out_diff: Option<Map<String, Value>> = if heal {
-            Some(diff_map.clone())
-        } else {
-            None
-        };
+        let mut out_diff: Option<Map<String, Value>> =
+            if heal { Some(diff_map.clone()) } else { None };
         let refs = RefSets {
             type_guids: guid_set_from_entities(kit_map.get("types").unwrap_or(&Value::Null)),
             design_guids: guid_set_from_entities(kit_map.get("designs").unwrap_or(&Value::Null)),
@@ -14406,12 +14580,7 @@ mod kit_diff_validation {
         if let Some(a) = diff_map.get("attributes") {
             let attr_base: Vec<Map<String, Value>> = kit_map
                 .get("attributes")
-                .map(|v| {
-                    to_map_slice(v)
-                        .into_iter()
-                        .map(|m| (*m).clone())
-                        .collect()
-                })
+                .map(|v| to_map_slice(v).into_iter().map(|m| (*m).clone()).collect())
                 .unwrap_or_default();
             let _ = validate_guid_collection_diff(
                 &mut ctx,
@@ -14441,7 +14610,6 @@ mod kit_diff_validation {
             diff: diff_out,
         }
     }
-
 } // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
 
@@ -14564,58 +14732,80 @@ mod kit_graph {
         }
 
         pub fn set_backbone(&self, backbone: Option<Box<dyn KitBackbone>>) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             g.backbone = backbone;
             Ok(())
         }
 
         pub fn set_strict_mode(&self, strict: bool) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             g.strict_mode = strict;
             Ok(())
         }
 
         pub fn clear_conflict(&self) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             g.is_conflicted = false;
             Ok(())
         }
 
         pub fn map_kit<T, F: FnOnce(&Kit) -> T>(&self, f: F) -> Result<T> {
-            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             Ok(f(&g.kit))
         }
 
         pub fn map_kit_mut<T, F: FnOnce(&mut Kit) -> T>(&self, f: F) -> Result<T> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             Ok(f(&mut g.kit))
         }
 
         /// Validates against the current kit, inverts, applies, then records transaction/history/backbone (see [`KitCommitOptions`]).
         pub fn commit(&self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             g.commit_graph(diff, opts)
         }
 
         pub fn start_transaction(&self) -> Result<String> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
-                    message: "Kit has unresolved validation conflicts; call clear_conflict() first".into(),
+                    message: "Kit has unresolved validation conflicts; call clear_conflict() first"
+                        .into(),
                 });
             }
             let id = guid();
@@ -14632,18 +14822,22 @@ mod kit_graph {
         }
 
         pub fn abort_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
-            let tx = g
-                .open_transactions
-                .remove(transaction_id)
-                .ok_or_else(|| SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", transaction_id),
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
                 })?;
+            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
+                SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                }
+            })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted; call clear_conflict() before aborting a transaction".into(),
+                    message:
+                        "Kit is conflicted; call clear_conflict() before aborting a transaction"
+                            .into(),
                 });
             }
             for step in tx.steps.iter().rev() {
@@ -14653,20 +14847,24 @@ mod kit_graph {
         }
 
         pub fn finalize_transaction(&self, transaction_id: &str) -> Result<KitGraphChange> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted; call clear_conflict() before finalizing a transaction".into(),
+                    message:
+                        "Kit is conflicted; call clear_conflict() before finalizing a transaction"
+                            .into(),
                 });
             }
-            let tx = g
-                .open_transactions
-                .remove(transaction_id)
-                .ok_or_else(|| SemioError::InvalidOperation {
+            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
+                SemioError::InvalidOperation {
                     message: format!("Unknown transaction {}", transaction_id),
-                })?;
+                }
+            })?;
             let sk = &tx.start_kit;
             let forward_raw = get_kit_diff(sk, &g.kit);
             let validation = validate_kit_diff(sk, &forward_raw, false);
@@ -14692,7 +14890,10 @@ mod kit_graph {
                         .join("; "),
                 });
             }
-            let diff_to_apply = validation.diff.clone().unwrap_or_else(|| forward_raw.clone());
+            let diff_to_apply = validation
+                .diff
+                .clone()
+                .unwrap_or_else(|| forward_raw.clone());
             let backward = inverse_kit_diff(sk, &diff_to_apply);
             let squashed = KitGraphChange {
                 forward: diff_to_apply,
@@ -14708,9 +14909,12 @@ mod kit_graph {
         }
 
         pub fn undo_within_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
                     message: "Kit is conflicted".into(),
@@ -14722,7 +14926,10 @@ mod kit_graph {
                 });
             }
             let ch = {
-                let tx = g.open_transactions.get_mut(transaction_id).expect("transaction id checked");
+                let tx = g
+                    .open_transactions
+                    .get_mut(transaction_id)
+                    .expect("transaction id checked");
                 tx.steps.pop()
             };
             let Some(ch) = ch else { return Ok(()) };
@@ -14736,9 +14943,12 @@ mod kit_graph {
         }
 
         pub fn redo_within_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
                     message: "Kit is conflicted".into(),
@@ -14750,7 +14960,10 @@ mod kit_graph {
                 });
             }
             let ch = {
-                let tx = g.open_transactions.get_mut(transaction_id).expect("transaction id checked");
+                let tx = g
+                    .open_transactions
+                    .get_mut(transaction_id)
+                    .expect("transaction id checked");
                 tx.redo_steps.pop()
             };
             let Some(ch) = ch else { return Ok(()) };
@@ -14764,9 +14977,12 @@ mod kit_graph {
         }
 
         pub fn undo_history(&self) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
                     message: "Kit is conflicted".into(),
@@ -14781,9 +14997,12 @@ mod kit_graph {
         }
 
         pub fn redo_history(&self) -> Result<()> {
-            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             if g.is_conflicted {
                 return Err(SemioError::InvalidOperation {
                     message: "Kit is conflicted".into(),
@@ -14798,22 +15017,32 @@ mod kit_graph {
         }
 
         pub fn can_undo_history(&self) -> Result<bool> {
-            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             Ok(!g.history_past.is_empty())
         }
 
         pub fn can_redo_history(&self) -> Result<bool> {
-            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
-                message: "KitGraphSession mutex poisoned".into(),
-            })?;
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
             Ok(!g.history_future.is_empty())
         }
     }
 
     impl KitGraphSessionInner {
-        fn commit_graph(&mut self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+        fn commit_graph(
+            &mut self,
+            diff: KitDiff,
+            opts: KitCommitOptions,
+        ) -> Result<KitGraphChange> {
             if self.is_conflicted {
                 return Err(SemioError::InvalidOperation {
                     message: "Kit has unresolved validation conflicts; call clear_conflict() before applying further changes."
@@ -14856,8 +15085,10 @@ mod kit_graph {
             };
 
             if let Some(tx_id) = &opts.transaction_id {
-                let tx = self.open_transactions.get_mut(tx_id).ok_or_else(|| SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", tx_id),
+                let tx = self.open_transactions.get_mut(tx_id).ok_or_else(|| {
+                    SemioError::InvalidOperation {
+                        message: format!("Unknown transaction {}", tx_id),
+                    }
                 })?;
                 tx.steps.push(change.clone());
                 tx.redo_steps.clear();
@@ -14879,10 +15110,13 @@ mod kit_graph {
     }
 
     /// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
-    pub fn commit_kit_graph_change(session: &KitGraphSession, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+    pub fn commit_kit_graph_change(
+        session: &KitGraphSession,
+        diff: KitDiff,
+        opts: KitCommitOptions,
+    ) -> Result<KitGraphChange> {
         session.commit(diff, opts)
     }
-
 }
 pub use kit_graph::*;
 
@@ -14951,7 +15185,6 @@ mod oop {
                 z: self.z * factor,
             }
         }
-
     }
 
     impl Point {
@@ -14995,9 +15228,7 @@ mod oop {
 
     impl IdDto {
         pub fn new(guid: impl Into<String>) -> Self {
-            Self {
-                guid: guid.into(),
-            }
+            Self { guid: guid.into() }
         }
 
         pub fn as_guid(&self) -> &str {
@@ -15034,10 +15265,7 @@ mod oop {
         }
 
         pub fn add_child(&mut self, field: impl Into<String>, child: InputDto) {
-            self.children
-                .entry(field.into())
-                .or_default()
-                .push(child);
+            self.children.entry(field.into()).or_default().push(child);
         }
 
         pub fn validate(&self) -> bool {
@@ -15108,7 +15336,10 @@ mod oop {
 
     impl ShallowDtoTrait for ShallowRecord {
         fn add_child_view(&mut self, field: impl Into<String>, child: MetadataRecord) {
-            self.child_views.entry(field.into()).or_default().push(child);
+            self.child_views
+                .entry(field.into())
+                .or_default()
+                .push(child);
         }
 
         fn flatten_children(&self) -> Vec<MetadataRecord> {
@@ -15154,309 +15385,309 @@ mod oop {
         fn compute_derived(&mut self) {}
     }
 
-        // region generated oop_dto_entities (semio/rs/gen_dto_wrappers.py)
-        // Per-entity DTO newtypes (generated)
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct KitIdDto(pub IdDto);
+    // region generated oop_dto_entities (semio/rs/gen_dto_wrappers.py)
+    // Per-entity DTO newtypes (generated)
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct KitIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct KitInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct KitInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct KitMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct KitMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct KitShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct KitShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct KitFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct AttributeIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct KitFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct AttributeIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AttributeInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AttributeInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AttributeMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AttributeMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AttributeShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AttributeShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AttributeFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct AuthorIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AttributeFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct AuthorIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AuthorInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AuthorInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AuthorMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AuthorMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AuthorShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AuthorShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct AuthorFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct LocationIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct AuthorFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct LocationIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LocationInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LocationInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LocationMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LocationMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LocationShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LocationShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LocationFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct FolderIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LocationFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct FolderIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FolderInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FolderInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FolderMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FolderMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FolderShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FolderShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FolderFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct FileIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FolderFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct FileIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FileInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FileInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FileMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FileMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FileShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FileShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct FileFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct ConceptIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FileFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct ConceptIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConceptInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConceptInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConceptMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConceptMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConceptShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConceptShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConceptFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct QualityIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConceptFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct QualityIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct QualityInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct QualityInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct QualityMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct QualityMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct QualityShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct QualityShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct QualityFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct BenchmarkIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct QualityFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct BenchmarkIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct BenchmarkInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct BenchmarkInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct BenchmarkMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct BenchmarkMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct BenchmarkShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct BenchmarkShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct BenchmarkFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct StatIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct BenchmarkFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct StatIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct StatInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct StatInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct StatMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct StatMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct StatShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct StatShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct StatFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct TagIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct StatFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct TagIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TagInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TagInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TagMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TagMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TagShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TagShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TagFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct ModelIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TagFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct ModelIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ModelInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ModelInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ModelMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ModelMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ModelShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ModelShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ModelFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct PortIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ModelFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct PortIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PortInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PortInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PortMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PortMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PortShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PortShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PortFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct ConnectorIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PortFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct ConnectorIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectorInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectorInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectorMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectorMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectorShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectorShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectorFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct PropIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectorFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct PropIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PropInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PropInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PropMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PropMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PropShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PropShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PropFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct LayerIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PropFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct LayerIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LayerInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LayerInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LayerMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LayerMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LayerShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LayerShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct LayerFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct GroupIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct LayerFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct GroupIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct GroupInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct GroupInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct GroupMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct GroupMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct GroupShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct GroupShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct GroupFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct PieceIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct GroupFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct PieceIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PieceInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PieceInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PieceMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PieceMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PieceShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PieceShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct PieceFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct ConnectionIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct PieceFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct ConnectionIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectionInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectionInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectionMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectionMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectionShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectionShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct ConnectionFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct TypeIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ConnectionFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct TypeIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TypeInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TypeInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TypeMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TypeMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TypeShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TypeShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct TypeFullDto(pub FullRecord);
-        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-        pub struct DesignIdDto(pub IdDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct TypeFullDto(pub FullRecord);
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct DesignIdDto(pub IdDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct DesignInputDto(pub InputDto);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct DesignInputDto(pub InputDto);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct DesignMetadataDto(pub MetadataRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct DesignMetadataDto(pub MetadataRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct DesignShallowDto(pub ShallowRecord);
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct DesignShallowDto(pub ShallowRecord);
 
-        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-        pub struct DesignFullDto(pub FullRecord);
-        // endregion generated oop_dto_entities
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct DesignFullDto(pub FullRecord);
+    // endregion generated oop_dto_entities
 
     // ——— Store trait (diagram: abstract Store)
 
     pub trait Store: HasGuid + Serialize {
         fn get_name(&self) -> &str;
-        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()>;
+        fn update_description(&mut self, description: &str) -> Result<()>;
         fn to_id_dto(&self) -> IdDto {
             IdDto::new(self.guid())
         }
@@ -15506,13 +15737,8 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            if self.guid != kit.guid {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit Store update_description requires context kit with matching guid".into(),
-                });
-            }
-            kit.description = Some(description.to_string());
+        fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
             Ok(())
         }
 
@@ -15526,8 +15752,9 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            Concept::update_description(self, kit, description)
+        fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
+            Ok(())
         }
 
         fn to_input_dto(&self) -> InputDto {
@@ -15540,8 +15767,9 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            Tag::update_description(self, kit, description)
+        fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
+            Ok(())
         }
 
         fn to_input_dto(&self) -> InputDto {
@@ -15554,7 +15782,7 @@ mod oop {
             &self.key
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15568,7 +15796,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15582,7 +15810,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15596,7 +15824,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15610,7 +15838,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15624,7 +15852,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15638,7 +15866,7 @@ mod oop {
             self.guid.as_str()
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15652,7 +15880,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15666,7 +15894,7 @@ mod oop {
             self.name.as_deref().unwrap_or(self.guid.as_str())
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15680,7 +15908,7 @@ mod oop {
             self.guid.as_str()
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15694,7 +15922,7 @@ mod oop {
             &self.path
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15708,7 +15936,7 @@ mod oop {
             self.name.as_deref().unwrap_or(self.guid.as_str())
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15722,7 +15950,7 @@ mod oop {
             self.name.as_deref().unwrap_or(self.guid.as_str())
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15736,7 +15964,7 @@ mod oop {
             self.guid.as_str()
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15750,7 +15978,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15764,32 +15992,9 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            let before = kit
-                .designs
-                .as_ref()
-                .and_then(|d| d.iter().find(|x| x.guid == self.guid))
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Design".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.description = Some(description.to_string());
-            let kd = KitDiff {
-                guid: kit.guid.clone(),
-                designs: Some(CollectionDiff {
-                    updated: Some(vec![DiffUpdate {
-                        key: "design".into(),
-                        guid: self.guid.clone(),
-                        diff: before.diff_from(&after),
-                    }]),
-                    removed: None,
-                    added: None,
-                }),
-                ..KitDiff::default()
-            };
-            apply_kit_diff(kit, &kd);
+        fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
+            self.invalidate_hash();
             Ok(())
         }
 
@@ -15803,7 +16008,7 @@ mod oop {
             self.name.as_deref().unwrap_or(self.guid.as_str())
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15817,7 +16022,7 @@ mod oop {
             &self.name
         }
 
-        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+        fn update_description(&mut self, _description: &str) -> Result<()> {
             Ok(())
         }
 
@@ -15927,7 +16132,6 @@ mod oop {
             });
         }
     }
-
 
     pub trait Actor {
         fn get_name(&self) -> &str;
@@ -16313,8 +16517,8 @@ mod oop {
             if self.name != after.name {
                 diff.name = Some(after.name.clone());
             }
-            if self.parent != after.parent {
-                diff.parent = Some(after.parent.clone());
+            if self.families != after.families {
+                diff.families = Some(after.families.clone());
             }
             if self.description != after.description {
                 diff.description = Some(after.description.clone());
@@ -16349,11 +16553,11 @@ mod oop {
             if self.authors != after.authors {
                 diff.authors = Some(after.authors.clone());
             }
-            diff.props = get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| {
+            diff.props =
+                get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+            diff.models = get_guid_collection_diff(&self.models, &after.models, "model", |b, a| {
                 b.diff_from(a)
             });
-            diff.models =
-                get_guid_collection_diff(&self.models, &after.models, "model", |b, a| b.diff_from(a));
             diff.connectors = get_guid_collection_diff(
                 &self.connectors,
                 &after.connectors,
@@ -16776,6 +16980,11 @@ mod oop {
     }
 
     impl Kit {
+        /// Flatten a design that belongs to this kit (graph layout); same as `flatten_design(kit, &design.guid)`.
+        pub fn flatten_for(&self, design: &Design) -> SemioReport<DesignChange> {
+            flatten_design(self, &design.guid)
+        }
+
         /// Computes a structural diff from `self` to `after` (replaces `get_kit_diff` logic).
         pub fn diff_from(&self, after: &Kit) -> KitDiff {
             let mut diff = KitDiff {
@@ -16823,12 +17032,10 @@ mod oop {
                 });
             diff.ports =
                 get_guid_collection_diff(&self.ports, &after.ports, "port", |b, a| b.diff_from(a));
-            diff.qualities = get_guid_collection_diff(
-                &self.qualities,
-                &after.qualities,
-                "quality",
-                |b, a| b.diff_from(a),
-            );
+            diff.qualities =
+                get_guid_collection_diff(&self.qualities, &after.qualities, "quality", |b, a| {
+                    b.diff_from(a)
+                });
             diff.files =
                 get_guid_collection_diff(&self.files, &after.files, "file", |b, a| b.diff_from(a));
             diff.folders =
@@ -16849,39 +17056,66 @@ mod oop {
         }
 
         pub fn find_type_entity<'a>(&'a self, t: &Type) -> Option<&'a Type> {
-            self.types.as_ref()?.iter().find(|x| x.guid == t.guid)
+            self.types.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Type>(*x), std::ptr::from_ref(t))
+                    || (*x).guid == t.guid
+            })
         }
 
         pub fn find_design_entity<'a>(&'a self, d: &Design) -> Option<&'a Design> {
-            self.designs.as_ref()?.iter().find(|x| x.guid == d.guid)
+            self.designs.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Design>(*x), std::ptr::from_ref(d))
+                    || (*x).guid == d.guid
+            })
         }
 
         pub fn find_tag<'a>(&'a self, tag: &Tag) -> Option<&'a Tag> {
-            self.tags.as_ref()?.iter().find(|x| x.guid == tag.guid)
+            self.tags.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Tag>(*x), std::ptr::from_ref(tag))
+                    || (*x).guid == tag.guid
+            })
         }
 
         pub fn find_concept<'a>(&'a self, c: &Concept) -> Option<&'a Concept> {
-            self.concepts.as_ref()?.iter().find(|x| x.guid == c.guid)
+            self.concepts.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Concept>(*x), std::ptr::from_ref(c))
+                    || (*x).guid == c.guid
+            })
         }
 
         pub fn find_port<'a>(&'a self, p: &Port) -> Option<&'a Port> {
-            self.ports.as_ref()?.iter().find(|x| x.guid == p.guid)
+            self.ports.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Port>(*x), std::ptr::from_ref(p))
+                    || (*x).guid == p.guid
+            })
         }
 
         pub fn find_quality<'a>(&'a self, q: &Quality) -> Option<&'a Quality> {
-            self.qualities.as_ref()?.iter().find(|x| x.guid == q.guid)
+            self.qualities.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Quality>(*x), std::ptr::from_ref(q))
+                    || (*x).guid == q.guid
+            })
         }
 
         pub fn find_file<'a>(&'a self, f: &File) -> Option<&'a File> {
-            self.files.as_ref()?.iter().find(|x| x.guid == f.guid)
+            self.files.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<File>(*x), std::ptr::from_ref(f))
+                    || (*x).guid == f.guid
+            })
         }
 
         pub fn find_folder<'a>(&'a self, f: &Folder) -> Option<&'a Folder> {
-            self.folders.as_ref()?.iter().find(|x| x.guid == f.guid)
+            self.folders.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Folder>(*x), std::ptr::from_ref(f))
+                    || (*x).guid == f.guid
+            })
         }
 
         pub fn find_author<'a>(&'a self, a: &Author) -> Option<&'a Author> {
-            self.authors.as_ref()?.iter().find(|x| x.guid == a.guid)
+            self.authors.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Author>(*x), std::ptr::from_ref(a))
+                    || (*x).guid == a.guid
+            })
         }
 
         pub fn create_tag(&mut self, tag: Tag) -> Result<()> {
@@ -16906,7 +17140,9 @@ mod oop {
             let Some(v) = self.tags.as_mut() else {
                 return Ok(());
             };
-            v.retain(|t| t.guid != tag.guid);
+            v.retain(|t| {
+                !(std::ptr::eq(std::ptr::from_ref(&*t), std::ptr::from_ref(tag)) || t.guid == tag.guid)
+            });
             Ok(())
         }
 
@@ -16939,7 +17175,9 @@ mod oop {
             let Some(v) = self.concepts.as_mut() else {
                 return Ok(());
             };
-            v.retain(|x| x.guid != c.guid);
+            v.retain(|x| {
+                !(std::ptr::eq(std::ptr::from_ref(&*x), std::ptr::from_ref(c)) || x.guid == c.guid)
+            });
             Ok(())
         }
 
@@ -16972,7 +17210,9 @@ mod oop {
             let Some(v) = self.ports.as_mut() else {
                 return Ok(());
             };
-            v.retain(|x| x.guid != p.guid);
+            v.retain(|x| {
+                !(std::ptr::eq(std::ptr::from_ref(&*x), std::ptr::from_ref(p)) || x.guid == p.guid)
+            });
             Ok(())
         }
 
@@ -17005,7 +17245,9 @@ mod oop {
             let Some(v) = self.qualities.as_mut() else {
                 return Ok(());
             };
-            v.retain(|x| x.guid != q.guid);
+            v.retain(|x| {
+                !(std::ptr::eq(std::ptr::from_ref(&*x), std::ptr::from_ref(q)) || x.guid == q.guid)
+            });
             Ok(())
         }
 
@@ -17038,7 +17280,9 @@ mod oop {
             let Some(v) = self.types.as_mut() else {
                 return Ok(());
             };
-            v.retain(|x| x.guid != t.guid);
+            v.retain(|x| {
+                !(std::ptr::eq(std::ptr::from_ref(&*x), std::ptr::from_ref(t)) || x.guid == t.guid)
+            });
             Ok(())
         }
 
@@ -17071,7 +17315,9 @@ mod oop {
             let Some(v) = self.designs.as_mut() else {
                 return Ok(());
             };
-            v.retain(|x| x.guid != d.guid);
+            v.retain(|x| {
+                !(std::ptr::eq(std::ptr::from_ref(&*x), std::ptr::from_ref(d)) || x.guid == d.guid)
+            });
             Ok(())
         }
 
@@ -17092,8 +17338,8 @@ mod oop {
             if self.name != after.name {
                 diff.name = Some(after.name.clone());
             }
-            if self.parent != after.parent {
-                diff.parent = Some(after.parent.clone());
+            if self.families != after.families {
+                diff.families = Some(after.families.clone());
             }
             if self.description != after.description {
                 diff.description = Some(after.description.clone());
@@ -17130,18 +17376,21 @@ mod oop {
             }
             diff.props =
                 get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-            diff.pieces =
-                get_guid_collection_diff(&self.pieces, &after.pieces, "piece", |b, a| b.diff_from(a));
+            diff.pieces = get_guid_collection_diff(&self.pieces, &after.pieces, "piece", |b, a| {
+                b.diff_from(a)
+            });
             diff.connections = get_guid_collection_diff(
                 &self.connections,
                 &after.connections,
                 "connection",
                 |b, a| b.diff_from(a),
             );
-            diff.layers =
-                get_guid_collection_diff(&self.layers, &after.layers, "layer", |b, a| b.diff_from(a));
-            diff.groups =
-                get_guid_collection_diff(&self.groups, &after.groups, "group", |b, a| b.diff_from(a));
+            diff.layers = get_guid_collection_diff(&self.layers, &after.layers, "layer", |b, a| {
+                b.diff_from(a)
+            });
+            diff.groups = get_guid_collection_diff(&self.groups, &after.groups, "group", |b, a| {
+                b.diff_from(a)
+            });
             diff.stats =
                 get_guid_collection_diff(&self.stats, &after.stats, "stat", |b, a| b.diff_from(a));
             diff.attributes = get_guid_collection_diff(
@@ -17154,18 +17403,42 @@ mod oop {
         }
 
         pub fn find_piece<'a>(&'a self, piece: &Piece) -> Option<&'a Piece> {
-            self.pieces.as_ref()?.iter().find(|p| p.guid == piece.guid)
+            self.pieces.as_ref()?.iter().find(|p| {
+                std::ptr::eq(std::ptr::from_ref::<Piece>(*p), std::ptr::from_ref(piece))
+                    || (*p).guid == piece.guid
+            })
         }
 
         pub fn find_connection<'a>(&'a self, c: &Connection) -> Option<&'a Connection> {
-            self.connections
-                .as_ref()?
-                .iter()
-                .find(|x| x.guid == c.guid)
+            self.connections.as_ref()?.iter().find(|x| {
+                std::ptr::eq(std::ptr::from_ref::<Connection>(*x), std::ptr::from_ref(c))
+                    || (*x).guid == c.guid
+            })
+        }
+
+        pub fn find_layer<'a>(&'a self, layer: &Layer) -> Option<&'a Layer> {
+            self.layers.as_ref()?.iter().find(|l| {
+                std::ptr::eq(std::ptr::from_ref::<Layer>(*l), std::ptr::from_ref(layer))
+                    || (*l).guid == layer.guid
+            })
+        }
+
+        pub fn find_group<'a>(&'a self, group: &Group) -> Option<&'a Group> {
+            self.groups.as_ref()?.iter().find(|g| {
+                std::ptr::eq(std::ptr::from_ref::<Group>(*g), std::ptr::from_ref(group))
+                    || (*g).guid == group.guid
+            })
+        }
+
+        pub fn find_stat<'a>(&'a self, stat: &Stat) -> Option<&'a Stat> {
+            self.stats.as_ref()?.iter().find(|s| {
+                std::ptr::eq(std::ptr::from_ref::<Stat>(*s), std::ptr::from_ref(stat))
+                    || (*s).guid == stat.guid
+            })
         }
 
         pub fn flatten(&self, kit: &Kit) -> SemioReport<DesignChange> {
-            flatten_design(kit, &self.guid)
+            kit.flatten_for(self)
         }
 
         /// Deletes pieces and connections using entity references; expands stale connection removals.
@@ -17176,34 +17449,17 @@ mod oop {
             connections: &[Connection],
         ) -> SemioReport<DesignDiff> {
             let piece_guids: Vec<String> = pieces.iter().map(|p| p.guid.clone()).collect();
-            let connection_guids: Vec<String> = connections.iter().map(|c| c.guid.clone()).collect();
+            let connection_guids: Vec<String> =
+                connections.iter().map(|c| c.guid.clone()).collect();
             delete_pieces_and_connections_in_design(kit, self, &piece_guids, &connection_guids)
         }
 
         pub fn drag_pieces(&self, pieces: &[Piece], offset: &Coord) -> DesignDiff {
             let design_pieces = self.pieces.as_deref().unwrap_or(&[]);
             let design_connections = self.connections.as_deref().unwrap_or(&[]);
-            let mut d =
-                drag_pieces_in_design(design_pieces, design_connections, pieces, offset);
+            let mut d = drag_pieces_in_design(design_pieces, design_connections, pieces, offset);
             d.guid = self.guid.clone();
             d
-        }
-    }
-
-    fn kit_diff_update_concept(kit: &Kit, before: &Concept, after: &Concept) -> KitDiff {
-        let d = before.diff_from(after);
-        KitDiff {
-            guid: kit.guid.clone(),
-            concepts: Some(CollectionDiff {
-                updated: Some(vec![DiffUpdate {
-                    key: "concept".into(),
-                    guid: before.guid.clone(),
-                    diff: d,
-                }]),
-                removed: None,
-                added: None,
-            }),
-            ..KitDiff::default()
         }
     }
 
@@ -17222,69 +17478,18 @@ mod oop {
     }
 
     impl Concept {
-        pub fn rename(&self, kit: &mut Kit, name: impl Into<String>) -> Result<()> {
-            let Some(v) = kit.concepts.as_ref() else {
-                return Err(SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                });
-            };
-            let before = v
-                .iter()
-                .find(|c| c.guid == self.guid)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.name = name.into();
-            let kd = kit_diff_update_concept(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn rename(&mut self, name: impl Into<String>) -> Result<()> {
+            self.name = name.into();
             Ok(())
         }
 
-        pub fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            let Some(v) = kit.concepts.as_ref() else {
-                return Err(SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                });
-            };
-            let before = v
-                .iter()
-                .find(|c| c.guid == self.guid)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.description = Some(description.to_string());
-            let kd = kit_diff_update_concept(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
             Ok(())
         }
 
-        pub fn update_icon(&self, kit: &mut Kit, icon: &str) -> Result<()> {
-            let Some(v) = kit.concepts.as_ref() else {
-                return Err(SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                });
-            };
-            let before = v
-                .iter()
-                .find(|c| c.guid == self.guid)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Concept".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.icon = Some(icon.to_string());
-            let kd = kit_diff_update_concept(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn update_icon(&mut self, icon: &str) -> Result<()> {
+            self.icon = Some(icon.to_string());
             Ok(())
         }
 
@@ -17295,72 +17500,19 @@ mod oop {
         }
     }
 
-    fn kit_diff_update_tag(kit: &Kit, before: &Tag, after: &Tag) -> KitDiff {
-        let d = before.diff_from(after);
-        KitDiff {
-            guid: kit.guid.clone(),
-            tags: Some(CollectionDiff {
-                updated: Some(vec![DiffUpdate {
-                    key: "tag".into(),
-                    guid: before.guid.clone(),
-                    diff: d,
-                }]),
-                removed: None,
-                added: None,
-            }),
-            ..KitDiff::default()
-        }
-    }
-
     impl Tag {
-        pub fn rename(&self, kit: &mut Kit, name: impl Into<String>) -> Result<()> {
-            let before = kit
-                .tags
-                .as_ref()
-                .and_then(|v| v.iter().find(|t| t.guid == self.guid))
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Tag".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.name = name.into();
-            let kd = kit_diff_update_tag(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn rename(&mut self, name: impl Into<String>) -> Result<()> {
+            self.name = name.into();
             Ok(())
         }
 
-        pub fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            let before = kit
-                .tags
-                .as_ref()
-                .and_then(|v| v.iter().find(|t| t.guid == self.guid))
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Tag".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.description = Some(description.to_string());
-            let kd = kit_diff_update_tag(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn update_description(&mut self, description: &str) -> Result<()> {
+            self.description = Some(description.to_string());
             Ok(())
         }
 
-        pub fn update_icon(&self, kit: &mut Kit, icon: &str) -> Result<()> {
-            let before = kit
-                .tags
-                .as_ref()
-                .and_then(|v| v.iter().find(|t| t.guid == self.guid))
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Tag".into(),
-                    guid: self.guid.clone(),
-                })?
-                .clone();
-            let mut after = before.clone();
-            after.icon = Some(icon.to_string());
-            let kd = kit_diff_update_tag(kit, &before, &after);
-            apply_kit_diff(kit, &kd);
+        pub fn update_icon(&mut self, icon: &str) -> Result<()> {
+            self.icon = Some(icon.to_string());
             Ok(())
         }
 
@@ -17650,7 +17802,7 @@ mod tests {
             let expected_design = find_design_by_name(designs, "Flat", Some(&design.guid))
                 .expect("Expected Flat design not found");
 
-            let flat_rep = flatten_design(kit, &design.guid);
+            let flat_rep = flatten_design_by_handle(kit, design);
             assert!(flat_rep.ok, "flatten_design failed: {:?}", flat_rep.errors);
             let flat_design_change = flat_rep.diff.expect("flatten ok implies diff");
             let mut flat_design = design.clone();
