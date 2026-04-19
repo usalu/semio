@@ -10461,6 +10461,13 @@ export class KitImpl {
     return kitGraphToPlainData(this);
   }
 
+  /**
+   * 📸JSON.stringify hook – returns plain data without circular refs.
+   */
+  toJSON(): KitData {
+    return kitGraphToPlainData(this);
+  }
+
   /** 📦Serialize this kit for wire transport. */
   serialize(): string {
     return JSON.stringify(this.toData());
@@ -19307,9 +19314,7 @@ export class InMemoryKitStore implements UndoableKitStore {
       this.notify();
       return;
     }
-    const forward = getKitDiff(before, nextInst);
-    const backward = inverseKitDiff(before, forward);
-    const entry: KitGraphChange = kitChangeFromDiffs(forward, backward);
+    const entry = getKitChange(before, nextInst);
     if (this.transacting) {
       this.transactionBuffer.push(entry);
     } else {
@@ -20100,7 +20105,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("KitImpl/Filter/Design", () => {
     const filterDesignCase0 = ((FilterKitCases as any).cases as Array<{ designName: string }>)[0];
-    const kit = MetabolismKit as KitImpl;
+    const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const expected = NakaginCapsuleTowerFilteredKit as any;
     const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase0.designName);
 
@@ -20185,7 +20190,7 @@ if (shouldRunEmbeddedJsTests) {
 
     for (const gc of filterKitGlobCases) {
       it(`filterKit glob case: ${gc.name}`, () => {
-        const kit = MetabolismKit as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const totalTypes = kit.types?.length ?? 0;
         const filter: any = {};
         if (gc.typeInclude) filter.types = { ...filter.types, include: gc.typeInclude };
@@ -20431,7 +20436,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("KitImpl/Filter/Design", () => {
     const filterDesignCases = (FilterKitCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[] }>;
-    const kit = MetabolismKit as KitImpl;
+    const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const expected = MetabolismKitFilteredNakaginCapsuleTower as any;
     const filterDesignCase = filterDesignCases[0];
     const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase.designName);
@@ -20493,7 +20498,7 @@ if (shouldRunEmbeddedJsTests) {
   // #endregion 🏰KitImpl Filter Tests
 
   describe("Flatten", () => {
-    const kit = MetabolismKit as KitImpl;
+    const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const flattenCasesData = (FlattenCases as any).cases as Array<{ name: string; designPath: string[] }>;
 
     const testFlatten = (designName: string) => {
@@ -20673,7 +20678,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten reuses cached plane/center when hashes match", () => {
-      const kit = MetabolismKit as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
       expect(Object.keys(first.cache).length).toBeGreaterThan(0);
@@ -20687,7 +20692,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten returns a structurally identical forward diff vs fresh flattenDesign (ignoring non-deterministic attribute guids)", () => {
-      const kit = MetabolismKit as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       // flattenDesign's setAttributes mints new attribute guids via guid() on every run, so
       // we strip those guids before comparing to focus on the geometric/attribute values that
@@ -20713,7 +20718,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("cached flatten preserves exact Piece object reference when merkle hash is unchanged", () => {
-      const kit = MetabolismKit as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = findDesignByPath(kit, [NAKAGIN_DESIGN_NAME]);
       const first = asKitInstance(kit).flattenDesignCachedOp(design.guid);
       const second = asKitInstance(kit).flattenDesignCachedOp(design.guid, first.cache);
@@ -22198,7 +22203,7 @@ if (shouldRunEmbeddedJsTests) {
   });
 
   describe("Design/Quality/Sum", () => {
-    const kit = MetabolismKit as KitImpl;
+    const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; qualityName: string; expected: number; tolerance: number }>;
     for (const tc of qualitySumCases) {
       it(`${tc.name}: sums ${tc.qualityName} to ~${tc.expected}`, () => {
@@ -22215,7 +22220,7 @@ if (shouldRunEmbeddedJsTests) {
   describe("ExportDesignModel", () => {
     const exportCases = (ExportDesignModelCases as any).cases as Array<{ name: string; designName: string }>;
     const exportCase = exportCases[0];
-    const kit = MetabolismKit as KitImpl;
+    const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const design = kit.designs?.find((d) => d.name === exportCase.designName)!;
 
     it("exports .glb format with valid GLB header", async () => {
@@ -22586,7 +22591,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createJsonFileKitStore(adapter);
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBeDefined();
-      expect(snapshot.kit.name).toBe("New KitImpl");
+      expect(snapshot.kit.name).toBe("New Kit");
       expect(snapshot.sync.status).toBe("ready");
     });
 
@@ -23001,7 +23006,7 @@ if (shouldRunEmbeddedJsTests) {
       const store = await createFolderKitStore(makeAdapter());
       const snapshot = store.getSnapshot();
       expect(snapshot.kit.guid).toBeDefined();
-      expect(snapshot.kit.name).toBe("New KitImpl");
+      expect(snapshot.kit.name).toBe("New Kit");
       expect(snapshot.sync.status).toBe("ready");
     });
 
