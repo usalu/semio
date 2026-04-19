@@ -14911,12 +14911,61 @@ mod design_flatten_layout {
         pub from_connected: bool,
     }
 
+    /// Handle to one piece inside a [`DesignFlattenLayout`]; tree edges and geometry are resolved lazily.
+    pub struct FlattenPiece<'layout, 'a> {
+        layout: &'layout DesignFlattenLayout<'a>,
+        guid: String,
+    }
+
+    impl<'layout, 'a> Clone for FlattenPiece<'layout, 'a> {
+        fn clone(&self) -> Self {
+            FlattenPiece {
+                layout: self.layout,
+                guid: self.guid.clone(),
+            }
+        }
+    }
+
+    impl<'layout, 'a> FlattenPiece<'layout, 'a> {
+        pub fn guid(&self) -> &str {
+            &self.guid
+        }
+
+        /// Parent in the flatten spanning tree (`None` for component roots).
+        pub fn parent(&self) -> Option<FlattenPiece<'layout, 'a>> {
+            self.layout
+                .parent_piece_guid(&self.guid)
+                .map(|pg| self.layout.flatten_piece(pg))
+        }
+
+        /// Direct children in the flatten tree (edges materialized so far; see [`DesignFlattenLayout::expand_entire_design`]).
+        pub fn children(&self) -> Vec<FlattenPiece<'layout, 'a>> {
+            self.layout.children_of_piece(&self.guid)
+        }
+
+        pub fn flat_plane(&self) -> Plane {
+            self.layout.flat_plane_for_piece_guid(&self.guid)
+        }
+
+        pub fn flat_center(&self) -> Coord {
+            self.layout.flat_center_for_piece_guid(&self.guid)
+        }
+    }
+
+    /// Incremental flatten layout: no global BFS at construction. Parent/child links and paths are
+    /// discovered step-by-step; matrices and centers memoize; downward invalidation clears only a subtree.
     pub struct DesignFlattenLayout<'a> {
         kit: &'a Kit,
         design: &'a Design,
         pieces_map: HashMap<&'a str, &'a Piece>,
-        parent_edge: HashMap<&'a str, PieceFlattenParent<'a>>,
-        piece_paths: HashMap<&'a str, String>,
+        /// Undirected adjacency (same rule as legacy flatten).
+        adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>>,
+        bfs_queue: RefCell<VecDeque<String>>,
+        bfs_visited: RefCell<HashSet<String>>,
+        next_seed_index: RefCell<usize>,
+        parent_of: RefCell<HashMap<String, PieceFlattenParent<'a>>>,
+        children_of: RefCell<HashMap<String, Vec<String>>>,
+        piece_paths: RefCell<HashMap<String, String>>,
         memo_matrix: RefCell<HashMap<String, Matrix4<f64>>>,
         memo_center: RefCell<HashMap<String, Coord>>,
     }
@@ -14933,72 +14982,19 @@ mod design_flatten_layout {
             let pieces_map: HashMap<&str, &Piece> =
                 pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
 
-            let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+            let mut adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>> = HashMap::new();
             for conn in connections {
                 let src = conn.connected.piece.guid.as_str();
                 let tgt = conn.connecting.piece.guid.as_str();
                 if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                    adjacency.entry(src).or_default().push((tgt, conn, true));
-                    adjacency.entry(tgt).or_default().push((src, conn, false));
-                }
-            }
-
-            let mut parent_edge: HashMap<&str, PieceFlattenParent<'a>> = HashMap::new();
-            let mut piece_paths: HashMap<&str, String> = HashMap::new();
-            let mut visited: HashSet<&str> = HashSet::new();
-            let mut queue: VecDeque<&str> = VecDeque::new();
-
-            for piece in pieces {
-                if visited.contains(piece.guid.as_str()) {
-                    continue;
-                }
-                piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
-                visited.insert(piece.guid.as_str());
-                queue.push_back(piece.guid.as_str());
-
-                while let Some(current_guid) = queue.pop_front() {
-                    if let Some(neighbors) = adjacency.get(current_guid) {
-                        for &(neighbor_guid, conn, is_connected) in neighbors {
-                            if visited.contains(neighbor_guid) {
-                                continue;
-                            }
-                            let (parent_side, _child_side) = if is_connected {
-                                (&conn.connected, &conn.connecting)
-                            } else {
-                                (&conn.connecting, &conn.connected)
-                            };
-                            if kit
-                                .connector_for_side_fast(&pieces_map, parent_side)
-                                .is_none()
-                            {
-                                continue;
-                            }
-                            if kit
-                                .connection_matrix_fast(&pieces_map, conn, is_connected)
-                                .is_none()
-                            {
-                                continue;
-                            }
-                            parent_edge.insert(
-                                neighbor_guid,
-                                PieceFlattenParent {
-                                    parent_piece_guid: current_guid,
-                                    conn,
-                                    from_connected: is_connected,
-                                },
-                            );
-                            let parent_path = piece_paths
-                                .get(current_guid)
-                                .cloned()
-                                .unwrap_or_default();
-                            piece_paths.insert(
-                                neighbor_guid,
-                                format!("{},{}", parent_path, neighbor_guid),
-                            );
-                            visited.insert(neighbor_guid);
-                            queue.push_back(neighbor_guid);
-                        }
-                    }
+                    adjacency
+                        .entry(src.to_string())
+                        .or_default()
+                        .push((tgt.to_string(), conn, true));
+                    adjacency
+                        .entry(tgt.to_string())
+                        .or_default()
+                        .push((src.to_string(), conn, false));
                 }
             }
 
@@ -15006,8 +15002,13 @@ mod design_flatten_layout {
                 kit,
                 design,
                 pieces_map,
-                parent_edge,
-                piece_paths,
+                adjacency,
+                bfs_queue: RefCell::new(VecDeque::new()),
+                bfs_visited: RefCell::new(HashSet::new()),
+                next_seed_index: RefCell::new(0),
+                parent_of: RefCell::new(HashMap::new()),
+                children_of: RefCell::new(HashMap::new()),
+                piece_paths: RefCell::new(HashMap::new()),
                 memo_matrix: RefCell::new(HashMap::new()),
                 memo_center: RefCell::new(HashMap::new()),
             })
@@ -15017,18 +15018,148 @@ mod design_flatten_layout {
             self.design
         }
 
+        pub fn flatten_piece(&self, piece_guid: &str) -> FlattenPiece<'_, 'a> {
+            FlattenPiece {
+                layout: self,
+                guid: piece_guid.to_string(),
+            }
+        }
+
+        /// Drive the same spanning-tree BFS as legacy flatten until the entire design is materialized.
+        pub fn expand_entire_design(&self) {
+            while self.expand_one_bfs_step() {}
+        }
+
+        /// One step of the incremental BFS (outer seeds × inner queue). Returns `false` when finished.
+        pub fn expand_one_bfs_step(&self) -> bool {
+            let pieces = self.design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+
+            let mut queue = self.bfs_queue.borrow_mut();
+            if queue.is_empty() {
+                let mut idx = self.next_seed_index.borrow_mut();
+                while *idx < pieces.len() {
+                    let p = &pieces[*idx];
+                    *idx += 1;
+                    if !self.bfs_visited.borrow().contains(&p.guid) {
+                        self.bfs_visited.borrow_mut().insert(p.guid.clone());
+                        self.piece_paths
+                            .borrow_mut()
+                            .insert(p.guid.clone(), p.guid.clone());
+                        queue.push_back(p.guid.clone());
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            let current_guid = queue.pop_front().expect("queue non-empty");
+            drop(queue);
+
+            let neighbors = self.adjacency.get(&current_guid).cloned().unwrap_or_default();
+            for (neighbor_guid, conn, is_connected) in neighbors {
+                if self.bfs_visited.borrow().contains(&neighbor_guid) {
+                    continue;
+                }
+                let (parent_side, _child_side) = if is_connected {
+                    (&conn.connected, &conn.connecting)
+                } else {
+                    (&conn.connecting, &conn.connected)
+                };
+                if self
+                    .kit
+                    .connector_for_side_fast(&self.pieces_map, parent_side)
+                    .is_none()
+                {
+                    continue;
+                }
+                if self
+                    .kit
+                    .connection_matrix_fast(&self.pieces_map, conn, is_connected)
+                    .is_none()
+                {
+                    continue;
+                }
+                let parent_piece_guid = self
+                    .pieces_map
+                    .get(current_guid.as_str())
+                    .expect("current vertex is a design piece")
+                    .guid
+                    .as_str();
+                self.parent_of.borrow_mut().insert(
+                    neighbor_guid.clone(),
+                    PieceFlattenParent {
+                        parent_piece_guid,
+                        conn,
+                        from_connected: is_connected,
+                    },
+                );
+                self.children_of
+                    .borrow_mut()
+                    .entry(current_guid.clone())
+                    .or_default()
+                    .push(neighbor_guid.clone());
+
+                let parent_path = self
+                    .piece_paths
+                    .borrow()
+                    .get(&current_guid)
+                    .cloned()
+                    .unwrap_or_default();
+                self.piece_paths.borrow_mut().insert(
+                    neighbor_guid.clone(),
+                    format!("{},{}", parent_path, neighbor_guid),
+                );
+                self.bfs_visited.borrow_mut().insert(neighbor_guid.clone());
+                self.bfs_queue.borrow_mut().push_back(neighbor_guid);
+            }
+            true
+        }
+
+        /// Ensure `piece_guid` has been visited by the incremental BFS (parent link if non-root).
+        pub fn ensure_piece_reachable(&self, piece_guid: &str) {
+            loop {
+                if self.parent_of.borrow().contains_key(piece_guid) {
+                    return;
+                }
+                if self.bfs_visited.borrow().contains(piece_guid) {
+                    return;
+                }
+                if !self.expand_one_bfs_step() {
+                    return;
+                }
+            }
+        }
+
+        /// Drop memoized flat plane/center/world matrix for `piece_guid` and every descendant in the flatten tree.
+        /// Ancestors are left cached so parent chains stay stable when only a subtree changes.
+        pub fn invalidate_flat_cache_downward_from(&self, piece_guid: &str) {
+            let mut stack = vec![piece_guid.to_string()];
+            while let Some(g) = stack.pop() {
+                self.memo_matrix.borrow_mut().remove(&g);
+                self.memo_center.borrow_mut().remove(&g);
+                if let Some(chs) = self.children_of.borrow().get(&g) {
+                    for c in chs {
+                        stack.push(c.clone());
+                    }
+                }
+            }
+        }
+
         pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
-            self.parent_edge
+            self.ensure_piece_reachable(piece_guid);
+            self.parent_of
+                .borrow()
                 .get(piece_guid)
                 .map(|e| e.parent_piece_guid)
         }
 
         fn world_matrix_uncached(&self, piece_guid: &str) -> Matrix4<f64> {
+            self.ensure_piece_reachable(piece_guid);
             let piece = match self.pieces_map.get(piece_guid) {
                 Some(p) => *p,
                 None => return Matrix4::identity(),
             };
-            if let Some(edge) = self.parent_edge.get(piece_guid) {
+            if let Some(edge) = self.parent_of.borrow().get(piece_guid) {
                 let parent_m = self.compute_world_matrix(edge.parent_piece_guid);
                 let conn_m = self
                     .kit
@@ -15061,11 +15192,12 @@ mod design_flatten_layout {
         }
 
         fn flat_center_uncached(&self, piece_guid: &str) -> Coord {
+            self.ensure_piece_reachable(piece_guid);
             let piece = match self.pieces_map.get(piece_guid) {
                 Some(p) => *p,
                 None => return Coord { u: 0.0, v: 0.0 },
             };
-            if let Some(edge) = self.parent_edge.get(piece_guid) {
+            if let Some(edge) = self.parent_of.borrow().get(piece_guid) {
                 let parent_center = self.flat_center_for_piece_guid(edge.parent_piece_guid);
                 let (parent_side, _child_side) = if edge.from_connected {
                     (&edge.conn.connected, &edge.conn.connecting)
@@ -15117,11 +15249,25 @@ mod design_flatten_layout {
             c
         }
 
-        pub fn semio_path_string(&self, piece_guid: &str) -> Option<&str> {
-            self.piece_paths.get(piece_guid).map(|s| s.as_str())
+        fn children_of_piece(&self, parent_guid: &str) -> Vec<FlattenPiece<'_, 'a>> {
+            self.ensure_piece_reachable(parent_guid);
+            self.children_of
+                .borrow()
+                .get(parent_guid)
+                .cloned()
+                .unwrap_or_default()
+                .into_iter()
+                .map(|g| self.flatten_piece(&g))
+                .collect()
+        }
+
+        pub fn semio_path_string(&self, piece_guid: &str) -> Option<String> {
+            self.ensure_piece_reachable(piece_guid);
+            self.piece_paths.borrow().get(piece_guid).cloned()
         }
 
         pub fn flatten_to_design_change(&self) -> DesignChange {
+            self.expand_entire_design();
             let design_guid = self.design.guid.clone();
             let before_design = self.design.clone();
             let pieces = self.design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
@@ -15372,9 +15518,16 @@ mod design_flatten_layout {
         }
     }
 }
-pub use design_flatten_layout::{DesignFlattenLayout, FlattenAffine, PieceFlattenParent};
+pub use design_flatten_layout::{
+    DesignFlattenLayout, FlattenAffine, FlattenPiece, PieceFlattenParent,
+};
 
 impl Piece {
+    /// OO handle for lazy flatten geometry and tree navigation (`parent` / `children`).
+    pub fn flatten<'l, 'a>(&self, layout: &'l DesignFlattenLayout<'a>) -> FlattenPiece<'l, 'a> {
+        layout.flatten_piece(self.guid.as_str())
+    }
+
     /// Resolved world plane for this piece in `layout` (lazy, memoized on `layout`; does not flatten or copy the design).
     pub fn flat_plane(&self, layout: &DesignFlattenLayout<'_>) -> Plane {
         layout.flat_plane_for_piece_guid(self.guid.as_str())

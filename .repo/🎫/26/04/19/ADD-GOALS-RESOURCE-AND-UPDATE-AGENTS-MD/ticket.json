@@ -1,0 +1,15 @@
+{
+  "title": "Add Goals Resource and Update Agents Md",
+  "status": "open",
+  "description": "Verify mcp goals resource exists and lists all goals; adjust AGENTS.md so agents must list goals before starting a ticket.",
+  "summary": "Added repo CLI `goal list` and `goal tree` subcommands streaming via StreamGoals and rendering the monorepo goal tree. Strengthened TestGoalList to assert returned []*Goal is non-empty and well-formed, fixed TestGoalListIDs (had wrong type assertion []Goal and wrong expected ID shape — now expects fully prefixed hierarchical id), and added TestGoalListCommand and TestGoalTreeCommand exercising the cobra root. AGENTS.md and CLAUDE.md updated to require listing goals via `repo://goals` before opening a ticket. Verified all TestGoal* tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1359"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary",
+  "sessions": [
+    "⚪c1363d7f5a0a45d4b2fe90b9508c88f3",
+    "⚪930f56dcc3bf48809e7acb167d214422",
+    "⚪d18f842a3cc44b80836e644201ffe3e3"
+  ]
+}

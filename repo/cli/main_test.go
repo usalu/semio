@@ -6508,7 +6508,61 @@ func TestGoalList(t *testing.T) {
 	result := ToolGoalList()
 
 	if result.Error != "" {
-		t.Logf("ToolGoalList returned error (may be due to existing malformed data): %s", result.Error)
+		t.Fatalf("ToolGoalList returned error: %s", result.Error)
+	}
+	goals, ok := result.Data.([]*Goal)
+	if !ok {
+		t.Fatalf("ToolGoalList Data was not []*Goal, got %T", result.Data)
+	}
+	if len(goals) == 0 {
+		t.Fatal("ToolGoalList returned no goals; expected the seeded goal hierarchy")
+	}
+	for _, g := range goals {
+		if g.ID == "" {
+			t.Errorf("goal has empty ID: %+v", g)
+		}
+		if g.Title == "" {
+			t.Errorf("goal %s has empty title", g.ID)
+		}
+	}
+}
+
+func TestGoalListCommand(t *testing.T) {
+	factory := func(config Config) (*Engine, error) {
+		return NewEngine(&recordingGraphQLExecutor{}), nil
+	}
+	root, config := NewRootWithConfig(factory)
+	config.Format = "json"
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
+	root.SetArgs([]string{"goal", "list"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("goal list failed: %v\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+	}
+	out := stdout.String()
+	if !strings.Contains(out, "\"goal\"") {
+		t.Fatalf("expected goal list output to contain goal entries, got: %s", out)
+	}
+}
+
+func TestGoalTreeCommand(t *testing.T) {
+	factory := func(config Config) (*Engine, error) {
+		return NewEngine(&recordingGraphQLExecutor{}), nil
+	}
+	root, config := NewRootWithConfig(factory)
+	config.Format = "markdown"
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
+	root.SetArgs([]string{"goal", "tree"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("goal tree failed: %v\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+	}
+	if stdout.Len() == 0 {
+		t.Fatal("expected goal tree output, got empty stdout")
 	}
 }
 
@@ -7881,25 +7935,25 @@ func TestContributorListIDs(t *testing.T) {
 func TestGoalListIDs(t *testing.T) {
 	result := ToolGoalList()
 	if result.Error != "" {
-		t.Skipf("ToolGoalList returned error (may be due to existing data): %s", result.Error)
+		t.Fatalf("ToolGoalList returned error: %s", result.Error)
 	}
-	goals, ok := result.Data.([]Goal)
+	goals, ok := result.Data.([]*Goal)
 	if !ok {
-		t.Skip("ToolGoalList data is not []Goal")
+		t.Fatalf("ToolGoalList data is not []*Goal, got %T", result.Data)
 	}
 	for _, g := range goals {
 		id := g.GetID()
-		expectedPrefix := emojiText(EmojiGoal)
-		if !strings.HasPrefix(id, expectedPrefix) {
-			t.Errorf("goal %q id %q should start with %q", g.ID, id, expectedPrefix)
+		goalEmoji := emojiText(EmojiGoal)
+		if !strings.HasPrefix(id, goalEmoji) {
+			t.Errorf("goal %q id %q should start with %q", g.ID, id, goalEmoji)
 		}
-		flatID := Flat(g.ID)
-		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
-			flatID = Flat(g.ID[idx+1:])
+		var expected strings.Builder
+		for _, segment := range strings.Split(g.ID, "/") {
+			expected.WriteString(goalEmoji)
+			expected.WriteString(Flat(segment))
 		}
-		expectedID := expectedPrefix + flatID
-		if id != expectedID {
-			t.Errorf("goal %q id: expected %q, got %q", g.ID, expectedID, id)
+		if id != expected.String() {
+			t.Errorf("goal %q id: expected %q, got %q", g.ID, expected.String(), id)
 		}
 	}
 }

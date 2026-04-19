@@ -17,6 +17,7 @@ There are many inconsistencies that you MUST refactor. You MUST use clean mechan
 - You MUST use repo mcp for repo-specific infrastructure.
   - You MUST work inside a ticket.
   - You MUST start by gathering information about the repo with mcp tool `search`.
+  - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
   - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.repo/🎫/YY/MM/DD/TICKETSLUG`.
   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
