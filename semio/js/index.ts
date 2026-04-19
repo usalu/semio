@@ -5202,24 +5202,24 @@ export class Piece {
   }
 
   /**
-   * Cached/lazy flattened placement: uses the kit merkle flatten cache for this piece's host design.
+   * Lazy flattened placement: fills the kit geometry cache via {@link KitImpl.ensureFlattenGeometryCache} (no persist diff).
    */
   flatPlane(): Plane | undefined {
     const design = this.#hostDesign;
     const kit = this.#resolveKit();
     if (!design || !kit) return undefined;
-    kit.flattenDesignMerkle(design.guid);
+    kit.ensureFlattenGeometryCache(design.guid);
     return kit.getFlattenMerkleCache(design.guid)?.[this.guid]?.plane;
   }
 
   /**
-   * Cached/lazy flattened 2D center in host-design space (see {@link flatPlane}).
+   * Lazy flattened 2D center in host-design space (see {@link flatPlane}; no persist diff).
    */
   flatCenter(): Coord | undefined {
     const design = this.#hostDesign;
     const kit = this.#resolveKit();
     if (!design || !kit) return undefined;
-    kit.flattenDesignMerkle(design.guid);
+    kit.ensureFlattenGeometryCache(design.guid);
     return kit.getFlattenMerkleCache(design.guid)?.[this.guid]?.center;
   }
 
@@ -6598,7 +6598,8 @@ export class Design {
   }
 
   /**
-   * Flatten this design in the kit graph (merkle-cached); commits via {@link KitImpl._applyDiff} (respects active transaction).
+   * Persist a full flatten to the kit (forward {@link DesignDiff}, removes connections): the rare explicit layout commit.
+   * For rendering / hit-testing, use {@link Piece.flatPlane}, {@link Piece.flatCenter}, {@link KitImpl.ensureFlattenGeometryCache}, or {@link KitImpl.piecesMetadataFor} instead — those update only the in-memory geometry cache without building a persist diff.
    */
   flatten(opts?: KitChangeOptions): KitGraphChange {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
@@ -6857,11 +6858,14 @@ export class Design {
   }
   // #endregion ✏️Methods
 
-  /** Ensures the kit's merkle flatten cache is populated for this design (batch before many {@link Piece.flatPlane} calls). */
+  /**
+   * Ensures the kit's flatten geometry cache is populated for this design (no persist diff).
+   * Batch this before many {@link Piece.flatPlane} / {@link Piece.flatCenter} calls.
+   */
   ensureFlattenMerkleCache(): void {
     const k = this.#kit;
     if (!k) return;
-    asKitInstance(k).flattenDesignMerkle(this.guid);
+    asKitInstance(k).ensureFlattenGeometryCache(this.guid);
   }
 
   toPlain(): DesignPlain {
@@ -9069,7 +9073,8 @@ export class KitImpl {
   }
 
   /**
-   * Flatten with per-piece merkle cache (hashed plane/center); updates cache in place on this kit.
+   * Builds a full persist {@link DesignDiff} (forward/backward) and updates the merkle flatten cache.
+   * Use {@link KitImpl.ensureFlattenGeometryCache} when you only need resolved plane/center for rendering or {@link Piece.flatPlane}.
    */
   flattenDesignMerkle(designGuid: string) {
     const prev = this.#flattenMerkleByDesign.get(designGuid);
@@ -9400,23 +9405,28 @@ export class KitImpl {
   }
 
   /**
-   * Incremental flatten with optional merkle cache; see {@link KitImpl.flattenDesignMerkle}.
+   * Resolves flattened plane/center per piece into {@link KitImpl.getFlattenMerkleCache}.
+   * Does not build a persist {@link DesignDiff}. Use {@link Design.flatten} / {@link KitImpl.flattenDesignMerkle} to commit layout to the kit.
    */
-  #flattenDesignCached(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
+  ensureFlattenGeometryCache(designGuid: string): void {
     const design = this.findDesign(designGuid);
-    if (!design) {
-      return {
-        result: operationErr([{ code: "flatten.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]),
-        cache: {},
-      };
-    }
-    if (!design.pieces || design.pieces.length === 0) {
-      return {
-        result: operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]),
-        cache: {},
-      };
-    }
+    if (!design?.pieces?.length) return;
+    const prev = this.#flattenMerkleByDesign.get(designGuid);
+    const walk = this.#runFlattenPlacementWalk(design, prev);
+    this.#flattenMerkleByDesign.set(designGuid, walk.nextCache);
+  }
 
+  /** Shared placement walk for {@link KitImpl.ensureFlattenGeometryCache} and flatten-to-diff ({@link KitImpl.flattenDesignMerkle}). */
+  #runFlattenPlacementWalk(
+    design: Design,
+    cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
+  ): {
+    flatPieces: Piece[];
+    nextCache: { [guid: string]: FlatMerkleCacheEntry };
+    warnings: OperationNote[];
+    infos: OperationNote[];
+    placementErrors: OperationNote[];
+  } {
     const warnings: OperationNote[] = [];
     const infos: OperationNote[] = [];
     const placementErrors: OperationNote[] = [];
@@ -9615,7 +9625,30 @@ export class KitImpl {
       },
     });
 
-    let piecesWithPlanes = 0;
+  }
+
+  /**
+   * Incremental flatten with optional merkle cache; computes forward/backward {@link DesignDiff} for persistence (see {@link Design.flatten}).
+   */
+  #flattenDesignCached(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
+    const design = this.findDesign(designGuid);
+    if (!design) {
+      return {
+        result: operationErr([{ code: "flatten.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]),
+        cache: {},
+      };
+    }
+    if (!design.pieces || design.pieces.length === 0) {
+      return {
+        result: operationOk({ forward: {}, backward: {} }, [], [{ code: "flatten.empty-pieces", message: "No pieces to flatten; returning empty forward and backward diffs." }]),
+        cache: {},
+      };
+    }
+
+    const walk = this.#runFlattenPlacementWalk(design, cache);
+    const { flatPieces, nextCache, warnings, infos, placementErrors } = walk;
+    const pieces = design.pieces;
+
     let piecesWithoutPlanes = 0;
     const updatedPieces = flatPieces
       .map((flatPiece) => {
@@ -9649,7 +9682,6 @@ export class KitImpl {
     const backward = inverseDesignDiff(design, forward);
     return { result: operationOk({ forward, backward }, warnings, infos), cache: nextCache };
   }
-
   /** @see {@link copyDesign} */
   #copyDesignClipboard(design: Design, pieceGuids: string[], connectionGuids: string[]): OperationResult<Design> {
     const selectedPieceSet = new Set(pieceGuids);
@@ -11229,36 +11261,32 @@ export class KitImpl {
     if (!design) {
       return operationErr([{ code: "pieces-metadata.design-not-found", message: `Design ${designGuid} not found in kit ${this.name}` }]);
     }
-    const flattenChange = this.flattenDesignMerkle(designGuid);
-    if (!flattenChange.ok) {
-      return { ok: false, errors: flattenChange.errors };
+    if (!design.pieces?.length) {
+      return operationOk(new Map(), [], []);
     }
-    const flatDesign = detachDesignForLocalMutation(design);
-    flatDesign.applyDiff(flattenChange.diff.forward);
-    const fixedPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid);
-    const parentPieceIds = flatDesign.pieces?.map((p) => findAttributeValue(p, "semio.parentPieceId", null));
-    const depths = flatDesign.pieces?.map((p) => parseInt(findAttributeValue(p, "semio.depth", "0")!));
-    const paths = flatDesign.pieces?.map((p) => {
-      const raw = findAttributeValue(p, "semio.path", p.guid);
-      return raw ? raw.split(",").filter(Boolean) : [p.guid!];
-    });
-    return operationOk(
-      new Map(
-        flatDesign.pieces?.map((p, index) => [
-          p.guid,
-          {
-            plane: p.plane!,
-            center: p.center!,
-            fixedPieceId: fixedPieceIds![index],
-            parentPieceId: parentPieceIds![index],
-            depth: depths![index],
-            path: paths![index],
-          },
-        ]),
-      ),
-      flattenChange.warnings,
-      flattenChange.infos,
-    );
+    const prev = this.#flattenMerkleByDesign.get(designGuid);
+    const walk = this.#runFlattenPlacementWalk(design, prev);
+    this.#flattenMerkleByDesign.set(designGuid, walk.nextCache);
+    if (walk.placementErrors.length > 0) {
+      return operationErr(walk.placementErrors);
+    }
+    const metadata = new Map<string, PiecePlacementMetadata>();
+    for (const piece of design.pieces) {
+      if (!piece.guid) continue;
+      const entry = walk.nextCache[piece.guid];
+      const fp = entry?.flatPiece;
+      if (!entry?.plane || !entry?.center || !fp) continue;
+      const rawPath = findAttributeValue(fp, "semio.path", piece.guid);
+      metadata.set(piece.guid, {
+        plane: entry.plane,
+        center: entry.center,
+        fixedPieceId: findAttributeValue(fp, "semio.fixedPieceId", piece.guid) || piece.guid,
+        parentPieceId: findAttributeValue(fp, "semio.parentPieceId", null),
+        depth: parseInt(findAttributeValue(fp, "semio.depth", "0")!),
+        path: rawPath ? rawPath.split(",").filter(Boolean) : [piece.guid],
+      });
+    }
+    return operationOk(metadata, walk.warnings, walk.infos);
   }
 
   piecesMetadataCachedFor(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
@@ -11269,28 +11297,36 @@ export class KitImpl {
         cache: {},
       };
     }
-    const cached = this.flattenDesignCachedOp(designGuid, cache);
-    if (!cached.result.ok) {
-      return { result: { ok: false, errors: cached.result.errors }, cache: cached.cache };
+    if (!design.pieces?.length) {
+      return {
+        result: operationOk(new Map(), [], []),
+        cache: {},
+      };
     }
-    const flatDesign = detachDesignForLocalMutation(design);
-    flatDesign.applyDiff(cached.result.diff.forward);
+    const walk = this.#runFlattenPlacementWalk(design, cache);
+    this.#flattenMerkleByDesign.set(designGuid, walk.nextCache);
+    if (walk.placementErrors.length > 0) {
+      return { result: operationErr(walk.placementErrors), cache: walk.nextCache };
+    }
     const metadata = new Map<string, PiecePlacementMetadata>();
-    for (const p of flatDesign.pieces ?? []) {
-      if (!p.guid) continue;
-      const rawPath = findAttributeValue(p, "semio.path", p.guid);
-      metadata.set(p.guid, {
-        plane: p.plane!,
-        center: p.center!,
-        fixedPieceId: findAttributeValue(p, "semio.fixedPieceId", p.guid) || p.guid,
-        parentPieceId: findAttributeValue(p, "semio.parentPieceId", null),
-        depth: parseInt(findAttributeValue(p, "semio.depth", "0")!),
-        path: rawPath ? rawPath.split(",").filter(Boolean) : [p.guid],
+    for (const piece of design.pieces) {
+      if (!piece.guid) continue;
+      const entry = walk.nextCache[piece.guid];
+      const fp = entry?.flatPiece;
+      if (!entry?.plane || !entry?.center || !fp) continue;
+      const rawPath = findAttributeValue(fp, "semio.path", piece.guid);
+      metadata.set(piece.guid, {
+        plane: entry.plane,
+        center: entry.center,
+        fixedPieceId: findAttributeValue(fp, "semio.fixedPieceId", piece.guid) || piece.guid,
+        parentPieceId: findAttributeValue(fp, "semio.parentPieceId", null),
+        depth: parseInt(findAttributeValue(fp, "semio.depth", "0")!),
+        path: rawPath ? rawPath.split(",").filter(Boolean) : [piece.guid],
       });
     }
     return {
-      result: operationOk(metadata, cached.result.warnings, cached.result.infos),
-      cache: cached.cache,
+      result: operationOk(metadata, walk.warnings, walk.infos),
+      cache: walk.nextCache,
     };
   }
 

@@ -315,7 +315,9 @@ impl<'a> FlattenGraphInner<'a> {
     }
 }
 
-/// Resolve flattened geometry for one design; coordinates lazy tree expansion and delegates caching to [`FlattenPieceState`].
+/// Resolve flattened geometry for one design: lazy tree expansion with per-piece memo on [`FlattenPieceState`].
+/// Call [`FlattenDesign::piece`] / [`FlattenPiece::flat_plane`] / [`FlattenPiece::flat_center`] for evaluation (rendering, export of a slice, etc.).
+/// Only call [`FlattenDesign::to_design_change`] when explicitly persisting a flattened layout — that path expands the whole design and builds diffs.
 pub struct FlattenDesign<'a> {
     inner: Rc<FlattenGraphInner<'a>>,
 }
@@ -370,6 +372,10 @@ impl<'a> FlattenDesign<'a> {
         FlattenPiece {
             state: FlattenGraphInner::piece_state(&self.inner, piece_guid),
         }
+    }
+
+    pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
+        self.inner.parent_piece_guid(piece_guid)
     }
 
     pub fn expand_entire_design(&self) {
@@ -686,8 +692,14 @@ impl<'a> FlattenPiece<'a> {
     pub fn parent(&self) -> Option<FlattenPiece<'a>> {
         let g = self.state.graph.upgrade()?;
         g.ensure_piece_reachable(&self.state.guid);
-        g.parent_of.borrow().get(&self.state.guid).map(|e| FlattenPiece {
-            state: FlattenGraphInner::piece_state(&g, e.parent_piece_guid),
+        let parent_guid: Option<String> = g
+            .parent_of
+            .borrow()
+            .get(&self.state.guid)
+            .map(|e| e.parent_piece_guid.to_string());
+        let pg = parent_guid?;
+        Some(FlattenPiece {
+            state: FlattenGraphInner::piece_state(&g, &pg),
         })
     }
 
@@ -697,11 +709,13 @@ impl<'a> FlattenPiece<'a> {
             None => return vec![],
         };
         g.ensure_piece_reachable(&self.state.guid);
-        g.children_of
+        let child_guids: Vec<String> = g
+            .children_of
             .borrow()
             .get(&self.state.guid)
             .cloned()
-            .unwrap_or_default()
+            .unwrap_or_default();
+        child_guids
             .into_iter()
             .map(|guid| FlattenPiece {
                 state: FlattenGraphInner::piece_state(&g, &guid),
