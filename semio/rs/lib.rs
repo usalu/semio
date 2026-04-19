@@ -35,9 +35,6 @@ use uuid::Uuid;
 use wasm_bindgen::prelude::*;
 
 mod utility_functions {
-    // 📦Utilities
-    // 🏭Utility Functions
-    // Utility Functions MUST provide the utility functions functionality.
     /// <summary>🔑Guid represents a UUID string identifier.</summary>
     /// <remarks>
     /// </remarks>
@@ -148,9 +145,6 @@ mod utility_functions {
 pub use utility_functions::*;
 
 mod error_types {
-    // ⚠️Exceptions
-    // 🎪Error Types
-    // Error Types MUST provide the error types functionality.
 
     use super::*;
 
@@ -178,9 +172,6 @@ mod error_types {
 pub use error_types::*;
 
 mod has_guid_trait {
-    // 🐍Entity IDs
-    // 🎮HasGuid Trait
-    // HasGuid Trait MUST provide the hasguid trait functionality.
     /// <summary>🔧d.</summary>
     /// <remarks>
     /// </remarks>
@@ -503,9 +494,6 @@ mod has_guid_trait {
 pub use has_guid_trait::*;
 
 mod model_types_attribute {
-    // 💎Attribute
-    // 💎Model Types - Attribute
-    // 💎Model Types - Attribute MUST provide the model types - attribute functionality.
 
     use super::*;
 
@@ -531,9 +519,6 @@ mod model_types_attribute {
 pub use model_types_attribute::*;
 
 mod model_types_coord {
-    // 📺Coord
-    // 📺Model Types - Coord
-    // 📺Model Types - Coord MUST provide the model types - coord functionality.
 
     use super::*;
 
@@ -557,9 +542,6 @@ mod model_types_coord {
 pub use model_types_coord::*;
 
 mod model_types_vector {
-    // ↗️Vector
-    // ↗️Model Types - Vector
-    // ↗️Model Types - Vector MUST provide the model types - vector functionality.
 
     use super::*;
 
@@ -604,9 +586,6 @@ mod model_types_vector {
 pub use model_types_vector::*;
 
 mod model_types_plane {
-    // ◻️Plane
-    // ◻️Model Types - Plane
-    // ◻️Model Types - Plane MUST provide the model types - plane functionality.
 
     use super::*;
 
@@ -689,9 +668,6 @@ mod model_types_plane {
 pub use model_types_plane::*;
 
 mod model_types_camera {
-    // 🎥Camera
-    // 🎥Model Types - Camera
-    // 🎥Model Types - Camera MUST provide the model types - camera functionality.
 
     use super::*;
 
@@ -725,9 +701,6 @@ mod model_types_camera {
 pub use model_types_camera::*;
 
 mod location {
-    // 📍Location
-    // 📍Location
-    // 📍Location MUST provide the location functionality.
 
     use super::*;
 
@@ -755,9 +728,6 @@ mod location {
 pub use location::*;
 
 mod author {
-    // ✍️Author
-    // ✍️Author
-    // ✍️Author MUST provide the author functionality.
 
     use super::*;
 
@@ -787,9 +757,6 @@ mod author {
 pub use author::*;
 
 mod file_entity {
-    // 📄File
-    // 📄File
-    // 📄File MUST provide the file functionality.
 
     use super::*;
 
@@ -827,9 +794,6 @@ mod file_entity {
 pub use file_entity::*;
 
 mod folder_entity {
-    // 📁Folder
-    // 📁Folder
-    // 📁Folder MUST provide the folder functionality.
 
     use super::*;
 
@@ -861,9 +825,6 @@ mod folder_entity {
 pub use folder_entity::*;
 
 mod benchmark_entity {
-    // 📏Benchmark
-    // 📏Benchmark
-    // 📏Benchmark MUST provide the benchmark functionality.
 
     use super::*;
 
@@ -895,9 +856,6 @@ mod benchmark_entity {
 pub use benchmark_entity::*;
 
 mod quality {
-    // 🔬Quality
-    // 🔬Quality
-    // 🔬Quality MUST provide the quality functionality.
 
     use super::*;
 
@@ -992,9 +950,6 @@ mod quality {
 pub use quality::*;
 
 mod port {
-    // ⚓Port
-    // ⚓Port
-    // ⚓Port MUST provide the port functionality.
 
     use super::*;
 
@@ -1028,9 +983,6 @@ mod port {
 pub use port::*;
 
 mod prop {
-    // 📊Prop
-    // 📊Prop
-    // 📊Prop MUST provide the prop functionality.
 
     use super::*;
 
@@ -1059,9 +1011,6 @@ mod prop {
 pub use prop::*;
 
 mod tag {
-    // 🏷️Tag
-    // 🏷️Tag
-    // 🏷️Tag MUST provide the tag functionality.
 
     use super::*;
 
@@ -1091,9 +1040,6 @@ mod tag {
 pub use tag::*;
 
 mod concept {
-    // 💡Concept
-    // 💡Concept
-    // 💡Concept MUST provide the concept functionality.
 
     use super::*;
 
@@ -1125,9 +1071,6 @@ mod concept {
 pub use concept::*;
 
 mod model_entity {
-    // 🗿Model
-    // 🗿Model
-    // 🗿Model MUST provide the model functionality.
 
     use super::*;
 
@@ -1159,9 +1102,6 @@ mod model_entity {
 pub use model_entity::*;
 
 mod connector {
-    // 🔌Connector
-    // 🔌Connector
-    // 🔌Connector MUST provide the connector functionality.
 
     use super::*;
 
@@ -1201,9 +1141,6 @@ mod connector {
 pub use connector::*;
 
 mod model_types_type {
-    // 🧱Type
-    // 🧱Model Types - Type
-    // 🧱Model Types - Type MUST provide the model types - type functionality.
 
     use super::*;
 
@@ -1263,9 +1200,6 @@ mod model_types_type {
 pub use model_types_type::*;
 
 mod layer {
-    // 🎨Layer
-    // 🎨Layer
-    // 🎨Layer MUST provide the layer functionality.
 
     use super::*;
 
@@ -1299,9 +1233,6 @@ mod layer {
 pub use layer::*;
 
 mod piece {
-    // 🧩Piece
-    // 🧩Piece
-    // 🧩Piece MUST provide the piece functionality.
 
     use super::*;
 
@@ -1358,9 +1289,6 @@ mod piece {
 pub use piece::*;
 
 mod group {
-    // 👥Group
-    // 👥Group
-    // 👥Group MUST provide the group functionality.
 
     use super::*;
 
@@ -1393,9 +1321,6 @@ mod group {
 pub use group::*;
 
 mod side {
-    // ↔️Side
-    // ↔️Side
-    // ↔️Side MUST provide the side functionality.
 
     use super::*;
 
@@ -1414,9 +1339,6 @@ mod side {
 pub use side::*;
 
 mod connection {
-    // 🔗Connection
-    // 🔗Connection
-    // 🔗Connection MUST provide the connection functionality.
 
     use super::*;
 
@@ -1461,9 +1383,6 @@ mod connection {
 pub use connection::*;
 
 mod stat {
-    // 📈Stat
-    // 📈Stat
-    // 📈Stat MUST provide the stat functionality.
 
     use super::*;
 
@@ -1499,9 +1418,6 @@ mod stat {
 pub use stat::*;
 
 mod model_types_design {
-    // 📐Design
-    // 📐Model Types - Design
-    // 📐Model Types - Design MUST provide the model types - design functionality.
 
     use super::*;
     use std::cell::{Cell, RefCell};
@@ -1649,9 +1565,6 @@ mod model_types_design {
 pub use model_types_design::*;
 
 mod model_types_kit {
-    // ⏱️Kit
-    // 📦Model Types - Kit
-    // 📦Model Types - Kit MUST provide the model types - kit functionality.
 
     use super::*;
 
@@ -1742,9 +1655,6 @@ mod model_types_kit {
 pub use model_types_kit::*;
 
 mod serialization {
-    // ⏰Serialization
-    // 👑Serialization
-    // Serialization MUST provide the serialization functionality.
 
     /// <summary>💾serialize kit.</summary>
     use super::*;
@@ -1823,9 +1733,6 @@ mod serialization {
 pub use serialization::*;
 
 mod diff_types {
-    // ✂️Diff Types
-    // ✂️Diff Types
-    // Diff Types MUST provide the diff types functionality.
 
     use super::*;
 
@@ -1953,6 +1860,75 @@ mod diff_types {
         pub removed: Option<Vec<RemovedItem>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub updated: Option<Vec<DiffUpdate<D>>>,
+    }
+
+    impl<T, D> CollectionDiff<T, D>
+    where
+        T: HasGuid + Clone + PartialEq,
+        D: DiffHasGuid,
+    {
+        /// Diff between optional GUID-keyed collections (`before` → `after`).
+        pub fn from_optional_vecs(
+            before: &Option<Vec<T>>,
+            after: &Option<Vec<T>>,
+            entity_key: &str,
+            compute_diff: impl Fn(&T, &T) -> D,
+        ) -> Option<Self> {
+            let before_items = before.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+            let after_items = after.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
+            let before_map: HashMap<String, &T> = before_items
+                .iter()
+                .map(|i| (i.guid().to_string(), i))
+                .collect();
+            let after_map: HashMap<String, &T> = after_items
+                .iter()
+                .map(|i| (i.guid().to_string(), i))
+                .collect();
+            let mut added = Vec::new();
+            let mut removed = Vec::new();
+            let mut updated = Vec::new();
+            for item in after_items {
+                if !before_map.contains_key(item.guid()) {
+                    added.push(item.clone());
+                }
+            }
+            for item in before_items {
+                if !after_map.contains_key(item.guid()) {
+                    removed.push(RemovedItem {
+                        guid: item.guid().to_string(),
+                    });
+                }
+            }
+            for item in after_items {
+                if let Some(before_item) = before_map.get(item.guid()) {
+                    if *before_item != item {
+                        let diff = compute_diff(before_item, item);
+                        updated.push(DiffUpdate {
+                            key: entity_key.to_string(),
+                            guid: item.guid().to_string(),
+                            diff,
+                        });
+                    }
+                }
+            }
+            if added.is_empty() && removed.is_empty() && updated.is_empty() {
+                None
+            } else {
+                Some(CollectionDiff {
+                    added: if added.is_empty() { None } else { Some(added) },
+                    removed: if removed.is_empty() {
+                        None
+                    } else {
+                        Some(removed)
+                    },
+                    updated: if updated.is_empty() {
+                        None
+                    } else {
+                        Some(updated)
+                    },
+                })
+            }
+        }
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -2989,9 +2965,6 @@ mod diff_types {
 pub use diff_types::*;
 
 mod meta_and_shallow_types {
-    // 🔑Meta And Shallow
-    // 🥉Meta And Shallow Types
-    // Meta And Shallow Types MUST provide lightweight entity representations.
 
     use super::*;
 
@@ -4545,281 +4518,6 @@ mod apply_diff {
 } // ✈️ApplyDiff
 pub use apply_diff::*;
 
-mod kit_change_helpers {
-    // 🏬Kit Change Helpers
-    // Kit Change Helpers MUST provide convenience functions for computing kit and design diffs, inverses, and changes.
-
-    /// Computes a CollectionDiff between two optional collections of guid-identified items.
-    /// Uses a caller-provided `compute_diff` function for entity-level diffs.
-    use super::*;
-
-    pub fn get_guid_collection_diff<T, D>(
-        before: &Option<Vec<T>>,
-        after: &Option<Vec<T>>,
-        entity_key: &str,
-        compute_diff: impl Fn(&T, &T) -> D,
-    ) -> Option<CollectionDiff<T, D>>
-    where
-        T: HasGuid + Clone + PartialEq,
-        D: DiffHasGuid,
-    {
-        let before_items = before.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-        let after_items = after.as_ref().map(|v| v.as_slice()).unwrap_or(&[]);
-        let before_map: HashMap<String, &T> = before_items
-            .iter()
-            .map(|i| (i.guid().to_string(), i))
-            .collect();
-        let after_map: HashMap<String, &T> = after_items
-            .iter()
-            .map(|i| (i.guid().to_string(), i))
-            .collect();
-        let mut added = Vec::new();
-        let mut removed = Vec::new();
-        let mut updated = Vec::new();
-        for item in after_items {
-            if !before_map.contains_key(item.guid()) {
-                added.push(item.clone());
-            }
-        }
-        for item in before_items {
-            if !after_map.contains_key(item.guid()) {
-                removed.push(RemovedItem {
-                    guid: item.guid().to_string(),
-                });
-            }
-        }
-        for item in after_items {
-            if let Some(before_item) = before_map.get(item.guid()) {
-                if *before_item != item {
-                    let diff = compute_diff(before_item, item);
-                    updated.push(DiffUpdate {
-                        key: entity_key.to_string(),
-                        guid: item.guid().to_string(),
-                        diff,
-                    });
-                }
-            }
-        }
-        if added.is_empty() && removed.is_empty() && updated.is_empty() {
-            None
-        } else {
-            Some(CollectionDiff {
-                added: if added.is_empty() { None } else { Some(added) },
-                removed: if removed.is_empty() {
-                    None
-                } else {
-                    Some(removed)
-                },
-                updated: if updated.is_empty() {
-                    None
-                } else {
-                    Some(updated)
-                },
-            })
-        }
-    }
-
-    /// 🔄Computes the KitDiff that transforms efore into fter.
-    pub fn get_kit_diff(before: &Kit, after: &Kit) -> KitDiff {
-        before.diff_from(after)
-    }
-
-    /// 🔖Computes the DesignDiff that transforms efore into fter.
-    pub fn get_design_diff(before: &Design, after: &Design) -> DesignDiff {
-        before.diff_from(after)
-    }
-
-    /// 🔖Computes the inverse of a KitDiff given the original Kit state.
-    pub fn inverse_kit_diff(original: &Kit, forward: &KitDiff) -> KitDiff {
-        let mut after = original.clone();
-        apply_kit_diff(&mut after, forward);
-        get_kit_diff(&after, original)
-    }
-
-    /// 🔖Computes the inverse of a DesignDiff given the original Design state.
-    pub fn inverse_design_diff(original: &Design, forward: &DesignDiff) -> DesignDiff {
-        let mut after = original.clone();
-        apply_design_diff(&mut after, forward);
-        get_design_diff(&after, original)
-    }
-
-    /// 🗑️Deletes pieces and connections from a design, returning a canonical `SemioReport<DesignDiff>`.
-    /// Removes stale connections referencing deleted pieces.
-    /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
-    pub fn delete_pieces_and_connections_in_design(
-        kit: &Kit,
-        design: &Design,
-        piece_guids: &[String],
-        connection_guids: &[String],
-    ) -> SemioReport<DesignDiff> {
-        let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
-        let connections = design.connections.as_deref().unwrap_or(&[]);
-
-        // Find stale connections: connections referencing any deleted piece
-        let mut stale_connection_guids: HashSet<String> = HashSet::new();
-        for conn in connections {
-            if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
-                || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
-            {
-                stale_connection_guids.insert(conn.guid.clone());
-            }
-        }
-
-        // All removed connections = explicit + stale
-        let mut all_removed_connection_guids: HashSet<String> =
-            connection_guids.iter().cloned().collect();
-        all_removed_connection_guids.extend(stale_connection_guids);
-
-        // Find pieces that become fixed: pieces whose parent connection was removed
-        // and are not themselves being deleted.
-        // A piece becomes fixed when the connection where it is the "connecting" side is removed
-        // and it has no other remaining parent connection.
-        let mut fixed_piece_guids: Vec<String> = Vec::new();
-        for conn_guid in &all_removed_connection_guids {
-            let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
-                Some(c) => c,
-                None => continue,
-            };
-            let connecting_guid = &conn.connecting.piece.guid;
-            if deleted_piece_set.contains(connecting_guid.as_str()) {
-                continue;
-            }
-            // Check if this piece has another parent connection not in the removed set
-            let has_other_parent = connections.iter().any(|c| {
-                c.connecting.piece.guid == *connecting_guid
-                    && !all_removed_connection_guids.contains(&c.guid)
-            });
-            if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
-                fixed_piece_guids.push(connecting_guid.clone());
-            }
-        }
-
-        // Build the diff - flatten the design to get absolute plane and center for each piece
-        let flat_rep = kit.flatten_for(design);
-        if !flat_rep.ok {
-            return SemioReport::err(flat_rep.errors);
-        }
-        let flat_change = flat_rep.diff.expect("flatten ok implies diff");
-        let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
-        if let Some(pieces) = &design.pieces {
-            for piece in pieces {
-                if let Some(plane) = &piece.plane {
-                    flat_piece_map.insert(
-                        piece.guid.clone(),
-                        (Some(plane.clone()), piece.center.clone()),
-                    );
-                }
-            }
-        }
-        if let Some(pieces_diff) = &flat_change.forward.pieces {
-            if let Some(updates) = &pieces_diff.updated {
-                for update in updates {
-                    let entry = flat_piece_map
-                        .entry(update.guid.clone())
-                        .or_insert((None, None));
-                    if let Some(Some(plane)) = &update.diff.plane {
-                        entry.0 = Some(plane.clone());
-                    }
-                    if let Some(Some(center)) = &update.diff.center {
-                        entry.1 = Some(center.clone());
-                    }
-                }
-            }
-        }
-
-        let pieces_removed: Vec<RemovedItem> = piece_guids
-            .iter()
-            .map(|g| RemovedItem { guid: g.clone() })
-            .collect();
-        let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
-            .iter()
-            .map(|g| {
-                let (flat_plane, flat_center) = flat_piece_map
-                    .get(g)
-                    .cloned()
-                    .unwrap_or((Some(Plane::default()), Some(Coord::default())));
-                DiffUpdate {
-                    key: "piece".to_string(),
-                    guid: g.clone(),
-                    diff: PieceDiff {
-                        guid: g.clone(),
-                        plane: Some(flat_plane),
-                        center: Some(flat_center),
-                        ..Default::default()
-                    },
-                }
-            })
-            .collect();
-        let mut sorted_removed_connections: Vec<String> =
-            all_removed_connection_guids.into_iter().collect();
-        sorted_removed_connections.sort();
-        let connections_removed: Vec<RemovedItem> = sorted_removed_connections
-            .iter()
-            .map(|g| RemovedItem { guid: g.clone() })
-            .collect();
-
-        let mut diff = DesignDiff {
-            guid: design.guid.clone(),
-            ..Default::default()
-        };
-
-        if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
-            diff.pieces = Some(CollectionDiff {
-                removed: if pieces_removed.is_empty() {
-                    None
-                } else {
-                    Some(pieces_removed)
-                },
-                updated: if pieces_updated.is_empty() {
-                    None
-                } else {
-                    Some(pieces_updated)
-                },
-                added: None,
-            });
-        }
-
-        if !connections_removed.is_empty() {
-            diff.connections = Some(CollectionDiff {
-                removed: Some(connections_removed),
-                updated: None,
-                added: None,
-            });
-        }
-
-        SemioReport::ok_with(diff, flat_rep.warnings, flat_rep.infos)
-    }
-
-    /// 🔖Computes a reversible KitChange from two kit states.
-    pub fn get_kit_change(before: &Kit, after: &Kit) -> KitChange {
-        let forward = get_kit_diff(before, after);
-        let backward = inverse_kit_diff(before, &forward);
-        KitChange {
-            forward,
-            backward,
-            author: None,
-            time: None,
-            before: Some(before.clone()),
-            after: Some(after.clone()),
-        }
-    }
-
-    /// 🔖Computes a reversible DesignChange from two design states.
-    pub fn get_design_change(before: &Design, after: &Design) -> DesignChange {
-        let forward = get_design_diff(before, after);
-        let backward = inverse_design_diff(before, &forward);
-        DesignChange {
-            forward,
-            backward,
-            author: None,
-            time: None,
-            before: Some(before.clone()),
-            after: Some(after.clone()),
-        }
-    }
-} // 🎽Kit Change Helpers
-pub use kit_change_helpers::*;
-
 mod filter {
     // 📷Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
@@ -4973,7 +4671,7 @@ mod filter {
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
     pub fn filter_kit_by_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
-        let design = match find_design_in_kit(kit, design_guid) {
+        let design = match kit.design_by_guid(design_guid) {
             Some(design) => design,
             None => {
                 return Kit {
@@ -5350,1089 +5048,8 @@ mod filter {
 } // 🧩Filter
 pub use filter::*;
 
-mod flatten_design {
-    // 🏦FlattenDesign
-    // FlattenDesign MUST provide the flattendesign functionality.
-
-    /// <summary>🔖FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
-    use super::*;
-
-    pub struct FlattenedPiece {
-        pub piece: Piece,
-        pub plane: Plane,
-        pub type_guid: Option<String>,
-        pub design_guid: Option<String>,
-        pub path: Vec<String>,
-    }
-
-    /// 🔖Computes forward/backward DesignChange for flatten (hot path; no SemioReport wrapper).
-    pub fn flatten_design_change(kit: &Kit, design_guid: &str) -> DesignChange {
-        let design = match find_design_in_kit(kit, design_guid) {
-            Some(d) => d,
-            None => {
-                let empty_diff = DesignDiff {
-                    guid: design_guid.to_string(),
-                    ..Default::default()
-                };
-                return DesignChange {
-                    forward: empty_diff.clone(),
-                    backward: empty_diff,
-                    author: None,
-                    time: None,
-                    before: None,
-                    after: None,
-                };
-            }
-        };
-
-        let before_design = design.clone();
-
-        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-        if pieces.is_empty() {
-            let empty_diff = DesignDiff {
-                guid: design_guid.to_string(),
-                ..Default::default()
-            };
-            return DesignChange {
-                forward: empty_diff.clone(),
-                backward: empty_diff,
-                author: None,
-                time: None,
-                before: Some(before_design.clone()),
-                after: Some(before_design),
-            };
-        }
-
-        let connections = design
-            .connections
-            .as_ref()
-            .map(|c| c.as_slice())
-            .unwrap_or(&[]);
-
-        let types_map: HashMap<&str, &Type> = kit
-            .types
-            .as_ref()
-            .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
-            .unwrap_or_default();
-
-        let pieces_map: HashMap<&str, &Piece> =
-            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-
-        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-        for conn in connections {
-            let src = conn.connected.piece.guid.as_str();
-            let tgt = conn.connecting.piece.guid.as_str();
-            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                adjacency.entry(src).or_default().push((tgt, conn, true));
-                adjacency.entry(tgt).or_default().push((src, conn, false));
-            }
-        }
-
-        let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
-        let mut piece_centers: HashMap<&str, Coord> = HashMap::with_capacity(pieces.len());
-        let mut piece_paths: HashMap<&str, String> = HashMap::with_capacity(pieces.len());
-        let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
-        let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
-
-        pub const RADIUS: f64 = 2.697;
-        pub const VERTICAL_V_EXTRA: f64 = 1.0;
-        pub const HORIZONTAL_SCALE: f64 = 3.0633;
-
-        for piece in pieces {
-            if !visited.contains(piece.guid.as_str()) {
-                let initial_matrix = piece
-                    .plane
-                    .as_ref()
-                    .map(|p| p.to_matrix())
-                    .unwrap_or_else(Matrix4::identity);
-                piece_planes.insert(piece.guid.as_str(), initial_matrix);
-
-                let initial_center = piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 });
-                piece_centers.insert(piece.guid.as_str(), initial_center);
-                piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
-
-                visited.insert(piece.guid.as_str());
-                queue.push_back(piece.guid.as_str());
-
-                while let Some(current_guid) = queue.pop_front() {
-                    let current_matrix = *piece_planes.get(current_guid).unwrap();
-                    let parent_center = piece_centers
-                        .get(current_guid)
-                        .cloned()
-                        .unwrap_or(Coord { u: 0.0, v: 0.0 });
-
-                    if let Some(neighbors) = adjacency.get(current_guid) {
-                        for &(neighbor_guid, conn, is_connected) in neighbors {
-                            if visited.contains(neighbor_guid) {
-                                continue;
-                            }
-
-                            let (parent_side, _child_side) = if is_connected {
-                                (&conn.connected, &conn.connecting)
-                            } else {
-                                (&conn.connecting, &conn.connected)
-                            };
-
-                            let parent_connector = match get_connector_for_side_fast(
-                                &types_map,
-                                &pieces_map,
-                                parent_side,
-                            ) {
-                                Some(c) => c,
-                                None => continue,
-                            };
-
-                            let connection_matrix = match compute_connection_matrix_fast(
-                                &types_map,
-                                &pieces_map,
-                                conn,
-                                is_connected,
-                            ) {
-                                Some(m) => m,
-                                None => continue,
-                            };
-
-                            let new_matrix = current_matrix * connection_matrix;
-
-                            let conn_u = conn.u.unwrap_or(0.0);
-                            let conn_v = conn.v.unwrap_or(0.0);
-
-                            let (child_u, child_v) = if parent_center.u.abs() < 0.0001
-                                && parent_center.v.abs() < 0.0001
-                            {
-                                let angle = 2.0 * PI * parent_connector.t;
-                                (RADIUS * angle.sin(), RADIUS * angle.cos())
-                            } else {
-                                let is_vertical = parent_connector.direction.z.abs() > 0.5;
-                                if is_vertical {
-                                    (
-                                        parent_center.u + conn_u,
-                                        parent_center.v + conn_v + VERTICAL_V_EXTRA,
-                                    )
-                                } else {
-                                    (
-                                        parent_center.u + conn_u * HORIZONTAL_SCALE,
-                                        parent_center.v + conn_v * HORIZONTAL_SCALE,
-                                    )
-                                }
-                            };
-
-                            let child_center = Coord {
-                                u: (child_u * 1_000_000.0).round() / 1_000_000.0,
-                                v: (child_v * 1_000_000.0).round() / 1_000_000.0,
-                            };
-
-                            piece_planes.insert(neighbor_guid, new_matrix);
-                            piece_centers.insert(neighbor_guid, child_center);
-                            let parent_path =
-                                piece_paths.get(current_guid).cloned().unwrap_or_default();
-                            piece_paths.insert(
-                                neighbor_guid,
-                                format!("{},{}", parent_path, neighbor_guid),
-                            );
-                            visited.insert(neighbor_guid);
-                            queue.push_back(neighbor_guid);
-                        }
-                    }
-                }
-            }
-        }
-
-        let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
-
-        for piece in pieces {
-            let matrix_opt = piece_planes.get(piece.guid.as_str());
-            let center_opt = piece_centers.get(piece.guid.as_str());
-
-            if let (Some(&matrix), Some(center)) = (matrix_opt, center_opt) {
-                let new_plane = Plane::from_matrix(&matrix).round();
-                let plane_needs_update = match &piece.plane {
-                    Some(existing) => !planes_equal_approx(existing, &new_plane),
-                    None => true,
-                };
-
-                let center_needs_update = match &piece.center {
-                    Some(existing) => {
-                        (existing.u - center.u).abs() > 0.0001
-                            || (existing.v - center.v).abs() > 0.0001
-                    }
-                    None => true,
-                };
-
-                if plane_needs_update || center_needs_update {
-                    let path_attr =
-                        piece_paths
-                            .get(piece.guid.as_str())
-                            .map(|path| CollectionDiff {
-                                added: Some(vec![Attribute {
-                                    guid: guid(),
-                                    key: "semio.path".to_string(),
-                                    value: Some(path.clone()),
-                                    definition: None,
-                                }]),
-                                removed: None,
-                                updated: None,
-                            });
-                    updated_pieces.push(DiffUpdate {
-                        key: "piece".to_string(),
-                        guid: piece.guid.clone(),
-                        diff: PieceDiff {
-                            guid: piece.guid.clone(),
-                            plane: if plane_needs_update {
-                                Some(Some(new_plane))
-                            } else {
-                                None
-                            },
-                            center: if center_needs_update {
-                                Some(Some(center.clone()))
-                            } else {
-                                None
-                            },
-                            attributes: path_attr,
-                            ..Default::default()
-                        },
-                    });
-                }
-            }
-        }
-
-        let mut forward = DesignDiff {
-            guid: design_guid.to_string(),
-            ..Default::default()
-        };
-
-        if !updated_pieces.is_empty() {
-            forward.pieces = Some(CollectionDiff {
-                added: None,
-                removed: None,
-                updated: Some(updated_pieces),
-            });
-        }
-
-        let mut after_design = before_design.clone();
-        apply_design_diff(&mut after_design, &forward);
-        let backward = get_design_diff(&after_design, &before_design);
-
-        DesignChange {
-            forward,
-            backward,
-            author: None,
-            time: None,
-            before: Some(before_design),
-            after: Some(after_design),
-        }
-    }
-
-    fn flatten_design_report_from_change(
-        kit: &Kit,
-        design_guid: &str,
-        change: DesignChange,
-    ) -> SemioReport<DesignChange> {
-        let pieces_empty = find_design_in_kit(kit, design_guid)
-            .and_then(|d| d.pieces.as_ref())
-            .map(|p| p.is_empty())
-            .unwrap_or(true);
-        if pieces_empty {
-            SemioReport::ok_with(
-                change,
-                vec![],
-                vec![OperationNote {
-                    code: Some("flatten.empty-pieces".into()),
-                    message: "No pieces to flatten; returning empty forward and backward diffs."
-                        .into(),
-                }],
-            )
-        } else {
-            SemioReport::ok_with(change, vec![], vec![])
-        }
-    }
-
-    /// 🌤️Canonical flatten report (matches TypeScript flattenDesign).
-    pub fn flatten_design(kit: &Kit, design_guid: &str) -> SemioReport<DesignChange> {
-        if find_design_in_kit(kit, design_guid).is_none() {
-            return SemioReport::err(vec![OperationNote {
-                code: Some("flatten.design-not-found".into()),
-                message: format!("Design {design_guid} not found in kit"),
-            }]);
-        }
-        let change = flatten_design_change(kit, design_guid);
-        flatten_design_report_from_change(kit, design_guid, change)
-    }
-
-    /// Same outcome as [`flatten_design`], but takes the in-kit [`Design`] handle (see [`Kit::flatten_for`]).
-    #[inline]
-    pub fn flatten_design_by_handle(kit: &Kit, design: &Design) -> SemioReport<DesignChange> {
-        kit.flatten_for(design)
-    }
-
-    /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn planes_equal_approx(a: &Plane, b: &Plane) -> bool {
-        pub const TOL: f64 = 0.0001;
-        (a.origin.x - b.origin.x).abs() < TOL
-            && (a.origin.y - b.origin.y).abs() < TOL
-            && (a.origin.z - b.origin.z).abs() < TOL
-            && (a.x_axis.x - b.x_axis.x).abs() < TOL
-            && (a.x_axis.y - b.x_axis.y).abs() < TOL
-            && (a.x_axis.z - b.x_axis.z).abs() < TOL
-            && (a.y_axis.x - b.y_axis.x).abs() < TOL
-            && (a.y_axis.y - b.y_axis.y).abs() < TOL
-            && (a.y_axis.z - b.y_axis.z).abs() < TOL
-    }
-    /// 🔖<summary>💾compute_connection_matrix_fast holds the data fields for a compute_connection_matrix_fast record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn compute_connection_matrix_fast(
-        types_map: &HashMap<&str, &Type>,
-        pieces_map: &HashMap<&str, &Piece>,
-        conn: &Connection,
-        from_connected: bool,
-    ) -> Option<Matrix4<f64>> {
-        let (from_side, to_side) = if from_connected {
-            (&conn.connected, &conn.connecting)
-        } else {
-            (&conn.connecting, &conn.connected)
-        };
-
-        let parent_connector = get_connector_for_side_fast(types_map, pieces_map, from_side)?;
-        let child_connector = get_connector_for_side_fast(types_map, pieces_map, to_side)?;
-
-        Some(compute_child_plane_matrix(
-            &parent_connector,
-            &child_connector,
-            conn,
-        ))
-    }
-    /// 🔖<summary>🔖compute_child_plane_matrix holds the data fields for a compute_child_plane_matrix record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn compute_child_plane_matrix(
-        parent_connector: &Connector,
-        child_connector: &Connector,
-        conn: &Connection,
-    ) -> Matrix4<f64> {
-        use nalgebra::{UnitQuaternion, Vector3};
-
-        let parent_point = Vector3::new(
-            parent_connector.point.x,
-            parent_connector.point.y,
-            parent_connector.point.z,
-        );
-        let mut parent_dir = Vector3::new(
-            parent_connector.direction.x,
-            parent_connector.direction.y,
-            parent_connector.direction.z,
-        );
-        if parent_dir.norm() > 0.0001 {
-            parent_dir = parent_dir.normalize();
-        }
-
-        let child_point = Vector3::new(
-            child_connector.point.x,
-            child_connector.point.y,
-            child_connector.point.z,
-        );
-        let mut child_dir = Vector3::new(
-            child_connector.direction.x,
-            child_connector.direction.y,
-            child_connector.direction.z,
-        );
-        if child_dir.norm() > 0.0001 {
-            child_dir = child_dir.normalize();
-        }
-
-        let gap = conn.gap;
-        let shift = conn.shift;
-        let rise = conn.rise;
-        let rotation_rad = conn.rotation * PI / 180.0;
-        let turn_rad = conn.turn * PI / 180.0;
-        let tilt_rad = conn.tilt * PI / 180.0;
-
-        let reverse_child_dir = -child_dir;
-
-        let align_quat: UnitQuaternion<f64> = {
-            let cross_vec = parent_dir.cross(&reverse_child_dir);
-            let cross_len = cross_vec.norm();
-            let dot = parent_dir.dot(&reverse_child_dir);
-
-            if cross_len < 0.01 {
-                if dot > 0.0 {
-                    UnitQuaternion::identity()
-                } else if parent_dir.z.abs() < 0.001 {
-                    UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
-                } else {
-                    let axis = Vector3::new(0.0, 0.0, 1.0).cross(&parent_dir);
-                    if axis.norm() > 0.0001 {
-                        UnitQuaternion::from_axis_angle(
-                            &nalgebra::Unit::new_normalize(axis.normalize()),
-                            PI,
-                        )
-                    } else {
-                        UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
-                    }
-                }
-            } else {
-                UnitQuaternion::rotation_between(&reverse_child_dir, &parent_dir)
-                    .unwrap_or_else(UnitQuaternion::identity)
-            }
-        };
-        let direction_t = quat_to_matrix4(&align_quat);
-
-        let y_axis = Vector3::new(0.0, 1.0, 0.0);
-        let parent_connector_quat = {
-            let dot = y_axis.dot(&parent_dir);
-            if (dot + 1.0).abs() < 0.0001 {
-                UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
-            } else {
-                UnitQuaternion::rotation_between(&y_axis, &parent_dir)
-                    .unwrap_or_else(UnitQuaternion::identity)
-            }
-        };
-        let parent_rotation_t = quat_to_matrix4(&parent_connector_quat);
-
-        let gap_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
-        let shift_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
-        let raise_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-        let mut turn_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-        let mut tilt_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
-
-        let mut orientation_t = direction_t;
-
-        let rotate_quat = UnitQuaternion::from_axis_angle(
-            &nalgebra::Unit::new_normalize(parent_dir),
-            -rotation_rad,
-        );
-        let rotate_t = quat_to_matrix4(&rotate_quat);
-        orientation_t = rotate_t * orientation_t;
-
-        turn_axis = apply_matrix4_to_vec3(&rotate_t, &turn_axis);
-        tilt_axis = apply_matrix4_to_vec3(&rotate_t, &tilt_axis);
-
-        if turn_axis.norm() > 0.0001 {
-            let turn_quat = UnitQuaternion::from_axis_angle(
-                &nalgebra::Unit::new_normalize(turn_axis.normalize()),
-                turn_rad,
-            );
-            let turn_t = quat_to_matrix4(&turn_quat);
-            orientation_t = turn_t * orientation_t;
-        }
-
-        if tilt_axis.norm() > 0.0001 {
-            let tilt_quat = UnitQuaternion::from_axis_angle(
-                &nalgebra::Unit::new_normalize(tilt_axis.normalize()),
-                tilt_rad,
-            );
-            let tilt_t = quat_to_matrix4(&tilt_quat);
-            orientation_t = tilt_t * orientation_t;
-        }
-
-        let center_child_t = make_translation(-child_point.x, -child_point.y, -child_point.z);
-        let mut transform = orientation_t * center_child_t;
-
-        let gap_transform = make_translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
-        let shift_transform = make_translation(
-            shift_dir.x * shift,
-            shift_dir.y * shift,
-            shift_dir.z * shift,
-        );
-        let raise_transform =
-            make_translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
-
-        let translation_t = raise_transform * (shift_transform * gap_transform);
-        transform = translation_t * transform;
-
-        let move_to_parent_t = make_translation(parent_point.x, parent_point.y, parent_point.z);
-        transform = move_to_parent_t * transform;
-
-        transform
-    }
-    /// 🔖<summary>🔄quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
-        let rot = q.to_rotation_matrix();
-        let m = rot.matrix();
-        Matrix4::new(
-            m[(0, 0)],
-            m[(0, 1)],
-            m[(0, 2)],
-            0.0,
-            m[(1, 0)],
-            m[(1, 1)],
-            m[(1, 2)],
-            0.0,
-            m[(2, 0)],
-            m[(2, 1)],
-            m[(2, 2)],
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            1.0,
-        )
-    }
-    /// 🔖<summary>🔖make_translation holds the data fields for a make_translation record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn make_translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
-        Matrix4::new(
-            1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
-        )
-    }
-    /// 🔖<summary>🔖apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_matrix4_to_vec3(
-        m: &Matrix4<f64>,
-        v: &nalgebra::Vector3<f64>,
-    ) -> nalgebra::Vector3<f64> {
-        nalgebra::Vector3::new(
-            m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
-            m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
-            m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
-        )
-    }
-    /// 🔖<summary>🔖get_connector_for_side_fast holds the data fields for a get_connector_for_side_fast record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn get_connector_for_side_fast<'a>(
-        types_map: &HashMap<&str, &'a Type>,
-        pieces_map: &HashMap<&str, &Piece>,
-        side: &Side,
-    ) -> Option<Connector> {
-        let piece = pieces_map.get(side.piece.guid.as_str())?;
-        let type_id = piece.type_ref.as_ref()?;
-        let t = types_map.get(type_id.guid.as_str())?;
-        let connector_guid = side.connector.as_ref().map(|c| c.guid.as_str());
-        get_connector_from_type(types_map, t, connector_guid).map(|c| c.clone())
-    }
-    /// 🔖<summary>🔖get_connector_from_type holds the data fields for a get_connector_from_type record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn get_connector_from_type<'a>(
-        _types_map: &HashMap<&str, &'a Type>,
-        t: &'a Type,
-        connector_guid: Option<&str>,
-    ) -> Option<&'a Connector> {
-        match connector_guid {
-            None | Some("") => {
-                if let Some(connectors) = &t.connectors {
-                    if !connectors.is_empty() {
-                        return Some(&connectors[0]);
-                    }
-                }
-                None
-            }
-            Some(guid) => {
-                if let Some(connectors) = &t.connectors {
-                    for c in connectors {
-                        if c.guid == guid {
-                            return Some(c);
-                        }
-                    }
-                    if !connectors.is_empty() {
-                        return Some(&connectors[0]);
-                    }
-                }
-                None
-            }
-        }
-    }
-    /// 🔖<summary>🔖connector_to_plane holds the data fields for a connector_to_plane record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn connector_to_plane(connector: &Connector) -> Plane {
-        let origin = connector.point.clone();
-        let y_axis = connector.direction.clone();
-        let temp_x = if (y_axis.z.abs() - 1.0).abs() < 0.001 {
-            Vector::unit_x()
-        } else {
-            Vector::unit_z()
-        };
-        let y_vec = y_axis.to_nalgebra();
-        let x_vec = y_vec.cross(&temp_x.to_nalgebra()).normalize();
-        let x_axis = Vector::from_nalgebra(&x_vec);
-        Plane::new(origin, x_axis, y_axis)
-    }
-
-    pub fn drag_pieces_in_design(
-        design_pieces: &[Piece],
-        design_connections: &[Connection],
-        selected_pieces: &[Piece],
-        offset: &Coord,
-    ) -> DesignDiff {
-        let selected_guids: HashSet<&str> =
-            selected_pieces.iter().map(|p| p.guid.as_str()).collect();
-        let mut parent_map: HashMap<&str, (&str, &str)> = HashMap::new();
-        for conn in design_connections {
-            let connecting_guid = conn.connecting.piece.guid.as_str();
-            let connected_guid = conn.connected.piece.guid.as_str();
-            parent_map.insert(connecting_guid, (conn.guid.as_str(), connected_guid));
-        }
-        let piece_map: HashMap<&str, &Piece> =
-            design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-        let fixed_guids: HashSet<&str> = selected_guids
-            .iter()
-            .filter(|&&guid| !parent_map.contains_key(guid))
-            .copied()
-            .collect();
-        let piece_updates: Vec<DiffUpdate<PieceDiff>> = fixed_guids
-            .iter()
-            .filter_map(|&guid| {
-                let center = piece_map.get(guid)?.center.as_ref()?;
-                Some(DiffUpdate {
-                    key: "piece".to_string(),
-                    guid: guid.to_string(),
-                    diff: PieceDiff {
-                        guid: guid.to_string(),
-                        center: Some(Some(Coord {
-                            u: center.u + offset.u,
-                            v: center.v + offset.v,
-                        })),
-                        ..Default::default()
-                    },
-                })
-            })
-            .collect();
-        let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids
-            .iter()
-            .filter(|&&guid| {
-                if fixed_guids.contains(guid) {
-                    return false;
-                }
-                let mut current = guid;
-                loop {
-                    match parent_map.get(current) {
-                        Some(&(_conn_guid, ancestor_guid)) => {
-                            if selected_guids.contains(ancestor_guid) {
-                                return false;
-                            }
-                            current = ancestor_guid;
-                        }
-                        None => break,
-                    }
-                }
-                parent_map.contains_key(guid)
-            })
-            .map(|&guid| {
-                let (conn_guid, _parent_guid) = parent_map[guid];
-                DiffUpdate {
-                    key: "connection".to_string(),
-                    guid: conn_guid.to_string(),
-                    diff: ConnectionDiff {
-                        guid: conn_guid.to_string(),
-                        u: Some(Some(offset.u)),
-                        v: Some(Some(offset.v)),
-                        ..Default::default()
-                    },
-                }
-            })
-            .collect();
-        let mut diff = DesignDiff {
-            guid: String::new(),
-            ..Default::default()
-        };
-        if !piece_updates.is_empty() {
-            diff.pieces = Some(CollectionDiff {
-                added: None,
-                removed: None,
-                updated: Some(piece_updates),
-            });
-        }
-        if !connection_updates.is_empty() {
-            diff.connections = Some(CollectionDiff {
-                added: None,
-                removed: None,
-                updated: Some(connection_updates),
-            });
-        }
-        diff
-    }
-
-    // #region 🌳Flatten Merkle Hashes
-    // 🌳Per-piece {plane_hash, center_hash} merkle hashes for cached flatten_design reuse.
-
-    /// <summary>🌳FlatMerkleHashes holds the plane and center merkle hashes for a single piece in a flattened design.</summary>
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct FlatMerkleHashes {
-        pub plane_hash: String,
-        pub center_hash: String,
-    }
-
-    /// <summary>🌳FlatMerkleCacheEntry caches a piece's merkle hashes together with the resolved plane and center from the previous flatten_design run.</summary>
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct FlatMerkleCacheEntry {
-        pub plane_hash: String,
-        pub center_hash: String,
-        pub plane: Option<Plane>,
-        pub center: Option<Coord>,
-    }
-
-    /// <summary>🌱Root plane hash includes only the piece guid and its fixed plane components (identity when absent).</summary>
-    fn hash_plane_root(guid: &str, plane: Option<&Plane>) -> String {
-        let mut w = super::HashWriter::new();
-        match plane {
-            None => {
-                w.write_string("plane.root.identity");
-                w.write_string(guid);
-            }
-            Some(p) => {
-                w.write_string("plane.root");
-                w.write_string(guid);
-                w.write_number(p.origin.x);
-                w.write_number(p.origin.y);
-                w.write_number(p.origin.z);
-                w.write_number(p.x_axis.x);
-                w.write_number(p.x_axis.y);
-                w.write_number(p.x_axis.z);
-                w.write_number(p.y_axis.x);
-                w.write_number(p.y_axis.y);
-                w.write_number(p.y_axis.z);
-            }
-        }
-        w.digest()
-    }
-
-    /// <summary>🔗Chain plane hash depends on the parent plane hash plus every input consumed by compute_child_plane_matrix.</summary>
-    fn hash_plane_chain(
-        parent_hash: &str,
-        parent_connector: &Connector,
-        child_connector: &Connector,
-        conn: &Connection,
-    ) -> String {
-        let mut w = super::HashWriter::new();
-        w.write_string("plane.chain");
-        w.write_hash(parent_hash);
-        w.write_number(parent_connector.point.x);
-        w.write_number(parent_connector.point.y);
-        w.write_number(parent_connector.point.z);
-        w.write_number(parent_connector.direction.x);
-        w.write_number(parent_connector.direction.y);
-        w.write_number(parent_connector.direction.z);
-        w.write_number(child_connector.point.x);
-        w.write_number(child_connector.point.y);
-        w.write_number(child_connector.point.z);
-        w.write_number(child_connector.direction.x);
-        w.write_number(child_connector.direction.y);
-        w.write_number(child_connector.direction.z);
-        w.write_number(conn.gap);
-        w.write_number(conn.shift);
-        w.write_number(conn.rise);
-        w.write_number(conn.rotation);
-        w.write_number(conn.turn);
-        w.write_number(conn.tilt);
-        w.digest()
-    }
-
-    /// <summary>🌱Root center hash includes only the piece guid and its fixed center (identity when absent).</summary>
-    fn hash_center_root(guid: &str, center: Option<&Coord>) -> String {
-        let mut w = super::HashWriter::new();
-        match center {
-            None => {
-                w.write_string("center.root.identity");
-                w.write_string(guid);
-            }
-            Some(c) => {
-                w.write_string("center.root");
-                w.write_string(guid);
-                w.write_number(c.u);
-                w.write_number(c.v);
-            }
-        }
-        w.digest()
-    }
-
-    /// <summary>🔗Chain center hash conservatively includes every potentially-read input of the child center computation.</summary>
-    fn hash_center_chain(
-        parent_hash: &str,
-        parent_connector: &Connector,
-        conn: &Connection,
-    ) -> String {
-        let mut w = super::HashWriter::new();
-        w.write_string("center.chain");
-        w.write_hash(parent_hash);
-        w.write_number(parent_connector.direction.z);
-        w.write_number(parent_connector.t);
-        w.write_number(conn.u.unwrap_or(0.0));
-        w.write_number(conn.v.unwrap_or(0.0));
-        w.digest()
-    }
-
-    /// <summary>🌳Compute per-piece {plane_hash, center_hash} merkle hashes for the flattened design so callers can cache by chain identity.</summary>
-    pub fn compute_flat_hashes(kit: &Kit, design_guid: &str) -> HashMap<String, FlatMerkleHashes> {
-        let design = match find_design_in_kit(kit, design_guid) {
-            Some(d) => d,
-            None => return HashMap::new(),
-        };
-        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-        if pieces.is_empty() {
-            return HashMap::new();
-        }
-        let connections = design
-            .connections
-            .as_ref()
-            .map(|c| c.as_slice())
-            .unwrap_or(&[]);
-        let types_map: HashMap<&str, &Type> = kit
-            .types
-            .as_ref()
-            .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
-            .unwrap_or_default();
-        let pieces_map: HashMap<&str, &Piece> =
-            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-
-        // Same adjacency order as flatten_design so the BFS chain selects the same parent for every child.
-        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-        for conn in connections {
-            let src = conn.connected.piece.guid.as_str();
-            let tgt = conn.connecting.piece.guid.as_str();
-            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                adjacency.entry(src).or_default().push((tgt, conn, true));
-                adjacency.entry(tgt).or_default().push((src, conn, false));
-            }
-        }
-
-        let mut components: Vec<Vec<&str>> = Vec::new();
-        {
-            let mut component_visited: HashSet<&str> = HashSet::new();
-            for piece in pieces {
-                let guid = piece.guid.as_str();
-                if component_visited.contains(guid) {
-                    continue;
-                }
-                let mut component = Vec::new();
-                let mut queue: VecDeque<&str> = VecDeque::new();
-                queue.push_back(guid);
-                component_visited.insert(guid);
-                while let Some(cur) = queue.pop_front() {
-                    component.push(cur);
-                    if let Some(neighbors) = adjacency.get(cur) {
-                        for &(neigh, _, _) in neighbors {
-                            if !component_visited.contains(neigh) {
-                                component_visited.insert(neigh);
-                                queue.push_back(neigh);
-                            }
-                        }
-                    }
-                }
-                components.push(component);
-            }
-        }
-
-        let mut plane_hashes: HashMap<String, String> = HashMap::new();
-        let mut center_hashes: HashMap<String, String> = HashMap::new();
-
-        for component in &components {
-            let component_set: HashSet<&str> = component.iter().copied().collect();
-
-            // Rule 1: first piece (in slice order) of this component with both plane and center.
-            let mut root: Option<&str> = None;
-            for piece in pieces {
-                let g = piece.guid.as_str();
-                if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
-                    root = Some(g);
-                    break;
-                }
-            }
-            // Rule 2: lexicographically smallest guid in the component.
-            if root.is_none() {
-                let mut sorted: Vec<&str> = component.iter().copied().collect();
-                sorted.sort();
-                root = sorted.first().copied();
-            }
-            let root_guid = match root {
-                Some(g) => g,
-                None => continue,
-            };
-            let root_piece = match pieces_map.get(root_guid) {
-                Some(p) => *p,
-                None => continue,
-            };
-            plane_hashes.insert(
-                root_guid.to_string(),
-                hash_plane_root(root_guid, root_piece.plane.as_ref()),
-            );
-            center_hashes.insert(
-                root_guid.to_string(),
-                hash_center_root(root_guid, root_piece.center.as_ref()),
-            );
-
-            let mut bfs_visited: HashSet<&str> = HashSet::new();
-            bfs_visited.insert(root_guid);
-            let mut queue: VecDeque<&str> = VecDeque::new();
-            queue.push_back(root_guid);
-            while let Some(cur) = queue.pop_front() {
-                let parent_plane_hash = match plane_hashes.get(cur).cloned() {
-                    Some(h) => h,
-                    None => continue,
-                };
-                let parent_center_hash = match center_hashes.get(cur).cloned() {
-                    Some(h) => h,
-                    None => continue,
-                };
-                if let Some(neighbors) = adjacency.get(cur) {
-                    for &(neigh, conn, is_connected) in neighbors {
-                        if bfs_visited.contains(neigh) {
-                            continue;
-                        }
-                        let (parent_side, child_side) = if is_connected {
-                            (&conn.connected, &conn.connecting)
-                        } else {
-                            (&conn.connecting, &conn.connected)
-                        };
-                        let parent_connector =
-                            match get_connector_for_side_fast(&types_map, &pieces_map, parent_side)
-                            {
-                                Some(c) => c,
-                                None => continue,
-                            };
-                        let child_connector = match get_connector_for_side_fast(
-                            &types_map,
-                            &pieces_map,
-                            child_side,
-                        ) {
-                            Some(c) => c,
-                            None => continue,
-                        };
-                        plane_hashes.insert(
-                            neigh.to_string(),
-                            hash_plane_chain(
-                                &parent_plane_hash,
-                                &parent_connector,
-                                &child_connector,
-                                conn,
-                            ),
-                        );
-                        center_hashes.insert(
-                            neigh.to_string(),
-                            hash_center_chain(&parent_center_hash, &parent_connector, conn),
-                        );
-                        bfs_visited.insert(neigh);
-                        queue.push_back(neigh);
-                    }
-                }
-            }
-        }
-
-        let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
-        for (guid, plane_hash) in plane_hashes {
-            if let Some(center_hash) = center_hashes.get(&guid).cloned() {
-                result.insert(
-                    guid,
-                    FlatMerkleHashes {
-                        plane_hash,
-                        center_hash,
-                    },
-                );
-            }
-        }
-        result
-    }
-
-    /// <summary>🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run.</summary>
-    pub fn flatten_design_cached(
-        kit: &Kit,
-        design_guid: &str,
-        cache: Option<&HashMap<String, FlatMerkleCacheEntry>>,
-    ) -> (
-        SemioReport<DesignChange>,
-        HashMap<String, FlatMerkleCacheEntry>,
-    ) {
-        let new_hashes = compute_flat_hashes(kit, design_guid);
-        let change = flatten_design_change(kit, design_guid);
-        let report = if find_design_in_kit(kit, design_guid).is_none() {
-            SemioReport::err(vec![OperationNote {
-                code: Some("flatten.design-not-found".into()),
-                message: format!("Design {design_guid} not found in kit"),
-            }])
-        } else {
-            flatten_design_report_from_change(kit, design_guid, change.clone())
-        };
-
-        let mut updated_by_id: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
-        if let Some(pieces_diff) = &change.forward.pieces {
-            if let Some(updates) = &pieces_diff.updated {
-                for upd in updates {
-                    let plane = upd.diff.plane.clone().flatten();
-                    let center = upd.diff.center.clone().flatten();
-                    updated_by_id.insert(upd.guid.clone(), (plane, center));
-                }
-            }
-        }
-
-        let mut next_cache: HashMap<String, FlatMerkleCacheEntry> = HashMap::new();
-        match cache {
-            Some(prev_cache) => {
-                for (guid, hashes) in &new_hashes {
-                    let prev = prev_cache.get(guid);
-                    let updated = updated_by_id.get(guid);
-                    match (prev, updated) {
-                        (None, None) => {}
-                        (None, Some((plane, center))) => {
-                            next_cache.insert(
-                                guid.clone(),
-                                FlatMerkleCacheEntry {
-                                    plane_hash: hashes.plane_hash.clone(),
-                                    center_hash: hashes.center_hash.clone(),
-                                    plane: plane.clone(),
-                                    center: center.clone(),
-                                },
-                            );
-                        }
-                        (Some(_), None) => {}
-                        (Some(p), Some((u_plane, u_center))) => {
-                            let plane = if p.plane_hash == hashes.plane_hash {
-                                p.plane.clone()
-                            } else {
-                                u_plane.clone()
-                            };
-                            let center = if p.center_hash == hashes.center_hash {
-                                p.center.clone()
-                            } else {
-                                u_center.clone()
-                            };
-                            next_cache.insert(
-                                guid.clone(),
-                                FlatMerkleCacheEntry {
-                                    plane_hash: hashes.plane_hash.clone(),
-                                    center_hash: hashes.center_hash.clone(),
-                                    plane,
-                                    center,
-                                },
-                            );
-                        }
-                    }
-                }
-            }
-            None => {
-                for (guid, hashes) in &new_hashes {
-                    if let Some((plane, center)) = updated_by_id.get(guid) {
-                        next_cache.insert(
-                            guid.clone(),
-                            FlatMerkleCacheEntry {
-                                plane_hash: hashes.plane_hash.clone(),
-                                center_hash: hashes.center_hash.clone(),
-                                plane: plane.clone(),
-                                center: center.clone(),
-                            },
-                        );
-                    }
-                }
-            }
-        }
-
-        (report, next_cache)
-    }
-
-    // #endregion 🌳Flatten Merkle Hashes
-} // 🕍FlattenDesign
-pub use flatten_design::*;
-
+ // 🕍FlattenDesign
 mod find_replaceable_types_in_designs {
-    // 🔍Find Replaceable Types In Designs
-    // Find Replaceable Types In Designs MUST find all types and designs that can replace selected pieces in a design.
-    // Specs: Build one selection boundary requirement multiset from actual opposite-side connectors and accept a candidate only if distinct compatible candidate connectors can satisfy the whole multiset. Without boundary connections, use the selected pieces' own connectors with multiplicity.
 
     use super::*;
     use std::collections::{HashMap, HashSet};
@@ -6444,7 +5061,7 @@ mod find_replaceable_types_in_designs {
         design_guid: &str,
         piece_guids: &[String],
     ) -> (Vec<String>, Vec<String>) {
-        let design = match find_design_in_kit(kit, design_guid) {
+        let design = match kit.design_by_guid(design_guid) {
             Some(d) => d,
             None => return (vec![], vec![]),
         };
@@ -6772,9 +5389,6 @@ mod find_replaceable_types_in_designs {
 pub use find_replaceable_types_in_designs::*;
 
 mod copy_paste_design {
-    // 📋Copy Paste Design
-    // Copy Paste Design MUST provide copy and paste functionality for designs.
-    // Specs: CopyDesign extracts selected pieces and connections. PasteDesign inserts them into a target design.
 
     use super::*;
     use std::collections::{HashMap, HashSet};
@@ -7827,7 +6441,7 @@ mod kit_model_export {
             });
         }
 
-        let design = find_design_in_kit(kit, design_guid).ok_or_else(|| SemioError::NotFound {
+        let design = kit.design_by_guid(design_guid).ok_or_else(|| SemioError::NotFound {
             kind: "Design".to_string(),
             guid: design_guid.to_string(),
         })?;
@@ -10547,7 +9161,7 @@ mod kit_kind_types {
         }
         fn import_transport(&mut self, transport: &TransportKit) -> Result<()> {
             let imported = transport.to_kit()?;
-            let diff = get_kit_diff(self.kit(), &imported);
+            let diff = self.kit().diff_from(&imported);
             apply_kit_diff(self.kit_mut(), &diff);
             Ok(())
         }
@@ -10743,7 +9357,7 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "findTypeInKit")]
         pub fn wasm_find_type_in_kit(kit_json: &str, guid: &str) -> JsValue {
             match deserialize_kit(kit_json) {
-                Ok(kit) => match find_type_in_kit(&kit, guid) {
+                Ok(kit) => match kit.type_by_guid(guid) {
                     Some(t) => to_js_value(WasmResult::success(t.clone())),
                     None => to_js_value(WasmResult::<Type>::failure(format!(
                         "Type {} not found",
@@ -10757,7 +9371,7 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "findDesignInKit")]
         pub fn wasm_find_design_in_kit(kit_json: &str, guid: &str) -> JsValue {
             match deserialize_kit(kit_json) {
-                Ok(kit) => match find_design_in_kit(&kit, guid) {
+                Ok(kit) => match kit.design_by_guid(guid) {
                     Some(d) => to_js_value(WasmResult::success(d.clone())),
                     None => to_js_value(WasmResult::<Design>::failure(format!(
                         "Design {} not found",
@@ -13663,250 +12277,8 @@ mod hash {
 } // 🖥️Hash
 pub use hash::*;
 
-mod finder_functions {
-    // 🔍Helpers
-    // 🥿Finder Functions
-    // Finder Functions MUST provide the finder functions functionality.
-    /// <summary>🔍finds a type in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    use super::*;
-
-    pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
-        kit.types.as_ref()?.iter().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a type in a kit mutably by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_type_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Type> {
-        kit.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a design in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_design_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Design> {
-        kit.designs.as_ref()?.iter().find(|d| d.guid == guid)
-    }
-    /// <summary>🔍finds a design in a kit mutably by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_design_in_kit_mut<'a>(kit: &'a mut Kit, guid: &str) -> Option<&'a mut Design> {
-        kit.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
-    }
-    /// <summary>🔍finds a piece in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_piece_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Piece> {
-        design.pieces.as_ref()?.iter().find(|p| p.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_piece_in_design_mut<'a>(
-        design: &'a mut Design,
-        guid: &str,
-    ) -> Option<&'a mut Piece> {
-        design.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
-    }
-    /// <summary>🔍finds a connection in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_connection_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Connection> {
-        design.connections.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a connector in a type by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_connector_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Connector> {
-        t.connectors.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a model in a type by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_model_in_type<'a>(t: &'a Type, guid: &str) -> Option<&'a Model> {
-        t.models.as_ref()?.iter().find(|m| m.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_file_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a File> {
-        kit.files.as_ref()?.iter().find(|f| f.guid == guid)
-    }
-
-    /// <summary>🔍finds a folder in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_folder_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Folder> {
-        kit.folders.as_ref()?.iter().find(|f| f.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_author_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Author> {
-        kit.authors.as_ref()?.iter().find(|a| a.guid == guid)
-    }
-    /// <summary>🔍find tag in kit.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_tag_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Tag> {
-        kit.tags.as_ref()?.iter().find(|t| t.guid == guid)
-    }
-    /// <summary>🔍finds a concept in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_concept_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Concept> {
-        kit.concepts.as_ref()?.iter().find(|c| c.guid == guid)
-    }
-    /// <summary>🔍finds a quality in a kit by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_quality_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Quality> {
-        kit.qualities.as_ref()?.iter().find(|q| q.guid == guid)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn find_interface_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Port> {
-        kit.ports.as_ref()?.iter().find(|i| i.guid == guid)
-    }
-
-    /// <summary>🔍finds a layer in a design by GUID.</summary>
-    pub fn find_layer_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Layer> {
-        design.layers.as_ref()?.iter().find(|l| l.guid == guid)
-    }
-    /// <summary>🔍finds a group in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_group_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Group> {
-        design.groups.as_ref()?.iter().find(|g| g.guid == guid)
-    }
-
-    /// <summary>🔍finds a stat in a design by GUID.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Stat> {
-        design.stats.as_ref()?.iter().find(|s| s.guid == guid)
-    }
-
-    // ——— Handle-based (pointer identity first, then GUID for detached copies)
-
-    #[inline]
-    pub fn find_design_in_kit_by_handle<'a>(kit: &'a Kit, design: &Design) -> Option<&'a Design> {
-        kit.find_design_entity(design)
-    }
-
-    #[inline]
-    pub fn find_type_in_kit_by_handle<'a>(kit: &'a Kit, t: &Type) -> Option<&'a Type> {
-        kit.find_type_entity(t)
-    }
-
-    #[inline]
-    pub fn find_tag_in_kit_by_handle<'a>(kit: &'a Kit, tag: &Tag) -> Option<&'a Tag> {
-        kit.find_tag(tag)
-    }
-
-    #[inline]
-    pub fn find_concept_in_kit_by_handle<'a>(kit: &'a Kit, c: &Concept) -> Option<&'a Concept> {
-        kit.find_concept(c)
-    }
-
-    #[inline]
-    pub fn find_interface_in_kit_by_handle<'a>(kit: &'a Kit, p: &Port) -> Option<&'a Port> {
-        kit.find_port(p)
-    }
-
-    #[inline]
-    pub fn find_quality_in_kit_by_handle<'a>(kit: &'a Kit, q: &Quality) -> Option<&'a Quality> {
-        kit.find_quality(q)
-    }
-
-    #[inline]
-    pub fn find_file_in_kit_by_handle<'a>(kit: &'a Kit, f: &File) -> Option<&'a File> {
-        kit.find_file(f)
-    }
-
-    #[inline]
-    pub fn find_folder_in_kit_by_handle<'a>(kit: &'a Kit, f: &Folder) -> Option<&'a Folder> {
-        kit.find_folder(f)
-    }
-
-    #[inline]
-    pub fn find_author_in_kit_by_handle<'a>(kit: &'a Kit, a: &Author) -> Option<&'a Author> {
-        kit.find_author(a)
-    }
-
-    #[inline]
-    pub fn find_piece_in_design_by_handle<'a>(
-        design: &'a Design,
-        piece: &Piece,
-    ) -> Option<&'a Piece> {
-        design.find_piece(piece)
-    }
-
-    #[inline]
-    pub fn find_connection_in_design_by_handle<'a>(
-        design: &'a Design,
-        c: &Connection,
-    ) -> Option<&'a Connection> {
-        design.find_connection(c)
-    }
-
-    #[inline]
-    pub fn find_layer_in_design_by_handle<'a>(design: &'a Design, layer: &Layer) -> Option<&'a Layer> {
-        design.find_layer(layer)
-    }
-
-    #[inline]
-    pub fn find_group_in_design_by_handle<'a>(design: &'a Design, group: &Group) -> Option<&'a Group> {
-        design.find_group(group)
-    }
-
-    #[inline]
-    pub fn find_stat_in_design_by_handle<'a>(design: &'a Design, stat: &Stat) -> Option<&'a Stat> {
-        design.find_stat(stat)
-    }
-
-    /// ✔️For each piece, it checks piece-level props first, then falls back to type-level props.
-    pub fn sum_quality_in_design(kit: &Kit, design_guid: &str, quality_guid: &str) -> f64 {
-        let design = match find_design_in_kit(kit, design_guid) {
-            Some(d) => d,
-            None => return 0.0,
-        };
-        let pieces = match &design.pieces {
-            Some(p) => p,
-            None => return 0.0,
-        };
-        let mut sum = 0.0;
-        for piece in pieces {
-            let piece_prop = piece
-                .props
-                .as_ref()
-                .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid));
-            if let Some(prop) = piece_prop {
-                if let Ok(val) = prop.value.parse::<f64>() {
-                    sum += val;
-                }
-                continue;
-            }
-            if let Some(type_ref) = &piece.type_ref {
-                if let Some(t) = find_type_in_kit(kit, &type_ref.guid) {
-                    if let Some(prop) = t
-                        .props
-                        .as_ref()
-                        .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid))
-                    {
-                        if let Ok(val) = prop.value.parse::<f64>() {
-                            sum += val;
-                        }
-                    }
-                }
-            }
-        }
-        sum
-    }
-} // 🔍Helpers
-pub use finder_functions::*;
-
+ // 🔍Helpers
 mod kit_diff_validation {
-    // 📦Kit Diff Validation
-    // Kit diff validation: errors vs warnings; optional JSON heal aligned with Go/TS asset cases.
-    // Included by lib.rs (kit_diff_validation). Validates kit diffs; heal scrubs invalid entries.
 
     use super::*;
     use serde::{Deserialize, Serialize};
@@ -14613,512 +12985,6 @@ mod kit_diff_validation {
 } // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
 
-mod kit_graph {
-    // 📇Kit Graph Session
-    // Parallel to TypeScript `commitKitGraphChange`: `KitGraphChange`, backbone hook, mutex-backed session, transactions, undo stacks.
-    // Included by lib.rs (`mod kit_graph`). TypeScript-parallel graph commit: `KitGraphChange`, session, mutex, transactions, history.
-
-    use std::collections::HashMap;
-    use std::sync::Mutex;
-
-    use super::*;
-
-    // ——— KitGraphChange (aligns with TypeScript `KitChange` for graph mutations: diffs + pre-apply validation)
-
-    /// Bidirectional kit graph edit with [`KitDiffValidationResult`] captured before [`apply_kit_diff`].
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct KitGraphChange {
-        pub forward: KitDiff,
-        pub backward: KitDiff,
-        pub validation: KitDiffValidationResult,
-    }
-
-    /// [`KitGraphChange`] from precomputed diffs without running the validation pipeline (validation is a no-op success).
-    pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGraphChange {
-        KitGraphChange {
-            forward,
-            backward,
-            validation: KitDiffValidationResult {
-                ok: true,
-                errors: vec![],
-                warnings: vec![],
-                diff: None,
-            },
-        }
-    }
-
-    // ——— Backbone (TypeScript `Backbone` parallel)
-
-    /// Notified after a successful graph commit (see [`KitGraphSession::commit`]).
-    pub trait KitBackbone {
-        fn changed(&mut self, change: &KitGraphChange);
-
-        /// Optional hook for inbound remote edits. Default: no-op.
-        ///
-        /// Callers must **not** invoke `commit_inbound` synchronously if that re-enters the same
-        /// [`KitGraphSession`] lock (deadlock). Prefer a channel or queued apply. TODO: structured inbound pipeline.
-        fn attach(&mut self, _kit: &mut Kit, _commit_inbound: &mut dyn FnMut(KitDiff)) {}
-    }
-
-    // ——— Commit options (TypeScript `KitCommitOptions`)
-
-    #[derive(Debug, Clone)]
-    pub struct KitCommitOptions {
-        pub transaction_id: Option<String>,
-        pub notify_backbone: bool,
-        pub skip_global_history: bool,
-    }
-
-    impl Default for KitCommitOptions {
-        fn default() -> Self {
-            Self {
-                transaction_id: None,
-                notify_backbone: true,
-                skip_global_history: false,
-            }
-        }
-    }
-
-    // ——— Session (mutex + transactions + undo stacks)
-
-    struct KitOpenTransaction {
-        start_kit: Kit,
-        steps: Vec<KitGraphChange>,
-        redo_steps: Vec<KitGraphChange>,
-    }
-
-    struct KitGraphSessionInner {
-        kit: Kit,
-        strict_mode: bool,
-        is_conflicted: bool,
-        open_transactions: HashMap<String, KitOpenTransaction>,
-        history_past: Vec<KitGraphChange>,
-        history_future: Vec<KitGraphChange>,
-        backbone: Option<Box<dyn KitBackbone>>,
-    }
-
-    /// Managed kit graph: serializes mutations with a mutex, tracks transactions and undo/redo stacks (TypeScript `Kit` private state parallel).
-    pub struct KitGraphSession {
-        inner: Mutex<KitGraphSessionInner>,
-    }
-
-    impl KitGraphSession {
-        pub fn new(kit: Kit) -> Self {
-            Self {
-                inner: Mutex::new(KitGraphSessionInner {
-                    kit,
-                    strict_mode: false,
-                    is_conflicted: false,
-                    open_transactions: HashMap::new(),
-                    history_past: vec![],
-                    history_future: vec![],
-                    backbone: None,
-                }),
-            }
-        }
-
-        pub fn with_backbone(kit: Kit, backbone: Box<dyn KitBackbone>) -> Self {
-            Self {
-                inner: Mutex::new(KitGraphSessionInner {
-                    kit,
-                    strict_mode: false,
-                    is_conflicted: false,
-                    open_transactions: HashMap::new(),
-                    history_past: vec![],
-                    history_future: vec![],
-                    backbone: Some(backbone),
-                }),
-            }
-        }
-
-        pub fn set_backbone(&self, backbone: Option<Box<dyn KitBackbone>>) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            g.backbone = backbone;
-            Ok(())
-        }
-
-        pub fn set_strict_mode(&self, strict: bool) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            g.strict_mode = strict;
-            Ok(())
-        }
-
-        pub fn clear_conflict(&self) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            g.is_conflicted = false;
-            Ok(())
-        }
-
-        pub fn map_kit<T, F: FnOnce(&Kit) -> T>(&self, f: F) -> Result<T> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            Ok(f(&g.kit))
-        }
-
-        pub fn map_kit_mut<T, F: FnOnce(&mut Kit) -> T>(&self, f: F) -> Result<T> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            Ok(f(&mut g.kit))
-        }
-
-        /// Validates against the current kit, inverts, applies, then records transaction/history/backbone (see [`KitCommitOptions`]).
-        pub fn commit(&self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            g.commit_graph(diff, opts)
-        }
-
-        pub fn start_transaction(&self) -> Result<String> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit has unresolved validation conflicts; call clear_conflict() first"
-                        .into(),
-                });
-            }
-            let id = guid();
-            let start_kit = g.kit.clone();
-            g.open_transactions.insert(
-                id.clone(),
-                KitOpenTransaction {
-                    start_kit,
-                    steps: vec![],
-                    redo_steps: vec![],
-                },
-            );
-            Ok(id)
-        }
-
-        pub fn abort_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
-                SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", transaction_id),
-                }
-            })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message:
-                        "Kit is conflicted; call clear_conflict() before aborting a transaction"
-                            .into(),
-                });
-            }
-            for step in tx.steps.iter().rev() {
-                apply_kit_diff(&mut g.kit, &step.backward);
-            }
-            Ok(())
-        }
-
-        pub fn finalize_transaction(&self, transaction_id: &str) -> Result<KitGraphChange> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message:
-                        "Kit is conflicted; call clear_conflict() before finalizing a transaction"
-                            .into(),
-                });
-            }
-            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
-                SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", transaction_id),
-                }
-            })?;
-            let sk = &tx.start_kit;
-            let forward_raw = get_kit_diff(sk, &g.kit);
-            let validation = validate_kit_diff(sk, &forward_raw, false);
-            if !validation.ok || !validation.errors.is_empty() {
-                g.open_transactions.insert(transaction_id.to_string(), tx);
-                return Err(SemioError::Validation {
-                    message: validation
-                        .errors
-                        .iter()
-                        .map(|e| e.message.clone())
-                        .collect::<Vec<_>>()
-                        .join("; "),
-                });
-            }
-            if g.strict_mode && !validation.warnings.is_empty() {
-                g.open_transactions.insert(transaction_id.to_string(), tx);
-                return Err(SemioError::Validation {
-                    message: validation
-                        .warnings
-                        .iter()
-                        .map(|e| e.message.clone())
-                        .collect::<Vec<_>>()
-                        .join("; "),
-                });
-            }
-            let diff_to_apply = validation
-                .diff
-                .clone()
-                .unwrap_or_else(|| forward_raw.clone());
-            let backward = inverse_kit_diff(sk, &diff_to_apply);
-            let squashed = KitGraphChange {
-                forward: diff_to_apply,
-                backward,
-                validation,
-            };
-            g.history_past.push(squashed.clone());
-            g.history_future.clear();
-            if let Some(ref mut bb) = g.backbone {
-                bb.changed(&squashed);
-            }
-            Ok(squashed)
-        }
-
-        pub fn undo_within_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted".into(),
-                });
-            }
-            if !g.open_transactions.contains_key(transaction_id) {
-                return Err(SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", transaction_id),
-                });
-            }
-            let ch = {
-                let tx = g
-                    .open_transactions
-                    .get_mut(transaction_id)
-                    .expect("transaction id checked");
-                tx.steps.pop()
-            };
-            let Some(ch) = ch else { return Ok(()) };
-            apply_kit_diff(&mut g.kit, &ch.backward);
-            g.open_transactions
-                .get_mut(transaction_id)
-                .expect("transaction id checked")
-                .redo_steps
-                .push(ch);
-            Ok(())
-        }
-
-        pub fn redo_within_transaction(&self, transaction_id: &str) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted".into(),
-                });
-            }
-            if !g.open_transactions.contains_key(transaction_id) {
-                return Err(SemioError::InvalidOperation {
-                    message: format!("Unknown transaction {}", transaction_id),
-                });
-            }
-            let ch = {
-                let tx = g
-                    .open_transactions
-                    .get_mut(transaction_id)
-                    .expect("transaction id checked");
-                tx.redo_steps.pop()
-            };
-            let Some(ch) = ch else { return Ok(()) };
-            apply_kit_diff(&mut g.kit, &ch.forward);
-            g.open_transactions
-                .get_mut(transaction_id)
-                .expect("transaction id checked")
-                .steps
-                .push(ch);
-            Ok(())
-        }
-
-        pub fn undo_history(&self) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted".into(),
-                });
-            }
-            let Some(ch) = g.history_past.pop() else {
-                return Ok(());
-            };
-            apply_kit_diff(&mut g.kit, &ch.backward);
-            g.history_future.push(ch);
-            Ok(())
-        }
-
-        pub fn redo_history(&self) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            if g.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit is conflicted".into(),
-                });
-            }
-            let Some(ch) = g.history_future.pop() else {
-                return Ok(());
-            };
-            apply_kit_diff(&mut g.kit, &ch.forward);
-            g.history_past.push(ch);
-            Ok(())
-        }
-
-        pub fn can_undo_history(&self) -> Result<bool> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            Ok(!g.history_past.is_empty())
-        }
-
-        pub fn can_redo_history(&self) -> Result<bool> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::InvalidOperation {
-                    message: "KitGraphSession mutex poisoned".into(),
-                })?;
-            Ok(!g.history_future.is_empty())
-        }
-    }
-
-    impl KitGraphSessionInner {
-        fn commit_graph(
-            &mut self,
-            diff: KitDiff,
-            opts: KitCommitOptions,
-        ) -> Result<KitGraphChange> {
-            if self.is_conflicted {
-                return Err(SemioError::InvalidOperation {
-                    message: "Kit has unresolved validation conflicts; call clear_conflict() before applying further changes."
-                        .into(),
-                });
-            }
-
-            let validation = validate_kit_diff(&self.kit, &diff, false);
-            if !validation.ok || !validation.errors.is_empty() {
-                self.is_conflicted = true;
-                return Err(SemioError::Validation {
-                    message: validation
-                        .errors
-                        .iter()
-                        .map(|e| e.message.clone())
-                        .collect::<Vec<_>>()
-                        .join("; "),
-                });
-            }
-            if self.strict_mode && !validation.warnings.is_empty() {
-                self.is_conflicted = true;
-                return Err(SemioError::Validation {
-                    message: validation
-                        .warnings
-                        .iter()
-                        .map(|e| e.message.clone())
-                        .collect::<Vec<_>>()
-                        .join("; "),
-                });
-            }
-
-            let diff_to_apply = validation.diff.clone().unwrap_or_else(|| diff.clone());
-            let backward = inverse_kit_diff(&self.kit, &diff_to_apply);
-            apply_kit_diff(&mut self.kit, &diff_to_apply);
-
-            let change = KitGraphChange {
-                forward: diff_to_apply,
-                backward,
-                validation,
-            };
-
-            if let Some(tx_id) = &opts.transaction_id {
-                let tx = self.open_transactions.get_mut(tx_id).ok_or_else(|| {
-                    SemioError::InvalidOperation {
-                        message: format!("Unknown transaction {}", tx_id),
-                    }
-                })?;
-                tx.steps.push(change.clone());
-                tx.redo_steps.clear();
-            } else if !opts.skip_global_history {
-                self.history_past.push(change.clone());
-                self.history_future.clear();
-            }
-
-            let notify_backbone = opts.notify_backbone && opts.transaction_id.is_none();
-            if notify_backbone {
-                if let Some(ref mut bb) = self.backbone {
-                    bb.changed(&change);
-                }
-            }
-
-            self.is_conflicted = false;
-            Ok(change)
-        }
-    }
-
-    /// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
-    pub fn commit_kit_graph_change(
-        session: &KitGraphSession,
-        diff: KitDiff,
-        opts: KitCommitOptions,
-    ) -> Result<KitGraphChange> {
-        session.commit(diff, opts)
-    }
-}
-pub use kit_graph::*;
 
 mod oop {
     use super::*;
@@ -15212,6 +13078,7 @@ mod oop {
 
     use serde_json::{Map, Value};
     use std::collections::HashMap;
+    use std::sync::Mutex;
 
     // ——— DTO bases
 
@@ -16423,7 +14290,7 @@ mod oop {
             if self.unit != after.unit {
                 diff.unit = Some(after.unit.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16469,8 +14336,8 @@ mod oop {
                 diff.port = Some(after.port.clone());
             }
             diff.props =
-                get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-            diff.attributes = get_guid_collection_diff(
+                CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16498,7 +14365,7 @@ mod oop {
             if self.tags != after.tags {
                 diff.tags = Some(after.tags.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16509,6 +14376,15 @@ mod oop {
     }
 
     impl Type {
+        #[inline]
+        pub fn connector_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Connector> {
+            self.connectors.as_ref()?.iter().find(|c| c.guid == guid)
+        }
+        #[inline]
+        pub fn model_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Model> {
+            self.models.as_ref()?.iter().find(|m| m.guid == guid)
+        }
+
         pub(crate) fn diff_from(&self, after: &Type) -> TypeDiff {
             let mut diff = TypeDiff {
                 guid: self.guid.clone(),
@@ -16554,17 +14430,17 @@ mod oop {
                 diff.authors = Some(after.authors.clone());
             }
             diff.props =
-                get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-            diff.models = get_guid_collection_diff(&self.models, &after.models, "model", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+            diff.models = CollectionDiff::from_optional_vecs(&self.models, &after.models, "model", |b, a| {
                 b.diff_from(a)
             });
-            diff.connectors = get_guid_collection_diff(
+            diff.connectors = CollectionDiff::from_optional_vecs(
                 &self.connectors,
                 &after.connectors,
                 "connector",
                 |b, a| b.diff_from(a),
             );
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16614,8 +14490,8 @@ mod oop {
                 diff.description = Some(after.description.clone());
             }
             diff.props =
-                get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-            diff.attributes = get_guid_collection_diff(
+                CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16692,7 +14568,7 @@ mod oop {
             if self.description != after.description {
                 diff.description = Some(after.description.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16723,7 +14599,7 @@ mod oop {
             if self.description != after.description {
                 diff.description = Some(after.description.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16751,7 +14627,7 @@ mod oop {
             if self.pieces != after.pieces {
                 diff.pieces = Some(after.pieces.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16845,7 +14721,7 @@ mod oop {
             if self.compatible_interfaces != after.compatible_interfaces {
                 diff.compatible_interfaces = Some(after.compatible_interfaces.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16900,7 +14776,7 @@ mod oop {
             if self.uri != after.uri {
                 diff.uri = Some(after.uri.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16947,7 +14823,7 @@ mod oop {
             if self.parent != after.parent {
                 diff.parent = Some(after.parent.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16969,7 +14845,7 @@ mod oop {
             if self.email != after.email {
                 diff.email = Some(after.email.clone());
             }
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
@@ -16980,12 +14856,102 @@ mod oop {
     }
 
     impl Kit {
-        /// Flatten a design that belongs to this kit (graph layout); same as `flatten_design(kit, &design.guid)`.
-        pub fn flatten_for(&self, design: &Design) -> SemioReport<DesignChange> {
-            flatten_design(self, &design.guid)
+        #[inline]
+        pub fn design_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Design> {
+            self.designs.as_ref()?.iter().find(|d| d.guid == guid)
+        }
+        #[inline]
+        pub fn design_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Design> {
+            self.designs.as_mut()?.iter_mut().find(|d| d.guid == guid)
+        }
+        #[inline]
+        pub fn type_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Type> {
+            self.types.as_ref()?.iter().find(|t| t.guid == guid)
+        }
+        #[inline]
+        pub fn type_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Type> {
+            self.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
+        }
+        #[inline]
+        pub fn file_by_guid<'a>(&'a self, guid: &str) -> Option<&'a File> {
+            self.files.as_ref()?.iter().find(|f| f.guid == guid)
+        }
+        #[inline]
+        pub fn folder_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Folder> {
+            self.folders.as_ref()?.iter().find(|f| f.guid == guid)
+        }
+        #[inline]
+        pub fn author_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Author> {
+            self.authors.as_ref()?.iter().find(|a| a.guid == guid)
+        }
+        #[inline]
+        pub fn tag_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Tag> {
+            self.tags.as_ref()?.iter().find(|t| t.guid == guid)
+        }
+        #[inline]
+        pub fn concept_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Concept> {
+            self.concepts.as_ref()?.iter().find(|c| c.guid == guid)
+        }
+        #[inline]
+        pub fn quality_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Quality> {
+            self.qualities.as_ref()?.iter().find(|q| q.guid == guid)
+        }
+        #[inline]
+        pub fn port_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Port> {
+            self.ports.as_ref()?.iter().find(|p| p.guid == guid)
         }
 
-        /// Computes a structural diff from `self` to `after` (replaces `get_kit_diff` logic).
+        /// Sum numeric prop values for a quality across a design (piece props, then type-level fallback).
+        pub fn sum_quality_for_design_guid(&self, design_guid: &str, quality_guid: &str) -> f64 {
+            let Some(design) = self.design_by_guid(design_guid) else {
+                return 0.0;
+            };
+            let Some(pieces) = &design.pieces else {
+                return 0.0;
+            };
+            let mut sum = 0.0;
+            for piece in pieces {
+                let piece_prop = piece
+                    .props
+                    .as_ref()
+                    .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid));
+                if let Some(prop) = piece_prop {
+                    if let Ok(val) = prop.value.parse::<f64>() {
+                        sum += val;
+                    }
+                    continue;
+                }
+                if let Some(type_ref) = &piece.type_ref {
+                    if let Some(t) = self.type_by_guid(&type_ref.guid) {
+                        if let Some(prop) = t
+                            .props
+                            .as_ref()
+                            .and_then(|props| {
+                                props.iter().find(|p| p.quality.guid == quality_guid)
+                            })
+                        {
+                            if let Ok(val) = prop.value.parse::<f64>() {
+                                sum += val;
+                            }
+                        }
+                    }
+                }
+            }
+            sum
+        }
+
+        /// Canonical flatten report for a design GUID (computed planes / centers).
+        #[inline]
+        pub fn flatten_design_report(&self, design_guid: &str) -> SemioReport<DesignChange> {
+            flatten_design(self, design_guid)
+        }
+
+        /// Flatten a design that belongs to this kit (graph layout).
+        pub fn flatten_for(&self, design: &Design) -> SemioReport<DesignChange> {
+            self.flatten_design_report(&design.guid)
+        }
+
+        /// Computes a structural diff from `self` to `after`.
         pub fn diff_from(&self, after: &Kit) -> KitDiff {
             let mut diff = KitDiff {
                 guid: self.guid.clone(),
@@ -17019,40 +14985,200 @@ mod oop {
                 diff.license = Some(after.license.clone());
             }
             diff.types =
-                get_guid_collection_diff(&self.types, &after.types, "type", |b, a| b.diff_from(a));
+                CollectionDiff::from_optional_vecs(&self.types, &after.types, "type", |b, a| b.diff_from(a));
             diff.designs =
-                get_guid_collection_diff(&self.designs, &after.designs, "design", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.designs, &after.designs, "design", |b, a| {
                     b.diff_from(a)
                 });
             diff.tags =
-                get_guid_collection_diff(&self.tags, &after.tags, "tag", |b, a| b.diff_from(a));
+                CollectionDiff::from_optional_vecs(&self.tags, &after.tags, "tag", |b, a| b.diff_from(a));
             diff.concepts =
-                get_guid_collection_diff(&self.concepts, &after.concepts, "concept", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.concepts, &after.concepts, "concept", |b, a| {
                     b.diff_from(a)
                 });
             diff.ports =
-                get_guid_collection_diff(&self.ports, &after.ports, "port", |b, a| b.diff_from(a));
+                CollectionDiff::from_optional_vecs(&self.ports, &after.ports, "port", |b, a| b.diff_from(a));
             diff.qualities =
-                get_guid_collection_diff(&self.qualities, &after.qualities, "quality", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.qualities, &after.qualities, "quality", |b, a| {
                     b.diff_from(a)
                 });
             diff.files =
-                get_guid_collection_diff(&self.files, &after.files, "file", |b, a| b.diff_from(a));
+                CollectionDiff::from_optional_vecs(&self.files, &after.files, "file", |b, a| b.diff_from(a));
             diff.folders =
-                get_guid_collection_diff(&self.folders, &after.folders, "folder", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.folders, &after.folders, "folder", |b, a| {
                     b.diff_from(a)
                 });
             diff.authors =
-                get_guid_collection_diff(&self.authors, &after.authors, "author", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.authors, &after.authors, "author", |b, a| {
                     b.diff_from(a)
                 });
-            diff.attributes = get_guid_collection_diff(
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
                 |b, a| b.diff_from(a),
             );
             diff
+        }
+
+        /// Diff that undoes `forward` when applied after `forward` has been applied to `self`.
+        pub fn inverse_forward_diff(&self, forward: &KitDiff) -> KitDiff {
+            let mut after = self.clone();
+            apply_kit_diff(&mut after, forward);
+            after.diff_from(self)
+        }
+
+        /// Reversible [`KitChange`] from this kit to `after`.
+        pub fn change_to(&self, after: &Kit) -> KitChange {
+            let forward = self.diff_from(after);
+            let backward = self.inverse_forward_diff(&forward);
+            KitChange {
+                forward,
+                backward,
+                author: None,
+                time: None,
+                before: Some(self.clone()),
+                after: Some(after.clone()),
+            }
+        }
+
+        /// Deletes pieces and connections from a design, returning a canonical `SemioReport<DesignDiff>`.
+        /// Removes stale connections referencing deleted pieces.
+        /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+        pub fn delete_pieces_and_connections_in_design(
+            &self,
+            design: &Design,
+            piece_guids: &[String],
+            connection_guids: &[String],
+        ) -> SemioReport<DesignDiff> {
+            let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+            let connections = design.connections.as_deref().unwrap_or(&[]);
+
+            let mut stale_connection_guids: HashSet<String> = HashSet::new();
+            for conn in connections {
+                if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
+                    || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
+                {
+                    stale_connection_guids.insert(conn.guid.clone());
+                }
+            }
+
+            let mut all_removed_connection_guids: HashSet<String> =
+                connection_guids.iter().cloned().collect();
+            all_removed_connection_guids.extend(stale_connection_guids);
+
+            let mut fixed_piece_guids: Vec<String> = Vec::new();
+            for conn_guid in &all_removed_connection_guids {
+                let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
+                    Some(c) => c,
+                    None => continue,
+                };
+                let connecting_guid = &conn.connecting.piece.guid;
+                if deleted_piece_set.contains(connecting_guid.as_str()) {
+                    continue;
+                }
+                let has_other_parent = connections.iter().any(|c| {
+                    c.connecting.piece.guid == *connecting_guid
+                        && !all_removed_connection_guids.contains(&c.guid)
+                });
+                if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
+                    fixed_piece_guids.push(connecting_guid.clone());
+                }
+            }
+
+            let flat_rep = self.flatten_for(design);
+            if !flat_rep.ok {
+                return SemioReport::err(flat_rep.errors);
+            }
+            let flat_change = flat_rep.diff.expect("flatten ok implies diff");
+            let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+            if let Some(pieces) = &design.pieces {
+                for piece in pieces {
+                    if let Some(plane) = &piece.plane {
+                        flat_piece_map.insert(
+                            piece.guid.clone(),
+                            (Some(plane.clone()), piece.center.clone()),
+                        );
+                    }
+                }
+            }
+            if let Some(pieces_diff) = &flat_change.forward.pieces {
+                if let Some(updates) = &pieces_diff.updated {
+                    for update in updates {
+                        let entry = flat_piece_map
+                            .entry(update.guid.clone())
+                            .or_insert((None, None));
+                        if let Some(Some(plane)) = &update.diff.plane {
+                            entry.0 = Some(plane.clone());
+                        }
+                        if let Some(Some(center)) = &update.diff.center {
+                            entry.1 = Some(center.clone());
+                        }
+                    }
+                }
+            }
+
+            let pieces_removed: Vec<RemovedItem> = piece_guids
+                .iter()
+                .map(|g| RemovedItem { guid: g.clone() })
+                .collect();
+            let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
+                .iter()
+                .map(|g| {
+                    let (flat_plane, flat_center) = flat_piece_map
+                        .get(g)
+                        .cloned()
+                        .unwrap_or((Some(Plane::default()), Some(Coord::default())));
+                    DiffUpdate {
+                        key: "piece".to_string(),
+                        guid: g.clone(),
+                        diff: PieceDiff {
+                            guid: g.clone(),
+                            plane: Some(flat_plane),
+                            center: Some(flat_center),
+                            ..Default::default()
+                        },
+                    }
+                })
+                .collect();
+            let mut sorted_removed_connections: Vec<String> =
+                all_removed_connection_guids.into_iter().collect();
+            sorted_removed_connections.sort();
+            let connections_removed: Vec<RemovedItem> = sorted_removed_connections
+                .iter()
+                .map(|g| RemovedItem { guid: g.clone() })
+                .collect();
+
+            let mut diff = DesignDiff {
+                guid: design.guid.clone(),
+                ..Default::default()
+            };
+
+            if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
+                diff.pieces = Some(CollectionDiff {
+                    removed: if pieces_removed.is_empty() {
+                        None
+                    } else {
+                        Some(pieces_removed)
+                    },
+                    updated: if pieces_updated.is_empty() {
+                        None
+                    } else {
+                        Some(pieces_updated)
+                    },
+                    added: None,
+                });
+            }
+
+            if !connections_removed.is_empty() {
+                diff.connections = Some(CollectionDiff {
+                    removed: Some(connections_removed),
+                    updated: None,
+                    added: None,
+                });
+            }
+
+            SemioReport::ok_with(diff, flat_rep.warnings, flat_rep.infos)
         }
 
         pub fn find_type_entity<'a>(&'a self, t: &Type) -> Option<&'a Type> {
@@ -17330,6 +15456,31 @@ mod oop {
     }
 
     impl Design {
+        #[inline]
+        pub fn piece_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Piece> {
+            self.pieces.as_ref()?.iter().find(|p| p.guid == guid)
+        }
+        #[inline]
+        pub fn piece_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Piece> {
+            self.pieces.as_mut()?.iter_mut().find(|p| p.guid == guid)
+        }
+        #[inline]
+        pub fn connection_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Connection> {
+            self.connections.as_ref()?.iter().find(|c| c.guid == guid)
+        }
+        #[inline]
+        pub fn layer_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Layer> {
+            self.layers.as_ref()?.iter().find(|l| l.guid == guid)
+        }
+        #[inline]
+        pub fn group_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Group> {
+            self.groups.as_ref()?.iter().find(|g| g.guid == guid)
+        }
+        #[inline]
+        pub fn stat_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Stat> {
+            self.stats.as_ref()?.iter().find(|s| s.guid == guid)
+        }
+
         pub fn diff_from(&self, after: &Design) -> DesignDiff {
             let mut diff = DesignDiff {
                 guid: self.guid.clone(),
@@ -17375,31 +15526,52 @@ mod oop {
                 diff.active_layer = Some(after.active_layer.clone());
             }
             diff.props =
-                get_guid_collection_diff(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
-            diff.pieces = get_guid_collection_diff(&self.pieces, &after.pieces, "piece", |b, a| {
+                CollectionDiff::from_optional_vecs(&self.props, &after.props, "prop", |b, a| b.diff_from(a));
+            diff.pieces = CollectionDiff::from_optional_vecs(&self.pieces, &after.pieces, "piece", |b, a| {
                 b.diff_from(a)
             });
-            diff.connections = get_guid_collection_diff(
+            diff.connections = CollectionDiff::from_optional_vecs(
                 &self.connections,
                 &after.connections,
                 "connection",
                 |b, a| b.diff_from(a),
             );
-            diff.layers = get_guid_collection_diff(&self.layers, &after.layers, "layer", |b, a| {
+            diff.layers = CollectionDiff::from_optional_vecs(&self.layers, &after.layers, "layer", |b, a| {
                 b.diff_from(a)
             });
-            diff.groups = get_guid_collection_diff(&self.groups, &after.groups, "group", |b, a| {
+            diff.groups = CollectionDiff::from_optional_vecs(&self.groups, &after.groups, "group", |b, a| {
                 b.diff_from(a)
             });
             diff.stats =
-                get_guid_collection_diff(&self.stats, &after.stats, "stat", |b, a| b.diff_from(a));
-            diff.attributes = get_guid_collection_diff(
+                CollectionDiff::from_optional_vecs(&self.stats, &after.stats, "stat", |b, a| b.diff_from(a));
+            diff.attributes = CollectionDiff::from_optional_vecs(
                 &self.attributes,
                 &after.attributes,
                 "attribute",
                 |b, a| b.diff_from(a),
             );
             diff
+        }
+
+        /// Diff that undoes `forward` when applied after `forward` has been applied to `self`.
+        pub fn inverse_forward_diff(&self, forward: &DesignDiff) -> DesignDiff {
+            let mut after = self.clone();
+            apply_design_diff(&mut after, forward);
+            after.diff_from(self)
+        }
+
+        /// Reversible [`DesignChange`] from this design to `after`.
+        pub fn change_to(&self, after: &Design) -> DesignChange {
+            let forward = self.diff_from(after);
+            let backward = self.inverse_forward_diff(&forward);
+            DesignChange {
+                forward,
+                backward,
+                author: None,
+                time: None,
+                before: Some(self.clone()),
+                after: Some(after.clone()),
+            }
         }
 
         pub fn find_piece<'a>(&'a self, piece: &Piece) -> Option<&'a Piece> {
@@ -17451,7 +15623,7 @@ mod oop {
             let piece_guids: Vec<String> = pieces.iter().map(|p| p.guid.clone()).collect();
             let connection_guids: Vec<String> =
                 connections.iter().map(|c| c.guid.clone()).collect();
-            delete_pieces_and_connections_in_design(kit, self, &piece_guids, &connection_guids)
+            kit.delete_pieces_and_connections_in_design(self, &piece_guids, &connection_guids)
         }
 
         pub fn drag_pieces(&self, pieces: &[Piece], offset: &Coord) -> DesignDiff {
@@ -17532,14 +15704,1574 @@ mod oop {
             Ok(())
         }
     }
+
+    // ——— KitGraphChange (aligns with TypeScript `KitChange` for graph mutations: diffs + pre-apply validation)
+
+    /// Bidirectional kit graph edit with [`KitDiffValidationResult`] captured before [`apply_kit_diff`].
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub struct KitGraphChange {
+        pub forward: KitDiff,
+        pub backward: KitDiff,
+        pub validation: KitDiffValidationResult,
+    }
+
+    /// [`KitGraphChange`] from precomputed diffs without running the validation pipeline (validation is a no-op success).
+    pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGraphChange {
+        KitGraphChange {
+            forward,
+            backward,
+            validation: KitDiffValidationResult {
+                ok: true,
+                errors: vec![],
+                warnings: vec![],
+                diff: None,
+            },
+        }
+    }
+
+    // ——— Backbone (TypeScript `Backbone` parallel)
+
+    /// Notified after a successful graph commit (see [`KitGraphSession::commit`]).
+    pub trait KitBackbone {
+        fn changed(&mut self, change: &KitGraphChange);
+
+        /// Optional hook for inbound remote edits. Default: no-op.
+        ///
+        /// Callers must **not** invoke `commit_inbound` synchronously if that re-enters the same
+        /// [`KitGraphSession`] lock (deadlock). Prefer a channel or queued apply. TODO: structured inbound pipeline.
+        fn attach(&mut self, _kit: &mut Kit, _commit_inbound: &mut dyn FnMut(KitDiff)) {}
+    }
+
+    // ——— Commit options (TypeScript `KitCommitOptions`)
+
+    #[derive(Debug, Clone)]
+    pub struct KitCommitOptions {
+        pub transaction_id: Option<String>,
+        pub notify_backbone: bool,
+        pub skip_global_history: bool,
+    }
+
+    impl Default for KitCommitOptions {
+        fn default() -> Self {
+            Self {
+                transaction_id: None,
+                notify_backbone: true,
+                skip_global_history: false,
+            }
+        }
+    }
+
+    // ——— Session (mutex + transactions + undo stacks)
+
+    struct KitOpenTransaction {
+        start_kit: Kit,
+        steps: Vec<KitGraphChange>,
+        redo_steps: Vec<KitGraphChange>,
+    }
+
+    struct KitGraphSessionInner {
+        kit: Kit,
+        strict_mode: bool,
+        is_conflicted: bool,
+        open_transactions: HashMap<String, KitOpenTransaction>,
+        history_past: Vec<KitGraphChange>,
+        history_future: Vec<KitGraphChange>,
+        backbone: Option<Box<dyn KitBackbone>>,
+    }
+
+    /// Managed kit graph: serializes mutations with a mutex, tracks transactions and undo/redo stacks (TypeScript `Kit` private state parallel).
+    pub struct KitGraphSession {
+        inner: Mutex<KitGraphSessionInner>,
+    }
+
+    impl KitGraphSession {
+        pub fn new(kit: Kit) -> Self {
+            Self {
+                inner: Mutex::new(KitGraphSessionInner {
+                    kit,
+                    strict_mode: false,
+                    is_conflicted: false,
+                    open_transactions: HashMap::new(),
+                    history_past: vec![],
+                    history_future: vec![],
+                    backbone: None,
+                }),
+            }
+        }
+
+        pub fn with_backbone(kit: Kit, backbone: Box<dyn KitBackbone>) -> Self {
+            Self {
+                inner: Mutex::new(KitGraphSessionInner {
+                    kit,
+                    strict_mode: false,
+                    is_conflicted: false,
+                    open_transactions: HashMap::new(),
+                    history_past: vec![],
+                    history_future: vec![],
+                    backbone: Some(backbone),
+                }),
+            }
+        }
+
+        pub fn set_backbone(&self, backbone: Option<Box<dyn KitBackbone>>) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            g.backbone = backbone;
+            Ok(())
+        }
+
+        pub fn set_strict_mode(&self, strict: bool) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            g.strict_mode = strict;
+            Ok(())
+        }
+
+        pub fn clear_conflict(&self) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            g.is_conflicted = false;
+            Ok(())
+        }
+
+        pub fn map_kit<T, F: FnOnce(&Kit) -> T>(&self, f: F) -> Result<T> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            Ok(f(&g.kit))
+        }
+
+        pub fn map_kit_mut<T, F: FnOnce(&mut Kit) -> T>(&self, f: F) -> Result<T> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            Ok(f(&mut g.kit))
+        }
+
+        /// Validates against the current kit, inverts, applies, then records transaction/history/backbone (see [`KitCommitOptions`]).
+        pub fn commit(&self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            g.commit_graph(diff, opts)
+        }
+
+        pub fn start_transaction(&self) -> Result<String> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit has unresolved validation conflicts; call clear_conflict() first"
+                        .into(),
+                });
+            }
+            let id = guid();
+            let start_kit = g.kit.clone();
+            g.open_transactions.insert(
+                id.clone(),
+                KitOpenTransaction {
+                    start_kit,
+                    steps: vec![],
+                    redo_steps: vec![],
+                },
+            );
+            Ok(id)
+        }
+
+        pub fn abort_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
+                SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                }
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message:
+                        "Kit is conflicted; call clear_conflict() before aborting a transaction"
+                            .into(),
+                });
+            }
+            for step in tx.steps.iter().rev() {
+                apply_kit_diff(&mut g.kit, &step.backward);
+            }
+            Ok(())
+        }
+
+        pub fn finalize_transaction(&self, transaction_id: &str) -> Result<KitGraphChange> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message:
+                        "Kit is conflicted; call clear_conflict() before finalizing a transaction"
+                            .into(),
+                });
+            }
+            let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
+                SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                }
+            })?;
+            let sk = &tx.start_kit;
+            let forward_raw = sk.diff_from(&g.kit);
+            let validation = validate_kit_diff(sk, &forward_raw, false);
+            if !validation.ok || !validation.errors.is_empty() {
+                g.open_transactions.insert(transaction_id.to_string(), tx);
+                return Err(SemioError::Validation {
+                    message: validation
+                        .errors
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            if g.strict_mode && !validation.warnings.is_empty() {
+                g.open_transactions.insert(transaction_id.to_string(), tx);
+                return Err(SemioError::Validation {
+                    message: validation
+                        .warnings
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            let diff_to_apply = validation
+                .diff
+                .clone()
+                .unwrap_or_else(|| forward_raw.clone());
+            let backward = sk.inverse_forward_diff(&diff_to_apply);
+            let squashed = KitGraphChange {
+                forward: diff_to_apply,
+                backward,
+                validation,
+            };
+            g.history_past.push(squashed.clone());
+            g.history_future.clear();
+            if let Some(ref mut bb) = g.backbone {
+                bb.changed(&squashed);
+            }
+            Ok(squashed)
+        }
+
+        pub fn undo_within_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            if !g.open_transactions.contains_key(transaction_id) {
+                return Err(SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                });
+            }
+            let ch = {
+                let tx = g
+                    .open_transactions
+                    .get_mut(transaction_id)
+                    .expect("transaction id checked");
+                tx.steps.pop()
+            };
+            let Some(ch) = ch else { return Ok(()) };
+            apply_kit_diff(&mut g.kit, &ch.backward);
+            g.open_transactions
+                .get_mut(transaction_id)
+                .expect("transaction id checked")
+                .redo_steps
+                .push(ch);
+            Ok(())
+        }
+
+        pub fn redo_within_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            if !g.open_transactions.contains_key(transaction_id) {
+                return Err(SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                });
+            }
+            let ch = {
+                let tx = g
+                    .open_transactions
+                    .get_mut(transaction_id)
+                    .expect("transaction id checked");
+                tx.redo_steps.pop()
+            };
+            let Some(ch) = ch else { return Ok(()) };
+            apply_kit_diff(&mut g.kit, &ch.forward);
+            g.open_transactions
+                .get_mut(transaction_id)
+                .expect("transaction id checked")
+                .steps
+                .push(ch);
+            Ok(())
+        }
+
+        pub fn undo_history(&self) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            let Some(ch) = g.history_past.pop() else {
+                return Ok(());
+            };
+            apply_kit_diff(&mut g.kit, &ch.backward);
+            g.history_future.push(ch);
+            Ok(())
+        }
+
+        pub fn redo_history(&self) -> Result<()> {
+            let mut g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            let Some(ch) = g.history_future.pop() else {
+                return Ok(());
+            };
+            apply_kit_diff(&mut g.kit, &ch.forward);
+            g.history_past.push(ch);
+            Ok(())
+        }
+
+        pub fn can_undo_history(&self) -> Result<bool> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            Ok(!g.history_past.is_empty())
+        }
+
+        pub fn can_redo_history(&self) -> Result<bool> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession mutex poisoned".into(),
+                })?;
+            Ok(!g.history_future.is_empty())
+        }
+    }
+
+    impl KitGraphSessionInner {
+        fn commit_graph(
+            &mut self,
+            diff: KitDiff,
+            opts: KitCommitOptions,
+        ) -> Result<KitGraphChange> {
+            if self.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit has unresolved validation conflicts; call clear_conflict() before applying further changes."
+                        .into(),
+                });
+            }
+
+            let validation = validate_kit_diff(&self.kit, &diff, false);
+            if !validation.ok || !validation.errors.is_empty() {
+                self.is_conflicted = true;
+                return Err(SemioError::Validation {
+                    message: validation
+                        .errors
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            if self.strict_mode && !validation.warnings.is_empty() {
+                self.is_conflicted = true;
+                return Err(SemioError::Validation {
+                    message: validation
+                        .warnings
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+
+            let diff_to_apply = validation.diff.clone().unwrap_or_else(|| diff.clone());
+            let backward = self.kit.inverse_forward_diff(&diff_to_apply);
+            apply_kit_diff(&mut self.kit, &diff_to_apply);
+
+            let change = KitGraphChange {
+                forward: diff_to_apply,
+                backward,
+                validation,
+            };
+
+            if let Some(tx_id) = &opts.transaction_id {
+                let tx = self.open_transactions.get_mut(tx_id).ok_or_else(|| {
+                    SemioError::InvalidOperation {
+                        message: format!("Unknown transaction {}", tx_id),
+                    }
+                })?;
+                tx.steps.push(change.clone());
+                tx.redo_steps.clear();
+            } else if !opts.skip_global_history {
+                self.history_past.push(change.clone());
+                self.history_future.clear();
+            }
+
+            let notify_backbone = opts.notify_backbone && opts.transaction_id.is_none();
+            if notify_backbone {
+                if let Some(ref mut bb) = self.backbone {
+                    bb.changed(&change);
+                }
+            }
+
+            self.is_conflicted = false;
+            Ok(change)
+        }
+    }
+
+    /// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
+    pub fn commit_kit_graph_change(
+        session: &KitGraphSession,
+        diff: KitDiff,
+        opts: KitCommitOptions,
+    ) -> Result<KitGraphChange> {
+        session.commit(diff, opts)
+    }
+
+    // 🏦FlattenDesign
+    // FlattenDesign MUST provide the flattendesign functionality.
+
+    /// <summary>🔖FlattenedPiece holds the data fields for a FlattenedPiece record.</summary>
+    pub struct FlattenedPiece {
+        pub piece: Piece,
+        pub plane: Plane,
+        pub type_guid: Option<String>,
+        pub design_guid: Option<String>,
+        pub path: Vec<String>,
+    }
+
+    /// 🔖Computes forward/backward DesignChange for flatten (hot path; no SemioReport wrapper).
+    pub fn flatten_design_change(kit: &Kit, design_guid: &str) -> DesignChange {
+        let design = match kit.design_by_guid(design_guid) {
+            Some(d) => d,
+            None => {
+                let empty_diff = DesignDiff {
+                    guid: design_guid.to_string(),
+                    ..Default::default()
+                };
+                return DesignChange {
+                    forward: empty_diff.clone(),
+                    backward: empty_diff,
+                    author: None,
+                    time: None,
+                    before: None,
+                    after: None,
+                };
+            }
+        };
+
+        let before_design = design.clone();
+
+        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+        if pieces.is_empty() {
+            let empty_diff = DesignDiff {
+                guid: design_guid.to_string(),
+                ..Default::default()
+            };
+            return DesignChange {
+                forward: empty_diff.clone(),
+                backward: empty_diff,
+                author: None,
+                time: None,
+                before: Some(before_design.clone()),
+                after: Some(before_design),
+            };
+        }
+
+        let connections = design
+            .connections
+            .as_ref()
+            .map(|c| c.as_slice())
+            .unwrap_or(&[]);
+
+        let types_map: HashMap<&str, &Type> = kit
+            .types
+            .as_ref()
+            .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
+            .unwrap_or_default();
+
+        let pieces_map: HashMap<&str, &Piece> =
+            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+        for conn in connections {
+            let src = conn.connected.piece.guid.as_str();
+            let tgt = conn.connecting.piece.guid.as_str();
+            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                adjacency.entry(src).or_default().push((tgt, conn, true));
+                adjacency.entry(tgt).or_default().push((src, conn, false));
+            }
+        }
+
+        let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
+        let mut piece_centers: HashMap<&str, Coord> = HashMap::with_capacity(pieces.len());
+        let mut piece_paths: HashMap<&str, String> = HashMap::with_capacity(pieces.len());
+        let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
+        let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
+
+        const RADIUS: f64 = 2.697;
+        const VERTICAL_V_EXTRA: f64 = 1.0;
+        const HORIZONTAL_SCALE: f64 = 3.0633;
+
+        for piece in pieces {
+            if !visited.contains(piece.guid.as_str()) {
+                let initial_matrix = piece
+                    .plane
+                    .as_ref()
+                    .map(|p| p.to_matrix())
+                    .unwrap_or_else(Matrix4::identity);
+                piece_planes.insert(piece.guid.as_str(), initial_matrix);
+
+                let initial_center = piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 });
+                piece_centers.insert(piece.guid.as_str(), initial_center);
+                piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
+
+                visited.insert(piece.guid.as_str());
+                queue.push_back(piece.guid.as_str());
+
+                while let Some(current_guid) = queue.pop_front() {
+                    let current_matrix = *piece_planes.get(current_guid).unwrap();
+                    let parent_center = piece_centers
+                        .get(current_guid)
+                        .cloned()
+                        .unwrap_or(Coord { u: 0.0, v: 0.0 });
+
+                    if let Some(neighbors) = adjacency.get(current_guid) {
+                        for &(neighbor_guid, conn, is_connected) in neighbors {
+                            if visited.contains(neighbor_guid) {
+                                continue;
+                            }
+
+                            let (parent_side, _child_side) = if is_connected {
+                                (&conn.connected, &conn.connecting)
+                            } else {
+                                (&conn.connecting, &conn.connected)
+                            };
+
+                            let parent_connector = match get_connector_for_side_fast(
+                                &types_map,
+                                &pieces_map,
+                                parent_side,
+                            ) {
+                                Some(c) => c,
+                                None => continue,
+                            };
+
+                            let connection_matrix = match compute_connection_matrix_fast(
+                                &types_map,
+                                &pieces_map,
+                                conn,
+                                is_connected,
+                            ) {
+                                Some(m) => m,
+                                None => continue,
+                            };
+
+                            let new_matrix = current_matrix * connection_matrix;
+
+                            let conn_u = conn.u.unwrap_or(0.0);
+                            let conn_v = conn.v.unwrap_or(0.0);
+
+                            let (child_u, child_v) = if parent_center.u.abs() < 0.0001
+                                && parent_center.v.abs() < 0.0001
+                            {
+                                let angle = 2.0 * PI * parent_connector.t;
+                                (RADIUS * angle.sin(), RADIUS * angle.cos())
+                            } else {
+                                let is_vertical = parent_connector.direction.z.abs() > 0.5;
+                                if is_vertical {
+                                    (
+                                        parent_center.u + conn_u,
+                                        parent_center.v + conn_v + VERTICAL_V_EXTRA,
+                                    )
+                                } else {
+                                    (
+                                        parent_center.u + conn_u * HORIZONTAL_SCALE,
+                                        parent_center.v + conn_v * HORIZONTAL_SCALE,
+                                    )
+                                }
+                            };
+
+                            let child_center = Coord {
+                                u: (child_u * 1_000_000.0).round() / 1_000_000.0,
+                                v: (child_v * 1_000_000.0).round() / 1_000_000.0,
+                            };
+
+                            piece_planes.insert(neighbor_guid, new_matrix);
+                            piece_centers.insert(neighbor_guid, child_center);
+                            let parent_path =
+                                piece_paths.get(current_guid).cloned().unwrap_or_default();
+                            piece_paths.insert(
+                                neighbor_guid,
+                                format!("{},{}", parent_path, neighbor_guid),
+                            );
+                            visited.insert(neighbor_guid);
+                            queue.push_back(neighbor_guid);
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
+
+        for piece in pieces {
+            let matrix_opt = piece_planes.get(piece.guid.as_str());
+            let center_opt = piece_centers.get(piece.guid.as_str());
+
+            if let (Some(&matrix), Some(center)) = (matrix_opt, center_opt) {
+                let new_plane = Plane::from_matrix(&matrix).round();
+                let plane_needs_update = match &piece.plane {
+                    Some(existing) => !planes_equal_approx(existing, &new_plane),
+                    None => true,
+                };
+
+                let center_needs_update = match &piece.center {
+                    Some(existing) => {
+                        (existing.u - center.u).abs() > 0.0001
+                            || (existing.v - center.v).abs() > 0.0001
+                    }
+                    None => true,
+                };
+
+                if plane_needs_update || center_needs_update {
+                    let path_attr =
+                        piece_paths
+                            .get(piece.guid.as_str())
+                            .map(|path| CollectionDiff {
+                                added: Some(vec![Attribute {
+                                    guid: guid(),
+                                    key: "semio.path".to_string(),
+                                    value: Some(path.clone()),
+                                    definition: None,
+                                }]),
+                                removed: None,
+                                updated: None,
+                            });
+                    updated_pieces.push(DiffUpdate {
+                        key: "piece".to_string(),
+                        guid: piece.guid.clone(),
+                        diff: PieceDiff {
+                            guid: piece.guid.clone(),
+                            plane: if plane_needs_update {
+                                Some(Some(new_plane))
+                            } else {
+                                None
+                            },
+                            center: if center_needs_update {
+                                Some(Some(center.clone()))
+                            } else {
+                                None
+                            },
+                            attributes: path_attr,
+                            ..Default::default()
+                        },
+                    });
+                }
+            }
+        }
+
+        let mut forward = DesignDiff {
+            guid: design_guid.to_string(),
+            ..Default::default()
+        };
+
+        if !updated_pieces.is_empty() {
+            forward.pieces = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(updated_pieces),
+            });
+        }
+
+        let mut after_design = before_design.clone();
+        apply_design_diff(&mut after_design, &forward);
+        let backward = after_design.diff_from(&before_design);
+
+        DesignChange {
+            forward,
+            backward,
+            author: None,
+            time: None,
+            before: Some(before_design),
+            after: Some(after_design),
+        }
+    }
+
+    fn flatten_design_report_from_change(
+        kit: &Kit,
+        design_guid: &str,
+        change: DesignChange,
+    ) -> SemioReport<DesignChange> {
+        let pieces_empty = kit.design_by_guid(design_guid)
+            .and_then(|d| d.pieces.as_ref())
+            .map(|p| p.is_empty())
+            .unwrap_or(true);
+        if pieces_empty {
+            SemioReport::ok_with(
+                change,
+                vec![],
+                vec![OperationNote {
+                    code: Some("flatten.empty-pieces".into()),
+                    message: "No pieces to flatten; returning empty forward and backward diffs."
+                        .into(),
+                }],
+            )
+        } else {
+            SemioReport::ok_with(change, vec![], vec![])
+        }
+    }
+
+    /// 🌤️Canonical flatten report (matches TypeScript flattenDesign).
+    pub fn flatten_design(kit: &Kit, design_guid: &str) -> SemioReport<DesignChange> {
+        if kit.design_by_guid(design_guid).is_none() {
+            return SemioReport::err(vec![OperationNote {
+                code: Some("flatten.design-not-found".into()),
+                message: format!("Design {design_guid} not found in kit"),
+            }]);
+        }
+        let change = flatten_design_change(kit, design_guid);
+        flatten_design_report_from_change(kit, design_guid, change)
+    }
+
+    /// 🔖<summary>🔖planes_equal_approx holds the data fields for a planes_equal_approx record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn planes_equal_approx(a: &Plane, b: &Plane) -> bool {
+        const TOL: f64 = 0.0001;
+        (a.origin.x - b.origin.x).abs() < TOL
+            && (a.origin.y - b.origin.y).abs() < TOL
+            && (a.origin.z - b.origin.z).abs() < TOL
+            && (a.x_axis.x - b.x_axis.x).abs() < TOL
+            && (a.x_axis.y - b.x_axis.y).abs() < TOL
+            && (a.x_axis.z - b.x_axis.z).abs() < TOL
+            && (a.y_axis.x - b.y_axis.x).abs() < TOL
+            && (a.y_axis.y - b.y_axis.y).abs() < TOL
+            && (a.y_axis.z - b.y_axis.z).abs() < TOL
+    }
+    /// 🔖<summary>💾compute_connection_matrix_fast holds the data fields for a compute_connection_matrix_fast record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn compute_connection_matrix_fast(
+        types_map: &HashMap<&str, &Type>,
+        pieces_map: &HashMap<&str, &Piece>,
+        conn: &Connection,
+        from_connected: bool,
+    ) -> Option<Matrix4<f64>> {
+        let (from_side, to_side) = if from_connected {
+            (&conn.connected, &conn.connecting)
+        } else {
+            (&conn.connecting, &conn.connected)
+        };
+
+        let parent_connector = get_connector_for_side_fast(types_map, pieces_map, from_side)?;
+        let child_connector = get_connector_for_side_fast(types_map, pieces_map, to_side)?;
+
+        Some(compute_child_plane_matrix(
+            &parent_connector,
+            &child_connector,
+            conn,
+        ))
+    }
+    /// 🔖<summary>🔖compute_child_plane_matrix holds the data fields for a compute_child_plane_matrix record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn compute_child_plane_matrix(
+        parent_connector: &Connector,
+        child_connector: &Connector,
+        conn: &Connection,
+    ) -> Matrix4<f64> {
+        use nalgebra::{UnitQuaternion, Vector3};
+
+        let parent_point = Vector3::new(
+            parent_connector.point.x,
+            parent_connector.point.y,
+            parent_connector.point.z,
+        );
+        let mut parent_dir = Vector3::new(
+            parent_connector.direction.x,
+            parent_connector.direction.y,
+            parent_connector.direction.z,
+        );
+        if parent_dir.norm() > 0.0001 {
+            parent_dir = parent_dir.normalize();
+        }
+
+        let child_point = Vector3::new(
+            child_connector.point.x,
+            child_connector.point.y,
+            child_connector.point.z,
+        );
+        let mut child_dir = Vector3::new(
+            child_connector.direction.x,
+            child_connector.direction.y,
+            child_connector.direction.z,
+        );
+        if child_dir.norm() > 0.0001 {
+            child_dir = child_dir.normalize();
+        }
+
+        let gap = conn.gap;
+        let shift = conn.shift;
+        let rise = conn.rise;
+        let rotation_rad = conn.rotation * PI / 180.0;
+        let turn_rad = conn.turn * PI / 180.0;
+        let tilt_rad = conn.tilt * PI / 180.0;
+
+        let reverse_child_dir = -child_dir;
+
+        let align_quat: UnitQuaternion<f64> = {
+            let cross_vec = parent_dir.cross(&reverse_child_dir);
+            let cross_len = cross_vec.norm();
+            let dot = parent_dir.dot(&reverse_child_dir);
+
+            if cross_len < 0.01 {
+                if dot > 0.0 {
+                    UnitQuaternion::identity()
+                } else if parent_dir.z.abs() < 0.001 {
+                    UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
+                } else {
+                    let axis = Vector3::new(0.0, 0.0, 1.0).cross(&parent_dir);
+                    if axis.norm() > 0.0001 {
+                        UnitQuaternion::from_axis_angle(
+                            &nalgebra::Unit::new_normalize(axis.normalize()),
+                            PI,
+                        )
+                    } else {
+                        UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
+                    }
+                }
+            } else {
+                UnitQuaternion::rotation_between(&reverse_child_dir, &parent_dir)
+                    .unwrap_or_else(UnitQuaternion::identity)
+            }
+        };
+        let direction_t = quat_to_matrix4(&align_quat);
+
+        let y_axis = Vector3::new(0.0, 1.0, 0.0);
+        let parent_connector_quat = {
+            let dot = y_axis.dot(&parent_dir);
+            if (dot + 1.0).abs() < 0.0001 {
+                UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
+            } else {
+                UnitQuaternion::rotation_between(&y_axis, &parent_dir)
+                    .unwrap_or_else(UnitQuaternion::identity)
+            }
+        };
+        let parent_rotation_t = quat_to_matrix4(&parent_connector_quat);
+
+        let gap_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
+        let shift_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+        let raise_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+        let mut turn_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+        let mut tilt_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+
+        let mut orientation_t = direction_t;
+
+        let rotate_quat = UnitQuaternion::from_axis_angle(
+            &nalgebra::Unit::new_normalize(parent_dir),
+            -rotation_rad,
+        );
+        let rotate_t = quat_to_matrix4(&rotate_quat);
+        orientation_t = rotate_t * orientation_t;
+
+        turn_axis = apply_matrix4_to_vec3(&rotate_t, &turn_axis);
+        tilt_axis = apply_matrix4_to_vec3(&rotate_t, &tilt_axis);
+
+        if turn_axis.norm() > 0.0001 {
+            let turn_quat = UnitQuaternion::from_axis_angle(
+                &nalgebra::Unit::new_normalize(turn_axis.normalize()),
+                turn_rad,
+            );
+            let turn_t = quat_to_matrix4(&turn_quat);
+            orientation_t = turn_t * orientation_t;
+        }
+
+        if tilt_axis.norm() > 0.0001 {
+            let tilt_quat = UnitQuaternion::from_axis_angle(
+                &nalgebra::Unit::new_normalize(tilt_axis.normalize()),
+                tilt_rad,
+            );
+            let tilt_t = quat_to_matrix4(&tilt_quat);
+            orientation_t = tilt_t * orientation_t;
+        }
+
+        let center_child_t = make_translation(-child_point.x, -child_point.y, -child_point.z);
+        let mut transform = orientation_t * center_child_t;
+
+        let gap_transform = make_translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
+        let shift_transform = make_translation(
+            shift_dir.x * shift,
+            shift_dir.y * shift,
+            shift_dir.z * shift,
+        );
+        let raise_transform =
+            make_translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
+
+        let translation_t = raise_transform * (shift_transform * gap_transform);
+        transform = translation_t * transform;
+
+        let move_to_parent_t = make_translation(parent_point.x, parent_point.y, parent_point.z);
+        transform = move_to_parent_t * transform;
+
+        transform
+    }
+    /// 🔖<summary>🔄quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
+        let rot = q.to_rotation_matrix();
+        let m = rot.matrix();
+        Matrix4::new(
+            m[(0, 0)],
+            m[(0, 1)],
+            m[(0, 2)],
+            0.0,
+            m[(1, 0)],
+            m[(1, 1)],
+            m[(1, 2)],
+            0.0,
+            m[(2, 0)],
+            m[(2, 1)],
+            m[(2, 2)],
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        )
+    }
+    /// 🔖<summary>🔖make_translation holds the data fields for a make_translation record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn make_translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
+        Matrix4::new(
+            1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
+        )
+    }
+    /// 🔖<summary>🔖apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn apply_matrix4_to_vec3(
+        m: &Matrix4<f64>,
+        v: &nalgebra::Vector3<f64>,
+    ) -> nalgebra::Vector3<f64> {
+        nalgebra::Vector3::new(
+            m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
+            m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
+            m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
+        )
+    }
+    /// 🔖<summary>🔖get_connector_for_side_fast holds the data fields for a get_connector_for_side_fast record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn get_connector_for_side_fast<'a>(
+        types_map: &HashMap<&str, &'a Type>,
+        pieces_map: &HashMap<&str, &Piece>,
+        side: &Side,
+    ) -> Option<Connector> {
+        let piece = pieces_map.get(side.piece.guid.as_str())?;
+        let type_id = piece.type_ref.as_ref()?;
+        let t = types_map.get(type_id.guid.as_str())?;
+        let connector_guid = side.connector.as_ref().map(|c| c.guid.as_str());
+        get_connector_from_type(types_map, t, connector_guid).map(|c| c.clone())
+    }
+    /// 🔖<summary>🔖get_connector_from_type holds the data fields for a get_connector_from_type record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn get_connector_from_type<'a>(
+        _types_map: &HashMap<&str, &'a Type>,
+        t: &'a Type,
+        connector_guid: Option<&str>,
+    ) -> Option<&'a Connector> {
+        match connector_guid {
+            None | Some("") => {
+                if let Some(connectors) = &t.connectors {
+                    if !connectors.is_empty() {
+                        return Some(&connectors[0]);
+                    }
+                }
+                None
+            }
+            Some(guid) => {
+                if let Some(connectors) = &t.connectors {
+                    for c in connectors {
+                        if c.guid == guid {
+                            return Some(c);
+                        }
+                    }
+                    if !connectors.is_empty() {
+                        return Some(&connectors[0]);
+                    }
+                }
+                None
+            }
+        }
+    }
+    /// 🔖<summary>🔖connector_to_plane holds the data fields for a connector_to_plane record.</summary>
+    /// <remarks>
+    /// </remarks>
+    pub fn connector_to_plane(connector: &Connector) -> Plane {
+        let origin = connector.point.clone();
+        let y_axis = connector.direction.clone();
+        let temp_x = if (y_axis.z.abs() - 1.0).abs() < 0.001 {
+            Vector::unit_x()
+        } else {
+            Vector::unit_z()
+        };
+        let y_vec = y_axis.to_nalgebra();
+        let x_vec = y_vec.cross(&temp_x.to_nalgebra()).normalize();
+        let x_axis = Vector::from_nalgebra(&x_vec);
+        Plane::new(origin, x_axis, y_axis)
+    }
+
+    pub fn drag_pieces_in_design(
+        design_pieces: &[Piece],
+        design_connections: &[Connection],
+        selected_pieces: &[Piece],
+        offset: &Coord,
+    ) -> DesignDiff {
+        let selected_guids: HashSet<&str> =
+            selected_pieces.iter().map(|p| p.guid.as_str()).collect();
+        let mut parent_map: HashMap<&str, (&str, &str)> = HashMap::new();
+        for conn in design_connections {
+            let connecting_guid = conn.connecting.piece.guid.as_str();
+            let connected_guid = conn.connected.piece.guid.as_str();
+            parent_map.insert(connecting_guid, (conn.guid.as_str(), connected_guid));
+        }
+        let piece_map: HashMap<&str, &Piece> =
+            design_pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+        let fixed_guids: HashSet<&str> = selected_guids
+            .iter()
+            .filter(|&&guid| !parent_map.contains_key(guid))
+            .copied()
+            .collect();
+        let piece_updates: Vec<DiffUpdate<PieceDiff>> = fixed_guids
+            .iter()
+            .filter_map(|&guid| {
+                let center = piece_map.get(guid)?.center.as_ref()?;
+                Some(DiffUpdate {
+                    key: "piece".to_string(),
+                    guid: guid.to_string(),
+                    diff: PieceDiff {
+                        guid: guid.to_string(),
+                        center: Some(Some(Coord {
+                            u: center.u + offset.u,
+                            v: center.v + offset.v,
+                        })),
+                        ..Default::default()
+                    },
+                })
+            })
+            .collect();
+        let connection_updates: Vec<DiffUpdate<ConnectionDiff>> = selected_guids
+            .iter()
+            .filter(|&&guid| {
+                if fixed_guids.contains(guid) {
+                    return false;
+                }
+                let mut current = guid;
+                loop {
+                    match parent_map.get(current) {
+                        Some(&(_conn_guid, ancestor_guid)) => {
+                            if selected_guids.contains(ancestor_guid) {
+                                return false;
+                            }
+                            current = ancestor_guid;
+                        }
+                        None => break,
+                    }
+                }
+                parent_map.contains_key(guid)
+            })
+            .map(|&guid| {
+                let (conn_guid, _parent_guid) = parent_map[guid];
+                DiffUpdate {
+                    key: "connection".to_string(),
+                    guid: conn_guid.to_string(),
+                    diff: ConnectionDiff {
+                        guid: conn_guid.to_string(),
+                        u: Some(Some(offset.u)),
+                        v: Some(Some(offset.v)),
+                        ..Default::default()
+                    },
+                }
+            })
+            .collect();
+        let mut diff = DesignDiff {
+            guid: String::new(),
+            ..Default::default()
+        };
+        if !piece_updates.is_empty() {
+            diff.pieces = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(piece_updates),
+            });
+        }
+        if !connection_updates.is_empty() {
+            diff.connections = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(connection_updates),
+            });
+        }
+        diff
+    }
+
+    // #region 🌳Flatten Merkle Hashes
+    // 🌳Per-piece {plane_hash, center_hash} merkle hashes for cached flatten_design reuse.
+
+    /// <summary>🌳FlatMerkleHashes holds the plane and center merkle hashes for a single piece in a flattened design.</summary>
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct FlatMerkleHashes {
+        pub plane_hash: String,
+        pub center_hash: String,
+    }
+
+    /// <summary>🌳FlatMerkleCacheEntry caches a piece's merkle hashes together with the resolved plane and center from the previous flatten_design run.</summary>
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct FlatMerkleCacheEntry {
+        pub plane_hash: String,
+        pub center_hash: String,
+        pub plane: Option<Plane>,
+        pub center: Option<Coord>,
+    }
+
+    /// <summary>🌱Root plane hash includes only the piece guid and its fixed plane components (identity when absent).</summary>
+    fn hash_plane_root(guid: &str, plane: Option<&Plane>) -> String {
+        let mut w = super::HashWriter::new();
+        match plane {
+            None => {
+                w.write_string("plane.root.identity");
+                w.write_string(guid);
+            }
+            Some(p) => {
+                w.write_string("plane.root");
+                w.write_string(guid);
+                w.write_number(p.origin.x);
+                w.write_number(p.origin.y);
+                w.write_number(p.origin.z);
+                w.write_number(p.x_axis.x);
+                w.write_number(p.x_axis.y);
+                w.write_number(p.x_axis.z);
+                w.write_number(p.y_axis.x);
+                w.write_number(p.y_axis.y);
+                w.write_number(p.y_axis.z);
+            }
+        }
+        w.digest()
+    }
+
+    /// <summary>🔗Chain plane hash depends on the parent plane hash plus every input consumed by compute_child_plane_matrix.</summary>
+    fn hash_plane_chain(
+        parent_hash: &str,
+        parent_connector: &Connector,
+        child_connector: &Connector,
+        conn: &Connection,
+    ) -> String {
+        let mut w = super::HashWriter::new();
+        w.write_string("plane.chain");
+        w.write_hash(parent_hash);
+        w.write_number(parent_connector.point.x);
+        w.write_number(parent_connector.point.y);
+        w.write_number(parent_connector.point.z);
+        w.write_number(parent_connector.direction.x);
+        w.write_number(parent_connector.direction.y);
+        w.write_number(parent_connector.direction.z);
+        w.write_number(child_connector.point.x);
+        w.write_number(child_connector.point.y);
+        w.write_number(child_connector.point.z);
+        w.write_number(child_connector.direction.x);
+        w.write_number(child_connector.direction.y);
+        w.write_number(child_connector.direction.z);
+        w.write_number(conn.gap);
+        w.write_number(conn.shift);
+        w.write_number(conn.rise);
+        w.write_number(conn.rotation);
+        w.write_number(conn.turn);
+        w.write_number(conn.tilt);
+        w.digest()
+    }
+
+    /// <summary>🌱Root center hash includes only the piece guid and its fixed center (identity when absent).</summary>
+    fn hash_center_root(guid: &str, center: Option<&Coord>) -> String {
+        let mut w = super::HashWriter::new();
+        match center {
+            None => {
+                w.write_string("center.root.identity");
+                w.write_string(guid);
+            }
+            Some(c) => {
+                w.write_string("center.root");
+                w.write_string(guid);
+                w.write_number(c.u);
+                w.write_number(c.v);
+            }
+        }
+        w.digest()
+    }
+
+    /// <summary>🔗Chain center hash conservatively includes every potentially-read input of the child center computation.</summary>
+    fn hash_center_chain(
+        parent_hash: &str,
+        parent_connector: &Connector,
+        conn: &Connection,
+    ) -> String {
+        let mut w = super::HashWriter::new();
+        w.write_string("center.chain");
+        w.write_hash(parent_hash);
+        w.write_number(parent_connector.direction.z);
+        w.write_number(parent_connector.t);
+        w.write_number(conn.u.unwrap_or(0.0));
+        w.write_number(conn.v.unwrap_or(0.0));
+        w.digest()
+    }
+
+    /// <summary>🌳Compute per-piece {plane_hash, center_hash} merkle hashes for the flattened design so callers can cache by chain identity.</summary>
+    pub fn compute_flat_hashes(kit: &Kit, design_guid: &str) -> HashMap<String, FlatMerkleHashes> {
+        let design = match kit.design_by_guid(design_guid) {
+            Some(d) => d,
+            None => return HashMap::new(),
+        };
+        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+        if pieces.is_empty() {
+            return HashMap::new();
+        }
+        let connections = design
+            .connections
+            .as_ref()
+            .map(|c| c.as_slice())
+            .unwrap_or(&[]);
+        let types_map: HashMap<&str, &Type> = kit
+            .types
+            .as_ref()
+            .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
+            .unwrap_or_default();
+        let pieces_map: HashMap<&str, &Piece> =
+            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        // Same adjacency order as flatten_design so the BFS chain selects the same parent for every child.
+        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+        for conn in connections {
+            let src = conn.connected.piece.guid.as_str();
+            let tgt = conn.connecting.piece.guid.as_str();
+            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                adjacency.entry(src).or_default().push((tgt, conn, true));
+                adjacency.entry(tgt).or_default().push((src, conn, false));
+            }
+        }
+
+        let mut components: Vec<Vec<&str>> = Vec::new();
+        {
+            let mut component_visited: HashSet<&str> = HashSet::new();
+            for piece in pieces {
+                let guid = piece.guid.as_str();
+                if component_visited.contains(guid) {
+                    continue;
+                }
+                let mut component = Vec::new();
+                let mut queue: VecDeque<&str> = VecDeque::new();
+                queue.push_back(guid);
+                component_visited.insert(guid);
+                while let Some(cur) = queue.pop_front() {
+                    component.push(cur);
+                    if let Some(neighbors) = adjacency.get(cur) {
+                        for &(neigh, _, _) in neighbors {
+                            if !component_visited.contains(neigh) {
+                                component_visited.insert(neigh);
+                                queue.push_back(neigh);
+                            }
+                        }
+                    }
+                }
+                components.push(component);
+            }
+        }
+
+        let mut plane_hashes: HashMap<String, String> = HashMap::new();
+        let mut center_hashes: HashMap<String, String> = HashMap::new();
+
+        for component in &components {
+            let component_set: HashSet<&str> = component.iter().copied().collect();
+
+            // Rule 1: first piece (in slice order) of this component with both plane and center.
+            let mut root: Option<&str> = None;
+            for piece in pieces {
+                let g = piece.guid.as_str();
+                if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
+                    root = Some(g);
+                    break;
+                }
+            }
+            // Rule 2: lexicographically smallest guid in the component.
+            if root.is_none() {
+                let mut sorted: Vec<&str> = component.iter().copied().collect();
+                sorted.sort();
+                root = sorted.first().copied();
+            }
+            let root_guid = match root {
+                Some(g) => g,
+                None => continue,
+            };
+            let root_piece = match pieces_map.get(root_guid) {
+                Some(p) => *p,
+                None => continue,
+            };
+            plane_hashes.insert(
+                root_guid.to_string(),
+                hash_plane_root(root_guid, root_piece.plane.as_ref()),
+            );
+            center_hashes.insert(
+                root_guid.to_string(),
+                hash_center_root(root_guid, root_piece.center.as_ref()),
+            );
+
+            let mut bfs_visited: HashSet<&str> = HashSet::new();
+            bfs_visited.insert(root_guid);
+            let mut queue: VecDeque<&str> = VecDeque::new();
+            queue.push_back(root_guid);
+            while let Some(cur) = queue.pop_front() {
+                let parent_plane_hash = match plane_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                let parent_center_hash = match center_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                if let Some(neighbors) = adjacency.get(cur) {
+                    for &(neigh, conn, is_connected) in neighbors {
+                        if bfs_visited.contains(neigh) {
+                            continue;
+                        }
+                        let (parent_side, child_side) = if is_connected {
+                            (&conn.connected, &conn.connecting)
+                        } else {
+                            (&conn.connecting, &conn.connected)
+                        };
+                        let parent_connector =
+                            match get_connector_for_side_fast(&types_map, &pieces_map, parent_side)
+                            {
+                                Some(c) => c,
+                                None => continue,
+                            };
+                        let child_connector = match get_connector_for_side_fast(
+                            &types_map,
+                            &pieces_map,
+                            child_side,
+                        ) {
+                            Some(c) => c,
+                            None => continue,
+                        };
+                        plane_hashes.insert(
+                            neigh.to_string(),
+                            hash_plane_chain(
+                                &parent_plane_hash,
+                                &parent_connector,
+                                &child_connector,
+                                conn,
+                            ),
+                        );
+                        center_hashes.insert(
+                            neigh.to_string(),
+                            hash_center_chain(&parent_center_hash, &parent_connector, conn),
+                        );
+                        bfs_visited.insert(neigh);
+                        queue.push_back(neigh);
+                    }
+                }
+            }
+        }
+
+        let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
+        for (guid, plane_hash) in plane_hashes {
+            if let Some(center_hash) = center_hashes.get(&guid).cloned() {
+                result.insert(
+                    guid,
+                    FlatMerkleHashes {
+                        plane_hash,
+                        center_hash,
+                    },
+                );
+            }
+        }
+        result
+    }
+
+    /// <summary>🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run.</summary>
+    pub fn flatten_design_cached(
+        kit: &Kit,
+        design_guid: &str,
+        cache: Option<&HashMap<String, FlatMerkleCacheEntry>>,
+    ) -> (
+        SemioReport<DesignChange>,
+        HashMap<String, FlatMerkleCacheEntry>,
+    ) {
+        let new_hashes = compute_flat_hashes(kit, design_guid);
+        let change = flatten_design_change(kit, design_guid);
+        let report = if kit.design_by_guid(design_guid).is_none() {
+            SemioReport::err(vec![OperationNote {
+                code: Some("flatten.design-not-found".into()),
+                message: format!("Design {design_guid} not found in kit"),
+            }])
+        } else {
+            flatten_design_report_from_change(kit, design_guid, change.clone())
+        };
+
+        let mut updated_by_id: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+        if let Some(pieces_diff) = &change.forward.pieces {
+            if let Some(updates) = &pieces_diff.updated {
+                for upd in updates {
+                    let plane = upd.diff.plane.clone().flatten();
+                    let center = upd.diff.center.clone().flatten();
+                    updated_by_id.insert(upd.guid.clone(), (plane, center));
+                }
+            }
+        }
+
+        let mut next_cache: HashMap<String, FlatMerkleCacheEntry> = HashMap::new();
+        match cache {
+            Some(prev_cache) => {
+                for (guid, hashes) in &new_hashes {
+                    let prev = prev_cache.get(guid);
+                    let updated = updated_by_id.get(guid);
+                    match (prev, updated) {
+                        (None, None) => {}
+                        (None, Some((plane, center))) => {
+                            next_cache.insert(
+                                guid.clone(),
+                                FlatMerkleCacheEntry {
+                                    plane_hash: hashes.plane_hash.clone(),
+                                    center_hash: hashes.center_hash.clone(),
+                                    plane: plane.clone(),
+                                    center: center.clone(),
+                                },
+                            );
+                        }
+                        (Some(_), None) => {}
+                        (Some(p), Some((u_plane, u_center))) => {
+                            let plane = if p.plane_hash == hashes.plane_hash {
+                                p.plane.clone()
+                            } else {
+                                u_plane.clone()
+                            };
+                            let center = if p.center_hash == hashes.center_hash {
+                                p.center.clone()
+                            } else {
+                                u_center.clone()
+                            };
+                            next_cache.insert(
+                                guid.clone(),
+                                FlatMerkleCacheEntry {
+                                    plane_hash: hashes.plane_hash.clone(),
+                                    center_hash: hashes.center_hash.clone(),
+                                    plane,
+                                    center,
+                                },
+                            );
+                        }
+                    }
+                }
+            }
+            None => {
+                for (guid, hashes) in &new_hashes {
+                    if let Some((plane, center)) = updated_by_id.get(guid) {
+                        next_cache.insert(
+                            guid.clone(),
+                            FlatMerkleCacheEntry {
+                                plane_hash: hashes.plane_hash.clone(),
+                                center_hash: hashes.center_hash.clone(),
+                                plane: plane.clone(),
+                                center: center.clone(),
+                            },
+                        );
+                    }
+                }
+            }
+        }
+
+        (report, next_cache)
+    }
+
+    // #endregion 🌳Flatten Merkle Hashes
 }
 
 pub use oop::*;
 
 mod tests {
-    // 🧪Tests
-    // 🏘️Tests
-    // Tests MUST provide the tests functionality.
 
     use super::*;
 
@@ -17802,7 +17534,7 @@ mod tests {
             let expected_design = find_design_by_name(designs, "Flat", Some(&design.guid))
                 .expect("Expected Flat design not found");
 
-            let flat_rep = flatten_design_by_handle(kit, design);
+            let flat_rep = kit.flatten_for(design);
             assert!(flat_rep.ok, "flatten_design failed: {:?}", flat_rep.errors);
             let flat_design_change = flat_rep.diff.expect("flatten ok implies diff");
             let mut flat_design = design.clone();
@@ -19052,7 +18784,7 @@ mod tests {
                         }
                         let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
 
-                        let change = get_kit_change(&kit_original, &kit_diffed);
+                        let change = kit_original.change_to(&kit_diffed);
 
                         let mut applied_forward = kit_original.clone();
                         apply_kit_diff(&mut applied_forward, &change.forward);
@@ -19127,8 +18859,7 @@ mod tests {
                         serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
 
                     // Compute diff
-                    let computed_report = delete_pieces_and_connections_in_design(
-                        &kit,
+                    let computed_report = kit.delete_pieces_and_connections_in_design(
                         design,
                         &piece_guids,
                         &connection_guids,
@@ -20426,7 +20157,8 @@ mod tests {
                             .iter()
                             .find(|q| q.name == case.quality_name)
                             .expect("Quality not found");
-                        let result = sum_quality_in_design(&kit, &design.guid, &quality.guid);
+                        let result =
+                            kit.sum_quality_for_design_guid(&design.guid, &quality.guid);
                         assert!(
                             (result - case.expected).abs() < case.tolerance,
                             "Expected ~{}, got {}",
@@ -21758,7 +21490,7 @@ mod benchmark {
             });
             let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
             let kit_invalid = load_kit("invalid.kit.semio.json");
-            let metabolism_change = get_kit_change(&kit_original, &kit_diffed);
+            let metabolism_change = kit_original.change_to(&kit_diffed);
             let diff_forward = metabolism_change.forward;
             let diff_inverse = metabolism_change.backward;
 
