@@ -12239,8 +12239,10 @@ export class KitEntity implements SynchronizedKit {
 /**
  * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link KitImpl._applyDiff} for validated edits.
  */
-export const applyKitDiff = (kit: KitImpl, diff: KitDiff): void => {
-  requireKit(kit).replayChangeUnchecked(diff);
+export const applyKitDiff = (kit: KitLike, diff: KitDiff): KitImpl => {
+  const k = asKitInstance(kit);
+  k.replayChangeUnchecked(diff);
+  return k;
 };
 
 /**

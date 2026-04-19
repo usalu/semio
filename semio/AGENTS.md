@@ -667,38 +667,40 @@ class Actor {
   <<interface>>
   +getId()
   +getName()
+  +getEmail()
+  +getColor()
 }
 
 class User {
-  +startSession(kit)
+  +startSession(timeoutSeconds: Float)
 }
 
 class Agent {
-  +execute(command)
+  +execute(commandKind: KitCommandKind, payload: Object)
 }
 
 class KitClient {
-  +startSession(timeout)
+  +startSession(timeoutSeconds: Float)
   +endSession()
   +undo()
   +canUndo()
   +redo()
   +canRedo()
   +startNewOperation()
-  +setActiveOperation(operation)
-  +submitOperation(operation)
+  +setActiveOperation(operationIndex: Int)
+  +submitOperation(operationIndex: Int)
   +submitActiveOperation()
   +submitAllOperations()
-  +cancelOperation(operation)
+  +cancelOperation(operationIndex: Int)
   +cancelActiveOperation()
   +cancelAllOperations()
 }
 
 class KitOperation {
-  +addToSelection(entity)
-  +addManyToSelection(entities)
-  +removeFromSelection(entity)
-  +removeManyFromSelection(entities)
+  +addToSelection(kind: EntityKind, entityId: ID)
+  +addManyToSelection(kind: EntityKind, entityIds: ID[])
+  +removeFromSelection(kind: EntityKind, entityId: ID)
+  +removeManyFromSelection(kind: EntityKind, entityIds: ID[])
   +clearSelection()
   +undo()
   +canUndo()
@@ -707,259 +709,313 @@ class KitOperation {
 }
 
 class Kit {
-  +createTag(input)
-  +createTags(inputs)
-  +createConcept(input)
-  +createConcepts(inputs)
-  +createPort(input)
-  +createPorts(inputs)
-  +createQuality(input)
-  +createQualities(inputs)
-  +createType(input)
-  +createTypes(inputs)
-  +createDesign(input)
-  +createDesigns(inputs)
-  +deleteTags(tags)
-  +deleteConcepts(concepts)
-  +deletePorts(ports)
-  +deleteQualities(qualities)
-  +deleteTypes(types)
-  +deleteDesigns(designs)
+  +createTag(input: TagInput)
+  +createTags(inputs: TagInput[])
+  +createConcept(input: ConceptInput)
+  +createConcepts(inputs: ConceptInput[])
+  +createPort(input: PortInput)
+  +createPorts(inputs: PortInput[])
+  +createQuality(input: QualityInput)
+  +createQualities(inputs: QualityInput[])
+  +createType(input: TypeInput)
+  +createTypes(inputs: TypeInput[])
+  +createDesign(input: DesignInput)
+  +createDesigns(inputs: DesignInput[])
+  +deleteTag(tagId: ID)
+  +deleteTags(tagIds: ID[])
+  +deleteConcept(conceptId: ID)
+  +deleteConcepts(conceptIds: ID[])
+  +deletePort(portId: ID)
+  +deletePorts(portIds: ID[])
+  +deleteQuality(qualityId: ID)
+  +deleteQualities(qualityIds: ID[])
+  +deleteType(typeId: ID)
+  +deleteTypes(typeIds: ID[])
+  +deleteDesign(designId: ID)
+  +deleteDesigns(designIds: ID[])
 }
 
 class Attribute {
-  +setKey(key)
-  +setValue(value)
-  +setDefinition(definition)
+  +rename(key: String)
+  +setValue(value: String)
+  +setDefinition(definition: String)
 }
 
 class Author {
-  +rename(name)
-  +changeEmail(email)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +rename(name: String)
+  +changeEmail(email: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Location {
-  +relocate(longitude, latitude, altitude)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +setCoordinates(longitude: Float, latitude: Float, altitude: Float)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Folder {
-  +rename(name)
-  +moveTo(parent)
-  +updateDescription(text)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +rename(name: String)
+  +setParent(parentFolderId: ID)
+  +updateDescription(description: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class File {
-  +rename(name)
-  +moveTo(folder)
-  +replaceBlob(blob)
-  +rehash()
+  +rename(name: String)
+  +setFolder(folderId: ID)
+  +setRemote(remote: String)
+  +replaceBlob(blob: String, size: Float, hash: String)
 }
 
 class Concept {
-  +rename(name)
-  +updateDescription(text)
-  +updateIcon(icon)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +rename(name: String)
+  +updateDescription(description: String)
+  +updateIcon(icon: String)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Quality {
-  +rename(name)
-  +updateDescription(text)
-  +updateIcon(icon)
-  +addBenchmark(benchmark)
-  +removeBenchmark(benchmarkId)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +rename(name: String)
+  +updateDescription(description: String)
+  +updateIcon(icon: String)
+  +setRange(min: Float, isMinExcluded: Boolean, max: Float, isMaxExcluded: Boolean)
+  +setUnit(unit: String)
+  +addBenchmark(benchmark: BenchmarkInput)
+  +removeBenchmark(benchmarkId: ID)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Benchmark {
-  +rename(name)
-  +setRange(min, max)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +rename(name: String)
+  +updateIcon(icon: String)
+  +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Stat {
-  +bindQuality(quality)
-  +setUnit(unit)
-  +setRange(min, max)
+  +setQuality(qualityId: ID)
+  +setUnit(unit: String)
+  +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
 }
 
 class Tag {
-  +rename(name)
-  +updateDescription(text)
-  +updateIcon(icon)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +rename(name: String)
+  +updateDescription(description: String)
+  +updateIcon(icon: String)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Model {
-  +rename(name)
-  +updateDescription(text)
-  +attachFile(file)
-  +addTag(tag)
-  +removeTag(tagId)
+  +rename(name: String)
+  +setFile(fileId: ID)
+  +setTags(tagIds: ID[])
+  +updateDescription(description: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Port {
-  +rename(name)
-  +updateDescription(text)
-  +updateIcon(icon)
-  +addCompatiblePort(port)
-  +removeCompatiblePort(portId)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +rename(name: String)
+  +updateDescription(description: String)
+  +updateIcon(icon: String)
+  +setCompatiblePorts(portIds: ID[])
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Connector {
-  +rename(name)
-  +updateDescription(text)
-  +moveTo(point)
-  +setDirection(vector)
-  +bindPort(port)
-  +addProp(prop)
-  +removeProp(propId)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +rename(name: String)
+  +setPlacement(t: Float, point: Point, direction: Vector)
+  +setPort(portId: ID)
+  +setMandatory(mandatory: Boolean)
+  +updateDescription(description: String)
+  +addProp(prop: PropInput)
+  +removeProp(propId: ID)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Prop {
-  +bindQuality(quality)
-  +setValue(value)
-  +setUnit(unit)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +setQuality(qualityId: ID)
+  +setValue(value: String)
+  +setUnit(unit: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Layer {
-  +setPath(path)
-  +hide()
-  +show()
-  +lock()
-  +unlock()
-  +recolor(color)
-  +updateDescription(text)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +setPath(path: String)
+  +setHidden(isHidden: Boolean)
+  +setLocked(isLocked: Boolean)
+  +setColor(color: String)
+  +updateDescription(description: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Group {
-  +rename(name)
-  +recolor(color)
-  +addPiece(piece)
-  +removePiece(pieceId)
-  +updateDescription(text)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +rename(name: String)
+  +setPieces(pieceIds: ID[])
+  +setColor(color: String)
+  +updateDescription(description: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Piece {
-  +rename(name)
-  +updateDescription(text)
-  +drag(targetPlane)
-  +move(center)
+  +rename(name: String)
+  +setType(typeId: ID)
+  +setDesign(designId: ID)
+  +setPlane(plane: Plane)
+  +setCenter(center: Coordinate)
+  +setScale(scale: Float)
+  +setMirrorPlane(mirrorPlane: Plane)
+  +setHidden(isHidden: Boolean)
+  +setLocked(isLocked: Boolean)
+  +setColor(color: String)
+  +updateDescription(description: String)
+  +drag(targetPlane: Plane)
+  +move(center: Coordinate)
   +fix()
-  +changeType(type)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +changeToType(typeId: ID)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
+class Side {
+  +setPiece(pieceId: ID)
+  +setDesignPiece(designPieceId: ID)
+  +setConnector(connectorId: ID)
+}
+
 class Connection {
-  +reconnect(connected, connecting)
-  +adjustAlignment(gap, shift, rise, rotation, turn, tilt, u, v)
-  +updateDescription(text)
-  +addAttribute(attr)
-  +removeAttribute(attrId)
+  +reconnect(connected: Side, connecting: Side)
+  +adjustAlignment(gap: Float, shift: Float, rise: Float, rotation: Float, turn: Float, tilt: Float, u: Float, v: Float)
+  +updateDescription(description: String)
+  +addAttribute(attribute: AttributeInput)
+  +removeAttribute(attributeId: ID)
 }
 
 class Type {
-  +rename(name)
-  +updateDescription(text)
-  +updateIcon(icon)
-  +setParent(parent)
-  +addModel(model)
-  +removeModel(modelId)
-  +addConnector(connector)
-  +removeConnector(connectorId)
-  +addProp(prop)
-  +removeProp(propId)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +rename(name: String)
+  +setParent(parentTypeId: ID)
+  +setAbstract(isAbstract: Boolean)
+  +setFolder(folder: String)
+  +setStock(stock: Int)
+  +setVirtual(isVirtual: Boolean)
+  +setUnit(unit: String)
+  +setLocation(locationId: ID)
+  +setAuthors(authorIds: ID[])
+  +setConcepts(conceptIds: ID[])
+  +updateIcon(icon: String)
+  +updateDescription(description: String)
+  +addModel(model: ModelInput)
+  +removeModel(modelId: ID)
+  +addConnector(connector: ConnectorInput)
+  +removeConnector(connectorId: ID)
+  +addProp(prop: PropInput)
+  +removeProp(propId: ID)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Design {
+  +rename(name: String)
+  +setParent(parentDesignId: ID)
+  +setAbstract(isAbstract: Boolean)
+  +setFolder(folder: String)
+  +setActiveLayer(layerId: ID)
+  +setScalable(canScale: Boolean)
+  +setMirrorable(canMirror: Boolean)
+  +setUnit(unit: String)
+  +setLocation(locationId: ID)
+  +setAuthors(authorIds: ID[])
+  +setConcepts(conceptIds: ID[])
+  +updateIcon(icon: String)
+  +updateDescription(description: String)
   +flatten()
-  +addFixedPiece(input)
-  +addFixedPieces(inputs)
-  +addChildPiece(input)
-  +addChildPieces(inputs)
-  +addHangingChildPiece(input)
-  +addHangingChildPieces(inputs)
-  +readPiece(pieceId)
-  +deletePiece(pieceId)
-  +deletePieces(pieceIds)
-  +deletePiecesAndConnections(pieceIds)
-  +setActiveLayer(layerId)
-  +addLayer(layer)
-  +removeLayer(layerId)
-  +addGroup(group)
-  +removeGroup(groupId)
-  +addConnection(connection)
-  +removeConnection(connectionId)
-  +addAttribute(attr)
-  +addAttributes(attrs)
-  +removeAttribute(attrId)
-  +removeAttributes(attrIds)
+  +addFixedPiece(name: String, typeId: ID, center: Coordinate, plane: Plane, designPieceId: ID, attributes: AttributeInput[])
+  +addFixedPieces(pieces: PieceInput[])
+  +addChildPiece(piece: PieceInput, connection: ConnectionInput)
+  +addChildPieces(pieces: PieceInput[], connections: ConnectionInput[])
+  +addHangingChildPiece(piece: PieceInput, connection: ConnectionInput)
+  +addHangingChildPieces(pieces: PieceInput[], connections: ConnectionInput[])
+  +readPiece(pieceId: ID)
+  +getAlternativePieceKind(pieceId: ID)
+  +renamePiece(pieceId: ID, name: String)
+  +updatePieceDescription(pieceId: ID, description: String)
+  +dragPiece(pieceId: ID, targetPlane: Plane)
+  +dragPieces(pieceIds: ID[], targetPlane: Plane)
+  +movePiece(pieceId: ID, center: Coordinate)
+  +movePieces(pieceIds: ID[], offset: Offset)
+  +fixPiece(pieceId: ID)
+  +fixPieces(pieceIds: ID[])
+  +changePieceToType(pieceId: ID, typeId: ID)
+  +changePiecesToType(pieceIds: ID[], typeId: ID)
+  +deletePiece(pieceId: ID)
+  +deletePieces(pieceIds: ID[])
+  +deletePiecesAndConnections(pieceIds: ID[])
+  +addConnection(connection: ConnectionInput)
+  +removeConnection(connectionId: ID)
+  +addLayer(layer: LayerInput)
+  +removeLayer(layerId: ID)
+  +addGroup(group: GroupInput)
+  +removeGroup(groupId: ID)
+  +addStat(stat: StatInput)
+  +removeStat(statId: ID)
+  +addProp(prop: PropInput)
+  +removeProp(propId: ID)
+  +addAttribute(attribute: AttributeInput)
+  +addAttributes(attributes: AttributeInput[])
+  +removeAttribute(attributeId: ID)
+  +removeAttributes(attributeIds: ID[])
   +delete()
 }
 
 class Coordinate {
-  +move(u, v)
+  +translate(offset: Offset)
+}
+
+class Offset {
+  +invert()
 }
 
 class Point {
-  +translate(vector)
+  +translate(vector: Vector)
 }
 
 class Vector {
   +normalize()
-  +scale(factor)
+  +scale(factor: Float)
 }
 
 class Plane {
-  +moveTo(origin)
-  +rotate(xAxis, yAxis)
-}
-
-class Side {
-  +attachPiece(piece)
-  +attachDesignPiece(piece)
-  +bindConnector(connector)
+  +moveTo(origin: Point)
+  +rotate(xAxis: Vector, yAxis: Vector)
 }
 
 Actor <|.. User
@@ -973,57 +1029,34 @@ Kit *-- Tag
 Kit *-- Concept
 Kit *-- Port
 Kit *-- Quality
+Kit *-- Type
+Kit *-- Design
 Kit *-- File
 Kit *-- Folder
 Kit *-- Author
-Kit *-- Type
-Kit *-- Design
-
-File --> Folder
-Model --> File
-Model o-- Tag
 
 Quality *-- Benchmark
-Stat --> Quality
-Prop --> Quality
-
-Connector --> Port
-Connector *-- Prop
-
-Type --> Type : parent
 Type *-- Model
 Type *-- Connector
 Type *-- Prop
-Type --> Location
-Type o-- Author
-Type o-- Concept
-
-Design --> Design : parent
 Design *-- Piece
 Design *-- Connection
-Design *-- Stat
-Design *-- Prop
 Design *-- Layer
 Design *-- Group
-Design --> Layer : activeLayer
-Design --> Location
-Design o-- Author
-Design o-- Concept
+Design *-- Stat
+Design *-- Prop
 
+Model --> File
+Model o-- Tag
+Connector --> Port
+Connector *-- Prop
 Piece --> Type
 Piece --> Design
-Piece --> Plane
-Piece --> Coordinate
-Group o-- Piece
-
 Connection *-- Side
 Side --> Piece
 Side --> Connector
-
 Plane *-- Point
 Plane *-- Vector
-Connector --> Point
-Connector --> Vector
 ```
 
 ## 📛 Entities
