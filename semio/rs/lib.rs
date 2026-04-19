@@ -5796,40 +5796,44 @@ mod apply_diff {
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, Weak};
 
-    pub fn kit_ports_arc_map(kit: &Kit) -> HashMap<String, Arc<Port>> {
-        kit.ports
-            .as_ref()
-            .map(|ps| {
-                ps.iter()
-                    .map(|p| (p.guid.clone(), Arc::new(p.clone())))
-                    .collect()
-            })
-            .unwrap_or_default()
+    impl Kit {
+        pub fn ports_arc_map(&self) -> HashMap<String, Arc<Port>> {
+            self.ports
+                .as_ref()
+                .map(|ps| {
+                    ps.iter()
+                        .map(|p| (p.guid.clone(), Arc::new(p.clone())))
+                        .collect()
+                })
+                .unwrap_or_default()
+        }
+
+        pub fn types_map_index(&self) -> HashMap<String, Arc<Type>> {
+            self.types
+                .as_ref()
+                .map(|ts| ts.iter().map(|t| (t.guid.clone(), t.clone())).collect())
+                .unwrap_or_default()
+        }
+
+        pub fn designs_map_index(&self) -> HashMap<String, Arc<Design>> {
+            self.designs
+                .as_ref()
+                .map(|ds| ds.iter().map(|d| (d.guid.clone(), d.clone())).collect())
+                .unwrap_or_default()
+        }
     }
 
-    pub fn kit_types_map_index(kit: &Kit) -> HashMap<String, Arc<Type>> {
-        kit.types
-            .as_ref()
-            .map(|ts| ts.iter().map(|t| (t.guid.clone(), t.clone())).collect())
-            .unwrap_or_default()
-    }
-
-    pub fn kit_designs_map_index(kit: &Kit) -> HashMap<String, Arc<Design>> {
-        kit.designs
-            .as_ref()
-            .map(|ds| ds.iter().map(|d| (d.guid.clone(), d.clone())).collect())
-            .unwrap_or_default()
-    }
-
-    /// Maps [`Piece::type_ref`] values present in this design for [`apply_design_diff`] without a full [`Kit`].
-    pub fn types_from_design_pieces(design: &Design) -> HashMap<String, Arc<Type>> {
-        design
-            .pieces
-            .as_ref()
-            .into_iter()
-            .flatten()
-            .filter_map(|p| p.type_ref.as_ref().map(|t| (t.guid.clone(), t.clone())))
-            .collect()
+    impl Design {
+        /// Maps [`Piece::type_ref`] values present in this design for [`Design::apply_diff`] without a full [`Kit`].
+        pub fn types_from_pieces(&self) -> HashMap<String, Arc<Type>> {
+            self
+                .pieces
+                .as_ref()
+                .into_iter()
+                .flatten()
+                .filter_map(|p| p.type_ref.as_ref().map(|t| (t.guid.clone(), t.clone())))
+                .collect()
+        }
     }
 
     fn piece_arc_from_dto(
@@ -6012,773 +6016,791 @@ mod apply_diff {
             };
         }
     }
-    /// 🔖<remarks>
-    /// </remarks>
-    pub fn apply_attribute_diff(item: &mut Attribute, diff: &AttributeDiff) {
-        if let Some(value) = &diff.key {
-            item.key = value.clone();
-        }
-        if let Some(value) = &diff.value {
-            item.value = value.clone();
-        }
-        if let Some(value) = &diff.definition {
-            item.definition = value.clone();
-        }
-    }
-    /// 🔖<summary>🔖apply_prop_diff holds the data fields for a apply_prop_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_prop_diff(item: &mut Prop, diff: &PropDiff) {
-        if let Some(value) = &diff.quality {
-            item.quality = value.clone();
-        }
-        if let Some(value) = &diff.value {
-            item.value = value.clone();
-        }
-        if let Some(value) = &diff.unit {
-            item.unit = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
-    }
-    /// 🔖<summary>🔖apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_connector_diff(
-        item: &mut Connector,
-        diff: &ConnectorDiff,
-        ports: &HashMap<String, Arc<Port>>,
-    ) {
-        if let Some(value) = &diff.point {
-            item.point.x += value.x;
-            item.point.y += value.y;
-            item.point.z += value.z;
-        }
-        if let Some(value) = &diff.direction {
-            item.direction.x += value.x;
-            item.direction.y += value.y;
-            item.direction.z += value.z;
-        }
-        if let Some(value) = &diff.t {
-            item.t = *value;
-        }
-        if let Some(v) = &diff.name {
-            item.name = v.clone();
-        }
-        if let Some(v) = &diff.description {
-            item.description = v.clone();
-        }
-        if let Some(v) = &diff.mandatory {
-            item.mandatory = v.clone();
-        }
-        if let Some(v) = &diff.max_children {
-            item.max_children = v.clone();
-        }
-        if let Some(outer) = &diff.port {
-            item.port = outer.as_ref().and_then(|pid| ports.get(&pid.guid).cloned());
-        }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
-            Prop::from(p)
-        });
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
-    }
-    /// 🔖<remarks>
-    /// </remarks>
-    pub fn apply_model_diff(item: &mut Model, diff: &ModelDiff) {
-        if let Some(value) = &diff.file {
-            item.file = value.clone();
-        }
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.tags {
-            item.tags = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
-    }
-    /// 🔖<summary>🔖apply_type_diff holds the data fields for a apply_type_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_type_diff(
-        item: &mut Type,
-        diff: &TypeDiff,
-        types: &HashMap<String, Arc<Type>>,
-        ports: &HashMap<String, Arc<Port>>,
-    ) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(v) = &diff.parent {
-            item.parent = v.as_ref().and_then(|tid| types.get(&tid.guid).cloned());
-        }
-        if let Some(v) = &diff.families {
-            item.families = v.as_ref().map(|ids| {
-                ids.iter()
-                    .filter_map(|tid| types.get(&tid.guid).cloned())
-                    .collect()
-            });
-        }
-        if let Some(v) = &diff.description {
-            item.description = v.clone();
-        }
-        if let Some(v) = &diff.icon {
-            item.icon = v.clone();
-        }
-        if let Some(v) = &diff.image {
-            item.image = v.clone();
-        }
-        if let Some(v) = &diff.folder {
-            item.folder = v.clone();
-        }
-        if let Some(v) = &diff.unit {
-            item.unit = v.clone();
-        }
-        if let Some(v) = &diff.stock {
-            item.stock = v.clone();
-        }
-        if let Some(v) = &diff.is_abstract {
-            item.is_abstract = v.clone();
-        }
-        if let Some(v) = &diff.virtual_type {
-            item.virtual_type = v.clone();
-        }
-        if let Some(v) = &diff.location {
-            item.location = v.clone();
-        }
-        if let Some(v) = &diff.concepts {
-            item.concepts = v.clone();
-        }
-        if let Some(v) = &diff.authors {
-            item.authors = v.clone();
-        }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
-            Prop::from(p)
-        });
-        apply_collection_diff(&mut item.models, &diff.models, apply_model_diff, |m| {
-            Model::from(m)
-        });
-
-        if let Some(cd) = &diff.connectors {
-            let mut conns = item.connectors.clone().unwrap_or_default();
-            if let Some(removed) = &cd.removed {
-                let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
-                conns.retain(|c| !rs.contains(&c.guid));
+    impl Attribute {
+        /// 🔖Applies an attribute diff to this attribute.
+        pub fn apply_diff(&mut self, diff: &AttributeDiff) {
+            if let Some(value) = &diff.key {
+                self.key = value.clone();
             }
-            if let Some(updated) = &cd.updated {
-                let um: HashMap<String, &ConnectorDiff> =
-                    updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
-                for c in &mut conns {
-                    if let Some(d) = um.get(&c.guid) {
-                        apply_connector_diff(Arc::make_mut(c), d, ports);
+            if let Some(value) = &diff.value {
+                self.value = value.clone();
+            }
+            if let Some(value) = &diff.definition {
+                self.definition = value.clone();
+            }
+        }
+    }
+    impl Prop {
+        /// 🔖Applies a prop diff to this prop.
+        pub fn apply_diff(&mut self, diff: &PropDiff) {
+            if let Some(value) = &diff.quality {
+                self.quality = value.clone();
+            }
+            if let Some(value) = &diff.value {
+                self.value = value.clone();
+            }
+            if let Some(value) = &diff.unit {
+                self.unit = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+        }
+    }
+    impl Connector {
+        /// 🔖Applies a connector diff.
+        pub fn apply_diff(
+            &mut self,
+            diff: &ConnectorDiff,
+            ports: &HashMap<String, Arc<Port>>,
+        ) {
+            if let Some(value) = &diff.point {
+                self.point.x += value.x;
+                self.point.y += value.y;
+                self.point.z += value.z;
+            }
+            if let Some(value) = &diff.direction {
+                self.direction.x += value.x;
+                self.direction.y += value.y;
+                self.direction.z += value.z;
+            }
+            if let Some(value) = &diff.t {
+                self.t = *value;
+            }
+            if let Some(v) = &diff.name {
+                self.name = v.clone();
+            }
+            if let Some(v) = &diff.description {
+                self.description = v.clone();
+            }
+            if let Some(v) = &diff.mandatory {
+                self.mandatory = v.clone();
+            }
+            if let Some(v) = &diff.max_children {
+                self.max_children = v.clone();
+            }
+            if let Some(outer) = &diff.port {
+                self.port = outer.as_ref().and_then(|pid| ports.get(&pid.guid).cloned());
+            }
+            apply_collection_diff(&mut self.props, &diff.props, Prop::apply_diff, |p| {
+                Prop::from(p)
+            });
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+        }
+    }
+    impl Model {
+        /// 🔖Applies a model diff.
+        pub fn apply_diff(&mut self, diff: &ModelDiff) {
+            if let Some(value) = &diff.file {
+                self.file = value.clone();
+            }
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.tags {
+                self.tags = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+        }
+    }
+    impl Type {
+        /// 🔖Applies a type diff.
+        pub fn apply_diff(
+            &mut self,
+            diff: &TypeDiff,
+            types: &HashMap<String, Arc<Type>>,
+            ports: &HashMap<String, Arc<Port>>,
+        ) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(v) = &diff.parent {
+                self.parent = v.as_ref().and_then(|tid| types.get(&tid.guid).cloned());
+            }
+            if let Some(v) = &diff.families {
+                self.families = v.as_ref().map(|ids| {
+                    ids.iter()
+                        .filter_map(|tid| types.get(&tid.guid).cloned())
+                        .collect()
+                });
+            }
+            if let Some(v) = &diff.description {
+                self.description = v.clone();
+            }
+            if let Some(v) = &diff.icon {
+                self.icon = v.clone();
+            }
+            if let Some(v) = &diff.image {
+                self.image = v.clone();
+            }
+            if let Some(v) = &diff.folder {
+                self.folder = v.clone();
+            }
+            if let Some(v) = &diff.unit {
+                self.unit = v.clone();
+            }
+            if let Some(v) = &diff.stock {
+                self.stock = v.clone();
+            }
+            if let Some(v) = &diff.is_abstract {
+                self.is_abstract = v.clone();
+            }
+            if let Some(v) = &diff.virtual_type {
+                self.virtual_type = v.clone();
+            }
+            if let Some(v) = &diff.location {
+                self.location = v.clone();
+            }
+            if let Some(v) = &diff.concepts {
+                self.concepts = v.clone();
+            }
+            if let Some(v) = &diff.authors {
+                self.authors = v.clone();
+            }
+            apply_collection_diff(&mut self.props, &diff.props, Prop::apply_diff, |p| {
+                Prop::from(p)
+            });
+            apply_collection_diff(&mut self.models, &diff.models, Model::apply_diff, |m| {
+                Model::from(m)
+            });
+
+            if let Some(cd) = &diff.connectors {
+                let mut conns = self.connectors.clone().unwrap_or_default();
+                if let Some(removed) = &cd.removed {
+                    let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
+                    conns.retain(|c| !rs.contains(&c.guid));
+                }
+                if let Some(updated) = &cd.updated {
+                    let um: HashMap<String, &ConnectorDiff> =
+                        updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
+                    for c in &mut conns {
+                        if let Some(d) = um.get(&c.guid) {
+                            Arc::make_mut(c).apply_diff(d, ports);
+                        }
                     }
                 }
-            }
-            if let Some(added) = &cd.added {
-                for cw in added {
-                    conns.push(Arc::new(Connector::from_dto(cw, ports)));
+                if let Some(added) = &cd.added {
+                    for cw in added {
+                        conns.push(Arc::new(Connector::from_dto(cw, ports)));
+                    }
                 }
+                self.connectors = if conns.is_empty() { None } else { Some(conns) };
             }
-            item.connectors = if conns.is_empty() { None } else { Some(conns) };
-        }
 
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+        }
     }
 
-    /// 🔖<summary>🔖apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_layer_diff(item: &mut Layer, diff: &LayerDiff) {
-        if let Some(value) = &diff.path {
-            item.path = value.clone();
+    impl Layer {
+        /// 🔖Applies a layer diff.
+        pub fn apply_diff(&mut self, diff: &LayerDiff) {
+            if let Some(value) = &diff.path {
+                self.path = value.clone();
+            }
+            if let Some(value) = &diff.is_hidden {
+                self.is_hidden = *value;
+            }
+            if let Some(value) = &diff.is_locked {
+                self.is_locked = *value;
+            }
+            if let Some(value) = &diff.color {
+                self.color = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.is_hidden {
-            item.is_hidden = *value;
-        }
-        if let Some(value) = &diff.is_locked {
-            item.is_locked = *value;
-        }
-        if let Some(value) = &diff.color {
-            item.color = value.clone();
-        }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
-    /// 🔖<summary>🔖apply_group_diff holds the data fields for a apply_group_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_group_diff(item: &mut Group, diff: &GroupDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Group {
+        /// 🔖Applies a group diff.
+        pub fn apply_diff(&mut self, diff: &GroupDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.color {
+                self.color = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.pieces {
+                self.pieces = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.color {
-            item.color = value.clone();
-        }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.pieces {
-            item.pieces = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
-    /// 🔖<summary>🔖apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
-    pub fn apply_stat_diff(item: &mut Stat, diff: &StatDiff) {
-        if let Some(value) = &diff.quality {
-            item.quality = value.clone();
-        }
-        if let Some(value) = &diff.min {
-            item.min = *value;
-        }
-        if let Some(value) = &diff.min_excluded {
-            item.min_excluded = *value;
-        }
-        if let Some(value) = &diff.max {
-            item.max = *value;
-        }
-        if let Some(value) = &diff.max_excluded {
-            item.max_excluded = *value;
-        }
-        if let Some(value) = &diff.unit {
-            item.unit = value.clone();
+    impl Stat {
+        /// 🔖Applies a stat diff.
+        pub fn apply_diff(&mut self, diff: &StatDiff) {
+            if let Some(value) = &diff.quality {
+                self.quality = value.clone();
+            }
+            if let Some(value) = &diff.min {
+                self.min = *value;
+            }
+            if let Some(value) = &diff.min_excluded {
+                self.min_excluded = *value;
+            }
+            if let Some(value) = &diff.max {
+                self.max = *value;
+            }
+            if let Some(value) = &diff.max_excluded {
+                self.max_excluded = *value;
+            }
+            if let Some(value) = &diff.unit {
+                self.unit = value.clone();
+            }
         }
     }
-    /// 🔖<summary>🔖apply_piece_diff holds the data fields for a apply_piece_diff record.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn apply_piece_diff(
-        item: &mut Piece,
-        diff: &PieceDiff,
-        types: &HashMap<String, Arc<Type>>,
-        designs: &HashMap<String, Arc<Design>>,
-    ) {
-        if let Some(v) = &diff.name {
-            item.name = v.clone();
+    impl Piece {
+        /// 🔖Applies a piece diff.
+        pub fn apply_diff(
+            &mut self,
+            diff: &PieceDiff,
+            types: &HashMap<String, Arc<Type>>,
+            designs: &HashMap<String, Arc<Design>>,
+        ) {
+            if let Some(v) = &diff.name {
+                self.name = v.clone();
+            }
+            if let Some(v) = &diff.type_ref {
+                self.type_ref = v.as_ref().and_then(|tid| types.get(&tid.guid).cloned());
+            }
+            if let Some(v) = &diff.design {
+                self.design = v
+                    .as_ref()
+                    .map(|did| designs.get(&did.guid).map(|d| Arc::downgrade(d)))
+                    .flatten();
+            }
+            if let Some(v) = &diff.plane {
+                self.plane = v.as_ref().map(Plane::from);
+            }
+            if let Some(v) = &diff.center {
+                self.center = v.as_ref().map(Coord::from);
+            }
+            if let Some(v) = &diff.scale {
+                self.scale = v.clone();
+            }
+            if let Some(v) = &diff.mirror_plane {
+                self.mirror_plane = v.as_ref().map(Plane::from);
+            }
+            if let Some(v) = &diff.is_hidden {
+                self.is_hidden = v.clone();
+            }
+            if let Some(v) = &diff.is_locked {
+                self.is_locked = v.clone();
+            }
+            if let Some(v) = &diff.color {
+                self.color = v.clone();
+            }
+            if let Some(v) = &diff.description {
+                self.description = v.clone();
+            }
+            apply_collection_diff(&mut self.props, &diff.props, Prop::apply_diff, |p| {
+                Prop::from(p)
+            });
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(v) = &diff.type_ref {
-            item.type_ref = v.as_ref().and_then(|tid| types.get(&tid.guid).cloned());
-        }
-        if let Some(v) = &diff.design {
-            item.design = v
-                .as_ref()
-                .map(|did| designs.get(&did.guid).map(|d| Arc::downgrade(d)))
-                .flatten();
-        }
-        if let Some(v) = &diff.plane {
-            item.plane = v.as_ref().map(Plane::from);
-        }
-        if let Some(v) = &diff.center {
-            item.center = v.as_ref().map(Coord::from);
-        }
-        if let Some(v) = &diff.scale {
-            item.scale = v.clone();
-        }
-        if let Some(v) = &diff.mirror_plane {
-            item.mirror_plane = v.as_ref().map(Plane::from);
-        }
-        if let Some(v) = &diff.is_hidden {
-            item.is_hidden = v.clone();
-        }
-        if let Some(v) = &diff.is_locked {
-            item.is_locked = v.clone();
-        }
-        if let Some(v) = &diff.color {
-            item.color = v.clone();
-        }
-        if let Some(v) = &diff.description {
-            item.description = v.clone();
-        }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
-            Prop::from(p)
-        });
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
     /// 🔖<summary>🔖apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_connection_diff(
-        item: &mut Connection,
-        diff: &ConnectionDiff,
-        pieces: &HashMap<String, Arc<Piece>>,
-    ) {
-        let prev_connected_connector_guid =
-            item.connected.connector.as_ref().map(|c| c.guid.clone());
-        let prev_connecting_connector_guid =
-            item.connecting.connector.as_ref().map(|c| c.guid.clone());
-        if let Some(sd) = &diff.connected {
-            if let Some(pid) = &sd.piece {
-                if let Some(p) = pieces.get(&pid.guid) {
-                    item.connected.piece = p.clone();
-                }
-            }
-            if let Some(o) = &sd.design_piece {
-                item.connected.design_piece =
-                    o.as_ref().and_then(|pid| pieces.get(&pid.guid).cloned());
-            }
-            match &sd.connector {
-                None => {
-                    if let Some(ref g) = prev_connected_connector_guid {
-                        item.connected.connector = connector_for_piece_side(
-                            &item.connected,
-                            &ConnectorId { guid: g.clone() },
-                        );
+    impl Connection {
+        /// 🔖Applies a connection diff.
+        pub fn apply_diff(
+            &mut self,
+            diff: &ConnectionDiff,
+            pieces: &HashMap<String, Arc<Piece>>,
+        ) {
+            let prev_connected_connector_guid =
+                self.connected.connector.as_ref().map(|c| c.guid.clone());
+            let prev_connecting_connector_guid =
+                self.connecting.connector.as_ref().map(|c| c.guid.clone());
+            if let Some(sd) = &diff.connected {
+                if let Some(pid) = &sd.piece {
+                    if let Some(p) = pieces.get(&pid.guid) {
+                        self.connected.piece = p.clone();
                     }
                 }
-                Some(inner) => {
-                    item.connected.connector = inner
-                        .as_ref()
-                        .and_then(|cid| connector_for_piece_side(&item.connected, cid));
+                if let Some(o) = &sd.design_piece {
+                    self.connected.design_piece =
+                        o.as_ref().and_then(|pid| pieces.get(&pid.guid).cloned());
                 }
-            }
-        }
-        if let Some(sd) = &diff.connecting {
-            if let Some(pid) = &sd.piece {
-                if let Some(p) = pieces.get(&pid.guid) {
-                    item.connecting.piece = p.clone();
-                }
-            }
-            if let Some(o) = &sd.design_piece {
-                item.connecting.design_piece =
-                    o.as_ref().and_then(|pid| pieces.get(&pid.guid).cloned());
-            }
-            match &sd.connector {
-                None => {
-                    if let Some(ref g) = prev_connecting_connector_guid {
-                        item.connecting.connector = connector_for_piece_side(
-                            &item.connecting,
-                            &ConnectorId { guid: g.clone() },
-                        );
+                match &sd.connector {
+                    None => {
+                        if let Some(ref g) = prev_connected_connector_guid {
+                            self.connected.connector = connector_for_piece_side(
+                                &self.connected,
+                                &ConnectorId { guid: g.clone() },
+                            );
+                        }
+                    }
+                    Some(inner) => {
+                        self.connected.connector = inner
+                            .as_ref()
+                            .and_then(|cid| connector_for_piece_side(&self.connected, cid));
                     }
                 }
-                Some(inner) => {
-                    item.connecting.connector = inner
-                        .as_ref()
-                        .and_then(|cid| connector_for_piece_side(&item.connecting, cid));
+            }
+            if let Some(sd) = &diff.connecting {
+                if let Some(pid) = &sd.piece {
+                    if let Some(p) = pieces.get(&pid.guid) {
+                        self.connecting.piece = p.clone();
+                    }
+                }
+                if let Some(o) = &sd.design_piece {
+                    self.connecting.design_piece =
+                        o.as_ref().and_then(|pid| pieces.get(&pid.guid).cloned());
+                }
+                match &sd.connector {
+                    None => {
+                        if let Some(ref g) = prev_connecting_connector_guid {
+                            self.connecting.connector = connector_for_piece_side(
+                                &self.connecting,
+                                &ConnectorId { guid: g.clone() },
+                            );
+                        }
+                    }
+                    Some(inner) => {
+                        self.connecting.connector = inner
+                            .as_ref()
+                            .and_then(|cid| connector_for_piece_side(&self.connecting, cid));
+                    }
                 }
             }
-        }
-        if let Some(value) = &diff.gap {
-            item.gap += value;
-        }
-        if let Some(value) = &diff.shift {
-            item.shift += value;
-        }
-        if let Some(value) = &diff.rise {
-            item.rise += value;
-        }
-        if let Some(value) = &diff.rotation {
-            item.rotation += value;
-        }
-        if let Some(value) = &diff.turn {
-            item.turn += value;
-        }
-        if let Some(value) = &diff.tilt {
-            item.tilt += value;
-        }
-        if let Some(value) = &diff.u {
-            match value {
-                Some(delta) => {
-                    item.u = Some(item.u.unwrap_or(0.0) + delta);
-                }
-                None => {
-                    item.u = None;
+            if let Some(value) = &diff.gap {
+                self.gap += value;
+            }
+            if let Some(value) = &diff.shift {
+                self.shift += value;
+            }
+            if let Some(value) = &diff.rise {
+                self.rise += value;
+            }
+            if let Some(value) = &diff.rotation {
+                self.rotation += value;
+            }
+            if let Some(value) = &diff.turn {
+                self.turn += value;
+            }
+            if let Some(value) = &diff.tilt {
+                self.tilt += value;
+            }
+            if let Some(value) = &diff.u {
+                match value {
+                    Some(delta) => {
+                        self.u = Some(self.u.unwrap_or(0.0) + delta);
+                    }
+                    None => {
+                        self.u = None;
+                    }
                 }
             }
-        }
-        if let Some(value) = &diff.v {
-            match value {
-                Some(delta) => {
-                    item.v = Some(item.v.unwrap_or(0.0) + delta);
-                }
-                None => {
-                    item.v = None;
+            if let Some(value) = &diff.v {
+                match value {
+                    Some(delta) => {
+                        self.v = Some(self.v.unwrap_or(0.0) + delta);
+                    }
+                    None => {
+                        self.v = None;
+                    }
                 }
             }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
     /// 🔖<remarks>
     /// </remarks>
-    pub fn apply_design_diff(
-        item: &mut Design,
-        diff: &DesignDiff,
-        types: &HashMap<String, Arc<Type>>,
-        designs: &HashMap<String, Arc<Design>>,
-    ) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(v) = &diff.parent {
-            item.parent = v.clone();
-        }
-        if let Some(v) = &diff.families {
-            item.families = v.clone();
-        }
-        if let Some(v) = &diff.description {
-            item.description = v.clone();
-        }
-        if let Some(v) = &diff.icon {
-            item.icon = v.clone();
-        }
-        if let Some(v) = &diff.image {
-            item.image = v.clone();
-        }
-        if let Some(v) = &diff.folder {
-            item.folder = v.clone();
-        }
-        if let Some(v) = &diff.unit {
-            item.unit = v.clone();
-        }
-        if let Some(v) = &diff.is_abstract {
-            item.is_abstract = v.clone();
-        }
-        if let Some(v) = &diff.can_scale {
-            item.can_scale = v.clone();
-        }
-        if let Some(v) = &diff.can_mirror {
-            item.can_mirror = v.clone();
-        }
-        if let Some(v) = &diff.concepts {
-            item.concepts = v.clone();
-        }
-        if let Some(v) = &diff.authors {
-            item.authors = v.clone();
-        }
-        if let Some(v) = &diff.active_layer {
-            item.active_layer = v.clone();
-        }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
-            Prop::from(p)
-        });
-
-        let self_weak = designs.get(&item.guid).map(|d| Arc::downgrade(d));
-
-        if let Some(pd) = &diff.pieces {
-            let mut pieces_vec = item.pieces.clone().unwrap_or_default();
-            if let Some(removed) = &pd.removed {
-                let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
-                pieces_vec.retain(|p| !rs.contains(&p.guid));
+    impl Design {
+        /// 🔖Applies a design diff.
+        pub fn apply_diff(
+            &mut self,
+            diff: &DesignDiff,
+            types: &HashMap<String, Arc<Type>>,
+            designs: &HashMap<String, Arc<Design>>,
+        ) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
             }
-            if let Some(added) = &pd.added {
-                for pw in added {
-                    pieces_vec.push(piece_arc_from_dto(pw, types, self_weak.clone()));
+            if let Some(v) = &diff.parent {
+                self.parent = v.clone();
+            }
+            if let Some(v) = &diff.families {
+                self.families = v.clone();
+            }
+            if let Some(v) = &diff.description {
+                self.description = v.clone();
+            }
+            if let Some(v) = &diff.icon {
+                self.icon = v.clone();
+            }
+            if let Some(v) = &diff.image {
+                self.image = v.clone();
+            }
+            if let Some(v) = &diff.folder {
+                self.folder = v.clone();
+            }
+            if let Some(v) = &diff.unit {
+                self.unit = v.clone();
+            }
+            if let Some(v) = &diff.is_abstract {
+                self.is_abstract = v.clone();
+            }
+            if let Some(v) = &diff.can_scale {
+                self.can_scale = v.clone();
+            }
+            if let Some(v) = &diff.can_mirror {
+                self.can_mirror = v.clone();
+            }
+            if let Some(v) = &diff.concepts {
+                self.concepts = v.clone();
+            }
+            if let Some(v) = &diff.authors {
+                self.authors = v.clone();
+            }
+            if let Some(v) = &diff.active_layer {
+                self.active_layer = v.clone();
+            }
+            apply_collection_diff(&mut self.props, &diff.props, Prop::apply_diff, |p| {
+                Prop::from(p)
+            });
+
+            let self_weak = designs.get(&self.guid).map(|d| Arc::downgrade(d));
+
+            if let Some(pd) = &diff.pieces {
+                let mut pieces_vec = self.pieces.clone().unwrap_or_default();
+                if let Some(removed) = &pd.removed {
+                    let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
+                    pieces_vec.retain(|p| !rs.contains(&p.guid));
                 }
-            }
-            if let Some(updated) = &pd.updated {
-                let um: HashMap<String, &PieceDiff> =
-                    updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
-                for p in &mut pieces_vec {
-                    if let Some(d) = um.get(&p.guid) {
-                        apply_piece_diff(Arc::make_mut(p), d, types, designs);
+                if let Some(added) = &pd.added {
+                    for pw in added {
+                        pieces_vec.push(piece_arc_from_dto(pw, types, self_weak.clone()));
                     }
                 }
-            }
-            item.pieces = if pieces_vec.is_empty() {
-                None
-            } else {
-                Some(pieces_vec)
-            };
-        }
-
-        let piece_map: HashMap<String, Arc<Piece>> = item
-            .pieces
-            .as_ref()
-            .map(|pv| pv.iter().map(|p| (p.guid.clone(), p.clone())).collect())
-            .unwrap_or_default();
-
-        if let Some(cd) = &diff.connections {
-            let mut conns = item.connections.clone().unwrap_or_default();
-            if let Some(removed) = &cd.removed {
-                let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
-                conns.retain(|c| !rs.contains(&c.guid));
-            }
-            if let Some(added) = &cd.added {
-                for cw in added {
-                    conns.push(connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
-                        panic!("apply_design_diff connection {}: {:?}", cw.guid, e)
-                    }));
-                }
-            }
-            if let Some(updated) = &cd.updated {
-                let um: HashMap<String, &ConnectionDiff> =
-                    updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
-                for c in &mut conns {
-                    if let Some(d) = um.get(&c.guid) {
-                        apply_connection_diff(c, d, &piece_map);
+                if let Some(updated) = &pd.updated {
+                    let um: HashMap<String, &PieceDiff> =
+                        updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
+                    for p in &mut pieces_vec {
+                        if let Some(d) = um.get(&p.guid) {
+                            Arc::make_mut(p).apply_diff(d, types, designs);
+                        }
                     }
                 }
+                self.pieces = if pieces_vec.is_empty() {
+                    None
+                } else {
+                    Some(pieces_vec)
+                };
             }
-            item.connections = if conns.is_empty() { None } else { Some(conns) };
-        }
 
-        apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff, |d| {
-            Layer::from(d)
-        });
-        apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff, |d| {
-            Group::from(d)
-        });
-        apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff, |d| {
-            Stat::from(d)
-        });
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
-        item.invalidate_hash();
+            let piece_map: HashMap<String, Arc<Piece>> = self
+                .pieces
+                .as_ref()
+                .map(|pv| pv.iter().map(|p| (p.guid.clone(), p.clone())).collect())
+                .unwrap_or_default();
+
+            if let Some(cd) = &diff.connections {
+                let mut conns = self.connections.clone().unwrap_or_default();
+                if let Some(removed) = &cd.removed {
+                    let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
+                    conns.retain(|c| !rs.contains(&c.guid));
+                }
+                if let Some(added) = &cd.added {
+                    for cw in added {
+                        conns.push(connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
+                            panic!("Design::apply_diff connection {}: {:?}", cw.guid, e)
+                        }));
+                    }
+                }
+                if let Some(updated) = &cd.updated {
+                    let um: HashMap<String, &ConnectionDiff> =
+                        updated.iter().map(|u| (u.guid.clone(), &u.diff)).collect();
+                    for c in &mut conns {
+                        if let Some(d) = um.get(&c.guid) {
+                            c.apply_diff(d, &piece_map);
+                        }
+                    }
+                }
+                self.connections = if conns.is_empty() { None } else { Some(conns) };
+            }
+
+            apply_collection_diff(&mut self.layers, &diff.layers, Layer::apply_diff, |d| {
+                Layer::from(d)
+            });
+            apply_collection_diff(&mut self.groups, &diff.groups, Group::apply_diff, |d| {
+                Group::from(d)
+            });
+            apply_collection_diff(&mut self.stats, &diff.stats, Stat::apply_diff, |d| {
+                Stat::from(d)
+            });
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+            self.invalidate_hash();
+        }
     }
 
-    /// 📌Creates a mixed design keeping old entities with diff status annotations.
-    /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
-    /// Updated entities are applied (new positions/values) and marked as modified.
-    /// Removed entities are kept in place marked as removed.
-    /// Added entities are appended marked as added.
-    pub fn design_with_diff(base: &Design, diff: &DesignDiff) -> Design {
-        let status_attr = |status: &str| Attribute {
-            guid: format!("semio.diffStatus.{}", status),
-            key: "semio.diffStatus".to_string(),
-            value: Some(status.to_string()),
-            definition: None,
-        };
+    impl Design {
+        /// 📌Creates a mixed design keeping old entities with diff status annotations.
+        /// annotate each with a semio.diffStatus attribute (unchanged/modified/removed/added).
+        pub fn with_diff(base: &Design, diff: &DesignDiff) -> Design {
+            let status_attr = |status: &str| Attribute {
+                guid: format!("semio.diffStatus.{}", status),
+                key: "semio.diffStatus".to_string(),
+                value: Some(status.to_string()),
+                definition: None,
+            };
 
-        let types_map = types_from_design_pieces(base);
-        let designs_map: HashMap<String, Arc<Design>> = HashMap::new();
+            let types_map = Design::types_from_pieces(base);
+            let designs_map: HashMap<String, Arc<Design>> = HashMap::new();
 
-        let removed_piece_guids: std::collections::HashSet<&str> = diff
-            .pieces
-            .as_ref()
-            .map(|pd| {
-                pd.removed
-                    .as_ref()
-                    .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
-        let updated_piece_map: std::collections::HashMap<&str, &PieceDiff> = diff
-            .pieces
-            .as_ref()
-            .map(|pd| {
-                pd.updated
-                    .as_ref()
-                    .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
+            let removed_piece_guids: std::collections::HashSet<&str> = diff
+                .pieces
+                .as_ref()
+                .map(|pd| {
+                    pd.removed
+                        .as_ref()
+                        .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
+            let updated_piece_map: std::collections::HashMap<&str, &PieceDiff> = diff
+                .pieces
+                .as_ref()
+                .map(|pd| {
+                    pd.updated
+                        .as_ref()
+                        .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
 
-        let removed_conn_guids: std::collections::HashSet<&str> = diff
-            .connections
-            .as_ref()
-            .map(|cd| {
-                cd.removed
-                    .as_ref()
-                    .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
-        let updated_conn_map: std::collections::HashMap<&str, &ConnectionDiff> = diff
-            .connections
-            .as_ref()
-            .map(|cd| {
-                cd.updated
-                    .as_ref()
-                    .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
-                    .unwrap_or_default()
-            })
-            .unwrap_or_default();
+            let removed_conn_guids: std::collections::HashSet<&str> = diff
+                .connections
+                .as_ref()
+                .map(|cd| {
+                    cd.removed
+                        .as_ref()
+                        .map(|r| r.iter().map(|id| id.guid.as_str()).collect())
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
+            let updated_conn_map: std::collections::HashMap<&str, &ConnectionDiff> = diff
+                .connections
+                .as_ref()
+                .map(|cd| {
+                    cd.updated
+                        .as_ref()
+                        .map(|u| u.iter().map(|upd| (upd.guid.as_str(), &upd.diff)).collect())
+                        .unwrap_or_default()
+                })
+                .unwrap_or_default();
 
-        let mut result_pieces: Vec<Arc<Piece>> = Vec::new();
-        if let Some(ref pieces) = base.pieces {
-            for p in pieces {
-                let mut pc = p.as_ref().clone();
-                if removed_piece_guids.contains(pc.guid.as_str()) {
-                    let mut attrs = pc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("removed"));
-                    pc.attributes = Some(attrs);
-                } else if let Some(piece_diff) = updated_piece_map.get(pc.guid.as_str()) {
-                    apply_piece_diff(&mut pc, piece_diff, &types_map, &designs_map);
-                    let mut attrs = pc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("modified"));
-                    pc.attributes = Some(attrs);
-                } else {
-                    let mut attrs = pc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("unchanged"));
-                    pc.attributes = Some(attrs);
-                }
-                result_pieces.push(Arc::new(pc));
-            }
-        }
-        if let Some(ref pd) = diff.pieces {
-            if let Some(ref added) = pd.added {
-                for pw in added {
-                    let arc = piece_arc_from_dto(pw, &types_map, None);
-                    let mut inner = arc.as_ref().clone();
-                    let mut attrs = inner.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("added"));
-                    inner.attributes = Some(attrs);
-                    result_pieces.push(Arc::new(inner));
+            let mut result_pieces: Vec<Arc<Piece>> = Vec::new();
+            if let Some(ref pieces) = base.pieces {
+                for p in pieces {
+                    let mut pc = p.as_ref().clone();
+                    if removed_piece_guids.contains(pc.guid.as_str()) {
+                        let mut attrs = pc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("removed"));
+                        pc.attributes = Some(attrs);
+                    } else if let Some(piece_diff) = updated_piece_map.get(pc.guid.as_str()) {
+                        pc.apply_diff(piece_diff, &types_map, &designs_map);
+                        let mut attrs = pc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("modified"));
+                        pc.attributes = Some(attrs);
+                    } else {
+                        let mut attrs = pc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("unchanged"));
+                        pc.attributes = Some(attrs);
+                    }
+                    result_pieces.push(Arc::new(pc));
                 }
             }
-        }
-
-        let piece_map: HashMap<String, Arc<Piece>> = result_pieces
-            .iter()
-            .map(|p| (p.guid.clone(), p.clone()))
-            .collect();
-
-        let mut result_conns: Vec<Connection> = Vec::new();
-        if let Some(ref conns) = base.connections {
-            for c in conns {
-                let mut cc = c.clone();
-                if removed_conn_guids.contains(cc.guid.as_str()) {
-                    let mut attrs = cc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("removed"));
-                    cc.attributes = Some(attrs);
-                } else if let Some(conn_diff) = updated_conn_map.get(cc.guid.as_str()) {
-                    apply_connection_diff(&mut cc, conn_diff, &piece_map);
-                    let mut attrs = cc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("modified"));
-                    cc.attributes = Some(attrs);
-                } else {
-                    let mut attrs = cc.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("unchanged"));
-                    cc.attributes = Some(attrs);
-                }
-                result_conns.push(cc);
-            }
-        }
-        if let Some(ref cd) = diff.connections {
-            if let Some(ref added) = cd.added {
-                for cw in added {
-                    let mut ac = connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
-                        panic!("design_with_diff connection {}: {:?}", cw.guid, e)
-                    });
-                    let mut attrs = ac.attributes.clone().unwrap_or_default();
-                    attrs.push(status_attr("added"));
-                    ac.attributes = Some(attrs);
-                    result_conns.push(ac);
+            if let Some(ref pd) = diff.pieces {
+                if let Some(ref added) = pd.added {
+                    for pw in added {
+                        let arc = piece_arc_from_dto(pw, &types_map, None);
+                        let mut inner = arc.as_ref().clone();
+                        let mut attrs = inner.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("added"));
+                        inner.attributes = Some(attrs);
+                        result_pieces.push(Arc::new(inner));
+                    }
                 }
             }
-        }
 
-        let mut result = base.clone();
-        result.pieces = Some(result_pieces);
-        result.connections = Some(result_conns);
-        result
+            let piece_map: HashMap<String, Arc<Piece>> = result_pieces
+                .iter()
+                .map(|p| (p.guid.clone(), p.clone()))
+                .collect();
+
+            let mut result_conns: Vec<Connection> = Vec::new();
+            if let Some(ref conns) = base.connections {
+                for c in conns {
+                    let mut cc = c.clone();
+                    if removed_conn_guids.contains(cc.guid.as_str()) {
+                        let mut attrs = cc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("removed"));
+                        cc.attributes = Some(attrs);
+                    } else if let Some(conn_diff) = updated_conn_map.get(cc.guid.as_str()) {
+                        cc.apply_diff(conn_diff, &piece_map);
+                        let mut attrs = cc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("modified"));
+                        cc.attributes = Some(attrs);
+                    } else {
+                        let mut attrs = cc.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("unchanged"));
+                        cc.attributes = Some(attrs);
+                    }
+                    result_conns.push(cc);
+                }
+            }
+            if let Some(ref cd) = diff.connections {
+                if let Some(ref added) = cd.added {
+                    for cw in added {
+                        let mut ac = connection_from_dto(cw, &piece_map).unwrap_or_else(|e| {
+                            panic!("Design::with_diff connection {}: {:?}", cw.guid, e)
+                        });
+                        let mut attrs = ac.attributes.clone().unwrap_or_default();
+                        attrs.push(status_attr("added"));
+                        ac.attributes = Some(attrs);
+                        result_conns.push(ac);
+                    }
+                }
+            }
+
+            let mut result = base.clone();
+            result.pieces = Some(result_pieces);
+            result.connections = Some(result_conns);
+            result
+        }
     }
 
     /// 🔖<summary>🔖apply_tag_diff holds the data fields for a apply_tag_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_tag_diff(item: &mut Tag, diff: &TagDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Tag {
+        /// 🔖Applies a tag diff.
+        pub fn apply_diff(&mut self, diff: &TagDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.icon {
+                self.icon = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.icon {
-            item.icon = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
     /// 🔖<summary>🔖apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_concept_diff(item: &mut Concept, diff: &ConceptDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Concept {
+        /// 🔖Applies a concept diff.
+        pub fn apply_diff(&mut self, diff: &ConceptDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.icon {
+                self.icon = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.icon {
-            item.icon = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
     /// 🔖<summary>🔢apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_interface_diff(item: &mut Port, diff: &PortDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Port {
+        /// 🔢Applies a port diff.
+        pub fn apply_diff(&mut self, diff: &PortDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.icon {
+                self.icon = value.clone();
+            }
+            if let Some(value) = &diff.compatible_interfaces {
+                self.compatible_interfaces = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.icon {
-            item.icon = value.clone();
-        }
-        if let Some(value) = &diff.compatible_interfaces {
-            item.compatible_interfaces = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
     /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>

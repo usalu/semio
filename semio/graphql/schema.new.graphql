@@ -25,6 +25,7 @@ interface Actor {
 }
 
 type User implements Actor {
+  hash: Hash!
   id: ID!
   name: String
   email: String
@@ -32,6 +33,7 @@ type User implements Actor {
 }
 
 type Agent implements Actor {
+  hash: Hash!
   id: ID!
   llm: String!
   name: String
@@ -49,6 +51,7 @@ input SessionActorInput {
 }
 
 type Coordinate {
+  hash: Hash!
   u: Float!
   v: Float!
 }
@@ -59,6 +62,7 @@ input CoordinateInput {
 }
 
 type Point {
+  hash: Hash!
   x: Float!
   y: Float!
   z: Float!
@@ -71,6 +75,7 @@ input PointInput {
 }
 
 type Vector {
+  hash: Hash!
   x: Float!
   y: Float!
   z: Float!
@@ -83,6 +88,7 @@ input VectorInput {
 }
 
 type Plane {
+  hash: Hash!
   origin: Point!
   xAxis: Vector!
   yAxis: Vector!
@@ -95,6 +101,7 @@ input PlaneInput {
 }
 
 type Camera {
+  hash: Hash!
   position: Point!
   forward: Vector!
   up: Vector!
@@ -107,6 +114,7 @@ input CameraInput {
 }
 
 type Attribute {
+  hash: Hash!
   id: ID!
   key: String!
   value: String
@@ -121,6 +129,7 @@ input AttributeInput {
 }
 
 type Location {
+  hash: Hash!
   longitude: Float!
   latitude: Float!
   altitude: Float
@@ -135,6 +144,7 @@ input LocationInput {
 }
 
 type Author {
+  hash: Hash!
   id: ID!
   name: String!
   email: String!
@@ -155,6 +165,7 @@ input AuthorPatchInput {
 }
 
 type Folder {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -192,13 +203,14 @@ input FolderPatchInput {
 }
 
 type File {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
   remote: String
   folder: Folder
   size: Float
-  hash: String
+  contentHash: String
   blob: String
   mime: String
   createdAt: DateTime
@@ -213,7 +225,7 @@ input FileInput {
   remote: String
   folderId: ID
   size: Float
-  hash: String
+  contentHash: String
   blob: String
   mime: String
   createdAt: DateTime
@@ -227,7 +239,7 @@ input FilePatchInput {
   remote: String
   folderId: ID
   size: Float
-  hash: String
+  contentHash: String
   blob: String
   mime: String
   createdAt: DateTime
@@ -237,7 +249,9 @@ input FilePatchInput {
 }
 
 type Benchmark {
+  hash: Hash!
   id: ID!
+  quality: Quality
   name: String!
   icon: String
   min: Float
@@ -259,6 +273,7 @@ input BenchmarkInput {
 }
 
 type Quality {
+  hash: Hash!
   id: ID!
   kit: Kit!
   key: String!
@@ -331,6 +346,7 @@ input QualityPatchInput {
 }
 
 type Port {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -361,7 +377,9 @@ input PortPatchInput {
 }
 
 type Prop {
+  hash: Hash!
   id: ID!
+  kit: Kit!
   quality: Quality!
   value: String!
   unit: String
@@ -377,6 +395,7 @@ input PropInput {
 }
 
 type Tag {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -401,6 +420,7 @@ input TagPatchInput {
 }
 
 type Concept {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -424,8 +444,42 @@ input ConceptPatchInput {
   attributes: [AttributeInput!]
 }
 
-type Model {
+
+"""👪Named connector family grouping ports and shared attributes."""
+type Family {
+  hash: Hash!
   id: ID!
+  kit: Kit!
+  name: String!
+  description: String
+  icon: String
+  ports: [Port!]!
+  attributes: [Attribute!]!
+}
+
+"""👪Input fields for creating or replacing a connector family."""
+input FamilyInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  ports: [PortInput!]
+  attributes: [AttributeInput!]
+}
+
+"""👪Patch fields for updating a connector family."""
+input FamilyPatchInput {
+  name: String
+  description: String
+  icon: String
+  ports: [PortInput!]
+  attributes: [AttributeInput!]
+}
+
+type Model {
+  hash: Hash!
+  id: ID!
+  type: Type!
   name: String
   tags: [Tag!]!
   file: File
@@ -443,7 +497,9 @@ input ModelInput {
 }
 
 type Connector {
+  hash: Hash!
   id: ID!
+  type: Type!
   name: String
   t: Float!
   point: Point!
@@ -471,6 +527,7 @@ input ConnectorInput {
 }
 
 type Type {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -541,7 +598,9 @@ input TypePatchInput {
 }
 
 type Layer {
+  hash: Hash!
   id: ID!
+  design: Design!
   path: String!
   isHidden: Boolean
   isLocked: Boolean
@@ -561,6 +620,8 @@ input LayerInput {
 }
 
 type Side {
+  hash: Hash!
+  connection: Connection!
   piece: Piece!
   designPiece: Piece
   connector: Connector
@@ -573,7 +634,9 @@ input SideInput {
 }
 
 type Connection {
+  hash: Hash!
   id: ID!
+  design: Design!
   connected: Side!
   connecting: Side!
   gap: Float
@@ -620,7 +683,9 @@ input ConnectionPatchInput {
 }
 
 type Stat {
+  hash: Hash!
   id: ID!
+  design: Design!
   quality: Quality!
   unit: String
   min: Float
@@ -640,6 +705,7 @@ input StatInput {
 }
 
 type Piece {
+  hash: Hash!
   id: ID!
   design: Design!
   name: String
@@ -695,7 +761,9 @@ input PiecePatchInput {
 }
 
 type Group {
+  hash: Hash!
   id: ID!
+  design: Design!
   pieces: [Piece!]!
   color: String
   name: String
@@ -713,6 +781,7 @@ input GroupInput {
 }
 
 type Design {
+  hash: Hash!
   id: ID!
   kit: Kit!
   name: String!
@@ -793,6 +862,7 @@ input DesignPatchInput {
 }
 
 type Kit {
+  hash: Hash!
   id: ID!
   name: String!
   release: String
@@ -800,6 +870,7 @@ type Kit {
   designs: [Design!]!
   tags: [Tag!]!
   concepts: [Concept!]!
+  families: [Family!]!
   ports: [Port!]!
   qualities: [Quality!]!
   files: [File!]!
@@ -825,6 +896,7 @@ input KitInput {
   designs: [DesignInput!]
   tags: [TagInput!]
   concepts: [ConceptInput!]
+  families: [FamilyInput!]
   ports: [PortInput!]
   qualities: [QualityInput!]
   files: [FileInput!]
@@ -864,6 +936,7 @@ enum BackboneKind {
 }
 
 type KitBackbone {
+  hash: Hash!
   kind: BackboneKind!
   endpoint: String
   authoritative: Boolean!
@@ -876,6 +949,7 @@ type KitBackbone {
 }
 
 type KitClientInfo {
+  hash: Hash!
   id: ID!
   name: String
   version: String
@@ -904,17 +978,20 @@ enum SessionWarningActionKind {
 }
 
 type SessionWarningAction {
+  hash: Hash!
   kind: SessionWarningActionKind!
   label: String!
 }
 
 type KitSessionWarning {
+  hash: Hash!
   code: String!
   message: String!
   actions: [SessionWarningAction!]!
 }
 
 type SessionConnectorSelection {
+  hash: Hash!
   piece: Piece!
   designPiece: Piece
   connector: Connector!
@@ -927,6 +1004,7 @@ input SessionConnectorSelectionInput {
 }
 
 type KitSessionSelection {
+  hash: Hash!
   activeDesign: Design
   pieces: [Piece!]!
   connections: [Connection!]!
@@ -934,6 +1012,9 @@ type KitSessionSelection {
   models: [Model!]!
   designs: [Design!]!
   types: [Type!]!
+  replacementTypeCandidates: [Type!]!
+  replacementDesignCandidates: [Design!]!
+  boundaryConnectorCount: Int!
 }
 
 input SessionSelectionInput {
@@ -947,6 +1028,7 @@ input SessionSelectionInput {
 }
 
 type KitSession {
+  hash: Hash!
   id: ID!
   kit: Kit!
   actor: Actor!
@@ -973,6 +1055,7 @@ enum ValidationSeverity {
 }
 
 type ValidationNote {
+  hash: Hash!
   severity: ValidationSeverity!
   code: String!
   path: String
@@ -981,6 +1064,7 @@ type ValidationNote {
 }
 
 type KitValidationResult {
+  hash: Hash!
   ok: Boolean!
   immutable: Boolean!
   strict: Boolean!
@@ -1018,6 +1102,7 @@ enum ConflictResolutionKind {
 }
 
 type ConflictResolutionOption {
+  hash: Hash!
   id: ID!
   kind: ConflictResolutionKind!
   label: String!
@@ -1026,6 +1111,7 @@ type ConflictResolutionOption {
 }
 
 type KitConflict {
+  hash: Hash!
   id: ID!
   kit: Kit!
   session: KitSession
@@ -1070,6 +1156,9 @@ enum KitCommandKind {
   CREATE_PORT
   UPDATE_PORT
   DELETE_PORT
+  CREATE_FAMILY
+  UPDATE_FAMILY
+  DELETE_FAMILY
   CREATE_TAG
   UPDATE_TAG
   DELETE_TAG
@@ -1116,8 +1205,8 @@ enum KitCommandKind {
 }
 
 type KitCommandDescriptor {
+  hash: Hash!
   kind: KitCommandKind!
-  legacyAliases: [String!]!
   mutatesKit: Boolean!
   sessionScoped: Boolean!
   requiresConsensus: Boolean!
@@ -1125,10 +1214,9 @@ type KitCommandDescriptor {
 }
 
 type KitChange {
-  id: ID!
   hash: Hash!
+  id: ID!
   kind: KitCommandKind!
-  legacyCommand: String
   summary: String
   origin: String
   actor: Actor
@@ -1160,6 +1248,7 @@ enum CandidateVoteState {
 }
 
 type KitCandidateVote {
+  hash: Hash!
   session: KitSession!
   state: CandidateVoteState!
   reason: String
@@ -1168,10 +1257,10 @@ type KitCandidateVote {
 }
 
 type KitChangeCandidate {
+  hash: Hash!
   id: ID!
   kit: Kit!
   kind: KitCommandKind!
-  legacyCommand: String
   summary: String
   proposedBy: KitSession!
   actor: Actor!
@@ -1193,6 +1282,7 @@ enum TransactionState {
 }
 
 type KitTransaction {
+  hash: Hash!
   id: ID!
   kit: Kit!
   label: String
@@ -1211,6 +1301,7 @@ type KitTransaction {
 }
 
 type KitHistoryEntry {
+  hash: Hash!
   id: ID!
   index: Int!
   transaction: KitTransaction
@@ -1224,17 +1315,20 @@ type KitHistoryEntry {
 }
 
 type KitHistoryPage {
+  hash: Hash!
   nodes: [KitHistoryEntry!]!
   pageInfo: PageInfo!
   totalCount: Int!
 }
 
-type KitInteraction {
+
+"""🧭Shared fields present on every recorded kit store interaction."""
+interface KitInteraction {
   id: ID!
+  hash: Hash!
   index: Int!
   kit: Kit!
   kind: KitCommandKind!
-  legacyCommand: String
   actor: Actor
   session: KitSession
   transaction: KitTransaction
@@ -1246,13 +1340,1457 @@ type KitInteraction {
   createdAt: DateTime!
 }
 
+"""🔁Shared fields present on interactions that change kit state."""
+interface ChangeKitInteraction implements KitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded SetSessionSelection command interaction with computed links and change data."""
+type SetSessionSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateAuthor command interaction with computed links and change data."""
+type CreateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateAuthor command interaction with computed links and change data."""
+type UpdateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteAuthor command interaction with computed links and change data."""
+type DeleteAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateType command interaction with computed links and change data."""
+type CreateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateType command interaction with computed links and change data."""
+type UpdateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteType command interaction with computed links and change data."""
+type DeleteTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateDesign command interaction with computed links and change data."""
+type CreateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateDesign command interaction with computed links and change data."""
+type UpdateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteDesign command interaction with computed links and change data."""
+type DeleteDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateQuality command interaction with computed links and change data."""
+type CreateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateQuality command interaction with computed links and change data."""
+type UpdateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteQuality command interaction with computed links and change data."""
+type DeleteQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreatePort command interaction with computed links and change data."""
+type CreatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdatePort command interaction with computed links and change data."""
+type UpdatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeletePort command interaction with computed links and change data."""
+type DeletePortKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateFamily command interaction with computed links and change data."""
+type CreateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateFamily command interaction with computed links and change data."""
+type UpdateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteFamily command interaction with computed links and change data."""
+type DeleteFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateTag command interaction with computed links and change data."""
+type CreateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateTag command interaction with computed links and change data."""
+type UpdateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteTag command interaction with computed links and change data."""
+type DeleteTagKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateConcept command interaction with computed links and change data."""
+type CreateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateConcept command interaction with computed links and change data."""
+type UpdateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteConcept command interaction with computed links and change data."""
+type DeleteConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateFile command interaction with computed links and change data."""
+type CreateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateFile command interaction with computed links and change data."""
+type UpdateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteFile command interaction with computed links and change data."""
+type DeleteFileKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateFolder command interaction with computed links and change data."""
+type CreateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateFolder command interaction with computed links and change data."""
+type UpdateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteFolder command interaction with computed links and change data."""
+type DeleteFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded MoveArtifactToFolder command interaction with computed links and change data."""
+type MoveArtifactToFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreatePiece command interaction with computed links and change data."""
+type CreatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreatePieces command interaction with computed links and change data."""
+type CreatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdatePiece command interaction with computed links and change data."""
+type UpdatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdatePieces command interaction with computed links and change data."""
+type UpdatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeletePiece command interaction with computed links and change data."""
+type DeletePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeletePieces command interaction with computed links and change data."""
+type DeletePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateConnection command interaction with computed links and change data."""
+type CreateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateConnections command interaction with computed links and change data."""
+type CreateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateConnection command interaction with computed links and change data."""
+type UpdateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded UpdateConnections command interaction with computed links and change data."""
+type UpdateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteConnection command interaction with computed links and change data."""
+type DeleteConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteConnections command interaction with computed links and change data."""
+type DeleteConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DeleteSelection command interaction with computed links and change data."""
+type DeleteSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded FixPieces command interaction with computed links and change data."""
+type FixPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ClusterPieces command interaction with computed links and change data."""
+type ClusterPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ExpandDesignReference command interaction with computed links and change data."""
+type ExpandDesignReferenceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded FlattenDesign command interaction with computed links and change data."""
+type FlattenDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded DragPieces command interaction with computed links and change data."""
+type DragPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded MovePieces command interaction with computed links and change data."""
+type MovePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateFixedPiece command interaction with computed links and change data."""
+type CreateFixedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateConnectedPiece command interaction with computed links and change data."""
+type CreateConnectedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded CreateHangingPieces command interaction with computed links and change data."""
+type CreateHangingPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ChangePieceType command interaction with computed links and change data."""
+type ChangePieceTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ChangePiecesType command interaction with computed links and change data."""
+type ChangePiecesTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded PasteDesignSelection command interaction with computed links and change data."""
+type PasteDesignSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ImportKit command interaction with computed links and change data."""
+type ImportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ResetKit command interaction with computed links and change data."""
+type ResetKitKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ExportKit command interaction with computed links and change data."""
+type ExportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded StartKitSession command interaction with computed links and change data."""
+type StartKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded HeartbeatKitSession command interaction with computed links and change data."""
+type HeartbeatKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded EndKitSession command interaction with computed links and change data."""
+type EndKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ReconnectKitSession command interaction with computed links and change data."""
+type ReconnectKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded BeginKitTransaction command interaction with computed links and change data."""
+type BeginKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded FinalizeKitTransaction command interaction with computed links and change data."""
+type FinalizeKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded AbortKitTransaction command interaction with computed links and change data."""
+type AbortKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded TransactionStep command interaction with computed links and change data."""
+type TransactionStepKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded HistoryStep command interaction with computed links and change data."""
+type HistoryStepKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded VoteOnKitChangeCandidate command interaction with computed links and change data."""
+type VoteOnKitChangeCandidateKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+"""🧾Recorded ResolveKitConflict command interaction with computed links and change data."""
+type ResolveKitConflictKitInteraction implements KitInteraction & ChangeKitInteraction {
+  id: ID!
+  hash: Hash!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+  forward: KitChange
+  backward: KitChange
+}
+
+union KitInteractionRecord = SetSessionSelectionKitInteraction | CreateAuthorKitInteraction | UpdateAuthorKitInteraction | DeleteAuthorKitInteraction | CreateTypeKitInteraction | UpdateTypeKitInteraction | DeleteTypeKitInteraction | CreateDesignKitInteraction | UpdateDesignKitInteraction | DeleteDesignKitInteraction | CreateQualityKitInteraction | UpdateQualityKitInteraction | DeleteQualityKitInteraction | CreatePortKitInteraction | UpdatePortKitInteraction | DeletePortKitInteraction | CreateFamilyKitInteraction | UpdateFamilyKitInteraction | DeleteFamilyKitInteraction | CreateTagKitInteraction | UpdateTagKitInteraction | DeleteTagKitInteraction | CreateConceptKitInteraction | UpdateConceptKitInteraction | DeleteConceptKitInteraction | CreateFileKitInteraction | UpdateFileKitInteraction | DeleteFileKitInteraction | CreateFolderKitInteraction | UpdateFolderKitInteraction | DeleteFolderKitInteraction | MoveArtifactToFolderKitInteraction | CreatePieceKitInteraction | CreatePiecesKitInteraction | UpdatePieceKitInteraction | UpdatePiecesKitInteraction | DeletePieceKitInteraction | DeletePiecesKitInteraction | CreateConnectionKitInteraction | CreateConnectionsKitInteraction | UpdateConnectionKitInteraction | UpdateConnectionsKitInteraction | DeleteConnectionKitInteraction | DeleteConnectionsKitInteraction | DeleteSelectionKitInteraction | FixPiecesKitInteraction | ClusterPiecesKitInteraction | ExpandDesignReferenceKitInteraction | FlattenDesignKitInteraction | DragPiecesKitInteraction | MovePiecesKitInteraction | CreateFixedPieceKitInteraction | CreateConnectedPieceKitInteraction | CreateHangingPiecesKitInteraction | ChangePieceTypeKitInteraction | ChangePiecesTypeKitInteraction | PasteDesignSelectionKitInteraction | ImportKitKitInteraction | ResetKitKitInteraction | ExportKitKitInteraction | StartKitSessionKitInteraction | HeartbeatKitSessionKitInteraction | EndKitSessionKitInteraction | ReconnectKitSessionKitInteraction | BeginKitTransactionKitInteraction | FinalizeKitTransactionKitInteraction | AbortKitTransactionKitInteraction | TransactionStepKitInteraction | HistoryStepKitInteraction | VoteOnKitChangeCandidateKitInteraction | ResolveKitConflictKitInteraction
+
 type KitInteractionPage {
-  nodes: [KitInteraction!]!
+  hash: Hash!
+  nodes: [KitInteractionRecord!]!
   pageInfo: PageInfo!
   totalCount: Int!
 }
 
 type KitHistory {
+  hash: Hash!
   canUndo: Boolean!
   canRedo: Boolean!
   totalCount: Int!
@@ -1261,6 +2799,7 @@ type KitHistory {
 }
 
 type KitStore {
+  hash: Hash!
   kit: Kit!
   backbone: KitBackbone
   sessions: [KitSession!]!
@@ -1289,13 +2828,14 @@ enum SelectionMutationMode {
 }
 
 type KitArchiveExport {
-  fileName: String!
   hash: Hash!
+  fileName: String!
   url: String!
   expiresAt: DateTime
 }
 
 type KitMutationResult {
+  hash: Hash!
   accepted: Boolean!
   kind: KitCommandKind!
   summary: String
@@ -1468,6 +3008,22 @@ input UpdatePortCommandInput {
 }
 
 input DeletePortCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateFamilyCommandInput {
+  context: KitCommandContextInput!
+  family: FamilyInput!
+}
+
+input UpdateFamilyCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: FamilyPatchInput!
+}
+
+input DeleteFamilyCommandInput {
   context: KitCommandContextInput!
   id: ID!
 }
@@ -1742,6 +3298,7 @@ input ExportKitCommandInput {
   context: KitCommandContextInput!
 }
 
+"""🔎Read the current kit store, history, candidates, conflicts and command catalog."""
 type Query {
   kit(id: ID!): Kit
   kitStore(id: ID!): KitStore
@@ -1754,6 +3311,7 @@ type Query {
   kitCommandCatalog: [KitCommandDescriptor!]!
 }
 
+"""🌱Apply semantic kit store commands through explicit command inputs."""
 type Mutation {
   startKitSession(input: StartKitSessionInput!): KitMutationResult!
   heartbeatKitSession(input: HeartbeatKitSessionInput!): KitMutationResult!
@@ -1792,6 +3350,10 @@ type Mutation {
   createPort(input: CreatePortCommandInput!): KitMutationResult!
   updatePort(input: UpdatePortCommandInput!): KitMutationResult!
   deletePort(input: DeletePortCommandInput!): KitMutationResult!
+
+  createFamily(input: CreateFamilyCommandInput!): KitMutationResult!
+  updateFamily(input: UpdateFamilyCommandInput!): KitMutationResult!
+  deleteFamily(input: DeleteFamilyCommandInput!): KitMutationResult!
 
   createTag(input: CreateTagCommandInput!): KitMutationResult!
   updateTag(input: UpdateTagCommandInput!): KitMutationResult!
@@ -1855,9 +3417,10 @@ enum KitStoreEventKind {
 }
 
 type KitStoreEvent {
+  hash: Hash!
   kind: KitStoreEventKind!
   store: KitStore!
-  interaction: KitInteraction
+  interaction: KitInteractionRecord
   change: KitChange
   candidate: KitChangeCandidate
   conflict: KitConflict
@@ -1865,6 +3428,7 @@ type KitStoreEvent {
   transaction: KitTransaction
 }
 
+"""📡Stream semantic kit store events for synchronized UI state."""
 type Subscription {
   kitStoreEvents(kitId: ID!, sessionId: ID): KitStoreEvent!
 }

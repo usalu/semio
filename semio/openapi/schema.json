@@ -721,6 +721,45 @@
                     }
                 }
             }
+        },
+        "/api/graphql": {
+            "post": {
+                "summary": "Graphql Store Execute",
+                "description": "Execute semantic semio GraphQL store queries, mutations, and subscriptions over the complete kit store API. Callers MUST use command-specific inputs and MUST pass expected hashes for state-changing commands.",
+                "operationId": "graphql_store_execute_api_graphql_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GraphqlStoreRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GraphqlStoreResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -3878,6 +3917,159 @@
                 ],
                 "title": "VectorInput",
                 "description": "\ud83e\udde1Input fields for creating or updating a vector."
+            },
+            "GraphqlStoreRequest": {
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "title": "Query"
+                    },
+                    "operationName": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Operation Name"
+                    },
+                    "variables": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Variables"
+                    },
+                    "extensions": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Extensions"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "query"
+                ],
+                "title": "GraphqlStoreRequest",
+                "description": "\ud83d\udd17Request envelope for executing the semio GraphQL store API."
+            },
+            "GraphqlErrorLocation": {
+                "properties": {
+                    "line": {
+                        "type": "integer",
+                        "title": "Line"
+                    },
+                    "column": {
+                        "type": "integer",
+                        "title": "Column"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "line",
+                    "column"
+                ],
+                "title": "GraphqlErrorLocation",
+                "description": "\ud83d\udccdSource location for a GraphQL execution error."
+            },
+            "GraphqlStoreError": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "locations": {
+                        "items": {
+                            "$ref": "#/components/schemas/GraphqlErrorLocation"
+                        },
+                        "type": "array",
+                        "title": "Locations"
+                    },
+                    "path": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Path"
+                    },
+                    "extensions": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Extensions"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message"
+                ],
+                "title": "GraphqlStoreError",
+                "description": "\ud83d\udea8Error envelope returned by the semio GraphQL store API."
+            },
+            "GraphqlStoreResponse": {
+                "properties": {
+                    "data": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Data"
+                    },
+                    "errors": {
+                        "items": {
+                            "$ref": "#/components/schemas/GraphqlStoreError"
+                        },
+                        "type": "array",
+                        "title": "Errors"
+                    },
+                    "extensions": {
+                        "anyOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": true
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Extensions"
+                    }
+                },
+                "type": "object",
+                "title": "GraphqlStoreResponse",
+                "description": "\u2705Response envelope returned by the semio GraphQL store API."
             }
         }
     }
