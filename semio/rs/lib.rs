@@ -5475,17 +5475,8 @@ mod copy_paste_design {
             );
         }
 
-        // Flatten the design to get absolute planes/centers
-        let flat_change = kit.flatten_design_change_for_guid(&design.guid);
-        let mut flat_design = design.clone();
-        apply_design_diff(&mut flat_design, &flat_change.forward);
-        let flat_piece_map: HashMap<&str, &Piece> = flat_design
-            .pieces
-            .as_deref()
-            .unwrap_or(&[])
-            .iter()
-            .map(|p| (p.guid.as_str(), p))
-            .collect();
+        let flatten_layout =
+            DesignFlattenLayout::try_new(kit, &design.guid).expect("copy_design has a design");
 
         let mut copy_pieces: Vec<Piece> = Vec::new();
         let mut added_piece_guids: HashSet<String> = HashSet::new();
@@ -5519,15 +5510,17 @@ mod copy_paste_design {
                 added_piece_guids.insert(piece_guid.clone());
             } else if is_pp_excl_pc_incl {
                 let mut copied = piece.clone();
-                if let Some(flat_piece) = flat_piece_map.get(piece_guid.as_str()) {
-                    let center_value = match &flat_piece.center {
-                        Some(c) => serde_json::to_string(c).unwrap_or_default(),
-                        None => serde_json::to_string(&Coord::default()).unwrap_or_default(),
-                    };
-                    let plane_value = match &flat_piece.plane {
-                        Some(p) => serde_json::to_string(p).unwrap_or_default(),
-                        None => serde_json::to_string(&Plane::default()).unwrap_or_default(),
-                    };
+                {
+                    let center_value =
+                        serde_json::to_string(&flatten_layout.flat_center_for_piece_guid(
+                            piece_guid.as_str(),
+                        ))
+                        .unwrap_or_default();
+                    let plane_value =
+                        serde_json::to_string(&flatten_layout.flat_plane_for_piece_guid(
+                            piece_guid.as_str(),
+                        ))
+                        .unwrap_or_default();
                     let attrs = copied.attributes.get_or_insert_with(Vec::new);
                     attrs.push(Attribute {
                         guid: String::new(),
@@ -5586,20 +5579,16 @@ mod copy_paste_design {
                                 value: Some("external".to_string()),
                                 definition: None,
                             });
-                            if let Some(flat_piece) = flat_piece_map.get(ext_guid) {
-                                let center_value = match &flat_piece.center {
-                                    Some(c) => serde_json::to_string(c).unwrap_or_default(),
-                                    None => {
-                                        serde_json::to_string(&Coord::default()).unwrap_or_default()
-                                    }
-                                };
-                                attrs.push(Attribute {
-                                    guid: String::new(),
-                                    key: "semio.center".to_string(),
-                                    value: Some(center_value),
-                                    definition: None,
-                                });
-                            }
+                            let center_value = serde_json::to_string(
+                                &flatten_layout.flat_center_for_piece_guid(ext_guid),
+                            )
+                            .unwrap_or_default();
+                            attrs.push(Attribute {
+                                guid: String::new(),
+                                key: "semio.center".to_string(),
+                                value: Some(center_value),
+                                definition: None,
+                            });
                             copy_pieces.push(cloned);
                             added_piece_guids.insert(ext_guid.to_string());
                         }
@@ -6518,20 +6507,11 @@ mod kit_model_export {
             };
         }
 
-        let connections = design
-            .connections
-            .as_ref()
-            .map(|c| c.as_slice())
-            .unwrap_or(&[]);
-
         let types_map: HashMap<&str, &Type> = kit
             .types
             .as_ref()
             .map(|types| types.iter().map(|t| (t.guid.as_str(), t)).collect())
             .unwrap_or_default();
-
-        let pieces_map: HashMap<&str, &Piece> =
-            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
 
         let files_map: HashMap<&str, &File> = kit
             .files
@@ -6539,61 +6519,9 @@ mod kit_model_export {
             .map(|files| files.iter().map(|f| (f.guid.as_str(), f)).collect())
             .unwrap_or_default();
 
-        // 📹BFS World Transforms
-        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-        for conn in connections {
-            let src = conn.connected.piece.guid.as_str();
-            let tgt = conn.connecting.piece.guid.as_str();
-            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                adjacency.entry(src).or_default().push((tgt, conn, true));
-                adjacency.entry(tgt).or_default().push((src, conn, false));
-            }
-        }
+        let flatten_layout = DesignFlattenLayout::try_new(kit, design_guid).expect("design exists");
 
-        let mut piece_world_matrices: HashMap<&str, Matrix4<f64>> =
-            HashMap::with_capacity(pieces.len());
-        let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
-        let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
-        let mut parent_map: HashMap<&str, &str> = HashMap::new();
-
-        for piece in pieces {
-            if visited.contains(piece.guid.as_str()) {
-                continue;
-            }
-            let initial_matrix = piece
-                .plane
-                .as_ref()
-                .map(|p| p.to_matrix())
-                .unwrap_or_else(Matrix4::identity);
-            piece_world_matrices.insert(piece.guid.as_str(), initial_matrix);
-            visited.insert(piece.guid.as_str());
-            queue.push_back(piece.guid.as_str());
-
-            while let Some(current_guid) = queue.pop_front() {
-                let current_matrix = *piece_world_matrices.get(current_guid).unwrap();
-                if let Some(neighbors) = adjacency.get(current_guid) {
-                    for &(neighbor_guid, conn, is_connected) in neighbors {
-                        if visited.contains(neighbor_guid) {
-                            continue;
-                        }
-                        let connection_matrix = match kit.connection_matrix_fast(
-                            &pieces_map,
-                            conn,
-                            is_connected,
-                        ) {
-                            Some(m) => m,
-                            None => continue,
-                        };
-                        let new_matrix = current_matrix * connection_matrix;
-                        piece_world_matrices.insert(neighbor_guid, new_matrix);
-                        visited.insert(neighbor_guid);
-                        parent_map.insert(neighbor_guid, current_guid);
-                        queue.push_back(neighbor_guid);
-                    }
-                }
-            }
-        }
-        // 🔑BFS World Transforms
+        // 🔑World transforms match design flatten layout (lazy memoized matrices per piece).
 
         // 🏞️Mesh Assembly
         let mut combined_bin: Vec<u8> = Vec::new();
@@ -6657,16 +6585,12 @@ mod kit_model_export {
             let node_idx = gltf_nodes.len();
             piece_node_indices.insert(piece.guid.as_str(), node_idx);
 
-            let world_matrix = piece_world_matrices
-                .get(piece.guid.as_str())
-                .copied()
-                .unwrap_or_else(Matrix4::identity);
+            let world_matrix = flatten_layout.compute_world_matrix(piece.guid.as_str());
 
-            let local_matrix = if let Some(&parent_guid) = parent_map.get(piece.guid.as_str()) {
-                let parent_world = piece_world_matrices
-                    .get(parent_guid)
-                    .copied()
-                    .unwrap_or_else(Matrix4::identity);
+            let local_matrix = if let Some(parent_guid) =
+                flatten_layout.parent_piece_guid(piece.guid.as_str())
+            {
+                let parent_world = flatten_layout.compute_world_matrix(parent_guid);
                 match parent_world.try_inverse() {
                     Some(inv) => inv * world_matrix,
                     None => world_matrix,
@@ -6697,7 +6621,7 @@ mod kit_model_export {
 
         let mut children_map: HashMap<&str, Vec<usize>> = HashMap::new();
         for piece in pieces {
-            if let Some(&pg) = parent_map.get(piece.guid.as_str()) {
+            if let Some(pg) = flatten_layout.parent_piece_guid(piece.guid.as_str()) {
                 if let Some(&child_idx) = piece_node_indices.get(piece.guid.as_str()) {
                     children_map.entry(pg).or_default().push(child_idx);
                 }
@@ -9375,7 +9299,7 @@ mod wasm_bindings {
         pub fn wasm_flatten_design(kit_json: &str, design_guid: &str) -> JsValue {
             match deserialize_kit(kit_json) {
                 Ok(kit) => {
-                    let rep = flatten_design(&kit, design_guid);
+                    let rep = kit.flatten_design_report(design_guid);
                     to_js_value(WasmResult::success(rep))
                 }
                 Err(e) => to_js_value(WasmResult::<SemioReport<DesignChange>>::failure(
@@ -14932,6 +14856,536 @@ impl Author {
     }
 }
 
+mod design_flatten_layout {
+    use super::*;
+    use std::cell::RefCell;
+
+    /// Affine helpers for connection / flatten transforms (replaces legacy module-level functions).
+    pub struct FlattenAffine;
+
+    impl FlattenAffine {
+        pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
+            let rot = q.to_rotation_matrix();
+            let m = rot.matrix();
+            Matrix4::new(
+                m[(0, 0)],
+                m[(0, 1)],
+                m[(0, 2)],
+                0.0,
+                m[(1, 0)],
+                m[(1, 1)],
+                m[(1, 2)],
+                0.0,
+                m[(2, 0)],
+                m[(2, 1)],
+                m[(2, 2)],
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+            )
+        }
+
+        pub fn translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
+            Matrix4::new(
+                1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
+            )
+        }
+
+        pub fn apply_mat_vec3(
+            m: &Matrix4<f64>,
+            v: &nalgebra::Vector3<f64>,
+        ) -> nalgebra::Vector3<f64> {
+            nalgebra::Vector3::new(
+                m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
+                m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
+                m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
+            )
+        }
+    }
+
+    pub struct PieceFlattenParent<'a> {
+        pub parent_piece_guid: &'a str,
+        pub conn: &'a Connection,
+        pub from_connected: bool,
+    }
+
+    pub struct DesignFlattenLayout<'a> {
+        kit: &'a Kit,
+        design: &'a Design,
+        pieces_map: HashMap<&'a str, &'a Piece>,
+        parent_edge: HashMap<&'a str, PieceFlattenParent<'a>>,
+        piece_paths: HashMap<&'a str, String>,
+        memo_matrix: RefCell<HashMap<String, Matrix4<f64>>>,
+        memo_center: RefCell<HashMap<String, Coord>>,
+    }
+
+    impl<'a> DesignFlattenLayout<'a> {
+        const RADIUS: f64 = 2.697;
+        const VERTICAL_V_EXTRA: f64 = 1.0;
+        const HORIZONTAL_SCALE: f64 = 3.0633;
+
+        pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
+            let design = kit.design_by_guid(design_guid)?;
+            let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+            let connections = design.connections.as_ref().map(|c| c.as_slice()).unwrap_or(&[]);
+            let pieces_map: HashMap<&str, &Piece> =
+                pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+            let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+            for conn in connections {
+                let src = conn.connected.piece.guid.as_str();
+                let tgt = conn.connecting.piece.guid.as_str();
+                if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                    adjacency.entry(src).or_default().push((tgt, conn, true));
+                    adjacency.entry(tgt).or_default().push((src, conn, false));
+                }
+            }
+
+            let mut parent_edge: HashMap<&str, PieceFlattenParent<'a>> = HashMap::new();
+            let mut piece_paths: HashMap<&str, String> = HashMap::new();
+            let mut visited: HashSet<&str> = HashSet::new();
+            let mut queue: VecDeque<&str> = VecDeque::new();
+
+            for piece in pieces {
+                if visited.contains(piece.guid.as_str()) {
+                    continue;
+                }
+                piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
+                visited.insert(piece.guid.as_str());
+                queue.push_back(piece.guid.as_str());
+
+                while let Some(current_guid) = queue.pop_front() {
+                    if let Some(neighbors) = adjacency.get(current_guid) {
+                        for &(neighbor_guid, conn, is_connected) in neighbors {
+                            if visited.contains(neighbor_guid) {
+                                continue;
+                            }
+                            let (parent_side, _child_side) = if is_connected {
+                                (&conn.connected, &conn.connecting)
+                            } else {
+                                (&conn.connecting, &conn.connected)
+                            };
+                            if kit
+                                .connector_for_side_fast(&pieces_map, parent_side)
+                                .is_none()
+                            {
+                                continue;
+                            }
+                            if kit
+                                .connection_matrix_fast(&pieces_map, conn, is_connected)
+                                .is_none()
+                            {
+                                continue;
+                            }
+                            parent_edge.insert(
+                                neighbor_guid,
+                                PieceFlattenParent {
+                                    parent_piece_guid: current_guid,
+                                    conn,
+                                    from_connected: is_connected,
+                                },
+                            );
+                            let parent_path = piece_paths
+                                .get(current_guid)
+                                .cloned()
+                                .unwrap_or_default();
+                            piece_paths.insert(
+                                neighbor_guid,
+                                format!("{},{}", parent_path, neighbor_guid),
+                            );
+                            visited.insert(neighbor_guid);
+                            queue.push_back(neighbor_guid);
+                        }
+                    }
+                }
+            }
+
+            Some(Self {
+                kit,
+                design,
+                pieces_map,
+                parent_edge,
+                piece_paths,
+                memo_matrix: RefCell::new(HashMap::new()),
+                memo_center: RefCell::new(HashMap::new()),
+            })
+        }
+
+        pub fn design(&self) -> &'a Design {
+            self.design
+        }
+
+        pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
+            self.parent_edge
+                .get(piece_guid)
+                .map(|e| e.parent_piece_guid)
+        }
+
+        fn world_matrix_uncached(&self, piece_guid: &str) -> Matrix4<f64> {
+            let piece = match self.pieces_map.get(piece_guid) {
+                Some(p) => *p,
+                None => return Matrix4::identity(),
+            };
+            if let Some(edge) = self.parent_edge.get(piece_guid) {
+                let parent_m = self.compute_world_matrix(edge.parent_piece_guid);
+                let conn_m = self
+                    .kit
+                    .connection_matrix_fast(&self.pieces_map, edge.conn, edge.from_connected)
+                    .unwrap_or_else(Matrix4::identity);
+                parent_m * conn_m
+            } else {
+                piece
+                    .plane
+                    .as_ref()
+                    .map(|p| p.to_matrix())
+                    .unwrap_or_else(Matrix4::identity)
+            }
+        }
+
+        pub fn compute_world_matrix(&self, piece_guid: &str) -> Matrix4<f64> {
+            if let Some(m) = self.memo_matrix.borrow().get(piece_guid) {
+                return *m;
+            }
+            let m = self.world_matrix_uncached(piece_guid);
+            self.memo_matrix
+                .borrow_mut()
+                .insert(piece_guid.to_string(), m);
+            m
+        }
+
+        pub fn flat_plane_for_piece_guid(&self, piece_guid: &str) -> Plane {
+            let matrix = self.compute_world_matrix(piece_guid);
+            Plane::from_matrix(&matrix).round()
+        }
+
+        fn flat_center_uncached(&self, piece_guid: &str) -> Coord {
+            let piece = match self.pieces_map.get(piece_guid) {
+                Some(p) => *p,
+                None => return Coord { u: 0.0, v: 0.0 },
+            };
+            if let Some(edge) = self.parent_edge.get(piece_guid) {
+                let parent_center = self.flat_center_for_piece_guid(edge.parent_piece_guid);
+                let (parent_side, _child_side) = if edge.from_connected {
+                    (&edge.conn.connected, &edge.conn.connecting)
+                } else {
+                    (&edge.conn.connecting, &edge.conn.connected)
+                };
+                let parent_connector = self
+                    .kit
+                    .connector_for_side_fast(&self.pieces_map, parent_side)
+                    .expect("parent connector validated when tree was built");
+                let conn_u = edge.conn.u.unwrap_or(0.0);
+                let conn_v = edge.conn.v.unwrap_or(0.0);
+                let (child_u, child_v) = if parent_center.u.abs() < 0.0001
+                    && parent_center.v.abs() < 0.0001
+                {
+                    let angle = 2.0 * PI * parent_connector.t;
+                    (Self::RADIUS * angle.sin(), Self::RADIUS * angle.cos())
+                } else {
+                    let is_vertical = parent_connector.direction.z.abs() > 0.5;
+                    if is_vertical {
+                        (
+                            parent_center.u + conn_u,
+                            parent_center.v + conn_v + Self::VERTICAL_V_EXTRA,
+                        )
+                    } else {
+                        (
+                            parent_center.u + conn_u * Self::HORIZONTAL_SCALE,
+                            parent_center.v + conn_v * Self::HORIZONTAL_SCALE,
+                        )
+                    }
+                };
+                Coord {
+                    u: (child_u * 1_000_000.0).round() / 1_000_000.0,
+                    v: (child_v * 1_000_000.0).round() / 1_000_000.0,
+                }
+            } else {
+                piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 })
+            }
+        }
+
+        pub fn flat_center_for_piece_guid(&self, piece_guid: &str) -> Coord {
+            if let Some(c) = self.memo_center.borrow().get(piece_guid) {
+                return c.clone();
+            }
+            let c = self.flat_center_uncached(piece_guid);
+            self.memo_center
+                .borrow_mut()
+                .insert(piece_guid.to_string(), c.clone());
+            c
+        }
+
+        pub fn semio_path_string(&self, piece_guid: &str) -> Option<&str> {
+            self.piece_paths.get(piece_guid).map(|s| s.as_str())
+        }
+
+        pub fn flatten_to_design_change(&self) -> DesignChange {
+            let design_guid = self.design.guid.clone();
+            let before_design = self.design.clone();
+            let pieces = self.design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+            let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
+
+            for piece in pieces {
+                let new_plane = self.flat_plane_for_piece_guid(piece.guid.as_str());
+                let center = self.flat_center_for_piece_guid(piece.guid.as_str());
+
+                let plane_needs_update = match &piece.plane {
+                    Some(existing) => !existing.approx_eq(&new_plane),
+                    None => true,
+                };
+
+                let center_needs_update = match &piece.center {
+                    Some(existing) => {
+                        (existing.u - center.u).abs() > 0.0001
+                            || (existing.v - center.v).abs() > 0.0001
+                    }
+                    None => true,
+                };
+
+                if plane_needs_update || center_needs_update {
+                    let path_attr = self.semio_path_string(piece.guid.as_str()).map(|path| {
+                        CollectionDiff {
+                            added: Some(vec![Attribute {
+                                guid: guid(),
+                                key: "semio.path".to_string(),
+                                value: Some(path.to_string()),
+                                definition: None,
+                            }]),
+                            removed: None,
+                            updated: None,
+                        }
+                    });
+                    updated_pieces.push(DiffUpdate {
+                        key: "piece".to_string(),
+                        guid: piece.guid.clone(),
+                        diff: PieceDiff {
+                            guid: piece.guid.clone(),
+                            plane: if plane_needs_update {
+                                Some(Some(new_plane))
+                            } else {
+                                None
+                            },
+                            center: if center_needs_update {
+                                Some(Some(center.clone()))
+                            } else {
+                                None
+                            },
+                            attributes: path_attr,
+                            ..Default::default()
+                        },
+                    });
+                }
+            }
+
+            let mut forward = DesignDiff {
+                guid: design_guid.clone(),
+                ..Default::default()
+            };
+
+            if !updated_pieces.is_empty() {
+                forward.pieces = Some(CollectionDiff {
+                    added: None,
+                    removed: None,
+                    updated: Some(updated_pieces),
+                });
+            }
+
+            let mut after_design = before_design.clone();
+            apply_design_diff(&mut after_design, &forward);
+            let backward = after_design.diff_from(&before_design);
+
+            DesignChange {
+                forward,
+                backward,
+                author: None,
+                time: None,
+                before: Some(before_design),
+                after: Some(after_design),
+            }
+        }
+
+        pub fn compute_flat_merkle_hashes(&self) -> HashMap<String, FlatMerkleHashes> {
+            let pieces = self
+                .design
+                .pieces
+                .as_ref()
+                .map(|p| p.as_slice())
+                .unwrap_or(&[]);
+            if pieces.is_empty() {
+                return HashMap::new();
+            }
+            let connections = self
+                .design
+                .connections
+                .as_ref()
+                .map(|c| c.as_slice())
+                .unwrap_or(&[]);
+            let pieces_map: HashMap<&str, &Piece> =
+                pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+            let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+            for conn in connections {
+                let src = conn.connected.piece.guid.as_str();
+                let tgt = conn.connecting.piece.guid.as_str();
+                if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                    adjacency.entry(src).or_default().push((tgt, conn, true));
+                    adjacency.entry(tgt).or_default().push((src, conn, false));
+                }
+            }
+
+            let mut components: Vec<Vec<&str>> = Vec::new();
+            {
+                let mut component_visited: HashSet<&str> = HashSet::new();
+                for piece in pieces {
+                    let guid = piece.guid.as_str();
+                    if component_visited.contains(guid) {
+                        continue;
+                    }
+                    let mut component = Vec::new();
+                    let mut queue: VecDeque<&str> = VecDeque::new();
+                    queue.push_back(guid);
+                    component_visited.insert(guid);
+                    while let Some(cur) = queue.pop_front() {
+                        component.push(cur);
+                        if let Some(neighbors) = adjacency.get(cur) {
+                            for &(neigh, _, _) in neighbors {
+                                if !component_visited.contains(neigh) {
+                                    component_visited.insert(neigh);
+                                    queue.push_back(neigh);
+                                }
+                            }
+                        }
+                    }
+                    components.push(component);
+                }
+            }
+
+            let mut plane_hashes: HashMap<String, String> = HashMap::new();
+            let mut center_hashes: HashMap<String, String> = HashMap::new();
+
+            for component in &components {
+                let component_set: HashSet<&str> = component.iter().copied().collect();
+
+                let mut root: Option<&str> = None;
+                for piece in pieces {
+                    let g = piece.guid.as_str();
+                    if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some()
+                    {
+                        root = Some(g);
+                        break;
+                    }
+                }
+                if root.is_none() {
+                    let mut sorted: Vec<&str> = component.iter().copied().collect();
+                    sorted.sort();
+                    root = sorted.first().copied();
+                }
+                let root_guid = match root {
+                    Some(g) => g,
+                    None => continue,
+                };
+                let root_piece = match pieces_map.get(root_guid) {
+                    Some(p) => *p,
+                    None => continue,
+                };
+                plane_hashes.insert(
+                    root_guid.to_string(),
+                    Plane::flatten_merkle_root_hash(root_guid, root_piece.plane.as_ref()),
+                );
+                center_hashes.insert(
+                    root_guid.to_string(),
+                    Coord::flatten_merkle_root_hash(root_guid, root_piece.center.as_ref()),
+                );
+
+                let mut bfs_visited: HashSet<&str> = HashSet::new();
+                bfs_visited.insert(root_guid);
+                let mut queue: VecDeque<&str> = VecDeque::new();
+                queue.push_back(root_guid);
+                while let Some(cur) = queue.pop_front() {
+                    let parent_plane_hash = match plane_hashes.get(cur).cloned() {
+                        Some(h) => h,
+                        None => continue,
+                    };
+                    let parent_center_hash = match center_hashes.get(cur).cloned() {
+                        Some(h) => h,
+                        None => continue,
+                    };
+                    if let Some(neighbors) = adjacency.get(cur) {
+                        for &(neigh, conn, is_connected) in neighbors {
+                            if bfs_visited.contains(neigh) {
+                                continue;
+                            }
+                            let (parent_side, child_side) = if is_connected {
+                                (&conn.connected, &conn.connecting)
+                            } else {
+                                (&conn.connecting, &conn.connected)
+                            };
+                            let parent_connector =
+                                match self.kit.connector_for_side_fast(&pieces_map, parent_side) {
+                                    Some(c) => c,
+                                    None => continue,
+                                };
+                            let child_connector = match self
+                                .kit
+                                .connector_for_side_fast(&pieces_map, child_side)
+                            {
+                                Some(c) => c,
+                                None => continue,
+                            };
+                            plane_hashes.insert(
+                                neigh.to_string(),
+                                conn.flatten_merkle_plane_chain_hash(
+                                    &parent_plane_hash,
+                                    &parent_connector,
+                                    &child_connector,
+                                ),
+                            );
+                            center_hashes.insert(
+                                neigh.to_string(),
+                                conn.flatten_merkle_center_chain_hash(
+                                    &parent_center_hash,
+                                    &parent_connector,
+                                ),
+                            );
+                            bfs_visited.insert(neigh);
+                            queue.push_back(neigh);
+                        }
+                    }
+                }
+            }
+
+            let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
+            for (guid, plane_hash) in plane_hashes {
+                if let Some(center_hash) = center_hashes.get(&guid).cloned() {
+                    result.insert(
+                        guid,
+                        FlatMerkleHashes {
+                            plane_hash,
+                            center_hash,
+                        },
+                    );
+                }
+            }
+            result
+        }
+    }
+}
+pub use design_flatten_layout::{DesignFlattenLayout, FlattenAffine, PieceFlattenParent};
+
+impl Piece {
+    /// Resolved world plane for this piece in `layout` (lazy, memoized on `layout`; does not flatten or copy the design).
+    pub fn flat_plane(&self, layout: &DesignFlattenLayout<'_>) -> Plane {
+        layout.flat_plane_for_piece_guid(self.guid.as_str())
+    }
+
+    /// Resolved layout center (u,v) for this piece (lazy, memoized on `layout`).
+    pub fn flat_center(&self, layout: &DesignFlattenLayout<'_>) -> Coord {
+        layout.flat_center_for_piece_guid(self.guid.as_str())
+    }
+}
+
 impl Kit {
     #[inline]
     pub fn design_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Design> {
@@ -14948,6 +15402,10 @@ impl Kit {
     #[inline]
     pub fn type_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Type> {
         self.types.as_mut()?.iter_mut().find(|t| t.guid == guid)
+    }
+
+    pub fn flatten_layout<'a>(&'a self, design_guid: &'a str) -> Option<DesignFlattenLayout<'a>> {
+        DesignFlattenLayout::try_new(self, design_guid)
     }
 
     pub fn connector_for_side_fast(
@@ -15071,9 +15529,27 @@ impl Kit {
 
     /// Forward/backward [`DesignChange`] for flattening layout (planes / centers).
     pub fn flatten_design_change_for_guid(&self, design_guid: &str) -> DesignChange {
-    let design = match self.design_by_guid(design_guid) {
-        Some(d) => d,
-        None => {
+        let design = match self.design_by_guid(design_guid) {
+            Some(d) => d,
+            None => {
+                let empty_diff = DesignDiff {
+                    guid: design_guid.to_string(),
+                    ..Default::default()
+                };
+                return DesignChange {
+                    forward: empty_diff.clone(),
+                    backward: empty_diff,
+                    author: None,
+                    time: None,
+                    before: None,
+                    after: None,
+                };
+            }
+        };
+
+        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+        if pieces.is_empty() {
+            let before_design = design.clone();
             let empty_diff = DesignDiff {
                 guid: design_guid.to_string(),
                 ..Default::default()
@@ -15083,240 +15559,14 @@ impl Kit {
                 backward: empty_diff,
                 author: None,
                 time: None,
-                before: None,
-                after: None,
+                before: Some(before_design.clone()),
+                after: Some(before_design),
             };
         }
-    };
 
-    let before_design = design.clone();
-
-    let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-    if pieces.is_empty() {
-        let empty_diff = DesignDiff {
-            guid: design_guid.to_string(),
-            ..Default::default()
-        };
-        return DesignChange {
-            forward: empty_diff.clone(),
-            backward: empty_diff,
-            author: None,
-            time: None,
-            before: Some(before_design.clone()),
-            after: Some(before_design),
-        };
-    }
-
-    let connections = design
-        .connections
-        .as_ref()
-        .map(|c| c.as_slice())
-        .unwrap_or(&[]);
-
-    let pieces_map: HashMap<&str, &Piece> =
-        pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-
-    let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-    for conn in connections {
-        let src = conn.connected.piece.guid.as_str();
-        let tgt = conn.connecting.piece.guid.as_str();
-        if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-            adjacency.entry(src).or_default().push((tgt, conn, true));
-            adjacency.entry(tgt).or_default().push((src, conn, false));
-        }
-    }
-
-    let mut piece_planes: HashMap<&str, Matrix4<f64>> = HashMap::with_capacity(pieces.len());
-    let mut piece_centers: HashMap<&str, Coord> = HashMap::with_capacity(pieces.len());
-    let mut piece_paths: HashMap<&str, String> = HashMap::with_capacity(pieces.len());
-    let mut visited: HashSet<&str> = HashSet::with_capacity(pieces.len());
-    let mut queue: VecDeque<&str> = VecDeque::with_capacity(pieces.len());
-
-    const RADIUS: f64 = 2.697;
-    const VERTICAL_V_EXTRA: f64 = 1.0;
-    const HORIZONTAL_SCALE: f64 = 3.0633;
-
-    for piece in pieces {
-        if !visited.contains(piece.guid.as_str()) {
-            let initial_matrix = piece
-                .plane
-                .as_ref()
-                .map(|p| p.to_matrix())
-                .unwrap_or_else(Matrix4::identity);
-            piece_planes.insert(piece.guid.as_str(), initial_matrix);
-
-            let initial_center = piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 });
-            piece_centers.insert(piece.guid.as_str(), initial_center);
-            piece_paths.insert(piece.guid.as_str(), piece.guid.clone());
-
-            visited.insert(piece.guid.as_str());
-            queue.push_back(piece.guid.as_str());
-
-            while let Some(current_guid) = queue.pop_front() {
-                let current_matrix = *piece_planes.get(current_guid).unwrap();
-                let parent_center = piece_centers
-                    .get(current_guid)
-                    .cloned()
-                    .unwrap_or(Coord { u: 0.0, v: 0.0 });
-
-                if let Some(neighbors) = adjacency.get(current_guid) {
-                    for &(neighbor_guid, conn, is_connected) in neighbors {
-                        if visited.contains(neighbor_guid) {
-                            continue;
-                        }
-
-                        let (parent_side, _child_side) = if is_connected {
-                            (&conn.connected, &conn.connecting)
-                        } else {
-                            (&conn.connecting, &conn.connected)
-                        };
-
-                        let parent_connector = match self.connector_for_side_fast(
-                            &pieces_map,
-                            parent_side,
-                        ) {
-                            Some(c) => c,
-                            None => continue,
-                        };
-
-                        let connection_matrix = match self.connection_matrix_fast(
-                            &pieces_map,
-                            conn,
-                            is_connected,
-                        ) {
-                            Some(m) => m,
-                            None => continue,
-                        };
-
-                        let new_matrix = current_matrix * connection_matrix;
-
-                        let conn_u = conn.u.unwrap_or(0.0);
-                        let conn_v = conn.v.unwrap_or(0.0);
-
-                        let (child_u, child_v) = if parent_center.u.abs() < 0.0001
-                            && parent_center.v.abs() < 0.0001
-                        {
-                            let angle = 2.0 * PI * parent_connector.t;
-                            (RADIUS * angle.sin(), RADIUS * angle.cos())
-                        } else {
-                            let is_vertical = parent_connector.direction.z.abs() > 0.5;
-                            if is_vertical {
-                                (
-                                    parent_center.u + conn_u,
-                                    parent_center.v + conn_v + VERTICAL_V_EXTRA,
-                                )
-                            } else {
-                                (
-                                    parent_center.u + conn_u * HORIZONTAL_SCALE,
-                                    parent_center.v + conn_v * HORIZONTAL_SCALE,
-                                )
-                            }
-                        };
-
-                        let child_center = Coord {
-                            u: (child_u * 1_000_000.0).round() / 1_000_000.0,
-                            v: (child_v * 1_000_000.0).round() / 1_000_000.0,
-                        };
-
-                        piece_planes.insert(neighbor_guid, new_matrix);
-                        piece_centers.insert(neighbor_guid, child_center);
-                        let parent_path =
-                            piece_paths.get(current_guid).cloned().unwrap_or_default();
-                        piece_paths.insert(
-                            neighbor_guid,
-                            format!("{},{}", parent_path, neighbor_guid),
-                        );
-                        visited.insert(neighbor_guid);
-                        queue.push_back(neighbor_guid);
-                    }
-                }
-            }
-        }
-    }
-
-    let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
-
-    for piece in pieces {
-        let matrix_opt = piece_planes.get(piece.guid.as_str());
-        let center_opt = piece_centers.get(piece.guid.as_str());
-
-        if let (Some(&matrix), Some(center)) = (matrix_opt, center_opt) {
-            let new_plane = Plane::from_matrix(&matrix).round();
-            let plane_needs_update = match &piece.plane {
-                Some(existing) => !existing.approx_eq(&new_plane),
-                None => true,
-            };
-
-            let center_needs_update = match &piece.center {
-                Some(existing) => {
-                    (existing.u - center.u).abs() > 0.0001
-                        || (existing.v - center.v).abs() > 0.0001
-                }
-                None => true,
-            };
-
-            if plane_needs_update || center_needs_update {
-                let path_attr =
-                    piece_paths
-                        .get(piece.guid.as_str())
-                        .map(|path| CollectionDiff {
-                            added: Some(vec![Attribute {
-                                guid: guid(),
-                                key: "semio.path".to_string(),
-                                value: Some(path.clone()),
-                                definition: None,
-                            }]),
-                            removed: None,
-                            updated: None,
-                        });
-                updated_pieces.push(DiffUpdate {
-                    key: "piece".to_string(),
-                    guid: piece.guid.clone(),
-                    diff: PieceDiff {
-                        guid: piece.guid.clone(),
-                        plane: if plane_needs_update {
-                            Some(Some(new_plane))
-                        } else {
-                            None
-                        },
-                        center: if center_needs_update {
-                            Some(Some(center.clone()))
-                        } else {
-                            None
-                        },
-                        attributes: path_attr,
-                        ..Default::default()
-                    },
-                });
-            }
-        }
-    }
-
-    let mut forward = DesignDiff {
-        guid: design_guid.to_string(),
-        ..Default::default()
-    };
-
-    if !updated_pieces.is_empty() {
-        forward.pieces = Some(CollectionDiff {
-            added: None,
-            removed: None,
-            updated: Some(updated_pieces),
-        });
-    }
-
-    let mut after_design = before_design.clone();
-    apply_design_diff(&mut after_design, &forward);
-    let backward = after_design.diff_from(&before_design);
-
-    DesignChange {
-        forward,
-        backward,
-        author: None,
-        time: None,
-        before: Some(before_design),
-        after: Some(after_design),
-    }
+        DesignFlattenLayout::try_new(self, design_guid)
+            .expect("design exists with pieces")
+            .flatten_to_design_change()
     }
 
     /// Canonical flatten report for a design GUID (computed planes / centers).
@@ -15338,168 +15588,9 @@ impl Kit {
 
     /// Merkle hashes per piece for flatten cache identity.
     pub fn compute_flat_hashes(&self, design_guid: &str) -> HashMap<String, FlatMerkleHashes> {
-    let design = match self.design_by_guid(design_guid) {
-        Some(d) => d,
-        None => return HashMap::new(),
-    };
-    let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-    if pieces.is_empty() {
-        return HashMap::new();
-    }
-    let connections = design
-        .connections
-        .as_ref()
-        .map(|c| c.as_slice())
-        .unwrap_or(&[]);
-    let pieces_map: HashMap<&str, &Piece> =
-        pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-
-    // Same adjacency order as flatten_design so the BFS chain selects the same parent for every child.
-    let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-    for conn in connections {
-        let src = conn.connected.piece.guid.as_str();
-        let tgt = conn.connecting.piece.guid.as_str();
-        if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-            adjacency.entry(src).or_default().push((tgt, conn, true));
-            adjacency.entry(tgt).or_default().push((src, conn, false));
-        }
-    }
-
-    let mut components: Vec<Vec<&str>> = Vec::new();
-    {
-        let mut component_visited: HashSet<&str> = HashSet::new();
-        for piece in pieces {
-            let guid = piece.guid.as_str();
-            if component_visited.contains(guid) {
-                continue;
-            }
-            let mut component = Vec::new();
-            let mut queue: VecDeque<&str> = VecDeque::new();
-            queue.push_back(guid);
-            component_visited.insert(guid);
-            while let Some(cur) = queue.pop_front() {
-                component.push(cur);
-                if let Some(neighbors) = adjacency.get(cur) {
-                    for &(neigh, _, _) in neighbors {
-                        if !component_visited.contains(neigh) {
-                            component_visited.insert(neigh);
-                            queue.push_back(neigh);
-                        }
-                    }
-                }
-            }
-            components.push(component);
-        }
-    }
-
-    let mut plane_hashes: HashMap<String, String> = HashMap::new();
-    let mut center_hashes: HashMap<String, String> = HashMap::new();
-
-    for component in &components {
-        let component_set: HashSet<&str> = component.iter().copied().collect();
-
-        // Rule 1: first piece (in slice order) of this component with both plane and center.
-        let mut root: Option<&str> = None;
-        for piece in pieces {
-            let g = piece.guid.as_str();
-            if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
-                root = Some(g);
-                break;
-            }
-        }
-        // Rule 2: lexicographically smallest guid in the component.
-        if root.is_none() {
-            let mut sorted: Vec<&str> = component.iter().copied().collect();
-            sorted.sort();
-            root = sorted.first().copied();
-        }
-        let root_guid = match root {
-            Some(g) => g,
-            None => continue,
-        };
-        let root_piece = match pieces_map.get(root_guid) {
-            Some(p) => *p,
-            None => continue,
-        };
-        plane_hashes.insert(
-            root_guid.to_string(),
-            Plane::flatten_merkle_root_hash(root_guid, root_piece.plane.as_ref()),
-        );
-        center_hashes.insert(
-            root_guid.to_string(),
-            Coord::flatten_merkle_root_hash(root_guid, root_piece.center.as_ref()),
-        );
-
-        let mut bfs_visited: HashSet<&str> = HashSet::new();
-        bfs_visited.insert(root_guid);
-        let mut queue: VecDeque<&str> = VecDeque::new();
-        queue.push_back(root_guid);
-        while let Some(cur) = queue.pop_front() {
-            let parent_plane_hash = match plane_hashes.get(cur).cloned() {
-                Some(h) => h,
-                None => continue,
-            };
-            let parent_center_hash = match center_hashes.get(cur).cloned() {
-                Some(h) => h,
-                None => continue,
-            };
-            if let Some(neighbors) = adjacency.get(cur) {
-                for &(neigh, conn, is_connected) in neighbors {
-                    if bfs_visited.contains(neigh) {
-                        continue;
-                    }
-                    let (parent_side, child_side) = if is_connected {
-                        (&conn.connected, &conn.connecting)
-                    } else {
-                        (&conn.connecting, &conn.connected)
-                    };
-                    let parent_connector =
-                        match self.connector_for_side_fast(&pieces_map, parent_side) {
-                            Some(c) => c,
-                            None => continue,
-                        };
-                    let child_connector = match self.connector_for_side_fast(
-                        &pieces_map,
-                        child_side,
-                    ) {
-                        Some(c) => c,
-                        None => continue,
-                    };
-                    plane_hashes.insert(
-                        neigh.to_string(),
-                        conn.flatten_merkle_plane_chain_hash(
-                            &parent_plane_hash,
-                            &parent_connector,
-                            &child_connector,
-                        ),
-                    );
-                    center_hashes.insert(
-                        neigh.to_string(),
-                        conn.flatten_merkle_center_chain_hash(
-                            &parent_center_hash,
-                            &parent_connector,
-                        ),
-                    );
-                    bfs_visited.insert(neigh);
-                    queue.push_back(neigh);
-                }
-            }
-        }
-    }
-
-    let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
-    for (guid, plane_hash) in plane_hashes {
-        if let Some(center_hash) = center_hashes.get(&guid).cloned() {
-            result.insert(
-                guid,
-                FlatMerkleHashes {
-                    plane_hash,
-                    center_hash,
-                },
-            );
-        }
-    }
-    result
+        self.flatten_layout(design_guid)
+            .map(|l| l.compute_flat_merkle_hashes())
+            .unwrap_or_default()
     }
 
     /// Flattens a design reusing cached plane/center values when the per-piece merkle hashes match the previous run.
@@ -15736,31 +15827,19 @@ impl Kit {
         if !flat_rep.ok {
             return SemioReport::err(flat_rep.errors);
         }
-        let flat_change = flat_rep.diff.expect("flatten ok implies diff");
+        let layout = self
+            .flatten_layout(&design.guid)
+            .expect("flatten succeeded implies layout");
         let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
         if let Some(pieces) = &design.pieces {
             for piece in pieces {
-                if let Some(plane) = &piece.plane {
-                    flat_piece_map.insert(
-                        piece.guid.clone(),
-                        (Some(plane.clone()), piece.center.clone()),
-                    );
-                }
-            }
-        }
-        if let Some(pieces_diff) = &flat_change.forward.pieces {
-            if let Some(updates) = &pieces_diff.updated {
-                for update in updates {
-                    let entry = flat_piece_map
-                        .entry(update.guid.clone())
-                        .or_insert((None, None));
-                    if let Some(Some(plane)) = &update.diff.plane {
-                        entry.0 = Some(plane.clone());
-                    }
-                    if let Some(Some(center)) = &update.diff.center {
-                        entry.1 = Some(center.clone());
-                    }
-                }
+                flat_piece_map.insert(
+                    piece.guid.clone(),
+                    (
+                        Some(layout.flat_plane_for_piece_guid(&piece.guid)),
+                        Some(layout.flat_center_for_piece_guid(&piece.guid)),
+                    ),
+                );
             }
         }
 
@@ -17020,7 +17099,7 @@ impl Connection {
                 .unwrap_or_else(UnitQuaternion::identity)
         }
     };
-    let direction_t = quat_to_matrix4(&align_quat);
+    let direction_t = FlattenAffine::quat_to_matrix4(&align_quat);
 
     let y_axis = Vector3::new(0.0, 1.0, 0.0);
     let parent_connector_quat = {
@@ -17032,13 +17111,15 @@ impl Connection {
                 .unwrap_or_else(UnitQuaternion::identity)
         }
     };
-    let parent_rotation_t = quat_to_matrix4(&parent_connector_quat);
+    let parent_rotation_t = FlattenAffine::quat_to_matrix4(&parent_connector_quat);
 
-    let gap_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
-    let shift_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
-    let raise_dir = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-    let mut turn_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-    let mut tilt_axis = apply_matrix4_to_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+    let gap_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
+    let shift_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+    let raise_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+    let mut turn_axis =
+        FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+    let mut tilt_axis =
+        FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
 
     let mut orientation_t = direction_t;
 
@@ -17046,18 +17127,18 @@ impl Connection {
         &nalgebra::Unit::new_normalize(parent_dir),
         -rotation_rad,
     );
-    let rotate_t = quat_to_matrix4(&rotate_quat);
+    let rotate_t = FlattenAffine::quat_to_matrix4(&rotate_quat);
     orientation_t = rotate_t * orientation_t;
 
-    turn_axis = apply_matrix4_to_vec3(&rotate_t, &turn_axis);
-    tilt_axis = apply_matrix4_to_vec3(&rotate_t, &tilt_axis);
+    turn_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &turn_axis);
+    tilt_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &tilt_axis);
 
     if turn_axis.norm() > 0.0001 {
         let turn_quat = UnitQuaternion::from_axis_angle(
             &nalgebra::Unit::new_normalize(turn_axis.normalize()),
             turn_rad,
         );
-        let turn_t = quat_to_matrix4(&turn_quat);
+        let turn_t = FlattenAffine::quat_to_matrix4(&turn_quat);
         orientation_t = turn_t * orientation_t;
     }
 
@@ -17066,26 +17147,29 @@ impl Connection {
             &nalgebra::Unit::new_normalize(tilt_axis.normalize()),
             tilt_rad,
         );
-        let tilt_t = quat_to_matrix4(&tilt_quat);
+        let tilt_t = FlattenAffine::quat_to_matrix4(&tilt_quat);
         orientation_t = tilt_t * orientation_t;
     }
 
-    let center_child_t = make_translation(-child_point.x, -child_point.y, -child_point.z);
+    let center_child_t =
+        FlattenAffine::translation(-child_point.x, -child_point.y, -child_point.z);
     let mut transform = orientation_t * center_child_t;
 
-    let gap_transform = make_translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
-    let shift_transform = make_translation(
+    let gap_transform =
+        FlattenAffine::translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
+    let shift_transform = FlattenAffine::translation(
         shift_dir.x * shift,
         shift_dir.y * shift,
         shift_dir.z * shift,
     );
     let raise_transform =
-        make_translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
+        FlattenAffine::translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
 
     let translation_t = raise_transform * (shift_transform * gap_transform);
     transform = translation_t * transform;
 
-    let move_to_parent_t = make_translation(parent_point.x, parent_point.y, parent_point.z);
+    let move_to_parent_t =
+        FlattenAffine::translation(parent_point.x, parent_point.y, parent_point.z);
     transform = move_to_parent_t * transform;
 
         transform
@@ -17136,53 +17220,6 @@ impl Connection {
         w.digest()
     }
 }
-/// 🔖<summary>🔄quat_to_matrix4 holds the data fields for a quat_to_matrix4 record.</summary>
-/// <remarks>
-/// </remarks>
-pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
-    let rot = q.to_rotation_matrix();
-    let m = rot.matrix();
-    Matrix4::new(
-        m[(0, 0)],
-        m[(0, 1)],
-        m[(0, 2)],
-        0.0,
-        m[(1, 0)],
-        m[(1, 1)],
-        m[(1, 2)],
-        0.0,
-        m[(2, 0)],
-        m[(2, 1)],
-        m[(2, 2)],
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-    )
-}
-/// 🔖<summary>🔖make_translation holds the data fields for a make_translation record.</summary>
-/// <remarks>
-/// </remarks>
-pub fn make_translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
-    Matrix4::new(
-        1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
-    )
-}
-/// 🔖<summary>🔖apply_matrix4_to_vec3 holds the data fields for a apply_matrix4_to_vec3 record.</summary>
-/// <remarks>
-/// </remarks>
-pub fn apply_matrix4_to_vec3(
-    m: &Matrix4<f64>,
-    v: &nalgebra::Vector3<f64>,
-) -> nalgebra::Vector3<f64> {
-    nalgebra::Vector3::new(
-        m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
-        m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
-        m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
-    )
-}
-
 // #region 🌳Flatten Merkle Hashes
 // 🌳Per-piece {plane_hash, center_hash} merkle hashes for cached flatten_design reuse.
 
@@ -21444,7 +21481,7 @@ mod benchmark {
             let d1 = find_design(&kit_metabolism, "Nakagin Capsule Tower", None);
             let d1_guid = d1.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower", || {
-                let diff = flatten_design_change(&kit_metabolism, &d1_guid);
+                let diff = kit_metabolism.flatten_design_change_for_guid(&d1_guid);
                 if diff
                     .forward
                     .pieces
@@ -21460,7 +21497,7 @@ mod benchmark {
             let d2 = find_design(&kit_metabolism, "Slanted", Some("Nakagin Capsule Tower"));
             let d2_guid = d2.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Slanted", || {
-                let diff = flatten_design_change(&kit_metabolism, &d2_guid);
+                let diff = kit_metabolism.flatten_design_change_for_guid(&d2_guid);
                 if diff
                     .forward
                     .pieces
@@ -21476,7 +21513,7 @@ mod benchmark {
             let d3 = find_design(&kit_metabolism, "Twisted", Some("Nakagin Capsule Tower"));
             let d3_guid = d3.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Twisted", || {
-                let diff = flatten_design_change(&kit_metabolism, &d3_guid);
+                let diff = kit_metabolism.flatten_design_change_for_guid(&d3_guid);
                 if diff
                     .forward
                     .pieces
@@ -21492,7 +21529,7 @@ mod benchmark {
             let d4 = find_design(&kit_metabolism, "Dancing", Some("Nakagin Capsule Tower"));
             let d4_guid = d4.guid.clone();
             bench("Flatten Design/Nakagin Capsule Tower/Dancing", || {
-                let diff = flatten_design_change(&kit_metabolism, &d4_guid);
+                let diff = kit_metabolism.flatten_design_change_for_guid(&d4_guid);
                 if diff
                     .forward
                     .pieces
@@ -21508,7 +21545,7 @@ mod benchmark {
             let d5 = find_design(&kit_metabolism, "Capsule Dream", None);
             let d5_guid = d5.guid.clone();
             bench("Flatten Design/Capsule Dream", || {
-                let diff = flatten_design_change(&kit_metabolism, &d5_guid);
+                let diff = kit_metabolism.flatten_design_change_for_guid(&d5_guid);
                 if diff
                     .forward
                     .pieces

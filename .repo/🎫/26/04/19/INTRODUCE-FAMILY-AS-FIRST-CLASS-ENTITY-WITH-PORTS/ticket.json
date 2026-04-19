@@ -1,0 +1,9 @@
+{
+  "title": "Introduce Family As First Class Entity With Ports",
+  "status": "open",
+  "description": "Introduce family as a proper first-class entity (not just a string) with name, description, icon etc. Ports belong to families - they are no longer kit-level entities but part of the family. Types and designs can have multiple families (composition, not inheritance). Families don't have hierarchy. This replaces the old artifact parent mechanism. Refactor all languages (JS/TS, Go, Rust, Python), schemas (JSON Schema, GraphQL), and tests.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪238b5e2a88764ada87a9a5ebefaf5d0e"
+  ]
+}

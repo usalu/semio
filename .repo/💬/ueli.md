@@ -232,6 +232,8 @@ Keep the renderer isolated from native details
 
 ###
 
+####
+
 TODO: Rename tilt to slope, Add rotation to piece node
 TODO: Rename scene to model
 TODO: Rename model to shape
@@ -596,7 +598,9 @@ The shift is from artifact inheritance to family composition.
 A type or a design can have multiple families.
 e.g. capsule->balcony->Z type becomes has three families.
 Families dont have hierarchy.
-You MUST refactor/extend/update everything (implementation, tests, docs) for all programming languages.
+Dont make family string. It is a proper entity as first-class citizen with name, description, icon etc.
+Ports have family as parent. They are no longer a kit entity but part of the family.
+You MUST refactor/extend/update everything (implementation, assets, tests, docs) for all programming languages.
 
 ### 📚ui
 
