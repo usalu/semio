@@ -3084,60 +3084,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	addLLMFlags(reopenCmd)
 	addClientFlags(reopenCmd)
 
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List all goals",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			opts := getStreamOptions(cmd)
-			stream := make(chan Event)
-			go func() {
-				defer close(stream)
-				stream <- Event{Kind: KindStart, Command: "goal list"}
-				goalChan := make(chan *Goal)
-				go func() {
-					StreamGoals(context.Background(), goalChan, opts)
-				}()
-				for g := range goalChan {
-					data, err := json.Marshal(map[string]interface{}{"goal": g})
-					if err != nil {
-						continue
-					}
-					stream <- Event{Kind: KindResult, Command: "goal list", Data: data}
-				}
-				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
-			}()
-			return renderStream(cmd, config, stream)
-		},
-	}
-	bindStreamFlags(listCmd)
-
-	treeCmd := &cobra.Command{
-		Use:   "tree",
-		Short: "Show goal tree",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			result := toolResultFromTreeRender(TreeNodeGoal)
-			var sb strings.Builder
-			for _, line := range result.Output.Lines {
-				sb.WriteString(line.Text)
-				sb.WriteString("\n")
-			}
-			stream := make(chan Event, 3)
-			stream <- Event{Kind: KindStart, Command: "goal tree"}
-			data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
-			stream <- Event{Kind: KindResult, Command: "goal tree", Data: data}
-			stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
-			close(stream)
-			return renderStream(cmd, config, stream)
-		},
-	}
-	bindStreamFlags(treeCmd)
-
 	root.AddCommand(changeCmd)
 	root.AddCommand(openCmd)
 	root.AddCommand(closeCmd)
 	root.AddCommand(reopenCmd)
-	root.AddCommand(listCmd)
-	root.AddCommand(treeCmd)
 	return root
 }
 

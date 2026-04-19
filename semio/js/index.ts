@@ -271,6 +271,10 @@ export type TagId = { guid: Guid };
  * Identifier type for Concept entities.
  **/
 export type ConceptId = { guid: Guid };
+/**
+ * Identifier type for Family entities.
+ **/
+export type FamilyId = { guid: Guid };
 
 /**
  * Zod schema for validating Attribute identifiers.
@@ -356,6 +360,10 @@ export const TagIdSchema = z.object({ guid: z.string() });
  * Zod schema for validating Concept identifiers.
  **/
 export const ConceptIdSchema = z.object({ guid: z.string() });
+/**
+ * Zod schema for validating Family identifiers.
+ **/
+export const FamilyIdSchema = z.object({ guid: z.string() });
 
 /**
  * Factory for creating Attribute identifiers.
@@ -441,6 +449,10 @@ export const createTagId = (guid: Guid): TagId => ({ guid });
  * Factory for creating Concept identifiers.
  **/
 export const createConceptId = (guid: Guid): ConceptId => ({ guid });
+/**
+ * Factory for creating Family identifiers.
+ **/
+export const createFamilyId = (guid: Guid): FamilyId => ({ guid });
 
 /**
  * Equality check for Attribute identifiers.
@@ -526,6 +538,10 @@ export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
  * Equality check for Concept identifiers.
  **/
 export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid === b.guid;
+/**
+ * Equality check for Family identifiers.
+ **/
+export const areSameFamilyId = (a: FamilyId, b: FamilyId): boolean => a.guid === b.guid;
 
 /**
  * Extracts the GUID from a Attribute identifier.
@@ -611,6 +627,10 @@ export const getTagGuid = (id: TagId): Guid => id.guid;
  * Extracts the GUID from a Concept identifier.
  **/
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
+/**
+ * Extracts the GUID from a Family identifier.
+ **/
+export const getFamilyGuid = (id: FamilyId): Guid => id.guid;
 
 // #endregion 🐍Entity IDs
 
@@ -2899,7 +2919,263 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 
 // #endregion ⚓Port
 
-// #region 📊Prop
+// #region �Family
+// Family entity types, schemas, and helpers MUST be defined here.
+
+/**
+ * Zod schema for Family validation.
+ **/
+export const FamilySchema = z.object({
+  guid: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon: z.string().optional(),
+  ports: z.array(PortSchema).optional(),
+  attributes: z.array(AttributeSchema).optional(),
+});
+/**
+ * Type alias for Family.
+ **/
+export type FamilyPlain = z.infer<typeof FamilySchema>;
+export class Family implements FamilyPlain {
+  guid!: string;
+  name!: string;
+  description?: string;
+  icon?: string;
+  ports?: Port[];
+  attributes?: Attribute[];
+  constructor(plain: FamilyPlain) {
+    const p = FamilySchema.parse(plain);
+    Object.assign(this, p);
+    this.ports = p.ports?.map((x) => new Port(x));
+    this.attributes = p.attributes?.map((a) => new Attribute(a));
+  }
+  static from(plain: FamilyPlain): Family {
+    return new Family(plain);
+  }
+  toPlain(): FamilyPlain {
+    return FamilySchema.parse(this as unknown as FamilyPlain);
+  }
+  /** 👪Serialize this family for transport. */
+  serialize(): string {
+    return JSON.stringify(this.toPlain());
+  }
+  /** 👪Deserialize a family from transport JSON. */
+  static deserialize(json: string): Family {
+    return new Family(FamilySchema.parse(JSON.parse(json)));
+  }
+  /** 👪Compute a family delta from this family to another family. */
+  diffTo(after: Family): FamilyDiff {
+    const diff: FamilyDiff = {};
+    if (this.name !== after.name) diff.name = after.name;
+    if (this.description !== after.description) diff.description = after.description ?? null;
+    if (this.icon !== after.icon) diff.icon = after.icon ?? null;
+    if (!deepEqual(this.ports, after.ports)) diff.ports = getPortsDiff(this.ports ?? [], after.ports ?? []);
+    if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
+    return diff;
+  }
+  /** 👪Build the reverse family delta for an already-applied delta. */
+  inverseDiff(appliedDiff: FamilyDiff): FamilyDiff {
+    const inverse: FamilyDiff = {};
+    if (appliedDiff.name !== undefined) inverse.name = this.name;
+    if (appliedDiff.description !== undefined) inverse.description = this.description ?? null;
+    if (appliedDiff.icon !== undefined) inverse.icon = this.icon ?? null;
+    if (appliedDiff.ports !== undefined) inverse.ports = inversePortsDiff(this.ports ?? [], appliedDiff.ports);
+    if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
+    return inverse;
+  }
+  /** 👪Merge two family deltas. */
+  static mergeDiff(first: FamilyDiff, second: FamilyDiff): FamilyDiff {
+    return {
+      ...first,
+      ...second,
+      ports: first.ports && second.ports ? mergePortsDiff(first.ports, second.ports) : (second.ports ?? first.ports),
+      attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes),
+    };
+  }
+  /** 👪Apply a family delta to this family. */
+  applyDiff(diff: FamilyDiff): void {
+    if (diff.name !== undefined) this.name = diff.name;
+    if ("description" in diff) {
+      this.description = diff.description !== null ? diff.description : undefined;
+    }
+    if ("icon" in diff) {
+      this.icon = diff.icon !== null ? diff.icon : undefined;
+    }
+    if (diff.ports) {
+      if (!this.ports) this.ports = [];
+      applyPortsDiff(this.ports, diff.ports);
+    }
+    if (diff.attributes) {
+      if (!this.attributes) this.attributes = [];
+      applyAttributesDiff(this.attributes, diff.attributes);
+    }
+  }
+}
+/**
+ * Serializes Family for transport.
+ **/
+export const serializeFamily = (family: Family): string => family.serialize();
+/**
+ **/
+export const deserializeFamily = (json: string): Family => Family.deserialize(json);
+
+/**
+ * Definition of FamilyMetaSchema.
+ **/
+export const FamilyMetaSchema = FamilySchema.omit({ ports: true, attributes: true });
+/**
+ * Type alias for FamilyMeta.
+ **/
+export type FamilyMeta = z.infer<typeof FamilyMetaSchema>;
+/**
+ * Serializes FamilyMeta for transport.
+ **/
+export const serializeFamilyMeta = (family: FamilyMeta): string => JSON.stringify(FamilyMetaSchema.parse(family));
+/**
+ **/
+export const deserializeFamilyMeta = (json: string): FamilyMeta => FamilyMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of FamilyShallowSchema.
+ **/
+export const FamilyShallowSchema = FamilySchema;
+/**
+ * Type alias for FamilyShallow.
+ **/
+export type FamilyShallow = z.infer<typeof FamilyShallowSchema>;
+/**
+ * Serializes FamilyShallow for transport.
+ **/
+export const serializeFamilyShallow = (family: FamilyShallow): string => JSON.stringify(FamilyShallowSchema.parse(family));
+/**
+ **/
+export const deserializeFamilyShallow = (json: string): FamilyShallow => FamilyShallowSchema.parse(JSON.parse(json));
+
+/**
+ * Zod schema for Family diff validation.
+ **/
+export const FamilyDiffSchema = FamilySchema.partial().omit({ ports: true, attributes: true }).extend({
+  ports: PortsDiffSchema.optional(),
+  attributes: AttributesDiffSchema.optional(),
+  description: z.string().nullable().optional(),
+  icon: z.string().nullable().optional(),
+});
+/**
+ * Diff type for tracking Family changes.
+ **/
+export type FamilyDiff = z.infer<typeof FamilyDiffSchema>;
+/**
+ * Retrieves the FamilyDiff value.
+ **/
+export const getFamilyDiff = (before: Family, after: Family): FamilyDiff => {
+  return before.diffTo(after);
+};
+/**
+ * Inverse of FamilyDiff.
+ **/
+export const inverseFamilyDiff = (original: Family, appliedDiff: FamilyDiff): FamilyDiff => {
+  return original.inverseDiff(appliedDiff);
+};
+/**
+ * Merge two FamilyDiffs.
+ **/
+export const mergeFamilyDiff = (diff1: FamilyDiff, diff2: FamilyDiff): FamilyDiff => {
+  return Family.mergeDiff(diff1, diff2);
+};
+/**
+ * Apply a FamilyDiff.
+ **/
+export const applyFamilyDiff = (family: Family, diff: FamilyDiff): void => {
+  family.applyDiff(diff);
+};
+
+/**
+ * Zod schema for Families collection diff.
+ **/
+export const FamiliesDiffSchema = z.object({
+  removed: z.array(FamilyIdSchema).optional(),
+  updated: z.array(z.object({ family: FamilyIdSchema, diff: FamilyDiffSchema })).optional(),
+  added: z.array(z.any()).optional(),
+});
+/**
+ * Diff type for tracking Families changes.
+ **/
+export type FamiliesDiff = z.infer<typeof FamiliesDiffSchema>;
+/**
+ * Retrieves the FamiliesDiff value.
+ **/
+export const getFamiliesDiff = (before: Family[], after: Family[]): FamiliesDiff => {
+  const diff: FamiliesDiff = {};
+  const beforeGuids = new Set(before.map((i) => i.guid));
+  const afterGuids = new Set(after.map((i) => i.guid));
+  const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => ({ guid: i.guid }));
+  if (removed.length > 0) diff.removed = removed;
+  const updated = before
+    .filter((i) => afterGuids.has(i.guid))
+    .map((i) => {
+      const afterFamily = after.find((a) => a.guid === i.guid)!;
+      const familyDiff = getFamilyDiff(i, afterFamily);
+      return { family: { guid: i.guid }, diff: familyDiff };
+    })
+    .filter((u) => Object.keys(u.diff).length > 0);
+  if (updated.length > 0) diff.updated = updated;
+  const added = after.filter((i) => !beforeGuids.has(i.guid));
+  if (added.length > 0) diff.added = added;
+  return diff;
+};
+/**
+ * Inverse of FamiliesDiff.
+ **/
+export const inverseFamiliesDiff = (original: Family[], appliedDiff: FamiliesDiff): FamiliesDiff => {
+  const inverse: FamiliesDiff = {};
+  if (appliedDiff.removed) inverse.added = original.filter((i) => appliedDiff.removed!.some((r) => r.guid === i.guid));
+  if (appliedDiff.added) inverse.removed = (appliedDiff.added as Family[]).map((i) => ({ guid: i.guid }));
+  if (appliedDiff.updated) {
+    inverse.updated = appliedDiff.updated
+      .filter((u) => original.some((i) => i.guid === u.family.guid))
+      .map((u) => {
+        const orig = original.find((i) => i.guid === u.family.guid)!;
+        return { family: { guid: u.family.guid }, diff: inverseFamilyDiff(orig, u.diff) };
+      });
+  }
+  return inverse;
+};
+/**
+ * Merge two FamiliesDiffs.
+ **/
+export const mergeFamiliesDiff = (diff1: FamiliesDiff, diff2: FamiliesDiff): FamiliesDiff => {
+  return {
+    removed: [...(diff1.removed ?? []), ...(diff2.removed ?? [])].length > 0 ? [...(diff1.removed ?? []), ...(diff2.removed ?? [])] : undefined,
+    updated: [...(diff1.updated ?? []), ...(diff2.updated ?? [])].length > 0 ? [...(diff1.updated ?? []), ...(diff2.updated ?? [])] : undefined,
+    added: [...(diff1.added ?? []), ...(diff2.added ?? [])].length > 0 ? [...(diff1.added ?? []), ...(diff2.added ?? [])] : undefined,
+  };
+};
+/**
+ * Apply a FamiliesDiff to a collection.
+ **/
+export const applyFamiliesDiff = (families: Family[], diff: FamiliesDiff): void => {
+  if (diff.removed) {
+    const removedGuids = new Set(diff.removed.map((r) => r.guid));
+    for (let i = families.length - 1; i >= 0; i--) {
+      if (removedGuids.has(families[i].guid)) families.splice(i, 1);
+    }
+  }
+  if (diff.updated) {
+    for (const u of diff.updated) {
+      const family = families.find((i) => i.guid === u.family.guid);
+      if (family) applyFamilyDiff(family, u.diff);
+    }
+  }
+  if (diff.added) {
+    for (const a of diff.added) {
+      families.push(new Family(FamilySchema.parse(a)));
+    }
+  }
+};
+
+// #endregion 👪Family
+
+// #region �📊Prop
 // Prop entity types, schemas, and helpers MUST be defined here.
 
 /**
@@ -18451,7 +18727,7 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
 /**
  * Supported 3D export formats with their MIME types.
  **/
-export const EXPORT_MODEL_FORMATS: Record<string, string> = {
+export const EXPORT_REPRESENTATION_FORMATS: Record<string, string> = {
   ".glb": "model/gltf-binary",
   ".gltf": "model/gltf+json",
   ".obj": "model/obj",
@@ -22250,9 +22526,9 @@ if (shouldRunEmbeddedJsTests) {
       expect(typeof parsed).toBe("object");
     });
 
-    it("EXPORT_MODEL_FORMATS includes .glb and .gltf", () => {
-      expect(EXPORT_MODEL_FORMATS[".glb"]).toBeDefined();
-      expect(EXPORT_MODEL_FORMATS[".gltf"]).toBeDefined();
+    it("EXPORT_REPRESENTATION_FORMATS includes .glb and .gltf", () => {
+      expect(EXPORT_REPRESENTATION_FORMATS[".glb"]).toBeDefined();
+      expect(EXPORT_REPRESENTATION_FORMATS[".gltf"]).toBeDefined();
     });
 
     it("exports identical Nakagin scene graph across implementations and writes reports", async () => {

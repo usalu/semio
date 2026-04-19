@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/spf13/cobra"
 	_ "modernc.org/sqlite"
 )
@@ -6527,42 +6528,40 @@ func TestGoalList(t *testing.T) {
 	}
 }
 
-func TestGoalListCommand(t *testing.T) {
-	factory := func(config Config) (*Engine, error) {
-		return NewEngine(&recordingGraphQLExecutor{}), nil
+func TestGoalsMcpResource(t *testing.T) {
+	req := mcp.ReadResourceRequest{}
+	req.Params.URI = "repo://goals"
+	contents, err := handleGoalsResource(context.Background(), req)
+	if err != nil {
+		t.Fatalf("handleGoalsResource returned error: %v", err)
 	}
-	root, config := NewRootWithConfig(factory)
-	config.Format = "json"
-	stdout := new(bytes.Buffer)
-	stderr := new(bytes.Buffer)
-	root.SetOut(stdout)
-	root.SetErr(stderr)
-	root.SetArgs([]string{"goal", "list"})
-	if err := root.Execute(); err != nil {
-		t.Fatalf("goal list failed: %v\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+	if len(contents) != 1 {
+		t.Fatalf("expected 1 ResourceContents entry, got %d", len(contents))
 	}
-	out := stdout.String()
-	if !strings.Contains(out, "\"goal\"") {
-		t.Fatalf("expected goal list output to contain goal entries, got: %s", out)
+	text, ok := contents[0].(mcp.TextResourceContents)
+	if !ok {
+		t.Fatalf("expected TextResourceContents, got %T", contents[0])
 	}
-}
-
-func TestGoalTreeCommand(t *testing.T) {
-	factory := func(config Config) (*Engine, error) {
-		return NewEngine(&recordingGraphQLExecutor{}), nil
+	if text.URI != "repo://goals" {
+		t.Errorf("URI: expected repo://goals, got %q", text.URI)
 	}
-	root, config := NewRootWithConfig(factory)
-	config.Format = "markdown"
-	stdout := new(bytes.Buffer)
-	stderr := new(bytes.Buffer)
-	root.SetOut(stdout)
-	root.SetErr(stderr)
-	root.SetArgs([]string{"goal", "tree"})
-	if err := root.Execute(); err != nil {
-		t.Fatalf("goal tree failed: %v\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+	if text.MIMEType != "text/plain" {
+		t.Errorf("MIMEType: expected text/plain, got %q", text.MIMEType)
 	}
-	if stdout.Len() == 0 {
-		t.Fatal("expected goal tree output, got empty stdout")
+	if text.Text == "" {
+		t.Fatal("expected non-empty YAML text body")
+	}
+	goals, err := ListGoals()
+	if err != nil {
+		t.Fatalf("ListGoals failed: %v", err)
+	}
+	if len(goals) == 0 {
+		t.Skip("no goals seeded in repo; cannot assert content")
+	}
+	for _, g := range goals {
+		if !strings.Contains(text.Text, g.Title) {
+			t.Errorf("YAML body missing goal title %q", g.Title)
+		}
 	}
 }
 

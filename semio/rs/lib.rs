@@ -14860,6 +14860,25 @@ mod design_flatten_layout {
     use super::*;
     use std::cell::RefCell;
 
+    thread_local! {
+        static ACTIVE_FLATTEN_LAYOUT_STACK: RefCell<Vec<*const ()>> = RefCell::new(Vec::new());
+    }
+
+    pub(crate) fn tls_active_flatten_layout_top() -> Option<*const ()> {
+        ACTIVE_FLATTEN_LAYOUT_STACK.with(|s| s.borrow().last().copied())
+    }
+
+    fn tls_push_flatten_layout(layout: &DesignFlattenLayout<'_>) {
+        let p = layout as *const DesignFlattenLayout<'_> as *const ();
+        ACTIVE_FLATTEN_LAYOUT_STACK.with(|st| st.borrow_mut().push(p));
+    }
+
+    fn tls_pop_flatten_layout() {
+        ACTIVE_FLATTEN_LAYOUT_STACK.with(|st| {
+            st.borrow_mut().pop();
+        });
+    }
+
     /// Affine helpers for connection / flatten transforms (replaces legacy module-level functions).
     pub struct FlattenAffine;
 
@@ -14974,6 +14993,20 @@ mod design_flatten_layout {
         const RADIUS: f64 = 2.697;
         const VERTICAL_V_EXTRA: f64 = 1.0;
         const HORIZONTAL_SCALE: f64 = 3.0633;
+
+        /// Makes this layout active on the current thread for the duration of `f` so [`Piece::flat_plane`]
+        /// and [`Piece::flat_center`] can be called without passing `self`.
+        pub fn with_active<T>(&self, f: impl FnOnce() -> T) -> T {
+            tls_push_flatten_layout(self);
+            struct Guard;
+            impl Drop for Guard {
+                fn drop(&mut self) {
+                    tls_pop_flatten_layout();
+                }
+            }
+            let _guard = Guard;
+            f()
+        }
 
         pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
             let design = kit.design_by_guid(design_guid)?;
@@ -15528,13 +15561,25 @@ impl Piece {
         layout.flatten_piece(self.guid.as_str())
     }
 
-    /// Resolved world plane for this piece in `layout` (lazy, memoized on `layout`; does not flatten or copy the design).
-    pub fn flat_plane(&self, layout: &DesignFlattenLayout<'_>) -> Plane {
+    /// Resolved flattened world [`Plane`] for this piece (lazy, memoized on the active layout).
+    ///
+    /// Call within [`DesignFlattenLayout::with_active`] on the same thread so the layout is in scope.
+    pub fn flat_plane(&self) -> Plane {
+        let p = design_flatten_layout::tls_active_flatten_layout_top().expect(
+            "Piece::flat_plane requires DesignFlattenLayout::with_active around this call site",
+        );
+        let layout = unsafe { &*(p as *const DesignFlattenLayout<'_>) };
         layout.flat_plane_for_piece_guid(self.guid.as_str())
     }
 
-    /// Resolved layout center (u,v) for this piece (lazy, memoized on `layout`).
-    pub fn flat_center(&self, layout: &DesignFlattenLayout<'_>) -> Coord {
+    /// Resolved flattened layout [`Coord`] (u, v) for this piece (lazy, memoized on the active layout).
+    ///
+    /// Call within [`DesignFlattenLayout::with_active`] on the same thread so the layout is in scope.
+    pub fn flat_center(&self) -> Coord {
+        let p = design_flatten_layout::tls_active_flatten_layout_top().expect(
+            "Piece::flat_center requires DesignFlattenLayout::with_active around this call site",
+        );
+        let layout = unsafe { &*(p as *const DesignFlattenLayout<'_>) };
         layout.flat_center_for_piece_guid(self.guid.as_str())
     }
 }
