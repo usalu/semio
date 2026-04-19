@@ -1,0 +1,12 @@
+{
+  "title": "Finish Graphql Schema With Complete Store Api",
+  "status": "open",
+  "description": "Finish the semio/graphql/schema.graphql. Complete all commands from KitCommandKind by adding a dedicated KitCommandInput and ChangeKitInteraction type for each. Keep the existing diff-based design (KitDiff with hash + last pointer, ChangeKitInteraction forward/backward). Use sketchpad index.tsx as a reference for the complete store API (sessions, operations, selections, candidates, conflicts). Add hash and entity links (kit, parent, children, etc.) to every type. Name things semantically. Extend Query, Mutation, and Subscription to expose the full store.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1363"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b50d1320c3d64a4dbeefa7bbb927bcc3"
+  ]
+}

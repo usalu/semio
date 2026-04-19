@@ -1,0 +1,9 @@
+{
+  "title": "Refactor Rust Codebase to Pure OO with Lazy Loading",
+  "status": "open",
+  "description": "Refactor semio/rs/lib.rs to be purely object-oriented with lazy-loading and no free pure functions. Dissolve the flatten module into methods on Design, Piece, and Connection. Add parent/child pointer references. Move all free functions into methods on their owning types.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪61801b835ac84f608ff8c41a704b9818"
+  ]
+}

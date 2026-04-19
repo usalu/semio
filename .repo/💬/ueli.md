@@ -743,12 +743,70 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🦀rs
 
+semio/rs:
+The code is very smelly and incomplete.
+You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+e.g. mod such as flatten MUST NOT exist and instead be methods such on design (keeps track of setting parent/child pointer for pieces and connections), pieces (use parent flat plane to derive flat plane)
+Achieve a pointer reference such as this schema:
+
+```graphql
+type Piece {
+ id: ID!
+ name: String
+ type: Type
+ alternativeTypes: [Type!]
+ design: Design
+ alternativeDesigns: [Design!]
+ plane: Plane
+ center: Coordinate
+ scale: Float
+ mirrorPlane: Plane
+ isHidden: Boolean
+ isLocked: Boolean
+ color: String
+ description: String
+ props: [Prop!]
+ attributes: [Attribute!]
+ flatPlane: Plane!
+ flatCenter: Coordinate!
+ parentPiece: Piece
+ parentConnection: Connection
+ childPieces: [Piece!]!
+}
+type Connection {
+ id: ID!
+ connected: Side!
+ connecting: Side!
+ gap: Float
+ shift: Float
+ rise: Float
+ rotation: Float
+ turn: Float
+ tilt: Float
+ u: Float
+ v: Float
+ description: String
+ attributes: [Attribute!]
+ parentPiece: Piece
+ parentConnector: Connector
+ childPiece: Piece
+ childConnector: Connector
+}
+```
+
+Do the same for other mod. All functions MUST be refactored and split apart into oo methods.
+
 Refactor semio/rs to be object-oriented and performant instead of pure functions.
 Requirements:
 
 - Never pass ids, just instance pointers
 - All methods are implemented inside the class (not just facade to pure function)
   Here is the target:
+
+### graphql
+
+semio/graphql:
+Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
 
 ### ✏️sketchpad
 

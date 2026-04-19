@@ -34,6 +34,10 @@ tempfile = "3.21"
 walkdir = "2.5"
 base64 = "0.22"
 reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "rustls-tls"] }
+tokio = { version = "1.44", features = ["rt-multi-thread", "sync", "time", "macros", "fs", "io-util", "net"] }
+futures = "0.3"
+tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
+url = "2.5"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 proptest = "1.9.0"

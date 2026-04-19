@@ -27,9 +27,9 @@ use base64::Engine;
 use nalgebra::{Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::sync::{Arc, Weak};
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::PI;
+use std::sync::{Arc, Weak};
 use thiserror::Error;
 use uuid::Uuid;
 #[cfg(target_arch = "wasm32")]
@@ -127,7 +127,10 @@ mod guid_ref {
             }
             match self {
                 GuidRef::Bare(s) => Row { guid: s.as_str() }.serialize(serializer),
-                GuidRef::Rich { guid } => Row { guid: guid.as_str() }.serialize(serializer),
+                GuidRef::Rich { guid } => Row {
+                    guid: guid.as_str(),
+                }
+                .serialize(serializer),
             }
         }
     }
@@ -1581,7 +1584,10 @@ mod prop {
                 quality: d.quality.clone(),
                 value: d.value.clone(),
                 unit: d.unit.clone(),
-                attributes: d.attributes.as_ref().map(|v| v.iter().map(Attribute::from).collect()),
+                attributes: d
+                    .attributes
+                    .as_ref()
+                    .map(|v| v.iter().map(Attribute::from).collect()),
             }
         }
     }
@@ -1853,7 +1859,10 @@ mod connector {
     }
 
     impl Connector {
-        pub fn from_dto(cw: &ConnectorDto, ports: &std::collections::HashMap<String, Arc<Port>>) -> Connector {
+        pub fn from_dto(
+            cw: &ConnectorDto,
+            ports: &std::collections::HashMap<String, Arc<Port>>,
+        ) -> Connector {
             Connector {
                 guid: cw.guid.clone(),
                 point: Vector::from(&cw.point),
@@ -1867,7 +1876,10 @@ mod connector {
                     .port
                     .as_ref()
                     .and_then(|pid| ports.get(&pid.guid).cloned()),
-                props: cw.props.as_ref().map(|v| v.iter().map(Prop::from).collect()),
+                props: cw
+                    .props
+                    .as_ref()
+                    .map(|v| v.iter().map(Prop::from).collect()),
                 attributes: cw
                     .attributes
                     .as_ref()
@@ -2025,9 +2037,10 @@ mod model_types_type {
                     .models
                     .as_ref()
                     .map(|v| v.iter().map(ModelDto::from).collect()),
-                connectors: self.connectors.as_ref().map(|v| {
-                    v.iter().map(|c| c.as_ref().to_dto()).collect()
-                }),
+                connectors: self
+                    .connectors
+                    .as_ref()
+                    .map(|v| v.iter().map(|c| c.as_ref().to_dto()).collect()),
                 attributes: self
                     .attributes
                     .as_ref()
@@ -2216,7 +2229,9 @@ mod piece {
                     .design
                     .as_ref()
                     .and_then(|w| w.upgrade())
-                    .map(|d| DesignId { guid: d.guid.clone() }),
+                    .map(|d| DesignId {
+                        guid: d.guid.clone(),
+                    }),
                 plane: self.plane.as_ref().map(PlaneDto::from),
                 center: self.center.as_ref().map(CoordDto::from),
                 scale: self.scale,
@@ -2356,8 +2371,14 @@ mod side {
                 }),
             }
         }
-    }
 
+        /// 🔌Resolves the connector from the piece's type hierarchy.
+        pub fn resolved_connector(&self) -> Option<Connector> {
+            let t = self.piece.type_ref.as_ref()?;
+            let connector_guid = self.connector.as_ref().map(|c| c.guid.as_str());
+            t.resolved_connector(connector_guid).cloned()
+        }
+    }
 } // ↔️Side
 pub use side::*;
 
@@ -2429,6 +2450,33 @@ mod connection {
                     .as_ref()
                     .map(|v| v.iter().map(AttributeDto::from).collect()),
             }
+        }
+
+        /// 🧩Parent piece (connected side).
+        pub fn parent_piece(&self) -> &Piece {
+            &self.connected.piece
+        }
+
+        /// 🔌Parent connector resolved from the connected side's type hierarchy.
+        pub fn parent_connector(&self) -> Option<Connector> {
+            self.connected.resolved_connector()
+        }
+
+        /// 🧩Child piece (connecting side).
+        pub fn child_piece(&self) -> &Piece {
+            &self.connecting.piece
+        }
+
+        /// 🔌Child connector resolved from the connecting side's type hierarchy.
+        pub fn child_connector(&self) -> Option<Connector> {
+            self.connecting.resolved_connector()
+        }
+
+        /// 🧮Compute child plane matrix using resolved connectors from both sides.
+        pub fn compute_child_plane_matrix(&self) -> Option<Matrix4<f64>> {
+            let parent_connector = self.connected.resolved_connector()?;
+            let child_connector = self.connecting.resolved_connector()?;
+            Some(self.child_plane_matrix(&parent_connector, &child_connector))
         }
     }
 
@@ -2773,7 +2821,10 @@ mod model_types_design {
                     .groups
                     .as_ref()
                     .map(|v| v.iter().map(GroupDto::from).collect()),
-                stats: self.stats.as_ref().map(|v| v.iter().map(StatDto::from).collect()),
+                stats: self
+                    .stats
+                    .as_ref()
+                    .map(|v| v.iter().map(StatDto::from).collect()),
                 active_layer: self.active_layer.clone(),
                 location: self.location.clone(),
                 attributes: self
@@ -3089,18 +3140,13 @@ mod model_types_kit {
         Ok(existing)
     }
 
-    fn resolve_side_from_dto(
-        sw: &SideDto,
-        pieces: &HashMap<String, Arc<Piece>>,
-    ) -> Result<Side> {
-        let piece = pieces.get(&sw.piece.guid).cloned().ok_or_else(|| {
-            SemioError::Validation {
-                message: format!(
-                    "connection side references unknown piece {}",
-                    sw.piece.guid
-                ),
-            }
-        })?;
+    fn resolve_side_from_dto(sw: &SideDto, pieces: &HashMap<String, Arc<Piece>>) -> Result<Side> {
+        let piece = pieces
+            .get(&sw.piece.guid)
+            .cloned()
+            .ok_or_else(|| SemioError::Validation {
+                message: format!("connection side references unknown piece {}", sw.piece.guid),
+            })?;
         let design_piece = sw
             .design_piece
             .as_ref()
@@ -3109,9 +3155,11 @@ mod model_types_kit {
             let p = pieces.get(&sw.piece.guid)?;
             let mut cur = p.type_ref.clone();
             while let Some(t) = cur {
-                if let Some(c) = t.connectors.as_ref().and_then(|cs| {
-                    cs.iter().find(|c| c.guid == cid.guid).cloned()
-                }) {
+                if let Some(c) = t
+                    .connectors
+                    .as_ref()
+                    .and_then(|cs| cs.iter().find(|c| c.guid == cid.guid).cloned())
+                {
                     return Some(c);
                 }
                 cur = t.parent.clone();
@@ -3238,7 +3286,10 @@ mod model_types_kit {
                     .groups
                     .as_ref()
                     .map(|v| v.iter().map(Group::from).collect()),
-                stats: dw.stats.as_ref().map(|v| v.iter().map(Stat::from).collect()),
+                stats: dw
+                    .stats
+                    .as_ref()
+                    .map(|v| v.iter().map(Stat::from).collect()),
                 active_layer: dw.active_layer.clone(),
                 location: dw.location.clone(),
                 attributes: dw
@@ -3258,10 +3309,11 @@ mod model_types_kit {
         /// Hydrate one type from JSON wire; parent/families only resolve if those types appear in the same batch (merge kits for full graphs).
         pub fn from_dto(tw: TypeDto, ports: &HashMap<String, Arc<Port>>) -> Result<Self> {
             let guid = tw.guid.clone();
-            let resolved = resolve_types_from_dto(Some(vec![tw]), ports)?
-                .ok_or_else(|| SemioError::Validation {
+            let resolved = resolve_types_from_dto(Some(vec![tw]), ports)?.ok_or_else(|| {
+                SemioError::Validation {
                     message: "no types resolved".to_string(),
-                })?;
+                }
+            })?;
             resolved
                 .into_iter()
                 .find(|t| t.guid == guid)
@@ -3348,7 +3400,9 @@ mod model_types_kit {
                 concepts: kw
                     .concepts
                     .map(|v| v.into_iter().map(|c| Concept::from(&c)).collect()),
-                tags: kw.tags.map(|v| v.into_iter().map(|t| Tag::from(&t)).collect()),
+                tags: kw
+                    .tags
+                    .map(|v| v.into_iter().map(|t| Tag::from(&t)).collect()),
                 types: types_opt,
                 designs: designs_opt,
                 ports: ports_owned,
@@ -3386,7 +3440,10 @@ mod model_types_kit {
                     .concepts
                     .as_ref()
                     .map(|v| v.iter().map(ConceptDto::from).collect()),
-                tags: self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect()),
+                tags: self
+                    .tags
+                    .as_ref()
+                    .map(|v| v.iter().map(TagDto::from).collect()),
                 types: self
                     .types
                     .as_ref()
@@ -3431,14 +3488,12 @@ mod model_types_kit {
 
         /// Deserialize from JSON (wire / DTO transport).
         pub fn from_json_str(json: &str) -> Result<Self> {
-            let kw: KitDto =
-                serde_json::from_str(json).map_err(|e| SemioError::Serialization {
-                    message: e.to_string(),
-                })?;
+            let kw: KitDto = serde_json::from_str(json).map_err(|e| SemioError::Serialization {
+                message: e.to_string(),
+            })?;
             Self::from_dto(kw)
         }
     }
-
 } // ⏱️Kit
 pub use model_types_kit::*;
 
@@ -3467,10 +3522,9 @@ mod serialization {
     /// <remarks>
     /// </remarks>
     pub fn deserialize_design(json: &str) -> Result<Design> {
-        let dw: DesignDto =
-            serde_json::from_str(json).map_err(|e| SemioError::Serialization {
-                message: e.to_string(),
-            })?;
+        let dw: DesignDto = serde_json::from_str(json).map_err(|e| SemioError::Serialization {
+            message: e.to_string(),
+        })?;
         Design::from_dto(dw, &std::collections::HashMap::new())
     }
 
@@ -3486,10 +3540,9 @@ mod serialization {
     /// <remarks>
     /// </remarks>
     pub fn deserialize_type(json: &str) -> Result<Type> {
-        let tw: TypeDto =
-            serde_json::from_str(json).map_err(|e| SemioError::Serialization {
-                message: e.to_string(),
-            })?;
+        let tw: TypeDto = serde_json::from_str(json).map_err(|e| SemioError::Serialization {
+            message: e.to_string(),
+        })?;
         Type::from_dto(tw, &std::collections::HashMap::new())
     }
     /// <remarks>
@@ -5458,7 +5511,9 @@ mod meta_and_shallow_types {
                         .design
                         .as_ref()
                         .and_then(|w| w.upgrade())
-                        .map(|d| DesignId { guid: d.guid.clone() }),
+                        .map(|d| DesignId {
+                            guid: d.guid.clone(),
+                        }),
                     plane: self.plane.as_ref().map(PlaneDto::from),
                     center: self.center.as_ref().map(CoordDto::from),
                     scale: self.scale,
@@ -5563,9 +5618,10 @@ mod meta_and_shallow_types {
                         .models
                         .as_ref()
                         .map(|v| v.iter().map(|m| m.to_meta()).collect()),
-                    connectors: self.connectors.as_ref().map(|v| {
-                        v.iter().map(|c| c.as_ref().to_meta()).collect()
-                    }),
+                    connectors: self
+                        .connectors
+                        .as_ref()
+                        .map(|v| v.iter().map(|c| c.as_ref().to_meta()).collect()),
                     attributes: self
                         .attributes
                         .as_ref()
@@ -5682,7 +5738,10 @@ mod meta_and_shallow_types {
                         .concepts
                         .as_ref()
                         .map(|v| v.iter().map(ConceptDto::from).collect()),
-                    tags: self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect()),
+                    tags: self
+                        .tags
+                        .as_ref()
+                        .map(|v| v.iter().map(TagDto::from).collect()),
                     types: self
                         .types
                         .as_ref()
@@ -5808,9 +5867,11 @@ mod apply_diff {
     fn connector_for_piece_side(side: &Side, cid: &ConnectorId) -> Option<Arc<Connector>> {
         let mut cur = side.piece.type_ref.clone();
         while let Some(t) = cur {
-            if let Some(c) = t.connectors.as_ref().and_then(|cs| {
-                cs.iter().find(|c| c.guid == cid.guid).cloned()
-            }) {
+            if let Some(c) = t
+                .connectors
+                .as_ref()
+                .and_then(|cs| cs.iter().find(|c| c.guid == cid.guid).cloned())
+            {
                 return Some(c);
             }
             cur = t.parent.clone();
@@ -5856,11 +5917,7 @@ mod apply_diff {
             }
         }
 
-        kit.types = if types.is_empty() {
-            None
-        } else {
-            Some(types)
-        };
+        kit.types = if types.is_empty() { None } else { Some(types) };
     }
 
     fn apply_kit_designs_patch(
@@ -5872,8 +5929,10 @@ mod apply_diff {
             return;
         };
         let mut designs = kit.designs.take().unwrap_or_default();
-        let mut design_map: HashMap<String, Arc<Design>> =
-            designs.iter().map(|d| (d.guid.clone(), d.clone())).collect();
+        let mut design_map: HashMap<String, Arc<Design>> = designs
+            .iter()
+            .map(|d| (d.guid.clone(), d.clone()))
+            .collect();
 
         if let Some(removed) = &diff.removed {
             let rs: HashSet<String> = removed.iter().map(|r| r.guid.clone()).collect();
@@ -5979,7 +6038,12 @@ mod apply_diff {
         if let Some(value) = &diff.unit {
             item.unit = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<summary>🔖apply_connector_diff holds the data fields for a apply_connector_diff record.</summary>
     /// <remarks>
@@ -6015,12 +6079,17 @@ mod apply_diff {
             item.max_children = v.clone();
         }
         if let Some(outer) = &diff.port {
-            item.port = outer
-                .as_ref()
-                .and_then(|pid| ports.get(&pid.guid).cloned());
+            item.port = outer.as_ref().and_then(|pid| ports.get(&pid.guid).cloned());
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
+            Prop::from(p)
+        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<remarks>
     /// </remarks>
@@ -6037,7 +6106,12 @@ mod apply_diff {
         if let Some(value) = &diff.tags {
             item.tags = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<summary>🔖apply_type_diff holds the data fields for a apply_type_diff record.</summary>
     /// <remarks>
@@ -6094,8 +6168,12 @@ mod apply_diff {
         if let Some(v) = &diff.authors {
             item.authors = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
-        apply_collection_diff(&mut item.models, &diff.models, apply_model_diff, |m| Model::from(m));
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
+            Prop::from(p)
+        });
+        apply_collection_diff(&mut item.models, &diff.models, apply_model_diff, |m| {
+            Model::from(m)
+        });
 
         if let Some(cd) = &diff.connectors {
             let mut conns = item.connectors.clone().unwrap_or_default();
@@ -6117,14 +6195,15 @@ mod apply_diff {
                     conns.push(Arc::new(Connector::from_dto(cw, ports)));
                 }
             }
-            item.connectors = if conns.is_empty() {
-                None
-            } else {
-                Some(conns)
-            };
+            item.connectors = if conns.is_empty() { None } else { Some(conns) };
         }
 
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_layer_diff holds the data fields for a apply_layer_diff record.</summary>
@@ -6146,7 +6225,12 @@ mod apply_diff {
         if let Some(value) = &diff.description {
             item.description = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_group_diff holds the data fields for a apply_group_diff record.</summary>
@@ -6165,7 +6249,12 @@ mod apply_diff {
         if let Some(value) = &diff.pieces {
             item.pieces = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_stat_diff holds the data fields for a apply_stat_diff record.</summary>
@@ -6234,8 +6323,15 @@ mod apply_diff {
         if let Some(v) = &diff.description {
             item.description = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
+            Prop::from(p)
+        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<summary>🔖apply_connection_diff holds the data fields for a apply_connection_diff record.</summary>
     /// <remarks>
@@ -6269,9 +6365,9 @@ mod apply_diff {
                     }
                 }
                 Some(inner) => {
-                    item.connected.connector = inner.as_ref().and_then(|cid| {
-                        connector_for_piece_side(&item.connected, cid)
-                    });
+                    item.connected.connector = inner
+                        .as_ref()
+                        .and_then(|cid| connector_for_piece_side(&item.connected, cid));
                 }
             }
         }
@@ -6295,9 +6391,9 @@ mod apply_diff {
                     }
                 }
                 Some(inner) => {
-                    item.connecting.connector = inner.as_ref().and_then(|cid| {
-                        connector_for_piece_side(&item.connecting, cid)
-                    });
+                    item.connecting.connector = inner
+                        .as_ref()
+                        .and_then(|cid| connector_for_piece_side(&item.connecting, cid));
                 }
             }
         }
@@ -6342,7 +6438,12 @@ mod apply_diff {
         if let Some(value) = &diff.description {
             item.description = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<remarks>
     /// </remarks>
@@ -6394,7 +6495,9 @@ mod apply_diff {
         if let Some(v) = &diff.active_layer {
             item.active_layer = v.clone();
         }
-        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| Prop::from(p));
+        apply_collection_diff(&mut item.props, &diff.props, apply_prop_diff, |p| {
+            Prop::from(p)
+        });
 
         let self_weak = designs.get(&item.guid).map(|d| Arc::downgrade(d));
 
@@ -6453,17 +6556,24 @@ mod apply_diff {
                     }
                 }
             }
-            item.connections = if conns.is_empty() {
-                None
-            } else {
-                Some(conns)
-            };
+            item.connections = if conns.is_empty() { None } else { Some(conns) };
         }
 
-        apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff, |d| Layer::from(d));
-        apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff, |d| Group::from(d));
-        apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff, |d| Stat::from(d));
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(&mut item.layers, &diff.layers, apply_layer_diff, |d| {
+            Layer::from(d)
+        });
+        apply_collection_diff(&mut item.groups, &diff.groups, apply_group_diff, |d| {
+            Group::from(d)
+        });
+        apply_collection_diff(&mut item.stats, &diff.stats, apply_stat_diff, |d| {
+            Stat::from(d)
+        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
         item.invalidate_hash();
     }
 
@@ -6618,9 +6728,12 @@ mod apply_diff {
         if let Some(value) = &diff.icon {
             item.icon = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| {
-            Attribute::from(a)
-        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_concept_diff holds the data fields for a apply_concept_diff record.</summary>
@@ -6636,9 +6749,12 @@ mod apply_diff {
         if let Some(value) = &diff.icon {
             item.icon = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| {
-            Attribute::from(a)
-        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔢apply_interface_diff holds the data fields for a apply_interface_diff record.</summary>
@@ -6657,7 +6773,12 @@ mod apply_diff {
         if let Some(value) = &diff.compatible_interfaces {
             item.compatible_interfaces = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
@@ -6701,7 +6822,12 @@ mod apply_diff {
         if let Some(value) = &diff.uri {
             item.uri = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<summary>🔖apply_file_diff holds the data fields for a apply_file_diff record.</summary>
     /// <remarks>
@@ -6732,7 +6858,12 @@ mod apply_diff {
         if let Some(value) = &diff.parent {
             item.parent = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 
     /// 🔖<summary>🔖apply_author_diff holds the data fields for a apply_author_diff record.</summary>
@@ -6743,7 +6874,12 @@ mod apply_diff {
         if let Some(value) = &diff.email {
             item.email = value.clone();
         }
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
     /// 🔖<summary>🔖apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
     /// <remarks>
@@ -6776,11 +6912,16 @@ mod apply_diff {
         if let Some(value) = &diff.license {
             item.license = value.clone();
         }
-        apply_collection_diff(&mut item.concepts, &diff.concepts, apply_concept_diff, |c| {
-            Concept::from(c)
-        });
+        apply_collection_diff(
+            &mut item.concepts,
+            &diff.concepts,
+            apply_concept_diff,
+            |c| Concept::from(c),
+        );
         apply_collection_diff(&mut item.tags, &diff.tags, apply_tag_diff, |t| Tag::from(t));
-        apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff, |p| Port::from(p));
+        apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff, |p| {
+            Port::from(p)
+        });
 
         let ports_map = kit_ports_arc_map(item);
         apply_kit_types_patch(item, diff.types.as_ref(), &ports_map);
@@ -6788,13 +6929,25 @@ mod apply_diff {
         let types_map = kit_types_map_index(item);
         apply_kit_designs_patch(item, diff.designs.as_ref(), &types_map);
 
-        apply_collection_diff(&mut item.qualities, &diff.qualities, apply_quality_diff, |q| {
-            Quality::from(q)
-        });
+        apply_collection_diff(
+            &mut item.qualities,
+            &diff.qualities,
+            apply_quality_diff,
+            |q| Quality::from(q),
+        );
         apply_collection_diff(&mut item.files, &diff.files, apply_file_diff, |x| x.clone());
-        apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff, |f| Folder::from(f));
-        apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff, |a| Author::from(a));
-        apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff, |a| Attribute::from(a));
+        apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff, |f| {
+            Folder::from(f)
+        });
+        apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff, |a| {
+            Author::from(a)
+        });
+        apply_collection_diff(
+            &mut item.attributes,
+            &diff.attributes,
+            apply_attribute_diff,
+            |a| Attribute::from(a),
+        );
     }
 } // ✈️ApplyDiff
 pub use apply_diff::*;
@@ -7364,7 +7517,7 @@ mod filter {
 } // 🧩Filter
 pub use filter::*;
 
- // 🕍FlattenDesign
+// 🕍FlattenDesign
 mod find_replaceable_types_in_designs {
 
     use super::*;
@@ -7737,8 +7890,7 @@ mod copy_paste_design {
             );
         }
 
-        let fd =
-            FlattenDesign::try_new(kit, &design.guid).expect("copy_design has a design");
+        let fd = FlattenDesign::try_new(kit, &design.guid).expect("copy_design has a design");
 
         let mut copy_pieces: Vec<Arc<Piece>> = Vec::new();
         let mut added_piece_guids: HashSet<String> = HashSet::new();
@@ -8744,10 +8896,12 @@ mod kit_model_export {
             });
         }
 
-        let design = kit.design_by_guid(design_guid).ok_or_else(|| SemioError::NotFound {
-            kind: "Design".to_string(),
-            guid: design_guid.to_string(),
-        })?;
+        let design = kit
+            .design_by_guid(design_guid)
+            .ok_or_else(|| SemioError::NotFound {
+                kind: "Design".to_string(),
+                guid: design_guid.to_string(),
+            })?;
 
         let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
         if pieces.is_empty() {
@@ -8845,8 +8999,7 @@ mod kit_model_export {
 
             let world_matrix = fd.piece(piece.guid.as_str()).world_matrix();
 
-            let local_matrix = if let Some(parent_guid) =
-                fd.parent_piece_guid(piece.guid.as_str())
+            let local_matrix = if let Some(parent_guid) = fd.parent_piece_guid(piece.guid.as_str())
             {
                 let parent_world = fd.piece(parent_guid).world_matrix();
                 match parent_world.try_inverse() {
@@ -9514,7 +9667,10 @@ mod validation_types {
         for t in types {
             let parent = t.parent.as_ref().map(|p| p.guid.clone());
             let mut fam_guids: Vec<&str> = if !t.family_membership_guids.is_empty() {
-                t.family_membership_guids.iter().map(|g| g.as_str()).collect()
+                t.family_membership_guids
+                    .iter()
+                    .map(|g| g.as_str())
+                    .collect()
             } else {
                 t.families
                     .as_ref()
@@ -9523,10 +9679,7 @@ mod validation_types {
             };
             fam_guids.sort_unstable();
             let fam_key = fam_guids.join("\x1e");
-            siblings
-                .entry((parent, fam_key))
-                .or_default()
-                .push(t);
+            siblings.entry((parent, fam_key)).or_default().push(t);
         }
         for (_parent, group) in siblings {
             let mut names: HashMap<&str, Vec<&Type>> = HashMap::new();
@@ -9565,10 +9718,7 @@ mod validation_types {
                 .unwrap_or_default();
             fam_guids.sort_unstable();
             let fam_key = fam_guids.join("\x1e");
-            siblings
-                .entry((parent, fam_key))
-                .or_default()
-                .push(d);
+            siblings.entry((parent, fam_key)).or_default().push(d);
         }
         for (_parent, group) in siblings {
             let mut names: HashMap<&str, Vec<&Design>> = HashMap::new();
@@ -10521,11 +10671,7 @@ mod sqlite_import_export {
                     Ok(ConnectorDto {
                         guid: row.get(0)?,
                         name: row.get(1)?,
-                        point: VectorDto::from(&Vector::new(
-                            row.get(2)?,
-                            row.get(3)?,
-                            row.get(4)?,
-                        )),
+                        point: VectorDto::from(&Vector::new(row.get(2)?, row.get(3)?, row.get(4)?)),
                         direction: VectorDto::from(&Vector::new(
                             row.get(5)?,
                             row.get(6)?,
@@ -11634,11 +11780,9 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "generateUniqueName")]
         pub fn wasm_generate_unique_name(base: &str, existing_json: &str) -> JsValue {
             match serde_json::from_str::<Vec<String>>(existing_json) {
-                Ok(existing) => {
-                    to_js_value(WasmResult::success(SemioUtil::generate_unique_name(
-                        base, &existing,
-                    )))
-                }
+                Ok(existing) => to_js_value(WasmResult::success(SemioUtil::generate_unique_name(
+                    base, &existing,
+                ))),
                 Err(e) => to_js_value(WasmResult::<String>::failure(e.to_string())),
             }
         }
@@ -12448,8 +12592,7 @@ mod hash {
             if let Some(v) = &t.connectors {
                 if !v.is_empty() {
                     w.write_string("connectors");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_connector_dto(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_connector_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12560,8 +12703,7 @@ mod hash {
             if let Some(v) = &d.connections {
                 if !v.is_empty() {
                     w.write_string("connections");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_connection_dto(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_connection_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12623,8 +12765,7 @@ mod hash {
             if let Some(v) = &d.pieces {
                 if !v.is_empty() {
                     w.write_string("pieces");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_piece_dto(x)).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_piece_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12638,8 +12779,7 @@ mod hash {
             if let Some(v) = &d.stats {
                 if !v.is_empty() {
                     w.write_string("stats");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_stat(&Stat::from(x))).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_stat(&Stat::from(x))).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12677,7 +12817,8 @@ mod hash {
             if let Some(v) = &t.connectors {
                 if !v.is_empty() {
                     w.write_string("connectors");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_connector(x.as_ref())).collect();
+                    let hashes: Vec<String> =
+                        v.iter().map(|x| hash_connector(x.as_ref())).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -13081,8 +13222,7 @@ mod hash {
             if let Some(v) = &d.pieces {
                 if !v.is_empty() {
                     w.write_string("pieces");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_piece(x.as_ref())).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_piece(x.as_ref())).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -13208,8 +13348,7 @@ mod hash {
             if let Some(v) = &k.types {
                 if !v.is_empty() {
                     w.write_string("types");
-                    let hashes: Vec<String> =
-                        v.iter().map(|x| hash_type(x.as_ref())).collect();
+                    let hashes: Vec<String> = v.iter().map(|x| hash_type(x.as_ref())).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -15020,7 +15159,7 @@ mod hash {
 } // 🖥️Hash
 pub use hash::*;
 
- // 🔍Helpers
+// 🔍Helpers
 mod kit_diff_validation {
 
     use super::*;
@@ -15071,7 +15210,10 @@ mod kit_diff_validation {
             && c.updated.as_ref().map_or(true, |v| v.is_empty())
     }
 
-    fn filter_updates<D: DiffHasGuid>(updates: Vec<DiffUpdate<D>>, gid: &str) -> Vec<DiffUpdate<D>> {
+    fn filter_updates<D: DiffHasGuid>(
+        updates: Vec<DiffUpdate<D>>,
+        gid: &str,
+    ) -> Vec<DiffUpdate<D>> {
         updates
             .into_iter()
             .filter(|u| u.guid.as_str() != gid)
@@ -15111,21 +15253,9 @@ mod kit_diff_validation {
             }
         }
 
-        let mut h_rem = if heal {
-            work.removed.clone()
-        } else {
-            None
-        };
-        let mut h_upd = if heal {
-            work.updated.clone()
-        } else {
-            None
-        };
-        let mut h_add = if heal {
-            work.added.clone()
-        } else {
-            None
-        };
+        let mut h_rem = if heal { work.removed.clone() } else { None };
+        let mut h_upd = if heal { work.updated.clone() } else { None };
+        let mut h_add = if heal { work.added.clone() } else { None };
 
         if let Some(arr) = &cd.removed {
             for r in arr {
@@ -15414,7 +15544,16 @@ mod kit_diff_validation {
             return;
         };
         let mut work = cd.clone();
-        validate_collection_diff_entity(ctx, path, id_key, base, cd, &mut work, heal, &mut on_updated);
+        validate_collection_diff_entity(
+            ctx,
+            path,
+            id_key,
+            base,
+            cd,
+            &mut work,
+            heal,
+            &mut on_updated,
+        );
         if heal {
             if let Some(s) = slot {
                 *s = if collection_diff_is_empty(&work) {
@@ -15466,9 +15605,11 @@ mod kit_diff_validation {
             healed.as_mut().map(|h| &mut h.designs),
             heal,
             |c, dw, update, p| {
-                let Some(item) = kit.designs.as_ref().and_then(|ds| {
-                    ds.iter().find(|d| d.guid == dw.guid)
-                }) else {
+                let Some(item) = kit
+                    .designs
+                    .as_ref()
+                    .and_then(|ds| ds.iter().find(|d| d.guid == dw.guid))
+                else {
                     return;
                 };
                 validate_design_diff_nested(c, kit, item.as_ref(), &update.diff, p, &refs_d);
@@ -15611,8 +15752,6 @@ mod kit_diff_validation {
     }
 } // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
-
-
 
 // ——— Geometry aliases (diagram: Point, Coordinate, Offset)
 
@@ -17220,19 +17359,21 @@ impl Connector {
         if self.mandatory != after.mandatory {
             diff.mandatory = Some(after.mandatory);
         }
-        if self.port.as_ref().map(|p| p.guid.as_str()) != after.port.as_ref().map(|p| p.guid.as_str())
+        if self.port.as_ref().map(|p| p.guid.as_str())
+            != after.port.as_ref().map(|p| p.guid.as_str())
         {
-            diff.port = Some(
-                after
-                    .port
-                    .as_ref()
-                    .map(|p| PortId {
-                        guid: p.guid.clone(),
-                    }),
-            );
+            diff.port = Some(after.port.as_ref().map(|p| PortId {
+                guid: p.guid.clone(),
+            }));
         }
-        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
-        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let bp = self
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
         diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
             let b_dom = self
                 .props
@@ -17385,14 +17526,9 @@ impl Type {
         if self.parent.as_ref().map(|p| p.guid.as_str())
             != after.parent.as_ref().map(|p| p.guid.as_str())
         {
-            diff.parent = Some(
-                after
-                    .parent
-                    .as_ref()
-                    .map(|p| TypeId {
-                        guid: p.guid.clone(),
-                    }),
-            );
+            diff.parent = Some(after.parent.as_ref().map(|p| TypeId {
+                guid: p.guid.clone(),
+            }));
         }
         if self.description != after.description {
             diff.description = Some(after.description.clone());
@@ -17427,8 +17563,14 @@ impl Type {
         if self.authors != after.authors {
             diff.authors = Some(after.authors.clone());
         }
-        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
-        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let bp = self
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
         diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
             let b_dom = self
                 .props
@@ -17442,8 +17584,14 @@ impl Type {
                 .expect("prop after");
             b_dom.diff_from(a_dom)
         });
-        let bm = self.models.as_ref().map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
-        let am = after.models.as_ref().map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
+        let bm = self
+            .models
+            .as_ref()
+            .map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
+        let am = after
+            .models
+            .as_ref()
+            .map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
         diff.models = CollectionDiff::from_optional_vecs(&bm, &am, "model", |b, a| {
             let b_dom = self
                 .models
@@ -17457,16 +17605,14 @@ impl Type {
                 .expect("model after");
             b_dom.diff_from(a_dom)
         });
-        let bw = self.connectors.as_ref().map(|v| {
-            v.iter()
-                .map(|c| c.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
-        let aw = after.connectors.as_ref().map(|v| {
-            v.iter()
-                .map(|c| c.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
+        let bw = self
+            .connectors
+            .as_ref()
+            .map(|v| v.iter().map(|c| c.as_ref().to_dto()).collect::<Vec<_>>());
+        let aw = after
+            .connectors
+            .as_ref()
+            .map(|v| v.iter().map(|c| c.as_ref().to_dto()).collect::<Vec<_>>());
         diff.connectors = CollectionDiff::from_optional_vecs(&bw, &aw, "connector", |bw, aw| {
             let b = self
                 .connectors
@@ -17518,23 +17664,12 @@ impl Piece {
         if self.name != after.name {
             diff.name = Some(after.name.clone());
         }
-        let self_tid = self
-            .type_ref
-            .as_ref()
-            .map(|t| t.guid.clone());
-        let after_tid = after
-            .type_ref
-            .as_ref()
-            .map(|t| t.guid.clone());
+        let self_tid = self.type_ref.as_ref().map(|t| t.guid.clone());
+        let after_tid = after.type_ref.as_ref().map(|t| t.guid.clone());
         if self_tid != after_tid {
-            diff.type_ref = Some(
-                after
-                    .type_ref
-                    .as_ref()
-                    .map(|t| TypeId {
-                        guid: t.guid.clone(),
-                    }),
-            );
+            diff.type_ref = Some(after.type_ref.as_ref().map(|t| TypeId {
+                guid: t.guid.clone(),
+            }));
         }
         let self_did = self
             .design
@@ -17581,8 +17716,14 @@ impl Piece {
         if self.description != after.description {
             diff.description = Some(after.description.clone());
         }
-        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
-        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let bp = self
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
         diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
             let b_dom = self
                 .props
@@ -17645,36 +17786,16 @@ impl Connection {
                     .as_ref()
                     .map(|p| p.guid.as_str())
             {
-                sd.design_piece = Some(
-                    after
-                        .connected
-                        .design_piece
-                        .as_ref()
-                        .map(|p| PieceId {
-                            guid: p.guid.clone(),
-                        }),
-                );
+                sd.design_piece = Some(after.connected.design_piece.as_ref().map(|p| PieceId {
+                    guid: p.guid.clone(),
+                }));
             }
-            if self
-                .connected
-                .connector
-                .as_ref()
-                .map(|c| c.guid.as_str())
-                != after
-                    .connected
-                    .connector
-                    .as_ref()
-                    .map(|c| c.guid.as_str())
+            if self.connected.connector.as_ref().map(|c| c.guid.as_str())
+                != after.connected.connector.as_ref().map(|c| c.guid.as_str())
             {
-                sd.connector = Some(
-                    after
-                        .connected
-                        .connector
-                        .as_ref()
-                        .map(|c| ConnectorId {
-                            guid: c.guid.clone(),
-                        }),
-                );
+                sd.connector = Some(after.connected.connector.as_ref().map(|c| ConnectorId {
+                    guid: c.guid.clone(),
+                }));
             }
             diff.connected = Some(sd);
         }
@@ -17696,36 +17817,16 @@ impl Connection {
                     .as_ref()
                     .map(|p| p.guid.as_str())
             {
-                sd.design_piece = Some(
-                    after
-                        .connecting
-                        .design_piece
-                        .as_ref()
-                        .map(|p| PieceId {
-                            guid: p.guid.clone(),
-                        }),
-                );
+                sd.design_piece = Some(after.connecting.design_piece.as_ref().map(|p| PieceId {
+                    guid: p.guid.clone(),
+                }));
             }
-            if self
-                .connecting
-                .connector
-                .as_ref()
-                .map(|c| c.guid.as_str())
-                != after
-                    .connecting
-                    .connector
-                    .as_ref()
-                    .map(|c| c.guid.as_str())
+            if self.connecting.connector.as_ref().map(|c| c.guid.as_str())
+                != after.connecting.connector.as_ref().map(|c| c.guid.as_str())
             {
-                sd.connector = Some(
-                    after
-                        .connecting
-                        .connector
-                        .as_ref()
-                        .map(|c| ConnectorId {
-                            guid: c.guid.clone(),
-                        }),
-                );
+                sd.connector = Some(after.connecting.connector.as_ref().map(|c| ConnectorId {
+                    guid: c.guid.clone(),
+                }));
             }
             diff.connecting = Some(sd);
         }
@@ -18358,24 +18459,24 @@ mod flatten {
                     .expect("parent connector validated when tree was built");
                 let conn_u = edge.conn.u.unwrap_or(0.0);
                 let conn_v = edge.conn.v.unwrap_or(0.0);
-                let (child_u, child_v) = if parent_center.u.abs() < 0.0001 && parent_center.v.abs() < 0.0001
-                {
-                    let angle = 2.0 * PI * parent_connector.t;
-                    (RADIUS * angle.sin(), RADIUS * angle.cos())
-                } else {
-                    let is_vertical = parent_connector.direction.z.abs() > 0.5;
-                    if is_vertical {
-                        (
-                            parent_center.u + conn_u,
-                            parent_center.v + conn_v + VERTICAL_V_EXTRA,
-                        )
+                let (child_u, child_v) =
+                    if parent_center.u.abs() < 0.0001 && parent_center.v.abs() < 0.0001 {
+                        let angle = 2.0 * PI * parent_connector.t;
+                        (RADIUS * angle.sin(), RADIUS * angle.cos())
                     } else {
-                        (
-                            parent_center.u + conn_u * HORIZONTAL_SCALE,
-                            parent_center.v + conn_v * HORIZONTAL_SCALE,
-                        )
-                    }
-                };
+                        let is_vertical = parent_connector.direction.z.abs() > 0.5;
+                        if is_vertical {
+                            (
+                                parent_center.u + conn_u,
+                                parent_center.v + conn_v + VERTICAL_V_EXTRA,
+                            )
+                        } else {
+                            (
+                                parent_center.u + conn_u * HORIZONTAL_SCALE,
+                                parent_center.v + conn_v * HORIZONTAL_SCALE,
+                            )
+                        }
+                    };
                 Coord {
                     u: (child_u * 1_000_000.0).round() / 1_000_000.0,
                     v: (child_v * 1_000_000.0).round() / 1_000_000.0,
@@ -18420,7 +18521,12 @@ mod flatten {
         }
 
         fn expand_one_bfs_step(&self) -> bool {
-            let pieces = self.design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+            let pieces = self
+                .design
+                .pieces
+                .as_ref()
+                .map(|p| p.as_slice())
+                .unwrap_or(&[]);
 
             let mut queue = self.bfs_queue.borrow_mut();
             if queue.is_empty() {
@@ -18443,7 +18549,11 @@ mod flatten {
             let current_guid = queue.pop_front().expect("queue non-empty");
             drop(queue);
 
-            let neighbors = self.adjacency.get(&current_guid).cloned().unwrap_or_default();
+            let neighbors = self
+                .adjacency
+                .get(&current_guid)
+                .cloned()
+                .unwrap_or_default();
             for (neighbor_guid, conn, is_connected) in neighbors {
                 if self.bfs_visited.borrow().contains(&neighbor_guid) {
                     continue;
@@ -18528,23 +18638,30 @@ mod flatten {
         pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
             let design = kit.design_by_guid(design_guid)?;
             let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-            let connections = design.connections.as_ref().map(|c| c.as_slice()).unwrap_or(&[]);
+            let connections = design
+                .connections
+                .as_ref()
+                .map(|c| c.as_slice())
+                .unwrap_or(&[]);
             let pieces_map: HashMap<&str, &Arc<Piece>> =
                 pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
 
-            let mut adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>> = HashMap::new();
+            let mut adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>> =
+                HashMap::new();
             for conn in connections {
                 let src = conn.connected.piece.guid.as_str();
                 let tgt = conn.connecting.piece.guid.as_str();
                 if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                    adjacency
-                        .entry(src.to_string())
-                        .or_default()
-                        .push((tgt.to_string(), conn, true));
-                    adjacency
-                        .entry(tgt.to_string())
-                        .or_default()
-                        .push((src.to_string(), conn, false));
+                    adjacency.entry(src.to_string()).or_default().push((
+                        tgt.to_string(),
+                        conn,
+                        true,
+                    ));
+                    adjacency.entry(tgt.to_string()).or_default().push((
+                        src.to_string(),
+                        conn,
+                        false,
+                    ));
                 }
             }
 
@@ -18632,8 +18749,10 @@ mod flatten {
                 };
 
                 if plane_needs_update || center_needs_update {
-                    let path_attr = self.inner.semio_path_string(piece.guid.as_str()).map(|path| {
-                        CollectionDiff {
+                    let path_attr = self
+                        .inner
+                        .semio_path_string(piece.guid.as_str())
+                        .map(|path| CollectionDiff {
                             added: Some(vec![AttributeDto {
                                 guid: SemioUtil::generate_guid(),
                                 key: "semio.path".to_string(),
@@ -18642,8 +18761,7 @@ mod flatten {
                             }]),
                             removed: None,
                             updated: None,
-                        }
-                    });
+                        });
                     updated_pieces.push(DiffUpdate {
                         key: "piece".to_string(),
                         guid: piece.guid.clone(),
@@ -18762,7 +18880,8 @@ mod flatten {
                 let mut root: Option<&str> = None;
                 for piece in pieces {
                     let g = piece.guid.as_str();
-                    if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
+                    if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some()
+                    {
                         root = Some(g);
                         break;
                     }
@@ -18812,12 +18931,14 @@ mod flatten {
                             } else {
                                 (&conn.connecting, &conn.connected)
                             };
-                            let parent_connector =
-                                match self.inner.kit.connector_for_side_fast(&pieces_map, parent_side)
-                                {
-                                    Some(c) => c,
-                                    None => continue,
-                                };
+                            let parent_connector = match self
+                                .inner
+                                .kit
+                                .connector_for_side_fast(&pieces_map, parent_side)
+                            {
+                                Some(c) => c,
+                                None => continue,
+                            };
                             let child_connector = match self
                                 .inner
                                 .kit
@@ -18928,7 +19049,7 @@ mod flatten {
         }
     }
 }
-pub use flatten::{FlattenDesign, FlattenAffine, FlattenPiece, PieceFlattenParent};
+pub use flatten::{FlattenAffine, FlattenDesign, FlattenPiece, PieceFlattenParent};
 
 impl Kit {
     /// Semantic kit identity: deterministic merkle hash over domain collections (not JSON serialization).
@@ -19045,9 +19166,11 @@ impl Kit {
                 continue;
             }
             if let Some(t) = piece.type_ref.as_ref() {
-                if let Some(prop) = t.props.as_ref().and_then(|props| {
-                    props.iter().find(|p| p.quality.guid == quality_guid)
-                }) {
+                if let Some(prop) = t
+                    .props
+                    .as_ref()
+                    .and_then(|props| props.iter().find(|p| p.quality.guid == quality_guid))
+                {
                     if let Ok(val) = prop.value.parse::<f64>() {
                         sum += val;
                     }
@@ -19062,23 +19185,24 @@ impl Kit {
         design_guid: &str,
         change: DesignChange,
     ) -> SemioReport<DesignChange> {
-    let pieces_empty = self.design_by_guid(design_guid)
-        .and_then(|d| d.pieces.as_ref())
-        .map(|p| p.is_empty())
-        .unwrap_or(true);
-    if pieces_empty {
-        SemioReport::ok_with(
-            change,
-            vec![],
-            vec![OperationNote {
-                code: Some("flatten.empty-pieces".into()),
-                message: "No pieces to flatten; returning empty forward and backward diffs."
-                    .into(),
-            }],
-        )
-    } else {
-        SemioReport::ok_with(change, vec![], vec![])
-    }
+        let pieces_empty = self
+            .design_by_guid(design_guid)
+            .and_then(|d| d.pieces.as_ref())
+            .map(|p| p.is_empty())
+            .unwrap_or(true);
+        if pieces_empty {
+            SemioReport::ok_with(
+                change,
+                vec![],
+                vec![OperationNote {
+                    code: Some("flatten.empty-pieces".into()),
+                    message: "No pieces to flatten; returning empty forward and backward diffs."
+                        .into(),
+                }],
+            )
+        } else {
+            SemioReport::ok_with(change, vec![], vec![])
+        }
     }
 
     /// Forward/backward [`DesignChange`] for flattening layout (planes / centers).
@@ -19125,14 +19249,14 @@ impl Kit {
 
     /// Canonical flatten report for a design GUID (computed planes / centers).
     pub fn flatten_design_report(&self, design_guid: &str) -> SemioReport<DesignChange> {
-    if self.design_by_guid(design_guid).is_none() {
-        return SemioReport::err(vec![OperationNote {
-            code: Some("flatten.design-not-found".into()),
-            message: format!("Design {design_guid} not found in kit"),
-        }]);
-    }
-    let change = self.flatten_design_change_for_guid(design_guid);
-    self.flatten_report_from_change(design_guid, change)
+        if self.design_by_guid(design_guid).is_none() {
+            return SemioReport::err(vec![OperationNote {
+                code: Some("flatten.design-not-found".into()),
+                message: format!("Design {design_guid} not found in kit"),
+            }]);
+        }
+        let change = self.flatten_design_change_for_guid(design_guid);
+        self.flatten_report_from_change(design_guid, change)
     }
 
     /// Flatten a design that belongs to this kit (graph layout).
@@ -19171,18 +19295,8 @@ impl Kit {
         if let Some(pieces_diff) = &change.forward.pieces {
             if let Some(updates) = &pieces_diff.updated {
                 for upd in updates {
-                    let plane = upd
-                        .diff
-                        .plane
-                        .clone()
-                        .flatten()
-                        .map(|p| Plane::from(&p));
-                    let center = upd
-                        .diff
-                        .center
-                        .clone()
-                        .flatten()
-                        .map(|c| Coord::from(&c));
+                    let plane = upd.diff.plane.clone().flatten().map(|p| Plane::from(&p));
+                    let center = upd.diff.center.clone().flatten().map(|c| Coord::from(&c));
                     updated_by_id.insert(upd.guid.clone(), (plane, center));
                 }
             }
@@ -19285,16 +19399,14 @@ impl Kit {
         if self.license != after.license {
             diff.license = Some(after.license.clone());
         }
-        let tw = self.types.as_ref().map(|v| {
-            v.iter()
-                .map(|t| t.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
-        let twa = after.types.as_ref().map(|v| {
-            v.iter()
-                .map(|t| t.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
+        let tw = self
+            .types
+            .as_ref()
+            .map(|v| v.iter().map(|t| t.as_ref().to_dto()).collect::<Vec<_>>());
+        let twa = after
+            .types
+            .as_ref()
+            .map(|v| v.iter().map(|t| t.as_ref().to_dto()).collect::<Vec<_>>());
         diff.types = CollectionDiff::from_optional_vecs(&tw, &twa, "type", |bw, aw| {
             let b = self
                 .types
@@ -19312,16 +19424,14 @@ impl Kit {
                 },
             }
         });
-        let dw = self.designs.as_ref().map(|v| {
-            v.iter()
-                .map(|d| d.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
-        let dwa = after.designs.as_ref().map(|v| {
-            v.iter()
-                .map(|d| d.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
+        let dw = self
+            .designs
+            .as_ref()
+            .map(|v| v.iter().map(|d| d.as_ref().to_dto()).collect::<Vec<_>>());
+        let dwa = after
+            .designs
+            .as_ref()
+            .map(|v| v.iter().map(|d| d.as_ref().to_dto()).collect::<Vec<_>>());
         diff.designs = CollectionDiff::from_optional_vecs(&dw, &dwa, "design", |bw, aw| {
             let b = self
                 .designs
@@ -19339,8 +19449,14 @@ impl Kit {
                 },
             }
         });
-        let tag_b = self.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
-        let tag_a = after.tags.as_ref().map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
+        let tag_b = self
+            .tags
+            .as_ref()
+            .map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
+        let tag_a = after
+            .tags
+            .as_ref()
+            .map(|v| v.iter().map(TagDto::from).collect::<Vec<_>>());
         diff.tags = CollectionDiff::from_optional_vecs(&tag_b, &tag_a, "tag", |b, a| {
             let b_dom = self
                 .tags
@@ -19362,21 +19478,28 @@ impl Kit {
             .concepts
             .as_ref()
             .map(|v| v.iter().map(ConceptDto::from).collect::<Vec<_>>());
-        diff.concepts = CollectionDiff::from_optional_vecs(&concept_b, &concept_a, "concept", |b, a| {
-            let b_dom = self
-                .concepts
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
-                .expect("concept before");
-            let a_dom = after
-                .concepts
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
-                .expect("concept after");
-            b_dom.diff_from(a_dom)
-        });
-        let port_b = self.ports.as_ref().map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
-        let port_a = after.ports.as_ref().map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
+        diff.concepts =
+            CollectionDiff::from_optional_vecs(&concept_b, &concept_a, "concept", |b, a| {
+                let b_dom = self
+                    .concepts
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                    .expect("concept before");
+                let a_dom = after
+                    .concepts
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                    .expect("concept after");
+                b_dom.diff_from(a_dom)
+            });
+        let port_b = self
+            .ports
+            .as_ref()
+            .map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
+        let port_a = after
+            .ports
+            .as_ref()
+            .map(|v| v.iter().map(PortDto::from).collect::<Vec<_>>());
         diff.ports = CollectionDiff::from_optional_vecs(&port_b, &port_a, "port", |b, a| {
             let b_dom = self
                 .ports
@@ -19412,7 +19535,9 @@ impl Kit {
             b_dom.diff_from(a_dom)
         });
         diff.files =
-            CollectionDiff::from_optional_vecs(&self.files, &after.files, "file", |b, a| b.diff_from(a));
+            CollectionDiff::from_optional_vecs(&self.files, &after.files, "file", |b, a| {
+                b.diff_from(a)
+            });
         let folder_b = self
             .folders
             .as_ref()
@@ -19421,19 +19546,20 @@ impl Kit {
             .folders
             .as_ref()
             .map(|v| v.iter().map(FolderDto::from).collect::<Vec<_>>());
-        diff.folders = CollectionDiff::from_optional_vecs(&folder_b, &folder_a, "folder", |b, a| {
-            let b_dom = self
-                .folders
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
-                .expect("folder before");
-            let a_dom = after
-                .folders
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
-                .expect("folder after");
-            b_dom.diff_from(a_dom)
-        });
+        diff.folders =
+            CollectionDiff::from_optional_vecs(&folder_b, &folder_a, "folder", |b, a| {
+                let b_dom = self
+                    .folders
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                    .expect("folder before");
+                let a_dom = after
+                    .folders
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                    .expect("folder after");
+                b_dom.diff_from(a_dom)
+            });
         let author_b = self
             .authors
             .as_ref()
@@ -19442,19 +19568,20 @@ impl Kit {
             .authors
             .as_ref()
             .map(|v| v.iter().map(AuthorDto::from).collect::<Vec<_>>());
-        diff.authors = CollectionDiff::from_optional_vecs(&author_b, &author_a, "author", |b, a| {
-            let b_dom = self
-                .authors
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == b.guid))
-                .expect("author before");
-            let a_dom = after
-                .authors
-                .as_ref()
-                .and_then(|v| v.iter().find(|x| x.guid == a.guid))
-                .expect("author after");
-            b_dom.diff_from(a_dom)
-        });
+        diff.authors =
+            CollectionDiff::from_optional_vecs(&author_b, &author_a, "author", |b, a| {
+                let b_dom = self
+                    .authors
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == b.guid))
+                    .expect("author before");
+                let a_dom = after
+                    .authors
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|x| x.guid == a.guid))
+                    .expect("author after");
+                b_dom.diff_from(a_dom)
+            });
         let ba = self
             .attributes
             .as_ref()
@@ -19548,8 +19675,8 @@ impl Kit {
         if !flat_rep.ok {
             return SemioReport::err(flat_rep.errors);
         }
-        let fd = FlattenDesign::try_new(self, &design.guid)
-            .expect("flatten succeeded implies layout");
+        let fd =
+            FlattenDesign::try_new(self, &design.guid).expect("flatten succeeded implies layout");
         let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
         if let Some(pieces) = &design.pieces {
             for piece in pieces {
@@ -19913,9 +20040,10 @@ impl Design {
     }
     #[inline]
     pub fn piece_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Piece> {
-        self.pieces.as_mut()?.iter_mut().find_map(|p| {
-            (p.guid == guid).then(|| Arc::make_mut(p))
-        })
+        self.pieces
+            .as_mut()?
+            .iter_mut()
+            .find_map(|p| (p.guid == guid).then(|| Arc::make_mut(p)))
     }
     #[inline]
     pub fn connection_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Connection> {
@@ -19978,8 +20106,14 @@ impl Design {
         if self.active_layer != after.active_layer {
             diff.active_layer = Some(after.active_layer.clone());
         }
-        let bp = self.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
-        let ap = after.props.as_ref().map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let bp = self
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
+        let ap = after
+            .props
+            .as_ref()
+            .map(|v| v.iter().map(PropDto::from).collect::<Vec<_>>());
         diff.props = CollectionDiff::from_optional_vecs(&bp, &ap, "prop", |b, a| {
             let b_dom = self
                 .props
@@ -19993,16 +20127,14 @@ impl Design {
                 .expect("prop after");
             b_dom.diff_from(a_dom)
         });
-        let pw = self.pieces.as_ref().map(|v| {
-            v.iter()
-                .map(|p| p.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
-        let pwa = after.pieces.as_ref().map(|v| {
-            v.iter()
-                .map(|p| p.as_ref().to_dto())
-                .collect::<Vec<_>>()
-        });
+        let pw = self
+            .pieces
+            .as_ref()
+            .map(|v| v.iter().map(|p| p.as_ref().to_dto()).collect::<Vec<_>>());
+        let pwa = after
+            .pieces
+            .as_ref()
+            .map(|v| v.iter().map(|p| p.as_ref().to_dto()).collect::<Vec<_>>());
         diff.pieces = CollectionDiff::from_optional_vecs(&pw, &pwa, "piece", |bw, aw| {
             let b = self
                 .pieces
@@ -20087,7 +20219,10 @@ impl Design {
                 .expect("group after");
             b_dom.diff_from(a_dom)
         });
-        let stat_b = self.stats.as_ref().map(|v| v.iter().map(StatDto::from).collect::<Vec<_>>());
+        let stat_b = self
+            .stats
+            .as_ref()
+            .map(|v| v.iter().map(StatDto::from).collect::<Vec<_>>());
         let stat_a = after
             .stats
             .as_ref()
@@ -20201,16 +20336,14 @@ impl Design {
         connections: &[Connection],
     ) -> SemioReport<DesignDiff> {
         let piece_guids: Vec<String> = pieces.iter().map(|p| p.guid.clone()).collect();
-        let connection_guids: Vec<String> =
-            connections.iter().map(|c| c.guid.clone()).collect();
+        let connection_guids: Vec<String> = connections.iter().map(|c| c.guid.clone()).collect();
         kit.delete_pieces_and_connections_in_design(self, &piece_guids, &connection_guids)
     }
 
     pub fn drag_pieces(&self, pieces: &[Piece], offset: &Coord) -> DesignDiff {
         let design_pieces = self.pieces.as_deref().unwrap_or(&[]);
         let design_connections = self.connections.as_deref().unwrap_or(&[]);
-        let selected_guids: HashSet<&str> =
-            pieces.iter().map(|p| p.guid.as_str()).collect();
+        let selected_guids: HashSet<&str> = pieces.iter().map(|p| p.guid.as_str()).collect();
         let mut parent_map: HashMap<&str, (&str, &str)> = HashMap::new();
         for conn in design_connections {
             let connecting_guid = conn.connecting.piece.guid.as_str();
@@ -20582,9 +20715,8 @@ impl KitGraphSession {
         })?;
         if g.is_conflicted {
             return Err(SemioError::InvalidOperation {
-                message:
-                    "Kit is conflicted; call clear_conflict() before aborting a transaction"
-                        .into(),
+                message: "Kit is conflicted; call clear_conflict() before aborting a transaction"
+                    .into(),
             });
         }
         for step in tx.steps.iter().rev() {
@@ -20602,9 +20734,8 @@ impl KitGraphSession {
             })?;
         if g.is_conflicted {
             return Err(SemioError::InvalidOperation {
-                message:
-                    "Kit is conflicted; call clear_conflict() before finalizing a transaction"
-                        .into(),
+                message: "Kit is conflicted; call clear_conflict() before finalizing a transaction"
+                    .into(),
             });
         }
         let tx = g.open_transactions.remove(transaction_id).ok_or_else(|| {
@@ -20785,11 +20916,7 @@ impl KitGraphSession {
 }
 
 impl KitGraphSessionInner {
-    fn commit_graph(
-        &mut self,
-        diff: KitDiff,
-        opts: KitCommitOptions,
-    ) -> Result<KitGraphChange> {
+    fn commit_graph(&mut self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
         if self.is_conflicted {
             return Err(SemioError::InvalidOperation {
                 message: "Kit has unresolved validation conflicts; call clear_conflict() before applying further changes."
@@ -20879,11 +21006,7 @@ pub struct FlattenedPiece {
 
 /// 🔖Computes forward/backward DesignChange for flatten (hot path; no SemioReport wrapper).
 
-
-
-
 /// 🌤️Canonical flatten report (matches TypeScript flattenDesign).
-
 
 impl Connection {
     pub fn child_plane_matrix(
@@ -20891,143 +21014,146 @@ impl Connection {
         parent_connector: &Connector,
         child_connector: &Connector,
     ) -> Matrix4<f64> {
-    use nalgebra::{UnitQuaternion, Vector3};
+        use nalgebra::{UnitQuaternion, Vector3};
 
-    let parent_point = Vector3::new(
-        parent_connector.point.x,
-        parent_connector.point.y,
-        parent_connector.point.z,
-    );
-    let mut parent_dir = Vector3::new(
-        parent_connector.direction.x,
-        parent_connector.direction.y,
-        parent_connector.direction.z,
-    );
-    if parent_dir.norm() > 0.0001 {
-        parent_dir = parent_dir.normalize();
-    }
+        let parent_point = Vector3::new(
+            parent_connector.point.x,
+            parent_connector.point.y,
+            parent_connector.point.z,
+        );
+        let mut parent_dir = Vector3::new(
+            parent_connector.direction.x,
+            parent_connector.direction.y,
+            parent_connector.direction.z,
+        );
+        if parent_dir.norm() > 0.0001 {
+            parent_dir = parent_dir.normalize();
+        }
 
-    let child_point = Vector3::new(
-        child_connector.point.x,
-        child_connector.point.y,
-        child_connector.point.z,
-    );
-    let mut child_dir = Vector3::new(
-        child_connector.direction.x,
-        child_connector.direction.y,
-        child_connector.direction.z,
-    );
-    if child_dir.norm() > 0.0001 {
-        child_dir = child_dir.normalize();
-    }
+        let child_point = Vector3::new(
+            child_connector.point.x,
+            child_connector.point.y,
+            child_connector.point.z,
+        );
+        let mut child_dir = Vector3::new(
+            child_connector.direction.x,
+            child_connector.direction.y,
+            child_connector.direction.z,
+        );
+        if child_dir.norm() > 0.0001 {
+            child_dir = child_dir.normalize();
+        }
 
-    let gap = self.gap;
-    let shift = self.shift;
-    let rise = self.rise;
-    let rotation_rad = self.rotation * PI / 180.0;
-    let turn_rad = self.turn * PI / 180.0;
-    let tilt_rad = self.tilt * PI / 180.0;
+        let gap = self.gap;
+        let shift = self.shift;
+        let rise = self.rise;
+        let rotation_rad = self.rotation * PI / 180.0;
+        let turn_rad = self.turn * PI / 180.0;
+        let tilt_rad = self.tilt * PI / 180.0;
 
-    let reverse_child_dir = -child_dir;
+        let reverse_child_dir = -child_dir;
 
-    let align_quat: UnitQuaternion<f64> = {
-        let cross_vec = parent_dir.cross(&reverse_child_dir);
-        let cross_len = cross_vec.norm();
-        let dot = parent_dir.dot(&reverse_child_dir);
+        let align_quat: UnitQuaternion<f64> = {
+            let cross_vec = parent_dir.cross(&reverse_child_dir);
+            let cross_len = cross_vec.norm();
+            let dot = parent_dir.dot(&reverse_child_dir);
 
-        if cross_len < 0.01 {
-            if dot > 0.0 {
-                UnitQuaternion::identity()
-            } else if parent_dir.z.abs() < 0.001 {
+            if cross_len < 0.01 {
+                if dot > 0.0 {
+                    UnitQuaternion::identity()
+                } else if parent_dir.z.abs() < 0.001 {
+                    UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
+                } else {
+                    let axis = Vector3::new(0.0, 0.0, 1.0).cross(&parent_dir);
+                    if axis.norm() > 0.0001 {
+                        UnitQuaternion::from_axis_angle(
+                            &nalgebra::Unit::new_normalize(axis.normalize()),
+                            PI,
+                        )
+                    } else {
+                        UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
+                    }
+                }
+            } else {
+                UnitQuaternion::rotation_between(&reverse_child_dir, &parent_dir)
+                    .unwrap_or_else(UnitQuaternion::identity)
+            }
+        };
+        let direction_t = FlattenAffine::quat_to_matrix4(&align_quat);
+
+        let y_axis = Vector3::new(0.0, 1.0, 0.0);
+        let parent_connector_quat = {
+            let dot = y_axis.dot(&parent_dir);
+            if (dot + 1.0).abs() < 0.0001 {
                 UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
             } else {
-                let axis = Vector3::new(0.0, 0.0, 1.0).cross(&parent_dir);
-                if axis.norm() > 0.0001 {
-                    UnitQuaternion::from_axis_angle(
-                        &nalgebra::Unit::new_normalize(axis.normalize()),
-                        PI,
-                    )
-                } else {
-                    UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
-                }
+                UnitQuaternion::rotation_between(&y_axis, &parent_dir)
+                    .unwrap_or_else(UnitQuaternion::identity)
             }
-        } else {
-            UnitQuaternion::rotation_between(&reverse_child_dir, &parent_dir)
-                .unwrap_or_else(UnitQuaternion::identity)
-        }
-    };
-    let direction_t = FlattenAffine::quat_to_matrix4(&align_quat);
+        };
+        let parent_rotation_t = FlattenAffine::quat_to_matrix4(&parent_connector_quat);
 
-    let y_axis = Vector3::new(0.0, 1.0, 0.0);
-    let parent_connector_quat = {
-        let dot = y_axis.dot(&parent_dir);
-        if (dot + 1.0).abs() < 0.0001 {
-            UnitQuaternion::from_axis_angle(&Vector3::z_axis(), PI)
-        } else {
-            UnitQuaternion::rotation_between(&y_axis, &parent_dir)
-                .unwrap_or_else(UnitQuaternion::identity)
-        }
-    };
-    let parent_rotation_t = FlattenAffine::quat_to_matrix4(&parent_connector_quat);
+        let gap_dir =
+            FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
+        let shift_dir =
+            FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+        let raise_dir =
+            FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+        let mut turn_axis =
+            FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
+        let mut tilt_axis =
+            FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
 
-    let gap_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 1.0, 0.0));
-    let shift_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
-    let raise_dir = FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-    let mut turn_axis =
-        FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(0.0, 0.0, 1.0));
-    let mut tilt_axis =
-        FlattenAffine::apply_mat_vec3(&parent_rotation_t, &Vector3::new(1.0, 0.0, 0.0));
+        let mut orientation_t = direction_t;
 
-    let mut orientation_t = direction_t;
-
-    let rotate_quat = UnitQuaternion::from_axis_angle(
-        &nalgebra::Unit::new_normalize(parent_dir),
-        -rotation_rad,
-    );
-    let rotate_t = FlattenAffine::quat_to_matrix4(&rotate_quat);
-    orientation_t = rotate_t * orientation_t;
-
-    turn_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &turn_axis);
-    tilt_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &tilt_axis);
-
-    if turn_axis.norm() > 0.0001 {
-        let turn_quat = UnitQuaternion::from_axis_angle(
-            &nalgebra::Unit::new_normalize(turn_axis.normalize()),
-            turn_rad,
+        let rotate_quat = UnitQuaternion::from_axis_angle(
+            &nalgebra::Unit::new_normalize(parent_dir),
+            -rotation_rad,
         );
-        let turn_t = FlattenAffine::quat_to_matrix4(&turn_quat);
-        orientation_t = turn_t * orientation_t;
-    }
+        let rotate_t = FlattenAffine::quat_to_matrix4(&rotate_quat);
+        orientation_t = rotate_t * orientation_t;
 
-    if tilt_axis.norm() > 0.0001 {
-        let tilt_quat = UnitQuaternion::from_axis_angle(
-            &nalgebra::Unit::new_normalize(tilt_axis.normalize()),
-            tilt_rad,
+        turn_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &turn_axis);
+        tilt_axis = FlattenAffine::apply_mat_vec3(&rotate_t, &tilt_axis);
+
+        if turn_axis.norm() > 0.0001 {
+            let turn_quat = UnitQuaternion::from_axis_angle(
+                &nalgebra::Unit::new_normalize(turn_axis.normalize()),
+                turn_rad,
+            );
+            let turn_t = FlattenAffine::quat_to_matrix4(&turn_quat);
+            orientation_t = turn_t * orientation_t;
+        }
+
+        if tilt_axis.norm() > 0.0001 {
+            let tilt_quat = UnitQuaternion::from_axis_angle(
+                &nalgebra::Unit::new_normalize(tilt_axis.normalize()),
+                tilt_rad,
+            );
+            let tilt_t = FlattenAffine::quat_to_matrix4(&tilt_quat);
+            orientation_t = tilt_t * orientation_t;
+        }
+
+        let center_child_t =
+            FlattenAffine::translation(-child_point.x, -child_point.y, -child_point.z);
+        let mut transform = orientation_t * center_child_t;
+
+        let gap_transform =
+            FlattenAffine::translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
+        let shift_transform = FlattenAffine::translation(
+            shift_dir.x * shift,
+            shift_dir.y * shift,
+            shift_dir.z * shift,
         );
-        let tilt_t = FlattenAffine::quat_to_matrix4(&tilt_quat);
-        orientation_t = tilt_t * orientation_t;
-    }
+        let raise_transform =
+            FlattenAffine::translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
 
-    let center_child_t =
-        FlattenAffine::translation(-child_point.x, -child_point.y, -child_point.z);
-    let mut transform = orientation_t * center_child_t;
+        let translation_t = raise_transform * (shift_transform * gap_transform);
+        transform = translation_t * transform;
 
-    let gap_transform =
-        FlattenAffine::translation(gap_dir.x * gap, gap_dir.y * gap, gap_dir.z * gap);
-    let shift_transform = FlattenAffine::translation(
-        shift_dir.x * shift,
-        shift_dir.y * shift,
-        shift_dir.z * shift,
-    );
-    let raise_transform =
-        FlattenAffine::translation(raise_dir.x * rise, raise_dir.y * rise, raise_dir.z * rise);
-
-    let translation_t = raise_transform * (shift_transform * gap_transform);
-    transform = translation_t * transform;
-
-    let move_to_parent_t =
-        FlattenAffine::translation(parent_point.x, parent_point.y, parent_point.z);
-    transform = move_to_parent_t * transform;
+        let move_to_parent_t =
+            FlattenAffine::translation(parent_point.x, parent_point.y, parent_point.z);
+        transform = move_to_parent_t * transform;
 
         transform
     }
@@ -21403,8 +21529,7 @@ mod tests {
                         .filter(|dr| dr.name == name)
                         .filter(|dr| {
                             dr.parent.as_ref().map(|p| p.guid.as_str()) == Some(pg)
-                                || (dr.parent.is_none()
-                                    && design_families_overlap(dr, parent_des))
+                                || (dr.parent.is_none() && design_families_overlap(dr, parent_des))
                         })
                         .collect();
 
@@ -21446,7 +21571,12 @@ mod tests {
             let mut flat_design = design.clone();
             let types_map = kit_types_map_index(kit);
             let designs_map = kit_designs_map_index(kit);
-            apply_design_diff(&mut flat_design, &flat_design_change.forward, &types_map, &designs_map);
+            apply_design_diff(
+                &mut flat_design,
+                &flat_design_change.forward,
+                &types_map,
+                &designs_map,
+            );
 
             let expected_pieces = expected_design
                 .pieces
@@ -22491,8 +22621,7 @@ mod tests {
                         let kit_before: Kit = kit_from_json_value(kit_value_before.clone());
                         let design_guid_before =
                             find_design_guid_in_kit(&kit_before, &case.design_path);
-                        let before_hashes =
-                            kit_before.compute_flat_hashes(&design_guid_before);
+                        let before_hashes = kit_before.compute_flat_hashes(&design_guid_before);
 
                         let mut kit_value_after = kit_value_before.clone();
                         for mutation in &case.mutations {
@@ -22635,8 +22764,7 @@ mod tests {
                     let kit = load_kit("metabolism.kit.semio.json");
                     let design_guid =
                         find_design_guid_in_kit(&kit, &["Nakagin Capsule Tower".to_string()]);
-                    let (_first_rep, first_cache) =
-                        kit.flatten_design_cached(&design_guid, None);
+                    let (_first_rep, first_cache) = kit.flatten_design_cached(&design_guid, None);
                     assert!(!first_cache.is_empty(), "first cache must not be empty");
                     let (_second_rep, second_cache) =
                         kit.flatten_design_cached(&design_guid, Some(&first_cache));
@@ -23815,9 +23943,7 @@ mod tests {
                         .map(|arr| {
                             arr.iter()
                                 .filter_map(|p| {
-                                    p.get("guid")
-                                        .and_then(|g| g.as_str())
-                                        .map(String::from)
+                                    p.get("guid").and_then(|g| g.as_str()).map(String::from)
                                 })
                                 .collect()
                         })
@@ -24114,8 +24240,7 @@ mod tests {
                             .iter()
                             .find(|q| q.name == case.quality_name)
                             .expect("Quality not found");
-                        let result =
-                            kit.sum_quality_for_design_guid(&design.guid, &quality.guid);
+                        let result = kit.sum_quality_for_design_guid(&design.guid, &quality.guid);
                         assert!(
                             (result - case.expected).abs() < case.tolerance,
                             "Expected ~{}, got {}",
@@ -24312,7 +24437,11 @@ mod tests {
                 assert!(shallow.designs.is_some());
                 assert!(shallow.tags.is_some());
                 assert!(shallow.concepts.is_some());
-                let has_ports = shallow.ports.as_ref().map(|p| !p.is_empty()).unwrap_or(false)
+                let has_ports = shallow
+                    .ports
+                    .as_ref()
+                    .map(|p| !p.is_empty())
+                    .unwrap_or(false)
                     || shallow
                         .families
                         .as_ref()
@@ -25451,8 +25580,7 @@ mod benchmark {
                         {
                             return Some(dr);
                         }
-                        if dr.parent.is_none()
-                            && benchmark_design_families_overlap(dr, parent_des)
+                        if dr.parent.is_none() && benchmark_design_families_overlap(dr, parent_des)
                         {
                             return Some(dr);
                         }
@@ -25596,3 +25724,8 @@ mod benchmark {
     }
 } // 🏋️Benchmarks
 pub use benchmark::*;
+
+#[cfg(not(target_arch = "wasm32"))]
+mod kit_backbone_async;
+#[cfg(not(target_arch = "wasm32"))]
+pub use kit_backbone_async::*;
