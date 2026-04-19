@@ -1,4 +1,26 @@
 scalar DateTime
+scalar Color
+scalar Hash
+
+interface Actor {
+  id: ID!
+  name: String
+  email: String
+  color: Color
+}
+
+type User implements Actor {
+  name: String
+  email: String
+  color: Color
+}
+
+type Agent implements Actor {
+  llm: String!
+  name: String
+  email: String
+  color: Color
+}
 
 input CoordinateInput {
   u: Float!
@@ -1273,16 +1295,36 @@ type KitDiff {
   attributes: AttributesDiff
 }
 
-enum KitOperationKind {
+interface KitInteraction {
+  actor: Actor!
+  timestamp: DateTime!
+}
+
+enum KitCommandKind {
   START_SESSION
   END_SESSION
   UNDO
   REDO
-  NEW_INTERACTION
-  SET_ACTIVE_INTERACTION
-  SELECT_
-  ACTIVE_INTERACTION_UNDO
-  ACTIVE_INTERACTION_REDO
+  START_NEW_OPERATION
+  SET_ACTIVE_OPERATION
+  FINALIZE_OPERATION
+  FINALIZE_ACTIVE_OPERATION
+  FINALIZE_ALL_OPERATIONS
+  ABORT_OPERATION
+  ABORT_ACTIVE_OPERATION
+  ABORT_ALL_OPERATIONS
+  SELECT_PIECE_IN_ACTIVE_SESSION
+  SELECT_PIECES_IN_ACTIVE_SESSION
+  SELECT_CONNECTION_IN_ACTIVE_SESSION
+  SELECT_CONNECTIONS_IN_ACTIVE_SESSION
+  SELECT_CONNECTOR_IN_ACTIVE_SESSION
+  SELECT_CONNECTORS_IN_ACTIVE_SESSION
+  SELECT_MODEL_IN_ACTIVE_SESSION
+  SELECT_MODELS_IN_ACTIVE_SESSION
+  SELECT_DESIGN_IN_ACTIVE_SESSION
+  SELECT_DESIGNS_IN_ACTIVE_SESSION
+  ACTIVE_OPERATION_UNDO
+  ACTIVE_OPERATION_REDO
   CREATE_FIXED_PIECE
   CREATE_FIXED_PIECES
   CREATE_CONNECTED_PIECE
@@ -1308,32 +1350,27 @@ enum KitOperationKind {
   FLATTEN_DESIGN
 }
 
-interface KitOperatio {
-  client: String!
+input StartSessionKitCommandInput {
+
+}
+
+type StartSessionInteraction implements KitInteraction {
+  actor: Actor!
   timestamp: DateTime!
-}
-
-input StartSessionInput {
-
-}
-
-type StartSessionOperation implements KitOperation {
   timeout: Float!
-  author: Author!
-  timestamp: DateTime!
+  lastCheckpoint: DateTime!
   input: StartSessionInput!
 }
 
-interface KitChange implements KitOperation {
-  hash: String!
+interface ChangeKitInteraction implements KitInteraction {
+  actor: Actor!
+  timestamp: DateTime!
+  hash: Hash!
   forward: KitDiff!
   backward: KitDiff!
-  author: Author!
-  timestamp: DateTime!
-  attributes: Attributes!
 }
 
-input CreateFixedPieceInput {
+input CreateFixedPieceChangeKitCommandInput {
   name: String
   description: String
   type: TypeIdInput
@@ -1343,14 +1380,13 @@ input CreateFixedPieceInput {
   attributes: [AttributeInput!]
 }
 
-type CreateFixedPieceOperation implements KitOperation {
+type CreateFixedPieceChangeKitInteraction implements ChangeKitInteraction {
+  actor: Actor!
+  timestamp: DateTime!
   hash: String!
   forward: KitDiff!
   backward: KitDiff!
-  author: Author!
-  timestamp: DateTime!
-  attributes: Attributes!
-  input: CreateFixedPieceInput!
+  input: CreateFixedPieceChangeKitCommandInput!
 }
 
 type KitSnapshot {
@@ -1380,18 +1416,19 @@ type KitSnapshot {
   designs: [DesignSnapshot!]
 }
 
-type KitSession {
+type KitClient {
   id: ID!
   started: DateTime!
-  lastActivity: DateTime!
-  operations: [KitOperation!]
+  lastInteraction: KitInteraction!
+  allowedCommands: [KitCommandKind!]
+  changes: [ChangeKitInteraction!]
 }
 
-type Kit {
+type KitStore {
   id: ID!
   snapshot: KitSnapshot!
-  operations: [KitOperation!]
-  sessions: [KitSession!]
+  changes: [ChangeKitInteraction!]
+  clients: [KitClient!]
 }
 
 type Query {
@@ -1399,6 +1436,6 @@ type Query {
 }
 
 type Mutation {
-  newInteraction(input: NewInteractionInput!): NewInteractionOperation!
-  createFixedPiece(input: CreateFixedPieceInput!): CreateFixedPieceOperation!
+  startSession(input: StartSessionInput!): StartSessionInteraction!
+  createFixedPiece(input: CreateFixedPieceInput!): CreateFixedPieceInteraction!
 }
