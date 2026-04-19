@@ -13715,14 +13715,1174 @@ pub use finder_functions::*;
 mod kit_diff_validation {
     // 📦Kit Diff Validation
     // Kit diff validation: errors vs warnings; optional JSON heal aligned with Go/TS asset cases.
-    include!("kit_diff_validation.inc.rs");
+    // Included by lib.rs (kit_diff_validation). Validates kit diffs; heal scrubs invalid entries.
+
+    use super::*;
+    use serde::{Deserialize, Serialize};
+    use serde_json::{Map, Value};
+    use std::collections::{HashMap, HashSet};
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct KitDiffValidationNote {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub code: Option<String>,
+        pub message: String,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+    pub struct KitDiffValidationResult {
+        pub ok: bool,
+        pub errors: Vec<KitDiffValidationNote>,
+        pub warnings: Vec<KitDiffValidationNote>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub diff: Option<KitDiff>,
+    }
+
+    struct KitDiffValidateCtx {
+        errors: Vec<KitDiffValidationNote>,
+        warnings: Vec<KitDiffValidationNote>,
+        heal: bool,
+    }
+
+    fn push_note(ctx: &mut KitDiffValidateCtx, kind: &str, code: &str, msg: String) {
+        let n = KitDiffValidationNote {
+            code: if code.is_empty() {
+                None
+            } else {
+                Some(code.to_string())
+            },
+            message: msg,
+        };
+        if kind == "errors" {
+            ctx.errors.push(n);
+        } else {
+            ctx.warnings.push(n);
+        }
+    }
+
+    fn kitdiff_deep_equal(a: &Value, b: &Value) -> bool {
+        a == b
+    }
+
+    fn to_map_slice(v: &Value) -> Vec<&Map<String, Value>> {
+        let Some(arr) = v.as_array() else {
+            return vec![];
+        };
+        arr.iter().filter_map(|x| x.as_object()).collect()
+    }
+
+    fn guid_set_from_entities(v: &Value) -> HashSet<String> {
+        to_map_slice(v)
+            .into_iter()
+            .filter_map(|m| m.get("guid").and_then(|g| g.as_str()).map(String::from))
+            .collect()
+    }
+
+    fn filter_updates_by_guid(updates: Vec<Value>, id_key: &str, gid: &str) -> Vec<Value> {
+        updates
+            .into_iter()
+            .filter(|u| {
+                let Some(m) = u.as_object() else {
+                    return true;
+                };
+                let Some(id_obj) = m.get(id_key).and_then(|x| x.as_object()) else {
+                    return true;
+                };
+                let Some(g) = id_obj.get("guid").and_then(|x| x.as_str()) else {
+                    return true;
+                };
+                g != gid
+            })
+            .collect()
+    }
+
+    fn validate_guid_collection_diff<F>(
+        ctx: &mut KitDiffValidateCtx,
+        path: &str,
+        id_key: &str,
+        base: &[Map<String, Value>],
+        raw: &Value,
+        mut on_updated: F,
+    ) -> Option<Value>
+    where
+        F: FnMut(&mut KitDiffValidateCtx, &Map<String, Value>, Option<&Map<String, Value>>, &str),
+    {
+        let Some(raw_map) = raw.as_object() else {
+            return None;
+        };
+        let mut base_by: HashMap<String, &Map<String, Value>> = HashMap::new();
+        for it in base {
+            if let Some(g) = it.get("guid").and_then(|x| x.as_str()) {
+                base_by.insert(g.to_string(), it);
+            }
+        }
+        let mut removed_set: HashSet<String> = HashSet::new();
+        if let Some(arr) = raw_map.get("removed").and_then(|x| x.as_array()) {
+            for r in arr {
+                let Some(rm) = r.as_object() else { continue };
+                if let Some(g) = rm.get("guid").and_then(|x| x.as_str()) {
+                    removed_set.insert(g.to_string());
+                }
+            }
+        }
+        let mut after_remove: HashSet<String> = HashSet::new();
+        for g in base_by.keys() {
+            if !removed_set.contains(g) {
+                after_remove.insert(g.clone());
+            }
+        }
+        let mut h_rem: Option<Vec<Value>> = None;
+        let mut h_upd: Option<Vec<Value>> = None;
+        let mut h_add: Option<Vec<Value>> = None;
+        if ctx.heal {
+            h_rem = raw_map
+                .get("removed")
+                .and_then(|x| x.as_array())
+                .cloned()
+                .map(|a| a.to_vec());
+            h_upd = raw_map
+                .get("updated")
+                .and_then(|x| x.as_array())
+                .cloned()
+                .map(|a| a.to_vec());
+            h_add = raw_map
+                .get("added")
+                .and_then(|x| x.as_array())
+                .cloned()
+                .map(|a| a.to_vec());
+        }
+        if let Some(arr) = raw_map.get("removed").and_then(|x| x.as_array()) {
+            for r in arr {
+                let Some(rm) = r.as_object() else { continue };
+                let rg = rm
+                    .get("guid")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                if !base_by.contains_key(&rg) {
+                    push_note(
+                        ctx,
+                        "warnings",
+                        "kitdiff.remove.missing-target",
+                        format!("{path}: remove references missing {id_key} {rg}"),
+                    );
+                    if let Some(ref mut hr) = h_rem {
+                        hr.retain(|x| {
+                            x.as_object()
+                                .and_then(|m| m.get("guid").and_then(|g| g.as_str()))
+                                != Some(rg.as_str())
+                        });
+                    }
+                }
+            }
+        }
+        let mut add_by: HashMap<String, Map<String, Value>> = HashMap::new();
+        if let Some(arr) = raw_map.get("added").and_then(|x| x.as_array()) {
+            for a in arr {
+                let Some(am) = a.as_object() else { continue };
+                if let Some(g) = am.get("guid").and_then(|x| x.as_str()) {
+                    add_by.insert(g.to_string(), am.clone());
+                }
+            }
+        }
+        if let Some(arr) = raw_map.get("removed").and_then(|x| x.as_array()) {
+            for r in arr {
+                let Some(rm) = r.as_object() else { continue };
+                let rg = rm
+                    .get("guid")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let orig = base_by.get(&rg).copied();
+                let add = add_by.get(&rg);
+                if let (Some(orig), Some(add)) = (orig, add) {
+                    let orig_v = Value::Object((*orig).clone());
+                    let add_v = Value::Object(add.clone());
+                    if kitdiff_deep_equal(&orig_v, &add_v) {
+                        push_note(
+                            ctx,
+                            "warnings",
+                            "kitdiff.cycle.noop-restore",
+                            format!(
+                                "{path}: removed and re-added {id_key} {rg} are deeply equal (no effective change)"
+                            ),
+                        );
+                        if ctx.heal {
+                            if let Some(ref mut hr) = h_rem {
+                                hr.retain(|x| {
+                                    x.as_object()
+                                        .and_then(|m| m.get("guid").and_then(|g| g.as_str()))
+                                        != Some(rg.as_str())
+                                });
+                            }
+                            if let Some(ref mut ha) = h_add {
+                                ha.retain(|x| {
+                                    x.as_object()
+                                        .and_then(|m| m.get("guid").and_then(|g| g.as_str()))
+                                        != Some(rg.as_str())
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let mut seen_add: HashSet<String> = HashSet::new();
+        if let Some(arr) = raw_map.get("added").and_then(|x| x.as_array()) {
+            for a in arr {
+                let Some(am) = a.as_object() else { continue };
+                let ag = am
+                    .get("guid")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                if seen_add.contains(&ag) {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.add.duplicate-in-diff",
+                        format!("{path}: duplicate added {id_key} guid {ag}"),
+                    );
+                    if let Some(ref mut ha) = h_add {
+                        let mut first = true;
+                        let mut na: Vec<Value> = vec![];
+                        for x in ha.drain(..) {
+                            let skip = x
+                                .as_object()
+                                .and_then(|m| m.get("guid").and_then(|g| g.as_str()))
+                                == Some(ag.as_str());
+                            if skip {
+                                if first {
+                                    na.push(x);
+                                    first = false;
+                                }
+                                continue;
+                            }
+                            na.push(x);
+                        }
+                        *ha = na;
+                    }
+                }
+                seen_add.insert(ag.clone());
+                if after_remove.contains(&ag) {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.add.duplicate-guid",
+                        format!("{path}: cannot add {id_key} {ag} that still exists after removes"),
+                    );
+                    if let Some(ref mut ha) = h_add {
+                        ha.retain(|x| {
+                            x.as_object()
+                                .and_then(|m| m.get("guid").and_then(|g| g.as_str()))
+                                != Some(ag.as_str())
+                        });
+                    }
+                }
+            }
+        }
+        if let Some(arr) = raw_map.get("updated").and_then(|x| x.as_array()) {
+            for u in arr {
+                let Some(um) = u.as_object() else { continue };
+                let Some(id_obj) = um.get(id_key).and_then(|x| x.as_object()) else {
+                    continue;
+                };
+                let gid = id_obj
+                    .get("guid")
+                    .and_then(|x| x.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let p = format!("{path}.{id_key}[{gid}]");
+                if gid.is_empty() {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.update.bad-id",
+                        format!("{p}: missing {id_key} id"),
+                    );
+                    if let Some(ref mut hu) = h_upd {
+                        *hu = filter_updates_by_guid(std::mem::take(hu), id_key, &gid);
+                    }
+                    continue;
+                }
+                if !after_remove.contains(&gid) {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.update.missing-target",
+                        format!("{p}: update targets {id_key} not present after removes"),
+                    );
+                    if let Some(ref mut hu) = h_upd {
+                        *hu = filter_updates_by_guid(std::mem::take(hu), id_key, &gid);
+                    }
+                    continue;
+                }
+                let Some(item) = base_by.get(&gid).copied() else {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.update.missing-base",
+                        format!("{p}: {id_key} not found in base kit"),
+                    );
+                    if let Some(ref mut hu) = h_upd {
+                        *hu = filter_updates_by_guid(std::mem::take(hu), id_key, &gid);
+                    }
+                    continue;
+                };
+                let dm = um.get("diff").and_then(|d| d.as_object());
+                on_updated(ctx, item, dm, &p);
+            }
+        }
+        if !ctx.heal {
+            return None;
+        }
+        let mut out = Map::new();
+        if let Some(ref hr) = h_rem {
+            if !hr.is_empty() {
+                out.insert("removed".into(), Value::Array(hr.clone()));
+            }
+        }
+        if let Some(ref hu) = h_upd {
+            if !hu.is_empty() {
+                out.insert("updated".into(), Value::Array(hu.clone()));
+            }
+        }
+        if let Some(ref ha) = h_add {
+            if !ha.is_empty() {
+                out.insert("added".into(), Value::Array(ha.clone()));
+            }
+        }
+        if out.is_empty() {
+            None
+        } else {
+            Some(Value::Object(out))
+        }
+    }
+
+    struct RefSets {
+        type_guids: HashSet<String>,
+        design_guids: HashSet<String>,
+        author_guids: HashSet<String>,
+    }
+
+    fn validate_design_diff_nested(
+        ctx: &mut KitDiffValidateCtx,
+        kit_map: &Map<String, Value>,
+        design: &Map<String, Value>,
+        diff: Option<&Map<String, Value>>,
+        path: &str,
+        refs: &RefSets,
+    ) {
+        let Some(diff) = diff else {
+            return;
+        };
+        if let Some(p) = diff.get("parent").and_then(|x| x.as_object()) {
+            if let Some(pg) = p.get("guid").and_then(|x| x.as_str()) {
+                if !pg.is_empty() && !refs.design_guids.contains(pg) {
+                    push_note(
+                        ctx,
+                        "errors",
+                        "kitdiff.ref.design-parent-missing",
+                        format!("{path}: parent design {pg} not in kit"),
+                    );
+                }
+                if let Some(dg) = design.get("guid").and_then(|x| x.as_str()) {
+                    if pg == dg {
+                        push_note(
+                            ctx,
+                            "errors",
+                            "kitdiff.ref.design-parent-self",
+                            format!("{path}: design cannot be its own parent"),
+                        );
+                    }
+                }
+            }
+        }
+        if let Some(da) = diff.get("authors") {
+            if let Some(arr) = da.as_array() {
+                for a in arr {
+                    let Some(am) = a.as_object() else { continue };
+                    if let Some(g) = am.get("guid").and_then(|x| x.as_str()) {
+                        if !g.is_empty() && !refs.author_guids.contains(g) {
+                            push_note(
+                                ctx,
+                                "errors",
+                                "kitdiff.ref.author-missing",
+                                format!("{path}: author {g} not in kit"),
+                            );
+                        }
+                    }
+                }
+            } else if let Some(dm) = da.as_object() {
+                let auth_base: Vec<Map<String, Value>> = kit_map
+                    .get("authors")
+                    .map(|v| {
+                        to_map_slice(v)
+                            .into_iter()
+                            .map(|m| (*m).clone())
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let nested = Value::Object(dm.clone());
+                let _ = validate_guid_collection_diff(
+                    ctx,
+                    &format!("{path}.authors"),
+                    "author",
+                    &auth_base,
+                    &nested,
+                    |_, _, _, _| {},
+                );
+            }
+        }
+        if let Some(pd) = diff.get("pieces").and_then(|x| x.as_object()) {
+            let pieces_base: Vec<Map<String, Value>> = design
+                .get("pieces")
+                .map(|v| {
+                    to_map_slice(v)
+                        .into_iter()
+                        .map(|m| (*m).clone())
+                        .collect()
+                })
+                .unwrap_or_default();
+            let pv = Value::Object(pd.clone());
+            let _ = validate_guid_collection_diff(
+                ctx,
+                &format!("{path}.pieces"),
+                "piece",
+                &pieces_base,
+                &pv,
+                |_, _, _, _| {},
+            );
+            if let Some(arr) = pd.get("added").and_then(|x| x.as_array()) {
+                for a in arr {
+                    let Some(am) = a.as_object() else { continue };
+                    let tg = am
+                        .get("type")
+                        .and_then(|x| x.as_object())
+                        .and_then(|t| t.get("guid").and_then(|x| x.as_str()))
+                        .unwrap_or("")
+                        .to_string();
+                    if !tg.is_empty() && !refs.type_guids.contains(&tg) {
+                        push_note(
+                            ctx,
+                            "errors",
+                            "kitdiff.ref.piece-type-missing",
+                            format!("{path}.pieces.added: type {tg} not in kit"),
+                        );
+                    }
+                    let dg = am
+                        .get("design")
+                        .and_then(|x| x.as_object())
+                        .and_then(|d| d.get("guid").and_then(|x| x.as_str()))
+                        .unwrap_or("")
+                        .to_string();
+                    if !dg.is_empty() && !refs.design_guids.contains(&dg) {
+                        push_note(
+                            ctx,
+                            "errors",
+                            "kitdiff.ref.piece-design-missing",
+                            format!("{path}.pieces.added: subdesign {dg} not in kit"),
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    fn merge_top_level_guid_coll<F>(
+        ctx: &mut KitDiffValidateCtx,
+        kit_map: &Map<String, Value>,
+        diff_map: &Map<String, Value>,
+        out_diff: &mut Option<Map<String, Value>>,
+        heal: bool,
+        key: &str,
+        id_key: &str,
+        arr_key: &str,
+        mut on_updated: F,
+    ) where
+        F: FnMut(&mut KitDiffValidateCtx, &Map<String, Value>, Option<&Map<String, Value>>, &str),
+    {
+        let Some(part) = diff_map.get(key) else {
+            return;
+        };
+        let base_slice: Vec<Map<String, Value>> = kit_map
+            .get(arr_key)
+            .map(|v| {
+                to_map_slice(v)
+                    .into_iter()
+                    .map(|m| (*m).clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        let fixed = validate_guid_collection_diff(ctx, key, id_key, &base_slice, part, |c, item, dm, p| {
+            on_updated(c, item, dm, p);
+        });
+        if heal {
+            if let Some(od) = out_diff {
+                match fixed {
+                    Some(v) => {
+                        od.insert(key.to_string(), v);
+                    }
+                    None => {
+                        od.remove(key);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn validate_kit_diff(kit: &Kit, diff: &KitDiff, heal: bool) -> KitDiffValidationResult {
+        let mut ctx = KitDiffValidateCtx {
+            errors: vec![],
+            warnings: vec![],
+            heal,
+        };
+        let km = match serde_json::to_value(kit) {
+            Ok(v) => v,
+            Err(_) => {
+                return KitDiffValidationResult {
+                    ok: false,
+                    errors: vec![KitDiffValidationNote {
+                        code: Some("kitdiff.internal".into()),
+                        message: "failed to serialize kit".into(),
+                    }],
+                    warnings: vec![],
+                    diff: None,
+                };
+            }
+        };
+        let dm = match serde_json::to_value(diff) {
+            Ok(v) => v,
+            Err(_) => {
+                return KitDiffValidationResult {
+                    ok: false,
+                    errors: vec![KitDiffValidationNote {
+                        code: Some("kitdiff.internal".into()),
+                        message: "failed to serialize diff".into(),
+                    }],
+                    warnings: vec![],
+                    diff: None,
+                };
+            }
+        };
+        let Some(kit_map) = km.as_object() else {
+            return KitDiffValidationResult {
+                ok: false,
+                errors: vec![KitDiffValidationNote {
+                    code: Some("kitdiff.internal".into()),
+                    message: "kit json not an object".into(),
+                }],
+                warnings: vec![],
+                diff: None,
+            };
+        };
+        let Some(diff_map) = dm.as_object() else {
+            return KitDiffValidationResult {
+                ok: false,
+                errors: vec![KitDiffValidationNote {
+                    code: Some("kitdiff.internal".into()),
+                    message: "diff json not an object".into(),
+                }],
+                warnings: vec![],
+                diff: None,
+            };
+        };
+        let mut out_diff: Option<Map<String, Value>> = if heal {
+            Some(diff_map.clone())
+        } else {
+            None
+        };
+        let refs = RefSets {
+            type_guids: guid_set_from_entities(kit_map.get("types").unwrap_or(&Value::Null)),
+            design_guids: guid_set_from_entities(kit_map.get("designs").unwrap_or(&Value::Null)),
+            author_guids: guid_set_from_entities(kit_map.get("authors").unwrap_or(&Value::Null)),
+        };
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "types",
+            "type",
+            "types",
+            |_, _, _, _| {},
+        );
+        let refs_clone = RefSets {
+            type_guids: refs.type_guids.clone(),
+            design_guids: refs.design_guids.clone(),
+            author_guids: refs.author_guids.clone(),
+        };
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "designs",
+            "design",
+            "designs",
+            |c, item, dm, p| {
+                validate_design_diff_nested(c, kit_map, item, dm, p, &refs_clone);
+            },
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "tags",
+            "tag",
+            "tags",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "concepts",
+            "concept",
+            "concepts",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "ports",
+            "port",
+            "ports",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "qualities",
+            "quality",
+            "qualities",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "files",
+            "file",
+            "files",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "folders",
+            "folder",
+            "folders",
+            |_, _, _, _| {},
+        );
+        merge_top_level_guid_coll(
+            &mut ctx,
+            kit_map,
+            diff_map,
+            &mut out_diff,
+            heal,
+            "authors",
+            "author",
+            "authors",
+            |_, _, _, _| {},
+        );
+        if let Some(a) = diff_map.get("attributes") {
+            let attr_base: Vec<Map<String, Value>> = kit_map
+                .get("attributes")
+                .map(|v| {
+                    to_map_slice(v)
+                        .into_iter()
+                        .map(|m| (*m).clone())
+                        .collect()
+                })
+                .unwrap_or_default();
+            let _ = validate_guid_collection_diff(
+                &mut ctx,
+                "kit.attributes",
+                "attribute",
+                &attr_base,
+                a,
+                |_, _, _, _| {},
+            );
+        }
+        let ok = ctx.errors.is_empty();
+        let diff_out = if heal {
+            out_diff.and_then(|m| {
+                if m.is_empty() {
+                    None
+                } else {
+                    serde_json::from_value(Value::Object(m)).ok()
+                }
+            })
+        } else {
+            None
+        };
+        KitDiffValidationResult {
+            ok,
+            errors: ctx.errors,
+            warnings: ctx.warnings,
+            diff: diff_out,
+        }
+    }
+
 } // 📦Kit Diff Validation
 pub use kit_diff_validation::*;
 
 mod kit_graph {
     // 📇Kit Graph Session
     // Parallel to TypeScript `commitKitGraphChange`: `KitGraphChange`, backbone hook, mutex-backed session, transactions, undo stacks.
-    include!("kit_graph.inc.rs");
+    // Included by lib.rs (`mod kit_graph`). TypeScript-parallel graph commit: `KitGraphChange`, session, mutex, transactions, history.
+
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    use super::*;
+
+    // ——— KitGraphChange (aligns with TypeScript `KitChange` for graph mutations: diffs + pre-apply validation)
+
+    /// Bidirectional kit graph edit with [`KitDiffValidationResult`] captured before [`apply_kit_diff`].
+    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    pub struct KitGraphChange {
+        pub forward: KitDiff,
+        pub backward: KitDiff,
+        pub validation: KitDiffValidationResult,
+    }
+
+    /// [`KitGraphChange`] from precomputed diffs without running the validation pipeline (validation is a no-op success).
+    pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGraphChange {
+        KitGraphChange {
+            forward,
+            backward,
+            validation: KitDiffValidationResult {
+                ok: true,
+                errors: vec![],
+                warnings: vec![],
+                diff: None,
+            },
+        }
+    }
+
+    // ——— Backbone (TypeScript `Backbone` parallel)
+
+    /// Notified after a successful graph commit (see [`KitGraphSession::commit`]).
+    pub trait KitBackbone {
+        fn changed(&mut self, change: &KitGraphChange);
+
+        /// Optional hook for inbound remote edits. Default: no-op.
+        ///
+        /// Callers must **not** invoke `commit_inbound` synchronously if that re-enters the same
+        /// [`KitGraphSession`] lock (deadlock). Prefer a channel or queued apply. TODO: structured inbound pipeline.
+        fn attach(&mut self, _kit: &mut Kit, _commit_inbound: &mut dyn FnMut(KitDiff)) {}
+    }
+
+    // ——— Commit options (TypeScript `KitCommitOptions`)
+
+    #[derive(Debug, Clone)]
+    pub struct KitCommitOptions {
+        pub transaction_id: Option<String>,
+        pub notify_backbone: bool,
+        pub skip_global_history: bool,
+    }
+
+    impl Default for KitCommitOptions {
+        fn default() -> Self {
+            Self {
+                transaction_id: None,
+                notify_backbone: true,
+                skip_global_history: false,
+            }
+        }
+    }
+
+    // ——— Session (mutex + transactions + undo stacks)
+
+    struct KitOpenTransaction {
+        start_kit: Kit,
+        steps: Vec<KitGraphChange>,
+        redo_steps: Vec<KitGraphChange>,
+    }
+
+    struct KitGraphSessionInner {
+        kit: Kit,
+        strict_mode: bool,
+        is_conflicted: bool,
+        open_transactions: HashMap<String, KitOpenTransaction>,
+        history_past: Vec<KitGraphChange>,
+        history_future: Vec<KitGraphChange>,
+        backbone: Option<Box<dyn KitBackbone>>,
+    }
+
+    /// Managed kit graph: serializes mutations with a mutex, tracks transactions and undo/redo stacks (TypeScript `Kit` private state parallel).
+    pub struct KitGraphSession {
+        inner: Mutex<KitGraphSessionInner>,
+    }
+
+    impl KitGraphSession {
+        pub fn new(kit: Kit) -> Self {
+            Self {
+                inner: Mutex::new(KitGraphSessionInner {
+                    kit,
+                    strict_mode: false,
+                    is_conflicted: false,
+                    open_transactions: HashMap::new(),
+                    history_past: vec![],
+                    history_future: vec![],
+                    backbone: None,
+                }),
+            }
+        }
+
+        pub fn with_backbone(kit: Kit, backbone: Box<dyn KitBackbone>) -> Self {
+            Self {
+                inner: Mutex::new(KitGraphSessionInner {
+                    kit,
+                    strict_mode: false,
+                    is_conflicted: false,
+                    open_transactions: HashMap::new(),
+                    history_past: vec![],
+                    history_future: vec![],
+                    backbone: Some(backbone),
+                }),
+            }
+        }
+
+        pub fn set_backbone(&self, backbone: Option<Box<dyn KitBackbone>>) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            g.backbone = backbone;
+            Ok(())
+        }
+
+        pub fn set_strict_mode(&self, strict: bool) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            g.strict_mode = strict;
+            Ok(())
+        }
+
+        pub fn clear_conflict(&self) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            g.is_conflicted = false;
+            Ok(())
+        }
+
+        pub fn map_kit<T, F: FnOnce(&Kit) -> T>(&self, f: F) -> Result<T> {
+            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            Ok(f(&g.kit))
+        }
+
+        pub fn map_kit_mut<T, F: FnOnce(&mut Kit) -> T>(&self, f: F) -> Result<T> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            Ok(f(&mut g.kit))
+        }
+
+        /// Validates against the current kit, inverts, applies, then records transaction/history/backbone (see [`KitCommitOptions`]).
+        pub fn commit(&self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            g.commit_graph(diff, opts)
+        }
+
+        pub fn start_transaction(&self) -> Result<String> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit has unresolved validation conflicts; call clear_conflict() first".into(),
+                });
+            }
+            let id = guid();
+            let start_kit = g.kit.clone();
+            g.open_transactions.insert(
+                id.clone(),
+                KitOpenTransaction {
+                    start_kit,
+                    steps: vec![],
+                    redo_steps: vec![],
+                },
+            );
+            Ok(id)
+        }
+
+        pub fn abort_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            let tx = g
+                .open_transactions
+                .remove(transaction_id)
+                .ok_or_else(|| SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted; call clear_conflict() before aborting a transaction".into(),
+                });
+            }
+            for step in tx.steps.iter().rev() {
+                apply_kit_diff(&mut g.kit, &step.backward);
+            }
+            Ok(())
+        }
+
+        pub fn finalize_transaction(&self, transaction_id: &str) -> Result<KitGraphChange> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted; call clear_conflict() before finalizing a transaction".into(),
+                });
+            }
+            let tx = g
+                .open_transactions
+                .remove(transaction_id)
+                .ok_or_else(|| SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                })?;
+            let sk = &tx.start_kit;
+            let forward_raw = get_kit_diff(sk, &g.kit);
+            let validation = validate_kit_diff(sk, &forward_raw, false);
+            if !validation.ok || !validation.errors.is_empty() {
+                g.open_transactions.insert(transaction_id.to_string(), tx);
+                return Err(SemioError::Validation {
+                    message: validation
+                        .errors
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            if g.strict_mode && !validation.warnings.is_empty() {
+                g.open_transactions.insert(transaction_id.to_string(), tx);
+                return Err(SemioError::Validation {
+                    message: validation
+                        .warnings
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            let diff_to_apply = validation.diff.clone().unwrap_or_else(|| forward_raw.clone());
+            let backward = inverse_kit_diff(sk, &diff_to_apply);
+            let squashed = KitGraphChange {
+                forward: diff_to_apply,
+                backward,
+                validation,
+            };
+            g.history_past.push(squashed.clone());
+            g.history_future.clear();
+            if let Some(ref mut bb) = g.backbone {
+                bb.changed(&squashed);
+            }
+            Ok(squashed)
+        }
+
+        pub fn undo_within_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            if !g.open_transactions.contains_key(transaction_id) {
+                return Err(SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                });
+            }
+            let ch = {
+                let tx = g.open_transactions.get_mut(transaction_id).expect("transaction id checked");
+                tx.steps.pop()
+            };
+            let Some(ch) = ch else { return Ok(()) };
+            apply_kit_diff(&mut g.kit, &ch.backward);
+            g.open_transactions
+                .get_mut(transaction_id)
+                .expect("transaction id checked")
+                .redo_steps
+                .push(ch);
+            Ok(())
+        }
+
+        pub fn redo_within_transaction(&self, transaction_id: &str) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            if !g.open_transactions.contains_key(transaction_id) {
+                return Err(SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", transaction_id),
+                });
+            }
+            let ch = {
+                let tx = g.open_transactions.get_mut(transaction_id).expect("transaction id checked");
+                tx.redo_steps.pop()
+            };
+            let Some(ch) = ch else { return Ok(()) };
+            apply_kit_diff(&mut g.kit, &ch.forward);
+            g.open_transactions
+                .get_mut(transaction_id)
+                .expect("transaction id checked")
+                .steps
+                .push(ch);
+            Ok(())
+        }
+
+        pub fn undo_history(&self) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            let Some(ch) = g.history_past.pop() else {
+                return Ok(());
+            };
+            apply_kit_diff(&mut g.kit, &ch.backward);
+            g.history_future.push(ch);
+            Ok(())
+        }
+
+        pub fn redo_history(&self) -> Result<()> {
+            let mut g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            if g.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit is conflicted".into(),
+                });
+            }
+            let Some(ch) = g.history_future.pop() else {
+                return Ok(());
+            };
+            apply_kit_diff(&mut g.kit, &ch.forward);
+            g.history_past.push(ch);
+            Ok(())
+        }
+
+        pub fn can_undo_history(&self) -> Result<bool> {
+            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            Ok(!g.history_past.is_empty())
+        }
+
+        pub fn can_redo_history(&self) -> Result<bool> {
+            let g = self.inner.lock().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+            Ok(!g.history_future.is_empty())
+        }
+    }
+
+    impl KitGraphSessionInner {
+        fn commit_graph(&mut self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+            if self.is_conflicted {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit has unresolved validation conflicts; call clear_conflict() before applying further changes."
+                        .into(),
+                });
+            }
+
+            let validation = validate_kit_diff(&self.kit, &diff, false);
+            if !validation.ok || !validation.errors.is_empty() {
+                self.is_conflicted = true;
+                return Err(SemioError::Validation {
+                    message: validation
+                        .errors
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+            if self.strict_mode && !validation.warnings.is_empty() {
+                self.is_conflicted = true;
+                return Err(SemioError::Validation {
+                    message: validation
+                        .warnings
+                        .iter()
+                        .map(|e| e.message.clone())
+                        .collect::<Vec<_>>()
+                        .join("; "),
+                });
+            }
+
+            let diff_to_apply = validation.diff.clone().unwrap_or_else(|| diff.clone());
+            let backward = inverse_kit_diff(&self.kit, &diff_to_apply);
+            apply_kit_diff(&mut self.kit, &diff_to_apply);
+
+            let change = KitGraphChange {
+                forward: diff_to_apply,
+                backward,
+                validation,
+            };
+
+            if let Some(tx_id) = &opts.transaction_id {
+                let tx = self.open_transactions.get_mut(tx_id).ok_or_else(|| SemioError::InvalidOperation {
+                    message: format!("Unknown transaction {}", tx_id),
+                })?;
+                tx.steps.push(change.clone());
+                tx.redo_steps.clear();
+            } else if !opts.skip_global_history {
+                self.history_past.push(change.clone());
+                self.history_future.clear();
+            }
+
+            let notify_backbone = opts.notify_backbone && opts.transaction_id.is_none();
+            if notify_backbone {
+                if let Some(ref mut bb) = self.backbone {
+                    bb.changed(&change);
+                }
+            }
+
+            self.is_conflicted = false;
+            Ok(change)
+        }
+    }
+
+    /// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
+    pub fn commit_kit_graph_change(session: &KitGraphSession, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+        session.commit(diff, opts)
+    }
+
 }
 pub use kit_graph::*;
 
@@ -13815,7 +14975,959 @@ mod oop {
         }
     }
 
-    include!("oop_store_dto.inc.rs");
+    // Included from `mod oop` in lib.rs — Store / DTO diagram surface.
+
+    use serde_json::{Map, Value};
+    use std::collections::HashMap;
+
+    // ——— DTO bases
+
+    pub trait Dto {
+        fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct IdDto {
+        pub guid: String,
+    }
+
+    impl IdDto {
+        pub fn new(guid: impl Into<String>) -> Self {
+            Self {
+                guid: guid.into(),
+            }
+        }
+
+        pub fn as_guid(&self) -> &str {
+            self.guid.as_str()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.guid.is_empty()
+        }
+    }
+
+    impl Dto for IdDto {}
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct InputDto {
+        pub fields: Map<String, Value>,
+        #[serde(default)]
+        pub references: HashMap<String, IdDto>,
+        #[serde(default)]
+        pub children: HashMap<String, Vec<InputDto>>,
+    }
+
+    impl InputDto {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        pub fn set(&mut self, field: impl Into<String>, value: Value) {
+            self.fields.insert(field.into(), value);
+        }
+
+        pub fn add_reference(&mut self, field: impl Into<String>, reference: IdDto) {
+            self.references.insert(field.into(), reference);
+        }
+
+        pub fn add_child(&mut self, field: impl Into<String>, child: InputDto) {
+            self.children
+                .entry(field.into())
+                .or_default()
+                .push(child);
+        }
+
+        pub fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    impl Dto for InputDto {
+        fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    pub trait MetadataDto: Dto {
+        fn add_reference(&mut self, field: impl Into<String>, reference: IdDto);
+        fn has_reference(&self, field: &str) -> bool;
+        fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct MetadataRecord {
+        pub payload: Value,
+        pub references: HashMap<String, IdDto>,
+    }
+
+    impl Dto for MetadataRecord {}
+
+    impl MetadataDto for MetadataRecord {
+        fn add_reference(&mut self, field: impl Into<String>, reference: IdDto) {
+            self.references.insert(field.into(), reference);
+        }
+
+        fn has_reference(&self, field: &str) -> bool {
+            self.references.contains_key(field)
+        }
+    }
+
+    pub trait ShallowDtoTrait: MetadataDto {
+        fn add_child_view(&mut self, field: impl Into<String>, child: MetadataRecord);
+        fn flatten_children(&self) -> Vec<MetadataRecord> {
+            vec![]
+        }
+        fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct ShallowRecord {
+        pub meta: MetadataRecord,
+        #[serde(default)]
+        pub child_views: HashMap<String, Vec<MetadataRecord>>,
+    }
+
+    impl Dto for ShallowRecord {}
+
+    impl MetadataDto for ShallowRecord {
+        fn add_reference(&mut self, field: impl Into<String>, reference: IdDto) {
+            self.meta.add_reference(field, reference);
+        }
+
+        fn has_reference(&self, field: &str) -> bool {
+            self.meta.has_reference(field)
+        }
+    }
+
+    impl ShallowDtoTrait for ShallowRecord {
+        fn add_child_view(&mut self, field: impl Into<String>, child: MetadataRecord) {
+            self.child_views.entry(field.into()).or_default().push(child);
+        }
+
+        fn flatten_children(&self) -> Vec<MetadataRecord> {
+            self.child_views.values().flatten().cloned().collect()
+        }
+    }
+
+    pub trait FullDtoTrait: Dto {
+        fn add_reference_full(&mut self, field: impl Into<String>, reference: IdDto);
+        fn add_child(&mut self, field: impl Into<String>, child: FullRecord);
+        fn add_derived(&mut self, key: impl Into<String>, value: Value);
+        fn compute_derived(&mut self) {}
+        fn validate(&self) -> bool {
+            true
+        }
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    pub struct FullRecord {
+        pub root: Value,
+        pub references: HashMap<String, IdDto>,
+        #[serde(default)]
+        pub children: HashMap<String, Vec<FullRecord>>,
+        #[serde(default)]
+        pub derived: Map<String, Value>,
+    }
+
+    impl Dto for FullRecord {}
+
+    impl FullDtoTrait for FullRecord {
+        fn add_reference_full(&mut self, field: impl Into<String>, reference: IdDto) {
+            self.references.insert(field.into(), reference);
+        }
+
+        fn add_child(&mut self, field: impl Into<String>, child: FullRecord) {
+            self.children.entry(field.into()).or_default().push(child);
+        }
+
+        fn add_derived(&mut self, key: impl Into<String>, value: Value) {
+            self.derived.insert(key.into(), value);
+        }
+
+        fn compute_derived(&mut self) {}
+    }
+
+        // region generated oop_dto_entities (semio/rs/gen_dto_wrappers.py)
+        // Per-entity DTO newtypes (generated)
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct KitIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct KitInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct KitMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct KitShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct KitFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct AttributeIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AttributeInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AttributeMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AttributeShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AttributeFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct AuthorIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AuthorInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AuthorMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AuthorShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct AuthorFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct LocationIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LocationInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LocationMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LocationShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LocationFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct FolderIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FolderInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FolderMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FolderShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FolderFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct FileIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FileInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FileMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FileShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct FileFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct ConceptIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConceptInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConceptMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConceptShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConceptFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct QualityIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct QualityInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct QualityMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct QualityShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct QualityFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct BenchmarkIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct BenchmarkInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct BenchmarkMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct BenchmarkShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct BenchmarkFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct StatIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct StatInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct StatMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct StatShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct StatFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct TagIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TagInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TagMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TagShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TagFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct ModelIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ModelInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ModelMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ModelShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ModelFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct PortIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PortInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PortMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PortShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PortFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct ConnectorIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectorInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectorMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectorShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectorFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct PropIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PropInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PropMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PropShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PropFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct LayerIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LayerInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LayerMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LayerShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct LayerFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct GroupIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct GroupInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct GroupMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct GroupShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct GroupFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct PieceIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PieceInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PieceMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PieceShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct PieceFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct ConnectionIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectionInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectionMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectionShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct ConnectionFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct TypeIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TypeInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TypeMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TypeShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct TypeFullDto(pub FullRecord);
+        #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+        pub struct DesignIdDto(pub IdDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct DesignInputDto(pub InputDto);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct DesignMetadataDto(pub MetadataRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct DesignShallowDto(pub ShallowRecord);
+
+        #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+        pub struct DesignFullDto(pub FullRecord);
+        // endregion generated oop_dto_entities
+
+    // ——— Store trait (diagram: abstract Store)
+
+    pub trait Store: HasGuid + Serialize {
+        fn get_name(&self) -> &str;
+        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()>;
+        fn to_id_dto(&self) -> IdDto {
+            IdDto::new(self.guid())
+        }
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+        fn to_metadata_dto(&self) -> MetadataRecord {
+            MetadataRecord {
+                payload: serde_json::to_value(self).unwrap_or(Value::Null),
+                references: HashMap::new(),
+            }
+        }
+        fn to_shallow_dto(&self) -> ShallowRecord {
+            ShallowRecord {
+                meta: self.to_metadata_dto(),
+                child_views: HashMap::new(),
+            }
+        }
+        fn to_full_dto(&self) -> FullRecord {
+            FullRecord {
+                root: serde_json::to_value(self).unwrap_or(Value::Null),
+                references: HashMap::new(),
+                children: HashMap::new(),
+                derived: Map::new(),
+            }
+        }
+    }
+
+    fn json_input_from<T: Serialize + ?Sized>(v: &T) -> InputDto {
+        match serde_json::to_value(v) {
+            Ok(Value::Object(map)) => InputDto {
+                fields: map,
+                references: HashMap::new(),
+                children: HashMap::new(),
+            },
+            Ok(other) => {
+                let mut i = InputDto::new();
+                i.set("_", other);
+                i
+            }
+            Err(_) => InputDto::new(),
+        }
+    }
+
+    impl Store for Kit {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
+            if self.guid != kit.guid {
+                return Err(SemioError::InvalidOperation {
+                    message: "Kit Store update_description requires context kit with matching guid".into(),
+                });
+            }
+            kit.description = Some(description.to_string());
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Concept {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
+            Concept::update_description(self, kit, description)
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Tag {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
+            Tag::update_description(self, kit, description)
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Attribute {
+        fn get_name(&self) -> &str {
+            &self.key
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Author {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Folder {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for File {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Quality {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Benchmark {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Stat {
+        fn get_name(&self) -> &str {
+            self.guid.as_str()
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Port {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Connector {
+        fn get_name(&self) -> &str {
+            self.name.as_deref().unwrap_or(self.guid.as_str())
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Prop {
+        fn get_name(&self) -> &str {
+            self.guid.as_str()
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Layer {
+        fn get_name(&self) -> &str {
+            &self.path
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Group {
+        fn get_name(&self) -> &str {
+            self.name.as_deref().unwrap_or(self.guid.as_str())
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Piece {
+        fn get_name(&self) -> &str {
+            self.name.as_deref().unwrap_or(self.guid.as_str())
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Connection {
+        fn get_name(&self) -> &str {
+            self.guid.as_str()
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Type {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Design {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, kit: &mut Kit, description: &str) -> Result<()> {
+            let before = kit
+                .designs
+                .as_ref()
+                .and_then(|d| d.iter().find(|x| x.guid == self.guid))
+                .ok_or_else(|| SemioError::NotFound {
+                    kind: "Design".into(),
+                    guid: self.guid.clone(),
+                })?
+                .clone();
+            let mut after = before.clone();
+            after.description = Some(description.to_string());
+            let kd = KitDiff {
+                guid: kit.guid.clone(),
+                designs: Some(CollectionDiff {
+                    updated: Some(vec![DiffUpdate {
+                        key: "design".into(),
+                        guid: self.guid.clone(),
+                        diff: before.diff_from(&after),
+                    }]),
+                    removed: None,
+                    added: None,
+                }),
+                ..KitDiff::default()
+            };
+            apply_kit_diff(kit, &kd);
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Model {
+        fn get_name(&self) -> &str {
+            self.name.as_deref().unwrap_or(self.guid.as_str())
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    impl Store for Location {
+        fn get_name(&self) -> &str {
+            &self.name
+        }
+
+        fn update_description(&self, _kit: &mut Kit, _description: &str) -> Result<()> {
+            Ok(())
+        }
+
+        fn to_input_dto(&self) -> InputDto {
+            json_input_from(self)
+        }
+    }
+
+    // ——— Diagram type aliases (*Store)
+
+    pub type KitStore = Kit;
+    pub type AttributeStore = Attribute;
+    pub type AuthorStore = Author;
+    pub type LocationStore = Location;
+    pub type FolderStore = Folder;
+    pub type FileStore = File;
+    pub type ConceptStore = Concept;
+    pub type QualityStore = Quality;
+    pub type BenchmarkStore = Benchmark;
+    pub type StatStore = Stat;
+    pub type TagStore = Tag;
+    pub type ModelStore = Model;
+    pub type PortStore = Port;
+    pub type ConnectorStore = Connector;
+    pub type PropStore = Prop;
+    pub type LayerStore = Layer;
+    pub type GroupStore = Group;
+    pub type PieceStore = Piece;
+    pub type ConnectionStore = Connection;
+    pub type TypeStore = Type;
+    pub type DesignStore = Design;
+
+    // ——— Selection carrier (diagram: KitOperation uses Store)
+
+    #[derive(Debug, Clone)]
+    pub enum AnyStore {
+        Kit(Kit),
+        Tag(Tag),
+        Concept(Concept),
+        Port(Port),
+        Quality(Quality),
+        Type(Type),
+        Design(Design),
+        File(File),
+        Folder(Folder),
+        Author(Author),
+        Attribute(Attribute),
+        Model(Model),
+        Connector(Connector),
+        Prop(Prop),
+        Layer(Layer),
+        Group(Group),
+        Piece(Piece),
+        Connection(Connection),
+        Stat(Stat),
+        Benchmark(Benchmark),
+        Location(Location),
+    }
+
+    impl HasGuid for AnyStore {
+        fn guid(&self) -> &str {
+            match self {
+                AnyStore::Kit(e) => e.guid.as_str(),
+                AnyStore::Tag(e) => e.guid(),
+                AnyStore::Concept(e) => e.guid(),
+                AnyStore::Port(e) => e.guid(),
+                AnyStore::Quality(e) => e.guid(),
+                AnyStore::Type(e) => e.guid(),
+                AnyStore::Design(e) => e.guid(),
+                AnyStore::File(e) => e.guid(),
+                AnyStore::Folder(e) => e.guid(),
+                AnyStore::Author(e) => e.guid(),
+                AnyStore::Attribute(e) => e.guid(),
+                AnyStore::Model(e) => e.guid(),
+                AnyStore::Connector(e) => e.guid(),
+                AnyStore::Prop(e) => e.guid(),
+                AnyStore::Layer(e) => e.guid(),
+                AnyStore::Group(e) => e.guid(),
+                AnyStore::Piece(e) => e.guid(),
+                AnyStore::Connection(e) => e.guid(),
+                AnyStore::Stat(e) => e.guid(),
+                AnyStore::Benchmark(e) => &e.guid,
+                AnyStore::Location(e) => e.guid.as_str(),
+            }
+        }
+    }
+
+    /// Back-compat name for [`AnyStore`].
+    pub type KitEntity = AnyStore;
+
+    impl Side {
+        pub fn set_piece_store(&mut self, piece: &PieceStore) {
+            self.piece = PieceId {
+                guid: piece.guid.clone(),
+            };
+        }
+
+        pub fn set_design_piece_store(&mut self, design_piece: &PieceStore) {
+            self.design_piece = Some(PieceId {
+                guid: design_piece.guid.clone(),
+            });
+        }
+
+        pub fn set_connector_store(&mut self, connector: &ConnectorStore) {
+            self.connector = Some(ConnectorId {
+                guid: connector.guid.clone(),
+            });
+        }
+    }
+
 
     pub trait Actor {
         fn get_name(&self) -> &str;
