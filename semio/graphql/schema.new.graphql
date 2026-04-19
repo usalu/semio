@@ -1,0 +1,1870 @@
+"""Arbitrary structured payloads such as diff previews, clipboard payloads or backend-specific metadata."""
+scalar JSON
+
+scalar DateTime
+scalar Color
+scalar Hash
+
+type PageInfo {
+  startCursor: String
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+}
+
+enum ActorKind {
+  USER
+  AGENT
+}
+
+interface Actor {
+  id: ID!
+  name: String
+  email: String
+  color: Color
+}
+
+type User implements Actor {
+  id: ID!
+  name: String
+  email: String
+  color: Color
+}
+
+type Agent implements Actor {
+  id: ID!
+  llm: String!
+  name: String
+  email: String
+  color: Color
+}
+
+input SessionActorInput {
+  id: ID!
+  kind: ActorKind!
+  llm: String
+  name: String
+  email: String
+  color: Color
+}
+
+type Coordinate {
+  u: Float!
+  v: Float!
+}
+
+input CoordinateInput {
+  u: Float!
+  v: Float!
+}
+
+type Point {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input PointInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Vector {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+input VectorInput {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Plane {
+  origin: Point!
+  xAxis: Vector!
+  yAxis: Vector!
+}
+
+input PlaneInput {
+  origin: PointInput!
+  xAxis: VectorInput!
+  yAxis: VectorInput!
+}
+
+type Camera {
+  position: Point!
+  forward: Vector!
+  up: Vector!
+}
+
+input CameraInput {
+  position: PointInput!
+  forward: VectorInput!
+  up: VectorInput!
+}
+
+type Attribute {
+  id: ID!
+  key: String!
+  value: String
+  definition: String
+}
+
+input AttributeInput {
+  id: ID!
+  key: String!
+  value: String
+  definition: String
+}
+
+type Location {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+  attributes: [Attribute!]!
+}
+
+input LocationInput {
+  longitude: Float!
+  latitude: Float!
+  altitude: Float
+  attributes: [AttributeInput!]
+}
+
+type Author {
+  id: ID!
+  name: String!
+  email: String!
+  attributes: [Attribute!]!
+}
+
+input AuthorInput {
+  id: ID!
+  name: String!
+  email: String!
+  attributes: [AttributeInput!]
+}
+
+input AuthorPatchInput {
+  name: String
+  email: String
+  attributes: [AttributeInput!]
+}
+
+type Folder {
+  id: ID!
+  kit: Kit!
+  name: String!
+  parent: Folder
+  children: [Folder!]!
+  description: String
+  attributes: [Attribute!]!
+  createdAt: DateTime
+  createdBy: Author
+  updatedAt: DateTime
+  updatedBy: Author
+}
+
+input FolderInput {
+  id: ID!
+  name: String!
+  parentId: ID
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
+}
+
+input FolderPatchInput {
+  name: String
+  parentId: ID
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
+}
+
+type File {
+  id: ID!
+  kit: Kit!
+  name: String!
+  remote: String
+  folder: Folder
+  size: Float
+  hash: String
+  blob: String
+  mime: String
+  createdAt: DateTime
+  createdBy: Author
+  updatedAt: DateTime
+  updatedBy: Author
+}
+
+input FileInput {
+  id: ID!
+  name: String!
+  remote: String
+  folderId: ID
+  size: Float
+  hash: String
+  blob: String
+  mime: String
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
+}
+
+input FilePatchInput {
+  name: String
+  remote: String
+  folderId: ID
+  size: Float
+  hash: String
+  blob: String
+  mime: String
+  createdAt: DateTime
+  createdById: ID
+  updatedAt: DateTime
+  updatedById: ID
+}
+
+type Benchmark {
+  id: ID!
+  name: String!
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: [Attribute!]!
+}
+
+input BenchmarkInput {
+  id: ID!
+  name: String!
+  icon: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+  attributes: [AttributeInput!]
+}
+
+type Quality {
+  id: ID!
+  kit: Kit!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folder: Folder
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [Benchmark!]!
+  attributes: [Attribute!]!
+}
+
+input QualityInput {
+  id: ID!
+  key: String!
+  name: String!
+  description: String
+  uri: String
+  kind: Int
+  folderId: ID
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
+}
+
+input QualityPatchInput {
+  key: String
+  name: String
+  description: String
+  uri: String
+  kind: Int
+  folderId: ID
+  canScale: Boolean
+  defaultSiUnit: String
+  defaultImperialUnit: String
+  min: Float
+  isMinExcluded: Boolean
+  max: Float
+  isMaxExcluded: Boolean
+  defaultValue: Float
+  formula: String
+  icon: String
+  image: String
+  unit: String
+  benchmarks: [BenchmarkInput!]
+  attributes: [AttributeInput!]
+}
+
+type Port {
+  id: ID!
+  kit: Kit!
+  name: String!
+  description: String
+  icon: String
+  maxChildren: Int
+  compatiblePorts: [Port!]!
+  attributes: [Attribute!]!
+}
+
+input PortInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  maxChildren: Int
+  compatiblePortIds: [ID!]
+  attributes: [AttributeInput!]
+}
+
+input PortPatchInput {
+  name: String
+  description: String
+  icon: String
+  maxChildren: Int
+  compatiblePortIds: [ID!]
+  attributes: [AttributeInput!]
+}
+
+type Prop {
+  id: ID!
+  quality: Quality!
+  value: String!
+  unit: String
+  attributes: [Attribute!]!
+}
+
+input PropInput {
+  id: ID!
+  qualityId: ID!
+  value: String!
+  unit: String
+  attributes: [AttributeInput!]
+}
+
+type Tag {
+  id: ID!
+  kit: Kit!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]!
+}
+
+input TagInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+input TagPatchInput {
+  name: String
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+type Concept {
+  id: ID!
+  kit: Kit!
+  name: String!
+  description: String
+  icon: String
+  attributes: [Attribute!]!
+}
+
+input ConceptInput {
+  id: ID!
+  name: String!
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+input ConceptPatchInput {
+  name: String
+  description: String
+  icon: String
+  attributes: [AttributeInput!]
+}
+
+type Model {
+  id: ID!
+  name: String
+  tags: [Tag!]!
+  file: File
+  description: String
+  attributes: [Attribute!]!
+}
+
+input ModelInput {
+  id: ID!
+  name: String
+  tagIds: [ID!]
+  fileId: ID
+  description: String
+  attributes: [AttributeInput!]
+}
+
+type Connector {
+  id: ID!
+  name: String
+  t: Float!
+  point: Point!
+  direction: Vector!
+  description: String
+  port: Port
+  mandatory: Boolean
+  maxChildren: Int
+  props: [Prop!]!
+  attributes: [Attribute!]!
+}
+
+input ConnectorInput {
+  id: ID!
+  name: String
+  t: Float!
+  point: PointInput!
+  direction: VectorInput!
+  description: String
+  portId: ID
+  mandatory: Boolean
+  maxChildren: Int
+  props: [PropInput!]
+  attributes: [AttributeInput!]
+}
+
+type Type {
+  id: ID!
+  kit: Kit!
+  name: String!
+  parent: Type
+  children: [Type!]!
+  isAbstract: Boolean
+  folder: Folder
+  models: [Model!]!
+  connectors: [Connector!]!
+  props: [Prop!]!
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: Location
+  authors: [Author!]!
+  concepts: [Concept!]!
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]!
+}
+
+input TypeInput {
+  id: ID!
+  name: String!
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  models: [ModelInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationInput
+  authorIds: [ID!]
+  conceptIds: [ID!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input TypePatchInput {
+  name: String
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  models: [ModelInput!]
+  connectors: [ConnectorInput!]
+  props: [PropInput!]
+  stock: Int
+  virtual: Boolean
+  unit: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  location: LocationInput
+  authorIds: [ID!]
+  conceptIds: [ID!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+type Layer {
+  id: ID!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: [Attribute!]!
+}
+
+input LayerInput {
+  id: ID!
+  path: String!
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+type Side {
+  piece: Piece!
+  designPiece: Piece
+  connector: Connector
+}
+
+input SideInput {
+  pieceId: ID!
+  designPieceId: ID
+  connectorId: ID
+}
+
+type Connection {
+  id: ID!
+  connected: Side!
+  connecting: Side!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [Attribute!]!
+}
+
+input ConnectionInput {
+  id: ID!
+  connected: SideInput!
+  connecting: SideInput!
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [AttributeInput!]
+}
+
+input ConnectionPatchInput {
+  connected: SideInput
+  connecting: SideInput
+  gap: Float
+  shift: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+  u: Float
+  v: Float
+  description: String
+  attributes: [AttributeInput!]
+}
+
+type Stat {
+  id: ID!
+  quality: Quality!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+input StatInput {
+  id: ID!
+  qualityId: ID!
+  unit: String
+  min: Float
+  minExcluded: Boolean
+  max: Float
+  maxExcluded: Boolean
+}
+
+type Piece {
+  id: ID!
+  design: Design!
+  name: String
+  type: Type
+  designReference: Design
+  plane: Plane
+  center: Coordinate
+  scale: Float
+  mirrorPlane: Plane
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [Prop!]!
+  attributes: [Attribute!]!
+  flatPlane: Plane
+  flatCenter: Coordinate
+  parentPiece: Piece
+  childPieces: [Piece!]!
+}
+
+input PieceInput {
+  id: ID!
+  name: String
+  typeId: ID
+  designReferenceId: ID
+  plane: PlaneInput
+  center: CoordinateInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [PropInput!]
+  attributes: [AttributeInput!]
+}
+
+input PiecePatchInput {
+  name: String
+  typeId: ID
+  designReferenceId: ID
+  plane: PlaneInput
+  center: CoordinateInput
+  scale: Float
+  mirrorPlane: PlaneInput
+  isHidden: Boolean
+  isLocked: Boolean
+  color: String
+  description: String
+  props: [PropInput!]
+  attributes: [AttributeInput!]
+}
+
+type Group {
+  id: ID!
+  pieces: [Piece!]!
+  color: String
+  name: String
+  description: String
+  attributes: [Attribute!]!
+}
+
+input GroupInput {
+  id: ID!
+  pieceIds: [ID!]!
+  color: String
+  name: String
+  description: String
+  attributes: [AttributeInput!]
+}
+
+type Design {
+  id: ID!
+  kit: Kit!
+  name: String!
+  parent: Design
+  children: [Design!]!
+  isAbstract: Boolean
+  folder: Folder
+  pieces: [Piece!]!
+  connections: [Connection!]!
+  stats: [Stat!]!
+  props: [Prop!]!
+  layers: [Layer!]!
+  activeLayer: Layer
+  groups: [Group!]!
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: Location
+  authors: [Author!]!
+  concepts: [Concept!]!
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DesignInput {
+  id: ID!
+  name: String!
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  pieces: [PieceInput!]
+  connections: [ConnectionInput!]
+  stats: [StatInput!]
+  props: [PropInput!]
+  layers: [LayerInput!]
+  activeLayerId: ID
+  groups: [GroupInput!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationInput
+  authorIds: [ID!]
+  conceptIds: [ID!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input DesignPatchInput {
+  name: String
+  parentId: ID
+  isAbstract: Boolean
+  folderId: ID
+  stats: [StatInput!]
+  props: [PropInput!]
+  layers: [LayerInput!]
+  activeLayerId: ID
+  groups: [GroupInput!]
+  canScale: Boolean
+  canMirror: Boolean
+  unit: String
+  location: LocationInput
+  authorIds: [ID!]
+  conceptIds: [ID!]
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+type Kit {
+  id: ID!
+  name: String!
+  release: String
+  types: [Type!]!
+  designs: [Design!]!
+  tags: [Tag!]!
+  concepts: [Concept!]!
+  ports: [Port!]!
+  qualities: [Quality!]!
+  files: [File!]!
+  folders: [Folder!]!
+  authors: [Author!]!
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [Attribute!]!
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input KitInput {
+  id: ID!
+  name: String!
+  release: String
+  types: [TypeInput!]
+  designs: [DesignInput!]
+  tags: [TagInput!]
+  concepts: [ConceptInput!]
+  ports: [PortInput!]
+  qualities: [QualityInput!]
+  files: [FileInput!]
+  folders: [FolderInput!]
+  authors: [AuthorInput!]
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+input KitPatchInput {
+  name: String
+  release: String
+  remote: String
+  homepage: String
+  license: String
+  preview: String
+  icon: String
+  image: String
+  description: String
+  attributes: [AttributeInput!]
+  createdAt: DateTime
+  updatedAt: DateTime
+}
+
+enum BackboneKind {
+  LOCAL
+  DEV
+  REMOTE
+}
+
+type KitBackbone {
+  kind: BackboneKind!
+  endpoint: String
+  authoritative: Boolean!
+  linearHistory: Boolean!
+  connected: Boolean!
+  timeoutSeconds: Int!
+  currentHash: Hash
+  lastInteractionIndex: Int
+  pendingCandidateCount: Int!
+}
+
+type KitClientInfo {
+  id: ID!
+  name: String
+  version: String
+  platform: String
+}
+
+input KitClientInfoInput {
+  id: ID!
+  name: String
+  version: String
+  platform: String
+}
+
+enum SessionState {
+  ACTIVE
+  WARNING
+  LOCKED
+  DISCONNECTED
+  EXPIRED
+}
+
+enum SessionWarningActionKind {
+  RECONNECT
+  SAVE_CHANGES
+  ACKNOWLEDGE
+}
+
+type SessionWarningAction {
+  kind: SessionWarningActionKind!
+  label: String!
+}
+
+type KitSessionWarning {
+  code: String!
+  message: String!
+  actions: [SessionWarningAction!]!
+}
+
+type SessionConnectorSelection {
+  piece: Piece!
+  designPiece: Piece
+  connector: Connector!
+}
+
+input SessionConnectorSelectionInput {
+  pieceId: ID!
+  designPieceId: ID
+  connectorId: ID!
+}
+
+type KitSessionSelection {
+  activeDesign: Design
+  pieces: [Piece!]!
+  connections: [Connection!]!
+  connectors: [SessionConnectorSelection!]!
+  models: [Model!]!
+  designs: [Design!]!
+  types: [Type!]!
+}
+
+input SessionSelectionInput {
+  activeDesignId: ID
+  pieceIds: [ID!]
+  connectionIds: [ID!]
+  connectorSelections: [SessionConnectorSelectionInput!]
+  modelIds: [ID!]
+  designIds: [ID!]
+  typeIds: [ID!]
+}
+
+type KitSession {
+  id: ID!
+  kit: Kit!
+  actor: Actor!
+  client: KitClientInfo!
+  state: SessionState!
+  strictMode: Boolean!
+  timeoutSeconds: Int!
+  startedAt: DateTime!
+  lastSeenAt: DateTime!
+  expiresAt: DateTime!
+  disconnectedAt: DateTime
+  locked: Boolean!
+  canReconnect: Boolean!
+  canSaveLocalChanges: Boolean!
+  warning: KitSessionWarning
+  selection: KitSessionSelection
+  activeTransactions: [KitTransaction!]!
+}
+
+enum ValidationSeverity {
+  ERROR
+  WARNING
+  INFO
+}
+
+type ValidationNote {
+  severity: ValidationSeverity!
+  code: String!
+  path: String
+  entityId: ID
+  message: String!
+}
+
+type KitValidationResult {
+  ok: Boolean!
+  immutable: Boolean!
+  strict: Boolean!
+  errors: [ValidationNote!]!
+  warnings: [ValidationNote!]!
+  infos: [ValidationNote!]!
+}
+
+enum KitConflictStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum KitConflictKind {
+  VALIDATION_ERROR
+  VALIDATION_WARNING
+  AGREEMENT_REJECTED
+  ENTITY_DELETED
+  ENTITY_CHANGED
+  SESSION_TIMEOUT
+  BACKBONE_DISCONNECTED
+  HISTORY_DIVERGED
+}
+
+enum ConflictResolutionKind {
+  ACKNOWLEDGE
+  DISCARD_CANDIDATE
+  RETRY_CANDIDATE
+  RESTORE_ENTITY
+  APPLY_ANYWAY
+  RECONNECT
+  SAVE_LOCAL_COPY
+  MERGE_MANUALLY
+}
+
+type ConflictResolutionOption {
+  id: ID!
+  kind: ConflictResolutionKind!
+  label: String!
+  description: String
+  patchPreview: JSON
+}
+
+type KitConflict {
+  id: ID!
+  kit: Kit!
+  session: KitSession
+  candidate: KitChangeCandidate
+  status: KitConflictStatus!
+  kind: KitConflictKind!
+  title: String!
+  message: String!
+  blocking: Boolean!
+  strict: Boolean!
+  notes: [ValidationNote!]!
+  options: [ConflictResolutionOption!]!
+  createdAt: DateTime!
+  resolvedAt: DateTime
+}
+
+enum KitCommandKind {
+  START_SESSION
+  HEARTBEAT_SESSION
+  END_SESSION
+  RECONNECT_SESSION
+  SET_SESSION_SELECTION
+  BEGIN_TRANSACTION
+  FINALIZE_TRANSACTION
+  ABORT_TRANSACTION
+  UNDO_TRANSACTION
+  REDO_TRANSACTION
+  UNDO_HISTORY
+  REDO_HISTORY
+  CREATE_AUTHOR
+  UPDATE_AUTHOR
+  DELETE_AUTHOR
+  CREATE_TYPE
+  UPDATE_TYPE
+  DELETE_TYPE
+  CREATE_DESIGN
+  UPDATE_DESIGN
+  DELETE_DESIGN
+  CREATE_QUALITY
+  UPDATE_QUALITY
+  DELETE_QUALITY
+  CREATE_PORT
+  UPDATE_PORT
+  DELETE_PORT
+  CREATE_TAG
+  UPDATE_TAG
+  DELETE_TAG
+  CREATE_CONCEPT
+  UPDATE_CONCEPT
+  DELETE_CONCEPT
+  CREATE_FILE
+  UPDATE_FILE
+  DELETE_FILE
+  CREATE_FOLDER
+  UPDATE_FOLDER
+  DELETE_FOLDER
+  MOVE_ARTIFACT_TO_FOLDER
+  CREATE_PIECE
+  CREATE_PIECES
+  UPDATE_PIECE
+  UPDATE_PIECES
+  DELETE_PIECE
+  DELETE_PIECES
+  CREATE_CONNECTION
+  CREATE_CONNECTIONS
+  UPDATE_CONNECTION
+  UPDATE_CONNECTIONS
+  DELETE_CONNECTION
+  DELETE_CONNECTIONS
+  DELETE_SELECTION
+  FIX_PIECES
+  CLUSTER_PIECES
+  EXPAND_DESIGN_REFERENCE
+  FLATTEN_DESIGN
+  DRAG_PIECES
+  MOVE_PIECES
+  CREATE_FIXED_PIECE
+  CREATE_CONNECTED_PIECE
+  CREATE_HANGING_PIECES
+  CHANGE_PIECE_TYPE
+  CHANGE_PIECES_TYPE
+  PASTE_DESIGN_SELECTION
+  IMPORT_KIT
+  RESET_KIT
+  EXPORT_KIT
+  VOTE_CANDIDATE
+  RESOLVE_CONFLICT
+}
+
+type KitCommandDescriptor {
+  kind: KitCommandKind!
+  legacyAliases: [String!]!
+  mutatesKit: Boolean!
+  sessionScoped: Boolean!
+  requiresConsensus: Boolean!
+  description: String!
+}
+
+type KitChange {
+  id: ID!
+  hash: Hash!
+  kind: KitCommandKind!
+  legacyCommand: String
+  summary: String
+  origin: String
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  forward: JSON!
+  backward: JSON!
+  validation: KitValidationResult
+  createdAt: DateTime!
+  appliedAt: DateTime
+}
+
+enum KitCandidateStatus {
+  PENDING
+  AGREEMENT_PENDING
+  ACCEPTED
+  REJECTED
+  TIMED_OUT
+  APPLIED
+  CONFLICTED
+  CANCELLED
+}
+
+enum CandidateVoteState {
+  PENDING
+  AGREED
+  REJECTED
+  TIMED_OUT
+}
+
+type KitCandidateVote {
+  session: KitSession!
+  state: CandidateVoteState!
+  reason: String
+  respondedAt: DateTime
+  resolutionOptionId: ID
+}
+
+type KitChangeCandidate {
+  id: ID!
+  kit: Kit!
+  kind: KitCommandKind!
+  legacyCommand: String
+  summary: String
+  proposedBy: KitSession!
+  actor: Actor!
+  transaction: KitTransaction
+  status: KitCandidateStatus!
+  requestedFrom: [KitSession!]!
+  votes: [KitCandidateVote!]!
+  validation: KitValidationResult
+  preview: KitChange
+  proposedAt: DateTime!
+  expiresAt: DateTime!
+  decidedAt: DateTime
+}
+
+enum TransactionState {
+  ACTIVE
+  FINALIZED
+  ABORTED
+}
+
+type KitTransaction {
+  id: ID!
+  kit: Kit!
+  label: String
+  state: TransactionState!
+  startedBy: KitSession!
+  parent: KitTransaction
+  startedAt: DateTime!
+  finalizedAt: DateTime
+  abortedAt: DateTime
+  changes: [KitChange!]!
+  undoStack: [KitChange!]!
+  redoStack: [KitChange!]!
+  canUndo: Boolean!
+  canRedo: Boolean!
+  squashedChange: KitChange
+}
+
+type KitHistoryEntry {
+  id: ID!
+  index: Int!
+  transaction: KitTransaction
+  commandKinds: [KitCommandKind!]!
+  summary: String
+  squashedChangeCount: Int!
+  change: KitChange!
+  createdAt: DateTime!
+  finalizedAt: DateTime!
+  undoneAt: DateTime
+}
+
+type KitHistoryPage {
+  nodes: [KitHistoryEntry!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type KitInteraction {
+  id: ID!
+  index: Int!
+  kit: Kit!
+  kind: KitCommandKind!
+  legacyCommand: String
+  actor: Actor
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  conflict: KitConflict
+  summary: String
+  metadata: JSON
+  createdAt: DateTime!
+}
+
+type KitInteractionPage {
+  nodes: [KitInteraction!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type KitHistory {
+  canUndo: Boolean!
+  canRedo: Boolean!
+  totalCount: Int!
+  head: KitHistoryEntry
+  entries(cursor: String, limit: Int): KitHistoryPage!
+}
+
+type KitStore {
+  kit: Kit!
+  backbone: KitBackbone
+  sessions: [KitSession!]!
+  transactions: [KitTransaction!]!
+  pendingCandidates: [KitChangeCandidate!]!
+  activeConflicts: [KitConflict!]!
+  validation: KitValidationResult!
+  history: KitHistory!
+  blockedByConflict: Boolean!
+  strictMode: Boolean!
+}
+
+enum ArtifactKind {
+  TYPE
+  DESIGN
+  QUALITY
+  FILE
+  FOLDER
+}
+
+enum SelectionMutationMode {
+  REPLACE
+  ADD
+  REMOVE
+  CLEAR
+}
+
+type KitArchiveExport {
+  fileName: String!
+  hash: Hash!
+  url: String!
+  expiresAt: DateTime
+}
+
+type KitMutationResult {
+  accepted: Boolean!
+  kind: KitCommandKind!
+  summary: String
+  store: KitStore
+  kit: Kit
+  session: KitSession
+  transaction: KitTransaction
+  candidate: KitChangeCandidate
+  change: KitChange
+  historyEntry: KitHistoryEntry
+  conflict: KitConflict
+  validation: KitValidationResult
+  export: KitArchiveExport
+}
+
+input KitCommandContextInput {
+  kitId: ID!
+  sessionId: ID!
+  transactionId: ID
+  origin: String
+  expectedHash: Hash
+  strictMode: Boolean
+}
+
+input StartKitSessionInput {
+  kitId: ID!
+  actor: SessionActorInput!
+  client: KitClientInfoInput!
+  strictMode: Boolean
+}
+
+input HeartbeatKitSessionInput {
+  kitId: ID!
+  sessionId: ID!
+  lastKnownHash: Hash
+}
+
+input EndKitSessionInput {
+  kitId: ID!
+  sessionId: ID!
+}
+
+input ReconnectKitSessionInput {
+  kitId: ID!
+  sessionId: ID!
+  client: KitClientInfoInput
+  lastKnownHash: Hash
+}
+
+input SetSessionSelectionCommandInput {
+  context: KitCommandContextInput!
+  mode: SelectionMutationMode!
+  selection: SessionSelectionInput!
+}
+
+input BeginKitTransactionInput {
+  context: KitCommandContextInput!
+  label: String
+  parentTransactionId: ID
+}
+
+input FinalizeKitTransactionInput {
+  context: KitCommandContextInput!
+  transactionId: ID!
+}
+
+input AbortKitTransactionInput {
+  context: KitCommandContextInput!
+  transactionId: ID!
+}
+
+input TransactionStepInput {
+  context: KitCommandContextInput!
+  transactionId: ID!
+}
+
+input HistoryStepInput {
+  context: KitCommandContextInput!
+  steps: Int
+}
+
+input VoteOnKitChangeCandidateInput {
+  context: KitCommandContextInput!
+  candidateId: ID!
+  state: CandidateVoteState!
+  reason: String
+  resolutionOptionId: ID
+}
+
+input ResolveKitConflictInput {
+  context: KitCommandContextInput!
+  conflictId: ID!
+  optionId: ID!
+  payload: JSON
+}
+
+input CreateAuthorCommandInput {
+  context: KitCommandContextInput!
+  author: AuthorInput!
+}
+
+input UpdateAuthorCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: AuthorPatchInput!
+}
+
+input DeleteAuthorCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateTypeCommandInput {
+  context: KitCommandContextInput!
+  type: TypeInput!
+}
+
+input UpdateTypeCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: TypePatchInput!
+}
+
+input DeleteTypeCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateDesignCommandInput {
+  context: KitCommandContextInput!
+  design: DesignInput!
+}
+
+input UpdateDesignCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: DesignPatchInput!
+}
+
+input DeleteDesignCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateQualityCommandInput {
+  context: KitCommandContextInput!
+  quality: QualityInput!
+}
+
+input UpdateQualityCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: QualityPatchInput!
+}
+
+input DeleteQualityCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreatePortCommandInput {
+  context: KitCommandContextInput!
+  port: PortInput!
+}
+
+input UpdatePortCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: PortPatchInput!
+}
+
+input DeletePortCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateTagCommandInput {
+  context: KitCommandContextInput!
+  tag: TagInput!
+}
+
+input UpdateTagCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: TagPatchInput!
+}
+
+input DeleteTagCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateConceptCommandInput {
+  context: KitCommandContextInput!
+  concept: ConceptInput!
+}
+
+input UpdateConceptCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: ConceptPatchInput!
+}
+
+input DeleteConceptCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateFileCommandInput {
+  context: KitCommandContextInput!
+  file: FileInput!
+}
+
+input UpdateFileCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: FilePatchInput!
+}
+
+input DeleteFileCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input CreateFolderCommandInput {
+  context: KitCommandContextInput!
+  folder: FolderInput!
+}
+
+input UpdateFolderCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+  patch: FolderPatchInput!
+}
+
+input DeleteFolderCommandInput {
+  context: KitCommandContextInput!
+  id: ID!
+}
+
+input MoveArtifactToFolderCommandInput {
+  context: KitCommandContextInput!
+  artifactKind: ArtifactKind!
+  artifactId: ID!
+  folderId: ID
+}
+
+input CreatePieceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  piece: PieceInput!
+}
+
+input CreatePiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieces: [PieceInput!]!
+}
+
+input PieceUpdateInput {
+  id: ID!
+  patch: PiecePatchInput!
+}
+
+input UpdatePieceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  id: ID!
+  patch: PiecePatchInput!
+}
+
+input UpdatePiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  updates: [PieceUpdateInput!]!
+}
+
+input DeletePieceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  id: ID!
+}
+
+input DeletePiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  ids: [ID!]!
+}
+
+input CreateConnectionCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  connection: ConnectionInput!
+}
+
+input CreateConnectionsCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  connections: [ConnectionInput!]!
+}
+
+input ConnectionUpdateInput {
+  id: ID!
+  patch: ConnectionPatchInput!
+}
+
+input UpdateConnectionCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  id: ID!
+  patch: ConnectionPatchInput!
+}
+
+input UpdateConnectionsCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  updates: [ConnectionUpdateInput!]!
+}
+
+input DeleteConnectionCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  id: ID!
+}
+
+input DeleteConnectionsCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  ids: [ID!]!
+}
+
+input DeleteSelectionCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]
+  connectionIds: [ID!]
+}
+
+input FixPiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]
+}
+
+input ClusterPiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]!
+  newDesignName: String
+}
+
+input ExpandDesignReferenceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  referencedDesignId: ID!
+}
+
+input FlattenDesignCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+}
+
+input DragPiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]!
+  offset: CoordinateInput!
+}
+
+input MovePiecesVectorInput {
+  shift: Float
+  gap: Float
+  rise: Float
+  rotation: Float
+  turn: Float
+  tilt: Float
+}
+
+input MovePiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]!
+  vector: MovePiecesVectorInput!
+}
+
+input CreateFixedPieceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  piece: PieceInput!
+}
+
+input CreateConnectedPieceCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  piece: PieceInput!
+  connection: ConnectionInput!
+}
+
+input CreateHangingPiecesCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieces: [PieceInput!]!
+  parentPieceId: ID
+  parentDesignPieceId: ID
+  parentConnectorId: ID
+  connectionTemplate: ConnectionPatchInput
+}
+
+input ChangePieceTypeCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceId: ID!
+  typeId: ID!
+}
+
+input ChangePiecesTypeCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  pieceIds: [ID!]!
+  typeId: ID!
+}
+
+input PasteDesignSelectionCommandInput {
+  context: KitCommandContextInput!
+  designId: ID!
+  payload: JSON!
+  offset: CoordinateInput
+}
+
+input ImportKitCommandInput {
+  context: KitCommandContextInput!
+  sourceUrl: String
+  archiveBase64: String
+}
+
+input ResetKitCommandInput {
+  context: KitCommandContextInput!
+  sourceUrl: String
+  archiveBase64: String
+  kit: KitInput
+}
+
+input ExportKitCommandInput {
+  context: KitCommandContextInput!
+}
+
+type Query {
+  kit(id: ID!): Kit
+  kitStore(id: ID!): KitStore
+  kitSession(kitId: ID!, sessionId: ID!): KitSession
+  kitTransaction(kitId: ID!, transactionId: ID!): KitTransaction
+  kitCandidate(kitId: ID!, candidateId: ID!): KitChangeCandidate
+  kitConflict(kitId: ID!, conflictId: ID!): KitConflict
+  kitHistory(kitId: ID!, cursor: String, limit: Int): KitHistoryPage!
+  kitInteractions(kitId: ID!, cursor: String, limit: Int): KitInteractionPage!
+  kitCommandCatalog: [KitCommandDescriptor!]!
+}
+
+type Mutation {
+  startKitSession(input: StartKitSessionInput!): KitMutationResult!
+  heartbeatKitSession(input: HeartbeatKitSessionInput!): KitMutationResult!
+  endKitSession(input: EndKitSessionInput!): KitMutationResult!
+  reconnectKitSession(input: ReconnectKitSessionInput!): KitMutationResult!
+
+  setSessionSelection(input: SetSessionSelectionCommandInput!): KitMutationResult!
+
+  beginKitTransaction(input: BeginKitTransactionInput!): KitMutationResult!
+  finalizeKitTransaction(input: FinalizeKitTransactionInput!): KitMutationResult!
+  abortKitTransaction(input: AbortKitTransactionInput!): KitMutationResult!
+  undoKitTransaction(input: TransactionStepInput!): KitMutationResult!
+  redoKitTransaction(input: TransactionStepInput!): KitMutationResult!
+  undoKitHistory(input: HistoryStepInput!): KitMutationResult!
+  redoKitHistory(input: HistoryStepInput!): KitMutationResult!
+
+  voteOnKitChangeCandidate(input: VoteOnKitChangeCandidateInput!): KitMutationResult!
+  resolveKitConflict(input: ResolveKitConflictInput!): KitMutationResult!
+
+  createAuthor(input: CreateAuthorCommandInput!): KitMutationResult!
+  updateAuthor(input: UpdateAuthorCommandInput!): KitMutationResult!
+  deleteAuthor(input: DeleteAuthorCommandInput!): KitMutationResult!
+
+  createType(input: CreateTypeCommandInput!): KitMutationResult!
+  updateType(input: UpdateTypeCommandInput!): KitMutationResult!
+  deleteType(input: DeleteTypeCommandInput!): KitMutationResult!
+
+  createDesign(input: CreateDesignCommandInput!): KitMutationResult!
+  updateDesign(input: UpdateDesignCommandInput!): KitMutationResult!
+  deleteDesign(input: DeleteDesignCommandInput!): KitMutationResult!
+
+  createQuality(input: CreateQualityCommandInput!): KitMutationResult!
+  updateQuality(input: UpdateQualityCommandInput!): KitMutationResult!
+  deleteQuality(input: DeleteQualityCommandInput!): KitMutationResult!
+
+  createPort(input: CreatePortCommandInput!): KitMutationResult!
+  updatePort(input: UpdatePortCommandInput!): KitMutationResult!
+  deletePort(input: DeletePortCommandInput!): KitMutationResult!
+
+  createTag(input: CreateTagCommandInput!): KitMutationResult!
+  updateTag(input: UpdateTagCommandInput!): KitMutationResult!
+  deleteTag(input: DeleteTagCommandInput!): KitMutationResult!
+
+  createConcept(input: CreateConceptCommandInput!): KitMutationResult!
+  updateConcept(input: UpdateConceptCommandInput!): KitMutationResult!
+  deleteConcept(input: DeleteConceptCommandInput!): KitMutationResult!
+
+  createFile(input: CreateFileCommandInput!): KitMutationResult!
+  updateFile(input: UpdateFileCommandInput!): KitMutationResult!
+  deleteFile(input: DeleteFileCommandInput!): KitMutationResult!
+
+  createFolder(input: CreateFolderCommandInput!): KitMutationResult!
+  updateFolder(input: UpdateFolderCommandInput!): KitMutationResult!
+  deleteFolder(input: DeleteFolderCommandInput!): KitMutationResult!
+  moveArtifactToFolder(input: MoveArtifactToFolderCommandInput!): KitMutationResult!
+
+  createPiece(input: CreatePieceCommandInput!): KitMutationResult!
+  createPieces(input: CreatePiecesCommandInput!): KitMutationResult!
+  updatePiece(input: UpdatePieceCommandInput!): KitMutationResult!
+  updatePieces(input: UpdatePiecesCommandInput!): KitMutationResult!
+  deletePiece(input: DeletePieceCommandInput!): KitMutationResult!
+  deletePieces(input: DeletePiecesCommandInput!): KitMutationResult!
+
+  createConnection(input: CreateConnectionCommandInput!): KitMutationResult!
+  createConnections(input: CreateConnectionsCommandInput!): KitMutationResult!
+  updateConnection(input: UpdateConnectionCommandInput!): KitMutationResult!
+  updateConnections(input: UpdateConnectionsCommandInput!): KitMutationResult!
+  deleteConnection(input: DeleteConnectionCommandInput!): KitMutationResult!
+  deleteConnections(input: DeleteConnectionsCommandInput!): KitMutationResult!
+
+  deleteSelection(input: DeleteSelectionCommandInput!): KitMutationResult!
+  fixPieces(input: FixPiecesCommandInput!): KitMutationResult!
+  clusterPieces(input: ClusterPiecesCommandInput!): KitMutationResult!
+  expandDesignReference(input: ExpandDesignReferenceCommandInput!): KitMutationResult!
+  flattenDesign(input: FlattenDesignCommandInput!): KitMutationResult!
+  dragPieces(input: DragPiecesCommandInput!): KitMutationResult!
+  movePieces(input: MovePiecesCommandInput!): KitMutationResult!
+  createFixedPiece(input: CreateFixedPieceCommandInput!): KitMutationResult!
+  createConnectedPiece(input: CreateConnectedPieceCommandInput!): KitMutationResult!
+  createHangingPieces(input: CreateHangingPiecesCommandInput!): KitMutationResult!
+  changePieceType(input: ChangePieceTypeCommandInput!): KitMutationResult!
+  changePiecesType(input: ChangePiecesTypeCommandInput!): KitMutationResult!
+  pasteDesignSelection(input: PasteDesignSelectionCommandInput!): KitMutationResult!
+
+  importKit(input: ImportKitCommandInput!): KitMutationResult!
+  resetKit(input: ResetKitCommandInput!): KitMutationResult!
+  exportKit(input: ExportKitCommandInput!): KitMutationResult!
+}
+
+enum KitStoreEventKind {
+  STORE_CHANGED
+  INTERACTION_RECORDED
+  CHANGE_CANDIDATE_REQUESTED
+  CHANGE_APPLIED
+  CONFLICT_RAISED
+  SESSION_CHANGED
+  TRANSACTION_CHANGED
+  HISTORY_CHANGED
+}
+
+type KitStoreEvent {
+  kind: KitStoreEventKind!
+  store: KitStore!
+  interaction: KitInteraction
+  change: KitChange
+  candidate: KitChangeCandidate
+  conflict: KitConflict
+  session: KitSession
+  transaction: KitTransaction
+}
+
+type Subscription {
+  kitStoreEvents(kitId: ID!, sessionId: ID): KitStoreEvent!
+}
