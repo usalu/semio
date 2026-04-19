@@ -224,6 +224,9 @@
           "value": "415488",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Base"
       ]
     },
     {
@@ -429,7 +432,8 @@
           "value": "5864",
           "unit": "kgCO2e"
         }
-      ]
+      ],
+      "families": []
     },
     {
       "connectors": [
@@ -578,6 +582,9 @@
           "value": "4802",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Capital"
       ]
     },
     {
@@ -752,7 +759,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -934,7 +941,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -1116,7 +1123,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -1291,7 +1298,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -1473,7 +1480,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -1648,7 +1655,7 @@
         }
       ],
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -2394,7 +2401,7 @@
         }
       ],
       "families": [
-        "Tambour"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -2767,7 +2774,7 @@
         }
       ],
       "families": [
-        "Tambour"
+        "Nakagin Capsule Tower"
       ]
     }
   ],
@@ -9870,6 +9877,9 @@
             }
           ]
         }
+      ],
+      "families": [
+        "Nakagin Capsule Tower"
       ]
     }
   ],

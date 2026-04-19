@@ -19732,11 +19732,11 @@ if (shouldRunEmbeddedJsTests) {
   type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
 
   const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
-  const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; selectionAsset: string; expectedDiffAsset: string }>;
+  const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; selectionAsset: string; expectedDiffAsset: string }>;
   const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{
     name: string;
     designName: string;
-    designParent: string | null;
+    designFamilies: string[];
     selectionAsset: string;
     expectedCopyAsset: string;
     pasteTargetAsset: string;
@@ -20157,7 +20157,7 @@ if (shouldRunEmbeddedJsTests) {
       typeExclude?: string[];
       designInclude?: string[];
       designName?: string;
-      designParent?: string | null;
+      designFamilies?: string[];
     }>;
     const globMatchAssetCases = filterKitCasesData.globMatchCases as Array<{ input: string; pattern: string; expected: boolean }>;
     const globMatchCaseInsensitiveCases = filterKitCasesData.globMatchCaseInsensitiveCases as Array<{ input: string; pattern: string; expected: boolean }>;
@@ -20190,7 +20190,7 @@ if (shouldRunEmbeddedJsTests) {
         if (gc.typeExclude) filter.types = { ...filter.types, exclude: gc.typeExclude };
         if (gc.designInclude) filter.designs = { include: gc.designInclude };
         if (gc.designName) {
-          const nakaginDesign = kit.designs?.find((d) => d.name === gc.designName && !d.parent);
+          const nakaginDesign = kit.designs?.find((d) => d.name === gc.designName);
           expect(nakaginDesign).toBeDefined();
           filter.designGuid = nakaginDesign!.guid;
         }
@@ -20428,11 +20428,11 @@ if (shouldRunEmbeddedJsTests) {
   // Tests for filterKit MUST verify correct subset extraction with design-based and glob-based filters.
 
   describe("KitImpl/Filter/Design", () => {
-    const filterDesignCases = (FilterKitCases as any).cases as Array<{ name: string; designName: string; designParent: string | null }>;
+    const filterDesignCases = (FilterKitCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[] }>;
     const kit = MetabolismKit as KitImpl;
     const expected = MetabolismKitFilteredNakaginCapsuleTower as any;
     const filterDesignCase = filterDesignCases[0];
-    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase.designName && !d.parent);
+    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase.designName);
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
@@ -20496,7 +20496,7 @@ if (shouldRunEmbeddedJsTests) {
 
     const testFlatten = (designName: string) => {
       const design = findDesign(kit, designName);
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.families?.some((f) => design.families?.includes(f)));
+      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.families?.includes(design.name));
       expect(expectedDesign).toBeDefined();
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -20911,7 +20911,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower flattened piece drag uses piece center diff (flat design has no connections)", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME)!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
@@ -20934,7 +20934,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin sketchpad flow: drag root piece with connections preserved moves all descendants", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME)!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata (simulates usePiecesMetadataMap)
@@ -21037,7 +21037,7 @@ if (shouldRunEmbeddedJsTests) {
       // 3. KitImpl store applies piece-only kitDiff via applyKitDiff
       // 4. Reactive chain recomputes piecesMetadata → descendants should have new positions
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
@@ -21167,7 +21167,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin leaf drag: dragging a leaf node (parent, no children) offsets through parent connection and matches nativeDragPieces", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
@@ -21285,7 +21285,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin center-space to connection-space scaling: pixel offset scales by horizontalScale for horizontal connections", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
@@ -21392,7 +21392,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("findParentConnectionForPieceInDesign and fixPieceInDesign use the connection to the parent piece, not the parent piece id as connection id", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
@@ -21481,7 +21481,7 @@ if (shouldRunEmbeddedJsTests) {
   describe("Delete", () => {
     it("Nakagin Capsule Tower delete third tambour and first small tower connection", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const selection = NakaginCapsuleTowerDeletedSelection as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerDeletedDesignDiff as any;
 
@@ -21527,7 +21527,7 @@ if (shouldRunEmbeddedJsTests) {
   describe("CopyAndPaste", () => {
     it("Nakagin Capsule Tower copy selected pieces and connections", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const selection = NakaginCapsuleTowerCopySelection as any;
       const expectedCopy = NakaginCapsuleTowerCopyDesign as unknown as Design;
 
@@ -21635,7 +21635,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coord", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
       if (!flatOp.ok) return;
@@ -21665,7 +21665,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin paste remaps t_f2–t_f1 onto target t_f1 when t_f1 is external stub only", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const flatOp3 = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp3.ok).toBe(true);
       if (!flatOp3.ok) return;
@@ -21723,7 +21723,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("copyDesign single connected piece selected alone becomes free fixed root and auto-pulls source descendants", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const tF0BC0 = "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952";
 
       const sourceConns = design._connections ?? [];
@@ -21826,7 +21826,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
       const bc = findReplCases.boundaryCases;
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === bc.designName && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === bc.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -21872,7 +21872,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
       const selAssetCase = findReplCases.cases.find((c: any) => c.name === "selection_asset_returns_compatible_guids");
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName && !d.parent)!;
+      const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName)!;
       const kindItems = kit.types ?? [];
       const linkItems = kit.ports ?? [];
       const allPlans = kit.designs ?? [];
@@ -21890,7 +21890,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
       const connCase = findReplCases.cases.find((c: any) => c.name === "connected_piece_yields_only_exact_design_matches");
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === connCase.designName && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === connCase.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -21941,7 +21941,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
       const multiCase = findReplCases.cases.find((c: any) => c.name === "multiple_selected_pieces");
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === multiCase.designName && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === multiCase.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -21956,7 +21956,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Returns empty when no pieces selected", () => {
       const emptyCase = findReplCases.cases.find((c: any) => c.name === "empty_selection");
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const design = kit.designs!.find((d) => d.name === emptyCase.designName && !d.parent)!;
+      const design = kit.designs!.find((d) => d.name === emptyCase.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -21973,14 +21973,14 @@ if (shouldRunEmbeddedJsTests) {
     const designWithDiffCases = (DesignWithDiffCases as any).cases as Array<{
       name: string;
       designName: string;
-      designParent: string | null;
+      designFamilies: string[];
       expectedPieceCounts: { unchanged: number; modified: number; removed: number; added: number };
       expectedConnectionCounts: { unchanged: number; modified: number; removed: number; added: number };
     }>;
     for (const tc of designWithDiffCases) {
       it(`${tc.name} with-diff preserves old entities and annotates status`, () => {
         const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-        const design = kit.designs!.find((d) => d.name === tc.designName && !d.parent)!;
+        const design = kit.designs!.find((d) => d.name === tc.designName)!;
         const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
         const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
         const computed = designWithDiff(design, diff);
@@ -22197,7 +22197,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Design/Quality/Sum", () => {
     const kit = MetabolismKit as KitImpl;
-    const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; qualityName: string; expected: number; tolerance: number }>;
+    const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; qualityName: string; expected: number; tolerance: number }>;
     for (const tc of qualitySumCases) {
       it(`${tc.name}: sums ${tc.qualityName} to ~${tc.expected}`, () => {
         const design = kit.designs?.find((d) => d.name === tc.designName);
@@ -23765,7 +23765,7 @@ if (shouldRunEmbeddedJsTests) {
       it("parses nakagin-capsule-tower.meta.design.semio.json with DesignMetaSchema", () => {
         const parsed = DesignMetaSchema.parse(NakaginCapsuleTowerMetaDesign);
         const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-        const expectedGuid = kit.designs?.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)?.guid;
+        const expectedGuid = kit.designs?.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME)?.guid;
         expect(parsed.name).toBe(NAKAGIN_DESIGN_NAME);
         expect(expectedGuid).toBeDefined();
         expect(parsed.guid).toBe(expectedGuid);
@@ -23774,7 +23774,7 @@ if (shouldRunEmbeddedJsTests) {
       });
       it("toDesignMeta strips collections from full design", () => {
         const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
+        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME)!;
         const meta = toDesignMeta(nct);
         expect(meta.name).toBe(NAKAGIN_DESIGN_NAME);
         expect((meta as any).pieces).toBeUndefined();
@@ -23793,7 +23793,7 @@ if (shouldRunEmbeddedJsTests) {
       });
       it("toDesignShallow converts full design to shallow with meta children", () => {
         const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
+        const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME)!;
         const shallow = toDesignShallow(nct);
         expect(shallow.name).toBe(NAKAGIN_DESIGN_NAME);
         if (shallow.pieces) {
@@ -23834,7 +23834,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashDesign produces a 64-char lowercase hex string", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName)!;
       const h = hashDesign(nct);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
@@ -23864,7 +23864,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashPiece is deterministic", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName)!;
       const piece = nct.pieces![0];
       const h1 = hashPiece(piece);
       const h2 = hashPiece(piece);
@@ -23874,7 +23874,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("hashConnection is deterministic", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
+      const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName)!;
       const conn = nct.connections()[0];
       const h1 = hashConnection(conn);
       const h2 = hashConnection(conn);
@@ -24035,44 +24035,42 @@ if (shouldRunEmbeddedJsTests) {
       });
 
       it("Port diff detects maxChildren change", () => {
-        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 1 };
-        const after: Port = { guid: "p1", name: "TestPort", maxChildren: 5 };
+        const before = new Port({ guid: "p1", name: "TestPort", maxChildren: 1 });
+        const after = new Port({ guid: "p1", name: "TestPort", maxChildren: 5 });
         const diff = getPortDiff(before, after);
         expect(diff.maxChildren).toBe(5);
       });
 
       it("Port diff detects maxChildren removal", () => {
-        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
-        const after: Port = { guid: "p1", name: "TestPort" };
+        const before = new Port({ guid: "p1", name: "TestPort", maxChildren: 3 });
+        const after = new Port({ guid: "p1", name: "TestPort" });
         const diff = getPortDiff(before, after);
         expect(diff.maxChildren).toBeNull();
       });
 
       it("Port diff ignores unchanged maxChildren", () => {
-        const before: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
-        const after: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
+        const before = new Port({ guid: "p1", name: "TestPort", maxChildren: 2 });
+        const after = new Port({ guid: "p1", name: "TestPort", maxChildren: 2 });
         const diff = getPortDiff(before, after);
         expect(diff.maxChildren).toBeUndefined();
       });
 
       it("Port apply diff sets maxChildren", () => {
-        const base: Port = { guid: "p1", name: "TestPort" };
+        const base = new Port({ guid: "p1", name: "TestPort" });
         const diff: PortDiff = { maxChildren: 4 };
-        const result = { ...base };
-        applyPortDiff(result, diff);
-        expect(result.maxChildren).toBe(4);
+        applyPortDiff(base, diff);
+        expect(base.maxChildren).toBe(4);
       });
 
       it("Port apply diff removes maxChildren with null", () => {
-        const base: Port = { guid: "p1", name: "TestPort", maxChildren: 3 };
+        const base = new Port({ guid: "p1", name: "TestPort", maxChildren: 3 });
         const diff: PortDiff = { maxChildren: null };
-        const result = { ...base };
-        applyPortDiff(result, diff);
-        expect(result.maxChildren).toBeUndefined();
+        applyPortDiff(base, diff);
+        expect(base.maxChildren).toBeUndefined();
       });
 
       it("Port inverse diff restores maxChildren", () => {
-        const original: Port = { guid: "p1", name: "TestPort", maxChildren: 2 };
+        const original = new Port({ guid: "p1", name: "TestPort", maxChildren: 2 });
         const diff: PortDiff = { maxChildren: 5 };
         const inverse = inversePortDiff(original, diff);
         expect(inverse.maxChildren).toBe(2);
@@ -24093,37 +24091,35 @@ if (shouldRunEmbeddedJsTests) {
       });
 
       it("Connector diff detects maxChildren change", () => {
-        const before: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 1 };
-        const after: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 5 };
+        const before = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 1 });
+        const after = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 5 });
         const diff = getConnectorDiff(before, after);
         expect(diff.maxChildren).toBe(5);
       });
 
       it("Connector diff detects maxChildren removal", () => {
-        const before: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
-        const after: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
+        const before = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 });
+        const after = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } });
         const diff = getConnectorDiff(before, after);
         expect(diff.maxChildren).toBeNull();
       });
 
       it("Connector apply diff sets maxChildren", () => {
-        const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } };
+        const base = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 } });
         const diff: ConnectorDiff = { maxChildren: 4 };
-        const result = { ...base };
-        applyConnectorDiff(result, diff);
-        expect(result.maxChildren).toBe(4);
+        applyConnectorDiff(base, diff);
+        expect(base.maxChildren).toBe(4);
       });
 
       it("Connector apply diff removes maxChildren with null", () => {
-        const base: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 };
+        const base = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 3 });
         const diff: ConnectorDiff = { maxChildren: null };
-        const result = { ...base };
-        applyConnectorDiff(result, diff);
-        expect(result.maxChildren).toBeUndefined();
+        applyConnectorDiff(base, diff);
+        expect(base.maxChildren).toBeUndefined();
       });
 
       it("Connector inverse diff restores maxChildren", () => {
-        const original: Connector = { guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 2 };
+        const original = new Connector({ guid: "c1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 0, z: 1 }, maxChildren: 2 });
         const diff: ConnectorDiff = { maxChildren: 5 };
         const inverse = inverseConnectorDiff(original, diff);
         expect(inverse.maxChildren).toBe(2);
@@ -24653,10 +24649,10 @@ async function runBenchmarks() {
   const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
-  const kitMetabolism = BenchasKitInstance(MetabolismKit as unknown as KitImpl);
-  const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
+  const kitMetabolism = asKitInstance(BenchMetabolismKit as unknown as KitImpl);
+  const kitOriginal = kitMetabolism;
   const kitDiffed = asKitInstance(BenchKitDiffed as unknown as KitImpl);
-  const kitInvalid = asKitInstance(BenchasKitInstance(InvalidKit as unknown as KitImpl));
+  const kitInvalid = asKitInstance(BenchInvalidKit as unknown as KitImpl);
   const metabolismChange = getKitChange(kitOriginal, kitDiffed);
   const diffForward = metabolismChange.forward;
   const diffInverse = metabolismChange.backward;

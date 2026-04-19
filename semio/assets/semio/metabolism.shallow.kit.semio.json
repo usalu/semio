@@ -136,7 +136,8 @@
       "stock": 2147483647,
       "virtual": false,
       "createdAt": "2025-11-23T01:10:21.108Z",
-      "updatedAt": "2025-11-23T01:10:21.108Z"
+      "updatedAt": "2025-11-23T01:10:21.108Z",
+      "families": []
     },
     {
       "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
@@ -180,7 +181,7 @@
       "createdAt": "2025-11-23T01:10:21.115Z",
       "updatedAt": "2025-11-23T01:10:21.115Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -195,7 +196,7 @@
       "createdAt": "2025-11-23T01:10:21.117Z",
       "updatedAt": "2025-11-23T01:10:21.117Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -225,7 +226,7 @@
       "createdAt": "2025-11-23T01:10:21.121Z",
       "updatedAt": "2025-11-23T01:10:21.121Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -240,7 +241,7 @@
       "createdAt": "2025-11-23T01:10:21.123Z",
       "updatedAt": "2025-11-23T01:10:21.123Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -255,7 +256,7 @@
       "createdAt": "2025-11-23T01:10:21.125Z",
       "updatedAt": "2025-11-23T01:10:21.125Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -270,7 +271,7 @@
       "createdAt": "2025-11-23T01:10:21.128Z",
       "updatedAt": "2025-11-23T01:10:21.128Z",
       "families": [
-        "Capsule"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -300,7 +301,7 @@
       "createdAt": "2025-11-23T01:10:21.133Z",
       "updatedAt": "2025-11-23T01:10:21.133Z",
       "families": [
-        "Capsule"
+        "Slanted"
       ]
     },
     {
@@ -315,7 +316,7 @@
       "createdAt": "2025-11-23T01:10:21.136Z",
       "updatedAt": "2025-11-23T01:10:21.136Z",
       "families": [
-        "Capsule"
+        "Slanted"
       ]
     },
     {
@@ -330,7 +331,7 @@
       "createdAt": "2025-11-23T01:10:21.139Z",
       "updatedAt": "2025-11-23T01:10:21.139Z",
       "families": [
-        "Capsule"
+        "Ellipsoid"
       ]
     },
     {
@@ -360,7 +361,7 @@
       "createdAt": "2025-11-23T01:10:21.149Z",
       "updatedAt": "2025-11-23T01:10:21.149Z",
       "families": [
-        "Capsule"
+        "Slanted"
       ]
     },
     {
@@ -375,7 +376,7 @@
       "createdAt": "2025-11-23T01:10:21.151Z",
       "updatedAt": "2025-11-23T01:10:21.151Z",
       "families": [
-        "Capsule"
+        "Slanted"
       ]
     },
     {
@@ -390,7 +391,7 @@
       "createdAt": "2025-11-23T01:10:21.205Z",
       "updatedAt": "2025-11-23T01:10:21.205Z",
       "families": [
-        "Capsule"
+        "Slanted"
       ]
     },
     {
@@ -405,7 +406,7 @@
       "createdAt": "2025-11-23T01:10:21.207Z",
       "updatedAt": "2025-11-23T01:10:21.207Z",
       "families": [
-        "Capsule"
+        "Ellipsoid"
       ]
     },
     {
@@ -420,7 +421,7 @@
       "createdAt": "2025-11-23T01:10:21.21Z",
       "updatedAt": "2025-11-23T01:10:21.21Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -435,7 +436,7 @@
       "createdAt": "2025-11-23T01:10:21.212Z",
       "updatedAt": "2025-11-23T01:10:21.212Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -450,7 +451,7 @@
       "createdAt": "2025-11-23T01:10:21.214Z",
       "updatedAt": "2025-11-23T01:10:21.214Z",
       "families": [
-        "Capsule"
+        "Trapezoid"
       ]
     },
     {
@@ -465,7 +466,7 @@
       "createdAt": "2025-11-23T01:10:21.216Z",
       "updatedAt": "2025-11-23T01:10:21.216Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -480,7 +481,7 @@
       "createdAt": "2025-11-23T01:10:21.218Z",
       "updatedAt": "2025-11-23T01:10:21.218Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -495,7 +496,7 @@
       "createdAt": "2025-11-23T01:10:21.22Z",
       "updatedAt": "2025-11-23T01:10:21.22Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -510,7 +511,7 @@
       "createdAt": "2025-11-23T01:10:21.222Z",
       "updatedAt": "2025-11-23T01:10:21.222Z",
       "families": [
-        "Capsule"
+        "Dancing"
       ]
     },
     {
@@ -525,7 +526,7 @@
       "createdAt": "2025-11-23T01:10:21.224Z",
       "updatedAt": "2025-11-23T01:10:21.224Z",
       "families": [
-        "Capsule"
+        "Trapezoid"
       ]
     },
     {
@@ -540,7 +541,7 @@
       "createdAt": "2025-11-23T01:10:21.227Z",
       "updatedAt": "2025-11-23T01:10:21.227Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -555,7 +556,7 @@
       "createdAt": "2025-11-23T01:10:21.228Z",
       "updatedAt": "2025-11-23T01:10:21.228Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -570,7 +571,7 @@
       "createdAt": "2025-11-23T01:10:21.23Z",
       "updatedAt": "2025-11-23T01:10:21.23Z",
       "families": [
-        "Capsule"
+        "Balcony"
       ]
     },
     {
@@ -585,7 +586,7 @@
       "createdAt": "2025-11-23T01:10:21.232Z",
       "updatedAt": "2025-11-23T01:10:21.232Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -600,7 +601,7 @@
       "createdAt": "2025-11-23T01:10:21.234Z",
       "updatedAt": "2025-11-23T01:10:21.234Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -615,7 +616,7 @@
       "createdAt": "2025-11-23T01:10:21.236Z",
       "updatedAt": "2025-11-23T01:10:21.236Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -630,7 +631,7 @@
       "createdAt": "2025-11-23T01:10:21.238Z",
       "updatedAt": "2025-11-23T01:10:21.238Z",
       "families": [
-        "Capsule"
+        "Twisted"
       ]
     },
     {
@@ -645,7 +646,7 @@
       "createdAt": "2025-11-23T01:10:21.24Z",
       "updatedAt": "2025-11-23T01:10:21.24Z",
       "families": [
-        "Capsule"
+        "Balcony"
       ]
     },
     {
@@ -675,7 +676,7 @@
       "createdAt": "2025-11-23T01:10:21.251Z",
       "updatedAt": "2025-11-23T01:10:21.251Z",
       "families": [
-        "Tambour"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -690,7 +691,7 @@
       "createdAt": "2025-11-23T01:10:21.268Z",
       "updatedAt": "2025-11-23T01:10:21.268Z",
       "families": [
-        "Tambour"
+        "Nakagin Capsule Tower"
       ]
     },
     {
@@ -705,7 +706,7 @@
       "createdAt": "2025-11-23T01:10:21.272Z",
       "updatedAt": "2025-11-23T01:10:21.272Z",
       "families": [
-        "Tambour"
+        "Capsule"
       ]
     },
     {
@@ -735,7 +736,7 @@
       "createdAt": "2025-11-23T01:10:21.28Z",
       "updatedAt": "2025-11-23T01:10:21.28Z",
       "families": [
-        "Tambour"
+        "Twisted"
       ]
     },
     {
@@ -750,7 +751,7 @@
       "createdAt": "2025-11-23T01:10:21.284Z",
       "updatedAt": "2025-11-23T01:10:21.284Z",
       "families": [
-        "Tambour"
+        "Twisted"
       ]
     },
     {
@@ -765,12 +766,13 @@
       "createdAt": "2025-11-23T01:10:21.288Z",
       "updatedAt": "2025-11-23T01:10:21.288Z",
       "families": [
-        "Tambour"
+        "Ellipsoid"
       ]
     },
     {
       "guid": "019d8734-03bb-774e-b52e-68d4f010e939",
-      "name": "semio.sketchpad.app.kit.defaultTypeName"
+      "name": "semio.sketchpad.app.kit.defaultTypeName",
+      "families": []
     }
   ],
   "designs": [
@@ -862,7 +864,7 @@
       "createdAt": "2025-11-23T01:11:04.468Z",
       "updatedAt": "2025-11-23T01:11:04.468Z",
       "families": [
-        "Nakagin Capsule Tower"
+        "Dancing"
       ]
     },
     {
@@ -888,7 +890,7 @@
       "createdAt": "2025-11-23T01:11:04.613Z",
       "updatedAt": "2025-11-23T01:11:04.613Z",
       "families": [
-        "Nakagin Capsule Tower"
+        "Slanted"
       ]
     },
     {
@@ -901,7 +903,7 @@
       "createdAt": "2025-11-23T01:11:04.687Z",
       "updatedAt": "2025-11-23T01:11:04.687Z",
       "families": [
-        "Nakagin Capsule Tower"
+        "Twisted"
       ]
     }
   ],
