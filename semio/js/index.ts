@@ -9624,6 +9624,8 @@ export class KitImpl {
         nextCache[childGuid] = { planeHash, centerHash, plane: childPlane, center: childCenter, flatPiece: flatChildPiece };
       },
     });
+
+    return { flatPieces, nextCache, warnings, infos, placementErrors };
   }
 
   /**
@@ -24563,7 +24565,7 @@ if (shouldRunEmbeddedJsTests) {
         const kit = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
-          ports: [{ guid: "p1", name: "Port1", maxChildren: 3 }],
+          families: [{ guid: "f1", name: "TestFamily", ports: [{ guid: "p1", name: "Port1", maxChildren: 3 }] }],
           types: [
             {
               guid: "t1",
@@ -24582,7 +24584,7 @@ if (shouldRunEmbeddedJsTests) {
         } as KitData);
         const serialized = serializeKit(kit);
         const deserialized = deserializeKit(serialized);
-        expect(deserialized.ports![0].maxChildren).toBe(3);
+        expect(deserialized.families![0].ports![0].maxChildren).toBe(3);
         expect(deserialized.types![0].connectors![0].maxChildren).toBe(5);
       });
 
@@ -24590,7 +24592,7 @@ if (shouldRunEmbeddedJsTests) {
         const before = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
-          ports: [{ guid: "p1", name: "Port1", maxChildren: 1 }],
+          families: [{ guid: "f1", name: "TestFamily", ports: [{ guid: "p1", name: "Port1", maxChildren: 1 }] }],
           types: [
             {
               guid: "t1",
@@ -24610,7 +24612,7 @@ if (shouldRunEmbeddedJsTests) {
         const after = new KitImpl({
           guid: "kit-1",
           name: "TestKit",
-          ports: [{ guid: "p1", name: "Port1", maxChildren: 10 }],
+          families: [{ guid: "f1", name: "TestFamily", ports: [{ guid: "p1", name: "Port1", maxChildren: 10 }] }],
           types: [
             {
               guid: "t1",
@@ -24628,11 +24630,10 @@ if (shouldRunEmbeddedJsTests) {
           ],
         });
         const diff = getKitDiff(before, after);
-        expect(diff.ports?.updated?.[0]?.diff.maxChildren).toBe(10);
+        expect(diff.families?.updated?.[0]?.diff.ports?.updated?.[0]?.diff.maxChildren).toBe(10);
         expect(diff.types?.updated?.[0]?.diff.connectors?.updated?.[0]?.diff.maxChildren).toBe(20);
-        const applied = duplicateKitForIsolation(before);
-        applyKitDiff(applied, diff);
-        expect(applied.ports![0].maxChildren).toBe(10);
+        const applied = applyKitDiff(before, diff);
+        expect(applied.families![0].ports![0].maxChildren).toBe(10);
         expect(applied.types![0].connectors![0].maxChildren).toBe(20);
       });
     });
@@ -24974,13 +24975,11 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ type: { guid: "t1" }, diff: { description: "Modified wall" } }],
         },
       };
-      const afterForward = duplicateKitForIsolation(new KitImpl(original as KitData));
-      applyKitDiff(afterForward, diff);
+      const afterForward = applyKitDiff(new KitImpl(original as KitData), diff);
       expect(afterForward.types).toHaveLength(2);
       expect(afterForward.types![0].description).toBe("Modified wall");
       const inverseDiff = inverseKitDiff(original, diff);
-      const afterBackward = duplicateKitForIsolation(afterForward);
-      applyKitDiff(afterBackward, inverseDiff);
+      const afterBackward = applyKitDiff(afterForward, inverseDiff);
       expect(afterBackward.types).toHaveLength(1);
       expect(afterBackward.types![0].description).toBe("A wall segment");
       expect(afterBackward.types![0].guid).toBe("t1");

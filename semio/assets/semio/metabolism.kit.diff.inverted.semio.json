@@ -14,7 +14,9 @@
         "guid": "71749140-9db9-43f6-bd81-d89011667b80",
         "name": "Capsule",
         "families": [
-          "Capsule"
+          {
+            "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          }
         ],
         "isAbstract": true,
         "createdAt": "2025-11-23T01:10:21.293Z",
@@ -29,51 +31,10 @@
     "updated": [
       {
         "type": {
-          "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
           "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
         },
         "diff": {
           "name": "Base",
-          "families": [
-            {
-              "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
-            }
-          ],
           "stock": 2147483647,
           "virtual": false,
           "unit": "m",
@@ -199,402 +160,6 @@
             "added": []
           }
         }
-      },
-      {
-        "type": {
-          "guid": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "e1878572-0fe1-4780-b877-90df9b25d31f"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "357b841f-b121-463c-88a6-153d7cbf272f"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "818f2a23-569b-47cb-a69c-147694beb815"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "214a30f8-adfc-40de-840b-151d9f7e17dd"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "cc9a4330-537f-49c2-a70d-5e6383b535f5"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "f1779b1f-2324-4bad-86da-773a1e90b57c"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "3697e115-c2e7-4279-b09a-03e1d1e9c21e"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "7ca051a6-8752-4ff2-9430-71a80114a88e"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "6cbd2d9c-5710-452c-af7a-6859cfb0151a"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "af980393-c613-47c2-88a4-461298b0b8f9"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "8ee84149-4198-4223-ae89-3021ad2950c7"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "5aa65d97-778b-4449-be63-7948730d64bc"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "c90e216d-d899-4709-995b-5abfcce75bcb"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "eefe6d3e-f18d-474e-b82e-04bb406d290f"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "ccb67521-5ca1-42cf-bd81-4058c6c5348d"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "4b8563c5-37ad-49e8-9b6c-d635378bffce"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "5af2d54e-309c-46a6-8454-c91b957a59f9"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "aa34760a-d543-46c8-afa1-d83a38d42f2b"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "5ee4ad14-091f-42f4-a357-09fc16c3ae39"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "34ddd546-4df3-480c-9aa3-880fb51b8016"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "e913ffae-6ae9-44e0-b516-1cc763bfefe7"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "7ec14f29-b730-4000-b66d-aa304767e8c1"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "67917609-d54d-4afc-9f9a-6e3abc0d18a4"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
-      },
-      {
-        "type": {
-          "guid": "94c31826-ae8e-432a-9a27-73346f49c704"
-        },
-        "diff": {
-          "families": [
-            {
-              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
-            }
-          ]
-        }
       }
     ]
   },
@@ -604,7 +169,9 @@
         "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
         "name": "Nakagin Capsule Tower",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          }
         ],
         "pieces": [
           {
@@ -4661,7 +4228,9 @@
         "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
         "name": "Slanted",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          }
         ],
         "pieces": [
           {
@@ -8584,7 +8153,9 @@
         "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f",
         "name": "Twisted",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          }
         ],
         "pieces": [
           {
@@ -12507,7 +12078,9 @@
         "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452",
         "name": "Dancing",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          }
         ],
         "pieces": [
           {
@@ -16430,7 +16003,9 @@
         "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
         "name": "Flat",
         "families": [
-          "Capsule Dream"
+          {
+            "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+          }
         ],
         "pieces": [
           {
@@ -120116,7 +119691,9 @@
         "guid": "79fa8945-b47d-4896-965f-f921067cbae2",
         "name": "Flat",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          }
         ],
         "pieces": [
           {
@@ -126722,7 +126299,9 @@
         "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
         "name": "Flat",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          }
         ],
         "pieces": [
           {
@@ -133328,7 +132907,9 @@
         "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
         "name": "Flat",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          }
         ],
         "pieces": [
           {
@@ -139934,7 +139515,9 @@
         "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95",
         "name": "Flat",
         "families": [
-          "Nakagin Capsule Tower"
+          {
+            "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          }
         ],
         "pieces": [
           {
@@ -146549,11 +146132,6 @@
         },
         "diff": {
           "name": "Capsule Dream",
-          "families": [
-            {
-              "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
-            }
-          ],
           "unit": "m",
           "icon": "icons/capsule-dream.svg",
           "image": "images/capsule-dream.png",
