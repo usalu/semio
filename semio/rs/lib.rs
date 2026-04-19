@@ -331,6 +331,16 @@ mod has_guid_trait {
             &self.guid
         }
     }
+    impl HasGuid for Benchmark {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
+    impl HasGuid for Location {
+        fn guid(&self) -> &str {
+            &self.guid
+        }
+    }
     /// <summary>💎DiffHasGuid implementation for AttributeDiff.</summary>
     /// <remarks>
     /// </remarks>
@@ -13718,6 +13728,7 @@ pub use kit_graph::*;
 
 mod oop {
     use super::*;
+    use serde::{Deserialize, Serialize};
 
     // ——— Geometry aliases (diagram: Point, Coordinate, Offset)
 
@@ -13804,32 +13815,7 @@ mod oop {
         }
     }
 
-    // ——— Traits (diagram Entity / Actor)
-
-    pub trait Entity: HasGuid {
-        fn entity_name(&self) -> &str;
-        fn update_description_str(&self, kit: &mut Kit, description: &str) -> Result<()>;
-    }
-
-    impl Entity for Concept {
-        fn entity_name(&self) -> &str {
-            &self.name
-        }
-
-        fn update_description_str(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            self.update_description(kit, description)
-        }
-    }
-
-    impl Entity for Tag {
-        fn entity_name(&self) -> &str {
-            &self.name
-        }
-
-        fn update_description_str(&self, kit: &mut Kit, description: &str) -> Result<()> {
-            self.update_description(kit, description)
-        }
-    }
+    include!("oop_store_dto.inc.rs");
 
     pub trait Actor {
         fn get_name(&self) -> &str;
@@ -13890,59 +13876,8 @@ mod oop {
     }
 
     impl Agent {
-        pub fn execute<E: Entity>(&self, _command_kind: KitCommandKind, target: &E) {
+        pub fn execute<S: Store>(&self, _command_kind: KitCommandKind, target: &S) {
             let _ = (self, target);
-        }
-    }
-
-    // ——— Polymorphic kit entities for selection (diagram: no bare ids in API)
-
-    #[derive(Debug, Clone)]
-    pub enum KitEntity {
-        Tag(Tag),
-        Concept(Concept),
-        Port(Port),
-        Quality(Quality),
-        Type(Type),
-        Design(Design),
-        File(File),
-        Folder(Folder),
-        Author(Author),
-        Attribute(Attribute),
-        Model(Model),
-        Connector(Connector),
-        Prop(Prop),
-        Layer(Layer),
-        Group(Group),
-        Piece(Piece),
-        Connection(Connection),
-        Stat(Stat),
-        Benchmark(Benchmark),
-    }
-
-    impl HasGuid for KitEntity {
-        fn guid(&self) -> &str {
-            match self {
-                KitEntity::Tag(e) => e.guid(),
-                KitEntity::Concept(e) => e.guid(),
-                KitEntity::Port(e) => e.guid(),
-                KitEntity::Quality(e) => e.guid(),
-                KitEntity::Type(e) => e.guid(),
-                KitEntity::Design(e) => e.guid(),
-                KitEntity::File(e) => e.guid(),
-                KitEntity::Folder(e) => e.guid(),
-                KitEntity::Author(e) => e.guid(),
-                KitEntity::Attribute(e) => e.guid(),
-                KitEntity::Model(e) => e.guid(),
-                KitEntity::Connector(e) => e.guid(),
-                KitEntity::Prop(e) => e.guid(),
-                KitEntity::Layer(e) => e.guid(),
-                KitEntity::Group(e) => e.guid(),
-                KitEntity::Piece(e) => e.guid(),
-                KitEntity::Connection(e) => e.guid(),
-                KitEntity::Stat(e) => e.guid(),
-                KitEntity::Benchmark(e) => &e.guid,
-            }
         }
     }
 
@@ -13950,7 +13885,7 @@ mod oop {
 
     /// Design-level edit scoped selection + undo stack for operations within a [`KitClient`] session.
     pub struct KitOperation {
-        pub selection: Vec<KitEntity>,
+        pub selection: Vec<AnyStore>,
         undo_stack: Vec<KitGraphChange>,
         redo_stack: Vec<KitGraphChange>,
     }
@@ -13970,25 +13905,25 @@ mod oop {
             Self::default()
         }
 
-        pub fn add_to_selection(&mut self, entity: KitEntity) {
+        pub fn add_to_selection(&mut self, entity: AnyStore) {
             let g = entity.guid().to_string();
             if !self.selection.iter().any(|e| e.guid() == g) {
                 self.selection.push(entity);
             }
         }
 
-        pub fn add_many_to_selection(&mut self, entities: impl IntoIterator<Item = KitEntity>) {
+        pub fn add_many_to_selection(&mut self, entities: impl IntoIterator<Item = AnyStore>) {
             for e in entities {
                 self.add_to_selection(e);
             }
         }
 
-        pub fn remove_from_selection(&mut self, entity: &KitEntity) {
+        pub fn remove_from_selection(&mut self, entity: &AnyStore) {
             let g = entity.guid();
             self.selection.retain(|e| e.guid() != g);
         }
 
-        pub fn remove_many_from_selection(&mut self, entities: &[KitEntity]) {
+        pub fn remove_many_from_selection(&mut self, entities: &[AnyStore]) {
             for e in entities {
                 self.remove_from_selection(e);
             }

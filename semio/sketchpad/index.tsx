@@ -1085,10 +1085,7 @@ export class FolderKitStore implements UndoableKitStore {
   undo(): void {
     const change = this.undoStack.pop();
     if (!change) return;
-    console.log("[DEBUG] FolderKitStore.undo backward:", JSON.stringify(change.backward));
-    console.log("[DEBUG] FolderKitStore.undo kit.name before:", (this.kit as any).name);
     this.kit = applyKitDiff(this.kit, change.backward);
-    console.log("[DEBUG] FolderKitStore.undo kit.name after:", (this.kit as any).name);
     this.redoStack.push(change);
     this.dirty = true;
     this.notify();

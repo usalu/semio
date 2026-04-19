@@ -663,479 +663,1628 @@ kit : !Kit{
 classDiagram
 direction TB
 
-class EntityStore {
+class Store {
   <<abstract>>
-  +getName()
-  +updateDescription(description: String)
   +toIdDto() IdDto
   +toInputDto() InputDto
   +toMetadataDto() MetadataDto
   +toShallowDto() ShallowDto
-  +toDto() Dto
-}
-
-class Actor {
-  <<interface>>
-  +getName()
-  +getEmail()
-  +getColor()
-}
-
-class User {
-  +startSession(timeoutSeconds: Float)
-}
-
-class Agent {
-  +execute(commandKind: KitCommandKind, target: EntityStore)
-}
-
-class KitClient {
-  +startSession(timeoutSeconds: Float)
-  +endSession()
-  +undo()
-  +canUndo()
-  +redo()
-  +canRedo()
-  +startNewOperation()
-  +setActiveOperation(operation: KitOperation)
-  +submitOperation(operation: KitOperation)
-  +submitActiveOperation()
-  +submitAllOperations()
-  +cancelOperation(operation: KitOperation)
-  +cancelActiveOperation()
-  +cancelAllOperations()
-}
-
-class KitOperation {
-  +addToSelection(entity: EntityStore)
-  +addManyToSelection(entities: EntityStore[])
-  +removeFromSelection(entity: EntityStore)
-  +removeManyFromSelection(entities: EntityStore[])
-  +clearSelection()
-  +undo()
-  +canUndo()
-  +redo()
-  +canRedo()
-}
-
-class KitStore {
-  +createTag(tag: TagStore)
-  +createTags(tags: TagStore[])
-  +createConcept(concept: ConceptStore)
-  +createConcepts(concepts: ConceptStore[])
-  +createPort(port: PortStore)
-  +createPorts(ports: PortStore[])
-  +createQuality(quality: QualityStore)
-  +createQualities(qualities: QualityStore[])
-  +createType(type: TypeStore)
-  +createTypes(types: TypeStore[])
-  +createDesign(design: DesignStore)
-  +createDesigns(designs: DesignStore[])
-  +deleteTag(tag: TagStore)
-  +deleteTags(tags: TagStore[])
-  +deleteConcept(concept: ConceptStore)
-  +deleteConcepts(concepts: ConceptStore[])
-  +deletePort(port: PortStore)
-  +deletePorts(ports: PortStore[])
-  +deleteQuality(quality: QualityStore)
-  +deleteQualities(qualities: QualityStore[])
-  +deleteType(type: TypeStore)
-  +deleteTypes(types: TypeStore[])
-  +deleteDesign(design: DesignStore)
-  +deleteDesigns(designs: DesignStore[])
-}
-
-class AttributeStore {
-  +rename(key: String)
-  +setValue(value: String)
-  +setDefinition(definition: String)
-}
-
-class AuthorStore {
-  +rename(name: String)
-  +changeEmail(email: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class LocationStore {
-  +setCoordinates(longitude: Float, latitude: Float, altitude: Float)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class FolderStore {
-  +rename(name: String)
-  +setParent(parentFolder: FolderStore)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class FileStore {
-  +rename(name: String)
-  +setFolder(folder: FolderStore)
-  +setRemote(remote: String)
-  +replaceBlob(blob: String, size: Float, hash: String)
-}
-
-class ConceptStore {
-  +rename(name: String)
-  +updateDescription(description: String)
-  +updateIcon(icon: String)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class QualityStore {
-  +rename(name: String)
-  +updateDescription(description: String)
-  +updateIcon(icon: String)
-  +setRange(min: Float, isMinExcluded: Boolean, max: Float, isMaxExcluded: Boolean)
-  +setUnit(unit: String)
-  +addBenchmark(benchmark: BenchmarkStore)
-  +removeBenchmark(benchmark: BenchmarkStore)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class BenchmarkStore {
-  +rename(name: String)
-  +updateIcon(icon: String)
-  +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class StatStore {
-  +setQuality(quality: QualityStore)
-  +setUnit(unit: String)
-  +setRange(min: Float, minExcluded: Boolean, max: Float, maxExcluded: Boolean)
-}
-
-class TagStore {
-  +rename(name: String)
-  +updateDescription(description: String)
-  +updateIcon(icon: String)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class ModelStore {
-  +rename(name: String)
-  +setFile(file: FileStore)
-  +setTags(tags: TagStore[])
-  +updateDescription(description: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class PortStore {
-  +rename(name: String)
-  +updateDescription(description: String)
-  +updateIcon(icon: String)
-  +setCompatiblePorts(ports: PortStore[])
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class ConnectorStore {
-  +rename(name: String)
-  +setPlacement(t: Float, point: Point, direction: Vector)
-  +setPort(port: PortStore)
-  +setMandatory(mandatory: Boolean)
-  +updateDescription(description: String)
-  +addProp(prop: PropStore)
-  +removeProp(prop: PropStore)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class PropStore {
-  +setQuality(quality: QualityStore)
-  +setValue(value: String)
-  +setUnit(unit: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class LayerStore {
-  +setPath(path: String)
-  +setHidden(isHidden: Boolean)
-  +setLocked(isLocked: Boolean)
-  +setColor(color: String)
-  +updateDescription(description: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class GroupStore {
-  +rename(name: String)
-  +setPieces(pieces: PieceStore[])
-  +setColor(color: String)
-  +updateDescription(description: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class PieceStore {
-  +rename(name: String)
-  +setType(type: TypeStore)
-  +setDesign(design: DesignStore)
-  +setPlane(plane: Plane)
-  +setCenter(center: Coordinate)
-  +setScale(scale: Float)
-  +setMirrorPlane(mirrorPlane: Plane)
-  +setHidden(isHidden: Boolean)
-  +setLocked(isLocked: Boolean)
-  +setColor(color: String)
-  +updateDescription(description: String)
-  +drag(targetPlane: Plane)
-  +move(center: Coordinate)
-  +fix()
-  +changeToType(type: TypeStore)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class Side {
-  +setPiece(piece: PieceStore)
-  +setDesignPiece(designPiece: PieceStore)
-  +setConnector(connector: ConnectorStore)
-}
-
-class ConnectionStore {
-  +reconnect(connected: Side, connecting: Side)
-  +adjustAlignment(gap: Float, shift: Float, rise: Float, rotation: Float, turn: Float, tilt: Float, u: Float, v: Float)
-  +updateDescription(description: String)
-  +addAttribute(attribute: AttributeStore)
-  +removeAttribute(attribute: AttributeStore)
-}
-
-class TypeStore {
-  +rename(name: String)
-  +setParent(parentType: TypeStore)
-  +setAbstract(isAbstract: Boolean)
-  +setFolder(folder: FolderStore)
-  +setStock(stock: Int)
-  +setVirtual(isVirtual: Boolean)
-  +setUnit(unit: String)
-  +setLocation(location: LocationStore)
-  +setAuthors(authors: AuthorStore[])
-  +setConcepts(concepts: ConceptStore[])
-  +updateIcon(icon: String)
-  +updateDescription(description: String)
-  +addModel(model: ModelStore)
-  +removeModel(model: ModelStore)
-  +addConnector(connector: ConnectorStore)
-  +removeConnector(connector: ConnectorStore)
-  +addProp(prop: PropStore)
-  +removeProp(prop: PropStore)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class DesignStore {
-  +rename(name: String)
-  +setParent(parentDesign: DesignStore)
-  +setAbstract(isAbstract: Boolean)
-  +setFolder(folder: FolderStore)
-  +setActiveLayer(layer: LayerStore)
-  +setScalable(canScale: Boolean)
-  +setMirrorable(canMirror: Boolean)
-  +setUnit(unit: String)
-  +setLocation(location: LocationStore)
-  +setAuthors(authors: AuthorStore[])
-  +setConcepts(concepts: ConceptStore[])
-  +updateIcon(icon: String)
-  +updateDescription(description: String)
-  +flatten()
-  +addFixedPiece(name: String, type: TypeStore, center: Coordinate, plane: Plane, designPiece: PieceStore, attributes: AttributeStore[])
-  +addFixedPieces(pieces: PieceStore[])
-  +addChildPiece(piece: PieceStore, connection: ConnectionStore)
-  +addChildPieces(pieces: PieceStore[], connections: ConnectionStore[])
-  +addHangingChildPiece(piece: PieceStore, connection: ConnectionStore)
-  +addHangingChildPieces(pieces: PieceStore[], connections: ConnectionStore[])
-  +readPiece(piece: PieceStore)
-  +getAlternativePieceKind(piece: PieceStore)
-  +renamePiece(piece: PieceStore, name: String)
-  +updatePieceDescription(piece: PieceStore, description: String)
-  +dragPiece(piece: PieceStore, targetPlane: Plane)
-  +dragPieces(pieces: PieceStore[], targetPlane: Plane)
-  +movePiece(piece: PieceStore, center: Coordinate)
-  +movePieces(pieces: PieceStore[], offset: Offset)
-  +fixPiece(piece: PieceStore)
-  +fixPieces(pieces: PieceStore[])
-  +changePieceToType(piece: PieceStore, type: TypeStore)
-  +changePiecesToType(pieces: PieceStore[], type: TypeStore)
-  +deletePiece(piece: PieceStore)
-  +deletePieces(pieces: PieceStore[])
-  +deletePiecesAndConnections(pieces: PieceStore[])
-  +addConnection(connection: ConnectionStore)
-  +removeConnection(connection: ConnectionStore)
-  +addLayer(layer: LayerStore)
-  +removeLayer(layer: LayerStore)
-  +addGroup(group: GroupStore)
-  +removeGroup(group: GroupStore)
-  +addStat(stat: StatStore)
-  +removeStat(stat: StatStore)
-  +addProp(prop: PropStore)
-  +removeProp(prop: PropStore)
-  +addAttribute(attribute: AttributeStore)
-  +addAttributes(attributes: AttributeStore[])
-  +removeAttribute(attribute: AttributeStore)
-  +removeAttributes(attributes: AttributeStore[])
-  +delete()
-}
-
-class Coordinate {
-  +translate(offset: Offset)
-}
-
-class Offset {
-  +invert()
-}
-
-class Point {
-  +translate(vector: Vector)
-}
-
-class Vector {
-  +normalize()
-  +scale(factor: Float)
-}
-
-class Plane {
-  +moveTo(origin: Point)
-  +rotate(xAxis: Vector, yAxis: Vector)
-}
-
-class IdDto {
-  +asGuid() String
-  +isEmpty() Boolean
-}
-
-class InputDto {
-  +set(field: String, value: Object)
-  +addReference(field: String, reference: IdDto)
-  +addChild(field: String, child: InputDto)
-  +validate() Boolean
-}
-
-class MetadataDto {
-  +addReference(field: String, reference: IdDto)
-  +hasReference(field: String) Boolean
-  +validate() Boolean
-}
-
-class ShallowDto {
-  +addReference(field: String, reference: IdDto)
-  +addChildView(field: String, child: MetadataDto)
-  +flattenChildren() MetadataDto[]
-  +validate() Boolean
+  +toFullDto() FullDto
 }
 
 class Dto {
-  +addReference(field: String, reference: IdDto)
-  +addChild(field: String, child: Dto)
-  +addDerived(key: String, value: Object)
-  +computeDerived()
+  <<abstract>>
   +validate() Boolean
 }
 
-Actor <|.. User
-Actor <|.. Agent
+class IdDto {
+  +id: String
+}
 
-AttributeStore --|> EntityStore
-AuthorStore --|> EntityStore
-LocationStore --|> EntityStore
-FolderStore --|> EntityStore
-FileStore --|> EntityStore
-ConceptStore --|> EntityStore
-QualityStore --|> EntityStore
-BenchmarkStore --|> EntityStore
-StatStore --|> EntityStore
-TagStore --|> EntityStore
-ModelStore --|> EntityStore
-PortStore --|> EntityStore
-ConnectorStore --|> EntityStore
-PropStore --|> EntityStore
-LayerStore --|> EntityStore
-GroupStore --|> EntityStore
-PieceStore --|> EntityStore
-ConnectionStore --|> EntityStore
-TypeStore --|> EntityStore
-DesignStore --|> EntityStore
-KitStore --|> EntityStore
+class InputDto
+class MetadataDto {
+  <<abstract>>
+}
+class ShallowDto {
+  <<abstract>>
+}
+class FullDto {
+  <<abstract>>
+}
 
-KitClient --> Actor : actor
-KitClient --> KitStore : worksOn
-KitClient *-- KitOperation : operations
+class SideDto {
+  +piece: PieceIdDto
+  +designPiece: PieceIdDto
+  +connector: ConnectorIdDto
+}
 
-KitStore *-- TagStore
-KitStore *-- ConceptStore
-KitStore *-- PortStore
-KitStore *-- QualityStore
-KitStore *-- TypeStore
-KitStore *-- DesignStore
-KitStore *-- FileStore
-KitStore *-- FolderStore
-KitStore *-- AuthorStore
+class Coordinate {
+  +u: Float
+  +v: Float
+}
 
-QualityStore *-- BenchmarkStore
-TypeStore *-- ModelStore
-TypeStore *-- ConnectorStore
-TypeStore *-- PropStore
-DesignStore *-- PieceStore
-DesignStore *-- ConnectionStore
-DesignStore *-- LayerStore
-DesignStore *-- GroupStore
-DesignStore *-- StatStore
-DesignStore *-- PropStore
+class Point {
+  +x: Float
+  +y: Float
+  +z: Float
+}
 
-ModelStore --> FileStore
-ModelStore o-- TagStore
-ConnectorStore --> PortStore
-ConnectorStore *-- PropStore
-GroupStore o-- PieceStore
-PieceStore --> TypeStore
-PieceStore --> DesignStore
-ConnectionStore *-- Side
-Side --> PieceStore
-Side --> ConnectorStore
+class Vector {
+  +x: Float
+  +y: Float
+  +z: Float
+}
+
+class Plane {
+  +origin: Point
+  +xAxis: Vector
+  +yAxis: Vector
+}
+
+class AttributeStore {
+  +AttributeStore(dto: AttributeIdDto)
+  +AttributeStore(dto: AttributeInputDto)
+  +AttributeStore(dto: AttributeMetadataDto)
+  +AttributeStore(dto: AttributeShallowDto)
+  +AttributeStore(dto: AttributeFullDto)
+  +toIdDto() AttributeIdDto
+  +toInputDto() AttributeInputDto
+  +toMetadataDto() AttributeMetadataDto
+  +toShallowDto() AttributeShallowDto
+  +toFullDto() AttributeFullDto
+}
+
+class AuthorStore {
+  +AuthorStore(dto: AuthorIdDto)
+  +AuthorStore(dto: AuthorInputDto)
+  +AuthorStore(dto: AuthorMetadataDto)
+  +AuthorStore(dto: AuthorShallowDto)
+  +AuthorStore(dto: AuthorFullDto)
+  +toIdDto() AuthorIdDto
+  +toInputDto() AuthorInputDto
+  +toMetadataDto() AuthorMetadataDto
+  +toShallowDto() AuthorShallowDto
+  +toFullDto() AuthorFullDto
+}
+
+class LocationStore {
+  +LocationStore(dto: LocationIdDto)
+  +LocationStore(dto: LocationInputDto)
+  +LocationStore(dto: LocationMetadataDto)
+  +LocationStore(dto: LocationShallowDto)
+  +LocationStore(dto: LocationFullDto)
+  +toIdDto() LocationIdDto
+  +toInputDto() LocationInputDto
+  +toMetadataDto() LocationMetadataDto
+  +toShallowDto() LocationShallowDto
+  +toFullDto() LocationFullDto
+}
+
+class FolderStore {
+  +FolderStore(dto: FolderIdDto)
+  +FolderStore(dto: FolderInputDto)
+  +FolderStore(dto: FolderMetadataDto)
+  +FolderStore(dto: FolderShallowDto)
+  +FolderStore(dto: FolderFullDto)
+  +toIdDto() FolderIdDto
+  +toInputDto() FolderInputDto
+  +toMetadataDto() FolderMetadataDto
+  +toShallowDto() FolderShallowDto
+  +toFullDto() FolderFullDto
+}
+
+class FileStore {
+  +FileStore(dto: FileIdDto)
+  +FileStore(dto: FileInputDto)
+  +FileStore(dto: FileMetadataDto)
+  +FileStore(dto: FileShallowDto)
+  +FileStore(dto: FileFullDto)
+  +toIdDto() FileIdDto
+  +toInputDto() FileInputDto
+  +toMetadataDto() FileMetadataDto
+  +toShallowDto() FileShallowDto
+  +toFullDto() FileFullDto
+}
+
+class ConceptStore {
+  +ConceptStore(dto: ConceptIdDto)
+  +ConceptStore(dto: ConceptInputDto)
+  +ConceptStore(dto: ConceptMetadataDto)
+  +ConceptStore(dto: ConceptShallowDto)
+  +ConceptStore(dto: ConceptFullDto)
+  +toIdDto() ConceptIdDto
+  +toInputDto() ConceptInputDto
+  +toMetadataDto() ConceptMetadataDto
+  +toShallowDto() ConceptShallowDto
+  +toFullDto() ConceptFullDto
+}
+
+class QualityStore {
+  +QualityStore(dto: QualityIdDto)
+  +QualityStore(dto: QualityInputDto)
+  +QualityStore(dto: QualityMetadataDto)
+  +QualityStore(dto: QualityShallowDto)
+  +QualityStore(dto: QualityFullDto)
+  +toIdDto() QualityIdDto
+  +toInputDto() QualityInputDto
+  +toMetadataDto() QualityMetadataDto
+  +toShallowDto() QualityShallowDto
+  +toFullDto() QualityFullDto
+}
+
+class BenchmarkStore {
+  +BenchmarkStore(dto: BenchmarkIdDto)
+  +BenchmarkStore(dto: BenchmarkInputDto)
+  +BenchmarkStore(dto: BenchmarkMetadataDto)
+  +BenchmarkStore(dto: BenchmarkShallowDto)
+  +BenchmarkStore(dto: BenchmarkFullDto)
+  +toIdDto() BenchmarkIdDto
+  +toInputDto() BenchmarkInputDto
+  +toMetadataDto() BenchmarkMetadataDto
+  +toShallowDto() BenchmarkShallowDto
+  +toFullDto() BenchmarkFullDto
+}
+
+class StatStore {
+  +StatStore(dto: StatIdDto)
+  +StatStore(dto: StatInputDto)
+  +StatStore(dto: StatMetadataDto)
+  +StatStore(dto: StatShallowDto)
+  +StatStore(dto: StatFullDto)
+  +toIdDto() StatIdDto
+  +toInputDto() StatInputDto
+  +toMetadataDto() StatMetadataDto
+  +toShallowDto() StatShallowDto
+  +toFullDto() StatFullDto
+}
+
+class TagStore {
+  +TagStore(dto: TagIdDto)
+  +TagStore(dto: TagInputDto)
+  +TagStore(dto: TagMetadataDto)
+  +TagStore(dto: TagShallowDto)
+  +TagStore(dto: TagFullDto)
+  +toIdDto() TagIdDto
+  +toInputDto() TagInputDto
+  +toMetadataDto() TagMetadataDto
+  +toShallowDto() TagShallowDto
+  +toFullDto() TagFullDto
+}
+
+class ModelStore {
+  +ModelStore(dto: ModelIdDto)
+  +ModelStore(dto: ModelInputDto)
+  +ModelStore(dto: ModelMetadataDto)
+  +ModelStore(dto: ModelShallowDto)
+  +ModelStore(dto: ModelFullDto)
+  +toIdDto() ModelIdDto
+  +toInputDto() ModelInputDto
+  +toMetadataDto() ModelMetadataDto
+  +toShallowDto() ModelShallowDto
+  +toFullDto() ModelFullDto
+}
+
+class PortStore {
+  +PortStore(dto: PortIdDto)
+  +PortStore(dto: PortInputDto)
+  +PortStore(dto: PortMetadataDto)
+  +PortStore(dto: PortShallowDto)
+  +PortStore(dto: PortFullDto)
+  +toIdDto() PortIdDto
+  +toInputDto() PortInputDto
+  +toMetadataDto() PortMetadataDto
+  +toShallowDto() PortShallowDto
+  +toFullDto() PortFullDto
+}
+
+class ConnectorStore {
+  +ConnectorStore(dto: ConnectorIdDto)
+  +ConnectorStore(dto: ConnectorInputDto)
+  +ConnectorStore(dto: ConnectorMetadataDto)
+  +ConnectorStore(dto: ConnectorShallowDto)
+  +ConnectorStore(dto: ConnectorFullDto)
+  +toIdDto() ConnectorIdDto
+  +toInputDto() ConnectorInputDto
+  +toMetadataDto() ConnectorMetadataDto
+  +toShallowDto() ConnectorShallowDto
+  +toFullDto() ConnectorFullDto
+}
+
+class PropStore {
+  +PropStore(dto: PropIdDto)
+  +PropStore(dto: PropInputDto)
+  +PropStore(dto: PropMetadataDto)
+  +PropStore(dto: PropShallowDto)
+  +PropStore(dto: PropFullDto)
+  +toIdDto() PropIdDto
+  +toInputDto() PropInputDto
+  +toMetadataDto() PropMetadataDto
+  +toShallowDto() PropShallowDto
+  +toFullDto() PropFullDto
+}
+
+class LayerStore {
+  +LayerStore(dto: LayerIdDto)
+  +LayerStore(dto: LayerInputDto)
+  +LayerStore(dto: LayerMetadataDto)
+  +LayerStore(dto: LayerShallowDto)
+  +LayerStore(dto: LayerFullDto)
+  +toIdDto() LayerIdDto
+  +toInputDto() LayerInputDto
+  +toMetadataDto() LayerMetadataDto
+  +toShallowDto() LayerShallowDto
+  +toFullDto() LayerFullDto
+}
+
+class GroupStore {
+  +GroupStore(dto: GroupIdDto)
+  +GroupStore(dto: GroupInputDto)
+  +GroupStore(dto: GroupMetadataDto)
+  +GroupStore(dto: GroupShallowDto)
+  +GroupStore(dto: GroupFullDto)
+  +toIdDto() GroupIdDto
+  +toInputDto() GroupInputDto
+  +toMetadataDto() GroupMetadataDto
+  +toShallowDto() GroupShallowDto
+  +toFullDto() GroupFullDto
+}
+
+class PieceStore {
+  +PieceStore(dto: PieceIdDto)
+  +PieceStore(dto: PieceInputDto)
+  +PieceStore(dto: PieceMetadataDto)
+  +PieceStore(dto: PieceShallowDto)
+  +PieceStore(dto: PieceFullDto)
+  +toIdDto() PieceIdDto
+  +toInputDto() PieceInputDto
+  +toMetadataDto() PieceMetadataDto
+  +toShallowDto() PieceShallowDto
+  +toFullDto() PieceFullDto
+}
+
+class ConnectionStore {
+  +ConnectionStore(dto: ConnectionIdDto)
+  +ConnectionStore(dto: ConnectionInputDto)
+  +ConnectionStore(dto: ConnectionMetadataDto)
+  +ConnectionStore(dto: ConnectionShallowDto)
+  +ConnectionStore(dto: ConnectionFullDto)
+  +toIdDto() ConnectionIdDto
+  +toInputDto() ConnectionInputDto
+  +toMetadataDto() ConnectionMetadataDto
+  +toShallowDto() ConnectionShallowDto
+  +toFullDto() ConnectionFullDto
+}
+
+class TypeStore {
+  +TypeStore(dto: TypeIdDto)
+  +TypeStore(dto: TypeInputDto)
+  +TypeStore(dto: TypeMetadataDto)
+  +TypeStore(dto: TypeShallowDto)
+  +TypeStore(dto: TypeFullDto)
+  +toIdDto() TypeIdDto
+  +toInputDto() TypeInputDto
+  +toMetadataDto() TypeMetadataDto
+  +toShallowDto() TypeShallowDto
+  +toFullDto() TypeFullDto
+}
+
+class DesignStore {
+  +DesignStore(dto: DesignIdDto)
+  +DesignStore(dto: DesignInputDto)
+  +DesignStore(dto: DesignMetadataDto)
+  +DesignStore(dto: DesignShallowDto)
+  +DesignStore(dto: DesignFullDto)
+  +toIdDto() DesignIdDto
+  +toInputDto() DesignInputDto
+  +toMetadataDto() DesignMetadataDto
+  +toShallowDto() DesignShallowDto
+  +toFullDto() DesignFullDto
+}
+
+class KitStore {
+  +KitStore(dto: KitIdDto)
+  +KitStore(dto: KitInputDto)
+  +KitStore(dto: KitMetadataDto)
+  +KitStore(dto: KitShallowDto)
+  +KitStore(dto: KitFullDto)
+  +toIdDto() KitIdDto
+  +toInputDto() KitInputDto
+  +toMetadataDto() KitMetadataDto
+  +toShallowDto() KitShallowDto
+  +toFullDto() KitFullDto
+}
+
+class AttributeIdDto {
+  +id: String
+}
+class AttributeInputDto {
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeMetadataDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeShallowDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+class AttributeFullDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +value: String
+  +definition: String
+}
+
+class AuthorIdDto {
+  +id: String
+}
+class AuthorInputDto {
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeInputDto[]
+}
+class AuthorMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+}
+class AuthorShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeMetadataDto[]
+}
+class AuthorFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +email: String
+  +attributes: AttributeFullDto[]
+}
+
+class LocationIdDto {
+  +id: String
+}
+class LocationInputDto {
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeInputDto[]
+}
+class LocationMetadataDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+}
+class LocationShallowDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeMetadataDto[]
+}
+class LocationFullDto {
+  <<abstract>>
+  +id: String
+  +longitude: Float
+  +latitude: Float
+  +altitude: Float
+  +attributes: AttributeFullDto[]
+}
+
+class FolderIdDto {
+  +id: String
+}
+class FolderInputDto {
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FolderMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FolderShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderIdDto
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorMetadataDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorMetadataDto
+}
+class FolderFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: FolderFullDto
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +createdBy: AuthorFullDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorFullDto
+}
+
+class FileIdDto {
+  +id: String
+}
+class FileInputDto {
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderIdDto
+  +size: Float
+  +hash: String
+  +blob: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FileMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderIdDto
+  +size: Float
+  +hash: String
+  +createdAt: DateTime
+  +createdBy: AuthorIdDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorIdDto
+}
+class FileShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderMetadataDto
+  +size: Float
+  +hash: String
+  +createdAt: DateTime
+  +createdBy: AuthorMetadataDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorMetadataDto
+}
+class FileFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +remote: String
+  +folder: FolderFullDto
+  +size: Float
+  +hash: String
+  +blob: String
+  +mime: String
+  +createdAt: DateTime
+  +createdBy: AuthorFullDto
+  +modifiedAt: DateTime
+  +modifiedBy: AuthorFullDto
+}
+
+class ConceptIdDto {
+  +id: String
+}
+class ConceptInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeInputDto[]
+}
+class ConceptMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+}
+class ConceptShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeMetadataDto[]
+}
+class ConceptFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeFullDto[]
+}
+
+class QualityIdDto {
+  +id: String
+}
+class QualityInputDto {
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class QualityMetadataDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+}
+class QualityShallowDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class QualityFullDto {
+  <<abstract>>
+  +id: String
+  +key: String
+  +name: String
+  +description: String
+  +uri: String
+  +kind: Int
+  +folder: String
+  +canScale: Boolean
+  +defaultSiUnit: String
+  +defaultImperialUnit: String
+  +min: Float
+  +isMinExcluded: Boolean
+  +max: Float
+  +isMaxExcluded: Boolean
+  +defaultValue: Float
+  +formula: String
+  +icon: String
+  +image: String
+  +unit: String
+  +benchmarks: BenchmarkFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class BenchmarkIdDto {
+  +id: String
+}
+class BenchmarkInputDto {
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeInputDto[]
+}
+class BenchmarkMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class BenchmarkShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeMetadataDto[]
+}
+class BenchmarkFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +icon: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+  +attributes: AttributeFullDto[]
+}
+
+class StatIdDto {
+  +id: String
+}
+class StatInputDto {
+  +id: String
+  +quality: QualityIdDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatMetadataDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityIdDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatShallowDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityMetadataDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+class StatFullDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityFullDto
+  +unit: String
+  +min: Float
+  +minExcluded: Boolean
+  +max: Float
+  +maxExcluded: Boolean
+}
+
+class TagIdDto {
+  +id: String
+}
+class TagInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeInputDto[]
+}
+class TagMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+}
+class TagShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeMetadataDto[]
+}
+class TagFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +attributes: AttributeFullDto[]
+}
+
+class ModelIdDto {
+  +id: String
+}
+class ModelInputDto {
+  +id: String
+  +name: String
+  +tags: TagIdDto[]
+  +file: FileIdDto
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class ModelMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagIdDto[]
+  +file: FileIdDto
+  +description: String
+}
+class ModelShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagMetadataDto[]
+  +file: FileMetadataDto
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class ModelFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +tags: TagFullDto[]
+  +file: FileFullDto
+  +description: String
+  +attributes: AttributeFullDto[]
+  +fileHash: String
+  +fileMime: String
+}
+
+class PortIdDto {
+  +id: String
+}
+class PortInputDto {
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +compatiblePorts: PortIdDto[]
+  +attributes: AttributeInputDto[]
+}
+class PortMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortIdDto[]
+}
+class PortShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class PortFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +description: String
+  +icon: String
+  +maxChildren: Int
+  +compatiblePorts: PortFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class ConnectorIdDto {
+  +id: String
+}
+class ConnectorInputDto {
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortIdDto
+  +mandatory: Boolean
+  +props: PropInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class ConnectorMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortIdDto
+  +mandatory: Boolean
+  +maxChildren: Int
+}
+class ConnectorShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortMetadataDto
+  +mandatory: Boolean
+  +maxChildren: Int
+  +props: PropMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class ConnectorFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +t: Float
+  +point: Point
+  +direction: Vector
+  +description: String
+  +port: PortFullDto
+  +mandatory: Boolean
+  +maxChildren: Int
+  +props: PropFullDto[]
+  +attributes: AttributeFullDto[]
+}
+
+class PropIdDto {
+  +id: String
+}
+class PropInputDto {
+  +id: String
+  +quality: QualityIdDto
+  +value: String
+  +unit: String
+  +attributes: AttributeInputDto[]
+}
+class PropMetadataDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityIdDto
+  +value: String
+  +unit: String
+}
+class PropShallowDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityMetadataDto
+  +value: String
+  +unit: String
+  +attributes: AttributeMetadataDto[]
+}
+class PropFullDto {
+  <<abstract>>
+  +id: String
+  +quality: QualityFullDto
+  +value: String
+  +unit: String
+  +attributes: AttributeFullDto[]
+}
+
+class LayerIdDto {
+  +id: String
+}
+class LayerInputDto {
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class LayerMetadataDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+}
+class LayerShallowDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class LayerFullDto {
+  <<abstract>>
+  +id: String
+  +path: String
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class GroupIdDto {
+  +id: String
+}
+class GroupInputDto {
+  +id: String
+  +pieces: PieceIdDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class GroupMetadataDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceIdDto[]
+  +color: String
+  +name: String
+  +description: String
+}
+class GroupShallowDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceMetadataDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class GroupFullDto {
+  <<abstract>>
+  +id: String
+  +pieces: PieceFullDto[]
+  +color: String
+  +name: String
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class PieceIdDto {
+  +id: String
+}
+class PieceInputDto {
+  +id: String
+  +name: String
+  +type: TypeIdDto
+  +design: DesignIdDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropInputDto[]
+  +attributes: AttributeInputDto[]
+}
+class PieceMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeIdDto
+  +design: DesignIdDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+}
+class PieceShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeMetadataDto
+  +design: DesignMetadataDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropMetadataDto[]
+  +attributes: AttributeMetadataDto[]
+}
+class PieceFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +type: TypeFullDto
+  +design: DesignMetadataDto
+  +plane: Plane
+  +center: Coordinate
+  +scale: Float
+  +mirrorPlane: Plane
+  +isHidden: Boolean
+  +isLocked: Boolean
+  +color: String
+  +description: String
+  +props: PropFullDto[]
+  +attributes: AttributeFullDto[]
+  +kind: PieceKind
+}
+
+class ConnectionIdDto {
+  +id: String
+}
+class ConnectionInputDto {
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class ConnectionMetadataDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+}
+class ConnectionShallowDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class ConnectionFullDto {
+  <<abstract>>
+  +id: String
+  +connected: SideDto
+  +connecting: SideDto
+  +gap: Float
+  +shift: Float
+  +rise: Float
+  +rotation: Float
+  +turn: Float
+  +tilt: Float
+  +u: Float
+  +v: Float
+  +description: String
+  +attributes: AttributeFullDto[]
+}
+
+class TypeIdDto {
+  +id: String
+}
+class TypeInputDto {
+  +id: String
+  +name: String
+  +parent: TypeIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelInputDto[]
+  +connectors: ConnectorInputDto[]
+  +props: PropInputDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+}
+class TypeMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+}
+class TypeShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelMetadataDto[]
+  +connectors: ConnectorMetadataDto[]
+  +props: PropMetadataDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationMetadataDto
+  +authors: AuthorMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+}
+class TypeFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: TypeMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +models: ModelFullDto[]
+  +connectors: ConnectorFullDto[]
+  +props: PropFullDto[]
+  +stock: Int
+  +virtual: Boolean
+  +unit: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +location: LocationFullDto
+  +authors: AuthorFullDto[]
+  +concepts: ConceptFullDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +hash: String
+}
+
+class DesignIdDto {
+  +id: String
+}
+class DesignInputDto {
+  +id: String
+  +name: String
+  +parent: DesignIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceInputDto[]
+  +connections: ConnectionInputDto[]
+  +stats: StatInputDto[]
+  +props: PropInputDto[]
+  +layers: LayerInputDto[]
+  +activeLayer: LayerIdDto
+  +groups: GroupInputDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignIdDto
+  +isAbstract: Boolean
+  +folder: String
+  +activeLayer: LayerIdDto
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationIdDto
+  +authors: AuthorIdDto[]
+  +concepts: ConceptIdDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceMetadataDto[]
+  +connections: ConnectionMetadataDto[]
+  +stats: StatMetadataDto[]
+  +props: PropMetadataDto[]
+  +layers: LayerMetadataDto[]
+  +activeLayer: LayerMetadataDto
+  +groups: GroupMetadataDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationMetadataDto
+  +authors: AuthorMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class DesignFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +parent: DesignMetadataDto
+  +isAbstract: Boolean
+  +folder: String
+  +pieces: PieceFullDto[]
+  +connections: ConnectionFullDto[]
+  +stats: StatFullDto[]
+  +props: PropFullDto[]
+  +layers: LayerFullDto[]
+  +activeLayer: LayerMetadataDto
+  +groups: GroupFullDto[]
+  +canScale: Boolean
+  +canMirror: Boolean
+  +unit: String
+  +location: LocationFullDto
+  +authors: AuthorFullDto[]
+  +concepts: ConceptFullDto[]
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +hash: String
+}
+
+class KitIdDto {
+  +id: String
+}
+class KitInputDto {
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeInputDto[]
+  +designs: DesignInputDto[]
+  +tags: TagInputDto[]
+  +concepts: ConceptInputDto[]
+  +ports: PortInputDto[]
+  +qualities: QualityInputDto[]
+  +files: FileInputDto[]
+  +folders: FolderInputDto[]
+  +authors: AuthorInputDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeInputDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitMetadataDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitShallowDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeMetadataDto[]
+  +designs: DesignMetadataDto[]
+  +tags: TagMetadataDto[]
+  +concepts: ConceptMetadataDto[]
+  +ports: PortMetadataDto[]
+  +qualities: QualityMetadataDto[]
+  +files: FileMetadataDto[]
+  +folders: FolderMetadataDto[]
+  +authors: AuthorMetadataDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeMetadataDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+}
+class KitFullDto {
+  <<abstract>>
+  +id: String
+  +name: String
+  +release: String
+  +types: TypeFullDto[]
+  +designs: DesignFullDto[]
+  +tags: TagFullDto[]
+  +concepts: ConceptFullDto[]
+  +ports: PortFullDto[]
+  +qualities: QualityFullDto[]
+  +files: FileFullDto[]
+  +folders: FolderFullDto[]
+  +authors: AuthorFullDto[]
+  +remote: String
+  +homepage: String
+  +license: String
+  +preview: String
+  +icon: String
+  +image: String
+  +description: String
+  +attributes: AttributeFullDto[]
+  +createdAt: DateTime
+  +modifiedAt: DateTime
+  +hash: String
+}
+
+IdDto --|> Dto
+InputDto --|> Dto
+MetadataDto --|> Dto
+ShallowDto --|> Dto
+FullDto --|> Dto
+
+AttributeStore --|> Store
+AuthorStore --|> Store
+LocationStore --|> Store
+FolderStore --|> Store
+FileStore --|> Store
+ConceptStore --|> Store
+QualityStore --|> Store
+BenchmarkStore --|> Store
+StatStore --|> Store
+TagStore --|> Store
+ModelStore --|> Store
+PortStore --|> Store
+ConnectorStore --|> Store
+PropStore --|> Store
+LayerStore --|> Store
+GroupStore --|> Store
+PieceStore --|> Store
+ConnectionStore --|> Store
+TypeStore --|> Store
+DesignStore --|> Store
+KitStore --|> Store
+
+AttributeIdDto --|> IdDto
+AttributeInputDto --|> InputDto
+AttributeMetadataDto --|> MetadataDto
+AttributeShallowDto --|> ShallowDto
+AttributeFullDto --|> FullDto
+
+AuthorIdDto --|> IdDto
+AuthorInputDto --|> InputDto
+AuthorMetadataDto --|> MetadataDto
+AuthorShallowDto --|> ShallowDto
+AuthorFullDto --|> FullDto
+
+LocationIdDto --|> IdDto
+LocationInputDto --|> InputDto
+LocationMetadataDto --|> MetadataDto
+LocationShallowDto --|> ShallowDto
+LocationFullDto --|> FullDto
+
+FolderIdDto --|> IdDto
+FolderInputDto --|> InputDto
+FolderMetadataDto --|> MetadataDto
+FolderShallowDto --|> ShallowDto
+FolderFullDto --|> FullDto
+
+FileIdDto --|> IdDto
+FileInputDto --|> InputDto
+FileMetadataDto --|> MetadataDto
+FileShallowDto --|> ShallowDto
+FileFullDto --|> FullDto
+
+ConceptIdDto --|> IdDto
+ConceptInputDto --|> InputDto
+ConceptMetadataDto --|> MetadataDto
+ConceptShallowDto --|> ShallowDto
+ConceptFullDto --|> FullDto
+
+QualityIdDto --|> IdDto
+QualityInputDto --|> InputDto
+QualityMetadataDto --|> MetadataDto
+QualityShallowDto --|> ShallowDto
+QualityFullDto --|> FullDto
+
+BenchmarkIdDto --|> IdDto
+BenchmarkInputDto --|> InputDto
+BenchmarkMetadataDto --|> MetadataDto
+BenchmarkShallowDto --|> ShallowDto
+BenchmarkFullDto --|> FullDto
+
+StatIdDto --|> IdDto
+StatInputDto --|> InputDto
+StatMetadataDto --|> MetadataDto
+StatShallowDto --|> ShallowDto
+StatFullDto --|> FullDto
+
+TagIdDto --|> IdDto
+TagInputDto --|> InputDto
+TagMetadataDto --|> MetadataDto
+TagShallowDto --|> ShallowDto
+TagFullDto --|> FullDto
+
+ModelIdDto --|> IdDto
+ModelInputDto --|> InputDto
+ModelMetadataDto --|> MetadataDto
+ModelShallowDto --|> ShallowDto
+ModelFullDto --|> FullDto
+
+PortIdDto --|> IdDto
+PortInputDto --|> InputDto
+PortMetadataDto --|> MetadataDto
+PortShallowDto --|> ShallowDto
+PortFullDto --|> FullDto
+
+ConnectorIdDto --|> IdDto
+ConnectorInputDto --|> InputDto
+ConnectorMetadataDto --|> MetadataDto
+ConnectorShallowDto --|> ShallowDto
+ConnectorFullDto --|> FullDto
+
+PropIdDto --|> IdDto
+PropInputDto --|> InputDto
+PropMetadataDto --|> MetadataDto
+PropShallowDto --|> ShallowDto
+PropFullDto --|> FullDto
+
+LayerIdDto --|> IdDto
+LayerInputDto --|> InputDto
+LayerMetadataDto --|> MetadataDto
+LayerShallowDto --|> ShallowDto
+LayerFullDto --|> FullDto
+
+GroupIdDto --|> IdDto
+GroupInputDto --|> InputDto
+GroupMetadataDto --|> MetadataDto
+GroupShallowDto --|> ShallowDto
+GroupFullDto --|> FullDto
+
+PieceIdDto --|> IdDto
+PieceInputDto --|> InputDto
+PieceMetadataDto --|> MetadataDto
+PieceShallowDto --|> ShallowDto
+PieceFullDto --|> FullDto
+
+ConnectionIdDto --|> IdDto
+ConnectionInputDto --|> InputDto
+ConnectionMetadataDto --|> MetadataDto
+ConnectionShallowDto --|> ShallowDto
+ConnectionFullDto --|> FullDto
+
+TypeIdDto --|> IdDto
+TypeInputDto --|> InputDto
+TypeMetadataDto --|> MetadataDto
+TypeShallowDto --|> ShallowDto
+TypeFullDto --|> FullDto
+
+DesignIdDto --|> IdDto
+DesignInputDto --|> InputDto
+DesignMetadataDto --|> MetadataDto
+DesignShallowDto --|> ShallowDto
+DesignFullDto --|> FullDto
+
+KitIdDto --|> IdDto
+KitInputDto --|> InputDto
+KitMetadataDto --|> MetadataDto
+KitShallowDto --|> ShallowDto
+KitFullDto --|> FullDto
+
 Plane *-- Point
 Plane *-- Vector
-
-EntityStore ..> IdDto : toIdDto
-EntityStore ..> InputDto : toInputDto
-EntityStore ..> MetadataDto : toMetadataDto
-EntityStore ..> ShallowDto : toShallowDto
-EntityStore ..> Dto : toDto
-
-InputDto --> IdDto : all references
-InputDto --> InputDto : all children
-MetadataDto --> IdDto : references only
-ShallowDto --> IdDto : cross references
-ShallowDto --> MetadataDto : child metadata
-Dto --> IdDto : cross references
-Dto --> Dto : deep children
 ```
 
 ## 📛 Entities

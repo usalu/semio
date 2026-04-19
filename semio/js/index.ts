@@ -12247,9 +12247,10 @@ export class KitEntity implements SynchronizedKit {
  * Applies `diff` to `kit` in place (no validation). Prefer semantic methods or {@link KitImpl._applyDiff} for validated edits.
  */
 export const applyKitDiff = (kit: KitLike, diff: KitDiff): KitImpl => {
-  const k = asKitInstance(kit);
-  k.replayChangeUnchecked(diff);
-  return k;
+  const source = asKitInstance(kit);
+  const clone = duplicateKitForIsolation(source);
+  clone.replayChangeUnchecked(diff);
+  return clone;
 };
 
 /**
@@ -16109,9 +16110,10 @@ export const importRemoteKit = async (url: string): Promise<KitImportResult> => 
  * Applies `diff` to `kit` in place and returns the same kit reference.
  * Callers that need an immutable snapshot should copy explicitly (e.g. serialize/deserialize).
  **/
-export const editTemporaryKit = (kit: KitImpl, diff: KitDiff): KitImpl => {
-  applyKitDiff(kit, diff);
-  return kit;
+export const editTemporaryKit = (kit: KitLike, diff: KitDiff): KitImpl => {
+  const k = asKitInstance(kit);
+  k.replayChangeUnchecked(diff);
+  return k;
 };
 
 // #region 🏷️KitImpl Kind Classes
@@ -20416,12 +20418,12 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("KitImpl/Temporary: editTemporaryKit applies a diff in place and returns the same reference", () => {
-      const kit: KitImpl = {
+      const kit = new KitImpl({
         guid: "temp-edit-kit-guid",
         name: "Temporary Editable KitImpl",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      };
+      } as KitData);
       const edited = editTemporaryKit(kit, { name: "Temporary Editable KitImpl Edited" });
       expect(edited.name).toBe("Temporary Editable KitImpl Edited");
       expect(kit.name).toBe("Temporary Editable KitImpl Edited");
@@ -23086,7 +23088,6 @@ if (shouldRunEmbeddedJsTests) {
       const adapter = makeAdapter(kit);
       await adapter.initPromise;
       const store = await createFolderKitStore(adapter);
-
       store.apply({ name: "Changed" });
       expect(store.canUndo()).toBe(true);
 
