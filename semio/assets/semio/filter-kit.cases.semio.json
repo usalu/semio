@@ -39,7 +39,7 @@
       "kit": "metabolism.kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "typeExclude": [
-        "Capsule*"
+        "Cylindric*"
       ],
       "designFamilies": []
     }

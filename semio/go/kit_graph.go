@@ -61,7 +61,7 @@ func kitStripRuntime(k *Kit) Kit {
 		Designs:     k.Designs,
 		Tags:        k.Tags,
 		Concepts:    k.Concepts,
-		Ports:       k.Ports,
+		Families:    k.Families,
 		Qualities:   k.Qualities,
 		Files:       k.Files,
 		Folders:     k.Folders,

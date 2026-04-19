@@ -1,33 +1,42 @@
 {
   "problems": [
     {
-      "constraintId": "connector-name-unique",
-      "message": "Duplicate connector name \"Duplicate Connector Name\" inside type \"Duplicate Type Name\".",
-      "entityKind": "Connector",
-      "entityGuid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+      "constraintId": "guid-unique",
+      "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).",
+      "location": {
+        "entityKind": "Connection",
+        "entityGuid": "019ab664-3333-3333-3333-333333333333",
+        "field": "guid"
+      },
+      "relatedGuids": [
+        "019ab664-3333-3333-3333-333333333333"
+      ],
+      "fixes": []
+    },
+    {
+      "constraintId": "type-name-unique",
+      "message": "Duplicate type name \"Duplicate Type Name\".",
+      "location": {
+        "entityKind": "Type",
+        "entityGuid": "019ab664-2222-2222-2222-222222222222",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-1111-1111-1111-111111111111",
+        "019ab664-2222-2222-2222-222222222222"
+      ],
       "fixes": [
         {
-          "title": "Rename connector \"Duplicate Connector Name\"",
+          "title": "Rename \"Duplicate Type Name\"",
           "diff": {
             "types": {
               "updated": [
                 {
                   "type": {
-                    "guid": "019ab664-1111-1111-1111-111111111111"
+                    "guid": "019ab664-2222-2222-2222-222222222222"
                   },
                   "diff": {
-                    "connectors": {
-                      "updated": [
-                        {
-                          "connector": {
-                            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
-                          },
-                          "diff": {
-                            "name": "Duplicate Connector Name 2"
-                          }
-                        }
-                      ]
-                    }
+                    "name": "Duplicate Type Name 2"
                   }
                 }
               ]
@@ -38,9 +47,16 @@
     },
     {
       "constraintId": "design-name-unique",
-      "message": "Duplicate design name \"Duplicate Design Name\" among siblings.",
-      "entityKind": "Design",
-      "entityGuid": "019ab664-6666-6666-6666-666666666666",
+      "message": "Duplicate design name \"Duplicate Design Name\".",
+      "location": {
+        "entityKind": "Design",
+        "entityGuid": "019ab664-6666-6666-6666-666666666666",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-3333-3333-3333-333333333333",
+        "019ab664-6666-6666-6666-666666666666"
+      ],
       "fixes": [
         {
           "title": "Rename \"Duplicate Design Name\"",
@@ -62,139 +78,17 @@
       ]
     },
     {
-      "constraintId": "file-name-unique",
-      "message": "Duplicate file name \"duplicate-file.txt\".",
-      "entityKind": "File",
-      "entityGuid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
-      "fixes": [
-        {
-          "title": "Rename file \"duplicate-file.txt\"",
-          "diff": {
-            "files": {
-              "updated": [
-                {
-                  "file": {
-                    "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
-                  },
-                  "diff": {
-                    "name": "duplicate-file.txt 2"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "constraintId": "folder-name-unique",
-      "message": "Duplicate folder name \"duplicate-folder\" among siblings.",
-      "entityKind": "Folder",
-      "entityGuid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
-      "fixes": [
-        {
-          "title": "Rename folder \"duplicate-folder\"",
-          "diff": {
-            "folders": {
-              "updated": [
-                {
-                  "folder": {
-                    "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
-                  },
-                  "diff": {
-                    "name": "duplicate-folder 2"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "constraintId": "guid-unique",
-      "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).",
-      "entityKind": "Connection",
-      "entityGuid": "019ab664-3333-3333-3333-333333333333",
-      "fixes": []
-    },
-    {
-      "constraintId": "layer-path-unique",
-      "message": "Duplicate layer path \"Duplicate.Layer.Path\" inside design \"Duplicate Design Name\".",
-      "entityKind": "Layer",
-      "entityGuid": "019ab664-3333-3333-3333-333333330002",
-      "fixes": [
-        {
-          "title": "Rename layer \"Duplicate.Layer.Path\"",
-          "diff": {
-            "designs": {
-              "updated": [
-                {
-                  "design": {
-                    "guid": "019ab664-3333-3333-3333-333333333333"
-                  },
-                  "diff": {
-                    "layers": {
-                      "updated": [
-                        {
-                          "layer": {
-                            "guid": "019ab664-3333-3333-3333-333333330002"
-                          },
-                          "diff": {
-                            "path": "Duplicate.Layer.Path 2"
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "constraintId": "model-name-unique",
-      "message": "Duplicate model name \"Duplicate Model Name\" inside type \"Duplicate Type Name\".",
-      "entityKind": "Model",
-      "entityGuid": "019ab664-1111-1111-1111-111111110002",
-      "fixes": [
-        {
-          "title": "Rename model \"Duplicate Model Name\"",
-          "diff": {
-            "types": {
-              "updated": [
-                {
-                  "type": {
-                    "guid": "019ab664-1111-1111-1111-111111111111"
-                  },
-                  "diff": {
-                    "models": {
-                      "updated": [
-                        {
-                          "model": {
-                            "guid": "019ab664-1111-1111-1111-111111110002"
-                          },
-                          "diff": {
-                            "name": "Duplicate Model Name 2"
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
       "constraintId": "piece-name-unique",
       "message": "Duplicate piece name \"Duplicate Piece Name\" inside design \"Duplicate Design Name\".",
-      "entityKind": "Piece",
-      "entityGuid": "019ab664-5555-5555-5555-555555555555",
+      "location": {
+        "entityKind": "Piece",
+        "entityGuid": "019ab664-5555-5555-5555-555555555555",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-4444-4444-4444-444444444444",
+        "019ab664-5555-5555-5555-555555555555"
+      ],
       "fixes": [
         {
           "title": "Rename piece \"Duplicate Piece Name\"",
@@ -227,35 +121,17 @@
       ]
     },
     {
-      "constraintId": "port-name-unique",
-      "message": "Duplicate port name \"Duplicate Port Name\".",
-      "entityKind": "Port",
-      "entityGuid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
-      "fixes": [
-        {
-          "title": "Rename port \"Duplicate Port Name\"",
-          "diff": {
-            "ports": {
-              "updated": [
-                {
-                  "port": {
-                    "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000"
-                  },
-                  "diff": {
-                    "name": "Duplicate Port Name 2"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
       "constraintId": "quality-name-unique",
       "message": "Duplicate quality name \"Duplicate Quality Name\".",
-      "entityKind": "Quality",
-      "entityGuid": "019ab664-8888-8888-8888-888888888888",
+      "location": {
+        "entityKind": "Quality",
+        "entityGuid": "019ab664-8888-8888-8888-888888888888",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-7777-7777-7777-777777777777",
+        "019ab664-8888-8888-8888-888888888888"
+      ],
       "fixes": [
         {
           "title": "Rename quality \"Duplicate Quality Name\"",
@@ -277,22 +153,186 @@
       ]
     },
     {
-      "constraintId": "type-name-unique",
-      "message": "Duplicate type name \"Duplicate Type Name\" among siblings.",
-      "entityKind": "Type",
-      "entityGuid": "019ab664-2222-2222-2222-222222222222",
+      "constraintId": "file-name-unique",
+      "message": "Duplicate file name \"duplicate-file.txt\".",
+      "location": {
+        "entityKind": "File",
+        "entityGuid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
+        "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+      ],
       "fixes": [
         {
-          "title": "Rename \"Duplicate Type Name\"",
+          "title": "Rename file \"duplicate-file.txt\"",
+          "diff": {
+            "files": {
+              "updated": [
+                {
+                  "file": {
+                    "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+                  },
+                  "diff": {
+                    "name": "duplicate-file.txt 2"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "constraintId": "folder-name-unique",
+      "message": "Duplicate folder name \"duplicate-folder\" among siblings.",
+      "location": {
+        "entityKind": "Folder",
+        "entityGuid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
+        "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
+      ],
+      "fixes": [
+        {
+          "title": "Rename folder \"duplicate-folder\"",
+          "diff": {
+            "folders": {
+              "updated": [
+                {
+                  "folder": {
+                    "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
+                  },
+                  "diff": {
+                    "name": "duplicate-folder 2"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "constraintId": "connector-name-unique",
+      "message": "Duplicate connector name \"Duplicate Connector Name\" inside type \"Duplicate Type Name\".",
+      "location": {
+        "entityKind": "Connector",
+        "entityGuid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+        "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
+      ],
+      "fixes": [
+        {
+          "title": "Rename connector \"Duplicate Connector Name\"",
           "diff": {
             "types": {
               "updated": [
                 {
                   "type": {
-                    "guid": "019ab664-2222-2222-2222-222222222222"
+                    "guid": "019ab664-1111-1111-1111-111111111111"
                   },
                   "diff": {
-                    "name": "Duplicate Type Name 2"
+                    "connectors": {
+                      "updated": [
+                        {
+                          "connector": {
+                            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
+                          },
+                          "diff": {
+                            "name": "Duplicate Connector Name 2"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "constraintId": "model-name-unique",
+      "message": "Duplicate model name \"Duplicate Model Name\" inside type \"Duplicate Type Name\".",
+      "location": {
+        "entityKind": "Model",
+        "entityGuid": "019ab664-1111-1111-1111-111111110002",
+        "field": "name"
+      },
+      "relatedGuids": [
+        "019ab664-1111-1111-1111-111111110001",
+        "019ab664-1111-1111-1111-111111110002"
+      ],
+      "fixes": [
+        {
+          "title": "Rename model \"Duplicate Model Name\"",
+          "diff": {
+            "types": {
+              "updated": [
+                {
+                  "type": {
+                    "guid": "019ab664-1111-1111-1111-111111111111"
+                  },
+                  "diff": {
+                    "models": {
+                      "updated": [
+                        {
+                          "model": {
+                            "guid": "019ab664-1111-1111-1111-111111110002"
+                          },
+                          "diff": {
+                            "name": "Duplicate Model Name 2"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "constraintId": "layer-path-unique",
+      "message": "Duplicate layer path \"Duplicate.Layer.Path\" inside design \"Duplicate Design Name\".",
+      "location": {
+        "entityKind": "Layer",
+        "entityGuid": "019ab664-3333-3333-3333-333333330002",
+        "field": "path"
+      },
+      "fixes": [
+        {
+          "title": "Rename layer \"Duplicate.Layer.Path\"",
+          "diff": {
+            "designs": {
+              "updated": [
+                {
+                  "design": {
+                    "guid": "019ab664-3333-3333-3333-333333333333"
+                  },
+                  "diff": {
+                    "layers": {
+                      "updated": [
+                        {
+                          "layer": {
+                            "guid": "019ab664-3333-3333-3333-333333330002"
+                          },
+                          "diff": {
+                            "path": "Duplicate.Layer.Path 2"
+                          }
+                        }
+                      ]
+                    }
                   }
                 }
               ]

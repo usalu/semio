@@ -390,22 +390,40 @@ func centersEqual(c1, c2 *Coord, tolerance float64) bool {
 }
 
 func findDesignByName(designs []Design, name string, parentGuid *string) *Design {
+	var parentFamilies []FamilyId
+	if parentGuid != nil {
+		for i := range designs {
+			if designs[i].Guid == *parentGuid {
+				parentFamilies = designs[i].Families
+				break
+			}
+		}
+	}
 	for i := range designs {
 		d := &designs[i]
 		if d.Name != name {
 			continue
 		}
 		if parentGuid == nil {
-			if d.Parent == nil {
-				return d
-			}
+			return d
 		} else {
-			if d.Parent != nil && d.Parent.Guid == *parentGuid {
+			if familiesOverlap(d.Families, parentFamilies) {
 				return d
 			}
 		}
 	}
 	return nil
+}
+
+func familiesOverlap(a, b []FamilyId) bool {
+	for _, left := range a {
+		for _, right := range b {
+			if left.Guid == right.Guid {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func findPieceByName(pieces []Piece, name string) *Piece {
@@ -582,8 +600,8 @@ func TestKitFilterDesign(t *testing.T) {
 		if len(filtered.Files) != len(expected.Files) {
 			t.Fatalf("Expected %d files, got %d", len(expected.Files), len(filtered.Files))
 		}
-		if len(filtered.Ports) != len(expected.Ports) {
-			t.Fatalf("Expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
+		if len(AllPortsInKit(&filtered)) != len(AllPortsInKit(&expected)) {
+			t.Fatalf("Expected %d ports, got %d", len(AllPortsInKit(&expected)), len(AllPortsInKit(&filtered)))
 		}
 		if len(filtered.Qualities) != len(expected.Qualities) {
 			t.Fatalf("Expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
@@ -652,7 +670,7 @@ func TestKitFilterDesign(t *testing.T) {
 					continue
 				}
 				foundPort := false
-				for _, port := range filtered.Ports {
+				for _, port := range AllPortsInKit(&filtered) {
 					if port.Guid == connector.Port.Guid {
 						foundPort = true
 						break
@@ -1631,7 +1649,7 @@ func TestFindReplaceableTypesInDesigns(t *testing.T) {
 				}
 			}
 
-			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pieceGuids)
+			typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), pieceGuids)
 
 			// Check expected type guid count
 			if tc.ExpectedTypeGuidCount != nil {
@@ -1719,7 +1737,7 @@ func TestFindReplaceableTypesInDesigns(t *testing.T) {
 					t.Fatalf("Design %q not found in synthetic kit", sc.DesignGuid)
 				}
 
-				typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*syntheticDesign, syntheticKit.Designs, syntheticKit.Types, syntheticKit.Ports, sc.PieceGuids)
+				typeGuids, designGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*syntheticDesign, syntheticKit.Designs, syntheticKit.Types, AllPortsInKit(&syntheticKit), sc.PieceGuids)
 
 				for _, expected := range sc.ExpectedContainsTypes {
 					if !containsGuid(typeGuids, expected) {
@@ -1774,7 +1792,7 @@ func TestFindReplaceableTypesInDesigns(t *testing.T) {
 				}
 				pGuids = append(pGuids, pieceGuid)
 			}
-			tGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, pGuids)
+			tGuids, _ := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), pGuids)
 			typeNames := make([]string, 0, len(tGuids))
 			for _, typeGuid := range tGuids {
 				typeNames = append(typeNames, typeNameByGuid[typeGuid])
@@ -1812,7 +1830,7 @@ func TestFindReplaceableTypesInDesigns(t *testing.T) {
 		if !ok {
 			t.Fatalf("Tambour piece %q not found", bc.TambourPieceName)
 		}
-		tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, kit.Ports, []string{tambourPieceGuid})
+		tambourTypeGuids, tambourDesignGuids := FindReplaceableTypesInDesignsForPiecesInDesign(*design, kit.Designs, kit.Types, AllPortsInKit(&kit), []string{tambourPieceGuid})
 
 		if len(singleCapsuleNames) <= len(twoCapsuleNames) {
 			t.Fatalf("Expected single capsule result to be larger than two capsules, got %d <= %d", len(singleCapsuleNames), len(twoCapsuleNames))
@@ -1869,12 +1887,7 @@ func TestCopyAndPaste(t *testing.T) {
 			loadJSON(t, "metabolism.kit.semio.json", &kit)
 
 			var design *Design
-			for i := range kit.Designs {
-				if kit.Designs[i].Name == "Nakagin Capsule Tower" && kit.Designs[i].Parent == nil {
-					design = &kit.Designs[i]
-					break
-				}
-			}
+			design = findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 			if design == nil {
 				t.Fatal("Design 'Nakagin Capsule Tower' not found")
 			}
@@ -2476,8 +2489,8 @@ func TestMetaShallow(t *testing.T) {
 		if len(shallow.Files) == 0 {
 			t.Error("KitShallow.Files is empty")
 		}
-		if len(shallow.Ports) == 0 {
-			t.Error("KitShallow.Ports is empty")
+		if len(shallow.Families) == 0 || len(shallow.Families[0].Ports) == 0 {
+			t.Error("KitShallow.Families ports is empty")
 		}
 		if len(shallow.Tags) == 0 {
 			t.Error("KitShallow.Tags is empty")
@@ -2879,8 +2892,8 @@ func TestFilterKit(t *testing.T) {
 			if len(filtered.Files) != len(expected.Files) {
 				t.Errorf("expected %d files, got %d", len(expected.Files), len(filtered.Files))
 			}
-			if len(filtered.Ports) != len(expected.Ports) {
-				t.Errorf("expected %d ports, got %d", len(expected.Ports), len(filtered.Ports))
+			if len(AllPortsInKit(&filtered)) != len(AllPortsInKit(&expected)) {
+				t.Errorf("expected %d ports, got %d", len(AllPortsInKit(&expected)), len(AllPortsInKit(&filtered)))
 			}
 			if len(filtered.Qualities) != len(expected.Qualities) {
 				t.Errorf("expected %d qualities, got %d", len(expected.Qualities), len(filtered.Qualities))
@@ -3295,10 +3308,14 @@ func TestMaxChildrenKitRoundtrip(t *testing.T) {
 	kit := Kit{
 		Guid: "kit-1",
 		Name: "TestKit",
-		Ports: []Port{{
-			Guid:        "p1",
-			Name:        "Port1",
-			MaxChildren: &mc3,
+		Families: []Family{{
+			Guid: "f1",
+			Name: "Family1",
+			Ports: []Port{{
+				Guid:        "p1",
+				Name:        "Port1",
+				MaxChildren: &mc3,
+			}},
 		}},
 		Types: []Type{{
 			Guid: "t1",
@@ -3320,8 +3337,8 @@ func TestMaxChildrenKitRoundtrip(t *testing.T) {
 	if err := json.Unmarshal(data, &restored); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if restored.Ports[0].MaxChildren == nil || *restored.Ports[0].MaxChildren != 3 {
-		t.Errorf("port maxChildren: got %v, want 3", restored.Ports[0].MaxChildren)
+	if AllPortsInKit(&restored)[0].MaxChildren == nil || *AllPortsInKit(&restored)[0].MaxChildren != 3 {
+		t.Errorf("port maxChildren: got %v, want 3", AllPortsInKit(&restored)[0].MaxChildren)
 	}
 	if restored.Types[0].Connectors[0].MaxChildren == nil || *restored.Types[0].Connectors[0].MaxChildren != 5 {
 		t.Errorf("connector maxChildren: got %v, want 5", restored.Types[0].Connectors[0].MaxChildren)
@@ -3360,15 +3377,15 @@ func benchLoadKitFile(b *testing.B, filename string) Kit {
 }
 
 func benchFindDesign(kit Kit, name string, parentName string) Design {
-	var parentGuid string
+	var parentFamilies []FamilyId
 	if parentName != "" {
 		for _, d := range kit.Designs {
 			if d.Name == parentName {
-				parentGuid = d.Guid
+				parentFamilies = d.Families
 				break
 			}
 		}
-		if parentGuid == "" {
+		if parentFamilies == nil {
 			panic("Parent design not found: " + parentName)
 		}
 	}
@@ -3376,11 +3393,9 @@ func benchFindDesign(kit Kit, name string, parentName string) Design {
 	for _, d := range kit.Designs {
 		if d.Name == name {
 			if parentName == "" {
-				if d.Parent == nil {
-					return d
-				}
+				return d
 			} else {
-				if d.Parent != nil && d.Parent.Guid == parentGuid {
+				if familiesOverlap(d.Families, parentFamilies) {
 					return d
 				}
 			}
@@ -3415,7 +3430,7 @@ func BenchmarkDiffMetabolism(b *testing.B) {
 	kitOriginal := kit
 	kitOriginal.Designs = nil
 	for _, design := range kit.Designs {
-		if design.Parent == nil {
+		if design.Name != "Flat" {
 			kitOriginal.Designs = append(kitOriginal.Designs, design)
 		}
 	}

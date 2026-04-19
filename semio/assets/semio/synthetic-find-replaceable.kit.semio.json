@@ -477,5 +477,37 @@
         }
       ]
     }
+  ],
+  "families": [
+    {
+      "guid": "family-synthetic-kit-ports",
+      "name": "Ports",
+      "description": "Connector ports owned by the default family.",
+      "icon": "🔌",
+      "ports": [
+        {
+          "guid": "port-L",
+          "name": "port-L",
+          "compatiblePorts": [
+            {
+              "guid": "port-L-compatible"
+            }
+          ]
+        },
+        {
+          "guid": "port-L-compatible",
+          "name": "port-L-compatible",
+          "compatiblePorts": [
+            {
+              "guid": "port-L"
+            }
+          ]
+        },
+        {
+          "guid": "port-G",
+          "name": "port-G"
+        }
+      ]
+    }
   ]
 }

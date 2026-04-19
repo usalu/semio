@@ -212,6 +212,18 @@ func arePortIdSlicesEqual(a, b []PortId) bool {
 	return true
 }
 
+func areFamilyIdSlicesEqual(a, b []FamilyId) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i].Guid != b[i].Guid {
+			return false
+		}
+	}
+	return true
+}
+
 func areAttributesEqual(a, b []Attribute) bool {
 	if len(a) != len(b) {
 		return false
@@ -327,6 +339,11 @@ type QualityId struct {
 
 // ⚓PortId identifies a port entity by GUID.
 type PortId struct {
+	Guid string `json:"guid"`
+}
+
+// 👪FamilyId identifies a first-class family entity by GUID.
+type FamilyId struct {
 	Guid string `json:"guid"`
 }
 
@@ -858,6 +875,90 @@ type PortMeta struct {
 
 // #endregion ⚓Port
 
+// #region 👪Family
+
+// 👪Family represents a composable artifact family that owns its connector ports.
+type Family struct {
+	Guid        string      `json:"guid"`
+	Name        string      `json:"name"`
+	Description *string     `json:"description,omitempty"`
+	Icon        *string     `json:"icon,omitempty"`
+	Ports       []Port      `json:"ports,omitempty"`
+	Attributes  []Attribute `json:"attributes,omitempty"`
+	CreatedAt   string      `json:"createdAt,omitempty"`
+	UpdatedAt   string      `json:"updatedAt,omitempty"`
+}
+
+// 🧬FamilyDiff represents a partial update to a family and its ports.
+type FamilyDiff struct {
+	Name        *string         `json:"name,omitempty"`
+	Description *string         `json:"description,omitempty"`
+	Icon        *string         `json:"icon,omitempty"`
+	Ports       *PortsDiff      `json:"ports,omitempty"`
+	Attributes  *AttributesDiff `json:"attributes,omitempty"`
+	setFields   map[string]bool `json:"-"`
+}
+
+// 📩UnmarshalJSON deserializes FamilyDiff JSON while tracking explicit fields.
+func (d *FamilyDiff) UnmarshalJSON(data []byte) error {
+	type Alias FamilyDiff
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(d),
+	}
+	var rawMap map[string]json.RawMessage
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return err
+	}
+	d.setFields = make(map[string]bool)
+	for key := range rawMap {
+		d.setFields[key] = true
+	}
+	return json.Unmarshal(data, aux)
+}
+
+// 🔎HasField checks whether a family diff field was present in JSON.
+func (d *FamilyDiff) HasField(field string) bool {
+	if d.setFields == nil {
+		return false
+	}
+	return d.setFields[field]
+}
+
+// 👨‍👩‍👧FamiliesDiff represents batched family additions, removals and updates.
+type FamiliesDiff struct {
+	Removed []FamilyId `json:"removed,omitempty"`
+	Updated []struct {
+		Family FamilyId   `json:"family"`
+		Diff   FamilyDiff `json:"diff"`
+	} `json:"updated,omitempty"`
+	Added []Family `json:"added,omitempty"`
+}
+
+// 🪪FamilyMeta represents the scalar-only view of a family.
+type FamilyMeta struct {
+	Guid        string  `json:"guid"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	CreatedAt   string  `json:"createdAt,omitempty"`
+	UpdatedAt   string  `json:"updatedAt,omitempty"`
+}
+
+// 🧾FamilyShallow represents a family including its port metadata.
+type FamilyShallow struct {
+	Guid        string     `json:"guid"`
+	Name        string     `json:"name"`
+	Description *string    `json:"description,omitempty"`
+	Icon        *string    `json:"icon,omitempty"`
+	Ports       []PortMeta `json:"ports,omitempty"`
+	CreatedAt   string     `json:"createdAt,omitempty"`
+	UpdatedAt   string     `json:"updatedAt,omitempty"`
+}
+
+// #endregion 👪Family
+
 // #region 📊Prop
 
 // 📊Prop represents a quality measurement value with optional unit.
@@ -1156,7 +1257,7 @@ type ConnectorMeta struct {
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Families    []TypeId    `json:"families,omitempty"`
+	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1179,7 +1280,7 @@ type Type struct {
 // ⚒️TypeDiff represents a partial update to a type's name, models, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
-	Families    []TypeId        `json:"families,omitempty"`
+	Families    []FamilyId      `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
 	Unit        *string         `json:"unit,omitempty"`
@@ -1239,7 +1340,7 @@ type TypesDiff struct {
 type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Families    []TypeId    `json:"families,omitempty"`
+	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Virtual     *bool       `json:"virtual,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
@@ -1257,7 +1358,7 @@ type TypeMeta struct {
 type TypeShallow struct {
 	Guid        string          `json:"guid"`
 	Name        string          `json:"name"`
-	Families    []TypeId        `json:"families,omitempty"`
+	Families    []FamilyId      `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
 	Virtual     *bool           `json:"virtual,omitempty"`
 	Unit        *string         `json:"unit,omitempty"`
@@ -1574,7 +1675,7 @@ type StatMeta struct {
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
-	Families    []DesignId   `json:"families,omitempty"`
+	Families    []FamilyId   `json:"families,omitempty"`
 	IsAbstract  *bool        `json:"isAbstract,omitempty"`
 	Unit        *string      `json:"unit,omitempty"`
 	Folder      *string      `json:"folder,omitempty"`
@@ -1609,7 +1710,7 @@ type CameraDiff struct {
 // ✒️DesignDiff represents a partial update to a design's name, pieces, connections or layers.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
-	Families    []DesignId       `json:"families,omitempty"`
+	Families    []FamilyId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
 	Folder      *string          `json:"folder,omitempty"`
@@ -1706,7 +1807,7 @@ type DesignsDiff struct {
 type DesignMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
-	Families    []DesignId  `json:"families,omitempty"`
+	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
 	Unit        *string     `json:"unit,omitempty"`
 	Folder      *string     `json:"folder,omitempty"`
@@ -1726,7 +1827,7 @@ type DesignMeta struct {
 type DesignShallow struct {
 	Guid        string           `json:"guid"`
 	Name        string           `json:"name"`
-	Families    []DesignId       `json:"families,omitempty"`
+	Families    []FamilyId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
 	Unit        *string          `json:"unit,omitempty"`
 	Folder      *string          `json:"folder,omitempty"`
@@ -1949,7 +2050,7 @@ type Kit struct {
 	Designs     []Design    `json:"designs,omitempty"`
 	Tags        []Tag       `json:"tags,omitempty"`
 	Concepts    []Concept   `json:"concepts,omitempty"`
-	Ports       []Port      `json:"ports,omitempty"`
+	Families    []Family    `json:"families,omitempty"`
 	Qualities   []Quality   `json:"qualities,omitempty"`
 	Files       []File      `json:"files,omitempty"`
 	Folders     []Folder    `json:"folders,omitempty"`
@@ -1986,7 +2087,7 @@ type KitDiff struct {
 	Designs     *DesignsDiff    `json:"designs,omitempty"`
 	Tags        *TagsDiff       `json:"tags,omitempty"`
 	Concepts    *ConceptsDiff   `json:"concepts,omitempty"`
-	Ports       *PortsDiff      `json:"ports,omitempty"`
+	Families    *FamiliesDiff   `json:"families,omitempty"`
 	Qualities   *QualitiesDiff  `json:"qualities,omitempty"`
 	Files       *FilesDiff      `json:"files,omitempty"`
 	Folders     *FoldersDiff    `json:"folders,omitempty"`
@@ -2061,7 +2162,7 @@ type KitShallow struct {
 	Designs     []DesignMeta    `json:"designs,omitempty"`
 	Tags        []TagMeta       `json:"tags,omitempty"`
 	Concepts    []ConceptMeta   `json:"concepts,omitempty"`
-	Ports       []PortMeta      `json:"ports,omitempty"`
+	Families    []FamilyShallow `json:"families,omitempty"`
 	Qualities   []QualityMeta   `json:"qualities,omitempty"`
 	Files       []FileMeta      `json:"files,omitempty"`
 	Folders     []FolderMeta    `json:"folders,omitempty"`
@@ -2105,6 +2206,8 @@ type BenchmarkChange = Change[Benchmark, BenchmarkDiff]
 type QualityChange = Change[Quality, QualityDiff]
 
 type PortChange = Change[Port, PortDiff]
+
+type FamilyChange = Change[Family, FamilyDiff]
 
 type PropChange = Change[Prop, PropDiff]
 
@@ -2351,7 +2454,21 @@ func ToQualityMeta(q Quality) QualityMeta {
 
 // ⚓ToPortMeta converts a Port to its scalar-only Meta view.
 func ToPortMeta(p Port) PortMeta {
-	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, MaxChildren: p.MaxChildren, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+}
+
+// 👪ToFamilyMeta converts a Family to its scalar-only Meta view.
+func ToFamilyMeta(f Family) FamilyMeta {
+	return FamilyMeta{Guid: f.Guid, Name: f.Name, Description: f.Description, Icon: f.Icon, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+}
+
+// 🧾ToFamilyShallow converts a Family to its Shallow overview with port metadata.
+func ToFamilyShallow(f Family) FamilyShallow {
+	ports := make([]PortMeta, len(f.Ports))
+	for i, p := range f.Ports {
+		ports[i] = ToPortMeta(p)
+	}
+	return FamilyShallow{Guid: f.Guid, Name: f.Name, Description: f.Description, Icon: f.Icon, Ports: ports, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
 // 📊ToPropMeta converts a Prop to its scalar-only Meta view.
@@ -2491,9 +2608,9 @@ func ToKitShallow(k Kit) KitShallow {
 	for i, c := range k.Concepts {
 		concepts[i] = ToConceptMeta(c)
 	}
-	ports := make([]PortMeta, len(k.Ports))
-	for i, p := range k.Ports {
-		ports[i] = ToPortMeta(p)
+	families := make([]FamilyShallow, len(k.Families))
+	for i, f := range k.Families {
+		families[i] = ToFamilyShallow(f)
 	}
 	qualities := make([]QualityMeta, len(k.Qualities))
 	for i, q := range k.Qualities {
@@ -2515,7 +2632,7 @@ func ToKitShallow(k Kit) KitShallow {
 	for i, a := range k.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Ports: ports, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Families: families, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
 // #endregion 🔑Meta And Shallow
@@ -2974,6 +3091,41 @@ func HashPort(p Port) string {
 	}
 	w.writeString("name")
 	w.writeString(p.Name)
+	return w.digest()
+}
+
+// 👪HashFamily computes SHA-256 hash of a Family entity and its owned ports.
+func HashFamily(f Family) string {
+	w := &hashWriter{}
+	w.writeString("Family")
+	if len(f.Attributes) > 0 {
+		w.writeString("attributes")
+		hashes := make([]string, len(f.Attributes))
+		for i, a := range f.Attributes {
+			hashes[i] = HashAttribute(a)
+		}
+		w.writeHashList(hashes)
+	}
+	if f.Description != nil {
+		w.writeString("description")
+		w.writeString(*f.Description)
+	}
+	w.writeString("guid")
+	w.writeString(f.Guid)
+	if f.Icon != nil {
+		w.writeString("icon")
+		w.writeString(*f.Icon)
+	}
+	w.writeString("name")
+	w.writeString(f.Name)
+	if len(f.Ports) > 0 {
+		w.writeString("ports")
+		hashes := make([]string, len(f.Ports))
+		for i, p := range f.Ports {
+			hashes[i] = HashPort(p)
+		}
+		w.writeHashList(hashes)
+	}
 	return w.digest()
 }
 
@@ -3678,11 +3830,11 @@ func HashKit(k Kit) string {
 	}
 	w.writeString("name")
 	w.writeString(k.Name)
-	if len(k.Ports) > 0 {
-		w.writeString("ports")
-		hashes := make([]string, len(k.Ports))
-		for i, p := range k.Ports {
-			hashes[i] = HashPort(p)
+	if len(k.Families) > 0 {
+		w.writeString("families")
+		hashes := make([]string, len(k.Families))
+		for i, f := range k.Families {
+			hashes[i] = HashFamily(f)
 		}
 		w.writeHashList(hashes)
 	}
@@ -4174,6 +4326,14 @@ func HashPortDiff(d PortDiff) string {
 	}
 	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
 	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	if d.MaxChildren != nil || d.HasField("maxChildren") {
+		w.writeString("maxChildren")
+		if d.MaxChildren != nil {
+			w.writeIntNumber(*d.MaxChildren)
+		} else {
+			w.writeString("null")
+		}
+	}
 	writeOptStringDiff(w, "name", d.Name)
 	return w.digest()
 }
@@ -4200,6 +4360,48 @@ func HashPortsDiff(d PortsDiff) string {
 	return hashCollectionDiffGeneric("PortsDiff", "PortDiffUpdate", "port",
 		func(e interface{}) string { return HashPort(e.(Port)) },
 		func(d interface{}) string { return HashPortDiff(d.(PortDiff)) },
+		removed, updated, added)
+}
+
+func HashFamilyDiff(d FamilyDiff) string {
+	w := &hashWriter{}
+	w.writeString("FamilyDiff")
+	if d.Attributes != nil {
+		w.writeString("attributes")
+		w.writeHash(HashAttributesDiff(*d.Attributes))
+	}
+	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
+	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
+	writeOptStringDiff(w, "name", d.Name)
+	if d.Ports != nil {
+		w.writeString("ports")
+		w.writeHash(HashPortsDiff(*d.Ports))
+	}
+	return w.digest()
+}
+
+func HashFamiliesDiff(d FamiliesDiff) string {
+	removed := make([]string, len(d.Removed))
+	for i, r := range d.Removed {
+		removed[i] = r.Guid
+	}
+	var updated []struct {
+		key  string
+		diff interface{}
+	}
+	for _, u := range d.Updated {
+		updated = append(updated, struct {
+			key  string
+			diff interface{}
+		}{key: u.Family.Guid, diff: u.Diff})
+	}
+	var added []interface{}
+	for _, a := range d.Added {
+		added = append(added, a)
+	}
+	return hashCollectionDiffGeneric("FamiliesDiff", "FamilyDiffUpdate", "family",
+		func(e interface{}) string { return HashFamily(e.(Family)) },
+		func(d interface{}) string { return HashFamilyDiff(d.(FamilyDiff)) },
 		removed, updated, added)
 }
 
@@ -4920,9 +5122,9 @@ func HashKitDiff(d KitDiff) string {
 	writeNullableStringDiff(w, "image", d.Image, d.HasField("image"))
 	writeNullableStringDiff(w, "license", d.License, d.HasField("license"))
 	writeOptStringDiff(w, "name", d.Name)
-	if d.Ports != nil {
-		w.writeString("ports")
-		w.writeHash(HashPortsDiff(*d.Ports))
+	if d.Families != nil {
+		w.writeString("families")
+		w.writeHash(HashFamiliesDiff(*d.Families))
 	}
 	writeNullableStringDiff(w, "preview", d.Preview, d.HasField("preview"))
 	if d.Qualities != nil {
@@ -5032,12 +5234,33 @@ func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 
 // ⚓FindPortInKit returns a pointer to the port with the given GUID or nil.
 func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
-	for i := range kit.Ports {
-		if kit.Ports[i].Guid == interfaceGuid {
-			return &kit.Ports[i]
+	for familyIndex := range kit.Families {
+		for portIndex := range kit.Families[familyIndex].Ports {
+			if kit.Families[familyIndex].Ports[portIndex].Guid == interfaceGuid {
+				return &kit.Families[familyIndex].Ports[portIndex]
+			}
 		}
 	}
 	return nil
+}
+
+// 👪FindFamilyInKit returns a pointer to the family with the given GUID or nil.
+func FindFamilyInKit(kit *Kit, familyGuid string) *Family {
+	for i := range kit.Families {
+		if kit.Families[i].Guid == familyGuid {
+			return &kit.Families[i]
+		}
+	}
+	return nil
+}
+
+// ⚓AllPortsInKit returns the family-owned ports as a flat read-only slice.
+func AllPortsInKit(kit *Kit) []Port {
+	ports := make([]Port, 0)
+	for _, family := range kit.Families {
+		ports = append(ports, family.Ports...)
+	}
+	return ports
 }
 
 // 🏷️FindTagInKit returns a pointer to the tag with the given GUID or nil.
@@ -5357,14 +5580,14 @@ func AreKitsEqual(a, b Kit) bool {
 			return false
 		}
 	}
-	if len(a.Ports) != len(b.Ports) {
+	if len(a.Families) != len(b.Families) {
 		return false
 	}
-	for _, ia := range a.Ports {
+	for _, fa := range a.Families {
 		found := false
-		for _, ib := range b.Ports {
-			if ia.Guid == ib.Guid {
-				if !arePortsEqual(ia, ib) {
+		for _, fb := range b.Families {
+			if fa.Guid == fb.Guid {
+				if !areFamiliesEqual(fa, fb) {
 					return false
 				}
 				found = true
@@ -5464,7 +5687,7 @@ func AreKitDiffsEqual(a, b KitDiff) bool {
 	if !areConceptsDiffsEqual(a.Concepts, b.Concepts) {
 		return false
 	}
-	if !arePortsDiffsEqual(a.Ports, b.Ports) {
+	if !areFamiliesDiffsEqual(a.Families, b.Families) {
 		return false
 	}
 	if !areFilesDiffsEqual(a.Files, b.Files) {
@@ -5649,6 +5872,40 @@ func arePortsDiffsEqual(a, b *PortsDiff) bool {
 	return true
 }
 
+func areFamiliesDiffsEqual(a, b *FamiliesDiff) bool {
+	if (a == nil) != (b == nil) {
+		return false
+	}
+	if a == nil {
+		return true
+	}
+	if len(a.Added) != len(b.Added) {
+		return false
+	}
+	for i := range a.Added {
+		if a.Added[i].Guid != b.Added[i].Guid {
+			return false
+		}
+	}
+	if len(a.Removed) != len(b.Removed) {
+		return false
+	}
+	for i := range a.Removed {
+		if a.Removed[i].Guid != b.Removed[i].Guid {
+			return false
+		}
+	}
+	if len(a.Updated) != len(b.Updated) {
+		return false
+	}
+	for i := range a.Updated {
+		if a.Updated[i].Family.Guid != b.Updated[i].Family.Guid {
+			return false
+		}
+	}
+	return true
+}
+
 func areFilesDiffsEqual(a, b *FilesDiff) bool {
 	if (a == nil) != (b == nil) {
 		return false
@@ -5797,9 +6054,9 @@ func GetKitDiff(before, after Kit) KitDiff {
 	if len(conceptsDiff.Added) > 0 || len(conceptsDiff.Removed) > 0 || len(conceptsDiff.Updated) > 0 {
 		diff.Concepts = &conceptsDiff
 	}
-	interfacesDiff := getPortsDiff(before.Ports, after.Ports)
-	if len(interfacesDiff.Added) > 0 || len(interfacesDiff.Removed) > 0 || len(interfacesDiff.Updated) > 0 {
-		diff.Ports = &interfacesDiff
+	familiesDiff := getFamiliesDiff(before.Families, after.Families)
+	if len(familiesDiff.Added) > 0 || len(familiesDiff.Removed) > 0 || len(familiesDiff.Updated) > 0 {
+		diff.Families = &familiesDiff
 	}
 	filesDiff := getFilesDiff(before.Files, after.Files)
 	if len(filesDiff.Added) > 0 || len(filesDiff.Removed) > 0 || len(filesDiff.Updated) > 0 {
@@ -5857,7 +6114,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
-	if !areTypeIdSlicesEqual(before.Families, after.Families) {
+	if !areFamilyIdSlicesEqual(before.Families, after.Families) {
 		diff.Families = after.Families
 		diff.setFields["families"] = true
 	}
@@ -5956,7 +6213,7 @@ func getDesignDiff(before, after Design) DesignDiff {
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
-	if !areDesignIdSlicesEqual(before.Families, after.Families) {
+	if !areFamilyIdSlicesEqual(before.Families, after.Families) {
 		diff.Families = after.Families
 	}
 	if !optBoolEqual(before.IsAbstract, after.IsAbstract) {
@@ -6187,6 +6444,10 @@ func getPortDiff(before, after Port) PortDiff {
 		diff.Icon = after.Icon
 		diff.setFields["icon"] = true
 	}
+	if (before.MaxChildren == nil) != (after.MaxChildren == nil) || (before.MaxChildren != nil && *before.MaxChildren != *after.MaxChildren) {
+		diff.MaxChildren = after.MaxChildren
+		diff.setFields["maxChildren"] = true
+	}
 	if !arePortIdSlicesEqual(before.CompatiblePorts, after.CompatiblePorts) {
 		diff.CompatiblePorts = after.CompatiblePorts
 	}
@@ -6198,7 +6459,67 @@ func getPortDiff(before, after Port) PortDiff {
 }
 
 func isPortDiffEmpty(diff PortDiff) bool {
-	return diff.Name == nil && diff.Description == nil && diff.Icon == nil && diff.CompatiblePorts == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Description == nil && diff.Icon == nil && diff.MaxChildren == nil && diff.CompatiblePorts == nil && diff.Attributes == nil
+}
+
+func getFamiliesDiff(before, after []Family) FamiliesDiff {
+	diff := FamiliesDiff{}
+	beforeMap := make(map[string]Family)
+	for _, f := range before {
+		beforeMap[f.Guid] = f
+	}
+	afterMap := make(map[string]Family)
+	for _, f := range after {
+		afterMap[f.Guid] = f
+	}
+	for _, f := range before {
+		if _, ok := afterMap[f.Guid]; !ok {
+			diff.Removed = append(diff.Removed, FamilyId{Guid: f.Guid})
+		}
+	}
+	for _, f := range after {
+		if _, ok := beforeMap[f.Guid]; !ok {
+			diff.Added = append(diff.Added, f)
+		} else {
+			familyDiff := getFamilyDiff(beforeMap[f.Guid], f)
+			if !isFamilyDiffEmpty(familyDiff) {
+				diff.Updated = append(diff.Updated, struct {
+					Family FamilyId   `json:"family"`
+					Diff   FamilyDiff `json:"diff"`
+				}{Family: FamilyId{Guid: f.Guid}, Diff: familyDiff})
+			}
+		}
+	}
+	return diff
+}
+
+func getFamilyDiff(before, after Family) FamilyDiff {
+	diff := FamilyDiff{}
+	diff.setFields = make(map[string]bool)
+	if before.Name != after.Name {
+		diff.Name = &after.Name
+	}
+	if normalizeStr(before.Description) != normalizeStr(after.Description) {
+		diff.Description = after.Description
+		diff.setFields["description"] = true
+	}
+	if normalizeStr(before.Icon) != normalizeStr(after.Icon) {
+		diff.Icon = after.Icon
+		diff.setFields["icon"] = true
+	}
+	portsDiff := getPortsDiff(before.Ports, after.Ports)
+	if len(portsDiff.Added) > 0 || len(portsDiff.Removed) > 0 || len(portsDiff.Updated) > 0 {
+		diff.Ports = &portsDiff
+	}
+	attrsDiff := getAttributesDiff(before.Attributes, after.Attributes)
+	if !isAttributesDiffEmpty(attrsDiff) {
+		diff.Attributes = &attrsDiff
+	}
+	return diff
+}
+
+func isFamilyDiffEmpty(diff FamilyDiff) bool {
+	return diff.Name == nil && diff.Description == nil && diff.Icon == nil && diff.Ports == nil && diff.Attributes == nil
 }
 
 func getFilesDiff(before, after []File) FilesDiff {
@@ -6415,9 +6736,9 @@ func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 		conceptsDiff := inverseConceptsDiff(original.Concepts, *appliedDiff.Concepts)
 		inverse.Concepts = &conceptsDiff
 	}
-	if appliedDiff.Ports != nil {
-		interfacesDiff := inversePortsDiff(original.Ports, *appliedDiff.Ports)
-		inverse.Ports = &interfacesDiff
+	if appliedDiff.Families != nil {
+		familiesDiff := inverseFamiliesDiff(original.Families, *appliedDiff.Families)
+		inverse.Families = &familiesDiff
 	}
 	if appliedDiff.Files != nil {
 		filesDiff := inverseFilesDiff(original.Files, *appliedDiff.Files)
@@ -6774,8 +7095,65 @@ func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {
 		inverse.Icon = original.Icon
 		inverse.setFields["icon"] = true
 	}
+	if appliedDiff.MaxChildren != nil {
+		inverse.MaxChildren = original.MaxChildren
+		inverse.setFields["maxChildren"] = true
+	}
 	if appliedDiff.CompatiblePorts != nil {
 		inverse.CompatiblePorts = original.CompatiblePorts
+	}
+	if appliedDiff.Attributes != nil {
+		attrsDiff := inverseAttributesDiff(original.Attributes, *appliedDiff.Attributes)
+		inverse.Attributes = &attrsDiff
+	}
+	return inverse
+}
+
+func inverseFamiliesDiff(original []Family, appliedDiff FamiliesDiff) FamiliesDiff {
+	inverse := FamiliesDiff{}
+	for _, added := range appliedDiff.Added {
+		inverse.Removed = append(inverse.Removed, FamilyId{Guid: added.Guid})
+	}
+	for _, removed := range appliedDiff.Removed {
+		for _, f := range original {
+			if f.Guid == removed.Guid {
+				inverse.Added = append(inverse.Added, f)
+				break
+			}
+		}
+	}
+	for _, updated := range appliedDiff.Updated {
+		for _, f := range original {
+			if f.Guid == updated.Family.Guid {
+				inverseDiff := inverseFamilyDiff(f, updated.Diff)
+				inverse.Updated = append(inverse.Updated, struct {
+					Family FamilyId   `json:"family"`
+					Diff   FamilyDiff `json:"diff"`
+				}{Family: FamilyId{Guid: f.Guid}, Diff: inverseDiff})
+				break
+			}
+		}
+	}
+	return inverse
+}
+
+func inverseFamilyDiff(original Family, appliedDiff FamilyDiff) FamilyDiff {
+	inverse := FamilyDiff{}
+	inverse.setFields = make(map[string]bool)
+	if appliedDiff.Name != nil {
+		inverse.Name = &original.Name
+	}
+	if appliedDiff.Description != nil {
+		inverse.Description = original.Description
+		inverse.setFields["description"] = true
+	}
+	if appliedDiff.Icon != nil {
+		inverse.Icon = original.Icon
+		inverse.setFields["icon"] = true
+	}
+	if appliedDiff.Ports != nil {
+		portsDiff := inversePortsDiff(original.Ports, *appliedDiff.Ports)
+		inverse.Ports = &portsDiff
 	}
 	if appliedDiff.Attributes != nil {
 		attrsDiff := inverseAttributesDiff(original.Attributes, *appliedDiff.Attributes)
@@ -8405,7 +8783,7 @@ func areTypesEqual(a, b Type) bool {
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
 		return false
 	}
-	if !areTypeIdSlicesEqual(a.Families, b.Families) {
+	if !areFamilyIdSlicesEqual(a.Families, b.Families) {
 		return false
 	}
 	if !optBoolEqual(a.IsAbstract, b.IsAbstract) {
@@ -8551,7 +8929,7 @@ func areDesignsEqual(a, b Design) bool {
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
 		return false
 	}
-	if !areDesignIdSlicesEqual(a.Families, b.Families) {
+	if !areFamilyIdSlicesEqual(a.Families, b.Families) {
 		return false
 	}
 	if !optBoolEqual(a.IsAbstract, b.IsAbstract) {
@@ -8790,8 +9168,48 @@ func arePortsEqual(a, b Port) bool {
 	if normalizeStr(a.Icon) != normalizeStr(b.Icon) {
 		return false
 	}
+	if (a.MaxChildren == nil) != (b.MaxChildren == nil) {
+		return false
+	}
+	if a.MaxChildren != nil && *a.MaxChildren != *b.MaxChildren {
+		return false
+	}
 	if !arePortIdSlicesEqual(a.CompatiblePorts, b.CompatiblePorts) {
 		return false
+	}
+	if !areAttributesEqual(a.Attributes, b.Attributes) {
+		return false
+	}
+	return true
+}
+
+func areFamiliesEqual(a, b Family) bool {
+	if a.Name != b.Name {
+		return false
+	}
+	if normalizeStr(a.Description) != normalizeStr(b.Description) {
+		return false
+	}
+	if normalizeStr(a.Icon) != normalizeStr(b.Icon) {
+		return false
+	}
+	if len(a.Ports) != len(b.Ports) {
+		return false
+	}
+	for _, pa := range a.Ports {
+		found := false
+		for _, pb := range b.Ports {
+			if pa.Guid == pb.Guid {
+				if !arePortsEqual(pa, pb) {
+					return false
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
 	}
 	if !areAttributesEqual(a.Attributes, b.Attributes) {
 		return false
@@ -9019,8 +9437,8 @@ func ApplyKitDiff(kit *Kit, diff *KitDiff) {
 	if diff.Concepts != nil {
 		applyConceptsDiff(&kit.Concepts, diff.Concepts)
 	}
-	if diff.Ports != nil {
-		applyPortsDiff(&kit.Ports, diff.Ports)
+	if diff.Families != nil {
+		applyFamiliesDiff(&kit.Families, diff.Families)
 	}
 	if diff.Files != nil {
 		applyFilesDiff(&kit.Files, diff.Files)
@@ -10211,8 +10629,58 @@ func applyPortDiff(item *Port, diff *PortDiff) {
 	if diff.HasField("icon") {
 		item.Icon = diff.Icon
 	}
+	if diff.HasField("maxChildren") {
+		item.MaxChildren = diff.MaxChildren
+	}
 	if diff.CompatiblePorts != nil {
 		item.CompatiblePorts = diff.CompatiblePorts
+	}
+	if diff.Attributes != nil {
+		applyAttributesDiff(&item.Attributes, diff.Attributes)
+	}
+}
+
+func applyFamiliesDiff(items *[]Family, diff *FamiliesDiff) {
+	if diff.Removed != nil {
+		removedGuids := make(map[string]bool)
+		for _, r := range diff.Removed {
+			removedGuids[r.Guid] = true
+		}
+		filtered := (*items)[:0]
+		for _, f := range *items {
+			if !removedGuids[f.Guid] {
+				filtered = append(filtered, f)
+			}
+		}
+		*items = filtered
+	}
+	if diff.Updated != nil {
+		for _, u := range diff.Updated {
+			for i := range *items {
+				if (*items)[i].Guid == u.Family.Guid {
+					applyFamilyDiff(&(*items)[i], &u.Diff)
+					break
+				}
+			}
+		}
+	}
+	if diff.Added != nil {
+		*items = append(*items, diff.Added...)
+	}
+}
+
+func applyFamilyDiff(item *Family, diff *FamilyDiff) {
+	if diff.Name != nil {
+		item.Name = *diff.Name
+	}
+	if diff.HasField("description") {
+		item.Description = diff.Description
+	}
+	if diff.HasField("icon") {
+		item.Icon = diff.Icon
+	}
+	if diff.Ports != nil {
+		applyPortsDiff(&item.Ports, diff.Ports)
 	}
 	if diff.Attributes != nil {
 		applyAttributesDiff(&item.Attributes, diff.Attributes)
@@ -10455,6 +10923,7 @@ type KitFilter struct {
 	ModelTags  []string    `json:"modelTags,omitempty"`
 	Designs    *GlobFilter `json:"designs,omitempty"`
 	Types      *GlobFilter `json:"types,omitempty"`
+	Families   *GlobFilter `json:"families,omitempty"`
 	Ports      *GlobFilter `json:"ports,omitempty"`
 	Files      *GlobFilter `json:"files,omitempty"`
 	Tags       *GlobFilter `json:"tags,omitempty"`
@@ -10500,7 +10969,7 @@ func MatchesGlobFilter(name string, filter *GlobFilter) bool {
 }
 
 // 📦filterKitByDesign filters a kit to only include entities transitively related to a design.
-// Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
+// Removes types not used by pieces, designs not the target, families without used ports,
 // 📄files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
 func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	var design *Design
@@ -10518,7 +10987,11 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 
 	usedTypeGuids := make(map[string]bool)
 	usedDesignGuids := make(map[string]bool)
+	usedFamilyGuids := make(map[string]bool)
 	usedDesignGuids[designGuid] = true
+	for _, family := range design.Families {
+		usedFamilyGuids[family.Guid] = true
+	}
 
 	for _, piece := range pieces {
 		if piece.Type != nil {
@@ -10532,6 +11005,20 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	typeByGuid := make(map[string]*Type)
 	for i := range kit.Types {
 		typeByGuid[kit.Types[i].Guid] = &kit.Types[i]
+	}
+	for i := range kit.Types {
+		for _, family := range kit.Types[i].Families {
+			if usedFamilyGuids[family.Guid] {
+				usedTypeGuids[kit.Types[i].Guid] = true
+			}
+		}
+	}
+	for i := range kit.Designs {
+		for _, family := range kit.Designs[i].Families {
+			if usedFamilyGuids[family.Guid] {
+				usedDesignGuids[kit.Designs[i].Guid] = true
+			}
+		}
 	}
 
 	resolvedTagGuids := make([]string, 0)
@@ -10615,8 +11102,11 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		portSnapshot = append(portSnapshot, portGuid)
 	}
 	for _, portGuid := range portSnapshot {
-		for _, port := range kit.Ports {
-			if port.Guid == portGuid {
+		for _, family := range kit.Families {
+			for _, port := range family.Ports {
+				if port.Guid != portGuid {
+					continue
+				}
 				for _, compat := range port.CompatiblePorts {
 					usedPortGuids[compat.Guid] = true
 				}
@@ -10662,9 +11152,16 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 			result.Designs = append(result.Designs, d)
 		}
 	}
-	for _, p := range kit.Ports {
-		if usedPortGuids[p.Guid] {
-			result.Ports = append(result.Ports, p)
+	for _, family := range kit.Families {
+		filteredFamily := family
+		filteredFamily.Ports = nil
+		for _, port := range family.Ports {
+			if usedPortGuids[port.Guid] {
+				filteredFamily.Ports = append(filteredFamily.Ports, port)
+			}
+		}
+		if len(filteredFamily.Ports) > 0 {
+			result.Families = append(result.Families, filteredFamily)
 		}
 	}
 	for _, f := range kit.Files {
@@ -10712,7 +11209,7 @@ func FilterKit(kit Kit, filter KitFilter) Kit {
 		base = kit
 	}
 
-	hasGlobFilters := filter.Designs != nil || filter.Types != nil || filter.Ports != nil || filter.Files != nil ||
+	hasGlobFilters := filter.Designs != nil || filter.Types != nil || filter.Families != nil || filter.Ports != nil || filter.Files != nil ||
 		filter.Tags != nil || filter.Concepts != nil || filter.Qualities != nil || filter.Authors != nil || filter.Folders != nil
 	if !hasGlobFilters {
 		return base
@@ -10744,10 +11241,18 @@ func FilterKit(kit Kit, filter KitFilter) Kit {
 			result.Designs = append(result.Designs, d)
 		}
 	}
-	for _, p := range base.Ports {
-		if MatchesGlobFilter(p.Name, filter.Ports) {
-			result.Ports = append(result.Ports, p)
+	for _, family := range base.Families {
+		if !MatchesGlobFilter(family.Name, filter.Families) {
+			continue
 		}
+		filteredFamily := family
+		filteredFamily.Ports = nil
+		for _, port := range family.Ports {
+			if MatchesGlobFilter(port.Name, filter.Ports) {
+				filteredFamily.Ports = append(filteredFamily.Ports, port)
+			}
+		}
+		result.Families = append(result.Families, filteredFamily)
 	}
 	for _, f := range base.Files {
 		if MatchesGlobFilter(f.Name, filter.Files) {
@@ -10949,11 +11454,11 @@ func RemoveFileFromKit(kit Kit, fileGuid string) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// ➕AddPortToKit creates a change that adds a single port to a kit.
-func AddPortToKit(kit Kit, iface Port) KitChange {
+// ➕AddFamilyToKit creates a change that adds a first-class family to a kit.
+func AddFamilyToKit(kit Kit, family Family) KitChange {
 	forward := KitDiff{
-		Ports: &PortsDiff{
-			Added: []Port{iface},
+		Families: &FamiliesDiff{
+			Added: []Family{family},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -10962,11 +11467,11 @@ func AddPortToKit(kit Kit, iface Port) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// ⚓RemovePortFromKit creates a change that removes a port by GUID.
-func RemovePortFromKit(kit Kit, interfaceGuid string) KitChange {
+// 👪RemoveFamilyFromKit creates a change that removes a family by GUID.
+func RemoveFamilyFromKit(kit Kit, familyGuid string) KitChange {
 	forward := KitDiff{
-		Ports: &PortsDiff{
-			Removed: []PortId{{Guid: interfaceGuid}},
+		Families: &FamiliesDiff{
+			Removed: []FamilyId{{Guid: familyGuid}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11512,8 +12017,10 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 		typesMap[kit.Types[i].Guid] = &kit.Types[i]
 	}
 	portsMap := make(map[string]*Port)
-	for i := range kit.Ports {
-		portsMap[kit.Ports[i].Guid] = &kit.Ports[i]
+	for familyIndex := range kit.Families {
+		for portIndex := range kit.Families[familyIndex].Ports {
+			portsMap[kit.Families[familyIndex].Ports[portIndex].Guid] = &kit.Families[familyIndex].Ports[portIndex]
+		}
 	}
 
 	// Classify source pieces
@@ -11924,6 +12431,7 @@ const (
 	EntityKindFile       SemioEntityKind = "File"
 	EntityKindFolder     SemioEntityKind = "Folder"
 	EntityKindQuality    SemioEntityKind = "Quality"
+	EntityKindFamily     SemioEntityKind = "Family"
 	EntityKindPort       SemioEntityKind = "Port"
 	EntityKindProp       SemioEntityKind = "Prop"
 	EntityKindModel      SemioEntityKind = "Model"
@@ -12084,8 +12592,11 @@ func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
 	for _, q := range ctx.Kit.Qualities {
 		check(EntityKindQuality, q.Guid)
 	}
-	for _, i := range ctx.Kit.Ports {
-		check(EntityKindPort, i.Guid)
+	for _, family := range ctx.Kit.Families {
+		check(EntityKindFamily, family.Guid)
+		for _, port := range family.Ports {
+			check(EntityKindPort, port.Guid)
+		}
 	}
 	for _, f := range ctx.Kit.Files {
 		check(EntityKindFile, f.Guid)
@@ -12162,13 +12673,18 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 			}
 		}
 	}
-	for i := range kit.Ports {
-		if kit.Ports[i].Guid == oldGuid {
-			kit.Ports[i].Guid = newGuid
+	for i := range kit.Families {
+		if kit.Families[i].Guid == oldGuid {
+			kit.Families[i].Guid = newGuid
 		}
-		for j := range kit.Ports[i].CompatiblePorts {
-			if kit.Ports[i].CompatiblePorts[j].Guid == oldGuid {
-				kit.Ports[i].CompatiblePorts[j].Guid = newGuid
+		for j := range kit.Families[i].Ports {
+			if kit.Families[i].Ports[j].Guid == oldGuid {
+				kit.Families[i].Ports[j].Guid = newGuid
+			}
+			for k := range kit.Families[i].Ports[j].CompatiblePorts {
+				if kit.Families[i].Ports[j].CompatiblePorts[k].Guid == oldGuid {
+					kit.Families[i].Ports[j].CompatiblePorts[k].Guid = newGuid
+				}
 			}
 		}
 	}
@@ -12405,12 +12921,13 @@ func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]Port)
-	for _, p := range ctx.Kit.Ports {
+	allPorts := AllPortsInKit(&ctx.Kit)
+	for _, p := range allPorts {
 		name := p.Name
 		names[name] = append(names[name], p)
 	}
-	allNames := make([]string, len(ctx.Kit.Ports))
-	for i, p := range ctx.Kit.Ports {
+	allNames := make([]string, len(allPorts))
+	for i, p := range allPorts {
 		allNames[i] = p.Name
 	}
 	for name, group := range names {
@@ -12431,10 +12948,12 @@ func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 				RelatedGuids: relatedGuids,
 				Fixes: []Fix{
 					makeFix(ctx, fmt.Sprintf("Rename port \"%s\"", name), func(clone *Kit) {
-						for j := range clone.Ports {
-							if clone.Ports[j].Guid == iface.Guid {
-								clone.Ports[j].Name = generateUniqueName(name, allNames)
-								break
+						for familyIndex := range clone.Families {
+							for portIndex := range clone.Families[familyIndex].Ports {
+								if clone.Families[familyIndex].Ports[portIndex].Guid == iface.Guid {
+									clone.Families[familyIndex].Ports[portIndex].Name = generateUniqueName(name, allNames)
+									return
+								}
 							}
 						}
 					}),
