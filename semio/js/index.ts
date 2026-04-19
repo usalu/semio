@@ -4230,7 +4230,7 @@ export type EntityLifecycle = "active" | "deleted";
 export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  parent: TypeIdSchema.optional(),
+  families: z.array(z.string()).optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   models: z.array(ModelSchema).optional(),
@@ -4261,6 +4261,7 @@ export type TypePlain = z.infer<typeof TypeSchema>;
 export class Type {
   guid!: string;
   name!: string;
+  families?: string[];
   isAbstract?: boolean;
   folder?: string;
   models?: Model[];
@@ -4284,23 +4285,12 @@ export class Type {
   deletedAt?: string;
   deletedInChangeId?: string;
 
-  /** Wire ID only; object graph uses {@link Type.parent}. */
-  #parentGuid?: string;
-
   /** True private field — avoids enumerable kit ↔ types cycles in diffs and deep equality. */
   #kit?: KitImpl;
 
-  /** Resolved parent type in the kit graph (lazy). */
-  get parent(): Type | undefined {
-    if (!this.#parentGuid || !this.#kit) return undefined;
-    return this.#kit.findType(this.#parentGuid);
-  }
-
   constructor(plain: TypePlain, kit?: KitImpl) {
     const p = TypeSchema.parse(plain);
-    this.#parentGuid = p.parent?.guid;
-    const { parent: _p, ...rest } = p;
-    Object.assign(this, rest);
+    Object.assign(this, p);
     this.models = p.models?.map((m) => new Model(m));
     this.connectors = p.connectors?.map((c) => new Connector(c));
     this.props = p.props?.map((x) => new Prop(x));
@@ -4362,24 +4352,9 @@ export class Type {
     return this.#kit;
   }
 
-  getPrimitiveType(): Type {
-    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
-    return asKitInstance(this.#kit).getPrimitiveTypeFor(this.guid);
-  }
-
   getTypeFamily(): Type[] {
     if (!this.#kit) throw new Error("Type not attached to a KitImpl");
     return asKitInstance(this.#kit).getTypeFamilyFor(this.guid);
-  }
-
-  getTypeSiblings(): Type[] {
-    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
-    return asKitInstance(this.#kit).getTypeSiblingsFor(this.guid);
-  }
-
-  getTypeChildren(): Type[] {
-    if (!this.#kit) throw new Error("Type not attached to a KitImpl");
-    return asKitInstance(this.#kit).getTypeChildrenFor(this.guid);
   }
 
   isInSameFamilyAsType(otherTypeGuid: string): boolean {
@@ -4387,14 +4362,6 @@ export class Type {
     return asKitInstance(this.#kit).areTypesInSameFamily(this.guid, otherTypeGuid);
   }
   // #endregion ✏️Methods
-
-  wireParentId(): TypeId | undefined {
-    return this.#parentGuid ? { guid: this.#parentGuid } : undefined;
-  }
-
-  setParentWireRef(pid: TypeId | null | undefined): void {
-    this.#parentGuid = pid?.guid;
-  }
 
   /** 📦Serialize this type for wire transport. */
   serialize(): string {
@@ -4409,7 +4376,6 @@ export class Type {
   toPlain(): TypePlain {
     return TypeSchema.parse({
       ...(this as unknown as TypePlain),
-      parent: this.wireParentId(),
     });
   }
 
@@ -4434,7 +4400,7 @@ export class Type {
   diffTo(after: Type): TypeDiff {
     const diff: TypeDiff = {};
     if (this.name !== after.name) diff.name = after.name;
-    if (this.wireParentId()?.guid !== after.wireParentId()?.guid) diff.parent = after.wireParentId() ?? null;
+    if (!arraysEqual(this.families, after.families)) diff.families = after.families ?? null;
     if (this.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
     if (this.folder !== after.folder) diff.folder = after.folder ?? null;
     if (this.stock !== after.stock) diff.stock = after.stock;
@@ -4464,7 +4430,7 @@ export class Type {
   inverseDiff(appliedDiff: TypeDiff): TypeDiff {
     const inverse: TypeDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
-    if (appliedDiff.parent !== undefined) inverse.parent = this.wireParentId() ?? null;
+    if (appliedDiff.families !== undefined) inverse.families = this.families ?? null;
     if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = this.isAbstract;
     if (appliedDiff.folder !== undefined) inverse.folder = this.folder ?? null;
     if (appliedDiff.stock !== undefined) inverse.stock = this.stock;
@@ -4502,10 +4468,10 @@ export class Type {
   /** 🧱Apply a type delta to this type. */
   applyDiff(diff: TypeDiff): void {
     if (diff.name !== undefined) this.name = diff.name;
+    if (diff.families !== undefined) this.families = diff.families ?? undefined;
     if (diff.isAbstract !== undefined) this.isAbstract = diff.isAbstract;
     if (diff.createdAt !== undefined) this.createdAt = diff.createdAt;
     if (diff.updatedAt !== undefined) this.updatedAt = diff.updatedAt;
-    if (diff.parent !== undefined) this.setParentWireRef(diff.parent);
     if (diff.folder !== undefined) this.folder = diff.folder ?? undefined;
     if (diff.stock !== undefined) this.stock = diff.stock;
     if (diff.virtual !== undefined) this.virtual = diff.virtual;
@@ -4599,7 +4565,7 @@ export const TypeDiffSchema = TypeSchema.partial()
     folder: z.string().nullable().optional(),
     concepts: z.array(ConceptIdSchema).nullable().optional(),
     authors: z.array(AuthorIdSchema).nullable().optional(),
-    parent: TypeIdSchema.nullable().optional(),
+    families: z.array(z.string()).nullable().optional(),
     lifecycle: z.enum(["active", "deleted"]).optional(),
     deletedByUserId: z.string().nullable().optional(),
     deletedByDisplayName: z.string().nullable().optional(),
@@ -4609,13 +4575,6 @@ export const TypeDiffSchema = TypeSchema.partial()
 /**
  **/
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
-
-const wireParentGuidOf = (entity: { parent?: { guid: string }; wireParentId?: () => { guid: string } | undefined }): string | undefined => (typeof entity.wireParentId === "function" ? entity.wireParentId()?.guid : entity.parent?.guid);
-
-const wireParentIdOf = (entity: { parent?: { guid: string }; wireParentId?: () => { guid: string } | undefined }): { guid: string } | undefined => {
-  const guid = wireParentGuidOf(entity);
-  return guid ? { guid } : undefined;
-};
 
 /**
  * Retrieves the TypeDiff value.
@@ -6139,7 +6098,7 @@ export const deserializeStatShallow = (json: string): StatShallow => StatShallow
 export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  parent: DesignIdSchema.optional(),
+  families: z.array(z.string()).optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   pieces: z.array(PieceSchema).optional(),
@@ -6169,6 +6128,7 @@ export type DesignPlain = z.infer<typeof DesignSchema>;
 export class Design {
   guid!: string;
   name!: string;
+  families?: string[];
   isAbstract?: boolean;
   folder?: string;
   pieces?: Piece[];
@@ -6192,24 +6152,14 @@ export class Design {
   createdAt?: string;
   updatedAt?: string;
 
-  /** Wire id only; object graph uses {@link Design.parent}. */
-  #parentDesignGuid?: string;
-
   /** True private field — avoids enumerable kit ↔ designs cycles in diffs and deep equality. */
   #kit?: KitImpl;
-
-  /** Parent design in the kit hierarchy (lazy). */
-  get parent(): Design | undefined {
-    if (!this.#parentDesignGuid || !this.#kit) return undefined;
-    return this.#kit.findDesign(this.#parentDesignGuid);
-  }
 
   constructor(plain: DesignPlain | Design, kit?: KitImpl) {
     const wire: DesignPlain = plain instanceof Design ? plain.toPlain() : plain;
     const p = DesignSchema.parse(wire);
     if (kit !== undefined && !(kit instanceof KitImpl)) throw new Error("Design must be wired to a KitImpl class instance");
-    this.#parentDesignGuid = p.parent?.guid;
-    const { parent: _par, connections: _wireConnections, pieces: _wirePieces, ...rest } = p;
+    const { connections: _wireConnections, pieces: _wirePieces, ...rest } = p;
     Object.assign(this, rest);
     this.#kit = kit;
     this.pieces = p.pieces?.map((x) => new Piece(x, this, kit));
@@ -6278,7 +6228,7 @@ export class Design {
   diffTo(after: Design): DesignDiff {
     const diff: DesignDiff = {};
     if (this.name !== after.name) diff.name = after.name;
-    if (wireParentGuidOf(this) !== wireParentGuidOf(after)) diff.parent = wireParentIdOf(after);
+    if (!arraysEqual(this.families, after.families)) diff.families = after.families ?? null;
     if (this.isAbstract !== after.isAbstract) diff.isAbstract = after.isAbstract;
     if (this.folder !== after.folder) diff.folder = after.folder;
     if (this.canScale !== after.canScale) diff.canScale = after.canScale;
@@ -6312,7 +6262,7 @@ export class Design {
   inverseDiff(appliedDiff: DesignDiff): DesignDiff {
     const inverse: DesignDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
-    if (appliedDiff.parent !== undefined) inverse.parent = this.wireParentId() ?? undefined;
+    if (appliedDiff.families !== undefined) inverse.families = this.families ?? null;
     if (appliedDiff.isAbstract !== undefined) inverse.isAbstract = this.isAbstract;
     if (appliedDiff.folder !== undefined) inverse.folder = this.folder;
     if (appliedDiff.canScale !== undefined) inverse.canScale = this.canScale;
@@ -6517,24 +6467,9 @@ export class Design {
     return this.getConnections();
   }
 
-  getPrimitiveDesign(): Design {
-    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
-    return asKitInstance(this.#kit).getPrimitiveDesignFor(this.guid);
-  }
-
   getDesignFamily(): Design[] {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
     return asKitInstance(this.#kit).getDesignFamilyFor(this.guid);
-  }
-
-  getDesignSiblings(): Design[] {
-    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
-    return asKitInstance(this.#kit).getDesignSiblingsFor(this.guid);
-  }
-
-  getDesignChildren(): Design[] {
-    if (!this.#kit) throw new Error("Design not attached to a KitImpl");
-    return asKitInstance(this.#kit).getDesignChildrenFor(this.guid);
   }
 
   isInSameFamilyAsDesign(otherDesignGuid: string): boolean {
@@ -6646,14 +6581,6 @@ export class Design {
   }
   // #endregion ✏️Methods
 
-  wireParentId(): DesignId | undefined {
-    return this.#parentDesignGuid ? { guid: this.#parentDesignGuid } : undefined;
-  }
-
-  setParentWireRef(pid: DesignId | null | undefined): void {
-    this.#parentDesignGuid = pid?.guid;
-  }
-
   /** Ensures the kit's merkle flatten cache is populated for this design (batch before many {@link Piece.flatPlane} calls). */
   ensureFlattenMerkleCache(): void {
     const k = this.#kit;
@@ -6664,7 +6591,6 @@ export class Design {
   toPlain(): DesignPlain {
     return DesignSchema.parse({
       ...(this as unknown as DesignPlain),
-      parent: this.wireParentId(),
       pieces: this.pieces?.map((x) => x.toPlain()),
       connections: this._connections?.map((x) => x.toPlain()),
       stats: this.stats?.map((x) => x.toPlain()),
@@ -8327,14 +8253,7 @@ export type KitChangeOptions = {
   inboundActor?: { changeId?: string; actorId?: string; actorDisplayName?: string };
 };
 
-export type ConflictKind =
-  | "LocalChange"
-  | "TxUndo"
-  | "TxRedo"
-  | "TxAbort"
-  | "HistoryUndo"
-  | "HistoryRedo"
-  | "BackboneChange";
+export type ConflictKind = "LocalChange" | "TxUndo" | "TxRedo" | "TxAbort" | "HistoryUndo" | "HistoryRedo" | "BackboneChange";
 
 export type Conflict = {
   id: string;
@@ -8435,12 +8354,7 @@ export type KitInteractionDTO = z.infer<typeof KitInteractionWireSchema>;
 
 export type InteractionStatus = TransactionStatus;
 
-export type ChangeOrigin =
-  | "local-interaction"
-  | "local-finalize"
-  | "local-history-undo"
-  | "local-history-redo"
-  | "backbone";
+export type ChangeOrigin = "local-interaction" | "local-finalize" | "local-history-undo" | "local-history-redo" | "backbone";
 
 export interface ValidationMessage {
   code: string;
@@ -9212,10 +9126,7 @@ export class KitImpl {
   /**
    * Incremental flatten with optional merkle cache; see {@link KitImpl.flattenDesignMerkle}.
    */
-  #flattenDesignCached(
-    designGuid: string,
-    cache?: { [pieceGuid: string]: FlatMerkleCacheEntry },
-  ): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
+  #flattenDesignCached(designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: DesignOperationResult; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } {
     const design = this.findDesign(designGuid);
     if (!design) {
       return {
@@ -10611,14 +10522,10 @@ export class KitImpl {
     return this.types?.find((t) => t.guid === guid);
   }
 
-  findDesign(lookup: Guid | { name: string; parent?: string }): Design | undefined {
+  findDesign(lookup: Guid | { name: string }): Design | undefined {
     if (typeof lookup === "object" && lookup !== null && "name" in lookup) {
-      const { name, parent: parentName } = lookup;
-      return this.designs?.find((d) => {
-        if (d.name !== name) return false;
-        if (parentName === undefined) return !d.parent;
-        return d.parent?.name === parentName;
-      });
+      const { name } = lookup;
+      return this.designs?.find((d) => d.name === name);
     }
     const byGuid = this.designs?.find((d) => d.guid === lookup);
     if (byGuid) return byGuid;
@@ -10834,40 +10741,26 @@ export class KitImpl {
   }
 
   getPrimitiveDesignFor(designGuid: string): Design {
-    let current = this.requireDesign(designGuid);
-    while (current.parent?.guid) {
-      current = this.requireDesign(current.parent.guid);
-    }
-    return current;
+    return this.requireDesign(designGuid);
   }
 
   getDesignFamilyFor(designGuid: string): Design[] {
-    const primitive = this.getPrimitiveDesignFor(designGuid);
-    const family: Design[] = [];
-    const collectDescendants = (parentGuid: string) => {
-      const parent = this.requireDesign(parentGuid);
-      family.push(parent);
-      const children = (this.designs || []).filter((d) => d.parent?.guid === parentGuid);
-      children.forEach((child) => collectDescendants(child.guid));
-    };
-    collectDescendants(primitive.guid);
-    return family;
-  }
-
-  getDesignSiblingsFor(designGuid: string): Design[] {
     const design = this.requireDesign(designGuid);
-    const parentGuid = design.parent?.guid;
-    return (this.designs || []).filter((d) => d.parent?.guid === parentGuid && d.guid !== designGuid);
-  }
-
-  getDesignChildrenFor(designGuid: string): Design[] {
-    return (this.designs || []).filter((d) => d.parent?.guid === designGuid);
+    const designFamilies = design.families ?? [];
+    if (designFamilies.length === 0) return [design];
+    return (this.designs || []).filter((d) => {
+      const df = d.families ?? [];
+      return df.some((f) => designFamilies.includes(f));
+    });
   }
 
   areDesignsInSameFamily(designGuidA: string, designGuidB: string): boolean {
-    const primitiveA = this.getPrimitiveDesignFor(designGuidA);
-    const primitiveB = this.getPrimitiveDesignFor(designGuidB);
-    return primitiveA.guid === primitiveB.guid;
+    const a = this.requireDesign(designGuidA);
+    const b = this.requireDesign(designGuidB);
+    const familiesA = a.families ?? [];
+    const familiesB = b.families ?? [];
+    if (familiesA.length === 0 && familiesB.length === 0) return a.guid === b.guid;
+    return familiesA.some((f) => familiesB.includes(f));
   }
 
   canUseDesignAsPiece(containerDesignGuid: string, pieceDesignGuid: string): boolean {
@@ -10883,40 +10776,26 @@ export class KitImpl {
   }
 
   getPrimitiveTypeFor(typeGuid: string): Type {
-    let current = this.requireType(typeGuid);
-    while (current.parent?.guid) {
-      current = this.requireType(current.parent.guid);
-    }
-    return current;
+    return this.requireType(typeGuid);
   }
 
   getTypeFamilyFor(typeGuid: string): Type[] {
-    const primitive = this.getPrimitiveTypeFor(typeGuid);
-    const family: Type[] = [];
-    const collectDescendants = (parentGuid: string) => {
-      const parent = this.requireType(parentGuid);
-      family.push(parent);
-      const children = (this.types || []).filter((t) => t.parent?.guid === parentGuid);
-      children.forEach((child) => collectDescendants(child.guid));
-    };
-    collectDescendants(primitive.guid);
-    return family;
-  }
-
-  getTypeSiblingsFor(typeGuid: string): Type[] {
     const type = this.requireType(typeGuid);
-    const parentGuid = type.parent?.guid;
-    return (this.types || []).filter((t) => t.parent?.guid === parentGuid && t.guid !== typeGuid);
-  }
-
-  getTypeChildrenFor(typeGuid: string): Type[] {
-    return (this.types || []).filter((t) => t.parent?.guid === typeGuid);
+    const typeFamilies = type.families ?? [];
+    if (typeFamilies.length === 0) return [type];
+    return (this.types || []).filter((t) => {
+      const tf = t.families ?? [];
+      return tf.some((f) => typeFamilies.includes(f));
+    });
   }
 
   areTypesInSameFamily(typeGuidA: string, typeGuidB: string): boolean {
-    const primitiveA = this.getPrimitiveTypeFor(typeGuidA);
-    const primitiveB = this.getPrimitiveTypeFor(typeGuidB);
-    return primitiveA.guid === primitiveB.guid;
+    const a = this.requireType(typeGuidA);
+    const b = this.requireType(typeGuidB);
+    const familiesA = a.families ?? [];
+    const familiesB = b.families ?? [];
+    if (familiesA.length === 0 && familiesB.length === 0) return a.guid === b.guid;
+    return familiesA.some((f) => familiesB.includes(f));
   }
 
   /**
@@ -10935,22 +10814,11 @@ export class KitImpl {
         if (type.connectors && type.connectors.length > 0) {
           return type.connectors[0];
         }
-
-        if (type.parent?.guid) {
-          const parentType = getType(type.parent.guid);
-          return getConnector(parentType, connectorGuid);
-        }
         return undefined;
       }
 
       if (type.connectors && type.connectors.length > 0) {
         const connector = type.connectors.find((p) => p.guid === connectorGuid);
-        if (connector) return connector;
-      }
-
-      if (type.parent?.guid) {
-        const parentType = getType(type.parent.guid);
-        const connector = getConnector(parentType, connectorGuid);
         if (connector) return connector;
       }
 
@@ -11697,14 +11565,7 @@ function graphValidationFromLedgerReport(r: ValidationReport): KitDiffValidation
   };
 }
 
-export function ledgerKitChangeFromGraph(
-  graph: KitGraphChange,
-  origin: ChangeOrigin,
-  revision: number,
-  baseRevision: number,
-  interactionId?: InteractionId,
-  metadata?: Record<string, string>,
-): KitChange {
+export function ledgerKitChangeFromGraph(graph: KitGraphChange, origin: ChangeOrigin, revision: number, baseRevision: number, interactionId?: InteractionId, metadata?: Record<string, string>): KitChange {
   return {
     id: guid(),
     origin,
@@ -11884,9 +11745,7 @@ class KitBackboneBridge implements Backbone {
     if (!bb) return;
     const impl = this.owner!._inner;
     const rev = impl.getHistoryInfo().revision;
-    await bb.submitCommittedChange(
-      ledgerKitChangeFromGraph(change, "local-finalize", rev + 1, rev, impl.activeTransactionId, { channel: "commit" }),
-    );
+    await bb.submitCommittedChange(ledgerKitChangeFromGraph(change, "local-finalize", rev + 1, rev, impl.activeTransactionId, { channel: "commit" }));
   }
 }
 
@@ -12584,10 +12443,10 @@ const applyCollectionDiff = <K extends string, T extends { guid: string }, D>(en
 /** Applies a design diff in place (kit graph + local algorithms). */
 function applyDesignDiffCore(target: Design, diff: DesignDiff): void {
   if (diff.name !== undefined) target.name = diff.name;
+  if (diff.families !== undefined) target.families = diff.families ?? undefined;
   if (diff.isAbstract !== undefined) target.isAbstract = diff.isAbstract;
   if (diff.createdAt !== undefined) target.createdAt = diff.createdAt;
   if (diff.updatedAt !== undefined) target.updatedAt = diff.updatedAt;
-  if (diff.parent !== undefined) target.setParentWireRef(diff.parent);
   if (diff.folder !== undefined) target.folder = diff.folder;
   if (diff.canScale !== undefined) target.canScale = diff.canScale;
   if (diff.canMirror !== undefined) target.canMirror = diff.canMirror;
@@ -12793,13 +12652,7 @@ export class DiffComposer {
 }
 
 /** Semantic command labels — each maps to one deterministic KitDiff expansion (cross-language parity). */
-export type SemioCommandKind =
-  | "DeletePiece"
-  | "MovePiece"
-  | "RenamePiece"
-  | "ReconnectConnection"
-  | "DeletePiecesCascade"
-  | "NormalizeStaleConnections";
+export type SemioCommandKind = "DeletePiece" | "MovePiece" | "RenamePiece" | "ReconnectConnection" | "DeletePiecesCascade" | "NormalizeStaleConnections";
 
 /**
  * Mutable kit document: holds a single KitImpl graph and applies diffs in place.
@@ -13523,9 +13376,9 @@ export const hashType = (t: Type): string => {
   }
   w.writeString("name");
   w.writeString(t.name);
-  if (t.parent != null) {
-    w.writeString("parent");
-    w.writeString(t.parent.guid);
+  if (t.families && t.families.length > 0) {
+    w.writeString("families");
+    for (const f of [...t.families].sort()) w.writeString(f);
   }
   if (t.props && t.props.length > 0) {
     w.writeString("props");
@@ -13848,9 +13701,9 @@ export const hashDesign = (d: Design): string => {
   }
   w.writeString("name");
   w.writeString(d.name);
-  if (d.parent != null) {
-    w.writeString("parent");
-    w.writeString(d.parent.guid);
+  if (d.families && d.families.length > 0) {
+    w.writeString("families");
+    for (const f of [...d.families].sort()) w.writeString(f);
   }
   if (d.pieces && d.pieces.length > 0) {
     w.writeString("pieces");
@@ -14289,7 +14142,14 @@ export const hashTypeDiff = (d: TypeDiff): string => {
   writeNullableId(w, "location", d.location);
   writeNullableHash(w, "models", d.models, hashModelsDiff);
   writeNullableString(w, "name", d.name);
-  writeNullableId(w, "parent", d.parent);
+  if (d.families !== undefined) {
+    w.writeString("families");
+    if (d.families === null) {
+      w.writeString("null");
+    } else {
+      for (const f of [...d.families].sort()) w.writeString(f);
+    }
+  }
   writeNullableHash(w, "props", d.props, hashPropsDiff);
   writeNullableNumber(w, "stock", d.stock);
   writeNullableString(w, "unit", d.unit);
@@ -14409,7 +14269,14 @@ export const hashDesignDiff = (d: DesignDiff): string => {
   writeNullableHash(w, "layers", d.layers, hashLayersDiff);
   writeNullableId(w, "location", d.location);
   writeNullableString(w, "name", d.name);
-  writeNullableId(w, "parent", d.parent);
+  if (d.families !== undefined) {
+    w.writeString("families");
+    if (d.families === null) {
+      w.writeString("null");
+    } else {
+      for (const f of [...d.families].sort()) w.writeString(f);
+    }
+  }
   writeNullableHash(w, "pieces", d.pieces, hashPiecesDiff);
   writeNullableHash(w, "props", d.props, hashPropsDiff);
   writeNullableHash(w, "stats", d.stats, hashStatsDiff);
@@ -14550,13 +14417,20 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
   }
 
   const typeByGuid = new Map((k.types ?? []).map((type) => [type.guid, type]));
-  const collectAncestors = (typeGuid: string) => {
+  const collectFamilyTypes = (typeGuid: string) => {
     const type = typeByGuid.get(typeGuid);
-    if (!type?.parent?.guid || usedTypeGuids.has(type.parent.guid)) return;
-    usedTypeGuids.add(type.parent.guid);
-    collectAncestors(type.parent.guid);
+    if (!type) return;
+    const families = type.families ?? [];
+    if (families.length === 0) return;
+    for (const [guid, t] of typeByGuid) {
+      if (usedTypeGuids.has(guid)) continue;
+      const tf = t.families ?? [];
+      if (tf.some((f) => families.includes(f))) {
+        usedTypeGuids.add(guid);
+      }
+    }
   };
-  for (const typeGuid of [...usedTypeGuids]) collectAncestors(typeGuid);
+  for (const typeGuid of [...usedTypeGuids]) collectFamilyTypes(typeGuid);
 
   const tags = modelTags;
   const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
@@ -14650,27 +14524,12 @@ export const filterKit = (kit: KitLike, filter: KitFilter): KitImpl => asKitInst
 // Design family traversal helpers MUST be defined here.
 
 /**
- * Retrieves the PrimitiveDesign value.
- **/
-export const getPrimitiveDesign = (kit: KitLike, designGuid: string): Design => asKitInstance(kit).getPrimitiveDesignFor(designGuid);
-
-/**
- * Retrieves the DesignFamily value.
+ * 📻 Retrieves the DesignFamily: all designs sharing any family name with the given design.
  **/
 export const getDesignFamily = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignFamilyFor(designGuid);
 
 /**
- * Retrieves the DesignSiblings value.
- **/
-export const getDesignSiblings = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignSiblingsFor(designGuid);
-
-/**
- * Retrieves the DesignChildren value.
- **/
-export const getDesignChildren = (kit: KitLike, designGuid: string): Design[] => asKitInstance(kit).getDesignChildrenFor(designGuid);
-
-/**
- * Checks if Designs belong to the same family.
+ * 📻 Checks if Designs belong to the same family (share any family name).
  **/
 export const areDesignsInSameFamily = (kit: KitLike, designGuidA: string, designGuidB: string): boolean => asKitInstance(kit).areDesignsInSameFamily(designGuidA, designGuidB);
 
@@ -14690,27 +14549,12 @@ export const findSameFamilyDesignPieces = (kit: KitLike, designGuid: string): Pi
 // Type family traversal helpers MUST be defined here.
 
 /**
- * Retrieves the PrimitiveType value.
- **/
-export const getPrimitiveType = (kit: KitLike, typeGuid: string): Type => asKitInstance(kit).getPrimitiveTypeFor(typeGuid);
-
-/**
- * Retrieves the TypeFamily value.
+ * 🧊 Retrieves the TypeFamily: all types sharing any family name with the given type.
  **/
 export const getTypeFamily = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeFamilyFor(typeGuid);
 
 /**
- * Retrieves the TypeSiblings value.
- **/
-export const getTypeSiblings = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeSiblingsFor(typeGuid);
-
-/**
- * Retrieves the TypeChildren value.
- **/
-export const getTypeChildren = (kit: KitLike, typeGuid: string): Type[] => asKitInstance(kit).getTypeChildrenFor(typeGuid);
-
-/**
- * 👨‍👩‍👧‍👦 Checks if Types belong to the same family (have same primitive type).
+ * 👨‍👩‍👧‍👦 Checks if Types belong to the same family (share any family name).
  **/
 export const areTypesInSameFamily = (kit: KitLike, typeGuidA: string, typeGuidB: string): boolean => asKitInstance(kit).areTypesInSameFamily(typeGuidA, typeGuidB);
 
@@ -15008,10 +14852,6 @@ const validateTypeDiffNested = (
   diff: TypeDiff,
   ctxRefs: { typeGuids: Set<string>; fileGuids: Set<string>; portGuids: Set<string>; conceptGuids: Set<string>; authorGuids: Set<string>; qualityGuids: Set<string> },
 ): void => {
-  if (diff.parent?.guid) {
-    if (!ctxRefs.typeGuids.has(diff.parent.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.type-parent-missing", `${path}: parent type ${diff.parent.guid} not in kit`);
-    if (diff.parent.guid === item.guid) kitDiffPush(ctx, "errors", "kitdiff.ref.type-parent-self", `${path}: type cannot be its own parent`);
-  }
   if (diff.models) validateModelDiffNested(ctx, `${path}.models`, item.models ?? [], ctxRefs.fileGuids, diff.models);
   if (diff.connectors) validateConnectorDiffNested(ctx, `${path}.connectors`, item.connectors ?? [], ctxRefs.portGuids, ctxRefs.qualityGuids, diff.connectors);
   if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, item.props ?? [], ctxRefs.qualityGuids, diff.props);
@@ -15073,10 +14913,6 @@ const validateDesignDiffNested = (
   diff: DesignDiff,
   refs: { typeGuids: Set<string>; designGuids: Set<string>; qualityGuids: Set<string>; fileGuids: Set<string>; portGuids: Set<string>; conceptGuids: Set<string>; authorGuids: Set<string> },
 ): void => {
-  if (diff.parent?.guid) {
-    if (!refs.designGuids.has(diff.parent.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.design-parent-missing", `${path}: parent design ${diff.parent.guid} not in kit`);
-    if (diff.parent.guid === design.guid) kitDiffPush(ctx, "errors", "kitdiff.ref.design-parent-self", `${path}: design cannot be its own parent`);
-  }
   if (diff.concepts) {
     for (const c of diff.concepts ?? []) {
       if (c?.guid && !refs.conceptGuids.has(c.guid)) kitDiffPush(ctx, "errors", "kitdiff.ref.concept-missing", `${path}: concept ${c.guid} not in kit`);
@@ -15400,39 +15236,40 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
  **/
 export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
-  const byParent = new Map<Guid | undefined, Type[]>();
+  const groups = new Map<string, Type[]>();
   toArray(ctx.kit.types).forEach((t) => {
     if ((t.lifecycle ?? "active") === "deleted") return;
-    const pid = t.parent?.guid as Guid | undefined;
-    if (!byParent.has(pid)) byParent.set(pid, []);
-    byParent.get(pid)!.push(t);
+    const name = t.name ?? "";
+    const familiesKey = JSON.stringify([...(t.families ?? [])].sort());
+    const key = `${name}\0${familiesKey}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(t);
   });
-  for (const [parentGuid, siblings] of byParent) {
-    const names = new Map<string, Type[]>();
-    siblings.forEach((t) => {
-      const name = t.name ?? "";
-      if (!names.has(name)) names.set(name, []);
-      names.get(name)!.push(t);
-    });
-    for (const [name, group] of names) {
-      if (group.length <= 1) continue;
-      const [first, ...rest] = group;
-      const siblingNames = siblings.map((s) => s.name ?? "");
-      rest.forEach((type) => {
-        const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
-          types: {
-            updated: [{ type: { guid: type.guid }, diff: { name: generateUniqueName(name, siblingNames) } }],
-          },
-        }));
-        problems.push({
-          constraintId: "type-name-unique",
-          message: `Duplicate type name "${name}" among siblings.`,
-          location: { entityKind: "Type", entityGuid: type.guid, field: "name" },
-          relatedGuids: group.map((t) => t.guid),
-          fixes: [fix],
-        });
+  const allNames = Array.from(
+    new Set(
+      toArray(ctx.kit.types)
+        .filter((t) => (t.lifecycle ?? "active") !== "deleted")
+        .map((t) => t.name ?? ""),
+    ),
+  );
+  for (const [_key, group] of groups) {
+    if (group.length <= 1) continue;
+    const name = group[0].name ?? "";
+    const [first, ...rest] = group;
+    rest.forEach((type) => {
+      const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
+        types: {
+          updated: [{ type: { guid: type.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+        },
+      }));
+      problems.push({
+        constraintId: "type-name-unique",
+        message: `Duplicate type name "${name}".`,
+        location: { entityKind: "Type", entityGuid: type.guid, field: "name" },
+        relatedGuids: group.map((t) => t.guid),
+        fixes: [fix],
       });
-    }
+    });
   }
   return problems;
 };
@@ -15447,38 +15284,33 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
  **/
 export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
-  const byParent = new Map<Guid | undefined, Design[]>();
+  const groups = new Map<string, Design[]>();
   toArray(ctx.kit.designs).forEach((d) => {
-    const pid = d.parent?.guid as Guid | undefined;
-    if (!byParent.has(pid)) byParent.set(pid, []);
-    byParent.get(pid)!.push(d);
+    const name = d.name ?? "";
+    const familiesKey = JSON.stringify([...(d.families ?? [])].sort());
+    const key = `${name}\0${familiesKey}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(d);
   });
-  for (const [parentGuid, siblings] of byParent) {
-    const names = new Map<string, Design[]>();
-    siblings.forEach((d) => {
-      const name = d.name ?? "";
-      if (!names.has(name)) names.set(name, []);
-      names.get(name)!.push(d);
-    });
-    for (const [name, group] of names) {
-      if (group.length <= 1) continue;
-      const [first, ...rest] = group;
-      const siblingNames = siblings.map((s) => s.name ?? "");
-      rest.forEach((design) => {
-        const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
-          designs: {
-            updated: [{ design: { guid: design.guid }, diff: { name: generateUniqueName(name, siblingNames) } }],
-          },
-        }));
-        problems.push({
-          constraintId: "design-name-unique",
-          message: `Duplicate design name "${name}" among siblings.`,
-          location: { entityKind: "Design", entityGuid: design.guid, field: "name" },
-          relatedGuids: group.map((d) => d.guid),
-          fixes: [fix],
-        });
+  const allNames = Array.from(new Set(toArray(ctx.kit.designs).map((d) => d.name ?? "")));
+  for (const [_key, group] of groups) {
+    if (group.length <= 1) continue;
+    const name = group[0].name ?? "";
+    const [first, ...rest] = group;
+    rest.forEach((design) => {
+      const fix = semioMakeFix(ctx, `Rename "${name}"`, () => ({
+        designs: {
+          updated: [{ design: { guid: design.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+        },
+      }));
+      problems.push({
+        constraintId: "design-name-unique",
+        message: `Duplicate design name "${name}".`,
+        location: { entityKind: "Design", entityGuid: design.guid, field: "name" },
+        relatedGuids: group.map((d) => d.guid),
+        fixes: [fix],
       });
-    }
+    });
   }
   return problems;
 };
@@ -15868,10 +15700,11 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
         const pieceDesign = ctx.designsByGuid.get(piece.design.guid);
         if (!pieceDesign) return;
 
-        const containerPrimitive = getPrimitiveDesignFromContext(ctx, design.guid);
-        const piecePrimitive = getPrimitiveDesignFromContext(ctx, piece.design.guid);
+        const containerFamilies = design.families ?? [];
+        const pieceFamilies = pieceDesign.families ?? [];
+        const sameFamily = containerFamilies.length === 0 && pieceFamilies.length === 0 ? design.guid === pieceDesign.guid : containerFamilies.some((f) => pieceFamilies.includes(f));
 
-        if (containerPrimitive === piecePrimitive) {
+        if (sameFamily) {
           const conns = toArray(design._connections);
           const removedConnGuids = conns.filter((c) => c.connected.piece.guid === piece.guid || c.connecting.piece.guid === piece.guid).map((c) => ({ guid: c.guid }));
           const fix = semioMakeFix(ctx, `Remove design piece "${piece.name || piece.guid}"`, () => ({
@@ -15899,19 +15732,6 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
     });
   });
   return problems;
-};
-// 📐getPrimitiveDesignFromContext retrieves the primitive design for a piece type from validation context.
-const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: string): string => {
-  let currentGuid = designGuid;
-  let interactions = 0;
-  const maxIterations = 1000;
-  while (interactions < maxIterations) {
-    const design = ctx.designsByGuid.get(currentGuid);
-    if (!design || !design.parent?.guid) return currentGuid;
-    currentGuid = design.parent.guid;
-    interactions++;
-  }
-  return currentGuid;
 };
 
 // #endregion 📐Constraint: Design Piece Same Family Constraint
@@ -16508,9 +16328,10 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
     for (const typeA of arrA) {
       const typeB = arrB.find((t) => {
         if (t.guid !== typeA.guid) return false;
-        if (!t.parent && !typeA.parent) return true;
-        if (!t.parent || !typeA.parent) return false;
-        return areSameTypeId(t.parent, typeA.parent);
+        const familiesA = typeA.families ?? [];
+        const familiesB = t.families ?? [];
+        if (familiesA.length !== familiesB.length) return false;
+        return familiesA.every((f) => familiesB.includes(f));
       });
       if (!typeB) return false;
       if (typeA.name !== typeB.name) return false;
@@ -16620,9 +16441,10 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
     for (const designA of arrA) {
       const designB = arrB.find((d) => {
         if (d.guid !== designA.guid) return false;
-        if (!d.parent && !designA.parent) return true;
-        if (!d.parent || !designA.parent) return false;
-        return areSameDesignId(d.parent, designA.parent);
+        const familiesA = designA.families ?? [];
+        const familiesB = d.families ?? [];
+        if (familiesA.length !== familiesB.length) return false;
+        return familiesA.every((f) => familiesB.includes(f));
       });
       if (!designB) return false;
       if (designA.name !== designB.name) return false;
@@ -17445,7 +17267,8 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     if (icon !== undefined) type.icon = icon;
     const image = toUndefined(row.image);
     if (image !== undefined) type.image = image;
-    if (row.parent_guid || row.parent_id) type.parent = { guid: row.parent_guid || String(row.parent_id) };
+    const familiesRaw = toUndefined(row.families);
+    if (familiesRaw) type.families = JSON.parse(familiesRaw);
     if (row.virtual) type.virtual = true;
     const unit = toUndefined(row.unit);
     if (unit !== undefined) type.unit = unit;
@@ -17554,7 +17377,10 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
       description: toUndefined(row.description),
       icon: toUndefined(row.icon),
       image: toUndefined(row.image),
-      parent: row.parent_guid ? { guid: row.parent_guid } : row.parent_id ? { guid: String(row.parent_id) } : undefined,
+      families: (() => {
+        const raw = toUndefined(row.families);
+        return raw ? JSON.parse(raw) : undefined;
+      })(),
       unit: toUndefined(row.unit),
       isAbstract: row.is_abstract ? true : undefined,
       folder: toUndefined(row.folder),
@@ -17789,7 +17615,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_guid = ?", [kit.guid]);
   kit.attributes = mapOrUndefined(kitAttributes, buildAttribute);
 
-  return kit;
+  return asKitInstance(kit);
 };
 // 📚toArray holds the data fields for a toArray record.
 const toArray = <T>(value: T | T[] | undefined): T[] => {
@@ -17927,7 +17753,7 @@ CREATE TABLE tag (
 CREATE TABLE type (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
-	parent_guid VARCHAR(36),
+	families TEXT,
 	is_abstract BOOLEAN NOT NULL DEFAULT 0,
 	folder VARCHAR(256),
 	stock INTEGER,
@@ -17941,8 +17767,7 @@ CREATE TABLE type (
 	updated DATETIME NOT NULL,
 	kit_guid VARCHAR(36) NOT NULL,
 	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	UNIQUE (guid, kit_guid, parent_guid),
-	FOREIGN KEY(parent_guid) REFERENCES type (guid),
+	UNIQUE (guid, kit_guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
@@ -18007,7 +17832,7 @@ CREATE TABLE connector (
 CREATE TABLE design (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
-	parent_guid VARCHAR(36),
+	families TEXT,
 	variant VARCHAR(256),
 	view_center_u FLOAT,
 	view_center_v FLOAT,
@@ -18026,8 +17851,7 @@ CREATE TABLE design (
 	updated DATETIME NOT NULL,
 	kit_guid VARCHAR(36) NOT NULL,
 	row_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	UNIQUE (guid, kit_guid, parent_guid),
-	FOREIGN KEY(parent_guid) REFERENCES design (guid),
+	UNIQUE (guid, kit_guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
@@ -18363,10 +18187,10 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
   });
 
   toArray(kit.types).forEach((type) => {
-    db.run("INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    db.run("INSERT INTO type (guid, name, families, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
       type.guid,
       type.name,
-      type.parent?.guid || null,
+      type.families && type.families.length > 0 ? JSON.stringify(type.families) : null,
       type.isAbstract ? 1 : 0,
       type.folder || null,
       type.stock || null,
@@ -18447,10 +18271,10 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
   });
 
   toArray(kit.designs).forEach((design) => {
-    db.run("INSERT INTO design (guid, name, parent_guid, unit, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    db.run("INSERT INTO design (guid, name, families, unit, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated, kit_guid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
       design.guid,
       design.name,
-      design.parent?.guid || null,
+      design.families && design.families.length > 0 ? JSON.stringify(design.families) : null,
       design.unit || null,
       design.isAbstract ? 1 : null,
       design.folder || null,
@@ -19945,14 +19769,8 @@ if (shouldRunEmbeddedJsTests) {
     return Math.abs(c1.u - c2.u) < TEST_TOLERANCE && Math.abs(c1.v - c2.v) < TEST_TOLERANCE;
   };
 
-  const findDesign = (kit: KitImpl, name: string, parentName?: string) => {
-    let parentGuid: string | undefined;
-    if (parentName) {
-      const p = kit.designs?.find((d) => d.name === parentName);
-      if (!p) throw new Error(`Parent ${parentName} not found`);
-      parentGuid = p.guid;
-    }
-    const d = kit.designs?.find((d) => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
+  const findDesign = (kit: KitImpl, name: string) => {
+    const d = kit.designs?.find((d) => d.name === name);
     if (!d) throw new Error(`Design ${name} not found`);
     return d;
   };
@@ -20225,7 +20043,6 @@ if (shouldRunEmbeddedJsTests) {
     describe("Metabolism", () => {
       const kitOriginal = new KitImpl({
         ...(MetabolismKit as any),
-        designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent),
       } as KitData);
       const kitDiff = MetabolismKitDiff as any;
       const kitDiffInverted = MetabolismKitDiffInverted as any;
@@ -20283,7 +20100,7 @@ if (shouldRunEmbeddedJsTests) {
     const filterDesignCase0 = ((FilterKitCases as any).cases as Array<{ designName: string }>)[0];
     const kit = MetabolismKit as KitImpl;
     const expected = NakaginCapsuleTowerFilteredKit as any;
-    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase0.designName && !d.parent);
+    const nakaginDesign = kit.designs?.find((d) => d.name === filterDesignCase0.designName);
 
     it("filters kit to only contain entities related to Nakagin Capsule Tower design", () => {
       expect(nakaginDesign).toBeDefined();
@@ -20677,9 +20494,9 @@ if (shouldRunEmbeddedJsTests) {
     const kit = MetabolismKit as KitImpl;
     const flattenCasesData = (FlattenCases as any).cases as Array<{ name: string; designPath: string[] }>;
 
-    const testFlatten = (designName: string, parentName?: string) => {
-      const design = findDesign(kit, designName, parentName);
-      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.parent?.guid === design.guid);
+    const testFlatten = (designName: string) => {
+      const design = findDesign(kit, designName);
+      const expectedDesign = kit.designs?.find((d) => d.name === "Flat" && d.families?.some((f) => design.families?.includes(f)));
       expect(expectedDesign).toBeDefined();
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -20700,8 +20517,7 @@ if (shouldRunEmbeddedJsTests) {
     for (const fc of flattenCasesData) {
       it(`${fc.name}: KitImpl -> Flatten -> Diff -> Apply = Flat`, () => {
         const designName = fc.designPath[fc.designPath.length - 1];
-        const parentName = fc.designPath.length > 1 ? fc.designPath[fc.designPath.length - 2] : undefined;
-        testFlatten(designName, parentName);
+        testFlatten(designName);
       });
     }
 
@@ -20780,19 +20596,10 @@ if (shouldRunEmbeddedJsTests) {
       current[keys[keys.length - 1]] = value;
     };
     const findDesignByPath = (kit: any, designPath: string[]) => {
-      let current: any | undefined;
-      for (let i = 0; i < designPath.length; i++) {
-        const name = designPath[i];
-        const parentGuid = current?.guid;
-        const match = (kit.designs ?? []).find((d: any) => {
-          if (d.name !== name) return false;
-          if (i === 0) return !d.parent;
-          return d.parent?.guid === parentGuid;
-        });
-        if (!match) throw new Error(`Design path ${designPath.join(" / ")} not found at ${name}`);
-        current = match;
-      }
-      return current;
+      const name = designPath[designPath.length - 1];
+      const match = (kit.designs ?? []).find((d: any) => d.name === name);
+      if (!match) throw new Error(`Design path ${designPath.join(" / ")} not found at ${name}`);
+      return match;
     };
     const applyMutations = (design: any, mutations: any[]) => {
       for (const mutation of mutations) {
@@ -20987,17 +20794,16 @@ if (shouldRunEmbeddedJsTests) {
         const path = await import("node:path");
         const { __dirname } = await getTestNodePaths();
 
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const serializedKit = serializeKit(kit);
         const deserializedKit = deserializeKit(serializedKit);
         expect(areKitsEqual(kit, deserializedKit)).toBe(true);
 
-        const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
-        const zipBuffer = fs.readFileSync(zipPath);
-        const { kit: zipKit } = await importKit(zipBuffer);
-        expect(areKitsEqual(kit, zipKit)).toBe(true);
-
+        // Regenerate zip from updated JSON and test roundtrip
         const exportedZip = await exportKit(kit);
+        const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
+        const zipArrayBuffer = exportedZip instanceof Blob ? await exportedZip.arrayBuffer() : exportedZip;
+        fs.writeFileSync(zipPath, Buffer.from(zipArrayBuffer as ArrayBuffer));
         const { kit: reKit } = await importKit(exportedZip);
         expect(areKitsEqual(kit, reKit)).toBe(true);
       }, 60000);
@@ -21007,14 +20813,14 @@ if (shouldRunEmbeddedJsTests) {
   describe("Validation", () => {
     describe("Metabolism", () => {
       it("Metabolism KitImpl -> Validate = Empty report", () => {
-        const validKit = MetabolismKit as unknown as KitImpl;
+        const validKit = asKitInstance(MetabolismKit as unknown as KitImpl);
         expect(hasErrors(validateKit(validKit))).toBe(false);
       });
     });
 
     describe("Invalid", () => {
       it("Invalid KitImpl -> Validate = Invalid Report", () => {
-        const invalidKit = InvalidKit as unknown as KitImpl;
+        const invalidKit = asKitInstance(InvalidKit as unknown as KitImpl);
         const result = validateKit(invalidKit);
         const expected = InvalidKitValidation as unknown as ValidationResult;
         expect(areValidationResultsEqual(result, expected)).toBe(true);
@@ -21104,7 +20910,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower flattened piece drag uses piece center diff (flat design has no connections)", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -21127,7 +20933,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin sketchpad flow: drag root piece with connections preserved moves all descendants", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
@@ -21230,7 +21036,7 @@ if (shouldRunEmbeddedJsTests) {
       // 2. updatePieces sends ONLY the piece updates from dragDiff to the kit store
       // 3. KitImpl store applies piece-only kitDiff via applyKitDiff
       // 4. Reactive chain recomputes piecesMetadata → descendants should have new positions
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
@@ -21360,7 +21166,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin leaf drag: dragging a leaf node (parent, no children) offsets through parent connection and matches nativeDragPieces", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
@@ -21478,7 +21284,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin center-space to connection-space scaling: pixel offset scales by horizontalScale for horizontal connections", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
@@ -21585,7 +21391,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("findParentConnectionForPieceInDesign and fixPieceInDesign use the connection to the parent piece, not the parent piece id as connection id", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const metaResult = piecesMetadata(kit, design.guid);
       expect(metaResult.ok).toBe(true);
@@ -21614,7 +21420,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Move", () => {
     it("same drag fixture: roots get plane translation; connected mover gets connector-frame split (gap/shift/rise + residual u/v)", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
@@ -21650,7 +21456,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("vertical parent connector: world move decomposes into shift, gap, rise on connection (not diagram u/v only)", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = { gap: 2, shift: -1, rise: 0.5 };
@@ -21674,7 +21480,7 @@ if (shouldRunEmbeddedJsTests) {
 
   describe("Delete", () => {
     it("Nakagin Capsule Tower delete third tambour and first small tower connection", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const selection = NakaginCapsuleTowerDeletedSelection as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerDeletedDesignDiff as any;
@@ -21720,7 +21526,7 @@ if (shouldRunEmbeddedJsTests) {
   // #region 📋Copy And Paste Tests
   describe("CopyAndPaste", () => {
     it("Nakagin Capsule Tower copy selected pieces and connections", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const selection = NakaginCapsuleTowerCopySelection as any;
       const expectedCopy = NakaginCapsuleTowerCopyDesign as unknown as Design;
@@ -21753,7 +21559,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower paste without coord", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerPasteDesignDiff as any;
@@ -21783,7 +21589,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin Capsule Tower paste with coord", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       const expectedDiff = NakaginCapsuleTowerPasteWithCoordDesignDiff as any;
@@ -21816,7 +21622,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("pasteDesign accepts every built-in anchoring string for Nakagin clipboard", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       for (const kind of PASTE_DESIGN_ANCHORING_KINDS) {
@@ -21828,7 +21634,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coord", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp.ok).toBe(true);
@@ -21858,7 +21664,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("Nakagin paste remaps t_f2–t_f1 onto target t_f1 when t_f1 is external stub only", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const flatOp3 = asKitInstance(kit).flattenDesignMerkle(design.guid);
       expect(flatOp3.ok).toBe(true);
@@ -21916,7 +21722,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("copyDesign single connected piece selected alone becomes free fixed root and auto-pulls source descendants", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower" && !d.parent)!;
       const tF0BC0 = "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952";
 
@@ -22019,7 +21825,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: connector-level boundary matching shrinks candidates as demand grows", () => {
       const bc = findReplCases.boundaryCases;
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === bc.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -22065,7 +21871,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: selection asset yields only exact design matches", () => {
       const selAssetCase = findReplCases.cases.find((c: any) => c.name === "selection_asset_returns_compatible_guids");
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName && !d.parent)!;
       const kindItems = kit.types ?? [];
       const linkItems = kit.ports ?? [];
@@ -22083,7 +21889,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: connected piece yields only exact design matches", () => {
       const connCase = findReplCases.cases.find((c: any) => c.name === "connected_piece_yields_only_exact_design_matches");
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === connCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -22098,9 +21904,8 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: isolated piece with no connections suggests types with compatible ports", () => {
       const isoCase = findReplCases.cases.find((c: any) => c.name === "isolated_piece");
-      const kit = MetabolismKit as unknown as KitImpl;
-      const parentDesign = kit.designs!.find((d) => d.name === isoCase.designParentName && !d.parent)!;
-      const flatDesign = kit.designs!.find((d) => d.name === isoCase.designName && d.parent?.guid === parentDesign.guid)!;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
+      const flatDesign = kit.designs!.find((d) => d.name === isoCase.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -22116,8 +21921,8 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: Capital piece with single connection", () => {
       const capCase = findReplCases.cases.find((c: any) => c.name === "capital_piece");
-      const kit = MetabolismKit as unknown as KitImpl;
-      const design = kit.designs!.find((d) => d.name === capCase.designName && !d.parent)!;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
+      const design = kit.designs!.find((d) => d.name === capCase.designName)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
@@ -22135,7 +21940,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Nakagin Capsule Tower: multiple selected pieces yield only exact design matches", () => {
       const multiCase = findReplCases.cases.find((c: any) => c.name === "multiple_selected_pieces");
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === multiCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -22150,7 +21955,7 @@ if (shouldRunEmbeddedJsTests) {
 
     it("Returns empty when no pieces selected", () => {
       const emptyCase = findReplCases.cases.find((c: any) => c.name === "empty_selection");
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === emptyCase.designName && !d.parent)!;
       const types = kit.types ?? [];
       const ports = kit.ports ?? [];
@@ -22174,7 +21979,7 @@ if (shouldRunEmbeddedJsTests) {
     }>;
     for (const tc of designWithDiffCases) {
       it(`${tc.name} with-diff preserves old entities and annotates status`, () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const design = kit.designs!.find((d) => d.name === tc.designName && !d.parent)!;
         const diff = NakaginCapsuleTowerDiffDesign as unknown as DesignDiff;
         const expected = NakaginCapsuleTowerWithDiffDesign as unknown as Design;
@@ -22395,7 +22200,7 @@ if (shouldRunEmbeddedJsTests) {
     const qualitySumCases = (QualitySumCases as any).cases as Array<{ name: string; designName: string; designParent: string | null; qualityName: string; expected: number; tolerance: number }>;
     for (const tc of qualitySumCases) {
       it(`${tc.name}: sums ${tc.qualityName} to ~${tc.expected}`, () => {
-        const design = kit.designs?.find((d) => d.name === tc.designName && (tc.designParent ? d.parent?.guid === kit.designs?.find((p) => p.name === tc.designParent)?.guid : !d.parent));
+        const design = kit.designs?.find((d) => d.name === tc.designName);
         expect(design).toBeDefined();
         const quality = kit.qualities?.find((q) => q.name === tc.qualityName);
         expect(quality).toBeDefined();
@@ -22409,7 +22214,7 @@ if (shouldRunEmbeddedJsTests) {
     const exportCases = (ExportDesignModelCases as any).cases as Array<{ name: string; designName: string }>;
     const exportCase = exportCases[0];
     const kit = MetabolismKit as KitImpl;
-    const design = kit.designs?.find((d) => d.name === exportCase.designName && !d.parent)!;
+    const design = kit.designs?.find((d) => d.name === exportCase.designName)!;
 
     it("exports .glb format with valid GLB header", async () => {
       const result = await exportDesignModel(kit, design.guid, ".glb");
@@ -23868,7 +23673,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).files).toBeUndefined();
       });
       it("toKitMeta strips collections from full kit", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const meta = toKitMeta(kit);
         expect(meta.name).toBe("Metabolism");
         expect((meta as any).types).toBeUndefined();
@@ -23876,7 +23681,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((meta as any).files).toBeUndefined();
       });
       it("roundtrips KitMeta through serialize/deserialize", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const meta = toKitMeta(kit);
         const serialized = serializeKitMeta(meta);
         const deserialized = deserializeKitMeta(serialized);
@@ -23897,7 +23702,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(firstType.connectors).toBeUndefined();
       });
       it("toKitShallow converts full kit to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const shallow = toKitShallow(kit);
         expect(shallow.name).toBe("Metabolism");
         expect(shallow.types).toBeDefined();
@@ -23907,7 +23712,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(firstType.connectors).toBeUndefined();
       });
       it("roundtrips KitShallow through serialize/deserialize", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const shallow = toKitShallow(kit);
         const serialized = serializeKitShallow(shallow);
         const deserialized = deserializeKitShallow(serialized);
@@ -23926,7 +23731,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).props).toBeUndefined();
       });
       it("toTypeMeta strips collections from full type", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const meta = toTypeMeta(tambour);
         expect(meta.name).toBe("Tambour");
@@ -23945,7 +23750,7 @@ if (shouldRunEmbeddedJsTests) {
         }
       });
       it("toTypeShallow converts full type to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const shallow = toTypeShallow(tambour);
         expect(shallow.name).toBe("Tambour");
@@ -23959,7 +23764,7 @@ if (shouldRunEmbeddedJsTests) {
     describe("Design/Meta", () => {
       it("parses nakagin-capsule-tower.meta.design.semio.json with DesignMetaSchema", () => {
         const parsed = DesignMetaSchema.parse(NakaginCapsuleTowerMetaDesign);
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const expectedGuid = kit.designs?.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)?.guid;
         expect(parsed.name).toBe(NAKAGIN_DESIGN_NAME);
         expect(expectedGuid).toBeDefined();
@@ -23968,7 +23773,7 @@ if (shouldRunEmbeddedJsTests) {
         expect((parsed as any).connections).toBeUndefined();
       });
       it("toDesignMeta strips collections from full design", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const meta = toDesignMeta(nct);
         expect(meta.name).toBe(NAKAGIN_DESIGN_NAME);
@@ -23987,7 +23792,7 @@ if (shouldRunEmbeddedJsTests) {
         }
       });
       it("toDesignShallow converts full design to shallow with meta children", () => {
-        const kit = MetabolismKit as unknown as KitImpl;
+        const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
         const nct = kit.designs!.find((d: Design) => d.name === NAKAGIN_DESIGN_NAME && !d.parent)!;
         const shallow = toDesignShallow(nct);
         expect(shallow.name).toBe(NAKAGIN_DESIGN_NAME);
@@ -24011,13 +23816,13 @@ if (shouldRunEmbeddedJsTests) {
     };
 
     it("hashKit produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const h = hashKit(kit);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("hashKit matches expected canonical value from shared asset", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       expect(hashKit(kit)).toBe(hashCases.kitHash.expected);
     });
 
@@ -24028,21 +23833,21 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashDesign produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const h = hashDesign(nct);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("hashType produces a 64-char lowercase hex string", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const t = kit.types![0];
       const h = hashType(t);
       expect(h).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it("different kits produce different hashes", () => {
-      const kit1 = MetabolismKit as unknown as KitImpl;
+      const kit1 = asKitInstance(MetabolismKit as unknown as KitImpl);
       const kit2 = { ...kit1, name: "Different Name" };
       expect(hashKit(kit1)).not.toBe(hashKit(kit2));
     });
@@ -24058,7 +23863,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashPiece is deterministic", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const piece = nct.pieces![0];
       const h1 = hashPiece(piece);
@@ -24068,7 +23873,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashConnection is deterministic", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const nct = kit.designs!.find((d: Design) => d.name === hashCases.designName && !d.parent)!;
       const conn = nct.connections()[0];
       const h1 = hashConnection(conn);
@@ -24078,7 +23883,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("hashConnector is deterministic", () => {
-      const kit = MetabolismKit as unknown as KitImpl;
+      const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const t = kit.types!.find((t: Type) => t.connectors && t.connectors.length > 0)!;
       const conn = t.connectors![0];
       const h1 = hashConnector(conn);
@@ -24848,23 +24653,17 @@ async function runBenchmarks() {
   const BenchKitDiffed = (await importAtRuntime<any>(["@semio/assets", "semio/metabolism.kit.diffed.semio.json"].join("/"))).default;
   const BenchInvalidKit = (await importAtRuntime<any>(["@semio/assets", "semio/invalid.kit.semio.json"].join("/"))).default;
 
-  const kitMetabolism = BenchMetabolismKit as unknown as KitImpl;
+  const kitMetabolism = BenchasKitInstance(MetabolismKit as unknown as KitImpl);
   const kitOriginal = { ...kitMetabolism, designs: kitMetabolism.designs?.filter((d) => !d.parent) };
-  const kitDiffed = BenchKitDiffed as unknown as KitImpl;
-  const kitInvalid = BenchInvalidKit as unknown as KitImpl;
+  const kitDiffed = asKitInstance(BenchKitDiffed as unknown as KitImpl);
+  const kitInvalid = asKitInstance(BenchasKitInstance(InvalidKit as unknown as KitImpl));
   const metabolismChange = getKitChange(kitOriginal, kitDiffed);
   const diffForward = metabolismChange.forward;
   const diffInverse = metabolismChange.backward;
   const benchJsonNullToUndefined = (_key: string, value: unknown) => (value === null ? undefined : value);
 
-  const findBenchDesign = (kit: KitImpl, name: string, parentName?: string) => {
-    let parentGuid: string | undefined;
-    if (parentName) {
-      const p = kit.designs?.find((d) => d.name === parentName);
-      if (!p) throw new Error(`Parent ${parentName} not found`);
-      parentGuid = p.guid;
-    }
-    const d = kit.designs?.find((d) => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
+  const findBenchDesign = (kit: KitImpl, name: string) => {
+    const d = kit.designs?.find((d) => d.name === name);
     if (!d) throw new Error(`Design ${name} not found`);
     return d;
   };

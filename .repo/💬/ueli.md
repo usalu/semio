@@ -588,6 +588,16 @@ You MUST implement and test for all programming languages.
 All test MUST pass.
 There MUST be only one schema, no migrations or legacy api support.
 
+#### schema
+
+Introduce a new entity: family
+It replaced the old artifact (type or design) parent mechanism.
+The shift is from artifact inheritance to family composition.
+A type or a design can have multiple families.
+e.g. capsule->balcony->Z type becomes has three families.
+Families dont have hierarchy.
+You MUST refactor/extend/update everything (implementation, tests, docs) for all programming languages.
+
 ### 📚ui
 
 semio ui:

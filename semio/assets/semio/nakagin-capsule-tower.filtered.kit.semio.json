@@ -18,7 +18,10 @@
       "guid": "71749140-9db9-43f6-bd81-d89011667b80",
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
-      "models": []
+      "models": [],
+      "families": [
+        "Capsule"
+      ]
     },
     {
       "connectors": [
@@ -163,7 +166,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "519.37",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "63951292-1192-4d83-8555-cfad64fcd20c",
@@ -171,7 +174,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "2856480",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "8cda3ff1-9eae-4013-a020-483ceb8f7d27",
@@ -203,7 +206,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "467424",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "d15584c8-3101-4ae8-8bab-179615760a5e",
@@ -211,7 +214,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "46742",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "aea2eede-67d3-4de2-b5db-48e2e02e67f7",
@@ -408,7 +411,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "65973",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "36c30ca9-b2c7-4662-ac8d-b4ff0cab5a18",
@@ -416,7 +419,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "880",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "b3ba39a5-4a29-46d1-9a65-2e9d925fe797",
@@ -557,7 +560,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "60025",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "44d2099c-ea1d-4d2e-9967-60bbaac489e3",
@@ -565,7 +568,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "720",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "7398acd6-8414-4f02-a2a8-6180c862fdde",
@@ -617,9 +620,6 @@
           "guid": "d6b613a7-aa4b-4145-a0e6-9eba42c8c7b3"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_backslash.png",
       "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
       "virtual": false,
@@ -692,7 +692,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "53f4f82b-c38d-478c-bbbe-c39addd8d41d",
@@ -700,7 +700,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "ca85ca8f-b309-4a25-9607-735be00abada",
@@ -732,7 +732,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "adaa5f14-faf6-484d-a25a-ca669fd22d17",
@@ -740,7 +740,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "cd82e0bd-f61a-4892-b60b-44e0b19b84b3",
@@ -750,6 +750,9 @@
           "value": "8736.01",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -792,9 +795,6 @@
           "guid": "f4645555-9aad-4557-b720-f3df4fed8eb9"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_slash.png",
       "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
@@ -867,7 +867,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "a4fe3cf3-9b88-49ad-95f9-63adbc3a3758",
@@ -875,7 +875,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "e19e33a1-b5e2-4241-b77f-00f71ff1d226",
@@ -907,7 +907,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "8f80f5d5-0a39-4570-8220-a77cbeaa50ca",
@@ -915,7 +915,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "560a84f4-1383-489b-a3bc-45cd201790dd",
@@ -932,6 +932,9 @@
           },
           "value": ""
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -974,9 +977,6 @@
           "guid": "eb10a789-2af3-41fc-b99b-6778ab94a97e"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_p.png",
       "description": "An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
       "virtual": false,
@@ -1049,7 +1049,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "be4399ca-ef70-4233-b161-20f65d32eff1",
@@ -1057,7 +1057,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "7ba4cbad-f312-43c2-bfda-87ac99609ae4",
@@ -1089,7 +1089,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "ba633fa8-6ccb-453f-9cde-04911f89e5dc",
@@ -1097,7 +1097,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "c7e1f5b7-68f2-499e-9e75-5ac36aa56fcf",
@@ -1114,6 +1114,9 @@
           },
           "value": ""
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -1156,9 +1159,6 @@
           "guid": "c54f6cea-7194-4410-9539-7ec1dcf46a1e"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_J.png",
       "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
       "virtual": false,
@@ -1231,7 +1231,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "eb133f0e-7153-4540-924f-8ae0b6433379",
@@ -1239,7 +1239,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "0e2dcba8-b633-498c-84f6-8d4e588d4099",
@@ -1271,7 +1271,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "6cc23b0f-ffb4-4dc9-9ca4-3325658fd89d",
@@ -1279,7 +1279,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "5406ffdb-6652-43c1-8422-bb5f755cf65e",
@@ -1289,6 +1289,9 @@
           "value": "8736.01",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -1331,9 +1334,6 @@
           "guid": "1771ad52-e1f4-41b3-86bc-594161411c9d"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_L.png",
       "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
       "virtual": false,
@@ -1406,7 +1406,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "d56e4fbc-0fdb-4205-9496-fd22760946d9",
@@ -1414,7 +1414,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "39d979f0-356b-4f0f-b262-e82a96b2da4c",
@@ -1446,7 +1446,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "0197d008-17c5-44f4-85c2-a2498e605fc6",
@@ -1454,7 +1454,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "2c0a2f46-bd0c-4467-b222-ee7616b79404",
@@ -1471,6 +1471,9 @@
           },
           "value": ""
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -1513,9 +1516,6 @@
           "guid": "8d7feac4-959c-478d-b6db-fb1c22eca5a0"
         }
       ],
-      "parent": {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
-      },
       "image": "images/capsule_s.png",
       "description": "An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
       "virtual": false,
@@ -1588,7 +1588,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "8.74",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "1ee60328-145c-4ed4-b51c-ada9188ce676",
@@ -1596,7 +1596,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "82992",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "65ea8d90-deea-4d8b-ac46-9d4e4a3f4ad9",
@@ -1628,7 +1628,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "13104",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "9e07d3f3-bd88-492a-b7b1-277f0af36567",
@@ -1636,7 +1636,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1048",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "17214442-ac47-41fa-9257-bcecd9bed975",
@@ -1646,6 +1646,9 @@
           "value": "8736.01",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Capsule"
       ]
     },
     {
@@ -1966,7 +1969,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "24.21",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "3bb43296-3f61-4423-bd45-0b0734b0f5a2",
@@ -1974,7 +1977,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "217800",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "ba190223-e122-4c2e-996a-dbfbf8966dd2",
@@ -2006,7 +2009,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1016",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "409c35f7-49df-409b-943b-28563db10769",
@@ -2016,6 +2019,9 @@
           "value": "1500",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Tambour"
       ]
     },
     {
@@ -2255,9 +2261,6 @@
           "guid": "9fc865f3-80d3-4b54-84f7-b03d8ff57b3b"
         }
       ],
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "image": "images/tambour_first-storey.svg",
       "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
@@ -2339,7 +2342,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "24.21",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "27a7ef4f-dbc6-43c2-a606-6dd2c7d337e4",
@@ -2347,7 +2350,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "217800",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "106bd646-768c-4850-99fc-bf4985a3b777",
@@ -2379,7 +2382,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1016",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "5c1906e3-020d-468a-8707-105a6d349bbd",
@@ -2389,6 +2392,9 @@
           "value": "1500",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Tambour"
       ]
     },
     {
@@ -2628,9 +2634,6 @@
           "guid": "03bd4e48-f747-49c2-894a-e622a395d169"
         }
       ],
-      "parent": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
-      },
       "image": "images/tambour_last-storey.svg",
       "description": "An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "virtual": false,
@@ -2712,7 +2715,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "24.21",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "3dd0578c-b003-4f5f-99a0-7a226928050d",
@@ -2720,7 +2723,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "217800",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "b088c7a2-73de-4de5-b708-96cfef7e7a2e",
@@ -2752,7 +2755,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "1016",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "63ebc919-b0fd-448e-9ab4-0c2f95f2aaea",
@@ -2762,6 +2765,9 @@
           "value": "1500",
           "unit": "kgCO2e"
         }
+      ],
+      "families": [
+        "Tambour"
       ]
     }
   ],
@@ -9624,7 +9630,7 @@
             "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2"
           },
           "value": "2349.53",
-          "unit": "m\u00b2"
+          "unit": "m²"
         },
         {
           "guid": "10ffebf8-08b9-4336-8048-ebe517995cea",
@@ -9632,7 +9638,7 @@
             "guid": "65d42370-990c-533d-a2ed-386714af2f46"
           },
           "value": "22.890446",
-          "unit": "kgCO2e/m\u00b2a"
+          "unit": "kgCO2e/m²a"
         },
         {
           "guid": "ab2254b4-8b33-4c8d-a935-21450d9e6541",
@@ -9640,7 +9646,7 @@
             "guid": "c3326230-4951-5e08-9752-d934dbc5a88f"
           },
           "value": "2.0311e+7",
-          "unit": "\u20ac"
+          "unit": "€"
         },
         {
           "guid": "41509944-6a7f-42a1-8e42-b3d0c784e98f",
@@ -9648,7 +9654,7 @@
             "guid": "eded115b-256c-5752-8756-923d0aecf8fd"
           },
           "value": "2.2088e+6",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "2f5d203d-bacb-479e-9ac7-fb393d609614",
@@ -9664,7 +9670,7 @@
             "guid": "cebf60ec-cdac-50be-947a-227fbe6ffae7"
           },
           "value": "276616.911111",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "3bb54d02-d519-4dd4-96b6-c8286cdbc929",
@@ -9680,7 +9686,7 @@
             "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a"
           },
           "value": "2.4854e+6",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "65b8d53e-2637-43de-a1e6-0fa108859284",
@@ -9688,7 +9694,7 @@
             "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77"
           },
           "value": "232534",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "2f7abca4-ed29-4909-9154-6f2cea5f48d2",
@@ -9696,7 +9702,7 @@
             "guid": "aed5edc4-5c23-5d5e-852b-e8670ad517ee"
           },
           "value": "99.440124",
-          "unit": "kWh/m\u00b2a"
+          "unit": "kWh/m²a"
         },
         {
           "guid": "7b5eece9-5177-493e-a981-8a01564b5354",
@@ -9704,7 +9710,7 @@
             "guid": "6d49703d-3f1a-5657-be01-bb9893094695"
           },
           "value": "44082.911111",
-          "unit": "\u20ac/a"
+          "unit": "€/a"
         },
         {
           "guid": "53a3625c-3448-402c-b0b8-79d86677aa8e",
@@ -10182,7 +10188,7 @@
       "guid": "c3326230-4951-5e08-9752-d934dbc5a88f",
       "key": "construction cost",
       "name": "construction cost",
-      "unit": "\u20ac"
+      "unit": "€"
     },
     {
       "guid": "7ed15c6b-b191-5da7-94a8-4443649d3593",
@@ -10247,7 +10253,7 @@
       "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
       "key": "effective floor area",
       "name": "effective floor area",
-      "unit": "m\u00b2",
+      "unit": "m²",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
@@ -10311,7 +10317,7 @@
       "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
       "key": "income",
       "name": "income",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "9a71931b-2837-571d-9169-83229724d78f",
@@ -10324,7 +10330,7 @@
       "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77",
       "key": "maintenance expenses",
       "name": "maintenance expenses",
-      "unit": "\u20ac/a"
+      "unit": "€/a"
     },
     {
       "guid": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
