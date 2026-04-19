@@ -33,7 +33,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -43,7 +45,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -53,7 +57,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -64,7 +70,9 @@
         "diff": {
           "name": "Base",
           "families": [
-            "Base"
+            {
+              "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+            }
           ],
           "stock": 2147483647,
           "virtual": false,
@@ -198,7 +206,9 @@
         },
         "diff": {
           "families": [
-            "Base"
+            {
+              "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+            }
           ]
         }
       },
@@ -208,7 +218,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -218,7 +230,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -228,7 +242,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -238,7 +254,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -248,7 +266,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -258,7 +278,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -268,7 +290,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -278,7 +302,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -288,7 +314,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -298,7 +326,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -308,7 +338,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -318,7 +350,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -328,7 +362,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -338,7 +374,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -348,7 +386,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -358,7 +398,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -368,7 +410,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -378,7 +422,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -388,7 +434,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -398,7 +446,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -408,7 +458,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -418,7 +470,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -428,7 +482,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -438,7 +494,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -448,7 +506,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -458,7 +518,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -468,7 +530,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -478,7 +542,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -488,7 +554,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -498,7 +566,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -508,7 +578,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       },
@@ -518,7 +590,9 @@
         },
         "diff": {
           "families": [
-            "Capsule"
+            {
+              "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+            }
           ]
         }
       }
@@ -146476,7 +146550,9 @@
         "diff": {
           "name": "Capsule Dream",
           "families": [
-            "Capsule Dream"
+            {
+              "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+            }
           ],
           "unit": "m",
           "icon": "icons/capsule-dream.svg",
@@ -146661,39 +146737,6 @@
         },
         "diff": {
           "name": "organic-city"
-        }
-      }
-    ]
-  },
-  "ports": {
-    "added": [
-      {
-        "guid": "019ab243-21f3-7380-93c6-994a9a023448",
-        "name": "core circular bottom",
-        "compatiblePorts": [
-          {
-            "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
-          }
-        ]
-      }
-    ],
-    "removed": [
-      {
-        "guid": "019caa00-0000-7000-a000-00000000001f"
-      }
-    ],
-    "updated": [
-      {
-        "port": {
-          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
-        },
-        "diff": {
-          "name": "core circular top",
-          "compatiblePorts": [
-            {
-              "guid": "019ab243-21f3-7380-93c6-994a9a023448"
-            }
-          ]
         }
       }
     ]

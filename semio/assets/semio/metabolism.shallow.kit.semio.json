@@ -63,7 +63,9 @@
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -73,7 +75,9 @@
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -83,7 +87,9 @@
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -93,7 +99,9 @@
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -108,7 +116,9 @@
       "createdAt": "2025-11-23T01:10:21.034Z",
       "updatedAt": "2025-11-23T01:10:21.034Z",
       "families": [
-        "Base"
+        {
+          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+        }
       ]
     },
     {
@@ -123,7 +133,9 @@
       "createdAt": "2025-11-23T01:10:21.052Z",
       "updatedAt": "2025-11-23T01:10:21.052Z",
       "families": [
-        "Base"
+        {
+          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+        }
       ]
     },
     {
@@ -151,7 +163,9 @@
       "createdAt": "2025-11-23T01:10:21.111Z",
       "updatedAt": "2025-11-23T01:10:21.111Z",
       "families": [
-        "Capital"
+        {
+          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+        }
       ]
     },
     {
@@ -166,7 +180,9 @@
       "createdAt": "2025-11-23T01:10:21.113Z",
       "updatedAt": "2025-11-23T01:10:21.113Z",
       "families": [
-        "Capital"
+        {
+          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+        }
       ]
     },
     {
@@ -181,7 +197,9 @@
       "createdAt": "2025-11-23T01:10:21.115Z",
       "updatedAt": "2025-11-23T01:10:21.115Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -196,7 +214,9 @@
       "createdAt": "2025-11-23T01:10:21.117Z",
       "updatedAt": "2025-11-23T01:10:21.117Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -211,7 +231,9 @@
       "createdAt": "2025-11-23T01:10:21.119Z",
       "updatedAt": "2025-11-23T01:10:21.119Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -226,7 +248,9 @@
       "createdAt": "2025-11-23T01:10:21.121Z",
       "updatedAt": "2025-11-23T01:10:21.121Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -241,7 +265,9 @@
       "createdAt": "2025-11-23T01:10:21.123Z",
       "updatedAt": "2025-11-23T01:10:21.123Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -256,7 +282,9 @@
       "createdAt": "2025-11-23T01:10:21.125Z",
       "updatedAt": "2025-11-23T01:10:21.125Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -271,7 +299,9 @@
       "createdAt": "2025-11-23T01:10:21.128Z",
       "updatedAt": "2025-11-23T01:10:21.128Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -286,7 +316,9 @@
       "createdAt": "2025-11-23T01:10:21.131Z",
       "updatedAt": "2025-11-23T01:10:21.131Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -301,7 +333,9 @@
       "createdAt": "2025-11-23T01:10:21.133Z",
       "updatedAt": "2025-11-23T01:10:21.133Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -316,7 +350,9 @@
       "createdAt": "2025-11-23T01:10:21.136Z",
       "updatedAt": "2025-11-23T01:10:21.136Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -331,7 +367,9 @@
       "createdAt": "2025-11-23T01:10:21.139Z",
       "updatedAt": "2025-11-23T01:10:21.139Z",
       "families": [
-        "Ellipsoid"
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
       ]
     },
     {
@@ -346,7 +384,9 @@
       "createdAt": "2025-11-23T01:10:21.144Z",
       "updatedAt": "2025-11-23T01:10:21.144Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -361,7 +401,9 @@
       "createdAt": "2025-11-23T01:10:21.149Z",
       "updatedAt": "2025-11-23T01:10:21.149Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -376,7 +418,9 @@
       "createdAt": "2025-11-23T01:10:21.151Z",
       "updatedAt": "2025-11-23T01:10:21.151Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -391,7 +435,9 @@
       "createdAt": "2025-11-23T01:10:21.205Z",
       "updatedAt": "2025-11-23T01:10:21.205Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -406,7 +452,9 @@
       "createdAt": "2025-11-23T01:10:21.207Z",
       "updatedAt": "2025-11-23T01:10:21.207Z",
       "families": [
-        "Ellipsoid"
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
       ]
     },
     {
@@ -421,7 +469,9 @@
       "createdAt": "2025-11-23T01:10:21.21Z",
       "updatedAt": "2025-11-23T01:10:21.21Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -436,7 +486,9 @@
       "createdAt": "2025-11-23T01:10:21.212Z",
       "updatedAt": "2025-11-23T01:10:21.212Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -451,7 +503,9 @@
       "createdAt": "2025-11-23T01:10:21.214Z",
       "updatedAt": "2025-11-23T01:10:21.214Z",
       "families": [
-        "Trapezoid"
+        {
+          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+        }
       ]
     },
     {
@@ -466,7 +520,9 @@
       "createdAt": "2025-11-23T01:10:21.216Z",
       "updatedAt": "2025-11-23T01:10:21.216Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -481,7 +537,9 @@
       "createdAt": "2025-11-23T01:10:21.218Z",
       "updatedAt": "2025-11-23T01:10:21.218Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -496,7 +554,9 @@
       "createdAt": "2025-11-23T01:10:21.22Z",
       "updatedAt": "2025-11-23T01:10:21.22Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -511,7 +571,9 @@
       "createdAt": "2025-11-23T01:10:21.222Z",
       "updatedAt": "2025-11-23T01:10:21.222Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -526,7 +588,9 @@
       "createdAt": "2025-11-23T01:10:21.224Z",
       "updatedAt": "2025-11-23T01:10:21.224Z",
       "families": [
-        "Trapezoid"
+        {
+          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+        }
       ]
     },
     {
@@ -541,7 +605,9 @@
       "createdAt": "2025-11-23T01:10:21.227Z",
       "updatedAt": "2025-11-23T01:10:21.227Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -556,7 +622,9 @@
       "createdAt": "2025-11-23T01:10:21.228Z",
       "updatedAt": "2025-11-23T01:10:21.228Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -571,7 +639,9 @@
       "createdAt": "2025-11-23T01:10:21.23Z",
       "updatedAt": "2025-11-23T01:10:21.23Z",
       "families": [
-        "Balcony"
+        {
+          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+        }
       ]
     },
     {
@@ -586,7 +656,9 @@
       "createdAt": "2025-11-23T01:10:21.232Z",
       "updatedAt": "2025-11-23T01:10:21.232Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -601,7 +673,9 @@
       "createdAt": "2025-11-23T01:10:21.234Z",
       "updatedAt": "2025-11-23T01:10:21.234Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -616,7 +690,9 @@
       "createdAt": "2025-11-23T01:10:21.236Z",
       "updatedAt": "2025-11-23T01:10:21.236Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -631,7 +707,9 @@
       "createdAt": "2025-11-23T01:10:21.238Z",
       "updatedAt": "2025-11-23T01:10:21.238Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -646,7 +724,9 @@
       "createdAt": "2025-11-23T01:10:21.24Z",
       "updatedAt": "2025-11-23T01:10:21.24Z",
       "families": [
-        "Balcony"
+        {
+          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+        }
       ]
     },
     {
@@ -661,7 +741,9 @@
       "createdAt": "2025-11-23T01:10:21.247Z",
       "updatedAt": "2025-11-23T01:10:21.247Z",
       "families": [
-        "Tambour"
+        {
+          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+        }
       ]
     },
     {
@@ -676,7 +758,9 @@
       "createdAt": "2025-11-23T01:10:21.251Z",
       "updatedAt": "2025-11-23T01:10:21.251Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -691,7 +775,9 @@
       "createdAt": "2025-11-23T01:10:21.268Z",
       "updatedAt": "2025-11-23T01:10:21.268Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -706,7 +792,9 @@
       "createdAt": "2025-11-23T01:10:21.272Z",
       "updatedAt": "2025-11-23T01:10:21.272Z",
       "families": [
-        "Capsule"
+        {
+          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+        }
       ]
     },
     {
@@ -721,7 +809,9 @@
       "createdAt": "2025-11-23T01:10:21.276Z",
       "updatedAt": "2025-11-23T01:10:21.276Z",
       "families": [
-        "Tambour"
+        {
+          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+        }
       ]
     },
     {
@@ -736,7 +826,9 @@
       "createdAt": "2025-11-23T01:10:21.28Z",
       "updatedAt": "2025-11-23T01:10:21.28Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -751,7 +843,9 @@
       "createdAt": "2025-11-23T01:10:21.284Z",
       "updatedAt": "2025-11-23T01:10:21.284Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
     },
     {
@@ -766,7 +860,9 @@
       "createdAt": "2025-11-23T01:10:21.288Z",
       "updatedAt": "2025-11-23T01:10:21.288Z",
       "families": [
-        "Ellipsoid"
+        {
+          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+        }
       ]
     },
     {
@@ -786,7 +882,9 @@
       "createdAt": "2025-11-23T01:10:21.335Z",
       "updatedAt": "2025-11-23T01:10:21.335Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -799,7 +897,9 @@
       "createdAt": "2025-11-23T01:10:21.875Z",
       "updatedAt": "2025-11-23T01:10:21.875Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -812,7 +912,9 @@
       "createdAt": "2025-11-23T01:10:22.324Z",
       "updatedAt": "2025-11-23T01:10:22.324Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -825,7 +927,9 @@
       "createdAt": "2025-11-23T01:10:22.721Z",
       "updatedAt": "2025-11-23T01:10:22.721Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -838,7 +942,9 @@
       "createdAt": "2025-11-23T01:10:23.177Z",
       "updatedAt": "2025-11-23T01:10:23.177Z",
       "families": [
-        "Capsule Dream"
+        {
+          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+        }
       ]
     },
     {
@@ -851,7 +957,9 @@
       "createdAt": "2025-11-23T01:11:03.4Z",
       "updatedAt": "2025-11-23T01:11:03.4Z",
       "families": [
-        "Capsule Dream"
+        {
+          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+        }
       ]
     },
     {
@@ -864,7 +972,9 @@
       "createdAt": "2025-11-23T01:11:04.468Z",
       "updatedAt": "2025-11-23T01:11:04.468Z",
       "families": [
-        "Dancing"
+        {
+          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+        }
       ]
     },
     {
@@ -877,7 +987,9 @@
       "createdAt": "2025-11-23T01:11:04.537Z",
       "updatedAt": "2025-11-23T01:11:04.537Z",
       "families": [
-        "Nakagin Capsule Tower"
+        {
+          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+        }
       ]
     },
     {
@@ -890,7 +1002,9 @@
       "createdAt": "2025-11-23T01:11:04.613Z",
       "updatedAt": "2025-11-23T01:11:04.613Z",
       "families": [
-        "Slanted"
+        {
+          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+        }
       ]
     },
     {
@@ -903,82 +1017,10 @@
       "createdAt": "2025-11-23T01:11:04.687Z",
       "updatedAt": "2025-11-23T01:11:04.687Z",
       "families": [
-        "Twisted"
+        {
+          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+        }
       ]
-    }
-  ],
-  "ports": [
-    {
-      "guid": "019ab243-21f3-7380-93c6-994a9a023448",
-      "name": "core circular bottom"
-    },
-    {
-      "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
-      "name": "core circular top"
-    },
-    {
-      "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
-      "name": "core rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
-      "name": "core rectangular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
-      "name": "door capsule east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
-      "name": "door capsule west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
-      "name": "door tambour east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
-      "name": "door tambour west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
-      "name": "platform east"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
-      "name": "platform west"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
-      "name": "roof circular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
-      "name": "roof circular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
-      "name": "roof rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
-      "name": "roof rectangular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
-      "name": "tambour circular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
-      "name": "tambour circular top"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
-      "name": "tambour rectangular bottom"
-    },
-    {
-      "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
-      "name": "tambour rectangular top"
     }
   ],
   "qualities": [
@@ -3306,6 +3348,56 @@
       "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88",
       "name": "Ueli Saluz",
       "email": "ueli@semio-tech.com"
+    }
+  ],
+  "families": [
+    {
+      "guid": "2df6bbea-349b-4a91-8e12-cb734110e854",
+      "name": "Capsule"
+    },
+    {
+      "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
+      "name": "Base"
+    },
+    {
+      "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b",
+      "name": "Capital"
+    },
+    {
+      "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
+      "name": "Nakagin Capsule Tower"
+    },
+    {
+      "guid": "50812682-1e66-4fe3-8765-618bc654b098",
+      "name": "Slanted"
+    },
+    {
+      "guid": "95a75018-ffc5-416b-8aa4-373259aba06e",
+      "name": "Ellipsoid"
+    },
+    {
+      "guid": "df795386-edf1-4408-84c6-d38c94a222d7",
+      "name": "Dancing"
+    },
+    {
+      "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215",
+      "name": "Trapezoid"
+    },
+    {
+      "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
+      "name": "Twisted"
+    },
+    {
+      "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3",
+      "name": "Balcony"
+    },
+    {
+      "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515",
+      "name": "Tambour"
+    },
+    {
+      "guid": "64c20e73-04e3-482b-8564-d239558c7da0",
+      "name": "Capsule Dream"
     }
   ]
 }

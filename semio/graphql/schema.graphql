@@ -149,7 +149,7 @@ type AttributeDiff {
 }
 
 type AttributesDiff {
-  removed: [AttributeId!]
+  removed: [Attribute!]
   modified: [AttributeModification!]
   added: [Attribute!]
 }
@@ -202,13 +202,13 @@ type AuthorDiff {
 }
 
 type AuthorsDiff {
-  removed: [AuthorId!]
+  removed: [Author!]
   modified: [AuthorModification!]
   added: [Author!]
 }
 
 type AuthorModification {
-  author: AuthorId!
+  author: Author!
   diff: AuthorDiff!
 }
 
@@ -245,7 +245,7 @@ type FileDiff {
   id: String
   name: String
   remote: String
-  folder: FolderId
+  folder: Folder
   size: Float
   hash: String
   blob: String
@@ -256,13 +256,13 @@ type FileDiff {
 }
 
 type FilesDiff {
-  removed: [FileId!]
+  removed: [File!]
   modified: [FileModification!]
   added: [File!]
 }
 
 type FileModification {
-  file: FileId!
+  file: File!
   diff: FileDiff!
 }
 
@@ -304,7 +304,7 @@ input FolderInput {
 type FolderDiff {
   id: String
   name: String
-  parent: FolderId
+  parent: Folder
   description: String
   attributes: AttributesDiff
   createdAt: DateTime
@@ -314,13 +314,13 @@ type FolderDiff {
 }
 
 type FoldersDiff {
-  removed: [FolderId!]
+  removed: [Folder!]
   modified: [FolderModification!]
   added: [Folder!]
 }
 
 type FolderModification {
-  folder: FolderId!
+  folder: Folder!
   diff: FolderDiff!
 }
 
@@ -331,7 +331,7 @@ input FolderModificationInput {
 type Folder {
   id: ID!
   name: String!
-  parent: FolderId
+  parent: Folder
   description: String
   attributes: [Attribute!]
   createdAt: DateTime
@@ -367,13 +367,13 @@ type BenchmarkDiff {
 }
 
 type BenchmarksDiff {
-  removed: [BenchmarkId!]
+  removed: [Benchmark!]
   modified: [BenchmarkModification!]
   added: [Benchmark!]
 }
 
 type BenchmarkModification {
-  benchmark: BenchmarkId!
+  benchmark: Benchmark!
   diff: BenchmarkDiff!
 }
 
@@ -445,13 +445,13 @@ type QualityDiff {
 }
 
 type QualitiesDiff {
-  removed: [QualityId!]
+  removed: [Quality!]
   modified: [QualityModification!]
   added: [Quality!]
 }
 
 type QualityModification {
-  quality: QualityId!
+  quality: Quality!
   diff: QualityDiff!
 }
 
@@ -502,18 +502,18 @@ type PortDiff {
   description: String
   icon: String
   maxChildren: Int
-  compatiblePorts: [PortId!]
+  compatiblePorts: [Port!]
   attributes: AttributesDiff
 }
 
 type PortsDiff {
-  removed: [PortId!]
+  removed: [Port!]
   modified: [PortModification!]
   added: [Port!]
 }
 
 type PortModification {
-  port: PortId!
+  port: Port!
   diff: PortDiff!
 }
 
@@ -527,7 +527,7 @@ type Port {
   description: String
   icon: String
   maxChildren: Int
-  compatiblePorts: [PortId!]
+  compatiblePorts: [Port!]
   attributes: [Attribute!]
 }
 
@@ -545,20 +545,20 @@ input PropInput {
 
 type PropDiff {
   id: String
-  quality: QualityId
+  quality: Quality
   value: String
   unit: String
   attributes: AttributesDiff
 }
 
 type PropsDiff {
-  removed: [PropId!]
+  removed: [Prop!]
   modified: [PropModification!]
   added: [Prop!]
 }
 
 type PropModification {
-  prop: PropId!
+  prop: Prop!
   diff: PropDiff!
 }
 
@@ -568,7 +568,7 @@ input PropModificationInput {
 
 type Prop {
   id: ID!
-  quality: QualityId!
+  quality: Quality!
   value: String!
   unit: String
   attributes: [Attribute!]
@@ -595,13 +595,13 @@ type TagDiff {
 }
 
 type TagsDiff {
-  removed: [TagId!]
+  removed: [Tag!]
   modified: [TagModification!]
   added: [Tag!]
 }
 
 type TagModification {
-  tag: TagId!
+  tag: Tag!
   diff: TagDiff!
 }
 
@@ -638,13 +638,13 @@ type ConceptDiff {
 }
 
 type ConceptsDiff {
-  removed: [ConceptId!]
+  removed: [Concept!]
   modified: [ConceptModification!]
   added: [Concept!]
 }
 
 type ConceptModification {
-  concept: ConceptId!
+  concept: Concept!
   diff: ConceptDiff!
 }
 
@@ -676,20 +676,20 @@ input ModelInput {
 type ModelDiff {
   id: String
   name: String
-  tags: [TagId!]
-  file: FileId
+  tags: [Tag!]
+  file: File
   description: String
   attributes: AttributesDiff
 }
 
 type ModelsDiff {
-  removed: [ModelId!]
+  removed: [Model!]
   modified: [ModelModification!]
   added: [Model!]
 }
 
 type ModelModification {
-  model: ModelId!
+  model: Model!
   diff: ModelDiff!
 }
 
@@ -700,8 +700,8 @@ input ModelModificationInput {
 type Model {
   id: ID!
   name: String
-  tags: [TagId!]
-  file: FileId!
+  tags: [Tag!]
+  file: File!
   description: String
   attributes: [Attribute!]
 }
@@ -730,7 +730,7 @@ type ConnectorDiff {
   point: PointDiff
   direction: VectorDiff
   description: String
-  port: PortId
+  port: Port
   mandatory: Boolean
   maxChildren: Int
   props: PropsDiff
@@ -738,13 +738,13 @@ type ConnectorDiff {
 }
 
 type ConnectorsDiff {
-  removed: [ConnectorId!]
+  removed: [Connector!]
   modified: [ConnectorModification!]
   added: [Connector!]
 }
 
 type ConnectorModification {
-  connector: ConnectorId!
+  connector: Connector!
   diff: ConnectorDiff!
 }
 
@@ -759,7 +759,7 @@ type Connector {
   point: Point!
   direction: Vector!
   description: String
-  port: PortId
+  port: Port
   mandatory: Boolean
   maxChildren: Int
   props: [Prop!]
@@ -805,7 +805,7 @@ input TypeInput {
 
 type TypeDiff {
   name: String
-  parent: TypeId
+  parent: Type
   isAbstract: Boolean
   folder: String
   stock: Int
@@ -813,12 +813,12 @@ type TypeDiff {
   unit: String
   createdAt: DateTime
   modifiedAt: DateTime
-  location: LocationId
+  location: Location
   icon: String
   image: String
   description: String
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
+  authors: [Author!]
+  concepts: [Concept!]
   models: ModelsDiff
   connectors: ConnectorsDiff
   props: PropsDiff
@@ -826,13 +826,13 @@ type TypeDiff {
 }
 
 type TypesDiff {
-  removed: [TypeId!]
+  removed: [Type!]
   modified: [TypeModification!]
   added: [Type!]
 }
 
 type TypeModification {
-  type: TypeId!
+  type: Type!
   diff: TypeDiff!
 }
 
@@ -843,7 +843,7 @@ input TypeModificationInput {
 type Type {
   id: ID!
   name: String!
-  parent: TypeId
+  parent: Type
   isAbstract: Boolean
   folder: String
   models: [Model!]
@@ -854,9 +854,9 @@ type Type {
   unit: String
   createdAt: DateTime
   modifiedAt: DateTime
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
+  location: Location
+  authors: [Author!]
+  concepts: [Concept!]
   icon: String
   image: String
   description: String
@@ -888,13 +888,13 @@ type LayerDiff {
 }
 
 type LayersDiff {
-  removed: [LayerId!]
+  removed: [Layer!]
   modified: [LayerModification!]
   added: [Layer!]
 }
 
 type LayerModification {
-  layer: LayerId!
+  layer: Layer!
   diff: LayerDiff!
 }
 
@@ -935,8 +935,8 @@ input PieceInput {
 
 type PieceDiff {
   name: String
-  type: TypeId
-  design: DesignId
+  type: Type
+  design: Design
   plane: PlaneDiff
   center: Coordinate
   scale: Float
@@ -950,13 +950,13 @@ type PieceDiff {
 }
 
 type PiecesDiff {
-  removed: [PieceId!]
+  removed: [Piece!]
   modified: [PieceModification!]
   added: [Piece!]
 }
 
 type PieceModification {
-  piece: PieceId!
+  piece: Piece!
   diff: PieceDiff!
 }
 
@@ -967,8 +967,8 @@ input PieceModificationInput {
 type Piece {
   id: ID!
   name: String
-  type: TypeId
-  design: DesignId
+  type: Type
+  design: Design
   plane: Plane
   center: Coordinate
   scale: Float
@@ -979,6 +979,11 @@ type Piece {
   description: String
   props: [Prop!]
   attributes: [Attribute!]
+  flatPlane: Plane!
+  flatCenter: Coordinate!
+  parentPiece: Piece
+  parentConnection: Connection
+  childPieces: [Piece!]!
 }
 
 input GroupIdInput {
@@ -996,7 +1001,7 @@ input GroupInput {
 
 type GroupDiff {
   id: String
-  pieces: [PieceId!]
+  pieces: [Piece!]
   color: String
   name: String
   description: String
@@ -1004,13 +1009,13 @@ type GroupDiff {
 }
 
 type GroupsDiff {
-  removed: [GroupId!]
+  removed: [Group!]
   modified: [GroupModification!]
   added: [Group!]
 }
 
 type GroupModification {
-  group: GroupId!
+  group: Group!
   diff: GroupDiff!
 }
 
@@ -1020,7 +1025,7 @@ input GroupModificationInput {
 
 type Group {
   id: ID!
-  pieces: [PieceId!]!
+  pieces: [Piece!]!
   color: String
   name: String
   description: String
@@ -1034,32 +1039,32 @@ input SideInput {
 }
 
 type SideDiff {
-  piece: PieceId
-  designPiece: PieceId
-  connector: ConnectorId
+  piece: Piece
+  designPiece: Piece
+  connector: Connector
 }
 
 type SidesDiff {
-  removed: [SideId!]
+  removed: [Side!]
   modified: [SideModification!]
   added: [Side!]
 }
 
 type SideModification {
-  side: SideId!
+  side: Side!
   diff: SideDiff!
 }
 
 type Side {
-  piece: PieceId!
-  designPiece: PieceId
-  connector: ConnectorId
+  piece: Piece!
+  designPiece: Piece
+  connector: Connector
 }
 
-type SideId {
-  piece: PieceId!
-  designPiece: PieceId
-  connector: ConnectorId
+type Side {
+  piece: Piece!
+  designPiece: Piece
+  connector: Connector
 }
 
 input ConnectionIdInput {
@@ -1098,13 +1103,13 @@ type ConnectionDiff {
 }
 
 type ConnectionsDiff {
-  removed: [ConnectionId!]
+  removed: [Connection!]
   modified: [ConnectionModification!]
   added: [Connection!]
 }
 
 type ConnectionModification {
-  connection: ConnectionId!
+  connection: Connection!
   diff: ConnectionDiff!
 }
 
@@ -1126,6 +1131,10 @@ type Connection {
   v: Float
   description: String
   attributes: [Attribute!]
+  parentPiece: Piece
+  parentConnector: Connector
+  childPiece: Piece
+  childConnector: Connector
 }
 
 input StatIdInput {
@@ -1144,7 +1153,7 @@ input StatInput {
 
 type StatDiff {
   id: String
-  quality: QualityId
+  quality: Quality
   unit: String
   min: Float
   minExcluded: Boolean
@@ -1153,13 +1162,13 @@ type StatDiff {
 }
 
 type StatsDiff {
-  removed: [StatId!]
+  removed: [Stat!]
   modified: [StatModification!]
   added: [Stat!]
 }
 
 type StatModification {
-  stat: StatId!
+  stat: Stat!
   diff: StatDiff!
 }
 
@@ -1169,7 +1178,7 @@ input StatModificationInput {
 
 type Stat {
   id: ID!
-  quality: QualityId!
+  quality: Quality!
   unit: String
   min: Float
   minExcluded: Boolean
@@ -1210,14 +1219,14 @@ input DesignInput {
 
 type DesignDiff {
   name: String
-  parent: DesignId
+  parent: Design
   isAbstract: Boolean
   folder: String
-  activeLayer: LayerId
+  activeLayer: Layer
   canScale: Boolean
   canMirror: Boolean
   unit: String
-  location: LocationId
+  location: Location
   icon: String
   image: String
   description: String
@@ -1234,13 +1243,13 @@ type DesignDiff {
 }
 
 type DesignsDiff {
-  removed: [DesignId!]
+  removed: [Design!]
   modified: [DesignModification!]
   added: [Design!]
 }
 
 type DesignModification {
-  design: DesignId!
+  design: Design!
   diff: DesignDiff!
 }
 
@@ -1251,7 +1260,7 @@ input DesignModificationInput {
 type Design {
   id: ID!
   name: String!
-  parent: DesignId
+  parent: Design
   isAbstract: Boolean
   folder: String
   pieces: [Piece!]
@@ -1259,14 +1268,14 @@ type Design {
   stats: [Stat!]
   props: [Prop!]
   layers: [Layer!]
-  activeLayer: LayerId
+  activeLayer: Layer
   groups: [Group!]
   canScale: Boolean
   canMirror: Boolean
   unit: String
-  location: LocationId
-  authors: [AuthorId!]
-  concepts: [ConceptId!]
+  location: Location
+  authors: [Author!]
+  concepts: [Concept!]
   icon: String
   image: String
   description: String

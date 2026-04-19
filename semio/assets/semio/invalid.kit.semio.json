@@ -162,16 +162,6 @@
       "key": "duplicate-quality-2"
     }
   ],
-  "ports": [
-    {
-      "guid": "019ab664-9999-9999-9999-999999999999",
-      "name": "Duplicate Port Name"
-    },
-    {
-      "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
-      "name": "Duplicate Port Name"
-    }
-  ],
   "files": [
     {
       "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",

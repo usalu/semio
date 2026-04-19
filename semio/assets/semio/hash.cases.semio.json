@@ -1,7 +1,7 @@
 {
   "kitHash": {
     "kit": "metabolism.kit.semio.json",
-    "expected": "48917a9e1a984332a5f2f34603495684481cb04b51004b62bceec74f3ae52251",
+    "expected": "5ce6d11989296e69b70cce0e96d3601b41c6a349d5d590c3448ed7d5077b164e",
     "expectedNet48": "3640c4cf3718af017555369e6f2396e7c3b8e0f74830599dad4e3f2ee2c39268"
   },
   "kitDiffHash": {

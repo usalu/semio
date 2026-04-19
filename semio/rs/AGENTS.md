@@ -16,3 +16,29 @@ bundle:
 ## 🛠️ Mechanisms
 
 ## 📛 Entities
+
+### Kit
+
+```rs
+
+pub struct Connector {
+        pub name: String,
+}
+
+pub struct Type {
+        pub name: String,
+}
+
+pub struct Piece {
+        pub name: String,
+}
+
+pub struct Connection {
+
+}
+
+pub struct Design {
+
+}
+
+```

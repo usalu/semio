@@ -46,7 +46,9 @@
         "diff": {
           "name": "Base Modified",
           "families": [
-            "Base Modified"
+            {
+              "guid": "4d65bffa-3d01-41a9-80ee-542c2774122d"
+            }
           ],
           "stock": 42,
           "virtual": true,
@@ -174,7 +176,9 @@
         },
         "diff": {
           "families": [
-            "Base Modified"
+            {
+              "guid": "4d65bffa-3d01-41a9-80ee-542c2774122d"
+            }
           ]
         }
       },
@@ -896,45 +900,6 @@
         "name": "New Concept",
         "description": "New",
         "icon": "concept.svg",
-        "attributes": []
-      }
-    ]
-  },
-  "ports": {
-    "removed": [
-      {
-        "guid": "019ab243-21f3-7380-93c6-994a9a023448"
-      }
-    ],
-    "updated": [
-      {
-        "port": {
-          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
-        },
-        "diff": {
-          "name": "core circular top Modified",
-          "compatiblePorts": [
-            {
-              "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
-            },
-            {
-              "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
-            }
-          ]
-        }
-      }
-    ],
-    "added": [
-      {
-        "guid": "019caa00-0000-7000-a000-00000000001f",
-        "name": "New Port",
-        "description": "New",
-        "icon": "port.svg",
-        "compatiblePorts": [
-          {
-            "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
-          }
-        ],
         "attributes": []
       }
     ]

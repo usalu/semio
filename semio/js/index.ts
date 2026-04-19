@@ -4506,7 +4506,7 @@ export type EntityLifecycle = "active" | "deleted";
 export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  families: z.array(z.string()).optional(),
+  families: z.array(FamilyIdSchema).optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   models: z.array(ModelSchema).optional(),
@@ -4537,7 +4537,7 @@ export type TypePlain = z.infer<typeof TypeSchema>;
 export class Type {
   guid!: string;
   name!: string;
-  families?: string[];
+  families?: FamilyId[];
   isAbstract?: boolean;
   folder?: string;
   models?: Model[];
@@ -4841,7 +4841,7 @@ export const TypeDiffSchema = TypeSchema.partial()
     folder: z.string().nullable().optional(),
     concepts: z.array(ConceptIdSchema).nullable().optional(),
     authors: z.array(AuthorIdSchema).nullable().optional(),
-    families: z.array(z.string()).nullable().optional(),
+    families: z.array(FamilyIdSchema).nullable().optional(),
     lifecycle: z.enum(["active", "deleted"]).optional(),
     deletedByUserId: z.string().nullable().optional(),
     deletedByDisplayName: z.string().nullable().optional(),
@@ -6374,7 +6374,7 @@ export const deserializeStatShallow = (json: string): StatShallow => StatShallow
 export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
-  families: z.array(z.string()).optional(),
+  families: z.array(FamilyIdSchema).optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
   pieces: z.array(PieceSchema).optional(),
@@ -6404,7 +6404,7 @@ export type DesignPlain = z.infer<typeof DesignSchema>;
 export class Design {
   guid!: string;
   name!: string;
-  families?: string[];
+  families?: FamilyId[];
   isAbstract?: boolean;
   folder?: string;
   pieces?: Piece[];
@@ -8419,7 +8419,7 @@ export const KitSchema = z.object({
   designs: z.array(DesignSchema).optional(),
   tags: z.array(TagSchema).optional(),
   concepts: z.array(ConceptSchema).optional(),
-  ports: z.array(PortSchema).optional(),
+  families: z.array(FamilySchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
   folders: z.array(FolderSchema).optional(),
@@ -8767,7 +8767,7 @@ export class KitImpl {
   designs?: Design[];
   tags?: Tag[];
   concepts?: Concept[];
-  ports?: Port[];
+  families?: Family[];
   qualities?: Quality[];
   files?: File[];
   folders?: Folder[];
@@ -8862,9 +8862,9 @@ export class KitImpl {
       if (!this.concepts) this.concepts = [];
       applyConceptsDiff(this.concepts, diff.concepts);
     }
-    if (diff.ports) {
-      if (!this.ports) this.ports = [];
-      applyPortsDiff(this.ports, diff.ports);
+    if (diff.families) {
+      if (!this.families) this.families = [];
+      applyFamiliesDiff(this.families, diff.families);
     }
     if (diff.qualities) {
       if (!this.qualities) this.qualities = [];
@@ -8929,7 +8929,7 @@ export class KitImpl {
         designs: [],
         tags: [],
         concepts: [],
-        ports: [],
+        families: [],
         qualities: [],
         files: [],
         folders: [],
@@ -8969,7 +8969,7 @@ export class KitImpl {
     this.designs = p.designs?.map((d) => new Design(d, this));
     this.tags = p.tags?.map((t) => new Tag(t));
     this.concepts = p.concepts?.map((c) => new Concept(c));
-    this.ports = p.ports?.map((x) => new Port(x));
+    this.families = p.families?.map((x) => new Family(x));
     this.qualities = p.qualities?.map((q) => new Quality(q));
     this.files = p.files?.map((f) => new File(f));
     this.folders = p.folders?.map((f) => new Folder(f));
@@ -9624,7 +9624,6 @@ export class KitImpl {
         nextCache[childGuid] = { planeHash, centerHash, plane: childPlane, center: childCenter, flatPiece: flatChildPiece };
       },
     });
-
   }
 
   /**
@@ -9846,7 +9845,7 @@ export class KitImpl {
     const typesMap = new Map<string, Type>();
     for (const t of this.types ?? []) typesMap.set(t.guid, t);
     const portsMap = new Map<string, Port>();
-    for (const p of this.ports ?? []) portsMap.set(p.guid, p);
+    for (const p of (this.families ?? []).flatMap((f) => f.ports ?? [])) portsMap.set(p.guid, p);
 
     const sourcePieces = source.pieces ?? [];
     const sourceConnections = source._connections ?? [];
@@ -10240,7 +10239,7 @@ export class KitImpl {
     this.designs = p.designs?.map((d) => new Design(d, this));
     this.tags = p.tags?.map((t) => new Tag(t));
     this.concepts = p.concepts?.map((c) => new Concept(c));
-    this.ports = p.ports?.map((x) => new Port(x));
+    this.families = p.families?.map((x) => new Family(x));
     this.qualities = p.qualities?.map((q) => new Quality(q));
     this.files = p.files?.map((f) => new File(f));
     this.folders = p.folders?.map((f) => new Folder(f));
@@ -10804,7 +10803,7 @@ export class KitImpl {
       designs: this.designs?.map((d) => d.toMeta()),
       tags: this.tags?.map((t) => TagMetaSchema.parse(t.toPlain())),
       concepts: this.concepts?.map((c) => ConceptMetaSchema.parse(c.toPlain())),
-      ports: this.ports?.map((p) => PortMetaSchema.parse(p.toPlain())),
+      families: this.families?.map((f) => f.toPlain()),
       qualities: this.qualities?.map((q) => QualityMetaSchema.parse(q.toPlain())),
       files: this.files?.map((f) => FileMetaSchema.parse(f.toPlain())),
       folders: this.folders?.map((f) => FolderMetaSchema.parse(f.toPlain())),
@@ -10888,9 +10887,15 @@ export class KitImpl {
   }
 
   requirePort(portGuid: string): Port {
-    const iface = this.ports?.find((i) => i.guid === portGuid);
+    const iface = (this.families ?? []).flatMap((f) => f.ports ?? []).find((i) => i.guid === portGuid);
     if (!iface) throw new Error(`Port ${portGuid} not found in kit ${this.name}`);
     return iface;
+  }
+
+  requireFamily(familyGuid: string): Family {
+    const family = this.families?.find((f) => f.guid === familyGuid);
+    if (!family) throw new Error(`Family ${familyGuid} not found in kit ${this.name}`);
+    return family;
   }
 
   /**
@@ -10981,17 +10986,17 @@ export class KitImpl {
     return this.#applyDiff({ designs: { removed: [{ guid: design.guid }] } }, opts ?? {});
   }
 
-  addPort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
+  addFamily(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.#applyDiff({ families: { added: [family] } }, opts ?? {});
   }
-  setPort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
+  setFamily(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.#applyDiff({ families: { added: [family] } }, opts ?? {});
   }
-  updatePort(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.#applyDiff({ ports: { added: [iface] } }, opts ?? {});
+  updateFamily(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.#applyDiff({ families: { added: [family] } }, opts ?? {});
   }
-  removePort(port: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.#applyDiff({ ports: { removed: [{ guid: port.guid }] } }, opts ?? {});
+  removeFamily(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.#applyDiff({ families: { removed: [{ guid: family.guid }] } }, opts ?? {});
   }
 
   addFile(file: File, opts?: KitChangeOptions): KitGraphChange {
@@ -11031,7 +11036,7 @@ export class KitImpl {
 
   // #region 📐KitImpl queries & algorithms (see module exports for plain-kit fallbacks)
   filter(filter: KitFilter): KitImpl {
-    const hasGlobFilters = !!(filter.designs || filter.types || filter.ports || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
+    const hasGlobFilters = !!(filter.designs || filter.types || filter.families || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
     if (!filter.designGuid && !hasGlobFilters) return this;
 
     const baseData: KitData = filter.designGuid ? filterKitByDesign(this, filter.designGuid, filter.modelTags) : this.toData();
@@ -11044,7 +11049,7 @@ export class KitImpl {
       ...baseData,
       types: (baseData.types ?? []).filter((t) => matchesGlobFilter(t.name, filter.types)),
       designs: (baseData.designs ?? []).filter((d) => matchesGlobFilter(d.name, filter.designs)),
-      ports: (baseData.ports ?? []).filter((p) => matchesGlobFilter(p.name, filter.ports)),
+      families: (baseData.families ?? []).filter((f) => matchesGlobFilter(f.name, filter.families)),
       files: (baseData.files ?? []).filter((f) => matchesGlobFilter(f.name, filter.files)),
       tags: (baseData.tags ?? []).filter((t) => matchesGlobFilter(t.name, filter.tags)),
       concepts: (baseData.concepts ?? []).filter((c) => matchesGlobFilter(c.name, filter.concepts)),
@@ -11065,7 +11070,7 @@ export class KitImpl {
     if (designFamilies.length === 0) return [design];
     return (this.designs || []).filter((d) => {
       const df = d.families ?? [];
-      return df.some((f) => designFamilies.includes(f));
+      return df.some((f) => designFamilies.some((df2) => df2.guid === f.guid));
     });
   }
 
@@ -11075,7 +11080,7 @@ export class KitImpl {
     const familiesA = a.families ?? [];
     const familiesB = b.families ?? [];
     if (familiesA.length === 0 && familiesB.length === 0) return a.guid === b.guid;
-    return familiesA.some((f) => familiesB.includes(f));
+    return familiesA.some((f) => familiesB.some((fb) => fb.guid === f.guid));
   }
 
   canUseDesignAsPiece(containerDesignGuid: string, pieceDesignGuid: string): boolean {
@@ -11100,7 +11105,7 @@ export class KitImpl {
     if (typeFamilies.length === 0) return [type];
     return (this.types || []).filter((t) => {
       const tf = t.families ?? [];
-      return tf.some((f) => typeFamilies.includes(f));
+      return tf.some((f) => typeFamilies.some((tf2) => tf2.guid === f.guid));
     });
   }
 
@@ -11110,7 +11115,7 @@ export class KitImpl {
     const familiesA = a.families ?? [];
     const familiesB = b.families ?? [];
     if (familiesA.length === 0 && familiesB.length === 0) return a.guid === b.guid;
-    return familiesA.some((f) => familiesB.includes(f));
+    return familiesA.some((f) => familiesB.some((fb) => fb.guid === f.guid));
   }
 
   /**
@@ -11610,27 +11615,27 @@ export class KitDesignsOps {
 /**
  * Object-oriented entry for port rows on a {@link KitImpl}.
  */
-export class KitPortsOps {
+export class KitFamiliesOps {
   constructor(private readonly kit: KitImpl) {}
 
-  add(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.kit.addPort(iface, opts);
+  add(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.kit.addFamily(family, opts);
   }
 
-  set(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.kit.setPort(iface, opts);
+  set(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.kit.setFamily(family, opts);
   }
 
-  update(iface: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.kit.updatePort(iface, opts);
+  update(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.kit.updateFamily(family, opts);
   }
 
-  remove(port: Port, opts?: KitChangeOptions): KitGraphChange {
-    return this.kit.removePort(port, opts);
+  remove(family: Family, opts?: KitChangeOptions): KitGraphChange {
+    return this.kit.removeFamily(family, opts);
   }
 
-  require(guid: string): Port {
-    return this.kit.requirePort(guid);
+  require(guid: string): Family {
+    return this.kit.requireFamily(guid);
   }
 }
 
@@ -11720,7 +11725,7 @@ export class KitAttributesOps {
 export class KitOps {
   readonly types: KitTypesOps;
   readonly designs: KitDesignsOps;
-  readonly ports: KitPortsOps;
+  readonly families: KitFamiliesOps;
   readonly files: KitFilesOps;
   readonly tags: KitTagsOps;
   readonly concepts: KitConceptsOps;
@@ -11729,7 +11734,7 @@ export class KitOps {
   constructor(kit: KitImpl) {
     this.types = new KitTypesOps(kit);
     this.designs = new KitDesignsOps(kit);
-    this.ports = new KitPortsOps(kit);
+    this.families = new KitFamiliesOps(kit);
     this.files = new KitFilesOps(kit);
     this.tags = new KitTagsOps(kit);
     this.concepts = new KitConceptsOps(kit);
@@ -11779,7 +11784,7 @@ const kitGraphToPlainData = (kit: KitImpl): KitData => {
     designs: kit.designs?.map((d) => d.toPlain()),
     tags: kit.tags?.map((t) => t.toPlain()),
     concepts: kit.concepts?.map((c) => c.toPlain()),
-    ports: kit.ports?.map((p) => p.toPlain()),
+    families: kit.families?.map((f) => f.toPlain()),
     qualities: kit.qualities?.map((q) => q.toPlain()),
     files: kit.files?.map((f) => f.toPlain()),
     folders: kit.folders?.map((f) => f.toPlain()),
@@ -11920,7 +11925,7 @@ export function emptyKitWireDto(): KitDTO {
     version: "0",
     tags: [],
     concepts: [],
-    ports: [],
+    families: [],
     qualities: [],
     files: [],
     folders: [],
@@ -11940,7 +11945,7 @@ function kitDataFromWireDto(dto: KitDTO): KitData {
     designs: d.designs ?? [],
     tags: d.tags ?? [],
     concepts: d.concepts ?? [],
-    ports: d.ports ?? [],
+    families: d.families ?? [],
     qualities: d.qualities ?? [],
     files: d.files ?? [],
     folders: d.folders ?? [],
@@ -12568,7 +12573,7 @@ export const applyKitDiff = (kit: KitLike, diff: KitDiff): KitImpl => {
 /**
  * Definition of KitMetaSchema.
  **/
-export const KitMetaSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, files: true, folders: true, authors: true, attributes: true });
+export const KitMetaSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, families: true, qualities: true, files: true, folders: true, authors: true, attributes: true });
 /**
  * Type alias for KitMeta.
  **/
@@ -12583,12 +12588,12 @@ export const deserializeKitMeta = (json: string): KitMeta => KitMetaSchema.parse
 /**
  * Definition of KitShallowSchema.
  **/
-export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, files: true, folders: true, authors: true, attributes: true }).extend({
+export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, families: true, qualities: true, files: true, folders: true, authors: true, attributes: true }).extend({
   types: z.array(TypeMetaSchema).optional(),
   designs: z.array(DesignMetaSchema).optional(),
   tags: z.array(TagMetaSchema).optional(),
   concepts: z.array(ConceptMetaSchema).optional(),
-  ports: z.array(PortMetaSchema).optional(),
+  families: z.array(FamilySchema).optional(),
   qualities: z.array(QualityMetaSchema).optional(),
   files: z.array(FileMetaSchema).optional(),
   folders: z.array(FolderMetaSchema).optional(),
@@ -12652,7 +12657,7 @@ export const toKitShallow = (kit: KitImpl): KitShallow => {
   if (result.designs) result.designs = result.designs.map((d: Design) => DesignMetaSchema.parse(d));
   if (result.tags) result.tags = result.tags.map((t: Tag) => TagMetaSchema.parse(t));
   if (result.concepts) result.concepts = result.concepts.map((c: Concept) => ConceptMetaSchema.parse(c));
-  if (result.ports) result.ports = result.ports.map((p: Port) => PortMetaSchema.parse(p));
+  if (result.families) result.families = result.families.map((f: Family) => FamilySchema.parse(f));
   if (result.qualities) result.qualities = result.qualities.map((q: Quality) => QualityMetaSchema.parse(q));
   if (result.files) result.files = result.files.map((f: File) => FileMetaSchema.parse(f));
   if (result.folders) result.folders = result.folders.map((f: Folder) => FolderMetaSchema.parse(f));
@@ -12663,12 +12668,12 @@ export const toKitShallow = (kit: KitImpl): KitShallow => {
 /**
  * Zod schema for KitImpl diff validation.
  **/
-export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
+export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, tags: true, concepts: true, families: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
   tags: TagsDiffSchema.optional(),
   concepts: ConceptsDiffSchema.optional(),
-  ports: PortsDiffSchema.optional(),
+  families: FamiliesDiffSchema.optional(),
   qualities: QualitiesDiffSchema.optional(),
   authors: AuthorsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
@@ -12855,8 +12860,8 @@ function computeKitGraphDiffBetween(before: KitImpl, after: KitImpl): KitDiff {
   if (Object.keys(tagsDiff).length > 0) diff.tags = tagsDiff;
   const conceptsDiff = getConceptsDiff(before.concepts ?? [], after.concepts ?? []);
   if (Object.keys(conceptsDiff).length > 0) diff.concepts = conceptsDiff;
-  const portsDiff = getPortsDiff(before.ports ?? [], after.ports ?? []);
-  if (Object.keys(portsDiff).length > 0) diff.ports = portsDiff;
+  const familiesDiff = getFamiliesDiff(before.families ?? [], after.families ?? []);
+  if (Object.keys(familiesDiff).length > 0) diff.families = familiesDiff;
   const qualitiesDiff = getCollectionDiff("quality", before.qualities ?? [], after.qualities ?? [], getQualityDiff);
   if (Object.keys(qualitiesDiff).length > 0) diff.qualities = qualitiesDiff;
   const filesDiff = getCollectionDiff("file", before.files ?? [], after.files ?? [], getFileDiff);
@@ -12885,7 +12890,7 @@ function inverseKitGraphDiff(original: KitImpl, appliedDiff: KitDiff): KitDiff {
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff("design", original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.tags) inverse.tags = inverseTagsDiff(original.tags ?? [], appliedDiff.tags);
   if (appliedDiff.concepts) inverse.concepts = inverseConceptsDiff(original.concepts ?? [], appliedDiff.concepts);
-  if (appliedDiff.ports) inverse.ports = inversePortsDiff(original.ports ?? [], appliedDiff.ports);
+  if (appliedDiff.families) inverse.families = inverseFamiliesDiff(original.families ?? [], appliedDiff.families);
   if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff("quality", original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
   if (appliedDiff.files) inverse.files = inverseCollectionDiff("file", original.files ?? [], appliedDiff.files, inverseFileDiff);
   if (appliedDiff.folders) inverse.folders = inverseCollectionDiff("folder", original.folders ?? [], appliedDiff.folders, inverseFolderDiff);
@@ -12903,7 +12908,7 @@ function mergeKitGraphDiff(diff1: KitDiff, diff2: KitDiff): KitDiff {
     designs: diff1.designs || diff2.designs ? mergeCollectionDiff("design", diff1.designs ?? {}, diff2.designs ?? {}, mergeDesignDiff) : undefined,
     tags: diff1.tags || diff2.tags ? mergeTagsDiff(diff1.tags ?? {}, diff2.tags ?? {}) : undefined,
     concepts: diff1.concepts || diff2.concepts ? mergeConceptsDiff(diff1.concepts ?? {}, diff2.concepts ?? {}) : undefined,
-    ports: diff1.ports || diff2.ports ? mergePortsDiff(diff1.ports ?? {}, diff2.ports ?? {}) : undefined,
+    families: diff1.families || diff2.families ? mergeFamiliesDiff(diff1.families ?? {}, diff2.families ?? {}) : undefined,
     qualities: diff1.qualities || diff2.qualities ? mergeCollectionDiff("quality", diff1.qualities ?? {}, diff2.qualities ?? {}, mergeQualityDiff) : undefined,
     files: diff1.files || diff2.files ? mergeCollectionDiff("file", diff1.files ?? {}, diff2.files ?? {}, mergeSimpleDiff) : undefined,
     folders: diff1.folders || diff2.folders ? mergeCollectionDiff("folder", diff1.folders ?? {}, diff2.folders ?? {}, mergeSimpleDiff) : undefined,
@@ -13482,6 +13487,35 @@ export const hashPort = (p: Port): string => {
 };
 
 /**
+ * Computes SHA-256 hash of a Family entity.
+ **/
+export const hashFamily = (f: Family): string => {
+  const w = new HashWriter();
+  w.writeString("Family");
+  if (f.attributes && f.attributes.length > 0) {
+    w.writeString("attributes");
+    w.writeHashList(f.attributes.map(hashAttribute));
+  }
+  if (f.description != null) {
+    w.writeString("description");
+    w.writeString(f.description);
+  }
+  w.writeString("guid");
+  w.writeString(f.guid);
+  if (f.icon != null) {
+    w.writeString("icon");
+    w.writeString(f.icon);
+  }
+  w.writeString("name");
+  w.writeString(f.name);
+  if (f.ports && f.ports.length > 0) {
+    w.writeString("ports");
+    w.writeHashList(f.ports.map(hashPort));
+  }
+  return w.digest();
+};
+
+/**
  * Computes SHA-256 hash of a Prop entity.
  **/
 export const hashProp = (p: Prop): string => {
@@ -13700,7 +13734,7 @@ export const hashType = (t: Type): string => {
   w.writeString(t.name);
   if (t.families && t.families.length > 0) {
     w.writeString("families");
-    for (const f of [...t.families].sort()) w.writeString(f);
+    w.writeGuidList(t.families.map((f) => f.guid));
   }
   if (t.props && t.props.length > 0) {
     w.writeString("props");
@@ -14025,7 +14059,7 @@ export const hashDesign = (d: Design): string => {
   w.writeString(d.name);
   if (d.families && d.families.length > 0) {
     w.writeString("families");
-    for (const f of [...d.families].sort()) w.writeString(f);
+    w.writeGuidList(d.families.map((f) => f.guid));
   }
   if (d.pieces && d.pieces.length > 0) {
     w.writeString("pieces");
@@ -14101,9 +14135,9 @@ export const hashKit = (k: KitImpl): string => {
   }
   w.writeString("name");
   w.writeString(k.name);
-  if (k.ports && k.ports.length > 0) {
-    w.writeString("ports");
-    w.writeHashList(k.ports.map(hashPort));
+  if (k.families && k.families.length > 0) {
+    w.writeString("families");
+    w.writeHashList(k.families.map(hashFamily));
   }
   if (k.preview != null) {
     w.writeString("preview");
@@ -14383,6 +14417,19 @@ export const hashPortDiff = (d: PortDiff): string => {
 
 export const hashPortsDiff = (d: PortsDiff): string => hashCollectionDiffGeneric("PortsDiff", "PortDiffUpdate", "port", hashPort, hashPortDiff, d);
 
+export const hashFamilyDiff = (d: FamilyDiff): string => {
+  const w = new HashWriter();
+  w.writeString("FamilyDiff");
+  writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
+  writeNullableString(w, "description", d.description);
+  writeNullableString(w, "icon", d.icon);
+  writeNullableString(w, "name", d.name);
+  writeNullableHash(w, "ports", d.ports, hashPortsDiff);
+  return w.digest();
+};
+
+export const hashFamiliesDiff = (d: FamiliesDiff): string => hashCollectionDiffGeneric("FamiliesDiff", "FamilyDiffUpdate", "family", hashFamily, hashFamilyDiff, d);
+
 export const hashPropDiff = (d: PropDiff): string => {
   const w = new HashWriter();
   w.writeString("PropDiff");
@@ -14469,7 +14516,7 @@ export const hashTypeDiff = (d: TypeDiff): string => {
     if (d.families === null) {
       w.writeString("null");
     } else {
-      for (const f of [...d.families].sort()) w.writeString(f);
+      w.writeGuidList(d.families.map((f) => f.guid));
     }
   }
   writeNullableHash(w, "props", d.props, hashPropsDiff);
@@ -14596,7 +14643,7 @@ export const hashDesignDiff = (d: DesignDiff): string => {
     if (d.families === null) {
       w.writeString("null");
     } else {
-      for (const f of [...d.families].sort()) w.writeString(f);
+      w.writeGuidList(d.families.map((f) => f.guid));
     }
   }
   writeNullableHash(w, "pieces", d.pieces, hashPiecesDiff);
@@ -14623,7 +14670,7 @@ export const hashKitDiff = (d: KitDiff): string => {
   writeNullableString(w, "image", d.image);
   writeNullableString(w, "license", d.license);
   writeNullableString(w, "name", d.name);
-  writeNullableHash(w, "ports", d.ports, hashPortsDiff);
+  writeNullableHash(w, "families", d.families, hashFamiliesDiff);
   writeNullableString(w, "preview", d.preview);
   writeNullableHash(w, "qualities", d.qualities, hashQualitiesDiff);
   writeNullableString(w, "remote", d.remote);
@@ -14690,7 +14737,7 @@ export type KitFilter = {
   modelTags?: string[];
   designs?: GlobFilter;
   types?: GlobFilter;
-  ports?: GlobFilter;
+  families?: GlobFilter;
   files?: GlobFilter;
   tags?: GlobFilter;
   concepts?: GlobFilter;
@@ -14747,7 +14794,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
     for (const [guid, t] of typeByGuid) {
       if (usedTypeGuids.has(guid)) continue;
       const tf = t.families ?? [];
-      if (tf.some((f) => families.includes(f))) {
+      if (tf.some((f) => families.some((fam) => fam.guid === f.guid))) {
         usedTypeGuids.add(guid);
       }
     }
@@ -14761,7 +14808,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
     return (k.tags ?? []).filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
   });
 
-  const usedPortGuids = new Set<string>();
+  const usedFamilyGuids = new Set<string>();
   const usedFileGuids = new Set<string>();
   const usedTagGuids = new Set<string>();
   const usedConceptGuids = new Set<string>();
@@ -14781,7 +14828,10 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
     if (!type) continue;
     if (type.folder) usedFolderNames.add(type.folder);
     for (const connector of type.connectors ?? []) {
-      if (connector.port?.guid) usedPortGuids.add(connector.port.guid);
+      if (connector.port?.guid) {
+        const family = (k.families ?? []).find((f) => (f.ports ?? []).some((p) => p.guid === connector.port!.guid));
+        if (family) usedFamilyGuids.add(family.guid);
+      }
       collectQualityFromProps(connector.props);
     }
     collectQualityFromProps(type.props);
@@ -14798,9 +14848,17 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
   for (const piece of design.pieces ?? []) collectQualityFromProps(piece.props);
   for (const concept of design.concepts ?? []) if (concept.guid) usedConceptGuids.add(concept.guid);
   for (const author of design.authors ?? []) if (author.guid) usedAuthorGuids.add(author.guid);
-  for (const portGuid of [...usedPortGuids]) {
-    const port = (k.ports ?? []).find((candidate) => candidate.guid === portGuid);
-    for (const compatible of port?.compatiblePorts ?? []) if (compatible.guid) usedPortGuids.add(compatible.guid);
+  for (const familyGuid of [...usedFamilyGuids]) {
+    const family = (k.families ?? []).find((f) => f.guid === familyGuid);
+    if (!family) continue;
+    for (const port of family.ports ?? []) {
+      for (const compatible of port.compatiblePorts ?? []) {
+        if (compatible.guid) {
+          const compatFamily = (k.families ?? []).find((f) => (f.ports ?? []).some((p) => p.guid === compatible.guid));
+          if (compatFamily) usedFamilyGuids.add(compatFamily.guid);
+        }
+      }
+    }
   }
   for (const tagGuid of resolvedTagGuids) usedTagGuids.add(tagGuid);
 
@@ -14822,7 +14880,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
         models: selectedModels.has(type.guid) ? [selectedModels.get(type.guid)!] : [],
       })),
     designs: (k.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)),
-    ports: (k.ports ?? []).filter((port) => usedPortGuids.has(port.guid)),
+    families: (k.families ?? []).filter((family) => usedFamilyGuids.has(family.guid)),
     files: (k.files ?? []).filter((file) => usedFileGuids.has(file.guid)),
     tags: (k.tags ?? []).filter((tag) => usedTagGuids.has(tag.guid)),
     concepts: (k.concepts ?? []).filter((concept) => usedConceptGuids.has(concept.guid)),
@@ -15346,7 +15404,8 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
   const designGuids = new Set((kit.designs ?? []).map((d) => d.guid));
   const qualityGuids = new Set((kit.qualities ?? []).map((q) => q.guid));
   const fileGuids = new Set((kit.files ?? []).map((f) => f.guid));
-  const portGuids = new Set((kit.ports ?? []).map((p) => p.guid));
+  const portGuids = new Set((kit.families ?? []).flatMap((f) => f.ports ?? []).map((p) => p.guid));
+  const familyGuids = new Set((kit.families ?? []).map((f) => f.guid));
   const conceptGuids = new Set((kit.concepts ?? []).map((c) => c.guid));
   const authorGuids = new Set((kit.authors ?? []).map((a) => a.guid));
   const refs = { typeGuids, designGuids, qualityGuids, fileGuids, portGuids, conceptGuids, authorGuids };
@@ -15359,7 +15418,7 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
   }
   if (ctx.diff.tags) ctx.diff.tags = validateGuidCollectionDiff(ctx, "tags", "tag", kit.tags ?? [], ctx.diff.tags, () => {});
   if (ctx.diff.concepts) ctx.diff.concepts = validateGuidCollectionDiff(ctx, "concepts", "concept", kit.concepts ?? [], ctx.diff.concepts, () => {});
-  if (ctx.diff.ports) ctx.diff.ports = validateGuidCollectionDiff(ctx, "ports", "port", kit.ports ?? [], ctx.diff.ports, () => {});
+  if (ctx.diff.families) ctx.diff.families = validateGuidCollectionDiff(ctx, "families", "family", kit.families ?? [], ctx.diff.families, () => {});
   if (ctx.diff.qualities) {
     ctx.diff.qualities = validateGuidCollectionDiff(ctx, "qualities", "quality", kit.qualities ?? [], ctx.diff.qualities, (item, qdiff, p) => validateQualityDiffNested(ctx, p, item, qdiff as QualityDiff));
   }
@@ -15542,7 +15601,10 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
     toArray(d.stats).forEach((s) => check("Stat", s.guid));
   });
   toArray(ctx.kit.qualities).forEach((q) => check("Quality", q.guid));
-  toArray(ctx.kit.ports).forEach((i) => check("Port", i.guid));
+  toArray(ctx.kit.families).forEach((f) => {
+    check("Family", f.guid);
+    toArray(f.ports).forEach((i) => check("Port", i.guid));
+  });
   toArray(ctx.kit.files).forEach((f) => check("File", f.guid));
   toArray(ctx.kit.folders).forEach((f) => check("Folder", f.guid));
   return problems;
@@ -15562,7 +15624,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   toArray(ctx.kit.types).forEach((t) => {
     if ((t.lifecycle ?? "active") === "deleted") return;
     const name = t.name ?? "";
-    const familiesKey = JSON.stringify([...(t.families ?? [])].sort());
+    const familiesKey = JSON.stringify([...(t.families ?? [])].map((f) => f.guid).sort());
     const key = `${name}\0${familiesKey}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(t);
@@ -15609,7 +15671,7 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const groups = new Map<string, Design[]>();
   toArray(ctx.kit.designs).forEach((d) => {
     const name = d.name ?? "";
-    const familiesKey = JSON.stringify([...(d.families ?? [])].sort());
+    const familiesKey = JSON.stringify([...(d.families ?? [])].map((f) => f.guid).sort());
     const key = `${name}\0${familiesKey}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(d);
@@ -15737,7 +15799,7 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
  **/
 export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
-  const ports = toArray(ctx.kit.ports);
+  const ports = (ctx.kit.families ?? []).flatMap((f) => toArray(f.ports));
   const nameMap = new Map<string, Port[]>();
   ports.forEach((i) => {
     const name = i.name ?? "";
@@ -15749,10 +15811,13 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
     const [first, ...rest] = list;
     const allNames = ports.map((i) => i.name ?? "");
     rest.forEach((iface) => {
+      const familyOfPort = (ctx.kit.families ?? []).find((f) => (f.ports ?? []).some((p) => p.guid === iface.guid));
       const fix = semioMakeFix(ctx, `Rename port "${name}"`, () => ({
-        ports: {
-          updated: [{ port: { guid: iface.guid }, diff: { name: generateUniqueName(name, allNames) } }],
-        },
+        families: familyOfPort
+          ? {
+              updated: [{ family: { guid: familyOfPort.guid }, diff: { ports: { updated: [{ port: { guid: iface.guid }, diff: { name: generateUniqueName(name, allNames) } }] } } }],
+            }
+          : undefined,
       }));
       problems.push({
         constraintId: "port-name-unique",
@@ -16024,7 +16089,7 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
 
         const containerFamilies = design.families ?? [];
         const pieceFamilies = pieceDesign.families ?? [];
-        const sameFamily = containerFamilies.length === 0 && pieceFamilies.length === 0 ? design.guid === pieceDesign.guid : containerFamilies.some((f) => pieceFamilies.includes(f));
+        const sameFamily = containerFamilies.length === 0 && pieceFamilies.length === 0 ? design.guid === pieceDesign.guid : containerFamilies.some((f) => pieceFamilies.some((pf) => pf.guid === f.guid));
 
         if (sameFamily) {
           const conns = toArray(design._connections);
@@ -16796,6 +16861,22 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
     return true;
   };
 
+  const areFamiliesEqual = (a?: Family[], b?: Family[]): boolean => {
+    const arrA = normalizeArray(a);
+    const arrB = normalizeArray(b);
+    if (arrA.length !== arrB.length) return false;
+    for (const famA of arrA) {
+      const famB = arrB.find((x) => x.guid === famA.guid);
+      if (!famB) return false;
+      if (famA.name !== famB.name) return false;
+      if (normalizeValue(famA.description) !== normalizeValue(famB.description)) return false;
+      if (normalizeValue(famA.icon) !== normalizeValue(famB.icon)) return false;
+      if (!arePortsEqual(famA.ports, famB.ports)) return false;
+      if (!areAttributesEqual(famA.attributes, famB.attributes)) return false;
+    }
+    return true;
+  };
+
   const areQualitiesEqual = (a?: Quality[], b?: Quality[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
@@ -16892,7 +16973,7 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
   if (!areTagsEqual(a.tags, b.tags)) return false;
   if (!areTypesEqual(a.types, b.types)) return false;
   if (!areDesignsEqual(a.designs, b.designs)) return false;
-  if (!arePortsEqual(a.ports, b.ports)) return false;
+  if (!areFamiliesEqual(a.families, b.families)) return false;
   if (!areQualitiesEqual(a.qualities, b.qualities)) return false;
   if (!areFilesEqual(a.files, b.files)) return false;
   if (!areFoldersEqual(a.folders, b.folders)) return false;
@@ -17832,17 +17913,28 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     };
   });
 
-  const ports = execResult("SELECT * FROM port WHERE kit_guid = ?", [kit.guid]);
-  kit.ports = mapOrUndefined(ports, (row: any) => {
-    const compatiblePorts = execResult("SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = ?", [row.guid]);
-    const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [row.guid]);
+  const familyRows = execResult("SELECT * FROM family WHERE kit_guid = ?", [kit.guid]);
+  kit.families = mapOrUndefined(familyRows, (fRow: any) => {
+    const familyAttributes = execResult("SELECT * FROM attribute WHERE family_guid = ?", [fRow.guid]);
+    const ports = execResult("SELECT * FROM port WHERE family_guid = ?", [fRow.guid]);
     return {
-      guid: row.guid,
-      name: row.name,
-      description: toUndefined(row.description),
-      icon: toUndefined(row.icon),
-      compatiblePorts: compatiblePorts.length > 0 ? compatiblePorts.map((ci: any) => ({ guid: ci.compatible_port_guid })) : undefined,
-      attributes: mapOrUndefined(portAttributes, buildAttribute),
+      guid: fRow.guid,
+      name: fRow.name,
+      description: toUndefined(fRow.description),
+      icon: toUndefined(fRow.icon),
+      ports: mapOrUndefined(ports, (row: any) => {
+        const compatiblePorts = execResult("SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = ?", [row.guid]);
+        const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          name: row.name,
+          description: toUndefined(row.description),
+          icon: toUndefined(row.icon),
+          compatiblePorts: compatiblePorts.length > 0 ? compatiblePorts.map((ci: any) => ({ guid: ci.compatible_port_guid })) : undefined,
+          attributes: mapOrUndefined(portAttributes, buildAttribute),
+        };
+      }),
+      attributes: mapOrUndefined(familyAttributes, buildAttribute),
     };
   });
 
@@ -18007,7 +18099,7 @@ CREATE TABLE benchmark (
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid)
 );
 
-CREATE TABLE port (
+CREATE TABLE family (
 	guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256) NOT NULL,
 	description TEXT,
@@ -18015,6 +18107,16 @@ CREATE TABLE port (
 	kit_guid VARCHAR(36) NOT NULL,
 	PRIMARY KEY (guid),
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
+);
+
+CREATE TABLE port (
+	guid VARCHAR(36) NOT NULL,
+	name VARCHAR(256) NOT NULL,
+	description TEXT,
+	icon TEXT,
+	family_guid VARCHAR(36) NOT NULL,
+	PRIMARY KEY (guid),
+	FOREIGN KEY(family_guid) REFERENCES family (guid)
 );
 
 CREATE TABLE port_compatibility (
@@ -18352,6 +18454,7 @@ CREATE TABLE attribute (
 	definition TEXT,
 	quality_guid VARCHAR(36),
 	benchmark_guid VARCHAR(36),
+	family_guid VARCHAR(36),
 	port_guid VARCHAR(36),
 	folder_guid VARCHAR(36),
 	file_guid VARCHAR(36),
@@ -18370,6 +18473,7 @@ CREATE TABLE attribute (
 	PRIMARY KEY (guid),
 	FOREIGN KEY(quality_guid) REFERENCES quality (guid),
 	FOREIGN KEY(benchmark_guid) REFERENCES benchmark (guid),
+	FOREIGN KEY(family_guid) REFERENCES family (guid),
 	FOREIGN KEY(port_guid) REFERENCES port (guid),
 	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
 	FOREIGN KEY(file_guid) REFERENCES file (guid),
@@ -18427,15 +18531,23 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
     db.run("INSERT INTO attribute (guid, key, value, definition, kit_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, kit.guid]);
   });
 
-  toArray(kit.ports).forEach((iface) => {
-    db.run("INSERT INTO port (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [iface.guid, iface.name, iface.description || null, iface.icon || null, kit.guid]);
+  toArray(kit.families).forEach((family) => {
+    db.run("INSERT INTO family (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [family.guid, family.name, family.description || null, family.icon || null, kit.guid]);
 
-    toArray(iface.compatiblePorts).forEach((compat) => {
-      db.run("INSERT INTO port_compatibility (port_guid, compatible_port_guid) VALUES (?, ?)", [iface.guid, compat.guid]);
+    toArray(family.attributes).forEach((attr) => {
+      db.run("INSERT INTO attribute (guid, key, value, definition, family_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, family.guid]);
     });
 
-    toArray(iface.attributes).forEach((attr) => {
-      db.run("INSERT INTO attribute (guid, key, value, definition, port_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, iface.guid]);
+    toArray(family.ports).forEach((iface) => {
+      db.run("INSERT INTO port (guid, name, description, icon, family_guid) VALUES (?, ?, ?, ?, ?)", [iface.guid, iface.name, iface.description || null, iface.icon || null, family.guid]);
+
+      toArray(iface.compatiblePorts).forEach((compat) => {
+        db.run("INSERT INTO port_compatibility (port_guid, compatible_port_guid) VALUES (?, ?)", [iface.guid, compat.guid]);
+      });
+
+      toArray(iface.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, port_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, iface.guid]);
+      });
     });
   });
 
@@ -20430,7 +20542,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
       expect(filtered.files?.length).toBe(expected.files.length);
-      expect(filtered.ports?.length).toBe(expected.ports.length);
+      expect(filtered.families?.length).toBe(expected.families?.length ?? expected.ports?.length ?? 0);
       expect(filtered.qualities?.length).toBe(expected.qualities.length);
       expect(filtered.authors?.length).toBe(expected.authors.length);
 
@@ -20457,7 +20569,7 @@ if (shouldRunEmbeddedJsTests) {
         }
         for (const connector of type.connectors ?? []) {
           if (connector.port?.guid) {
-            expect(filtered.ports?.some((p) => p.guid === connector.port!.guid)).toBe(true);
+            expect((filtered.families ?? []).some((f) => (f.ports ?? []).some((p) => p.guid === connector.port!.guid))).toBe(true);
           }
         }
       }
@@ -20538,7 +20650,7 @@ if (shouldRunEmbeddedJsTests) {
         if (!gc.typeInclude && !gc.typeExclude && !gc.designInclude && !gc.designName) {
           expect(filtered.types?.length).toBe(kit.types?.length);
           expect(filtered.designs?.length).toBe(kit.designs?.length);
-          expect(filtered.ports?.length).toBe(kit.ports?.length);
+          expect(filtered.families?.length).toBe(kit.families?.length);
         }
         if (gc.designName && gc.typeExclude) {
           const designOnlyFiltered = filterKit(kit, { designGuid: filter.designGuid });
@@ -20762,7 +20874,7 @@ if (shouldRunEmbeddedJsTests) {
       expect(filtered.designs?.length).toBe(expected.designs.length);
       expect(filtered.types?.length).toBe(expected.types.length);
       expect(filtered.files?.length).toBe(expected.files.length);
-      expect(filtered.ports?.length).toBe(expected.ports.length);
+      expect(filtered.families?.length).toBe(expected.families?.length ?? expected.ports?.length ?? 0);
       expect(filtered.qualities?.length).toBe(expected.qualities.length);
       expect(filtered.authors?.length).toBe(expected.authors.length);
 
@@ -20788,7 +20900,7 @@ if (shouldRunEmbeddedJsTests) {
         }
         for (const connector of type.connectors ?? []) {
           if (connector.port?.guid) {
-            expect(filtered.ports?.some((p) => p.guid === connector.port!.guid)).toBe(true);
+            expect((filtered.families ?? []).some((f) => (f.ports ?? []).some((p) => p.guid === connector.port!.guid))).toBe(true);
           }
         }
       }
@@ -22128,7 +22240,7 @@ if (shouldRunEmbeddedJsTests) {
     const syntheticKit = SyntheticFindReplaceableKit as any;
 
     it("Synthetic selection enforces distinct compatible connectors and ignores consumed design connectors", () => {
-      const ports = syntheticKit.ports as Port[];
+      const ports = (syntheticKit.families ?? syntheticKit.ports ?? []).flatMap((f: any) => f.ports ?? [f]) as Port[];
       const types = syntheticKit.types as Type[];
       const syntheticRootDesignGuid = (findReplCases.syntheticCases as Array<{ designGuid: string }>)?.[0]?.designGuid;
       expect(syntheticRootDesignGuid).toBeDefined();
@@ -22149,7 +22261,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === bc.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = (kit.families ?? []).flatMap((f) => f.ports ?? []);
       const designs = kit.designs ?? [];
       const nameToGuid = new Map((design.pieces ?? []).map((piece) => [piece.name, piece.guid]));
       const forbiddenSingleConnectorFamilies = new Set(bc.forbiddenFamilies as string[]);
@@ -22195,7 +22307,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const rootPlan = kit.designs!.find((d) => d.name === selAssetCase.designName)!;
       const kindItems = kit.types ?? [];
-      const linkItems = kit.ports ?? [];
+      const linkItems = (kit.families ?? []).flatMap((f) => f.ports ?? []);
       const allPlans = kit.designs ?? [];
       const selection = NakaginCapsuleTowerCopySelection as any;
       const pieceGuids = (selection.pieces ?? []).map((piece: { guid: string }) => piece.guid);
@@ -22213,7 +22325,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === connCase.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = (kit.families ?? []).flatMap((f) => f.ports ?? []);
       const designs = kit.designs ?? [];
 
       const tambourPiece = design.pieces!.find((p) => p.name === connCase.pieceNames[0])!;
@@ -22228,7 +22340,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const flatDesign = kit.designs!.find((d) => d.name === isoCase.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = (kit.families ?? []).flatMap((f) => f.ports ?? []);
       const designs = kit.designs ?? [];
 
       const piece = flatDesign.pieces![isoCase.usePieceIndex];
@@ -22245,7 +22357,7 @@ if (shouldRunEmbeddedJsTests) {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === capCase.designName)!;
       const types = kit.types ?? [];
-      const ports = kit.ports ?? [];
+      const ports = (kit.families ?? []).flatMap((f) => f.ports ?? []);
       const designs = kit.designs ?? [];
 
       const capitalType = types.find((t) => t.name === capCase.lookupTypeName)!;
