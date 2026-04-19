@@ -657,6 +657,375 @@ kit : !Kit{
 }
 ```
 
+### InMemory
+
+```mermaid
+classDiagram
+direction TB
+
+class Actor {
+  <<interface>>
+  +getId()
+  +getName()
+}
+
+class User {
+  +startSession(kit)
+}
+
+class Agent {
+  +execute(command)
+}
+
+class KitClient {
+  +startSession(timeout)
+  +endSession()
+  +undo()
+  +canUndo()
+  +redo()
+  +canRedo()
+  +startNewOperation()
+  +setActiveOperation(operation)
+  +submitOperation(operation)
+  +submitActiveOperation()
+  +submitAllOperations()
+  +cancelOperation(operation)
+  +cancelActiveOperation()
+  +cancelAllOperations()
+}
+
+class KitOperation {
+  +addToSelection(entity)
+  +addManyToSelection(entities)
+  +removeFromSelection(entity)
+  +removeManyFromSelection(entities)
+  +clearSelection()
+  +undo()
+  +canUndo()
+  +redo()
+  +canRedo()
+}
+
+class Kit {
+  +createTag(input)
+  +createTags(inputs)
+  +createConcept(input)
+  +createConcepts(inputs)
+  +createPort(input)
+  +createPorts(inputs)
+  +createQuality(input)
+  +createQualities(inputs)
+  +createType(input)
+  +createTypes(inputs)
+  +createDesign(input)
+  +createDesigns(inputs)
+  +deleteTags(tags)
+  +deleteConcepts(concepts)
+  +deletePorts(ports)
+  +deleteQualities(qualities)
+  +deleteTypes(types)
+  +deleteDesigns(designs)
+}
+
+class Attribute {
+  +setKey(key)
+  +setValue(value)
+  +setDefinition(definition)
+}
+
+class Author {
+  +rename(name)
+  +changeEmail(email)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Location {
+  +relocate(longitude, latitude, altitude)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Folder {
+  +rename(name)
+  +moveTo(parent)
+  +updateDescription(text)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class File {
+  +rename(name)
+  +moveTo(folder)
+  +replaceBlob(blob)
+  +rehash()
+}
+
+class Concept {
+  +rename(name)
+  +updateDescription(text)
+  +updateIcon(icon)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Quality {
+  +rename(name)
+  +updateDescription(text)
+  +updateIcon(icon)
+  +addBenchmark(benchmark)
+  +removeBenchmark(benchmarkId)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Benchmark {
+  +rename(name)
+  +setRange(min, max)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Stat {
+  +bindQuality(quality)
+  +setUnit(unit)
+  +setRange(min, max)
+}
+
+class Tag {
+  +rename(name)
+  +updateDescription(text)
+  +updateIcon(icon)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Model {
+  +rename(name)
+  +updateDescription(text)
+  +attachFile(file)
+  +addTag(tag)
+  +removeTag(tagId)
+}
+
+class Port {
+  +rename(name)
+  +updateDescription(text)
+  +updateIcon(icon)
+  +addCompatiblePort(port)
+  +removeCompatiblePort(portId)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Connector {
+  +rename(name)
+  +updateDescription(text)
+  +moveTo(point)
+  +setDirection(vector)
+  +bindPort(port)
+  +addProp(prop)
+  +removeProp(propId)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Prop {
+  +bindQuality(quality)
+  +setValue(value)
+  +setUnit(unit)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Layer {
+  +setPath(path)
+  +hide()
+  +show()
+  +lock()
+  +unlock()
+  +recolor(color)
+  +updateDescription(text)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Group {
+  +rename(name)
+  +recolor(color)
+  +addPiece(piece)
+  +removePiece(pieceId)
+  +updateDescription(text)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Piece {
+  +rename(name)
+  +updateDescription(text)
+  +drag(targetPlane)
+  +move(center)
+  +fix()
+  +changeType(type)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Connection {
+  +reconnect(connected, connecting)
+  +adjustAlignment(gap, shift, rise, rotation, turn, tilt, u, v)
+  +updateDescription(text)
+  +addAttribute(attr)
+  +removeAttribute(attrId)
+}
+
+class Type {
+  +rename(name)
+  +updateDescription(text)
+  +updateIcon(icon)
+  +setParent(parent)
+  +addModel(model)
+  +removeModel(modelId)
+  +addConnector(connector)
+  +removeConnector(connectorId)
+  +addProp(prop)
+  +removeProp(propId)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Design {
+  +flatten()
+  +addFixedPiece(input)
+  +addFixedPieces(inputs)
+  +addChildPiece(input)
+  +addChildPieces(inputs)
+  +addHangingChildPiece(input)
+  +addHangingChildPieces(inputs)
+  +readPiece(pieceId)
+  +deletePiece(pieceId)
+  +deletePieces(pieceIds)
+  +deletePiecesAndConnections(pieceIds)
+  +setActiveLayer(layerId)
+  +addLayer(layer)
+  +removeLayer(layerId)
+  +addGroup(group)
+  +removeGroup(groupId)
+  +addConnection(connection)
+  +removeConnection(connectionId)
+  +addAttribute(attr)
+  +addAttributes(attrs)
+  +removeAttribute(attrId)
+  +removeAttributes(attrIds)
+  +delete()
+}
+
+class Coordinate {
+  +move(u, v)
+}
+
+class Point {
+  +translate(vector)
+}
+
+class Vector {
+  +normalize()
+  +scale(factor)
+}
+
+class Plane {
+  +moveTo(origin)
+  +rotate(xAxis, yAxis)
+}
+
+class Side {
+  +attachPiece(piece)
+  +attachDesignPiece(piece)
+  +bindConnector(connector)
+}
+
+Actor <|.. User
+Actor <|.. Agent
+
+KitClient --> Actor : actor
+KitClient --> Kit : worksOn
+KitClient *-- KitOperation : operations
+
+Kit *-- Tag
+Kit *-- Concept
+Kit *-- Port
+Kit *-- Quality
+Kit *-- File
+Kit *-- Folder
+Kit *-- Author
+Kit *-- Type
+Kit *-- Design
+
+File --> Folder
+Model --> File
+Model o-- Tag
+
+Quality *-- Benchmark
+Stat --> Quality
+Prop --> Quality
+
+Connector --> Port
+Connector *-- Prop
+
+Type --> Type : parent
+Type *-- Model
+Type *-- Connector
+Type *-- Prop
+Type --> Location
+Type o-- Author
+Type o-- Concept
+
+Design --> Design : parent
+Design *-- Piece
+Design *-- Connection
+Design *-- Stat
+Design *-- Prop
+Design *-- Layer
+Design *-- Group
+Design --> Layer : activeLayer
+Design --> Location
+Design o-- Author
+Design o-- Concept
+
+Piece --> Type
+Piece --> Design
+Piece --> Plane
+Piece --> Coordinate
+Group o-- Piece
+
+Connection *-- Side
+Side --> Piece
+Side --> Connector
+
+Plane *-- Point
+Plane *-- Vector
+Connector --> Point
+Connector --> Vector
+```
+
 ## 📛 Entities
 
 $$

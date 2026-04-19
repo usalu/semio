@@ -11589,7 +11589,7 @@ function graphKitChangeFromLedger(c: KitChange): KitGraphChange {
 }
 
 /** @alias {@link guid} — uuid v7 strings for {@link KitEntity} interactions. */
-export const uuidv7 = guid;
+export { guid as uuidv7 };
 
 export function emptyKitWireDto(): KitDTO {
   const now = new Date().toISOString();
