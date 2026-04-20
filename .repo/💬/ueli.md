@@ -746,6 +746,10 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 semio/rs:
 The code is very smelly and incomplete.
 You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents. Mutations always happen on the lowest level possible. When it doesnt affect others, then it happens locally. As soon as the mutation affects others, then parent that has a complete picture is responsible for mutating.
+
+The code is very smelly and incomplete.
+You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
 Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents (e.g. design is responsible for managing pieces and connections)
 
 One example:

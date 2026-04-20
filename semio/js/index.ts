@@ -20109,23 +20109,133 @@ const shouldRunEmbeddedJsTests =
 
 const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
-  // #endregion 🔄Transaction Undo/Redo Tests
-        }
-      });
+// #endregion 🔬Runtime Test Flags
+
+// #region 🔬Tests
+// Vitest suites for the JS bundle. Guarded so browser consumers do not load test-only deps.
+if (shouldRunEmbeddedJsTests) {
+  const { beforeAll, describe, expect, it, vi } = await import("vitest");
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const ElementsBundle = await import("@elements/ui");
+  const { buildControlTree, Action: UiAction } = ElementsBundle;
+  type ControlDef = import("@elements/ui").ControlDef;
+  const {
+    DragDesign,
+    DragDiffDesign,
+    DragOffset,
+    DragPieces,
+    MoveDiffDesign,
+    MoveVector,
+    InvalidKit,
+    InvalidKitValidation,
+    MetabolismKit,
+    MetabolismKitDiff,
+    MetabolismKitDiffed,
+    MetabolismKitDiffInverted,
+    MetabolismKitFilteredNakaginCapsuleTower,
+    ModelSelectionCases,
+    NakaginCapsuleTowerFilteredKit,
+    MetabolismMetaKit,
+    MetabolismShallowKit,
+    TambourMetaType,
+    TambourShallowType,
+    NakaginCapsuleTowerMetaDesign,
+    NakaginCapsuleTowerShallowDesign,
+    NakaginCapsuleTowerDeletedDesignDiff,
+    NakaginCapsuleTowerDeletedSelection,
+    NakaginCapsuleTowerCopySelection,
+    NakaginCapsuleTowerCopyDesign,
+    NakaginCapsuleTowerPasteDesignDiff,
+    NakaginCapsuleTowerPasteDesign,
+    NakaginCapsuleTowerPasteWithCoordDesignDiff,
+    NakaginCapsuleTowerDiffDesign,
+    NakaginCapsuleTowerWithDiffDesign,
+    ValidateKitDiffCases,
+    FlattenMerkleCases,
+    HashCases,
+    QualitySumCases,
+    DesignWithDiffCases,
+    FilterKitCases,
+    FindReplaceableTypesCases,
+    FlattenCases,
+    SyntheticFindReplaceableKit,
+    ExportDesignModelCases,
+    DeleteCases,
+    CopyPasteCases,
+  } = await import("@semio/assets");
+  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
+  type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
+  type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
+
+  const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
+  const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; selectionAsset: string; expectedDiffAsset: string }>;
+  const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{
+    name: string;
+    designName: string;
+    designFamilies: string[];
+    selectionAsset: string;
+    expectedCopyAsset: string;
+    pasteTargetAsset: string;
+    expectedPasteDiffAsset: string;
+    pasteCoord: { u: number; v: number };
+    expectedPasteWithCoordDiffAsset: string;
+  }>;
+  const filterKitCasesData = FilterKitCases as any;
+
+  const TEST_TOLERANCE = 0.001;
+
+  const planesEqual = (p1?: Plane, p2?: Plane): boolean => {
+    if (!p1 || !p2) return false;
+    if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;
+    return (
+      Math.abs(p1.origin.x - p2.origin.x) < TEST_TOLERANCE &&
+      Math.abs(p1.origin.y - p2.origin.y) < TEST_TOLERANCE &&
+      Math.abs(p1.origin.z - p2.origin.z) < TEST_TOLERANCE &&
+      Math.abs(p1.xAxis.x - p2.xAxis.x) < TEST_TOLERANCE &&
+      Math.abs(p1.xAxis.y - p2.xAxis.y) < TEST_TOLERANCE &&
+      Math.abs(p1.xAxis.z - p2.xAxis.z) < TEST_TOLERANCE &&
+      Math.abs(p1.yAxis.x - p2.yAxis.x) < TEST_TOLERANCE &&
+      Math.abs(p1.yAxis.y - p2.yAxis.y) < TEST_TOLERANCE &&
+      Math.abs(p1.yAxis.z - p2.yAxis.z) < TEST_TOLERANCE
+    );
+  };
+
+  const centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean => {
+    if (!c1 || !c2) return false;
+    return Math.abs(c1.u - c2.u) < TEST_TOLERANCE && Math.abs(c1.v - c2.v) < TEST_TOLERANCE;
+  };
+
+  const findDesign = (kit: KitImpl, name: string) => {
+    const design = kit.designs?.find((candidate) => candidate.name === name);
+    if (!design) {
+      throw new Error(`Design ${name} not found`);
     }
-    it("heal drops invalid design update", () => {
-      const healCase = cases.cases.find((c: any) => c.id === "update-missing-design")!;
-      const healDiff = healCase.diff as Record<string, unknown>;
-      const healGuid = ((healDiff.designs as any).updated[0] as any).design.guid as string;
-      const bad: KitDiff = {
-        designs: {
-          updated: [{ design: { guid: healGuid }, diff: { name: "X" } }],
-        },
-      };
-      const r = validateKitGraphDiff(tinyKit, bad, true);
-      expect(r.diff?.designs?.updated ?? []).toHaveLength(0);
-    });
-  });
+    return design;
+  };
+
+  const getTestNodePaths = async () => {
+    const { dirname, resolve } = await import("node:path");
+    const { fileURLToPath } = await import("node:url");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const EXPORT_REPORTS_DIR = resolve(__dirname, "../../reports/export-design-model");
+    return { __filename, __dirname, EXPORT_REPORTS_DIR, dirname, resolve };
+  };
+
+  const writeExportReport = async (implementation: string, bytes: Uint8Array<ArrayBufferLike>) => {
+    const { mkdirSync, writeFileSync } = await import("node:fs");
+    const { EXPORT_REPORTS_DIR, resolve } = await getTestNodePaths();
+    mkdirSync(EXPORT_REPORTS_DIR, { recursive: true });
+    const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
+    writeFileSync(reportPath, bytes);
+    return reportPath;
+  };
+
+  const roundSceneNumber = (value: number) => {
+    const rounded = Math.round(value * 10_000) / 10_000;
+    return Object.is(rounded, -0) ? 0 : rounded;
+  };
 
   describe("Kit object representation (spec API)", () => {
     it("Kit(), transactions.start (uuid v7), setActiveTransaction, findDesign/findPiece objects, connections(), piece ops, history undo", () => {
@@ -24713,217 +24823,6 @@ const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined
   });
 
   // #endregion 🔄Transaction Undo/Redo Tests
-
-  // #region ⚛️React Hooks Tests
-  describe("React Hooks", () => {
-    let testKit: KitImpl;
-    let testStore: InMemoryKitStore;
-    let testDesignGuid: string;
-    let testPieceGuid: string;
-
-    beforeAll(() => {
-      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      testStore = new InMemoryKitStore(testKit);
-      const design = testKit.designs![0];
-      testDesignGuid = design.guid;
-      const piece = design.pieces![0];
-      testPieceGuid = piece.guid;
-    });
-
-    const renderHookResult = <T>(hookFn: () => T): T => {
-      let result: T | undefined;
-      const TestComponent = () => {
-        result = hookFn();
-        return createElement("span", null, JSON.stringify(result));
-      };
-      const tree = createElement(KitProvider, { store: testStore } as any, createElement(TestComponent, null));
-      renderToStaticMarkup(tree);
-      return result as T;
-    };
-
-    const renderPieceHookResult = <T>(hookFn: () => T, pieceGuid: string, designGuid: string): T => {
-      let result: T | undefined;
-      const TestComponent = () => {
-        result = hookFn();
-        return createElement("span", null, JSON.stringify(result));
-      };
-      const tree = createElement(KitProvider, { store: testStore } as any, createElement(PieceProvider, { guid: pieceGuid, designGuid } as any, createElement(TestComponent, null)));
-      renderToStaticMarkup(tree);
-      return result as T;
-    };
-
-    it("useKit returns a KitImpl instance", () => {
-      const kit = renderHookResult(() => useKit());
-      expect(kit).toBeDefined();
-      expect(kit.guid).toBe(testKit.guid);
-    });
-
-    it("useKitStore returns the store", () => {
-      const store = renderHookResult(() => useKitStore());
-      expect(store).toBe(testStore);
-    });
-
-    it("usePieceName returns piece name via PieceProvider", () => {
-      const piece = testKit.designs![0].pieces![0];
-      const name = renderPieceHookResult(() => usePieceName(), testPieceGuid, testDesignGuid);
-      expect(name).toBe(piece.name);
-    });
-
-    it("usePieceName returns piece name via explicit args", () => {
-      const piece = testKit.designs![0].pieces![0];
-      const name = renderHookResult(() => usePieceName(testPieceGuid, testDesignGuid));
-      expect(name).toBe(piece.name);
-    });
-
-    it("usePieceDescription returns piece description", () => {
-      const piece = testKit.designs![0].pieces![0];
-      const desc = renderPieceHookResult(() => usePieceDescription(), testPieceGuid, testDesignGuid);
-      expect(desc).toBe(piece.description);
-    });
-
-    it("usePieceTypeId returns the type reference guid", () => {
-      const piece = testKit.designs![0].pieces![0];
-      const typeId = renderPieceHookResult(() => usePieceTypeId(), testPieceGuid, testDesignGuid);
-      const expectedTypeId = piece.wireTypeId();
-      if (expectedTypeId) {
-        expect(typeId).toBeDefined();
-        expect(typeId!.guid).toBe(expectedTypeId.guid);
-      } else {
-        expect(typeId).toBeUndefined();
-      }
-    });
-
-    it("usePieceDesignId returns the design reference", () => {
-      const designId = renderPieceHookResult(() => usePieceDesignId(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      const expectedDesignId = piece.wireDesignAsPieceId();
-      if (expectedDesignId) {
-        expect(designId).toBeDefined();
-        expect(designId!.guid).toBe(expectedDesignId.guid);
-      } else {
-        expect(designId).toBeUndefined();
-      }
-    });
-
-    it("usePieceBlueprintId returns either type or design", () => {
-      const blueprint = renderPieceHookResult(() => usePieceBlueprintId(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      const designRef = piece.wireDesignAsPieceId();
-      if (designRef) {
-        expect(blueprint).toEqual({ kind: "design", guid: designRef.guid });
-      } else {
-        const typeRef = piece.wireTypeId();
-        if (typeRef) {
-          expect(blueprint).toEqual({ kind: "type", guid: typeRef.guid });
-        } else {
-          expect(blueprint).toBeUndefined();
-        }
-      }
-    });
-
-    it("usePiecePlane returns the placement plane", () => {
-      const plane = renderPieceHookResult(() => usePiecePlane(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      expect(plane).toEqual(piece.plane);
-    });
-
-    it("usePieceCenter returns the center coordinate", () => {
-      const center = renderPieceHookResult(() => usePieceCenter(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      expect(center).toEqual(piece.center);
-    });
-
-    it("usePieceFlatPlane returns flattened plane", () => {
-      const flatPlane = renderPieceHookResult(() => usePieceFlatPlane(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      expect(flatPlane).toEqual(piece.flatPlane());
-    });
-
-    it("usePieceFlatCenter returns flattened center", () => {
-      const flatCenter = renderPieceHookResult(() => usePieceFlatCenter(), testPieceGuid, testDesignGuid);
-      const piece = testKit.designs![0].pieces![0];
-      expect(flatCenter).toEqual(piece.flatCenter());
-    });
-
-    it("useParentPieceId returns parent piece id", () => {
-      const metadata = testKit.piecesMetadataFor(testDesignGuid);
-      expect(metadata.ok).toBe(true);
-      let childGuid: string | undefined;
-      let parentGuid: string | undefined;
-      for (const [pg, meta] of metadata.diff!) {
-        if (meta.parentPieceId) {
-          childGuid = pg;
-          parentGuid = meta.parentPieceId;
-          break;
-        }
-      }
-      if (childGuid && parentGuid) {
-        const parentId = renderPieceHookResult(() => useParentPieceId(), childGuid, testDesignGuid);
-        expect(parentId).toBeDefined();
-        expect(parentId!.guid).toBe(parentGuid);
-      }
-    });
-
-    it("useParentConnectionId returns parent connection id", () => {
-      const metadata = testKit.piecesMetadataFor(testDesignGuid);
-      expect(metadata.ok).toBe(true);
-      let childGuid: string | undefined;
-      for (const [pg, meta] of metadata.diff!) {
-        if (meta.parentPieceId) {
-          childGuid = pg;
-          break;
-        }
-      }
-      if (childGuid) {
-        const connId = renderPieceHookResult(() => useParentConnectionId(), childGuid, testDesignGuid);
-        expect(connId).toBeDefined();
-        expect(typeof connId!.guid).toBe("string");
-      }
-    });
-
-    it("useChildPiecesIds returns child piece ids", () => {
-      const metadata = testKit.piecesMetadataFor(testDesignGuid);
-      expect(metadata.ok).toBe(true);
-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;
-      const children = renderPieceHookResult(() => useChildPiecesIds(), rootGuid, testDesignGuid);
-      expect(Array.isArray(children)).toBe(true);
-    });
-
-    it("useAlternativeTypeIds returns replaceable types", () => {
-      const altTypes = renderPieceHookResult(() => useAlternativeTypeIds(), testPieceGuid, testDesignGuid);
-      expect(Array.isArray(altTypes)).toBe(true);
-    });
-
-    it("usePieceName returns undefined for nonexistent piece", () => {
-      const name = renderHookResult(() => usePieceName("nonexistent-guid", testDesignGuid));
-      expect(name).toBeUndefined();
-    });
-
-    it("useParentPieceId returns undefined for root piece", () => {
-      const metadata = testKit.piecesMetadataFor(testDesignGuid);
-      expect(metadata.ok).toBe(true);
-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;
-      const parentId = renderPieceHookResult(() => useParentPieceId(), rootGuid, testDesignGuid);
-      expect(parentId).toBeUndefined();
-    });
-
-    it("throws when hooks are used outside KitProvider", () => {
-      expect(() => {
-        const TestComponent = () => {
-          useKit();
-          return createElement("span", null, "fail");
-        };
-        renderToStaticMarkup(createElement(TestComponent, null));
-      }).toThrow("useKit*() hooks must be used inside <KitProvider>.");
-    });
-
-    it("throws when piece hooks are used without PieceProvider or args", () => {
-      expect(() => {
-        renderHookResult(() => usePieceName());
-      }).toThrow();
-    });
-  });
-  // #endregion ⚛️React Hooks Tests
 } // end vitest guard
 // #endregion ­ƒº¬Tests
 

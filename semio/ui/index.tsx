@@ -3952,13 +3952,13 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // #endregion 📌Design
 
 // #region 🗿McpApp
-// Specs: MCP App design viewer component using the official @representationcontextprotocol/ext-apps/react
+// Specs: MCP App design viewer component using the official @modelcontextprotocol/ext-apps/react
 // protocol. Communicates with the MCP host via useApp hook. Receives pre-computed diagram data
 // (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
-import type { App as McpApp } from "@representationcontextprotocol/ext-apps";
-import { useApp, useDocumentTheme } from "@representationcontextprotocol/ext-apps/react";
+import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
+import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 
 // #region 🔗McpApp Types
 
@@ -4377,7 +4377,7 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
 
 /**
  * MCP App design viewer that renders a semio diagram using the official MCP Apps protocol.
- * Uses useApp from @representationcontextprotocol/ext-apps/react for host communication.
+ * Uses useApp from @modelcontextprotocol/ext-apps/react for host communication.
  * Receives pre-computed diagram data (points and lines) from tool results.
  *
  * Specs:

@@ -947,6 +947,11 @@ async function createNodeFolderAdapter(folderPath: string) {
 	};
 }
 
+async function loadSketchpadModule() {
+	const sketchpadModuleId = "@semio" + "/sketchpad";
+	return import(/* @vite-ignore */ sketchpadModuleId);
+}
+
 async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined, initialKit?: KitLike): Promise<KitStore> {
 	const resolvedBackbone = backbone?.kind ? backbone : ({ kind: "memory", initialKit } as MemoryBackboneConfig);
 	if (resolvedBackbone.kind === "memory") {
@@ -954,14 +959,14 @@ async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined
 		return new InMemoryKitStore(asKitInstance(seed));
 	}
 	if (resolvedBackbone.kind === "dev") {
-		const { createJsonFileKitStore } = await import("@semio/sketchpad");
+		const { createJsonFileKitStore } = await loadSketchpadModule();
 		return createJsonFileKitStore(await createNodeJsonFileAdapter(resolvedBackbone.filePath));
 	}
 	if (resolvedBackbone.kind === "local") {
-		const { createFolderKitStore } = await import("@semio/sketchpad");
+		const { createFolderKitStore } = await loadSketchpadModule();
 		return createFolderKitStore(await createNodeFolderAdapter(resolvedBackbone.folderPath), initialKit ? asKitInstance(initialKit).toJSON() as any : undefined);
 	}
-	const { createSessionKitStore } = await import("@semio/sketchpad");
+	const { createSessionKitStore } = await loadSketchpadModule();
 	return createSessionKitStore({
 		serverUrl: resolvedBackbone.serverUrl,
 		sessionId: resolvedBackbone.sessionId,

@@ -13,7 +13,7 @@ todos:
    status: completed
  - id: verify-tests
    content: Run cargo test --lib -p semio and fix any compile/test regressions
-   status: in_progress
+   status: completed
 isProject: false
 ---
 

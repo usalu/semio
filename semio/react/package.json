@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx"
+    "test": "cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx"
   },
   "dependencies": {
     "@semio/js": "*",
