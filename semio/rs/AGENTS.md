@@ -15,6 +15,13 @@ bundle:
 
 ## 🛠️ Mechanisms
 
+### Layout
+
+- Crate root: [`src/lib.rs`](src/lib.rs) (domain + tests + WASM).
+- [`KitGraphSession`](src/lib.rs) owns `Arc<RwLock<Kit>>` (`kit_handle()` for shared access).
+- Kit lookups: `design`, `design_mut`, `semio_type`, `semio_type_mut`, `file`, `folder`, `author`, `tag`, `concept`, `quality`, `port` (replacing `*_by_guid`).
+- Future: split I/O into [`src/io/`](src/io/README.md); extra tests under [`src/tests/`](src/tests/extra_smoke.rs).
+
 ## 📛 Entities
 
 ### Kit

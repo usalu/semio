@@ -20158,9 +20158,11 @@ if (shouldRunEmbeddedJsTests) {
     DesignWithDiffCases,
     FilterKitCases,
     FindReplaceableTypesCases,
+    RepresentationSelectionCases,
     FlattenCases,
     SyntheticFindReplaceableKit,
     ExportDesignModelCases,
+    ExportDesignRepresentationCases,
     DeleteCases,
     CopyPasteCases,
   } = await import("@semio/assets");
@@ -20230,6 +20232,23 @@ if (shouldRunEmbeddedJsTests) {
     const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
     writeFileSync(reportPath, bytes);
     return reportPath;
+  };
+
+  const runExportReportCommand = async (command: string, args: string[], cwd: string) => {
+    const { execFileSync } = await import("node:child_process");
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        execFileSync(command, args, {
+          cwd,
+          stdio: "pipe",
+        });
+        return;
+      } catch (error) {
+        if (attempt === 2) {
+          throw error;
+        }
+      }
+    }
   };
 
   const roundSceneNumber = (value: number) => {

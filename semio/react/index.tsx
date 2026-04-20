@@ -1297,9 +1297,9 @@ if (shouldRunEmbeddedTests) {
 		});
 
 		it("generates schema property events from snapshots", () => {
-			const before = store.getSnapshot();
-			store.replace(asKitInstance({ ...(before.kit.toJSON() as any), name: "Evented Kit" }));
-			const events = diffSchemaPropertyEvents(before, store.getSnapshot());
+			const before = { guid: "kit-event", name: "Initial Kit", release: "0.1.0", types: [], designs: [] } as any;
+			const after = { ...before, name: "Evented Kit" } as any;
+			const events = diffSchemaPropertyEvents(before, after);
 			expect(events.some((event) => event.key === "Kit.name")).toBe(true);
 		});
 

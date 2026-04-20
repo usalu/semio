@@ -4,40 +4,40 @@ overview: "Ground-up rewrite of `semio/rs` as a purely object-oriented, pointer-
 todos:
  - id: scaffold
    content: Move semio/rs/lib.rs to semio/rs/src/ with per-concept files; update Cargo.toml path; set up empty module tree.
-   status: in_progress
+   status: completed
  - id: core_entities
    content: Define Guid newtype + pointer-based Kit / Type / Design / Piece / Connection / Connector / Representation / Port structs with Arc<RwLock<T>> children and Weak<RwLock<T>> parents.
-   status: pending
+   status: completed
  - id: leaf_entities
    content: Port the leaf value objects (Attribute, Prop, Quality, Benchmark, Stat, Tag, Concept, Author, File, Folder, Layer, Group, Side, Location, Coord/Vector/Plane) onto the new model.
-   status: pending
+   status: completed
  - id: lazy_caches
    content: Add OnceLock-based derived caches (hash, flatten, resolved_connectors, child_plane_matrix, validation) and uniform invalidate_* methods that bubble up through Weak parents.
-   status: pending
+   status: completed
  - id: delete_free_fns
    content: Delete mod guid_ref/has_guid_trait/meta_and_shallow_types/apply_diff/filter/copy_paste_design/kit_representation_export/geometric_insights/validation_types/kit_workflow/kit_kind_types/kit_diff_validation/find_replaceable_types_in_designs and all *_by_guid lookups; fold logic into methods.
-   status: pending
+   status: completed
  - id: diff_session
    content: Re-house KitDiff / DesignDiff / apply_diff / inverse_forward_diff / validate_diff as impl Kit/Design methods; rewrite KitGraphSession around Arc<RwLock<Kit>>.
-   status: pending
+   status: completed
  - id: dto_boundary
    content: Reduce *Dto structs to pure serde shapes plus a single Kit::from_dto resolver and Kit::to_dto serializer per entity; delete intermediate From<&X> / From<&XDto> chains.
-   status: pending
+   status: completed
  - id: io
    content: Port JSON / SQLite / ZIP import-export as methods on Kit in src/io/*.rs; delete mod sqlite_import_export / mod zip_import_export free functions.
-   status: pending
+   status: completed
  - id: wasm
    content: Rewrite src/wasm.rs to delegate to the new OO API while keeping identical JS-visible binding names.
-   status: pending
+   status: completed
  - id: consumer
    content: Update semio/algorithms/native-bridges/rs/src/main.rs to the new API (kit.design(g), design.flatten(), etc.).
-   status: pending
+   status: completed
  - id: tests
    content: Port the existing ~84 tests (mod tests, mod benchmark, mod kit_backbone_async) to the new OO API, split into semio/rs/src/tests/; cargo test --lib -p semio green.
-   status: pending
+   status: completed
  - id: verify
    content: cargo build for host and wasm32; cargo test; smoke-test semio-algorithms-native-bridges-rs with a fixture kit.
-   status: pending
+   status: completed
 isProject: false
 ---
 

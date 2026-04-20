@@ -31,14 +31,14 @@ use std::cell::RefCell;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::PI;
 use std::rc::Rc;
-use std::sync::{Arc, Weak};
+use std::sync::{Arc, RwLock, Weak};
 use thiserror::Error;
 use uuid::Uuid;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 mod utility_functions {
-    /// <summary>🔑Guid represents a UUID string identifier.</summary>
+    /// <summary>🔑Guid represents a UUID string identifier (JSON / transport).</summary>
     /// <remarks>
     /// </remarks>
     use super::*;
@@ -7212,7 +7212,7 @@ mod filter {
     }
 
     fn filter_kit_by_design_impl(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
-        let design = match kit.design_by_guid(design_guid) {
+        let design = match kit.design(design_guid) {
             Some(design) => design,
             None => {
                 return Kit {
@@ -7258,7 +7258,7 @@ mod filter {
             }
         }
 
-        let type_by_guid: HashMap<String, Arc<Type>> = kit
+        let types_index: HashMap<String, Arc<Type>> = kit
             .types
             .as_ref()
             .map(|types| {
@@ -7276,7 +7276,7 @@ mod filter {
             .map(|v| v.iter().map(|d| d.guid.clone()).collect())
             .unwrap_or_default();
         for gid in &used_type_guids {
-            if let Some(t) = type_by_guid.get(gid) {
+            if let Some(t) = types_index.get(gid) {
                 for g in &t.family_membership_guids {
                     family_ids.insert(g.clone());
                 }
@@ -7332,7 +7332,7 @@ mod filter {
         };
 
         for type_guid in &used_type_guids {
-            let Some(type_item) = type_by_guid.get(type_guid) else {
+            let Some(type_item) = types_index.get(type_guid) else {
                 continue;
             };
             if let Some(folder) = type_item.folder.as_ref() {
@@ -7515,7 +7515,7 @@ mod find_replaceable_types_in_designs {
         design_guid: &str,
         piece_guids: &[String],
     ) -> (Vec<String>, Vec<String>) {
-        let design = match kit.design_by_guid(design_guid) {
+        let design = match kit.design(design_guid) {
             Some(d) => d,
             None => return (vec![], vec![]),
         };
@@ -8881,7 +8881,7 @@ mod kit_representation_export {
         }
 
         let design = kit
-            .design_by_guid(design_guid)
+            .design(design_guid)
             .ok_or_else(|| SemioError::NotFound {
                 kind: "Design".to_string(),
                 guid: design_guid.to_string(),
@@ -10156,7 +10156,7 @@ mod sqlite_import_export {
                 message: e.to_string(),
             })?;
 
-            conn.execute_batch(include_str!("../sqlite/schema.sql"))
+            conn.execute_batch(include_str!("../../sqlite/schema.sql"))
                 .map_err(|e| SemioError::Database {
                     message: format!("Schema creation failed: {}", e),
                 })?;
@@ -11776,7 +11776,7 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "findTypeInKit")]
         pub fn wasm_find_type_in_kit(kit_json: &str, guid: &str) -> JsValue {
             match Kit::from_json_str(kit_json) {
-                Ok(kit) => match kit.type_by_guid(guid) {
+                Ok(kit) => match kit.semio_type(guid) {
                     Some(t) => to_js_value(WasmResult::success(t.clone())),
                     None => to_js_value(WasmResult::<Type>::failure(format!(
                         "Type {} not found",
@@ -11790,7 +11790,7 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "findDesignInKit")]
         pub fn wasm_find_design_in_kit(kit_json: &str, guid: &str) -> JsValue {
             match Kit::from_json_str(kit_json) {
-                Ok(kit) => match kit.design_by_guid(guid) {
+                Ok(kit) => match kit.design(guid) {
                     Some(d) => to_js_value(WasmResult::success(d.clone())),
                     None => to_js_value(WasmResult::<Design>::failure(format!(
                         "Design {} not found",
@@ -18621,7 +18621,7 @@ pub struct FlattenDesign<'a> {
 
 impl<'a> FlattenDesign<'a> {
     pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
-        let design = kit.design_by_guid(design_guid)?;
+        let design = kit.design(design_guid)?;
         let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
         let connections = design
             .connections
@@ -19037,7 +19037,7 @@ impl Kit {
     }
 
     #[inline]
-    pub fn design_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Design> {
+    pub fn design<'a>(&'a self, guid: &str) -> Option<&'a Design> {
         self.designs
             .as_ref()?
             .iter()
@@ -19045,7 +19045,7 @@ impl Kit {
             .map(|d| d.as_ref())
     }
     #[inline]
-    pub fn design_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Design> {
+    pub fn design_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Design> {
         self.designs
             .as_mut()?
             .iter_mut()
@@ -19053,7 +19053,7 @@ impl Kit {
             .map(|d| std::sync::Arc::make_mut(d))
     }
     #[inline]
-    pub fn type_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Type> {
+    pub fn semio_type<'a>(&'a self, guid: &str) -> Option<&'a Type> {
         self.types
             .as_ref()?
             .iter()
@@ -19061,7 +19061,7 @@ impl Kit {
             .map(|t| t.as_ref())
     }
     #[inline]
-    pub fn type_by_guid_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Type> {
+    pub fn semio_type_mut<'a>(&'a mut self, guid: &str) -> Option<&'a mut Type> {
         self.types
             .as_mut()?
             .iter_mut()
@@ -19096,37 +19096,37 @@ impl Kit {
         Some(conn.child_plane_matrix(&parent_connector, &child_connector))
     }
     #[inline]
-    pub fn file_by_guid<'a>(&'a self, guid: &str) -> Option<&'a File> {
+    pub fn file<'a>(&'a self, guid: &str) -> Option<&'a File> {
         self.files.as_ref()?.iter().find(|f| f.guid == guid)
     }
     #[inline]
-    pub fn folder_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Folder> {
+    pub fn folder<'a>(&'a self, guid: &str) -> Option<&'a Folder> {
         self.folders.as_ref()?.iter().find(|f| f.guid == guid)
     }
     #[inline]
-    pub fn author_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Author> {
+    pub fn author<'a>(&'a self, guid: &str) -> Option<&'a Author> {
         self.authors.as_ref()?.iter().find(|a| a.guid == guid)
     }
     #[inline]
-    pub fn tag_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Tag> {
+    pub fn tag<'a>(&'a self, guid: &str) -> Option<&'a Tag> {
         self.tags.as_ref()?.iter().find(|t| t.guid == guid)
     }
     #[inline]
-    pub fn concept_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Concept> {
+    pub fn concept<'a>(&'a self, guid: &str) -> Option<&'a Concept> {
         self.concepts.as_ref()?.iter().find(|c| c.guid == guid)
     }
     #[inline]
-    pub fn quality_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Quality> {
+    pub fn quality<'a>(&'a self, guid: &str) -> Option<&'a Quality> {
         self.qualities.as_ref()?.iter().find(|q| q.guid == guid)
     }
     #[inline]
-    pub fn port_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Port> {
+    pub fn port<'a>(&'a self, guid: &str) -> Option<&'a Port> {
         self.ports.as_ref()?.iter().find(|p| p.guid == guid)
     }
 
     /// Sum numeric prop values for a quality across a design (piece props, then type-level fallback).
     pub fn sum_quality_for_design_guid(&self, design_guid: &str, quality_guid: &str) -> f64 {
-        let Some(design) = self.design_by_guid(design_guid) else {
+        let Some(design) = self.design(design_guid) else {
             return 0.0;
         };
         let Some(pieces) = &design.pieces else {
@@ -19165,7 +19165,7 @@ impl Kit {
         change: DesignChange,
     ) -> SemioReport<DesignChange> {
         let pieces_empty = self
-            .design_by_guid(design_guid)
+            .design(design_guid)
             .and_then(|d| d.pieces.as_ref())
             .map(|p| p.is_empty())
             .unwrap_or(true);
@@ -19186,7 +19186,7 @@ impl Kit {
 
     /// Forward/backward [`DesignChange`] for flattening layout (planes / centers).
     pub fn flatten_design_change_for_guid(&self, design_guid: &str) -> DesignChange {
-        let design = match self.design_by_guid(design_guid) {
+        let design = match self.design(design_guid) {
             Some(d) => d,
             None => {
                 let empty_diff = DesignDiff {
@@ -19228,7 +19228,7 @@ impl Kit {
 
     /// Canonical flatten report for a design GUID (computed planes / centers).
     pub fn flatten_design_report(&self, design_guid: &str) -> SemioReport<DesignChange> {
-        if self.design_by_guid(design_guid).is_none() {
+        if self.design(design_guid).is_none() {
             return SemioReport::err(vec![OperationNote {
                 code: Some("flatten.design-not-found".into()),
                 message: format!("Design {design_guid} not found in kit"),
@@ -19261,7 +19261,7 @@ impl Kit {
     ) {
         let new_hashes = self.compute_flat_hashes(design_guid);
         let change = self.flatten_design_change_for_guid(design_guid);
-        let report = if self.design_by_guid(design_guid).is_none() {
+        let report = if self.design(design_guid).is_none() {
             SemioReport::err(vec![OperationNote {
                 code: Some("flatten.design-not-found".into()),
                 message: format!("Design {design_guid} not found in kit"),
@@ -20948,7 +20948,8 @@ struct KitOpenTransaction {
 }
 
 struct KitGraphSessionInner {
-    kit: Kit,
+    /// Authoritative kit graph; session mutations serialize through this lock.
+    kit: Arc<RwLock<Kit>>,
     strict_mode: bool,
     is_conflicted: bool,
     open_transactions: HashMap<String, KitOpenTransaction>,
@@ -20966,7 +20967,7 @@ impl KitGraphSession {
     pub fn new(kit: Kit) -> Self {
         Self {
             inner: Mutex::new(KitGraphSessionInner {
-                kit,
+                kit: Arc::new(RwLock::new(kit)),
                 strict_mode: false,
                 is_conflicted: false,
                 open_transactions: HashMap::new(),
@@ -20980,7 +20981,7 @@ impl KitGraphSession {
     pub fn with_backbone(kit: Kit, backbone: Box<dyn KitBackbone>) -> Self {
         Self {
             inner: Mutex::new(KitGraphSessionInner {
-                kit,
+                kit: Arc::new(RwLock::new(kit)),
                 strict_mode: false,
                 is_conflicted: false,
                 open_transactions: HashMap::new(),
@@ -20989,6 +20990,17 @@ impl KitGraphSession {
                 backbone: Some(backbone),
             }),
         }
+    }
+
+    /// Shared handle to the kit (read/write through [`RwLock`]).
+    pub fn kit_handle(&self) -> Result<Arc<RwLock<Kit>>> {
+        let g = self
+            .inner
+            .lock()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession mutex poisoned".into(),
+            })?;
+        Ok(Arc::clone(&g.kit))
     }
 
     pub fn set_backbone(&self, backbone: Option<Box<dyn KitBackbone>>) -> Result<()> {
@@ -21031,17 +21043,23 @@ impl KitGraphSession {
             .map_err(|_| SemioError::InvalidOperation {
                 message: "KitGraphSession mutex poisoned".into(),
             })?;
-        Ok(f(&g.kit))
+        let kit = g.kit.read().map_err(|_| SemioError::InvalidOperation {
+            message: "KitGraphSession kit lock poisoned".into(),
+        })?;
+        Ok(f(&*kit))
     }
 
     pub fn map_kit_mut<T, F: FnOnce(&mut Kit) -> T>(&self, f: F) -> Result<T> {
-        let mut g = self
+        let g = self
             .inner
             .lock()
             .map_err(|_| SemioError::InvalidOperation {
                 message: "KitGraphSession mutex poisoned".into(),
             })?;
-        Ok(f(&mut g.kit))
+        let mut kit = g.kit.write().map_err(|_| SemioError::InvalidOperation {
+            message: "KitGraphSession kit lock poisoned".into(),
+        })?;
+        Ok(f(&mut *kit))
     }
 
     /// Validates against the current kit, inverts, applies, then records transaction/history/backbone (see [`KitCommitOptions`]).
@@ -21075,7 +21093,13 @@ impl KitGraphSession {
             });
         }
         let id = SemioUtil::generate_guid();
-        let start_kit = g.kit.clone();
+        let start_kit = g
+            .kit
+            .read()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?
+            .clone();
         g.open_transactions.insert(
             id.clone(),
             KitOpenTransaction {
@@ -21106,7 +21130,12 @@ impl KitGraphSession {
             });
         }
         for step in tx.steps.iter().rev() {
-            g.kit.apply_diff(&step.backward);
+            g.kit
+                .write()
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "KitGraphSession kit lock poisoned".into(),
+                })?
+                .apply_diff(&step.backward);
         }
         Ok(())
     }
@@ -21130,7 +21159,12 @@ impl KitGraphSession {
             }
         })?;
         let sk = &tx.start_kit;
-        let forward_raw = sk.diff_from(&g.kit);
+        let forward_raw = {
+            let cur = g.kit.read().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?;
+            sk.diff_from(&*cur)
+        };
         let validation = sk.validate_diff(&forward_raw, false);
         if !validation.ok || !validation.errors.is_empty() {
             g.open_transactions.insert(transaction_id.to_string(), tx);
@@ -21197,7 +21231,12 @@ impl KitGraphSession {
             tx.steps.pop()
         };
         let Some(ch) = ch else { return Ok(()) };
-        g.kit.apply_diff(&ch.backward);
+        g.kit
+            .write()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?
+            .apply_diff(&ch.backward);
         g.open_transactions
             .get_mut(transaction_id)
             .expect("transaction id checked")
@@ -21231,7 +21270,12 @@ impl KitGraphSession {
             tx.redo_steps.pop()
         };
         let Some(ch) = ch else { return Ok(()) };
-        g.kit.apply_diff(&ch.forward);
+        g.kit
+            .write()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?
+            .apply_diff(&ch.forward);
         g.open_transactions
             .get_mut(transaction_id)
             .expect("transaction id checked")
@@ -21255,7 +21299,12 @@ impl KitGraphSession {
         let Some(ch) = g.history_past.pop() else {
             return Ok(());
         };
-        g.kit.apply_diff(&ch.backward);
+        g.kit
+            .write()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?
+            .apply_diff(&ch.backward);
         g.history_future.push(ch);
         Ok(())
     }
@@ -21275,7 +21324,12 @@ impl KitGraphSession {
         let Some(ch) = g.history_future.pop() else {
             return Ok(());
         };
-        g.kit.apply_diff(&ch.forward);
+        g.kit
+            .write()
+            .map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?
+            .apply_diff(&ch.forward);
         g.history_past.push(ch);
         Ok(())
     }
@@ -21310,7 +21364,12 @@ impl KitGraphSessionInner {
             });
         }
 
-        let validation = self.kit.validate_diff(&diff, false);
+        let validation = {
+            let kit = self.kit.read().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?;
+            kit.validate_diff(&diff, false)
+        };
         if !validation.ok || !validation.errors.is_empty() {
             self.is_conflicted = true;
             return Err(SemioError::Validation {
@@ -21335,8 +21394,18 @@ impl KitGraphSessionInner {
         }
 
         let diff_to_apply = validation.diff.clone().unwrap_or_else(|| diff.clone());
-        let backward = self.kit.inverse_forward_diff(&diff_to_apply);
-        self.kit.apply_diff(&diff_to_apply);
+        let backward = {
+            let kit = self.kit.read().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?;
+            kit.inverse_forward_diff(&diff_to_apply)
+        };
+        {
+            let mut kit = self.kit.write().map_err(|_| SemioError::InvalidOperation {
+                message: "KitGraphSession kit lock poisoned".into(),
+            })?;
+            kit.apply_diff(&diff_to_apply);
+        }
 
         let change = KitGraphChange {
             forward: diff_to_apply,
@@ -21367,16 +21436,6 @@ impl KitGraphSessionInner {
         self.is_conflicted = false;
         Ok(change)
     }
-}
-
-/// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
-#[deprecated(note = "use KitGraphSession::commit or KitGraphSession::commit_graph_change")]
-pub fn commit_kit_graph_change(
-    session: &KitGraphSession,
-    diff: KitDiff,
-    opts: KitCommitOptions,
-) -> Result<KitGraphChange> {
-    session.commit_graph_change(diff, opts)
 }
 
 // 🏦FlattenDesign
@@ -21610,6 +21669,10 @@ pub struct FlatMerkleCacheEntry {
 }
 
 // #endregion 🌳Flatten Merkle Hashes
+
+#[cfg(test)]
+#[path = "tests/extra_smoke.rs"]
+mod extra_smoke_tests;
 
 mod tests {
 
