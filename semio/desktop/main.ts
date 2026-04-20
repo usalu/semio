@@ -72,7 +72,7 @@ app.on("activate", () => {
 });
 
 app.whenReady().then(async () => {
-  app.setAppUserModelId("com.electron");
+  app.setAppUserRepresentationId("com.electron");
 
   const resolveKitEntryPath = (folderPath: string, entryPath: string) => {
     const rootPath = path.resolve(folderPath);

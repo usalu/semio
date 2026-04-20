@@ -1,39 +1,38 @@
 // #region 🧲Header
 // 💻 semio/algorithms/.storybook/stories/CopyAndPaste.stories.tsx
-// Specs: Copy/paste proxies through native adapters and the native copy/paste selectors.
-// Summary: Copy/paste Storybook shells with native adapters, source selection, and diff/output previews.
+// Specs: Copy/paste proxies through @semio/react entity helpers backed by semio/rs.
+// Summary: Copy/paste Storybook shells with KitEntity-backed copy/paste, source selection, and diff/output previews.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/js";
-import { Design as DesignEntity, Kit, type Kit as KitType } from "@semio/js";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Design, DesignDiff, DesignPlain, PasteDesignAnchoringKind } from "@semio/react";
+import { Design as DesignEntity, Kit } from "@semio/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
 import { SemioDiagram } from "@semio/ui";
 import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef, type VecValue } from "../../index";
-import { nativeCopyDesign, nativeFlatDesign, nativePasteDesign, type NativeAlgorithmLanguage } from "../../nativeAlgorithmAdapter";
-import { useAlgorithmLanguage } from "../withLanguage";
+import { copyDesign, flatDesign, pasteDesign } from "../../index";
 
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "../../../assets/index";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = ((metabolismKit as any).designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
 const pasteTargetDesign = NakaginCapsuleTowerPasteDesign as unknown as Design;
 
 /** Omits t_f1_b_c1 and t_f0→t_f1 link so t_f1 is external-stub in clipboard; includes t_f5/regressions. */
-const omitFromCopySelectionPieceGuids = new Set<string>(["31be08e1-e75c-4024-86b4-c3c6d3939fbb"]);
-const omitFromCopySelectionConnectionGuids = new Set<string>(["b1ecc6c5-722a-4814-9047-a87222bbaa4d"]);
-const selectionPieceGuids = Array.from(
+const omitFromCopySelectionPieceIds = new Set<string>(["31be08e1-e75c-4024-86b4-c3c6d3939fbb"]);
+const omitFromCopySelectionConnectionIds = new Set<string>(["b1ecc6c5-722a-4814-9047-a87222bbaa4d"]);
+const selectionPieceIds = Array.from(
   new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).pieces ?? []) as { guid: string }[]).map((p) => p.guid), "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9", "5feebbf8-33d9-41ad-a13a-24c271a1860b"].filter((g) => !omitFromCopySelectionPieceGuids.has(g)),
+    [...(((NakaginCapsuleTowerCopySelection as any).pieces ?? []) as { id: string }[]).map((p) => p.id), "9c1ec7a2-13c2-4d23-b7bd-1efe2663d0a9", "5feebbf8-33d9-41ad-a13a-24c271a1860b"].filter((g) => !omitFromCopySelectionPieceIds.has(g)),
   ),
 ) as string[];
-const selectionConnectionGuids = Array.from(
+const selectionConnectionIds = Array.from(
   new Set(
-    [...(((NakaginCapsuleTowerCopySelection as any).connections ?? []) as { guid: string }[]).map((c) => c.guid), "eb8ce9ce-091c-4495-a651-fa703748dfef", "4d5ff333-d70a-43e1-8b7a-8849c8c91405"].filter(
-      (g) => !omitFromCopySelectionConnectionGuids.has(g),
+    [...(((NakaginCapsuleTowerCopySelection as any).connections ?? []) as { id: string }[]).map((c) => c.id), "eb8ce9ce-091c-4495-a651-fa703748dfef", "4d5ff333-d70a-43e1-8b7a-8849c8c91405"].filter(
+      (g) => !omitFromCopySelectionConnectionIds.has(g),
     ),
   ),
 ) as string[];
@@ -107,7 +106,7 @@ const WINDOWS_WITH: AlgorithmWindowDef[] = [
   { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
   { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
   { id: "cp-anchor", kind: WindowKind.DESIGN_INPUT, label: "Paste anchoring", component: PasteAnchoringWindow },
-  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coord" },
+  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coordinate" },
   { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
@@ -142,7 +141,7 @@ const LAYOUT_WITH = {
           { kind: "stack" as const, size: 36, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
           { kind: "stack" as const, size: 24, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
           { kind: "stack" as const, size: 18, children: [{ kind: "window" as const, windowKindId: "cp-anchor", title: "Paste anchoring" }] },
-          { kind: "stack" as const, size: 22, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coord" }] },
+          { kind: "stack" as const, size: 22, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coordinate" }] },
         ],
       },
       { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
@@ -154,14 +153,13 @@ const LAYOUT_WITH = {
 export type CopyPasteStoryMode = "without" | "with";
 
 function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
-  const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const kitWithPasteTarget = React.useMemo(() => ({ ...kit, designs: [...(kit.designs ?? []), pasteTargetDesign] }), [kit]);
   const [flatSourceDesign, setFlatSourceDesign] = React.useState<Design | null>(null);
   const [flatPasteTargetDesign, setFlatPasteTargetDesign] = React.useState<Design | null>(null);
   const [layoutReady, setLayoutReady] = React.useState(false);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>(selectionPieceGuids);
-  const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>(selectionConnectionGuids);
+  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>(selectionPieceIds);
+  const [selectedConnectionIds, setSelectedConnectionIds] = React.useState<string[]>(selectionConnectionIds);
   const [vec, setVec] = React.useState<VecValue>({ u: 10, v: 10 });
   const [pasteAnchoring, setPasteAnchoring] = React.useState<PasteDesignAnchoringKind>("original");
   const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
@@ -176,7 +174,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     setLayoutReady(false);
     setDesignDiff(undefined);
     void (async () => {
-      const [flatSrc, flatTgt] = await Promise.all([nativeFlatDesign(kit, rawDesign.guid, language), nativeFlatDesign(kitWithPasteTarget, pasteTargetDesign.guid, language)]);
+      const [flatSrc, flatTgt] = await Promise.all([flatDesign(kit, rawDesign.id), flatDesign(kitWithPasteTarget, pasteTargetDesign.id)]);
       if (cancelled) return;
       setFlatSourceDesign(flatSrc);
       setFlatPasteTargetDesign(flatTgt);
@@ -185,36 +183,36 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
     return () => {
       cancelled = true;
     };
-  }, [kit, kitWithPasteTarget, language]);
+  }, [kit, kitWithPasteTarget]);
 
   React.useEffect(() => {
     if (!layoutReady || !flatSourceDesign) return;
     let cancelled = false;
     void (async () => {
-      if (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) {
+      if (selectedPieceIds.length === 0 && selectedConnectionIds.length === 0) {
         if (!cancelled) setDesignDiff(undefined);
         return;
       }
       setDesignDiff(undefined);
-      const copyRes = await nativeCopyDesign(kit, flatSourceDesign, selectedPieceGuids, selectedConnectionGuids, language);
+      const copyRes = await copyDesign(kit, flatSourceDesign, selectedPieceIds, selectedConnectionIds);
       if (cancelled) return;
       if (!copyRes.ok) return;
       const copied = copyRes.diff;
-      const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
-      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coord, language);
+      const coordinate = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
+      const diff = await pasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coordinate);
       if (!cancelled) setDesignDiff(diff);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, flatSourceDesign, layoutReady, selectedPieceGuids, selectedConnectionGuids, language, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
+  }, [kit, flatSourceDesign, layoutReady, selectedPieceIds, selectedConnectionIds, mode, pasteAnchoring, mode === "with" ? vec.u : 0, mode === "with" ? vec.v : 0]);
 
   const outputDesign = React.useMemo(() => {
     if (!flatPasteTargetDesign) return pasteTargetDesign as Design;
     if (!designDiff) return flatPasteTargetDesign as Design;
-    const k = Kit.ensure(kitWithPasteTarget as KitType);
+    void Kit.ensure(kitWithPasteTarget);
     const plain = (flatPasteTargetDesign as DesignEntity).toPlain?.() ?? (JSON.parse(JSON.stringify(flatPasteTargetDesign)) as DesignPlain);
-    const next = new DesignEntity(plain, k);
+    const next = new DesignEntity(plain);
     next.applyDiff(designDiff);
     return next;
   }, [designDiff, flatPasteTargetDesign, kitWithPasteTarget]);
@@ -231,22 +229,22 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
             vecMax: { u: 50, v: 50 },
           }
         : {}),
-      selectedPieceGuids,
-      onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      selectedConnectionGuids,
-      onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
+      selectedPieceIds,
+      onSelectedPieceIdsChange: setSelectedPieceIds,
+      selectedConnectionIds,
+      onSelectedConnectionIdsChange: setSelectedConnectionIds,
       designDiff,
       diffDesign: (flatPasteTargetDesign ?? pasteTargetDesign) as Design,
       outputDesign,
       error: !layoutReady
-        ? `Loading copy & paste preview (${language})…`
-        : selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0
+        ? "Loading copy & paste preview…"
+        : selectedPieceIds.length === 0 && selectedConnectionIds.length === 0
           ? "Select at least one piece or connection to copy."
           : !designDiff
-            ? `Loading paste result (${language})…`
+            ? "Loading paste result…"
             : undefined,
     }),
-    [kit, flatSourceDesign, flatPasteTargetDesign, layoutReady, selectedPieceGuids, selectedConnectionGuids, vec, designDiff, outputDesign, language, mode],
+    [kit, flatSourceDesign, flatPasteTargetDesign, layoutReady, selectedPieceIds, selectedConnectionIds, vec, designDiff, outputDesign, mode],
   );
 
   const windowContextValue = React.useMemo<CopyPasteWindowContextValue>(() => ({ flatPasteTargetDesign: flatPasteTargetDesign ?? undefined, pasteAnchoring, onPasteAnchoringChange: setPasteAnchoring }), [flatPasteTargetDesign, pasteAnchoring]);
@@ -271,12 +269,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithoutCoord: Story = {
+export const WithoutCoordinate: Story = {
   args: { mode: "without" },
   render: (args) => <CopyAndPasteFrame {...args} />,
 };
 
-export const WithCoord: Story = {
+export const WithCoordinate: Story = {
   args: { mode: "with" },
   render: (args) => <CopyAndPasteFrame {...args} />,
 };

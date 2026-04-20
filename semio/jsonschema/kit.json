@@ -110,12 +110,25 @@
             "type": "object"
         },
         "Connector": {
-            "description": "Output fields returned when fetching a connector.",
+            "description": "Type-owned connector; names the filled port (geometry lives on Port).",
             "properties": {
                 "id_": {
                     "default": "",
                     "maxLength": 128,
                     "title": "Id",
+                    "type": "string"
+                },
+                "name": {
+                    "default": "",
+                    "maxLength": 256,
+                    "title": "Name",
+                    "type": "string"
+                },
+                "code": {
+                    "default": "",
+                    "maxLength": 256,
+                    "description": "Legacy alias for name (serde)",
+                    "title": "Code",
                     "type": "string"
                 },
                 "description": {
@@ -124,40 +137,8 @@
                     "title": "Description",
                     "type": "string"
                 },
-                "is_mandatory": {
-                    "default": false,
-                    "title": "Is Mandatory",
-                    "type": "boolean"
-                },
-                "maxChildren": {
-                    "default": 1,
-                    "minimum": 0,
-                    "title": "Maxchildren",
-                    "type": "integer"
-                },
                 "port": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Port",
-                    "type": "string"
-                },
-                "compatiblePorts": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "title": "Compatibleports",
-                    "type": "array"
-                },
-                "point": {
-                    "$ref": "#/$defs/Point"
-                },
-                "direction": {
-                    "$ref": "#/$defs/Vector"
-                },
-                "t": {
-                    "default": 0.0,
-                    "title": "T",
-                    "type": "number"
+                    "$ref": "#/$defs/PortId"
                 },
                 "attributes": {
                     "items": {
@@ -168,14 +149,13 @@
                 }
             },
             "required": [
-                "point",
-                "direction"
+                "port"
             ],
             "title": "Connector",
             "type": "object"
         },
-        "Coord": {
-            "description": "\ud83d\udfe1Output fields returned when fetching a coord.",
+        "Coordinate": {
+            "description": "\ud83d\udfe1Output fields returned when fetching a coordinate.",
             "properties": {
                 "u": {
                     "title": "U",
@@ -190,7 +170,7 @@
                 "u",
                 "v"
             ],
-            "title": "Coord",
+            "title": "Coordinate",
             "type": "object"
         },
         "DesignId": {
@@ -250,29 +230,13 @@
                     "title": "Updated",
                     "type": "string"
                 },
-                "parent": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Parent"
-                },
-                "is_abstract": {
-                    "anyOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Is Abstract"
+                "families": {
+                    "description": "Referenced connector families (ids).",
+                    "items": {
+                        "$ref": "#/$defs/FamilyId"
+                    },
+                    "title": "Families",
+                    "type": "array"
                 },
                 "folder": {
                     "anyOf": [
@@ -358,12 +322,188 @@
             "title": "Design",
             "type": "object"
         },
+        "FamilyId": {
+            "description": "Reference to a kit family by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
+            "type": "object"
+        },
+        "Family": {
+            "description": "Kit-level family grouping ports.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                },
+                "name": {
+                    "maxLength": 256,
+                    "type": "string"
+                },
+                "description": {
+                    "default": "",
+                    "maxLength": 512,
+                    "type": "string"
+                },
+                "icon": {
+                    "default": "",
+                    "maxLength": 1024,
+                    "type": "string"
+                },
+                "ports": {
+                    "items": {
+                        "$ref": "#/$defs/Port"
+                    },
+                    "title": "Ports",
+                    "type": "array"
+                },
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "title": "Attributes",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ],
+            "title": "Family",
+            "type": "object"
+        },
+        "PortId": {
+            "description": "Port reference by id.",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "PortId",
+            "type": "object"
+        },
+        "Port": {
+            "description": "Family-scoped or kit-level port (placement + compatibility).",
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                },
+                "name": {
+                    "default": "",
+                    "type": "string"
+                },
+                "description": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "icon": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "mandatory": {
+                    "anyOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "t": {
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "point": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Point"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "direction": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Vector"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "compatiblePorts": {
+                    "items": {
+                        "$ref": "#/$defs/PortId"
+                    },
+                    "title": "CompatiblePorts",
+                    "type": "array"
+                },
+                "compatibleFamilies": {
+                    "items": {
+                        "$ref": "#/$defs/FamilyId"
+                    },
+                    "title": "CompatibleFamilies",
+                    "type": "array"
+                },
+                "attributes": {
+                    "items": {
+                        "$ref": "#/$defs/Attribute"
+                    },
+                    "title": "Attributes",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "Port",
+            "type": "object"
+        },
         "Folder": {
             "description": "Output fields returned when fetching a folder.",
             "properties": {
-                "guid": {
+                "id": {
                     "maxLength": 128,
-                    "title": "Guid",
+                    "title": "Id",
                     "type": "string"
                 },
                 "name": {
@@ -435,7 +575,7 @@
                 }
             },
             "required": [
-                "guid",
+                "id",
                 "name",
                 "createdAt",
                 "updatedAt"
@@ -474,8 +614,8 @@
             "title": "Location",
             "type": "object"
         },
-        "Model": {
-            "description": "Output fields returned when fetching a model.",
+        "Representation": {
+            "description": "Output fields returned when fetching a representation.",
             "properties": {
                 "url": {
                     "maxLength": 1024,
@@ -525,7 +665,7 @@
                 "url",
                 "file"
             ],
-            "title": "Model",
+            "title": "Representation",
             "type": "object"
         },
         "PieceId": {
@@ -592,7 +732,7 @@
                 "center": {
                     "anyOf": [
                         {
-                            "$ref": "#/$defs/Coord"
+                            "$ref": "#/$defs/Coordinate"
                         },
                         {
                             "type": "null"
@@ -738,12 +878,6 @@
         "TypeId": {
             "description": "\ud83d\udd16Identity fields for uniquely identifying a type.",
             "properties": {
-                "variant": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Variant",
-                    "type": "string"
-                },
                 "name": {
                     "maxLength": 64,
                     "title": "Name",
@@ -808,29 +942,13 @@
                     "title": "Updated",
                     "type": "string"
                 },
-                "parent": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Parent"
-                },
-                "is_abstract": {
-                    "anyOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Is Abstract"
+                "families": {
+                    "description": "Referenced connector families (ids).",
+                    "items": {
+                        "$ref": "#/$defs/FamilyId"
+                    },
+                    "title": "Families",
+                    "type": "array"
                 },
                 "folder": {
                     "anyOf": [
@@ -855,11 +973,11 @@
                     ],
                     "default": null
                 },
-                "models": {
+                "representations": {
                     "items": {
-                        "$ref": "#/$defs/Model"
+                        "$ref": "#/$defs/Representation"
                     },
-                    "title": "Models",
+                    "title": "Representations",
                     "type": "array"
                 },
                 "connectors": {
@@ -902,6 +1020,80 @@
                 "name"
             ],
             "title": "Type",
+            "type": "object"
+        },
+        "KitSnapshotRef": {
+            "description": "Parameters to materialize a kit snapshot (VCS + optional uncommitted transaction).",
+            "properties": {
+                "kitId": {
+                    "maxLength": 128,
+                    "type": "string"
+                },
+                "alternativeId": {
+                    "anyOf": [
+                        {
+                            "maxLength": 128,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "checkpointId": {
+                    "anyOf": [
+                        {
+                            "maxLength": 128,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "sessionId": {
+                    "anyOf": [
+                        {
+                            "maxLength": 128,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "draftId": {
+                    "anyOf": [
+                        {
+                            "maxLength": 128,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                },
+                "transactionId": {
+                    "anyOf": [
+                        {
+                            "maxLength": 128,
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null
+                }
+            },
+            "required": [
+                "kitId"
+            ],
+            "title": "KitSnapshotRef",
             "type": "object"
         },
         "Vector": {
@@ -965,12 +1157,6 @@
             "title": "Preview",
             "type": "string"
         },
-        "version": {
-            "default": "",
-            "maxLength": 64,
-            "title": "Version",
-            "type": "string"
-        },
         "remote": {
             "default": "",
             "maxLength": 1024,
@@ -1011,6 +1197,13 @@
                 "$ref": "#/$defs/Design"
             },
             "title": "Designs",
+            "type": "array"
+        },
+        "families": {
+            "items": {
+                "$ref": "#/$defs/Family"
+            },
+            "title": "Families",
             "type": "array"
         },
         "folders": {

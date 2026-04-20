@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -9,6 +9,13 @@ const require = createRequire(join(__dirname, '..', '..', 'package.json'));
 const esbuild = require('esbuild');
 
 export async function resolve(specifier, context, nextResolve) {
+  if (specifier === '@semio/rs-wasm') {
+    return {
+      url: pathToFileURL(join(__dirname, '..', 'rs', 'pkg', 'semio.js')).href,
+      format: 'module',
+      shortCircuit: true,
+    };
+  }
   // Stub every CSS module as empty ESM. Relying on `format: css-noop` + load() still hit Node's
   // "Unknown file extension .css" for some package subpaths (e.g. @xyflow/react/dist/style.css).
   const cssish =

@@ -161,15 +161,15 @@ class Program
 
     static Design FindDesign(Kit kit, string name, string? parentName = null)
     {
-        string? parentGuid = null;
+        string? parentId = null;
         if (parentName != null)
         {
             var p = kit.Designs.FirstOrDefault(d => d.Name == parentName);
             if (p == null) throw new Exception($"Parent {parentName} not found");
-            parentGuid = p.Guid;
+            parentId = p.Id;
         }
 
-        var d = kit.Designs.FirstOrDefault(d => d.Name == name && (parentGuid != null ? d.Parent?.Guid == parentGuid : d.Parent == null));
+        var d = kit.Designs.FirstOrDefault(d => d.Name == name && (parentId != null ? d.Parent?.Id == parentId : d.Parent == null));
         if (d == null) throw new Exception($"Design {name} not found");
         return d;
     }
@@ -181,9 +181,8 @@ class Program
         kitOriginal.Designs = kitOriginal.Designs.Where(d => d.Parent == null).ToList();
         var kitDiffed = LoadAsset<Kit>("metabolism.kit.diffed.semio.json");
         var kitInvalid = LoadAsset<Kit>("invalid.kit.semio.json");
-        var metabolismChange = SemioDiff.GetKitChange(kitOriginal, kitDiffed);
-        var diffForward = metabolismChange.Forward;
-        var diffInverse = metabolismChange.Backward;
+        var diffForward = LoadAsset<KitDiff>("metabolism.kit.diff.semio.json");
+        var diffInverse = LoadAsset<KitDiff>("metabolism.kit.diff.inverted.semio.json");
 
         Bench("Roundtrip/Metabolism", () =>
         {
@@ -194,44 +193,46 @@ class Program
 
         Bench("Diff/Metabolism", () =>
         {
-            var k2 = SemioDiff.ApplyKitDiff(kitOriginal, diffForward);
+            var k2 = Utility.Deserialize<Kit>(Utility.Serialize(kitOriginal))!;
+            KitInPlaceDiff.ApplyKitDiff(k2, diffForward);
             if (!SemioDiff.AreKitsEqual(k2, kitDiffed)) throw new Exception("Diff/Metabolism forward output does not match test expectation");
-            var restored = SemioDiff.ApplyKitDiff(k2, diffInverse);
+            var restored = Utility.Deserialize<Kit>(Utility.Serialize(k2))!;
+            KitInPlaceDiff.ApplyKitDiff(restored, diffInverse);
             if (!SemioDiff.AreKitsEqual(restored, kitOriginal)) throw new Exception("Diff/Metabolism inverse output does not match test expectation");
         });
 
         var d1 = FindDesign(kitMetabolism, "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower", () =>
         {
-            var flat = Kit.FlattenDesignDiff(kitMetabolism, d1.Guid);
+            var flat = Kit.FlattenDesignDiff(kitMetabolism, d1.Id);
             if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower output does not match test expectation");
         });
 
         var d2 = FindDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () =>
         {
-            var flat = Kit.FlattenDesignDiff(kitMetabolism, d2.Guid);
+            var flat = Kit.FlattenDesignDiff(kitMetabolism, d2.Id);
             if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Slanted output does not match test expectation");
         });
 
         var d3 = FindDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () =>
         {
-            var flat = Kit.FlattenDesignDiff(kitMetabolism, d3.Guid);
+            var flat = Kit.FlattenDesignDiff(kitMetabolism, d3.Id);
             if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Twisted output does not match test expectation");
         });
 
         var d4 = FindDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () =>
         {
-            var flat = Kit.FlattenDesignDiff(kitMetabolism, d4.Guid);
+            var flat = Kit.FlattenDesignDiff(kitMetabolism, d4.Id);
             if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Nakagin Capsule Tower/Dancing output does not match test expectation");
         });
 
         var d5 = FindDesign(kitMetabolism, "Capsule Dream");
         Bench("Flatten Design/Capsule Dream", () =>
         {
-            var flat = Kit.FlattenDesignDiff(kitMetabolism, d5.Guid);
+            var flat = Kit.FlattenDesignDiff(kitMetabolism, d5.Id);
             if (flat.Pieces?.Updated == null || flat.Pieces.Updated.Count == 0) throw new Exception("Flatten Design/Capsule Dream output does not match test expectation");
         });
 

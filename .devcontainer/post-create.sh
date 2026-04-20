@@ -220,12 +220,10 @@ fi
 #endregion 🔖Python
 #region 🔖Go
 echo "Building Go binaries..."
-if cd ./repo/cli && go build; then
+if go build -o ./repo/client/client ./repo/mcp; then
   echo "✅ Go CLI built successfully."
-  cd ../..
 else
   echo "⚠️  Go build failed, but continuing..."
-  cd ../..
 fi
 #endregion 🔖Go
 #region 🔖Dotnet
@@ -275,7 +273,7 @@ fi
 #endregion 🔖Playwright
 #region 🔖GitHooks
 echo "Configuring git hooks and agent hook configs..."
-if ./repo/cli/cli configure; then
+if ./repo/client/client configure; then
   echo "✅ Git hooks configured successfully."
 else
   echo "⚠️  Git hooks configuration failed, but continuing..."
@@ -302,7 +300,7 @@ cat << 'MCPCONFIG' > /home/vscode/.gemini/antigravity/mcp_config.json
 {
   "mcpServers": {
     "repo": {
-      "command": "/workspaces/semio/repo/cli/cli",
+      "command": "/workspaces/semio/repo/client/client",
       "args": [
         "mcp"
       ]

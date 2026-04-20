@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Barrel export for all asset modules including icons, fonts, models and images.
+// Barrel export for all asset modules including icons, fonts, representations and images.
 
 // #endregion 🧲Header
 
@@ -27,7 +27,7 @@ export { default as MetabolismKitDiff } from "./semio/metabolism.kit.diff.semio.
 export { default as MetabolismKitDiffed } from "./semio/metabolism.kit.diffed.semio.json";
 export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
 export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";
-export { default as ModelSelectionCases } from "./semio/model.selection.semio.json";
+export { default as RepresentationSelectionCases } from "./semio/representation.selection.semio.json";
 export { default as NakaginCapsuleTowerCopySelection } from "./semio/nakagin-capsule-tower.copy.design.selection.semio.json";
 export { default as NakaginCapsuleTowerCopyDesign } from "./semio/nakagin-capsule-tower.copy.design.semio.json";
 export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./semio/nakagin-capsule-tower.deleted.design.diff.semio.json";
@@ -36,7 +36,7 @@ export { default as MetabolismKitFilteredNakaginCapsuleTower, default as Nakagin
 export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
 export { default as NakaginCapsuleTowerPasteDesignDiff } from "./semio/nakagin-capsule-tower.paste.design.diff.semio.json";
 export { default as NakaginCapsuleTowerPasteDesign } from "./semio/nakagin-capsule-tower.paste.design.semio.json";
-export { default as NakaginCapsuleTowerPasteWithCoordDesignDiff } from "./semio/nakagin-capsule-tower.paste.with-coord.design.diff.semio.json";
+export { default as NakaginCapsuleTowerPasteWithCoordinateDesignDiff } from "./semio/nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json";
 export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";
 export { default as NakaginCapsuleTowerWithDiffDesign } from "./semio/nakagin-capsule-tower.with-diff.design.semio.json";
 export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "./semio/nakgin-capsule-tower.diff.design.semio.json";
@@ -52,7 +52,7 @@ export { default as FilterKitCases } from "./semio/filter-kit.cases.semio.json";
 export { default as FindReplaceableTypesCases } from "./semio/find-replaceable-types.cases.semio.json";
 export { default as FlattenCases } from "./semio/flatten.cases.semio.json";
 export { default as SyntheticFindReplaceableKit } from "./semio/synthetic-find-replaceable.kit.semio.json";
-export { default as ExportDesignModelCases } from "./semio/export-design-model.cases.semio.json";
+export { default as ExportDesignRepresentationCases } from "./semio/export-design-representation.cases.semio.json";
 export { default as DeleteCases } from "./semio/delete.cases.semio.json";
 export { default as CopyPasteCases } from "./semio/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };
@@ -103,20 +103,20 @@ export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unkn
 export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => design.name === "Nakagin Capsule Tower") ?? [];
 
 /**
- * Builds guid and name lookup maps from an item array
+ * Builds id and name lookup maps from an item array
  *
- * Callers MUST provide an array of objects with optional guid and name fields
+ * Callers MUST provide an array of objects with optional id and name fields
  * buildLookup holds the data fields for a buildLookup record.
  **/
 const buildLookup = (items: any[] = []) => {
-  const byGuid: Record<string, any> = {};
+  const byId: Record<string, any> = {};
   const byName: Record<string, any> = {};
   items.forEach((item) => {
     if (!item) return;
-    if (item.guid) byGuid[item.guid] = item;
+    if (item.id) byId[item.id] = item;
     if (item.name) byName[item.name] = item;
   });
-  return { byGuid, byName };
+  return { byId, byName };
 };
 
 /**
@@ -124,34 +124,34 @@ const buildLookup = (items: any[] = []) => {
  **/
 const typeLookup = buildLookup(MetabolismKitTypes);
 /**
- * Design lookup maps by guid and name
+ * Design lookup maps by id and name
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
- * Family lookup maps by guid and name
+ * Family lookup maps by id and name
  **/
 const familyLookup = buildLookup(MetabolismKitFamilies);
 
 /**
- * Metabolism kit types indexed by guid
+ * Metabolism kit types indexed by id
  **/
-export const MetabolismKitTypesByGuid = typeLookup.byGuid;
+export const MetabolismKitTypesById = typeLookup.byId;
 /**
  * Metabolism kit types indexed by name
  **/
 export const MetabolismKitTypesByName = typeLookup.byName;
 /**
- * Metabolism kit designs indexed by guid
+ * Metabolism kit designs indexed by id
  **/
-export const MetabolismKitDesignsByGuid = designLookup.byGuid;
+export const MetabolismKitDesignsById = designLookup.byId;
 /**
  * Metabolism kit designs indexed by name
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
 /**
- * Metabolism kit families indexed by guid
+ * Metabolism kit families indexed by id
  **/
-export const MetabolismKitFamiliesByGuid = familyLookup.byGuid;
+export const MetabolismKitFamiliesById = familyLookup.byId;
 /**
  * Metabolism kit families indexed by name
  **/
@@ -163,7 +163,7 @@ const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "N
 /**
  * nakaginCapsuleTowerFlatDesign holds the data fields for a nakaginCapsuleTowerFlatDesign record.
  **/
-const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
+const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && (d as any).parent?.id === nakaginCapsuleTowerDesign?.id);
 /**
  * Nakagin Capsule Tower Flat variant piece data with plane and center
  **/

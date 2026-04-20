@@ -5,8 +5,7 @@
       "command": "go",
       "args": [
         "run",
-        "./repo/cli",
-        "mcp"
+        "./repo/kiro"
       ]
     }
   }

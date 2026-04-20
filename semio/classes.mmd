@@ -189,17 +189,17 @@ class TagStore {
   +toFullDto() TagFullDto
 }
 
-class ModelStore {
-  +ModelStore(dto: ModelIdDto)
-  +ModelStore(dto: ModelInputDto)
-  +ModelStore(dto: ModelMetadataDto)
-  +ModelStore(dto: ModelShallowDto)
-  +ModelStore(dto: ModelFullDto)
-  +toIdDto() ModelIdDto
-  +toInputDto() ModelInputDto
-  +toMetadataDto() ModelMetadataDto
-  +toShallowDto() ModelShallowDto
-  +toFullDto() ModelFullDto
+class RepresentationStore {
+  +RepresentationStore(dto: RepresentationIdDto)
+  +RepresentationStore(dto: RepresentationInputDto)
+  +RepresentationStore(dto: RepresentationMetadataDto)
+  +RepresentationStore(dto: RepresentationShallowDto)
+  +RepresentationStore(dto: RepresentationFullDto)
+  +toIdDto() RepresentationIdDto
+  +toInputDto() RepresentationInputDto
+  +toMetadataDto() RepresentationMetadataDto
+  +toShallowDto() RepresentationShallowDto
+  +toFullDto() RepresentationFullDto
 }
 
 class PortStore {
@@ -789,10 +789,10 @@ class TagFullDto {
   +attributes: AttributeFullDto[]
 }
 
-class ModelIdDto {
+class RepresentationIdDto {
   +id: String
 }
-class ModelInputDto {
+class RepresentationInputDto {
   +id: String
   +name: String
   +tags: TagIdDto[]
@@ -800,7 +800,7 @@ class ModelInputDto {
   +description: String
   +attributes: AttributeInputDto[]
 }
-class ModelMetadataDto {
+class RepresentationMetadataDto {
   <<abstract>>
   +id: String
   +name: String
@@ -808,7 +808,7 @@ class ModelMetadataDto {
   +file: FileIdDto
   +description: String
 }
-class ModelShallowDto {
+class RepresentationShallowDto {
   <<abstract>>
   +id: String
   +name: String
@@ -817,7 +817,7 @@ class ModelShallowDto {
   +description: String
   +attributes: AttributeMetadataDto[]
 }
-class ModelFullDto {
+class RepresentationFullDto {
   <<abstract>>
   +id: String
   +name: String
@@ -1185,7 +1185,7 @@ class TypeInputDto {
   +parent: TypeIdDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelInputDto[]
+  +representations: RepresentationInputDto[]
   +connectors: ConnectorInputDto[]
   +props: PropInputDto[]
   +stock: Int
@@ -1227,7 +1227,7 @@ class TypeShallowDto {
   +parent: TypeMetadataDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelMetadataDto[]
+  +representations: RepresentationMetadataDto[]
   +connectors: ConnectorMetadataDto[]
   +props: PropMetadataDto[]
   +stock: Int
@@ -1250,7 +1250,7 @@ class TypeFullDto {
   +parent: TypeMetadataDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelFullDto[]
+  +representations: RepresentationFullDto[]
   +connectors: ConnectorFullDto[]
   +props: PropFullDto[]
   +stock: Int
@@ -1483,7 +1483,7 @@ QualityStore --|> Store
 BenchmarkStore --|> Store
 StatStore --|> Store
 TagStore --|> Store
-ModelStore --|> Store
+RepresentationStore --|> Store
 PortStore --|> Store
 ConnectorStore --|> Store
 PropStore --|> Store
@@ -1555,11 +1555,11 @@ TagMetadataDto --|> MetadataDto
 TagShallowDto --|> ShallowDto
 TagFullDto --|> FullDto
 
-ModelIdDto --|> IdDto
-ModelInputDto --|> InputDto
-ModelMetadataDto --|> MetadataDto
-ModelShallowDto --|> ShallowDto
-ModelFullDto --|> FullDto
+RepresentationIdDto --|> IdDto
+RepresentationInputDto --|> InputDto
+RepresentationMetadataDto --|> MetadataDto
+RepresentationShallowDto --|> ShallowDto
+RepresentationFullDto --|> FullDto
 
 PortIdDto --|> IdDto
 PortInputDto --|> InputDto

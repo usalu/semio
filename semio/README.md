@@ -2,7 +2,7 @@
 name: semio
 kind: user
 emoji: 🧩
-summary: ✏️ Design-Information-Modeling for Kit-of-Parts 🧩
+summary: ✏️ Design-Information-Representationing for Kit-of-Parts 🧩
 ---
 
 # 📑 Overview
@@ -64,7 +64,7 @@ Additional [`connections`](#-connection-) which where not used in the _placement
 
 ### 🏠 Type [↑](#-concepts-)
 
-A [`type`](#-type-) is a reusable component with different [`models`](#-model-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
+A [`type`](#-type-) is a reusable component with different [`representations`](#-representation-), [`connectors`](#-port-), [`attributes`](#%EF%B8%8F-attribute-), [`concepts`](#%EF%B8%8F-concept-), and [`authors`](#-author-) 🧱
 
 A [`type`](#-type-) is _proto_ (a _prototype_) when it has no _parent_.
 
@@ -108,13 +108,13 @@ It is enough for one [`connector`](#-port-) to be compatible with another [`conn
 
 A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
-### 💾 Model [↑](#-concepts-)
+### 💾 Representation [↑](#-concepts-)
 
-A [`model`](#-model-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
+A [`representation`](#-representation-) is a **[`tagged`](#%EF%B8%8F-tag-)** **[`url`](#-url-)** to a resource with an optional **description** 📄
 
-No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
+No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ representation 🔑
 
-The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
+The similarity of [`representations`](#-representation-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
 ### 🏷️ Attribute [↑](#-concepts-)
 

@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"archive/zip"
 	"database/sql"
@@ -55,7 +56,7 @@ const AssetsPath = "../assets/semio"
 
 // #region 📦Utilities
 
-// 🎲Guid generates a new random 128-bit hex-encoded unique identifier.
+// 🎲Id generates a new random 128-bit hex-encoded unique identifier.
 // 📎ptrString returns a pointer to the given string value.
 func ptrString(s string) *string { return &s }
 
@@ -102,7 +103,7 @@ func areLocationIdsEqual(a, b *LocationId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func areTypeIdsEqual(a, b *TypeId) bool {
@@ -112,7 +113,7 @@ func areTypeIdsEqual(a, b *TypeId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func areDesignIdsEqual(a, b *DesignId) bool {
@@ -122,7 +123,7 @@ func areDesignIdsEqual(a, b *DesignId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func areTypeIdSlicesEqual(a, b []TypeId) bool {
@@ -130,7 +131,7 @@ func areTypeIdSlicesEqual(a, b []TypeId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -142,7 +143,7 @@ func areDesignIdSlicesEqual(a, b []DesignId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -156,7 +157,7 @@ func arePortIdsEqual(a, b *PortId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func areLayerIdsEqual(a, b *LayerId) bool {
@@ -166,7 +167,7 @@ func areLayerIdsEqual(a, b *LayerId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func normalizeOptInt(p *int) int {
@@ -181,7 +182,7 @@ func areAuthorIdsEqual(a, b []AuthorId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -193,7 +194,7 @@ func areConceptIdsEqual(a, b []ConceptId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -205,7 +206,7 @@ func arePortIdSlicesEqual(a, b []PortId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -217,7 +218,7 @@ func areFamilyIdSlicesEqual(a, b []FamilyId) bool {
 		return false
 	}
 	for i := range a {
-		if a[i].Guid != b[i].Guid {
+		if a[i].Id != b[i].Id {
 			return false
 		}
 	}
@@ -230,10 +231,10 @@ func areAttributesEqual(a, b []Attribute) bool {
 	}
 	aMap := make(map[string]Attribute)
 	for _, attr := range a {
-		aMap[attr.Guid] = attr
+		aMap[attr.Id] = attr
 	}
 	for _, attr := range b {
-		other, ok := aMap[attr.Guid]
+		other, ok := aMap[attr.Id]
 		if !ok {
 			return false
 		}
@@ -256,21 +257,21 @@ func arePropsEqual(a, b []Prop) bool {
 	}
 	aMap := make(map[string]Prop)
 	for _, p := range a {
-		aMap[p.Guid] = p
+		aMap[p.Id] = p
 	}
 	for _, p := range b {
-		other, ok := aMap[p.Guid]
+		other, ok := aMap[p.Id]
 		if !ok {
 			return false
 		}
-		if p.Quality.Guid != other.Quality.Guid || p.Value != other.Value || normalizeStr(p.Unit) != normalizeStr(other.Unit) {
+		if p.Quality.Id != other.Quality.Id || p.Value != other.Value || normalizeStr(p.Unit) != normalizeStr(other.Unit) {
 			return false
 		}
 	}
 	return true
 }
 
-func Guid() string {
+func Id() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
@@ -302,94 +303,94 @@ func DeepEqual(a, b interface{}) bool {
 // #region 🐍Entity IDs
 // Entity IDs MUST define identifier types for all semio domain entities.
 
-// 💎AttributeId identifies an attribute entity by GUID.
+// 💎AttributeId identifies an attribute entity by ID.
 type AttributeId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📍LocationId identifies a location entity by GUID.
+// 📍LocationId identifies a location entity by ID.
 type LocationId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// ✍️AuthorId identifies an author entity by GUID.
+// ✍️AuthorId identifies an author entity by ID.
 type AuthorId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📄FileId identifies a file entity by GUID.
+// 📄FileId identifies a file entity by ID.
 type FileId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📁FolderId identifies a folder entity by GUID.
+// 📁FolderId identifies a folder entity by ID.
 type FolderId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📏BenchmarkId identifies a benchmark entity by GUID.
+// 📏BenchmarkId identifies a benchmark entity by ID.
 type BenchmarkId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🔬QualityId identifies a quality entity by GUID.
+// 🔬QualityId identifies a quality entity by ID.
 type QualityId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// ⚓PortId identifies a port entity by GUID.
+// ⚓PortId identifies a port entity by ID.
 type PortId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 👪FamilyId identifies a first-class family entity by GUID.
+// 👪FamilyId identifies a first-class family entity by ID.
 type FamilyId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📊PropId identifies a prop entity by GUID.
+// 📊PropId identifies a prop entity by ID.
 type PropId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🏷️TagId identifies a tag entity by GUID.
+// 🏷️TagId identifies a tag entity by ID.
 type TagId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 💡ConceptId identifies a concept entity by GUID.
+// 💡ConceptId identifies a concept entity by ID.
 type ConceptId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🗿ModelId identifies a model entity by GUID.
-type ModelId struct {
-	Guid string `json:"guid"`
+// 🗿RepresentationId identifies a representation entity by ID.
+type RepresentationId struct {
+	Id string `json:"id"`
 }
 
-// 🔌ConnectorId identifies a connector entity by GUID.
+// 🔌ConnectorId identifies a connector entity by ID.
 type ConnectorId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🧱TypeId identifies a type entity by GUID.
+// 🧱TypeId identifies a type entity by ID.
 type TypeId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🎨LayerId identifies a layer entity by GUID.
+// 🎨LayerId identifies a layer entity by ID.
 type LayerId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 🧩PieceId identifies a piece entity by GUID.
+// 🧩PieceId identifies a piece entity by ID.
 type PieceId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 👥GroupId identifies a group entity by GUID.
+// 👥GroupId identifies a group entity by ID.
 type GroupId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
 // ↔️SideId identifies a connection side by piece, design piece and connector references.
@@ -399,24 +400,24 @@ type SideId struct {
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// 🔗ConnectionId identifies a connection entity by GUID.
+// 🔗ConnectionId identifies a connection entity by ID.
 type ConnectionId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📈StatId identifies a stat entity by GUID.
+// 📈StatId identifies a stat entity by ID.
 type StatId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📐DesignId identifies a design entity by GUID.
+// 📐DesignId identifies a design entity by ID.
 type DesignId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
-// 📦KitId identifies a kit entity by GUID.
+// 📦KitId identifies a kit entity by ID.
 type KitId struct {
-	Guid string `json:"guid"`
+	Id string `json:"id"`
 }
 
 // #endregion 🐍Entity IDs
@@ -424,8 +425,8 @@ type KitId struct {
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
-// 📺Coord represents a 2D coordinate with U and V components.
-type Coord struct {
+// 📺Coordinate represents a 2D coordinate with U and V components.
+type Coordinate struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
@@ -470,7 +471,7 @@ type Camera struct {
 
 // 💎Attribute represents a key-value metadata entry with optional definition.
 type Attribute struct {
-	Guid       string  `json:"guid"`
+	Id       string  `json:"id"`
 	Key        string  `json:"key"`
 	Value      *string `json:"value,omitempty"`
 	Definition *string `json:"definition,omitempty"`
@@ -495,7 +496,7 @@ type AttributesDiff struct {
 
 // 📇AttributeMeta represents the scalar-only view of an attribute excluding nested arrays.
 type AttributeMeta struct {
-	Guid       string  `json:"guid"`
+	Id       string  `json:"id"`
 	Key        string  `json:"key"`
 	Value      *string `json:"value,omitempty"`
 	Definition *string `json:"definition,omitempty"`
@@ -507,7 +508,7 @@ type AttributeMeta struct {
 
 // 📍Location represents a geographic point with longitude, latitude and optional altitude.
 type Location struct {
-	Guid       string      `json:"guid"`
+	Id       string      `json:"id"`
 	Longitude  float64     `json:"longitude"`
 	Latitude   float64     `json:"latitude"`
 	Altitude   *float64    `json:"altitude,omitempty"`
@@ -528,7 +529,7 @@ type LocationDiff struct {
 
 // ✍️Author represents a named contributor with optional email and timestamps.
 type Author struct {
-	Guid       string      `json:"guid"`
+	Id       string      `json:"id"`
 	Name       string      `json:"name"`
 	Email      *string     `json:"email,omitempty"`
 	Attributes []Attribute `json:"attributes,omitempty"`
@@ -555,7 +556,7 @@ type AuthorsDiff struct {
 
 // 👤AuthorMeta represents the scalar-only view of an author excluding the attributes array.
 type AuthorMeta struct {
-	Guid      string  `json:"guid"`
+	Id      string  `json:"id"`
 	Name      string  `json:"name"`
 	Email     *string `json:"email,omitempty"`
 	CreatedAt string  `json:"createdAt,omitempty"`
@@ -568,7 +569,7 @@ type AuthorMeta struct {
 
 // 📄File represents a file reference entity with name, remote URL and metadata.
 type File struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Remote      *string     `json:"remote,omitempty"`
 	Folder      *FolderId   `json:"folder,omitempty"`
@@ -605,7 +606,7 @@ type FilesDiff struct {
 
 // 🗒️FileMeta represents the scalar-only view of a file excluding blob data and attributes.
 type FileMeta struct {
-	Guid        string    `json:"guid"`
+	Id        string    `json:"id"`
 	Name        string    `json:"name"`
 	Remote      *string   `json:"remote,omitempty"`
 	Folder      *FolderId `json:"folder,omitempty"`
@@ -622,7 +623,7 @@ type FileMeta struct {
 
 // 📁Folder represents a folder hierarchy entity with name and parent reference.
 type Folder struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Parent      *FolderId   `json:"parent,omitempty"`
 	Description *string     `json:"description,omitempty"`
@@ -651,7 +652,7 @@ type FoldersDiff struct {
 
 // 🏠FolderMeta represents the scalar-only view of a folder excluding attributes.
 type FolderMeta struct {
-	Guid        string    `json:"guid"`
+	Id        string    `json:"id"`
 	Name        string    `json:"name"`
 	Parent      *FolderId `json:"parent,omitempty"`
 	Description *string   `json:"description,omitempty"`
@@ -665,7 +666,7 @@ type FolderMeta struct {
 
 // 📏Benchmark represents a named metric range with min/max bounds and optional icon.
 type Benchmark struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Icon        *string     `json:"icon,omitempty"`
 	Min         *float64    `json:"min,omitempty"`
@@ -716,7 +717,7 @@ const (
 
 // 🔬Quality represents a measurable property with formula, units and benchmarks.
 type Quality struct {
-	Guid                string      `json:"guid"`
+	Id                string      `json:"id"`
 	Key                 string      `json:"key"`
 	Name                string      `json:"name"`
 	Description         *string     `json:"description,omitempty"`
@@ -775,7 +776,7 @@ type QualitiesDiff struct {
 
 // 🔎QualityMeta represents the scalar-only view of a quality excluding benchmarks and attributes.
 type QualityMeta struct {
-	Guid                string      `json:"guid"`
+	Id                string      `json:"id"`
 	Key                 string      `json:"key"`
 	Name                string      `json:"name"`
 	Description         *string     `json:"description,omitempty"`
@@ -803,7 +804,7 @@ type QualityMeta struct {
 
 // ⚓Port represents a named connector port category with compatible port references.
 type Port struct {
-	Guid            string      `json:"guid"`
+	Id            string      `json:"id"`
 	Name            string      `json:"name"`
 	Description     *string     `json:"description,omitempty"`
 	Icon            *string     `json:"icon,omitempty"`
@@ -864,7 +865,7 @@ type PortsDiff struct {
 
 // 🪝PortMeta represents the scalar-only view of a port excluding compatible ports and attributes.
 type PortMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Icon        *string `json:"icon,omitempty"`
@@ -879,7 +880,7 @@ type PortMeta struct {
 
 // 👪Family represents a composable artifact family that owns its connector ports.
 type Family struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Icon        *string     `json:"icon,omitempty"`
@@ -938,7 +939,7 @@ type FamiliesDiff struct {
 
 // 🪪FamilyMeta represents the scalar-only view of a family.
 type FamilyMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Icon        *string `json:"icon,omitempty"`
@@ -948,7 +949,7 @@ type FamilyMeta struct {
 
 // 🧾FamilyShallow represents a family including its port metadata.
 type FamilyShallow struct {
-	Guid        string     `json:"guid"`
+	Id        string     `json:"id"`
 	Name        string     `json:"name"`
 	Description *string    `json:"description,omitempty"`
 	Icon        *string    `json:"icon,omitempty"`
@@ -963,7 +964,7 @@ type FamilyShallow struct {
 
 // 📊Prop represents a quality measurement value with optional unit.
 type Prop struct {
-	Guid       string      `json:"guid"`
+	Id       string      `json:"id"`
 	Quality    QualityId   `json:"quality"`
 	Value      string      `json:"value"`
 	Unit       *string     `json:"unit,omitempty"`
@@ -990,7 +991,7 @@ type PropsDiff struct {
 
 // 🏺PropMeta represents the scalar-only view of a prop excluding attributes.
 type PropMeta struct {
-	Guid    string    `json:"guid"`
+	Id    string    `json:"id"`
 	Quality QualityId `json:"quality"`
 	Value   string    `json:"value"`
 	Unit    *string   `json:"unit,omitempty"`
@@ -1002,7 +1003,7 @@ type PropMeta struct {
 
 // 🏷️Tag represents a named classification label with optional description and icon.
 type Tag struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Icon        *string     `json:"icon,omitempty"`
@@ -1059,7 +1060,7 @@ type TagsDiff struct {
 
 // 🎗️TagMeta represents the scalar-only view of a tag excluding attributes.
 type TagMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Icon        *string `json:"icon,omitempty"`
@@ -1073,7 +1074,7 @@ type TagMeta struct {
 
 // 💡Concept represents a named categorization concept with optional description and icon.
 type Concept struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Description *string     `json:"description,omitempty"`
 	Icon        *string     `json:"icon,omitempty"`
@@ -1130,7 +1131,7 @@ type ConceptsDiff struct {
 
 // 🧠ConceptMeta represents the scalar-only view of a concept excluding attributes.
 type ConceptMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
 	Icon        *string `json:"icon,omitempty"`
@@ -1140,11 +1141,11 @@ type ConceptMeta struct {
 
 // #endregion 💡Concept
 
-// #region 🗿Model
+// #region 🗿Representation
 
-// 🗿Model represents a 3D model reference linking a file with tags and description.
-type Model struct {
-	Guid        string      `json:"guid"`
+// 🗿Representation represents a 3D representation reference linking a file with tags and description.
+type Representation struct {
+	Id        string      `json:"id"`
 	File        FileId      `json:"file"`
 	Name        *string     `json:"name,omitempty"`
 	Tags        []TagId     `json:"tags,omitempty"`
@@ -1152,8 +1153,8 @@ type Model struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// 🖼️ModelDiff represents a partial update to a model's file, name, tags or description.
-type ModelDiff struct {
+// 🖼️RepresentationDiff represents a partial update to a representation's file, name, tags or description.
+type RepresentationDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
 	Tags        []TagId         `json:"tags,omitempty"`
@@ -1161,31 +1162,31 @@ type ModelDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🎴ModelsDiff represents batched model additions, removals and per-model updates.
-type ModelsDiff struct {
-	Removed []ModelId `json:"removed,omitempty"`
+// 🎴RepresentationsDiff represents batched representation additions, removals and per-representation updates.
+type RepresentationsDiff struct {
+	Removed []RepresentationId `json:"removed,omitempty"`
 	Updated []struct {
-		Model ModelId   `json:"model"`
-		Diff  ModelDiff `json:"diff"`
+		Representation RepresentationId   `json:"representation"`
+		Diff  RepresentationDiff `json:"diff"`
 	} `json:"updated,omitempty"`
-	Added []Model `json:"added,omitempty"`
+	Added []Representation `json:"added,omitempty"`
 }
 
-// 🎭ModelMeta represents the scalar-only view of a model excluding tags and attributes.
-type ModelMeta struct {
-	Guid        string  `json:"guid"`
+// 🎭RepresentationMeta represents the scalar-only view of a representation excluding tags and attributes.
+type RepresentationMeta struct {
+	Id        string  `json:"id"`
 	File        FileId  `json:"file"`
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🗿Model
+// #endregion 🗿Representation
 
 // #region 🔌Connector
 
 // 🔌Connector represents a spatial connection point on a type with position and direction.
 type Connector struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        *string     `json:"name,omitempty"`
 	Point       Point       `json:"point"`
 	Direction   Vector      `json:"direction"`
@@ -1238,7 +1239,7 @@ type ConnectorsDiff struct {
 
 // 📎ConnectorMeta represents the scalar-only view of a connector excluding props and attributes.
 type ConnectorMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        *string `json:"name,omitempty"`
 	Point       Point   `json:"point"`
 	Direction   Vector  `json:"direction"`
@@ -1253,9 +1254,9 @@ type ConnectorMeta struct {
 
 // #region 🧱Type
 
-// 🧱Type represents a component blueprint with models, connectors and hierarchical inheritance.
+// 🧱Type represents a component blueprint with representations, connectors and hierarchical inheritance.
 type Type struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
@@ -1264,7 +1265,7 @@ type Type struct {
 	Stock       *int        `json:"stock,omitempty"`
 	Location    *LocationId `json:"location,omitempty"`
 	Folder      *string     `json:"folder,omitempty"`
-	Models      []Model     `json:"models,omitempty"`
+	Representations      []Representation     `json:"representations,omitempty"`
 	Connectors  []Connector `json:"connectors,omitempty"`
 	Props       []Prop      `json:"props,omitempty"`
 	Authors     []AuthorId  `json:"authors,omitempty"`
@@ -1277,7 +1278,7 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ⚒️TypeDiff represents a partial update to a type's name, models, connectors or props.
+// ⚒️TypeDiff represents a partial update to a type's name, representations, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Families    []FamilyId      `json:"families,omitempty"`
@@ -1287,7 +1288,7 @@ type TypeDiff struct {
 	Stock       *int            `json:"stock,omitempty"`
 	Location    *LocationId     `json:"location,omitempty"`
 	Folder      *string         `json:"folder,omitempty"`
-	Models      *ModelsDiff     `json:"models,omitempty"`
+	Representations      *RepresentationsDiff     `json:"representations,omitempty"`
 	Connectors  *ConnectorsDiff `json:"connectors,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
 	Authors     []AuthorId      `json:"authors,omitempty"`
@@ -1336,9 +1337,9 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
-// 🧊TypeMeta represents the scalar-only view of a type excluding models, connectors, props and attributes.
+// 🧊TypeMeta represents the scalar-only view of a type excluding representations, connectors, props and attributes.
 type TypeMeta struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
@@ -1356,7 +1357,7 @@ type TypeMeta struct {
 
 // 🔖TypeShallow represents a Type with slice fields replaced by Meta item slices.
 type TypeShallow struct {
-	Guid        string          `json:"guid"`
+	Id        string          `json:"id"`
 	Name        string          `json:"name"`
 	Families    []FamilyId      `json:"families,omitempty"`
 	IsAbstract  *bool           `json:"isAbstract,omitempty"`
@@ -1365,7 +1366,7 @@ type TypeShallow struct {
 	Stock       *int            `json:"stock,omitempty"`
 	Location    *LocationId     `json:"location,omitempty"`
 	Folder      *string         `json:"folder,omitempty"`
-	Models      []ModelMeta     `json:"models,omitempty"`
+	Representations      []RepresentationMeta     `json:"representations,omitempty"`
 	Connectors  []ConnectorMeta `json:"connectors,omitempty"`
 	Props       []PropMeta      `json:"props,omitempty"`
 	Authors     []AuthorId      `json:"authors,omitempty"`
@@ -1384,7 +1385,7 @@ type TypeShallow struct {
 
 // 🎨Layer represents a named layer with visibility, lock and color properties.
 type Layer struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Path        string      `json:"path"`
 	IsHidden    *bool       `json:"isHidden,omitempty"`
 	IsLocked    *bool       `json:"isLocked,omitempty"`
@@ -1415,7 +1416,7 @@ type LayersDiff struct {
 
 // 🪟LayerMeta represents the scalar-only view of a layer excluding attributes.
 type LayerMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Path        string  `json:"path"`
 	IsHidden    *bool   `json:"isHidden,omitempty"`
 	IsLocked    *bool   `json:"isLocked,omitempty"`
@@ -1429,12 +1430,12 @@ type LayerMeta struct {
 
 // 🧩Piece represents a positioned component instance within a design with optional transform.
 type Piece struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        *string     `json:"name,omitempty"`
 	Type        *TypeId     `json:"type,omitempty"`
 	Design      *DesignId   `json:"design,omitempty"`
 	Plane       *Plane      `json:"plane,omitempty"`
-	Center      *Coord      `json:"center,omitempty"`
+	Center      *Coordinate      `json:"center,omitempty"`
 	Scale       *float64    `json:"scale,omitempty"`
 	MirrorPlane *Plane      `json:"mirrorPlane,omitempty"`
 	Props       []Prop      `json:"props,omitempty"`
@@ -1445,8 +1446,8 @@ type Piece struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// 🎯CoordDiff represents a partial update to a 2D coordinate's U or V value.
-type CoordDiff struct {
+// 🎯CoordinateDiff represents a partial update to a 2D coordinate's U or V value.
+type CoordinateDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
@@ -1464,7 +1465,7 @@ type PieceDiff struct {
 	Type        *TypeId         `json:"type,omitempty"`
 	Design      *DesignId       `json:"design,omitempty"`
 	Plane       *PlaneDiff      `json:"plane,omitempty"`
-	Center      *CoordDiff      `json:"center,omitempty"`
+	Center      *CoordinateDiff      `json:"center,omitempty"`
 	Scale       *float64        `json:"scale,omitempty"`
 	MirrorPlane *PlaneDiff      `json:"mirrorPlane,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
@@ -1487,12 +1488,12 @@ type PiecesDiff struct {
 
 // 🧲PieceMeta represents the scalar-only view of a piece excluding props and attributes.
 type PieceMeta struct {
-	Guid        string    `json:"guid"`
+	Id        string    `json:"id"`
 	Name        *string   `json:"name,omitempty"`
 	Type        *TypeId   `json:"type,omitempty"`
 	Design      *DesignId `json:"design,omitempty"`
 	Plane       *Plane    `json:"plane,omitempty"`
-	Center      *Coord    `json:"center,omitempty"`
+	Center      *Coordinate    `json:"center,omitempty"`
 	Scale       *float64  `json:"scale,omitempty"`
 	MirrorPlane *Plane    `json:"mirrorPlane,omitempty"`
 	IsHidden    *bool     `json:"isHidden,omitempty"`
@@ -1507,7 +1508,7 @@ type PieceMeta struct {
 
 // 👥Group represents a named collection of pieces within a design.
 type Group struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Pieces      []PieceId   `json:"pieces,omitempty"`
 	Name        *string     `json:"name,omitempty"`
 	Color       *string     `json:"color,omitempty"`
@@ -1536,7 +1537,7 @@ type GroupsDiff struct {
 
 // 🗃️GroupMeta represents the scalar-only view of a group excluding pieces and attributes.
 type GroupMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        *string `json:"name,omitempty"`
 	Color       *string `json:"color,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -1566,7 +1567,7 @@ type SideDiff struct {
 
 // 🔗Connection represents a spatial relationship between two pieces with gap, shift and rotation.
 type Connection struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Connected   Side        `json:"connected"`
 	Connecting  Side        `json:"connecting"`
 	Gap         float64     `json:"gap"`
@@ -1609,7 +1610,7 @@ type ConnectionsDiff struct {
 
 // 🧷ConnectionMeta represents the scalar-only view of a connection excluding attributes.
 type ConnectionMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Connected   Side    `json:"connected"`
 	Connecting  Side    `json:"connecting"`
 	Gap         float64 `json:"gap"`
@@ -1629,7 +1630,7 @@ type ConnectionMeta struct {
 
 // 📈Stat represents a statistical quality measurement with min/max bounds and unit.
 type Stat struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Quality     QualityId   `json:"quality"`
 	Min         *float64    `json:"min,omitempty"`
 	MinExcluded *bool       `json:"minExcluded,omitempty"`
@@ -1660,7 +1661,7 @@ type StatsDiff struct {
 
 // 🪙StatMeta represents the scalar-only view of a stat excluding attributes.
 type StatMeta struct {
-	Guid    string    `json:"guid"`
+	Id    string    `json:"id"`
 	Quality QualityId `json:"quality"`
 	Min     *float64  `json:"min,omitempty"`
 	Max     *float64  `json:"max,omitempty"`
@@ -1673,7 +1674,7 @@ type StatMeta struct {
 
 // 📐Design represents an assembly of pieces, connections, layers and groups.
 type Design struct {
-	Guid        string       `json:"guid"`
+	Id        string       `json:"id"`
 	Name        string       `json:"name"`
 	Families    []FamilyId   `json:"families,omitempty"`
 	IsAbstract  *bool        `json:"isAbstract,omitempty"`
@@ -1805,7 +1806,7 @@ type DesignsDiff struct {
 
 // 🏙️DesignMeta represents the scalar-only view of a design excluding pieces, connections and layers.
 type DesignMeta struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Families    []FamilyId  `json:"families,omitempty"`
 	IsAbstract  *bool       `json:"isAbstract,omitempty"`
@@ -1825,7 +1826,7 @@ type DesignMeta struct {
 
 // 📔DesignShallow represents a design overview with nested arrays replaced by scalar-only items.
 type DesignShallow struct {
-	Guid        string           `json:"guid"`
+	Id        string           `json:"id"`
 	Name        string           `json:"name"`
 	Families    []FamilyId       `json:"families,omitempty"`
 	IsAbstract  *bool            `json:"isAbstract,omitempty"`
@@ -2043,7 +2044,7 @@ func (r *RemoteKit) Close() {}
 
 // 📦Kit represents the root container for all domain entities.
 type Kit struct {
-	Guid        string      `json:"guid"`
+	Id        string      `json:"id"`
 	Name        string      `json:"name"`
 	Version     string      `json:"version"`
 	Types       []Type      `json:"types,omitempty"`
@@ -2139,7 +2140,7 @@ type KitsDiff struct {
 
 // 🎀KitMeta represents the scalar-only view of a kit excluding types, designs and entity arrays.
 type KitMeta struct {
-	Guid        string  `json:"guid"`
+	Id        string  `json:"id"`
 	Name        string  `json:"name"`
 	Version     string  `json:"version"`
 	Remote      *string `json:"remote,omitempty"`
@@ -2155,7 +2156,7 @@ type KitMeta struct {
 
 // 📓KitShallow represents a kit overview with nested arrays replaced by scalar-only items.
 type KitShallow struct {
-	Guid        string          `json:"guid"`
+	Id        string          `json:"id"`
 	Name        string          `json:"name"`
 	Version     string          `json:"version"`
 	Types       []TypeMeta      `json:"types,omitempty"`
@@ -2215,7 +2216,7 @@ type TagChange = Change[Tag, TagDiff]
 
 type ConceptChange = Change[Concept, ConceptDiff]
 
-type ModelChange = Change[Model, ModelDiff]
+type RepresentationChange = Change[Representation, RepresentationDiff]
 
 type ConnectorChange = Change[Connector, ConnectorDiff]
 
@@ -2240,36 +2241,36 @@ type KitChange = Change[Kit, KitDiff]
 // 🔌DeletePiecesAndConnectionsInDesign deletes pieces and connections from a design, returning a canonical SemioReport of DesignDiff.
 // Removes stale connections referencing deleted pieces.
 // 🔧Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
-func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) SemioReport[DesignDiff] {
+func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceIds []string, connectionIds []string) SemioReport[DesignDiff] {
 	deletedPieceSet := make(map[string]bool)
-	for _, g := range pieceGuids {
+	for _, g := range pieceIds {
 		deletedPieceSet[g] = true
 	}
 
 	// Find stale connections: connections referencing any deleted piece
-	staleConnectionGuids := make(map[string]bool)
+	staleConnectionIds := make(map[string]bool)
 	for _, conn := range design.Connections {
-		if deletedPieceSet[conn.Connected.Piece.Guid] || deletedPieceSet[conn.Connecting.Piece.Guid] {
-			staleConnectionGuids[conn.Guid] = true
+		if deletedPieceSet[conn.Connected.Piece.Id] || deletedPieceSet[conn.Connecting.Piece.Id] {
+			staleConnectionIds[conn.Id] = true
 		}
 	}
 
 	// All removed connections = explicit + stale
-	allRemovedConnectionGuids := make(map[string]bool)
-	for _, g := range connectionGuids {
-		allRemovedConnectionGuids[g] = true
+	allRemovedConnectionIds := make(map[string]bool)
+	for _, g := range connectionIds {
+		allRemovedConnectionIds[g] = true
 	}
-	for g := range staleConnectionGuids {
-		allRemovedConnectionGuids[g] = true
+	for g := range staleConnectionIds {
+		allRemovedConnectionIds[g] = true
 	}
 
 	// Find pieces that become fixed
-	fixedPieceGuids := []string{}
+	fixedPieceIds := []string{}
 	fixedPieceSet := make(map[string]bool)
-	for connGuid := range allRemovedConnectionGuids {
+	for connId := range allRemovedConnectionIds {
 		var conn *Connection
 		for i := range design.Connections {
-			if design.Connections[i].Guid == connGuid {
+			if design.Connections[i].Id == connId {
 				conn = &design.Connections[i]
 				break
 			}
@@ -2277,32 +2278,32 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		if conn == nil {
 			continue
 		}
-		connectingGuid := conn.Connecting.Piece.Guid
-		if deletedPieceSet[connectingGuid] {
+		connectingId := conn.Connecting.Piece.Id
+		if deletedPieceSet[connectingId] {
 			continue
 		}
 		// Check if this piece has another parent connection not in the removed set
 		hasOtherParent := false
 		for _, c := range design.Connections {
-			if c.Connecting.Piece.Guid == connectingGuid && !allRemovedConnectionGuids[c.Guid] {
+			if c.Connecting.Piece.Id == connectingId && !allRemovedConnectionIds[c.Id] {
 				hasOtherParent = true
 				break
 			}
 		}
-		if !hasOtherParent && !fixedPieceSet[connectingGuid] {
-			fixedPieceGuids = append(fixedPieceGuids, connectingGuid)
-			fixedPieceSet[connectingGuid] = true
+		if !hasOtherParent && !fixedPieceSet[connectingId] {
+			fixedPieceIds = append(fixedPieceIds, connectingId)
+			fixedPieceSet[connectingId] = true
 		}
 	}
 
 	// 🚚Build the diff
 	var piecesRemoved []PieceId
-	for _, g := range pieceGuids {
-		piecesRemoved = append(piecesRemoved, PieceId{Guid: g})
+	for _, g := range pieceIds {
+		piecesRemoved = append(piecesRemoved, PieceId{Id: g})
 	}
 
 	// Flatten the design to get absolute plane and center for each piece (canonical report merges warnings/infos).
-	flatRep := FlattenDesign(kit, design.Guid)
+	flatRep := FlattenDesign(kit, design.Id)
 	if !flatRep.Ok {
 		return semioReportErr[DesignDiff](flatRep.Errors)
 	}
@@ -2311,7 +2312,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 	ApplyDesignDiff(&flatDesign, &flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
-		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+		flatPieceMap[flatDesign.Pieces[i].Id] = &flatDesign.Pieces[i]
 	}
 
 	zero := 0.0
@@ -2321,13 +2322,13 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		XAxis:  &VectorDiff{X: &one, Y: &zero, Z: &zero},
 		YAxis:  &VectorDiff{X: &zero, Y: &one, Z: &zero},
 	}
-	zeroCenterDiff := &CoordDiff{U: &zero, V: &zero}
+	zeroCenterDiff := &CoordinateDiff{U: &zero, V: &zero}
 
 	var piecesUpdated []struct {
 		Piece PieceId   `json:"piece"`
 		Diff  PieceDiff `json:"diff"`
 	}
-	for _, g := range fixedPieceGuids {
+	for _, g := range fixedPieceIds {
 		planeDiff := identityPlaneDiff
 		centerDiff := zeroCenterDiff
 		if flatPiece, ok := flatPieceMap[g]; ok {
@@ -2343,14 +2344,14 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 			}
 			if flatPiece.Center != nil {
 				cu, cv := flatPiece.Center.U, flatPiece.Center.V
-				centerDiff = &CoordDiff{U: &cu, V: &cv}
+				centerDiff = &CoordinateDiff{U: &cu, V: &cv}
 			}
 		}
 		piecesUpdated = append(piecesUpdated, struct {
 			Piece PieceId   `json:"piece"`
 			Diff  PieceDiff `json:"diff"`
 		}{
-			Piece: PieceId{Guid: g},
+			Piece: PieceId{Id: g},
 			Diff: PieceDiff{
 				Plane:  planeDiff,
 				Center: centerDiff,
@@ -2358,15 +2359,15 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		})
 	}
 
-	// Sort removed connections by guid
-	sortedConnectionGuids := make([]string, 0, len(allRemovedConnectionGuids))
-	for g := range allRemovedConnectionGuids {
-		sortedConnectionGuids = append(sortedConnectionGuids, g)
+	// Sort removed connections by id
+	sortedConnectionIds := make([]string, 0, len(allRemovedConnectionIds))
+	for g := range allRemovedConnectionIds {
+		sortedConnectionIds = append(sortedConnectionIds, g)
 	}
-	sort.Strings(sortedConnectionGuids)
+	sort.Strings(sortedConnectionIds)
 	var connectionsRemoved []ConnectionId
-	for _, g := range sortedConnectionGuids {
-		connectionsRemoved = append(connectionsRemoved, ConnectionId{Guid: g})
+	for _, g := range sortedConnectionIds {
+		connectionsRemoved = append(connectionsRemoved, ConnectionId{Id: g})
 	}
 
 	diff := DesignDiff{}
@@ -2429,37 +2430,37 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 
 // 💎ToAttributeMeta converts an Attribute to its scalar-only Meta view.
 func ToAttributeMeta(a Attribute) AttributeMeta {
-	return AttributeMeta{Guid: a.Guid, Key: a.Key, Value: a.Value, Definition: a.Definition}
+	return AttributeMeta{Id: a.Id, Key: a.Key, Value: a.Value, Definition: a.Definition}
 }
 
 // ✍️ToAuthorMeta converts an Author to its scalar-only Meta view.
 func ToAuthorMeta(a Author) AuthorMeta {
-	return AuthorMeta{Guid: a.Guid, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
+	return AuthorMeta{Id: a.Id, Name: a.Name, Email: a.Email, CreatedAt: a.CreatedAt, UpdatedAt: a.UpdatedAt}
 }
 
 // 📄ToFileMeta converts a File to its scalar-only Meta view.
 func ToFileMeta(f File) FileMeta {
-	return FileMeta{Guid: f.Guid, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+	return FileMeta{Id: f.Id, Name: f.Name, Remote: f.Remote, Folder: f.Folder, Size: f.Size, Hash: f.Hash, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
 // 📁ToFolderMeta converts a Folder to its scalar-only Meta view.
 func ToFolderMeta(f Folder) FolderMeta {
-	return FolderMeta{Guid: f.Guid, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+	return FolderMeta{Id: f.Id, Name: f.Name, Parent: f.Parent, Description: f.Description, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
 // 🔬ToQualityMeta converts a Quality to its scalar-only Meta view.
 func ToQualityMeta(q Quality) QualityMeta {
-	return QualityMeta{Guid: q.Guid, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
+	return QualityMeta{Id: q.Id, Key: q.Key, Name: q.Name, Description: q.Description, Uri: q.Uri, Kind: q.Kind, CanScale: q.CanScale, DefaultSiUnit: q.DefaultSiUnit, DefaultImperialUnit: q.DefaultImperialUnit, Min: q.Min, IsMinExcluded: q.IsMinExcluded, Max: q.Max, IsMaxExcluded: q.IsMaxExcluded, DefaultValue: q.DefaultValue, Formula: q.Formula, Icon: q.Icon, Image: q.Image, Unit: q.Unit, CreatedAt: q.CreatedAt, UpdatedAt: q.UpdatedAt}
 }
 
 // ⚓ToPortMeta converts a Port to its scalar-only Meta view.
 func ToPortMeta(p Port) PortMeta {
-	return PortMeta{Guid: p.Guid, Name: p.Name, Description: p.Description, Icon: p.Icon, MaxChildren: p.MaxChildren, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+	return PortMeta{Id: p.Id, Name: p.Name, Description: p.Description, Icon: p.Icon, MaxChildren: p.MaxChildren, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
 }
 
 // 👪ToFamilyMeta converts a Family to its scalar-only Meta view.
 func ToFamilyMeta(f Family) FamilyMeta {
-	return FamilyMeta{Guid: f.Guid, Name: f.Name, Description: f.Description, Icon: f.Icon, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+	return FamilyMeta{Id: f.Id, Name: f.Name, Description: f.Description, Icon: f.Icon, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
 // 🧾ToFamilyShallow converts a Family to its Shallow overview with port metadata.
@@ -2468,69 +2469,69 @@ func ToFamilyShallow(f Family) FamilyShallow {
 	for i, p := range f.Ports {
 		ports[i] = ToPortMeta(p)
 	}
-	return FamilyShallow{Guid: f.Guid, Name: f.Name, Description: f.Description, Icon: f.Icon, Ports: ports, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
+	return FamilyShallow{Id: f.Id, Name: f.Name, Description: f.Description, Icon: f.Icon, Ports: ports, CreatedAt: f.CreatedAt, UpdatedAt: f.UpdatedAt}
 }
 
 // 📊ToPropMeta converts a Prop to its scalar-only Meta view.
 func ToPropMeta(p Prop) PropMeta {
-	return PropMeta{Guid: p.Guid, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
+	return PropMeta{Id: p.Id, Quality: p.Quality, Value: p.Value, Unit: p.Unit}
 }
 
 // 🏷️ToTagMeta converts a Tag to its scalar-only Meta view.
 func ToTagMeta(t Tag) TagMeta {
-	return TagMeta{Guid: t.Guid, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TagMeta{Id: t.Id, Name: t.Name, Description: t.Description, Icon: t.Icon, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 💡ToConceptMeta converts a Concept to its scalar-only Meta view.
 func ToConceptMeta(c Concept) ConceptMeta {
-	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+	return ConceptMeta{Id: c.Id, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
 }
 
-// 🗿ToModelMeta converts a Model to its scalar-only Meta view.
-func ToModelMeta(m Model) ModelMeta {
-	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
+// 🗿ToRepresentationMeta converts a Representation to its scalar-only Meta view.
+func ToRepresentationMeta(m Representation) RepresentationMeta {
+	return RepresentationMeta{Id: m.Id, File: m.File, Name: m.Name, Description: m.Description}
 }
 
 // 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
 func ToConnectorMeta(c Connector) ConnectorMeta {
-	return ConnectorMeta{Guid: c.Guid, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
+	return ConnectorMeta{Id: c.Id, Name: c.Name, Point: c.Point, Direction: c.Direction, T: c.T, Mandatory: c.Mandatory, Port: c.Port, Description: c.Description}
 }
 
 // 🎨ToLayerMeta converts a Layer to its scalar-only Meta view.
 func ToLayerMeta(l Layer) LayerMeta {
-	return LayerMeta{Guid: l.Guid, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
+	return LayerMeta{Id: l.Id, Path: l.Path, IsHidden: l.IsHidden, IsLocked: l.IsLocked, Color: l.Color, Description: l.Description}
 }
 
 // 🧩ToPieceMeta converts a Piece to its scalar-only Meta view.
 func ToPieceMeta(p Piece) PieceMeta {
-	return PieceMeta{Guid: p.Guid, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
+	return PieceMeta{Id: p.Id, Name: p.Name, Type: p.Type, Design: p.Design, Plane: p.Plane, Center: p.Center, Scale: p.Scale, MirrorPlane: p.MirrorPlane, IsHidden: p.IsHidden, IsLocked: p.IsLocked, Color: p.Color, Description: p.Description}
 }
 
 // 👥ToGroupMeta converts a Group to its scalar-only Meta view.
 func ToGroupMeta(g Group) GroupMeta {
-	return GroupMeta{Guid: g.Guid, Name: g.Name, Color: g.Color, Description: g.Description}
+	return GroupMeta{Id: g.Id, Name: g.Name, Color: g.Color, Description: g.Description}
 }
 
 // 🔗ToConnectionMeta converts a Connection to its scalar-only Meta view.
 func ToConnectionMeta(c Connection) ConnectionMeta {
-	return ConnectionMeta{Guid: c.Guid, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
+	return ConnectionMeta{Id: c.Id, Connected: c.Connected, Connecting: c.Connecting, Gap: c.Gap, Shift: c.Shift, Rise: c.Rise, Rotation: c.Rotation, Turn: c.Turn, Tilt: c.Tilt, U: c.U, V: c.V, Description: c.Description}
 }
 
 // 📈ToStatMeta converts a Stat to its scalar-only Meta view.
 func ToStatMeta(s Stat) StatMeta {
-	return StatMeta{Guid: s.Guid, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
+	return StatMeta{Id: s.Id, Quality: s.Quality, Min: s.Min, Max: s.Max, Unit: s.Unit}
 }
 
 // 🧱ToTypeMeta converts a Type to its scalar-only Meta view.
 func ToTypeMeta(t Type) TypeMeta {
-	return TypeMeta{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeMeta{Id: t.Id, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Icon: t.Icon, Image: t.Image, Description: t.Description, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
 func ToTypeShallow(t Type) TypeShallow {
-	models := make([]ModelMeta, len(t.Models))
-	for i, m := range t.Models {
-		models[i] = ToModelMeta(m)
+	representations := make([]RepresentationMeta, len(t.Representations))
+	for i, m := range t.Representations {
+		representations[i] = ToRepresentationMeta(m)
 	}
 	connectors := make([]ConnectorMeta, len(t.Connectors))
 	for i, c := range t.Connectors {
@@ -2544,12 +2545,12 @@ func ToTypeShallow(t Type) TypeShallow {
 	for i, a := range t.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeShallow{Id: t.Id, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Representations: representations, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 📐ToDesignMeta converts a Design to its scalar-only Meta view.
 func ToDesignMeta(d Design) DesignMeta {
-	return DesignMeta{Guid: d.Guid, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignMeta{Id: d.Id, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, ActiveLayer: d.ActiveLayer, Location: d.Location, Icon: d.Icon, Image: d.Image, Description: d.Description, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 🏕️ToDesignShallow converts a Design to its Shallow overview with scalar-only nested items.
@@ -2582,12 +2583,12 @@ func ToDesignShallow(d Design) DesignShallow {
 	for i, a := range d.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return DesignShallow{Guid: d.Guid, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
+	return DesignShallow{Id: d.Id, Name: d.Name, Families: d.Families, IsAbstract: d.IsAbstract, Unit: d.Unit, Folder: d.Folder, CanScale: d.CanScale, CanMirror: d.CanMirror, View: d.View, Pieces: pieces, Connections: connections, Stats: stats, Props: props, Layers: layers, ActiveLayer: d.ActiveLayer, Groups: groups, Location: d.Location, Authors: d.Authors, Concepts: d.Concepts, Icon: d.Icon, Image: d.Image, Description: d.Description, Attributes: attributes, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt}
 }
 
 // 📦ToKitMeta converts a Kit to its scalar-only Meta view.
 func ToKitMeta(k Kit) KitMeta {
-	return KitMeta{Guid: k.Guid, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+	return KitMeta{Id: k.Id, Name: k.Name, Version: k.Version, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
 // 📦ToKitShallow converts a Kit to its Shallow overview with scalar-only nested items.
@@ -2632,7 +2633,7 @@ func ToKitShallow(k Kit) KitShallow {
 	for i, a := range k.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return KitShallow{Guid: k.Guid, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Families: families, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
+	return KitShallow{Id: k.Id, Name: k.Name, Version: k.Version, Types: types, Designs: designs, Tags: tags, Concepts: concepts, Families: families, Qualities: qualities, Files: files, Folders: folders, Authors: authors, Remote: k.Remote, Homepage: k.Homepage, License: k.License, Preview: k.Preview, Icon: k.Icon, Image: k.Image, Description: k.Description, Attributes: attributes, CreatedAt: k.CreatedAt, UpdatedAt: k.UpdatedAt}
 }
 
 // #endregion 🔑Meta And Shallow
@@ -2689,9 +2690,9 @@ func (w *hashWriter) writeHashList(hashes []string) {
 	}
 }
 
-func (w *hashWriter) writeGuidList(guids []string) {
-	sorted := make([]string, len(guids))
-	copy(sorted, guids)
+func (w *hashWriter) writeIdList(ids []string) {
+	sorted := make([]string, len(ids))
+	copy(sorted, ids)
 	sort.Strings(sorted)
 	lb := make([]byte, 4)
 	binary.BigEndian.PutUint32(lb, uint32(len(sorted)))
@@ -2736,10 +2737,10 @@ func FormatNumberForHash(n float64) string {
 
 // #region 🎵Hash Value Types
 
-// 📺HashCoord computes SHA-256 hash of a Coord value.
-func HashCoord(c Coord) string {
+// 📺HashCoordinate computes SHA-256 hash of a Coordinate value.
+func HashCoordinate(c Coordinate) string {
 	w := &hashWriter{}
-	w.writeString("Coord")
+	w.writeString("Coordinate")
 	w.writeString("u")
 	w.writeNumber(c.U)
 	w.writeString("v")
@@ -2822,8 +2823,8 @@ func HashAttribute(a Attribute) string {
 		w.writeString("definition")
 		w.writeString(*a.Definition)
 	}
-	w.writeString("guid")
-	w.writeString(a.Guid)
+	w.writeString("id")
+	w.writeString(a.Id)
 	w.writeString("key")
 	w.writeString(a.Key)
 	if a.Value != nil {
@@ -2849,8 +2850,8 @@ func HashLocation(l Location) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("guid")
-	w.writeString(l.Guid)
+	w.writeString("id")
+	w.writeString(l.Id)
 	w.writeString("latitude")
 	w.writeNumber(l.Latitude)
 	w.writeString("longitude")
@@ -2874,8 +2875,8 @@ func HashAuthor(a Author) string {
 		w.writeString("email")
 		w.writeString(*a.Email)
 	}
-	w.writeString("guid")
-	w.writeString(a.Guid)
+	w.writeString("id")
+	w.writeString(a.Id)
 	w.writeString("name")
 	w.writeString(a.Name)
 	return w.digest()
@@ -2891,10 +2892,10 @@ func HashFile(f File) string {
 	}
 	if f.Folder != nil {
 		w.writeString("folder")
-		w.writeString(f.Folder.Guid)
+		w.writeString(f.Folder.Id)
 	}
-	w.writeString("guid")
-	w.writeString(f.Guid)
+	w.writeString("id")
+	w.writeString(f.Id)
 	if f.Hash != nil {
 		w.writeString("hash")
 		w.writeString(*f.Hash)
@@ -2928,13 +2929,13 @@ func HashFolder(f Folder) string {
 		w.writeString("description")
 		w.writeString(*f.Description)
 	}
-	w.writeString("guid")
-	w.writeString(f.Guid)
+	w.writeString("id")
+	w.writeString(f.Id)
 	w.writeString("name")
 	w.writeString(f.Name)
 	if f.Parent != nil {
 		w.writeString("parent")
-		w.writeString(f.Parent.Guid)
+		w.writeString(f.Parent.Id)
 	}
 	return w.digest()
 }
@@ -2951,8 +2952,8 @@ func HashBenchmark(b Benchmark) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("guid")
-	w.writeString(b.Guid)
+	w.writeString("id")
+	w.writeString(b.Id)
 	if b.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*b.Icon)
@@ -3014,8 +3015,8 @@ func HashQuality(q Quality) string {
 		w.writeString("formula")
 		w.writeString(*q.Formula)
 	}
-	w.writeString("guid")
-	w.writeString(q.Guid)
+	w.writeString("id")
+	w.writeString(q.Id)
 	if q.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*q.Icon)
@@ -3073,18 +3074,18 @@ func HashPort(p Port) string {
 	}
 	if len(p.CompatiblePorts) > 0 {
 		w.writeString("compatiblePorts")
-		guids := make([]string, len(p.CompatiblePorts))
+		ids := make([]string, len(p.CompatiblePorts))
 		for i, cp := range p.CompatiblePorts {
-			guids[i] = cp.Guid
+			ids[i] = cp.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if p.Description != nil {
 		w.writeString("description")
 		w.writeString(*p.Description)
 	}
-	w.writeString("guid")
-	w.writeString(p.Guid)
+	w.writeString("id")
+	w.writeString(p.Id)
 	if p.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*p.Icon)
@@ -3110,8 +3111,8 @@ func HashFamily(f Family) string {
 		w.writeString("description")
 		w.writeString(*f.Description)
 	}
-	w.writeString("guid")
-	w.writeString(f.Guid)
+	w.writeString("id")
+	w.writeString(f.Id)
 	if f.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*f.Icon)
@@ -3141,10 +3142,10 @@ func HashProp(p Prop) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("guid")
-	w.writeString(p.Guid)
+	w.writeString("id")
+	w.writeString(p.Id)
 	w.writeString("quality")
-	w.writeString(p.Quality.Guid)
+	w.writeString(p.Quality.Id)
 	if p.Unit != nil {
 		w.writeString("unit")
 		w.writeString(*p.Unit)
@@ -3170,8 +3171,8 @@ func HashTag(t Tag) string {
 		w.writeString("description")
 		w.writeString(*t.Description)
 	}
-	w.writeString("guid")
-	w.writeString(t.Guid)
+	w.writeString("id")
+	w.writeString(t.Id)
 	if t.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*t.Icon)
@@ -3197,8 +3198,8 @@ func HashConcept(c Concept) string {
 		w.writeString("description")
 		w.writeString(*c.Description)
 	}
-	w.writeString("guid")
-	w.writeString(c.Guid)
+	w.writeString("id")
+	w.writeString(c.Id)
 	if c.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*c.Icon)
@@ -3208,10 +3209,10 @@ func HashConcept(c Concept) string {
 	return w.digest()
 }
 
-// 🗿HashModel computes SHA-256 hash of a Model entity.
-func HashModel(m Model) string {
+// 🗿HashRepresentation computes SHA-256 hash of a Representation entity.
+func HashRepresentation(m Representation) string {
 	w := &hashWriter{}
-	w.writeString("Model")
+	w.writeString("Representation")
 	if len(m.Attributes) > 0 {
 		w.writeString("attributes")
 		hashes := make([]string, len(m.Attributes))
@@ -3225,20 +3226,20 @@ func HashModel(m Model) string {
 		w.writeString(*m.Description)
 	}
 	w.writeString("file")
-	w.writeString(m.File.Guid)
-	w.writeString("guid")
-	w.writeString(m.Guid)
+	w.writeString(m.File.Id)
+	w.writeString("id")
+	w.writeString(m.Id)
 	if m.Name != nil {
 		w.writeString("name")
 		w.writeString(*m.Name)
 	}
 	if len(m.Tags) > 0 {
 		w.writeString("tags")
-		guids := make([]string, len(m.Tags))
+		ids := make([]string, len(m.Tags))
 		for i, t := range m.Tags {
-			guids[i] = t.Guid
+			ids[i] = t.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	return w.digest()
 }
@@ -3261,8 +3262,8 @@ func HashConnector(c Connector) string {
 	}
 	w.writeString("direction")
 	w.writeHash(HashVector(c.Direction))
-	w.writeString("guid")
-	w.writeString(c.Guid)
+	w.writeString("id")
+	w.writeString(c.Id)
 	if c.Mandatory != nil {
 		w.writeString("mandatory")
 		w.writeBool(*c.Mandatory)
@@ -3275,7 +3276,7 @@ func HashConnector(c Connector) string {
 	w.writeHash(HashPoint(c.Point))
 	if c.Port != nil {
 		w.writeString("port")
-		w.writeString(c.Port.Guid)
+		w.writeString(c.Port.Id)
 	}
 	if len(c.Props) > 0 {
 		w.writeString("props")
@@ -3304,19 +3305,19 @@ func HashType(t Type) string {
 	}
 	if len(t.Authors) > 0 {
 		w.writeString("authors")
-		guids := make([]string, len(t.Authors))
+		ids := make([]string, len(t.Authors))
 		for i, a := range t.Authors {
-			guids[i] = a.Guid
+			ids[i] = a.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if len(t.Concepts) > 0 {
 		w.writeString("concepts")
-		guids := make([]string, len(t.Concepts))
+		ids := make([]string, len(t.Concepts))
 		for i, c := range t.Concepts {
-			guids[i] = c.Guid
+			ids[i] = c.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if len(t.Connectors) > 0 {
 		w.writeString("connectors")
@@ -3334,8 +3335,8 @@ func HashType(t Type) string {
 		w.writeString("folder")
 		w.writeString(*t.Folder)
 	}
-	w.writeString("guid")
-	w.writeString(t.Guid)
+	w.writeString("id")
+	w.writeString(t.Id)
 	if t.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*t.Icon)
@@ -3350,13 +3351,13 @@ func HashType(t Type) string {
 	}
 	if t.Location != nil {
 		w.writeString("location")
-		w.writeString(t.Location.Guid)
+		w.writeString(t.Location.Id)
 	}
-	if len(t.Models) > 0 {
-		w.writeString("models")
-		hashes := make([]string, len(t.Models))
-		for i, m := range t.Models {
-			hashes[i] = HashModel(m)
+	if len(t.Representations) > 0 {
+		w.writeString("representations")
+		hashes := make([]string, len(t.Representations))
+		for i, m := range t.Representations {
+			hashes[i] = HashRepresentation(m)
 		}
 		w.writeHashList(hashes)
 	}
@@ -3364,11 +3365,11 @@ func HashType(t Type) string {
 	w.writeString(t.Name)
 	if len(t.Families) > 0 {
 		w.writeString("families")
-		guids := make([]string, len(t.Families))
+		ids := make([]string, len(t.Families))
 		for i, family := range t.Families {
-			guids[i] = family.Guid
+			ids[i] = family.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if len(t.Props) > 0 {
 		w.writeString("props")
@@ -3413,8 +3414,8 @@ func HashLayer(l Layer) string {
 		w.writeString("description")
 		w.writeString(*l.Description)
 	}
-	w.writeString("guid")
-	w.writeString(l.Guid)
+	w.writeString("id")
+	w.writeString(l.Id)
 	if l.IsHidden != nil {
 		w.writeString("isHidden")
 		w.writeBool(*l.IsHidden)
@@ -3432,8 +3433,8 @@ func HashLayer(l Layer) string {
 func HashStat(s Stat) string {
 	w := &hashWriter{}
 	w.writeString("Stat")
-	w.writeString("guid")
-	w.writeString(s.Guid)
+	w.writeString("id")
+	w.writeString(s.Id)
 	if s.Max != nil {
 		w.writeString("max")
 		w.writeNumber(*s.Max)
@@ -3451,7 +3452,7 @@ func HashStat(s Stat) string {
 		w.writeBool(*s.MinExcluded)
 	}
 	w.writeString("quality")
-	w.writeString(s.Quality.Guid)
+	w.writeString(s.Quality.Id)
 	if s.Unit != nil {
 		w.writeString("unit")
 		w.writeString(*s.Unit)
@@ -3479,18 +3480,18 @@ func HashGroup(g Group) string {
 		w.writeString("description")
 		w.writeString(*g.Description)
 	}
-	w.writeString("guid")
-	w.writeString(g.Guid)
+	w.writeString("id")
+	w.writeString(g.Id)
 	if g.Name != nil {
 		w.writeString("name")
 		w.writeString(*g.Name)
 	}
 	w.writeString("pieces")
-	guids := make([]string, len(g.Pieces))
+	ids := make([]string, len(g.Pieces))
 	for i, p := range g.Pieces {
-		guids[i] = p.Guid
+		ids[i] = p.Id
 	}
-	w.writeGuidList(guids)
+	w.writeIdList(ids)
 	return w.digest()
 }
 
@@ -3500,14 +3501,14 @@ func HashSide(s Side) string {
 	w.writeString("Side")
 	if s.Connector != nil {
 		w.writeString("connector")
-		w.writeString(s.Connector.Guid)
+		w.writeString(s.Connector.Id)
 	}
 	if s.DesignPiece != nil {
 		w.writeString("designPiece")
-		w.writeString(s.DesignPiece.Guid)
+		w.writeString(s.DesignPiece.Id)
 	}
 	w.writeString("piece")
-	w.writeString(s.Piece.Guid)
+	w.writeString(s.Piece.Id)
 	return w.digest()
 }
 
@@ -3535,8 +3536,8 @@ func HashConnection(c Connection) string {
 	// For hash compatibility, always write them (they're always present in JSON).
 	w.writeString("gap")
 	w.writeNumber(c.Gap)
-	w.writeString("guid")
-	w.writeString(c.Guid)
+	w.writeString("id")
+	w.writeString(c.Id)
 	w.writeString("rise")
 	w.writeNumber(c.Rise)
 	w.writeString("rotation")
@@ -3568,7 +3569,7 @@ func HashPiece(p Piece) string {
 	}
 	if p.Center != nil {
 		w.writeString("center")
-		w.writeHash(HashCoord(*p.Center))
+		w.writeHash(HashCoordinate(*p.Center))
 	}
 	if p.Color != nil {
 		w.writeString("color")
@@ -3580,10 +3581,10 @@ func HashPiece(p Piece) string {
 	}
 	if p.Design != nil {
 		w.writeString("design")
-		w.writeString(p.Design.Guid)
+		w.writeString(p.Design.Id)
 	}
-	w.writeString("guid")
-	w.writeString(p.Guid)
+	w.writeString("id")
+	w.writeString(p.Id)
 	if p.IsHidden != nil {
 		w.writeString("isHidden")
 		w.writeBool(*p.IsHidden)
@@ -3618,7 +3619,7 @@ func HashPiece(p Piece) string {
 	}
 	if p.Type != nil {
 		w.writeString("type")
-		w.writeString(p.Type.Guid)
+		w.writeString(p.Type.Id)
 	}
 	return w.digest()
 }
@@ -3629,7 +3630,7 @@ func HashDesign(d Design) string {
 	w.writeString("Design")
 	if d.ActiveLayer != nil {
 		w.writeString("activeLayer")
-		w.writeString(d.ActiveLayer.Guid)
+		w.writeString(d.ActiveLayer.Id)
 	}
 	if len(d.Attributes) > 0 {
 		w.writeString("attributes")
@@ -3641,11 +3642,11 @@ func HashDesign(d Design) string {
 	}
 	if len(d.Authors) > 0 {
 		w.writeString("authors")
-		guids := make([]string, len(d.Authors))
+		ids := make([]string, len(d.Authors))
 		for i, a := range d.Authors {
-			guids[i] = a.Guid
+			ids[i] = a.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if d.CanMirror != nil {
 		w.writeString("canMirror")
@@ -3657,11 +3658,11 @@ func HashDesign(d Design) string {
 	}
 	if len(d.Concepts) > 0 {
 		w.writeString("concepts")
-		guids := make([]string, len(d.Concepts))
+		ids := make([]string, len(d.Concepts))
 		for i, c := range d.Concepts {
-			guids[i] = c.Guid
+			ids[i] = c.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if len(d.Connections) > 0 {
 		w.writeString("connections")
@@ -3687,8 +3688,8 @@ func HashDesign(d Design) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("guid")
-	w.writeString(d.Guid)
+	w.writeString("id")
+	w.writeString(d.Id)
 	if d.Icon != nil {
 		w.writeString("icon")
 		w.writeString(*d.Icon)
@@ -3711,17 +3712,17 @@ func HashDesign(d Design) string {
 	}
 	if d.Location != nil {
 		w.writeString("location")
-		w.writeString(d.Location.Guid)
+		w.writeString(d.Location.Id)
 	}
 	w.writeString("name")
 	w.writeString(d.Name)
 	if len(d.Families) > 0 {
 		w.writeString("families")
-		guids := make([]string, len(d.Families))
+		ids := make([]string, len(d.Families))
 		for i, family := range d.Families {
-			guids[i] = family.Guid
+			ids[i] = family.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if len(d.Pieces) > 0 {
 		w.writeString("pieces")
@@ -3810,8 +3811,8 @@ func HashKit(k Kit) string {
 		}
 		w.writeHashList(hashes)
 	}
-	w.writeString("guid")
-	w.writeString(k.Guid)
+	w.writeString("id")
+	w.writeString(k.Id)
 	if k.Homepage != nil {
 		w.writeString("homepage")
 		w.writeString(*k.Homepage)
@@ -3946,7 +3947,7 @@ func hashCollectionDiffGeneric(
 	}
 	if len(removed) > 0 {
 		w.writeString("removed")
-		w.writeGuidList(removed)
+		w.writeIdList(removed)
 	}
 	if len(updated) > 0 {
 		w.writeString("updated")
@@ -3977,9 +3978,9 @@ func hashCollectionDiffGeneric(
 // #region ⚗️Hash Diff Entities
 // Hash functions for all diff entity types.
 
-func HashCoordDiff(d CoordDiff) string {
+func HashCoordinateDiff(d CoordinateDiff) string {
 	w := &hashWriter{}
-	w.writeString("CoordDiff")
+	w.writeString("CoordinateDiff")
 	writeOptNumberDiff(w, "u", d.U)
 	writeOptNumberDiff(w, "v", d.V)
 	return w.digest()
@@ -4051,7 +4052,7 @@ func HashAttributeDiff(d AttributeDiff) string {
 func HashAttributesDiff(d AttributesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4061,7 +4062,7 @@ func HashAttributesDiff(d AttributesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Attribute.Guid, diff: u.Diff})
+		}{key: u.Attribute.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4101,7 +4102,7 @@ func HashAuthorDiff(d AuthorDiff) string {
 func HashAuthorsDiff(d AuthorsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4111,7 +4112,7 @@ func HashAuthorsDiff(d AuthorsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Author.Guid, diff: u.Diff})
+		}{key: u.Author.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4134,7 +4135,7 @@ func HashFileDiff(d FileDiff) string {
 	writeOptStringDiff(w, "description", d.Description)
 	if d.Folder != nil {
 		w.writeString("folder")
-		w.writeString(d.Folder.Guid)
+		w.writeString(d.Folder.Id)
 	}
 	writeOptStringDiff(w, "hash", d.Hash)
 	writeOptStringDiff(w, "name", d.Name)
@@ -4149,7 +4150,7 @@ func HashFileDiff(d FileDiff) string {
 func HashFilesDiff(d FilesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4159,7 +4160,7 @@ func HashFilesDiff(d FilesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.File.Guid, diff: u.Diff})
+		}{key: u.File.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4182,7 +4183,7 @@ func HashFolderDiff(d FolderDiff) string {
 	writeOptStringDiff(w, "name", d.Name)
 	if d.Parent != nil {
 		w.writeString("parent")
-		w.writeString(d.Parent.Guid)
+		w.writeString(d.Parent.Id)
 	}
 	return w.digest()
 }
@@ -4190,7 +4191,7 @@ func HashFolderDiff(d FolderDiff) string {
 func HashFoldersDiff(d FoldersDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4200,7 +4201,7 @@ func HashFoldersDiff(d FoldersDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Folder.Guid, diff: u.Diff})
+		}{key: u.Folder.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4232,7 +4233,7 @@ func HashBenchmarkDiff(d BenchmarkDiff) string {
 func HashBenchmarksDiff(d BenchmarksDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4242,7 +4243,7 @@ func HashBenchmarksDiff(d BenchmarksDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Benchmark.Guid, diff: u.Diff})
+		}{key: u.Benchmark.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4287,7 +4288,7 @@ func HashQualityDiff(d QualityDiff) string {
 func HashQualitiesDiff(d QualitiesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4297,7 +4298,7 @@ func HashQualitiesDiff(d QualitiesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Quality.Guid, diff: u.Diff})
+		}{key: u.Quality.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4318,11 +4319,11 @@ func HashPortDiff(d PortDiff) string {
 	}
 	if len(d.CompatiblePorts) > 0 {
 		w.writeString("compatiblePorts")
-		guids := make([]string, len(d.CompatiblePorts))
+		ids := make([]string, len(d.CompatiblePorts))
 		for i, cp := range d.CompatiblePorts {
-			guids[i] = cp.Guid
+			ids[i] = cp.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	writeNullableStringDiff(w, "description", d.Description, d.HasField("description"))
 	writeNullableStringDiff(w, "icon", d.Icon, d.HasField("icon"))
@@ -4341,7 +4342,7 @@ func HashPortDiff(d PortDiff) string {
 func HashPortsDiff(d PortsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4351,7 +4352,7 @@ func HashPortsDiff(d PortsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Port.Guid, diff: u.Diff})
+		}{key: u.Port.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4383,7 +4384,7 @@ func HashFamilyDiff(d FamilyDiff) string {
 func HashFamiliesDiff(d FamiliesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4393,7 +4394,7 @@ func HashFamiliesDiff(d FamiliesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Family.Guid, diff: u.Diff})
+		}{key: u.Family.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4414,7 +4415,7 @@ func HashPropDiff(d PropDiff) string {
 	}
 	if d.Quality != nil {
 		w.writeString("quality")
-		w.writeString(d.Quality.Guid)
+		w.writeString(d.Quality.Id)
 	}
 	writeOptStringDiff(w, "unit", d.Unit)
 	writeOptStringDiff(w, "value", d.Value)
@@ -4424,7 +4425,7 @@ func HashPropDiff(d PropDiff) string {
 func HashPropsDiff(d PropsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4434,7 +4435,7 @@ func HashPropsDiff(d PropsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Prop.Guid, diff: u.Diff})
+		}{key: u.Prop.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4462,7 +4463,7 @@ func HashTagDiff(d TagDiff) string {
 func HashTagsDiff(d TagsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4472,7 +4473,7 @@ func HashTagsDiff(d TagsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Tag.Guid, diff: u.Diff})
+		}{key: u.Tag.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4500,7 +4501,7 @@ func HashConceptDiff(d ConceptDiff) string {
 func HashConceptsDiff(d ConceptsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4510,7 +4511,7 @@ func HashConceptsDiff(d ConceptsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Concept.Guid, diff: u.Diff})
+		}{key: u.Concept.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4522,9 +4523,9 @@ func HashConceptsDiff(d ConceptsDiff) string {
 		removed, updated, added)
 }
 
-func HashModelDiff(d ModelDiff) string {
+func HashRepresentationDiff(d RepresentationDiff) string {
 	w := &hashWriter{}
-	w.writeString("ModelDiff")
+	w.writeString("RepresentationDiff")
 	if d.Attributes != nil {
 		w.writeString("attributes")
 		w.writeHash(HashAttributesDiff(*d.Attributes))
@@ -4532,24 +4533,24 @@ func HashModelDiff(d ModelDiff) string {
 	writeOptStringDiff(w, "description", d.Description)
 	if d.File != nil {
 		w.writeString("file")
-		w.writeString(d.File.Guid)
+		w.writeString(d.File.Id)
 	}
 	writeOptStringDiff(w, "name", d.Name)
 	if len(d.Tags) > 0 {
 		w.writeString("tags")
-		guids := make([]string, len(d.Tags))
+		ids := make([]string, len(d.Tags))
 		for i, t := range d.Tags {
-			guids[i] = t.Guid
+			ids[i] = t.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	return w.digest()
 }
 
-func HashModelsDiff(d ModelsDiff) string {
+func HashRepresentationsDiff(d RepresentationsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4559,15 +4560,15 @@ func HashModelsDiff(d ModelsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Model.Guid, diff: u.Diff})
+		}{key: u.Representation.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
 		added = append(added, a)
 	}
-	return hashCollectionDiffGeneric("ModelsDiff", "ModelDiffUpdate", "model",
-		func(e interface{}) string { return HashModel(e.(Model)) },
-		func(d interface{}) string { return HashModelDiff(d.(ModelDiff)) },
+	return hashCollectionDiffGeneric("RepresentationsDiff", "RepresentationDiffUpdate", "representation",
+		func(e interface{}) string { return HashRepresentation(e.(Representation)) },
+		func(d interface{}) string { return HashRepresentationDiff(d.(RepresentationDiff)) },
 		removed, updated, added)
 }
 
@@ -4591,7 +4592,7 @@ func HashConnectorDiff(d ConnectorDiff) string {
 	}
 	if d.Port != nil {
 		w.writeString("port")
-		w.writeString(d.Port.Guid)
+		w.writeString(d.Port.Id)
 	}
 	if d.Props != nil {
 		w.writeString("props")
@@ -4604,7 +4605,7 @@ func HashConnectorDiff(d ConnectorDiff) string {
 func HashConnectorsDiff(d ConnectorsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4614,7 +4615,7 @@ func HashConnectorsDiff(d ConnectorsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Connector.Guid, diff: u.Diff})
+		}{key: u.Connector.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4635,22 +4636,22 @@ func HashTypeDiff(d TypeDiff) string {
 	}
 	if len(d.Authors) > 0 {
 		w.writeString("authors")
-		guids := make([]string, len(d.Authors))
+		ids := make([]string, len(d.Authors))
 		for i, a := range d.Authors {
-			guids[i] = a.Guid
+			ids[i] = a.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	} else if d.HasField("authors") {
 		w.writeString("authors")
 		w.writeBool(false)
 	}
 	if len(d.Concepts) > 0 {
 		w.writeString("concepts")
-		guids := make([]string, len(d.Concepts))
+		ids := make([]string, len(d.Concepts))
 		for i, c := range d.Concepts {
-			guids[i] = c.Guid
+			ids[i] = c.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	} else if d.HasField("concepts") {
 		w.writeString("concepts")
 		w.writeBool(false)
@@ -4666,23 +4667,23 @@ func HashTypeDiff(d TypeDiff) string {
 	writeOptBoolDiff(w, "isAbstract", d.IsAbstract)
 	if d.Location != nil {
 		w.writeString("location")
-		w.writeString(d.Location.Guid)
+		w.writeString(d.Location.Id)
 	} else if d.HasField("location") {
 		w.writeString("location")
 		w.writeBool(false)
 	}
-	if d.Models != nil {
-		w.writeString("models")
-		w.writeHash(HashModelsDiff(*d.Models))
+	if d.Representations != nil {
+		w.writeString("representations")
+		w.writeHash(HashRepresentationsDiff(*d.Representations))
 	}
 	writeOptStringDiff(w, "name", d.Name)
 	if len(d.Families) > 0 {
 		w.writeString("families")
-		guids := make([]string, len(d.Families))
+		ids := make([]string, len(d.Families))
 		for i, family := range d.Families {
-			guids[i] = family.Guid
+			ids[i] = family.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	} else if d.HasField("families") {
 		w.writeString("families")
 		w.writeBool(false)
@@ -4700,7 +4701,7 @@ func HashTypeDiff(d TypeDiff) string {
 func HashTypesDiff(d TypesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4710,7 +4711,7 @@ func HashTypesDiff(d TypesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Type.Guid, diff: u.Diff})
+		}{key: u.Type.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4727,15 +4728,15 @@ func HashSideDiff(d SideDiff) string {
 	w.writeString("SideDiff")
 	if d.Connector != nil {
 		w.writeString("connector")
-		w.writeString(d.Connector.Guid)
+		w.writeString(d.Connector.Id)
 	}
 	if d.DesignPiece != nil {
 		w.writeString("designPiece")
-		w.writeString(d.DesignPiece.Guid)
+		w.writeString(d.DesignPiece.Id)
 	}
 	if d.Piece != nil {
 		w.writeString("piece")
-		w.writeString(d.Piece.Guid)
+		w.writeString(d.Piece.Id)
 	}
 	return w.digest()
 }
@@ -4758,7 +4759,7 @@ func HashLayerDiff(d LayerDiff) string {
 func HashLayersDiff(d LayersDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4768,7 +4769,7 @@ func HashLayersDiff(d LayersDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Layer.Guid, diff: u.Diff})
+		}{key: u.Layer.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4792,11 +4793,11 @@ func HashGroupDiff(d GroupDiff) string {
 	writeOptStringDiff(w, "name", d.Name)
 	if len(d.Pieces) > 0 {
 		w.writeString("pieces")
-		guids := make([]string, len(d.Pieces))
+		ids := make([]string, len(d.Pieces))
 		for i, p := range d.Pieces {
-			guids[i] = p.Guid
+			ids[i] = p.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	return w.digest()
 }
@@ -4804,7 +4805,7 @@ func HashGroupDiff(d GroupDiff) string {
 func HashGroupsDiff(d GroupsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4814,7 +4815,7 @@ func HashGroupsDiff(d GroupsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Group.Guid, diff: u.Diff})
+		}{key: u.Group.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4837,7 +4838,7 @@ func HashStatDiff(d StatDiff) string {
 	writeOptNumberDiff(w, "min", d.Min)
 	if d.Quality != nil {
 		w.writeString("quality")
-		w.writeString(d.Quality.Guid)
+		w.writeString(d.Quality.Id)
 	}
 	writeOptStringDiff(w, "unit", d.Unit)
 	return w.digest()
@@ -4846,7 +4847,7 @@ func HashStatDiff(d StatDiff) string {
 func HashStatsDiff(d StatsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4856,7 +4857,7 @@ func HashStatsDiff(d StatsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Stat.Guid, diff: u.Diff})
+		}{key: u.Stat.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4898,7 +4899,7 @@ func HashConnectionDiff(d ConnectionDiff) string {
 func HashConnectionsDiff(d ConnectionsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4908,7 +4909,7 @@ func HashConnectionsDiff(d ConnectionsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Connection.Guid, diff: u.Diff})
+		}{key: u.Connection.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4929,13 +4930,13 @@ func HashPieceDiff(d PieceDiff) string {
 	}
 	if d.Center != nil {
 		w.writeString("center")
-		w.writeHash(HashCoordDiff(*d.Center))
+		w.writeHash(HashCoordinateDiff(*d.Center))
 	}
 	writeOptStringDiff(w, "color", d.Color)
 	writeOptStringDiff(w, "description", d.Description)
 	if d.Design != nil {
 		w.writeString("design")
-		w.writeString(d.Design.Guid)
+		w.writeString(d.Design.Id)
 	}
 	writeOptBoolDiff(w, "isHidden", d.IsHidden)
 	writeOptBoolDiff(w, "isLocked", d.IsLocked)
@@ -4955,7 +4956,7 @@ func HashPieceDiff(d PieceDiff) string {
 	writeOptNumberDiff(w, "scale", d.Scale)
 	if d.Type != nil {
 		w.writeString("type")
-		w.writeString(d.Type.Guid)
+		w.writeString(d.Type.Id)
 	}
 	return w.digest()
 }
@@ -4963,7 +4964,7 @@ func HashPieceDiff(d PieceDiff) string {
 func HashPiecesDiff(d PiecesDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -4973,7 +4974,7 @@ func HashPiecesDiff(d PiecesDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Piece.Guid, diff: u.Diff})
+		}{key: u.Piece.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -4990,7 +4991,7 @@ func HashDesignDiff(d DesignDiff) string {
 	w.writeString("DesignDiff")
 	if d.ActiveLayer != nil {
 		w.writeString("activeLayer")
-		w.writeString(d.ActiveLayer.Guid)
+		w.writeString(d.ActiveLayer.Id)
 	}
 	if d.Attributes != nil {
 		w.writeString("attributes")
@@ -4998,21 +4999,21 @@ func HashDesignDiff(d DesignDiff) string {
 	}
 	if len(d.Authors) > 0 {
 		w.writeString("authors")
-		guids := make([]string, len(d.Authors))
+		ids := make([]string, len(d.Authors))
 		for i, a := range d.Authors {
-			guids[i] = a.Guid
+			ids[i] = a.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	writeOptBoolDiff(w, "canMirror", d.CanMirror)
 	writeOptBoolDiff(w, "canScale", d.CanScale)
 	if len(d.Concepts) > 0 {
 		w.writeString("concepts")
-		guids := make([]string, len(d.Concepts))
+		ids := make([]string, len(d.Concepts))
 		for i, c := range d.Concepts {
-			guids[i] = c.Guid
+			ids[i] = c.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if d.Connections != nil {
 		w.writeString("connections")
@@ -5033,16 +5034,16 @@ func HashDesignDiff(d DesignDiff) string {
 	}
 	if d.Location != nil {
 		w.writeString("location")
-		w.writeString(d.Location.Guid)
+		w.writeString(d.Location.Id)
 	}
 	writeOptStringDiff(w, "name", d.Name)
 	if len(d.Families) > 0 {
 		w.writeString("families")
-		guids := make([]string, len(d.Families))
+		ids := make([]string, len(d.Families))
 		for i, family := range d.Families {
-			guids[i] = family.Guid
+			ids[i] = family.Id
 		}
-		w.writeGuidList(guids)
+		w.writeIdList(ids)
 	}
 	if d.Pieces != nil {
 		w.writeString("pieces")
@@ -5067,7 +5068,7 @@ func HashDesignDiff(d DesignDiff) string {
 func HashDesignsDiff(d DesignsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
-		removed[i] = r.Guid
+		removed[i] = r.Id
 	}
 	var updated []struct {
 		key  string
@@ -5077,7 +5078,7 @@ func HashDesignsDiff(d DesignsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Design.Guid, diff: u.Diff})
+		}{key: u.Design.Id, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
@@ -5152,91 +5153,91 @@ func HashKitDiff(d KitDiff) string {
 
 // #region 🔍Helpers
 
-// 🧱FindTypeInKit returns a pointer to the type with the given GUID or nil.
-func FindTypeInKit(kit *Kit, typeGuid string) *Type {
+// 🧱FindTypeInKit returns a pointer to the type with the given ID or nil.
+func FindTypeInKit(kit *Kit, typeId string) *Type {
 	for i := range kit.Types {
-		if kit.Types[i].Guid == typeGuid {
+		if kit.Types[i].Id == typeId {
 			return &kit.Types[i]
 		}
 	}
 	return nil
 }
 
-// 📐FindDesignInKit returns a pointer to the design with the given GUID or nil.
-func FindDesignInKit(kit *Kit, designGuid string) *Design {
+// 📐FindDesignInKit returns a pointer to the design with the given ID or nil.
+func FindDesignInKit(kit *Kit, designId string) *Design {
 	for i := range kit.Designs {
-		if kit.Designs[i].Guid == designGuid {
+		if kit.Designs[i].Id == designId {
 			return &kit.Designs[i]
 		}
 	}
 	return nil
 }
 
-// 🧩FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
-func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
+// 🧩FindPieceInDesign returns a pointer to the piece with the given ID or nil.
+func FindPieceInDesign(design *Design, pieceId string) *Piece {
 	for i := range design.Pieces {
-		if design.Pieces[i].Guid == pieceGuid {
+		if design.Pieces[i].Id == pieceId {
 			return &design.Pieces[i]
 		}
 	}
 	return nil
 }
 
-// 🔗FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
-func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
+// 🔗FindConnectionInDesign returns a pointer to the connection with the given ID or nil.
+func FindConnectionInDesign(design *Design, connectionId string) *Connection {
 	for i := range design.Connections {
-		if design.Connections[i].Guid == connectionGuid {
+		if design.Connections[i].Id == connectionId {
 			return &design.Connections[i]
 		}
 	}
 	return nil
 }
 
-// 🔌FindConnectorInType returns a pointer to the connector with the given GUID or nil.
-func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
+// 🔌FindConnectorInType returns a pointer to the connector with the given ID or nil.
+func FindConnectorInType(typ *Type, connectorId string) *Connector {
 	for i := range typ.Connectors {
-		if typ.Connectors[i].Guid == connectorGuid {
+		if typ.Connectors[i].Id == connectorId {
 			return &typ.Connectors[i]
 		}
 	}
 	return nil
 }
 
-// 📄FindFileInKit returns a pointer to the file with the given GUID or nil.
-func FindFileInKit(kit *Kit, fileGuid string) *File {
+// 📄FindFileInKit returns a pointer to the file with the given ID or nil.
+func FindFileInKit(kit *Kit, fileId string) *File {
 	for i := range kit.Files {
-		if kit.Files[i].Guid == fileGuid {
+		if kit.Files[i].Id == fileId {
 			return &kit.Files[i]
 		}
 	}
 	return nil
 }
 
-// 📁FindFolderInKit returns a pointer to the folder with the given GUID or nil.
-func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
+// 📁FindFolderInKit returns a pointer to the folder with the given ID or nil.
+func FindFolderInKit(kit *Kit, folderId string) *Folder {
 	for i := range kit.Folders {
-		if kit.Folders[i].Guid == folderGuid {
+		if kit.Folders[i].Id == folderId {
 			return &kit.Folders[i]
 		}
 	}
 	return nil
 }
 
-// 🔬FindQualityInKit returns a pointer to the quality with the given GUID or nil.
-func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
+// 🔬FindQualityInKit returns a pointer to the quality with the given ID or nil.
+func FindQualityInKit(kit *Kit, qualityId string) *Quality {
 	for i := range kit.Qualities {
-		if kit.Qualities[i].Guid == qualityGuid {
+		if kit.Qualities[i].Id == qualityId {
 			return &kit.Qualities[i]
 		}
 	}
 	return nil
 }
 
-// ⚓FindPortInKit returns a pointer to the port with the given GUID or nil.
-func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
+// ⚓FindPortInKit returns a pointer to the port with the given ID or nil.
+func FindPortInKit(kit *Kit, interfaceId string) *Port {
 	for familyIndex := range kit.Families {
 		for portIndex := range kit.Families[familyIndex].Ports {
-			if kit.Families[familyIndex].Ports[portIndex].Guid == interfaceGuid {
+			if kit.Families[familyIndex].Ports[portIndex].Id == interfaceId {
 				return &kit.Families[familyIndex].Ports[portIndex]
 			}
 		}
@@ -5244,10 +5245,10 @@ func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	return nil
 }
 
-// 👪FindFamilyInKit returns a pointer to the family with the given GUID or nil.
-func FindFamilyInKit(kit *Kit, familyGuid string) *Family {
+// 👪FindFamilyInKit returns a pointer to the family with the given ID or nil.
+func FindFamilyInKit(kit *Kit, familyId string) *Family {
 	for i := range kit.Families {
-		if kit.Families[i].Guid == familyGuid {
+		if kit.Families[i].Id == familyId {
 			return &kit.Families[i]
 		}
 	}
@@ -5263,30 +5264,30 @@ func AllPortsInKit(kit *Kit) []Port {
 	return ports
 }
 
-// 🏷️FindTagInKit returns a pointer to the tag with the given GUID or nil.
-func FindTagInKit(kit *Kit, tagGuid string) *Tag {
+// 🏷️FindTagInKit returns a pointer to the tag with the given ID or nil.
+func FindTagInKit(kit *Kit, tagId string) *Tag {
 	for i := range kit.Tags {
-		if kit.Tags[i].Guid == tagGuid {
+		if kit.Tags[i].Id == tagId {
 			return &kit.Tags[i]
 		}
 	}
 	return nil
 }
 
-// 💡FindConceptInKit returns a pointer to the concept with the given GUID or nil.
-func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
+// 💡FindConceptInKit returns a pointer to the concept with the given ID or nil.
+func FindConceptInKit(kit *Kit, conceptId string) *Concept {
 	for i := range kit.Concepts {
-		if kit.Concepts[i].Guid == conceptGuid {
+		if kit.Concepts[i].Id == conceptId {
 			return &kit.Concepts[i]
 		}
 	}
 	return nil
 }
 
-// ✍️FindAuthorInKit returns a pointer to the author with the given GUID or nil.
-func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
+// ✍️FindAuthorInKit returns a pointer to the author with the given ID or nil.
+func FindAuthorInKit(kit *Kit, authorId string) *Author {
 	for i := range kit.Authors {
-		if kit.Authors[i].Guid == authorGuid {
+		if kit.Authors[i].Id == authorId {
 			return &kit.Authors[i]
 		}
 	}
@@ -5294,8 +5295,8 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 }
 
 // 🔬For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
-func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64 {
-	design := FindDesignInKit(kit, designGuid)
+func SumQualityInDesign(kit *Kit, designId string, qualityId string) float64 {
+	design := FindDesignInKit(kit, designId)
 	if design == nil {
 		return 0
 	}
@@ -5303,7 +5304,7 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 	for _, piece := range design.Pieces {
 		var found bool
 		for _, prop := range piece.Props {
-			if prop.Quality.Guid == qualityGuid {
+			if prop.Quality.Id == qualityId {
 				val, err := strconv.ParseFloat(prop.Value, 64)
 				if err == nil {
 					total += val
@@ -5318,12 +5319,12 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 		if piece.Type == nil {
 			continue
 		}
-		typ := FindTypeInKit(kit, piece.Type.Guid)
+		typ := FindTypeInKit(kit, piece.Type.Id)
 		if typ == nil {
 			continue
 		}
 		for _, prop := range typ.Props {
-			if prop.Quality.Guid == qualityGuid {
+			if prop.Quality.Id == qualityId {
 				val, err := strconv.ParseFloat(prop.Value, 64)
 				if err == nil {
 					total += val
@@ -5339,11 +5340,11 @@ func SumQualityInDesign(kit *Kit, designGuid string, qualityGuid string) float64
 
 // #region 🗡️Factories
 
-// 🆕NewKit creates a new kit with the given name and a generated GUID.
+// 🆕NewKit creates a new kit with the given name and a generated ID.
 func NewKit(name string) Kit {
 	now := ""
 	return Kit{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		Version:   "0.0.1",
 		CreatedAt: now,
@@ -5351,81 +5352,81 @@ func NewKit(name string) Kit {
 	}
 }
 
-// 🧱NewType creates a new type with the given name and a generated GUID.
+// 🧱NewType creates a new type with the given name and a generated ID.
 func NewType(name string) Type {
 	now := ""
 	return Type{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 📐NewDesign creates a new design with the given name and a generated GUID.
+// 📐NewDesign creates a new design with the given name and a generated ID.
 func NewDesign(name string) Design {
 	now := ""
 	return Design{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 🧩NewPiece creates a new piece with a generated GUID.
+// 🧩NewPiece creates a new piece with a generated ID.
 func NewPiece() Piece {
 	return Piece{
-		Guid: Guid(),
+		Id: Id(),
 	}
 }
 
-// 🔗NewConnection creates a new connection between two pieces by their GUIDs.
-func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
+// 🔗NewConnection creates a new connection between two pieces by their IDs.
+func NewConnection(connectedPieceId, connectingPieceId string) Connection {
 	return Connection{
-		Guid:       Guid(),
-		Connected:  Side{Piece: PieceId{Guid: connectedPieceGuid}},
-		Connecting: Side{Piece: PieceId{Guid: connectingPieceGuid}},
+		Id:       Id(),
+		Connected:  Side{Piece: PieceId{Id: connectedPieceId}},
+		Connecting: Side{Piece: PieceId{Id: connectingPieceId}},
 	}
 }
 
 // 🎛️NewConnector creates a new connector with position, direction and parameter t.
 func NewConnector(point Point, direction Vector, t float64) Connector {
 	return Connector{
-		Guid:      Guid(),
+		Id:      Id(),
 		Point:     point,
 		Direction: direction,
 		T:         t,
 	}
 }
 
-// 📄NewFile creates a new file with the given name and a generated GUID.
+// 📄NewFile creates a new file with the given name and a generated ID.
 func NewFile(name string) File {
 	now := ""
 	return File{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 📁NewFolder creates a new folder with the given name and a generated GUID.
+// 📁NewFolder creates a new folder with the given name and a generated ID.
 func NewFolder(name string) Folder {
 	now := ""
 	return Folder{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 🔬NewQuality creates a new quality with the given key, name and a generated GUID.
+// 🔬NewQuality creates a new quality with the given key, name and a generated ID.
 func NewQuality(key, name string) Quality {
 	now := ""
 	return Quality{
-		Guid:      Guid(),
+		Id:      Id(),
 		Key:       key,
 		Name:      name,
 		CreatedAt: now,
@@ -5433,44 +5434,44 @@ func NewQuality(key, name string) Quality {
 	}
 }
 
-// ⚓NewPort creates a new port with the given name and a generated GUID.
+// ⚓NewPort creates a new port with the given name and a generated ID.
 func NewPort(name string) Port {
 	now := ""
 	return Port{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 🏷️NewTag creates a new tag with the given name and a generated GUID.
+// 🏷️NewTag creates a new tag with the given name and a generated ID.
 func NewTag(name string) Tag {
 	now := ""
 	return Tag{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// 💡NewConcept creates a new concept with the given name and a generated GUID.
+// 💡NewConcept creates a new concept with the given name and a generated ID.
 func NewConcept(name string) Concept {
 	now := ""
 	return Concept{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 }
 
-// ✍️NewAuthor creates a new author with the given name and a generated GUID.
+// ✍️NewAuthor creates a new author with the given name and a generated ID.
 func NewAuthor(name string) Author {
 	now := ""
 	return Author{
-		Guid:      Guid(),
+		Id:      Id(),
 		Name:      name,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -5484,7 +5485,7 @@ func NewAuthor(name string) Author {
 
 // 🧱AreKitsEqual compares two kits for structural equality.
 func AreKitsEqual(a, b Kit) bool {
-	if a.Guid != b.Guid || a.Name != b.Name || a.Version != b.Version {
+	if a.Id != b.Id || a.Name != b.Name || a.Version != b.Version {
 		return false
 	}
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
@@ -5514,7 +5515,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, ta := range a.Types {
 		found := false
 		for _, tb := range b.Types {
-			if ta.Guid == tb.Guid {
+			if ta.Id == tb.Id {
 				if !areTypesEqual(ta, tb) {
 					return false
 				}
@@ -5532,7 +5533,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, da := range a.Designs {
 		found := false
 		for _, db := range b.Designs {
-			if da.Guid == db.Guid {
+			if da.Id == db.Id {
 				if !areDesignsEqual(da, db) {
 					return false
 				}
@@ -5550,7 +5551,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, ta := range a.Tags {
 		found := false
 		for _, tb := range b.Tags {
-			if ta.Guid == tb.Guid {
+			if ta.Id == tb.Id {
 				if !areTagsEqual(ta, tb) {
 					return false
 				}
@@ -5568,7 +5569,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, ca := range a.Concepts {
 		found := false
 		for _, cb := range b.Concepts {
-			if ca.Guid == cb.Guid {
+			if ca.Id == cb.Id {
 				if !areConceptsEqual(ca, cb) {
 					return false
 				}
@@ -5586,7 +5587,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, fa := range a.Families {
 		found := false
 		for _, fb := range b.Families {
-			if fa.Guid == fb.Guid {
+			if fa.Id == fb.Id {
 				if !areFamiliesEqual(fa, fb) {
 					return false
 				}
@@ -5604,7 +5605,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, fa := range a.Files {
 		found := false
 		for _, fb := range b.Files {
-			if fa.Guid == fb.Guid {
+			if fa.Id == fb.Id {
 				if !areFilesEqual(fa, fb) {
 					return false
 				}
@@ -5622,7 +5623,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, fa := range a.Folders {
 		found := false
 		for _, fb := range b.Folders {
-			if fa.Guid == fb.Guid {
+			if fa.Id == fb.Id {
 				if !areFoldersEqual(fa, fb) {
 					return false
 				}
@@ -5640,7 +5641,7 @@ func AreKitsEqual(a, b Kit) bool {
 	for _, aa := range a.Authors {
 		found := false
 		for _, ab := range b.Authors {
-			if aa.Guid == ab.Guid {
+			if aa.Id == ab.Id {
 				if !areAuthorsEqual(aa, ab) {
 					return false
 				}
@@ -5713,7 +5714,7 @@ func areTypesDiffsEqual(a, b *TypesDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5721,7 +5722,7 @@ func areTypesDiffsEqual(a, b *TypesDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5729,7 +5730,7 @@ func areTypesDiffsEqual(a, b *TypesDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Type.Guid != b.Updated[i].Type.Guid {
+		if a.Updated[i].Type.Id != b.Updated[i].Type.Id {
 			return false
 		}
 	}
@@ -5747,7 +5748,7 @@ func areDesignsDiffsEqual(a, b *DesignsDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5755,7 +5756,7 @@ func areDesignsDiffsEqual(a, b *DesignsDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5763,7 +5764,7 @@ func areDesignsDiffsEqual(a, b *DesignsDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Design.Guid != b.Updated[i].Design.Guid {
+		if a.Updated[i].Design.Id != b.Updated[i].Design.Id {
 			return false
 		}
 	}
@@ -5781,7 +5782,7 @@ func areTagsDiffsEqual(a, b *TagsDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5789,7 +5790,7 @@ func areTagsDiffsEqual(a, b *TagsDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5797,7 +5798,7 @@ func areTagsDiffsEqual(a, b *TagsDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Tag.Guid != b.Updated[i].Tag.Guid {
+		if a.Updated[i].Tag.Id != b.Updated[i].Tag.Id {
 			return false
 		}
 	}
@@ -5815,7 +5816,7 @@ func areConceptsDiffsEqual(a, b *ConceptsDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5823,7 +5824,7 @@ func areConceptsDiffsEqual(a, b *ConceptsDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5831,7 +5832,7 @@ func areConceptsDiffsEqual(a, b *ConceptsDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Concept.Guid != b.Updated[i].Concept.Guid {
+		if a.Updated[i].Concept.Id != b.Updated[i].Concept.Id {
 			return false
 		}
 	}
@@ -5849,7 +5850,7 @@ func arePortsDiffsEqual(a, b *PortsDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5857,7 +5858,7 @@ func arePortsDiffsEqual(a, b *PortsDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5865,7 +5866,7 @@ func arePortsDiffsEqual(a, b *PortsDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Port.Guid != b.Updated[i].Port.Guid {
+		if a.Updated[i].Port.Id != b.Updated[i].Port.Id {
 			return false
 		}
 	}
@@ -5883,7 +5884,7 @@ func areFamiliesDiffsEqual(a, b *FamiliesDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5891,7 +5892,7 @@ func areFamiliesDiffsEqual(a, b *FamiliesDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5899,7 +5900,7 @@ func areFamiliesDiffsEqual(a, b *FamiliesDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Family.Guid != b.Updated[i].Family.Guid {
+		if a.Updated[i].Family.Id != b.Updated[i].Family.Id {
 			return false
 		}
 	}
@@ -5917,7 +5918,7 @@ func areFilesDiffsEqual(a, b *FilesDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5925,7 +5926,7 @@ func areFilesDiffsEqual(a, b *FilesDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5933,7 +5934,7 @@ func areFilesDiffsEqual(a, b *FilesDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].File.Guid != b.Updated[i].File.Guid {
+		if a.Updated[i].File.Id != b.Updated[i].File.Id {
 			return false
 		}
 	}
@@ -5951,7 +5952,7 @@ func areFoldersDiffsEqual(a, b *FoldersDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5959,7 +5960,7 @@ func areFoldersDiffsEqual(a, b *FoldersDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -5967,7 +5968,7 @@ func areFoldersDiffsEqual(a, b *FoldersDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Folder.Guid != b.Updated[i].Folder.Guid {
+		if a.Updated[i].Folder.Id != b.Updated[i].Folder.Id {
 			return false
 		}
 	}
@@ -5985,7 +5986,7 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 		return false
 	}
 	for i := range a.Added {
-		if a.Added[i].Guid != b.Added[i].Guid {
+		if a.Added[i].Id != b.Added[i].Id {
 			return false
 		}
 	}
@@ -5993,7 +5994,7 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 		return false
 	}
 	for i := range a.Removed {
-		if a.Removed[i].Guid != b.Removed[i].Guid {
+		if a.Removed[i].Id != b.Removed[i].Id {
 			return false
 		}
 	}
@@ -6001,7 +6002,7 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 		return false
 	}
 	for i := range a.Updated {
-		if a.Updated[i].Author.Guid != b.Updated[i].Author.Guid {
+		if a.Updated[i].Author.Id != b.Updated[i].Author.Id {
 			return false
 		}
 	}
@@ -6081,27 +6082,27 @@ func getTypesDiff(before, after []Type) TypesDiff {
 	diff := TypesDiff{}
 	beforeMap := make(map[string]Type)
 	for _, t := range before {
-		beforeMap[t.Guid] = t
+		beforeMap[t.Id] = t
 	}
 	afterMap := make(map[string]Type)
 	for _, t := range after {
-		afterMap[t.Guid] = t
+		afterMap[t.Id] = t
 	}
 	for _, t := range before {
-		if _, ok := afterMap[t.Guid]; !ok {
-			diff.Removed = append(diff.Removed, TypeId{Guid: t.Guid})
+		if _, ok := afterMap[t.Id]; !ok {
+			diff.Removed = append(diff.Removed, TypeId{Id: t.Id})
 		}
 	}
 	for _, t := range after {
-		if _, ok := beforeMap[t.Guid]; !ok {
+		if _, ok := beforeMap[t.Id]; !ok {
 			diff.Added = append(diff.Added, t)
 		} else {
-			typeDiff := getTypeDiff(beforeMap[t.Guid], t)
+			typeDiff := getTypeDiff(beforeMap[t.Id], t)
 			if !isTypeDiffEmpty(typeDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Type TypeId   `json:"type"`
 					Diff TypeDiff `json:"diff"`
-				}{Type: TypeId{Guid: t.Guid}, Diff: typeDiff})
+				}{Type: TypeId{Id: t.Id}, Diff: typeDiff})
 			}
 		}
 	}
@@ -6158,9 +6159,9 @@ func getTypeDiff(before, after Type) TypeDiff {
 	if len(connDiff.Added) > 0 || len(connDiff.Removed) > 0 || len(connDiff.Updated) > 0 {
 		diff.Connectors = &connDiff
 	}
-	modelsDiff := getModelsDiff(before.Models, after.Models)
-	if len(modelsDiff.Added) > 0 || len(modelsDiff.Removed) > 0 || len(modelsDiff.Updated) > 0 {
-		diff.Models = &modelsDiff
+	representationsDiff := getRepresentationsDiff(before.Representations, after.Representations)
+	if len(representationsDiff.Added) > 0 || len(representationsDiff.Removed) > 0 || len(representationsDiff.Updated) > 0 {
+		diff.Representations = &representationsDiff
 	}
 	propsDiff := getPropsDiff(before.Props, after.Props)
 	if len(propsDiff.Added) > 0 || len(propsDiff.Removed) > 0 || len(propsDiff.Updated) > 0 {
@@ -6174,34 +6175,34 @@ func getTypeDiff(before, after Type) TypeDiff {
 }
 
 func isTypeDiffEmpty(diff TypeDiff) bool {
-	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Representations == nil && diff.Props == nil && diff.Attributes == nil
 }
 
 func getDesignsDiff(before, after []Design) DesignsDiff {
 	diff := DesignsDiff{}
 	beforeMap := make(map[string]Design)
 	for _, d := range before {
-		beforeMap[d.Guid] = d
+		beforeMap[d.Id] = d
 	}
 	afterMap := make(map[string]Design)
 	for _, d := range after {
-		afterMap[d.Guid] = d
+		afterMap[d.Id] = d
 	}
 	for _, d := range before {
-		if _, ok := afterMap[d.Guid]; !ok {
-			diff.Removed = append(diff.Removed, DesignId{Guid: d.Guid})
+		if _, ok := afterMap[d.Id]; !ok {
+			diff.Removed = append(diff.Removed, DesignId{Id: d.Id})
 		}
 	}
 	for _, d := range after {
-		if _, ok := beforeMap[d.Guid]; !ok {
+		if _, ok := beforeMap[d.Id]; !ok {
 			diff.Added = append(diff.Added, d)
 		} else {
-			designDiff := getDesignDiff(beforeMap[d.Guid], d)
+			designDiff := getDesignDiff(beforeMap[d.Id], d)
 			if !isDesignDiffEmpty(designDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Design DesignId   `json:"design"`
 					Diff   DesignDiff `json:"diff"`
-				}{Design: DesignId{Guid: d.Guid}, Diff: designDiff})
+				}{Design: DesignId{Id: d.Id}, Diff: designDiff})
 			}
 		}
 	}
@@ -6291,27 +6292,27 @@ func getTagsDiff(before, after []Tag) TagsDiff {
 	diff := TagsDiff{}
 	beforeMap := make(map[string]Tag)
 	for _, t := range before {
-		beforeMap[t.Guid] = t
+		beforeMap[t.Id] = t
 	}
 	afterMap := make(map[string]Tag)
 	for _, t := range after {
-		afterMap[t.Guid] = t
+		afterMap[t.Id] = t
 	}
 	for _, t := range before {
-		if _, ok := afterMap[t.Guid]; !ok {
-			diff.Removed = append(diff.Removed, TagId{Guid: t.Guid})
+		if _, ok := afterMap[t.Id]; !ok {
+			diff.Removed = append(diff.Removed, TagId{Id: t.Id})
 		}
 	}
 	for _, t := range after {
-		if _, ok := beforeMap[t.Guid]; !ok {
+		if _, ok := beforeMap[t.Id]; !ok {
 			diff.Added = append(diff.Added, t)
 		} else {
-			tagDiff := getTagDiff(beforeMap[t.Guid], t)
+			tagDiff := getTagDiff(beforeMap[t.Id], t)
 			if !isTagDiffEmpty(tagDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Tag  TagId   `json:"tag"`
 					Diff TagDiff `json:"diff"`
-				}{Tag: TagId{Guid: t.Guid}, Diff: tagDiff})
+				}{Tag: TagId{Id: t.Id}, Diff: tagDiff})
 			}
 		}
 	}
@@ -6347,27 +6348,27 @@ func getConceptsDiff(before, after []Concept) ConceptsDiff {
 	diff := ConceptsDiff{}
 	beforeMap := make(map[string]Concept)
 	for _, c := range before {
-		beforeMap[c.Guid] = c
+		beforeMap[c.Id] = c
 	}
 	afterMap := make(map[string]Concept)
 	for _, c := range after {
-		afterMap[c.Guid] = c
+		afterMap[c.Id] = c
 	}
 	for _, c := range before {
-		if _, ok := afterMap[c.Guid]; !ok {
-			diff.Removed = append(diff.Removed, ConceptId{Guid: c.Guid})
+		if _, ok := afterMap[c.Id]; !ok {
+			diff.Removed = append(diff.Removed, ConceptId{Id: c.Id})
 		}
 	}
 	for _, c := range after {
-		if _, ok := beforeMap[c.Guid]; !ok {
+		if _, ok := beforeMap[c.Id]; !ok {
 			diff.Added = append(diff.Added, c)
 		} else {
-			conceptDiff := getConceptDiff(beforeMap[c.Guid], c)
+			conceptDiff := getConceptDiff(beforeMap[c.Id], c)
 			if !isConceptDiffEmpty(conceptDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Concept ConceptId   `json:"concept"`
 					Diff    ConceptDiff `json:"diff"`
-				}{Concept: ConceptId{Guid: c.Guid}, Diff: conceptDiff})
+				}{Concept: ConceptId{Id: c.Id}, Diff: conceptDiff})
 			}
 		}
 	}
@@ -6403,27 +6404,27 @@ func getPortsDiff(before, after []Port) PortsDiff {
 	diff := PortsDiff{}
 	beforeMap := make(map[string]Port)
 	for _, i := range before {
-		beforeMap[i.Guid] = i
+		beforeMap[i.Id] = i
 	}
 	afterMap := make(map[string]Port)
 	for _, i := range after {
-		afterMap[i.Guid] = i
+		afterMap[i.Id] = i
 	}
 	for _, i := range before {
-		if _, ok := afterMap[i.Guid]; !ok {
-			diff.Removed = append(diff.Removed, PortId{Guid: i.Guid})
+		if _, ok := afterMap[i.Id]; !ok {
+			diff.Removed = append(diff.Removed, PortId{Id: i.Id})
 		}
 	}
 	for _, i := range after {
-		if _, ok := beforeMap[i.Guid]; !ok {
+		if _, ok := beforeMap[i.Id]; !ok {
 			diff.Added = append(diff.Added, i)
 		} else {
-			interfaceDiff := getPortDiff(beforeMap[i.Guid], i)
+			interfaceDiff := getPortDiff(beforeMap[i.Id], i)
 			if !isPortDiffEmpty(interfaceDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Port PortId   `json:"port"`
 					Diff PortDiff `json:"diff"`
-				}{Port: PortId{Guid: i.Guid}, Diff: interfaceDiff})
+				}{Port: PortId{Id: i.Id}, Diff: interfaceDiff})
 			}
 		}
 	}
@@ -6466,27 +6467,27 @@ func getFamiliesDiff(before, after []Family) FamiliesDiff {
 	diff := FamiliesDiff{}
 	beforeMap := make(map[string]Family)
 	for _, f := range before {
-		beforeMap[f.Guid] = f
+		beforeMap[f.Id] = f
 	}
 	afterMap := make(map[string]Family)
 	for _, f := range after {
-		afterMap[f.Guid] = f
+		afterMap[f.Id] = f
 	}
 	for _, f := range before {
-		if _, ok := afterMap[f.Guid]; !ok {
-			diff.Removed = append(diff.Removed, FamilyId{Guid: f.Guid})
+		if _, ok := afterMap[f.Id]; !ok {
+			diff.Removed = append(diff.Removed, FamilyId{Id: f.Id})
 		}
 	}
 	for _, f := range after {
-		if _, ok := beforeMap[f.Guid]; !ok {
+		if _, ok := beforeMap[f.Id]; !ok {
 			diff.Added = append(diff.Added, f)
 		} else {
-			familyDiff := getFamilyDiff(beforeMap[f.Guid], f)
+			familyDiff := getFamilyDiff(beforeMap[f.Id], f)
 			if !isFamilyDiffEmpty(familyDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Family FamilyId   `json:"family"`
 					Diff   FamilyDiff `json:"diff"`
-				}{Family: FamilyId{Guid: f.Guid}, Diff: familyDiff})
+				}{Family: FamilyId{Id: f.Id}, Diff: familyDiff})
 			}
 		}
 	}
@@ -6526,27 +6527,27 @@ func getFilesDiff(before, after []File) FilesDiff {
 	diff := FilesDiff{}
 	beforeMap := make(map[string]File)
 	for _, f := range before {
-		beforeMap[f.Guid] = f
+		beforeMap[f.Id] = f
 	}
 	afterMap := make(map[string]File)
 	for _, f := range after {
-		afterMap[f.Guid] = f
+		afterMap[f.Id] = f
 	}
 	for _, f := range before {
-		if _, ok := afterMap[f.Guid]; !ok {
-			diff.Removed = append(diff.Removed, FileId{Guid: f.Guid})
+		if _, ok := afterMap[f.Id]; !ok {
+			diff.Removed = append(diff.Removed, FileId{Id: f.Id})
 		}
 	}
 	for _, f := range after {
-		if _, ok := beforeMap[f.Guid]; !ok {
+		if _, ok := beforeMap[f.Id]; !ok {
 			diff.Added = append(diff.Added, f)
 		} else {
-			fileDiff := getFileDiff(beforeMap[f.Guid], f)
+			fileDiff := getFileDiff(beforeMap[f.Id], f)
 			if !isFileDiffEmpty(fileDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					File FileId   `json:"file"`
 					Diff FileDiff `json:"diff"`
-				}{File: FileId{Guid: f.Guid}, Diff: fileDiff})
+				}{File: FileId{Id: f.Id}, Diff: fileDiff})
 			}
 		}
 	}
@@ -6591,27 +6592,27 @@ func getFoldersDiff(before, after []Folder) FoldersDiff {
 	diff := FoldersDiff{}
 	beforeMap := make(map[string]Folder)
 	for _, f := range before {
-		beforeMap[f.Guid] = f
+		beforeMap[f.Id] = f
 	}
 	afterMap := make(map[string]Folder)
 	for _, f := range after {
-		afterMap[f.Guid] = f
+		afterMap[f.Id] = f
 	}
 	for _, f := range before {
-		if _, ok := afterMap[f.Guid]; !ok {
-			diff.Removed = append(diff.Removed, FolderId{Guid: f.Guid})
+		if _, ok := afterMap[f.Id]; !ok {
+			diff.Removed = append(diff.Removed, FolderId{Id: f.Id})
 		}
 	}
 	for _, f := range after {
-		if _, ok := beforeMap[f.Guid]; !ok {
+		if _, ok := beforeMap[f.Id]; !ok {
 			diff.Added = append(diff.Added, f)
 		} else {
-			folderDiff := getFolderDiff(beforeMap[f.Guid], f)
+			folderDiff := getFolderDiff(beforeMap[f.Id], f)
 			if !isFolderDiffEmpty(folderDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Folder FolderId   `json:"folder"`
 					Diff   FolderDiff `json:"diff"`
-				}{Folder: FolderId{Guid: f.Guid}, Diff: folderDiff})
+				}{Folder: FolderId{Id: f.Id}, Diff: folderDiff})
 			}
 		}
 	}
@@ -6644,27 +6645,27 @@ func getAuthorsDiff(before, after []Author) AuthorsDiff {
 	diff := AuthorsDiff{}
 	beforeMap := make(map[string]Author)
 	for _, a := range before {
-		beforeMap[a.Guid] = a
+		beforeMap[a.Id] = a
 	}
 	afterMap := make(map[string]Author)
 	for _, a := range after {
-		afterMap[a.Guid] = a
+		afterMap[a.Id] = a
 	}
 	for _, a := range before {
-		if _, ok := afterMap[a.Guid]; !ok {
-			diff.Removed = append(diff.Removed, AuthorId{Guid: a.Guid})
+		if _, ok := afterMap[a.Id]; !ok {
+			diff.Removed = append(diff.Removed, AuthorId{Id: a.Id})
 		}
 	}
 	for _, a := range after {
-		if _, ok := beforeMap[a.Guid]; !ok {
+		if _, ok := beforeMap[a.Id]; !ok {
 			diff.Added = append(diff.Added, a)
 		} else {
-			authorDiff := getAuthorDiff(beforeMap[a.Guid], a)
+			authorDiff := getAuthorDiff(beforeMap[a.Id], a)
 			if !isAuthorDiffEmpty(authorDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Author AuthorId   `json:"author"`
 					Diff   AuthorDiff `json:"diff"`
-				}{Author: AuthorId{Guid: a.Guid}, Diff: authorDiff})
+				}{Author: AuthorId{Id: a.Id}, Diff: authorDiff})
 			}
 		}
 	}
@@ -6762,11 +6763,11 @@ func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {
 	inverse := TypesDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, TypeId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, TypeId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, t := range original {
-			if t.Guid == removed.Guid {
+			if t.Id == removed.Id {
 				inverse.Added = append(inverse.Added, t)
 				break
 			}
@@ -6774,12 +6775,12 @@ func inverseTypesDiff(original []Type, appliedDiff TypesDiff) TypesDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, t := range original {
-			if t.Guid == updated.Type.Guid {
+			if t.Id == updated.Type.Id {
 				inverseDiff := inverseTypeDiff(t, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Type TypeId   `json:"type"`
 					Diff TypeDiff `json:"diff"`
-				}{Type: TypeId{Guid: t.Guid}, Diff: inverseDiff})
+				}{Type: TypeId{Id: t.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -6833,9 +6834,9 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	if appliedDiff.Concepts != nil {
 		inverse.Concepts = original.Concepts
 	}
-	if appliedDiff.Models != nil {
-		modelsDiff := inverseModelsDiff(original.Models, *appliedDiff.Models)
-		inverse.Models = &modelsDiff
+	if appliedDiff.Representations != nil {
+		representationsDiff := inverseRepresentationsDiff(original.Representations, *appliedDiff.Representations)
+		inverse.Representations = &representationsDiff
 	}
 	if appliedDiff.Connectors != nil {
 		connDiff := inverseConnectorsDiff(original.Connectors, *appliedDiff.Connectors)
@@ -6855,11 +6856,11 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) DesignsDiff {
 	inverse := DesignsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, DesignId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, DesignId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, d := range original {
-			if d.Guid == removed.Guid {
+			if d.Id == removed.Id {
 				inverse.Added = append(inverse.Added, d)
 				break
 			}
@@ -6867,12 +6868,12 @@ func inverseDesignsDiff(original []Design, appliedDiff DesignsDiff) DesignsDiff 
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, d := range original {
-			if d.Guid == updated.Design.Guid {
+			if d.Id == updated.Design.Id {
 				inverseDiff := inverseDesignDiff(d, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Design DesignId   `json:"design"`
 					Diff   DesignDiff `json:"diff"`
-				}{Design: DesignId{Guid: d.Guid}, Diff: inverseDiff})
+				}{Design: DesignId{Id: d.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -6958,11 +6959,11 @@ func inverseDesignDiff(original Design, appliedDiff DesignDiff) DesignDiff {
 func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {
 	inverse := TagsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, TagId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, TagId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, t := range original {
-			if t.Guid == removed.Guid {
+			if t.Id == removed.Id {
 				inverse.Added = append(inverse.Added, t)
 				break
 			}
@@ -6970,12 +6971,12 @@ func inverseTagsDiff(original []Tag, appliedDiff TagsDiff) TagsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, t := range original {
-			if t.Guid == updated.Tag.Guid {
+			if t.Id == updated.Tag.Id {
 				inverseDiff := inverseTagDiff(t, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Tag  TagId   `json:"tag"`
 					Diff TagDiff `json:"diff"`
-				}{Tag: TagId{Guid: t.Guid}, Diff: inverseDiff})
+				}{Tag: TagId{Id: t.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7007,11 +7008,11 @@ func inverseTagDiff(original Tag, appliedDiff TagDiff) TagDiff {
 func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) ConceptsDiff {
 	inverse := ConceptsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, ConceptId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, ConceptId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, c := range original {
-			if c.Guid == removed.Guid {
+			if c.Id == removed.Id {
 				inverse.Added = append(inverse.Added, c)
 				break
 			}
@@ -7019,12 +7020,12 @@ func inverseConceptsDiff(original []Concept, appliedDiff ConceptsDiff) ConceptsD
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, c := range original {
-			if c.Guid == updated.Concept.Guid {
+			if c.Id == updated.Concept.Id {
 				inverseDiff := inverseConceptDiff(c, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Concept ConceptId   `json:"concept"`
 					Diff    ConceptDiff `json:"diff"`
-				}{Concept: ConceptId{Guid: c.Guid}, Diff: inverseDiff})
+				}{Concept: ConceptId{Id: c.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7056,11 +7057,11 @@ func inverseConceptDiff(original Concept, appliedDiff ConceptDiff) ConceptDiff {
 func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {
 	inverse := PortsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, PortId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, PortId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, i := range original {
-			if i.Guid == removed.Guid {
+			if i.Id == removed.Id {
 				inverse.Added = append(inverse.Added, i)
 				break
 			}
@@ -7068,12 +7069,12 @@ func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, i := range original {
-			if i.Guid == updated.Port.Guid {
+			if i.Id == updated.Port.Id {
 				inverseDiff := inversePortDiff(i, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Port PortId   `json:"port"`
 					Diff PortDiff `json:"diff"`
-				}{Port: PortId{Guid: i.Guid}, Diff: inverseDiff})
+				}{Port: PortId{Id: i.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7112,11 +7113,11 @@ func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {
 func inverseFamiliesDiff(original []Family, appliedDiff FamiliesDiff) FamiliesDiff {
 	inverse := FamiliesDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, FamilyId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, FamilyId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, f := range original {
-			if f.Guid == removed.Guid {
+			if f.Id == removed.Id {
 				inverse.Added = append(inverse.Added, f)
 				break
 			}
@@ -7124,12 +7125,12 @@ func inverseFamiliesDiff(original []Family, appliedDiff FamiliesDiff) FamiliesDi
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, f := range original {
-			if f.Guid == updated.Family.Guid {
+			if f.Id == updated.Family.Id {
 				inverseDiff := inverseFamilyDiff(f, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Family FamilyId   `json:"family"`
 					Diff   FamilyDiff `json:"diff"`
-				}{Family: FamilyId{Guid: f.Guid}, Diff: inverseDiff})
+				}{Family: FamilyId{Id: f.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7165,11 +7166,11 @@ func inverseFamilyDiff(original Family, appliedDiff FamilyDiff) FamilyDiff {
 func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {
 	inverse := FilesDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, FileId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, FileId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, f := range original {
-			if f.Guid == removed.Guid {
+			if f.Id == removed.Id {
 				inverse.Added = append(inverse.Added, f)
 				break
 			}
@@ -7177,12 +7178,12 @@ func inverseFilesDiff(original []File, appliedDiff FilesDiff) FilesDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, f := range original {
-			if f.Guid == updated.File.Guid {
+			if f.Id == updated.File.Id {
 				inverseDiff := inverseFileDiff(f, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					File FileId   `json:"file"`
 					Diff FileDiff `json:"diff"`
-				}{File: FileId{Guid: f.Guid}, Diff: inverseDiff})
+				}{File: FileId{Id: f.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7223,11 +7224,11 @@ func inverseFileDiff(original File, appliedDiff FileDiff) FileDiff {
 func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) FoldersDiff {
 	inverse := FoldersDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, FolderId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, FolderId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, f := range original {
-			if f.Guid == removed.Guid {
+			if f.Id == removed.Id {
 				inverse.Added = append(inverse.Added, f)
 				break
 			}
@@ -7235,12 +7236,12 @@ func inverseFoldersDiff(original []Folder, appliedDiff FoldersDiff) FoldersDiff 
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, f := range original {
-			if f.Guid == updated.Folder.Guid {
+			if f.Id == updated.Folder.Id {
 				inverseDiff := inverseFolderDiff(f, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Folder FolderId   `json:"folder"`
 					Diff   FolderDiff `json:"diff"`
-				}{Folder: FolderId{Guid: f.Guid}, Diff: inverseDiff})
+				}{Folder: FolderId{Id: f.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7269,11 +7270,11 @@ func inverseFolderDiff(original Folder, appliedDiff FolderDiff) FolderDiff {
 func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) AuthorsDiff {
 	inverse := AuthorsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, AuthorId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, AuthorId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, a := range original {
-			if a.Guid == removed.Guid {
+			if a.Id == removed.Id {
 				inverse.Added = append(inverse.Added, a)
 				break
 			}
@@ -7281,12 +7282,12 @@ func inverseAuthorsDiff(original []Author, appliedDiff AuthorsDiff) AuthorsDiff 
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, a := range original {
-			if a.Guid == updated.Author.Guid {
+			if a.Id == updated.Author.Id {
 				inverseDiff := inverseAuthorDiff(a, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Author AuthorId   `json:"author"`
 					Diff   AuthorDiff `json:"diff"`
-				}{Author: AuthorId{Guid: a.Guid}, Diff: inverseDiff})
+				}{Author: AuthorId{Id: a.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7312,11 +7313,11 @@ func inverseAuthorDiff(original Author, appliedDiff AuthorDiff) AuthorDiff {
 func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff) ConnectorsDiff {
 	inverse := ConnectorsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, ConnectorId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, ConnectorId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, c := range original {
-			if c.Guid == removed.Guid {
+			if c.Id == removed.Id {
 				inverse.Added = append(inverse.Added, c)
 				break
 			}
@@ -7324,12 +7325,12 @@ func inverseConnectorsDiff(original []Connector, appliedDiff ConnectorsDiff) Con
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, c := range original {
-			if c.Guid == updated.Connector.Guid {
+			if c.Id == updated.Connector.Id {
 				inverseDiff := inverseConnectorDiff(c, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Connector ConnectorId   `json:"connector"`
 					Diff      ConnectorDiff `json:"diff"`
-				}{Connector: ConnectorId{Guid: c.Guid}, Diff: inverseDiff})
+				}{Connector: ConnectorId{Id: c.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7397,14 +7398,14 @@ func inverseConnectorDiff(original Connector, appliedDiff ConnectorDiff) Connect
 	return inverse
 }
 
-func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
-	inverse := ModelsDiff{}
+func inverseRepresentationsDiff(original []Representation, appliedDiff RepresentationsDiff) RepresentationsDiff {
+	inverse := RepresentationsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, ModelId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, RepresentationId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, m := range original {
-			if m.Guid == removed.Guid {
+			if m.Id == removed.Id {
 				inverse.Added = append(inverse.Added, m)
 				break
 			}
@@ -7412,12 +7413,12 @@ func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, m := range original {
-			if m.Guid == updated.Model.Guid {
-				inverseDiff := inverseModelDiff(m, updated.Diff)
+			if m.Id == updated.Representation.Id {
+				inverseDiff := inverseRepresentationDiff(m, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
-					Model ModelId   `json:"model"`
-					Diff  ModelDiff `json:"diff"`
-				}{Model: ModelId{Guid: m.Guid}, Diff: inverseDiff})
+					Representation RepresentationId   `json:"representation"`
+					Diff  RepresentationDiff `json:"diff"`
+				}{Representation: RepresentationId{Id: m.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7425,8 +7426,8 @@ func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
 	return inverse
 }
 
-func inverseModelDiff(original Model, appliedDiff ModelDiff) ModelDiff {
-	inverse := ModelDiff{}
+func inverseRepresentationDiff(original Representation, appliedDiff RepresentationDiff) RepresentationDiff {
+	inverse := RepresentationDiff{}
 	if appliedDiff.Name != nil {
 		inverse.Name = original.Name
 	}
@@ -7449,11 +7450,11 @@ func inverseModelDiff(original Model, appliedDiff ModelDiff) ModelDiff {
 func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff {
 	inverse := PiecesDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, PieceId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, PieceId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, p := range original {
-			if p.Guid == removed.Guid {
+			if p.Id == removed.Id {
 				inverse.Added = append(inverse.Added, p)
 				break
 			}
@@ -7461,12 +7462,12 @@ func inversePiecesDiff(original []Piece, appliedDiff PiecesDiff) PiecesDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, p := range original {
-			if p.Guid == updated.Piece.Guid {
+			if p.Id == updated.Piece.Id {
 				inverseDiff := inversePieceDiff(p, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Piece PieceId   `json:"piece"`
 					Diff  PieceDiff `json:"diff"`
-				}{Piece: PieceId{Guid: p.Guid}, Diff: inverseDiff})
+				}{Piece: PieceId{Id: p.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7506,7 +7507,7 @@ func inversePieceDiff(original Piece, appliedDiff PieceDiff) PieceDiff {
 	}
 	if appliedDiff.Center != nil {
 		if original.Center != nil {
-			inverse.Center = &CoordDiff{U: &original.Center.U, V: &original.Center.V}
+			inverse.Center = &CoordinateDiff{U: &original.Center.U, V: &original.Center.V}
 		}
 	}
 	if appliedDiff.Scale != nil {
@@ -7556,11 +7557,11 @@ func inversePieceDiff(original Piece, appliedDiff PieceDiff) PieceDiff {
 func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsDiff) ConnectionsDiff {
 	inverse := ConnectionsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, ConnectionId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, ConnectionId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, c := range original {
-			if c.Guid == removed.Guid {
+			if c.Id == removed.Id {
 				inverse.Added = append(inverse.Added, c)
 				break
 			}
@@ -7568,12 +7569,12 @@ func inverseConnectionsDiff(original []Connection, appliedDiff ConnectionsDiff) 
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, c := range original {
-			if c.Guid == updated.Connection.Guid {
+			if c.Id == updated.Connection.Id {
 				inverseDiff := inverseConnectionDiff(c, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Connection ConnectionId   `json:"connection"`
 					Diff       ConnectionDiff `json:"diff"`
-				}{Connection: ConnectionId{Guid: c.Guid}, Diff: inverseDiff})
+				}{Connection: ConnectionId{Id: c.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7662,11 +7663,11 @@ func inverseAttributeDiff(original Attribute, appliedDiff AttributeDiff) Attribu
 func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) AttributesDiff {
 	inverse := AttributesDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, AttributeId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, AttributeId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, a := range original {
-			if a.Guid == removed.Guid {
+			if a.Id == removed.Id {
 				inverse.Added = append(inverse.Added, a)
 				break
 			}
@@ -7674,12 +7675,12 @@ func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) Att
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, a := range original {
-			if a.Guid == updated.Attribute.Guid {
+			if a.Id == updated.Attribute.Id {
 				inverseDiff := inverseAttributeDiff(a, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Attribute AttributeId   `json:"attribute"`
 					Diff      AttributeDiff `json:"diff"`
-				}{Attribute: AttributeId{Guid: a.Guid}, Diff: inverseDiff})
+				}{Attribute: AttributeId{Id: a.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7690,11 +7691,11 @@ func inverseAttributesDiff(original []Attribute, appliedDiff AttributesDiff) Att
 func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {
 	inverse := PropsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, PropId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, PropId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, p := range original {
-			if p.Guid == removed.Guid {
+			if p.Id == removed.Id {
 				inverse.Added = append(inverse.Added, p)
 				break
 			}
@@ -7702,12 +7703,12 @@ func inversePropsDiff(original []Prop, appliedDiff PropsDiff) PropsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, p := range original {
-			if p.Guid == updated.Prop.Guid {
+			if p.Id == updated.Prop.Id {
 				inverseDiff := inversePropDiff(p, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Prop PropId   `json:"prop"`
 					Diff PropDiff `json:"diff"`
-				}{Prop: PropId{Guid: p.Guid}, Diff: inverseDiff})
+				}{Prop: PropId{Id: p.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7736,11 +7737,11 @@ func inversePropDiff(original Prop, appliedDiff PropDiff) PropDiff {
 func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {
 	inverse := StatsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, StatId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, StatId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, s := range original {
-			if s.Guid == removed.Guid {
+			if s.Id == removed.Id {
 				inverse.Added = append(inverse.Added, s)
 				break
 			}
@@ -7748,12 +7749,12 @@ func inverseStatsDiff(original []Stat, appliedDiff StatsDiff) StatsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, s := range original {
-			if s.Guid == updated.Stat.Guid {
+			if s.Id == updated.Stat.Id {
 				inverseDiff := inverseStatDiff(s, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Stat StatId   `json:"stat"`
 					Diff StatDiff `json:"diff"`
-				}{Stat: StatId{Guid: s.Guid}, Diff: inverseDiff})
+				}{Stat: StatId{Id: s.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7785,11 +7786,11 @@ func inverseStatDiff(original Stat, appliedDiff StatDiff) StatDiff {
 func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff {
 	inverse := LayersDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, LayerId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, LayerId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, l := range original {
-			if l.Guid == removed.Guid {
+			if l.Id == removed.Id {
 				inverse.Added = append(inverse.Added, l)
 				break
 			}
@@ -7797,12 +7798,12 @@ func inverseLayersDiff(original []Layer, appliedDiff LayersDiff) LayersDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, l := range original {
-			if l.Guid == updated.Layer.Guid {
+			if l.Id == updated.Layer.Id {
 				inverseDiff := inverseLayerDiff(l, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Layer LayerId   `json:"layer"`
 					Diff  LayerDiff `json:"diff"`
-				}{Layer: LayerId{Guid: l.Guid}, Diff: inverseDiff})
+				}{Layer: LayerId{Id: l.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7837,11 +7838,11 @@ func inverseLayerDiff(original Layer, appliedDiff LayerDiff) LayerDiff {
 func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff {
 	inverse := GroupsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, GroupId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, GroupId{Id: added.Id})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, g := range original {
-			if g.Guid == removed.Guid {
+			if g.Id == removed.Id {
 				inverse.Added = append(inverse.Added, g)
 				break
 			}
@@ -7849,12 +7850,12 @@ func inverseGroupsDiff(original []Group, appliedDiff GroupsDiff) GroupsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, g := range original {
-			if g.Guid == updated.Group.Guid {
+			if g.Id == updated.Group.Id {
 				inverseDiff := inverseGroupDiff(g, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
 					Group GroupId   `json:"group"`
 					Diff  GroupDiff `json:"diff"`
-				}{Group: GroupId{Guid: g.Guid}, Diff: inverseDiff})
+				}{Group: GroupId{Id: g.Id}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7904,7 +7905,7 @@ func areFolderIdsEqual(a, b *FolderId) bool {
 	if a == nil || b == nil {
 		return false
 	}
-	return a.Guid == b.Guid
+	return a.Id == b.Id
 }
 
 func getAttributeDiff(before, after Attribute) AttributeDiff {
@@ -7929,27 +7930,27 @@ func getAttributesDiff(before, after []Attribute) AttributesDiff {
 	diff := AttributesDiff{}
 	beforeMap := make(map[string]Attribute)
 	for _, a := range before {
-		beforeMap[a.Guid] = a
+		beforeMap[a.Id] = a
 	}
 	afterMap := make(map[string]Attribute)
 	for _, a := range after {
-		afterMap[a.Guid] = a
+		afterMap[a.Id] = a
 	}
 	for _, a := range before {
-		if _, ok := afterMap[a.Guid]; !ok {
-			diff.Removed = append(diff.Removed, AttributeId{Guid: a.Guid})
+		if _, ok := afterMap[a.Id]; !ok {
+			diff.Removed = append(diff.Removed, AttributeId{Id: a.Id})
 		}
 	}
 	for _, a := range after {
-		if _, ok := beforeMap[a.Guid]; !ok {
+		if _, ok := beforeMap[a.Id]; !ok {
 			diff.Added = append(diff.Added, a)
 		} else {
-			attrDiff := getAttributeDiff(beforeMap[a.Guid], a)
+			attrDiff := getAttributeDiff(beforeMap[a.Id], a)
 			if !isAttributeDiffEmpty(attrDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Attribute AttributeId   `json:"attribute"`
 					Diff      AttributeDiff `json:"diff"`
-				}{Attribute: AttributeId{Guid: a.Guid}, Diff: attrDiff})
+				}{Attribute: AttributeId{Id: a.Id}, Diff: attrDiff})
 			}
 		}
 	}
@@ -7964,27 +7965,27 @@ func getPropsDiff(before, after []Prop) PropsDiff {
 	diff := PropsDiff{}
 	beforeMap := make(map[string]Prop)
 	for _, p := range before {
-		beforeMap[p.Guid] = p
+		beforeMap[p.Id] = p
 	}
 	afterMap := make(map[string]Prop)
 	for _, p := range after {
-		afterMap[p.Guid] = p
+		afterMap[p.Id] = p
 	}
 	for _, p := range before {
-		if _, ok := afterMap[p.Guid]; !ok {
-			diff.Removed = append(diff.Removed, PropId{Guid: p.Guid})
+		if _, ok := afterMap[p.Id]; !ok {
+			diff.Removed = append(diff.Removed, PropId{Id: p.Id})
 		}
 	}
 	for _, p := range after {
-		if _, ok := beforeMap[p.Guid]; !ok {
+		if _, ok := beforeMap[p.Id]; !ok {
 			diff.Added = append(diff.Added, p)
 		} else {
-			propDiff := getPropDiff(beforeMap[p.Guid], p)
+			propDiff := getPropDiff(beforeMap[p.Id], p)
 			if !isPropDiffEmpty(propDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Prop PropId   `json:"prop"`
 					Diff PropDiff `json:"diff"`
-				}{Prop: PropId{Guid: p.Guid}, Diff: propDiff})
+				}{Prop: PropId{Id: p.Id}, Diff: propDiff})
 			}
 		}
 	}
@@ -7993,7 +7994,7 @@ func getPropsDiff(before, after []Prop) PropsDiff {
 
 func getPropDiff(before, after Prop) PropDiff {
 	diff := PropDiff{}
-	if before.Quality.Guid != after.Quality.Guid {
+	if before.Quality.Id != after.Quality.Id {
 		diff.Quality = &after.Quality
 	}
 	if before.Value != after.Value {
@@ -8017,27 +8018,27 @@ func getStatsDiff(before, after []Stat) StatsDiff {
 	diff := StatsDiff{}
 	beforeMap := make(map[string]Stat)
 	for _, s := range before {
-		beforeMap[s.Guid] = s
+		beforeMap[s.Id] = s
 	}
 	afterMap := make(map[string]Stat)
 	for _, s := range after {
-		afterMap[s.Guid] = s
+		afterMap[s.Id] = s
 	}
 	for _, s := range before {
-		if _, ok := afterMap[s.Guid]; !ok {
-			diff.Removed = append(diff.Removed, StatId{Guid: s.Guid})
+		if _, ok := afterMap[s.Id]; !ok {
+			diff.Removed = append(diff.Removed, StatId{Id: s.Id})
 		}
 	}
 	for _, s := range after {
-		if _, ok := beforeMap[s.Guid]; !ok {
+		if _, ok := beforeMap[s.Id]; !ok {
 			diff.Added = append(diff.Added, s)
 		} else {
-			statDiff := getStatDiff(beforeMap[s.Guid], s)
+			statDiff := getStatDiff(beforeMap[s.Id], s)
 			if !isStatDiffEmpty(statDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Stat StatId   `json:"stat"`
 					Diff StatDiff `json:"diff"`
-				}{Stat: StatId{Guid: s.Guid}, Diff: statDiff})
+				}{Stat: StatId{Id: s.Id}, Diff: statDiff})
 			}
 		}
 	}
@@ -8046,7 +8047,7 @@ func getStatsDiff(before, after []Stat) StatsDiff {
 
 func getStatDiff(before, after Stat) StatDiff {
 	diff := StatDiff{}
-	if before.Quality.Guid != after.Quality.Guid {
+	if before.Quality.Id != after.Quality.Id {
 		diff.Quality = &after.Quality
 	}
 	if !optFloatEqual(before.Min, after.Min) {
@@ -8073,27 +8074,27 @@ func getLayersDiff(before, after []Layer) LayersDiff {
 	diff := LayersDiff{}
 	beforeMap := make(map[string]Layer)
 	for _, l := range before {
-		beforeMap[l.Guid] = l
+		beforeMap[l.Id] = l
 	}
 	afterMap := make(map[string]Layer)
 	for _, l := range after {
-		afterMap[l.Guid] = l
+		afterMap[l.Id] = l
 	}
 	for _, l := range before {
-		if _, ok := afterMap[l.Guid]; !ok {
-			diff.Removed = append(diff.Removed, LayerId{Guid: l.Guid})
+		if _, ok := afterMap[l.Id]; !ok {
+			diff.Removed = append(diff.Removed, LayerId{Id: l.Id})
 		}
 	}
 	for _, l := range after {
-		if _, ok := beforeMap[l.Guid]; !ok {
+		if _, ok := beforeMap[l.Id]; !ok {
 			diff.Added = append(diff.Added, l)
 		} else {
-			layerDiff := getLayerDiff(beforeMap[l.Guid], l)
+			layerDiff := getLayerDiff(beforeMap[l.Id], l)
 			if !isLayerDiffEmpty(layerDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Layer LayerId   `json:"layer"`
 					Diff  LayerDiff `json:"diff"`
-				}{Layer: LayerId{Guid: l.Guid}, Diff: layerDiff})
+				}{Layer: LayerId{Id: l.Id}, Diff: layerDiff})
 			}
 		}
 	}
@@ -8132,27 +8133,27 @@ func getGroupsDiff(before, after []Group) GroupsDiff {
 	diff := GroupsDiff{}
 	beforeMap := make(map[string]Group)
 	for _, g := range before {
-		beforeMap[g.Guid] = g
+		beforeMap[g.Id] = g
 	}
 	afterMap := make(map[string]Group)
 	for _, g := range after {
-		afterMap[g.Guid] = g
+		afterMap[g.Id] = g
 	}
 	for _, g := range before {
-		if _, ok := afterMap[g.Guid]; !ok {
-			diff.Removed = append(diff.Removed, GroupId{Guid: g.Guid})
+		if _, ok := afterMap[g.Id]; !ok {
+			diff.Removed = append(diff.Removed, GroupId{Id: g.Id})
 		}
 	}
 	for _, g := range after {
-		if _, ok := beforeMap[g.Guid]; !ok {
+		if _, ok := beforeMap[g.Id]; !ok {
 			diff.Added = append(diff.Added, g)
 		} else {
-			groupDiff := getGroupDiff(beforeMap[g.Guid], g)
+			groupDiff := getGroupDiff(beforeMap[g.Id], g)
 			if !isGroupDiffEmpty(groupDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Group GroupId   `json:"group"`
 					Diff  GroupDiff `json:"diff"`
-				}{Group: GroupId{Guid: g.Guid}, Diff: groupDiff})
+				}{Group: GroupId{Id: g.Id}, Diff: groupDiff})
 			}
 		}
 	}
@@ -8195,13 +8196,13 @@ func applyAttributeDiff(item *Attribute, diff *AttributeDiff) {
 
 func applyAttributesDiff(items *[]Attribute, diff *AttributesDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, a := range *items {
-			if !removedGuids[a.Guid] {
+			if !removedIds[a.Id] {
 				filtered = append(filtered, a)
 			}
 		}
@@ -8210,7 +8211,7 @@ func applyAttributesDiff(items *[]Attribute, diff *AttributesDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Attribute.Guid {
+				if (*items)[i].Id == u.Attribute.Id {
 					applyAttributeDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -8224,13 +8225,13 @@ func applyAttributesDiff(items *[]Attribute, diff *AttributesDiff) {
 
 func applyPropsDiff(items *[]Prop, diff *PropsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, p := range *items {
-			if !removedGuids[p.Guid] {
+			if !removedIds[p.Id] {
 				filtered = append(filtered, p)
 			}
 		}
@@ -8239,7 +8240,7 @@ func applyPropsDiff(items *[]Prop, diff *PropsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Prop.Guid {
+				if (*items)[i].Id == u.Prop.Id {
 					applyPropDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -8268,13 +8269,13 @@ func applyPropDiff(item *Prop, diff *PropDiff) {
 
 func applyStatsDiff(items *[]Stat, diff *StatsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, s := range *items {
-			if !removedGuids[s.Guid] {
+			if !removedIds[s.Id] {
 				filtered = append(filtered, s)
 			}
 		}
@@ -8283,7 +8284,7 @@ func applyStatsDiff(items *[]Stat, diff *StatsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Stat.Guid {
+				if (*items)[i].Id == u.Stat.Id {
 					applyStatDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -8315,13 +8316,13 @@ func applyStatDiff(item *Stat, diff *StatDiff) {
 
 func applyLayersDiff(items *[]Layer, diff *LayersDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, l := range *items {
-			if !removedGuids[l.Guid] {
+			if !removedIds[l.Id] {
 				filtered = append(filtered, l)
 			}
 		}
@@ -8330,7 +8331,7 @@ func applyLayersDiff(items *[]Layer, diff *LayersDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Layer.Guid {
+				if (*items)[i].Id == u.Layer.Id {
 					applyLayerDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -8365,13 +8366,13 @@ func applyLayerDiff(item *Layer, diff *LayerDiff) {
 
 func applyGroupsDiff(items *[]Group, diff *GroupsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, g := range *items {
-			if !removedGuids[g.Guid] {
+			if !removedIds[g.Id] {
 				filtered = append(filtered, g)
 			}
 		}
@@ -8380,7 +8381,7 @@ func applyGroupsDiff(items *[]Group, diff *GroupsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Group.Guid {
+				if (*items)[i].Id == u.Group.Id {
 					applyGroupDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -8414,27 +8415,27 @@ func getConnectorsDiff(before, after []Connector) ConnectorsDiff {
 	diff := ConnectorsDiff{}
 	beforeMap := make(map[string]Connector)
 	for _, c := range before {
-		beforeMap[c.Guid] = c
+		beforeMap[c.Id] = c
 	}
 	afterMap := make(map[string]Connector)
 	for _, c := range after {
-		afterMap[c.Guid] = c
+		afterMap[c.Id] = c
 	}
 	for _, c := range before {
-		if _, ok := afterMap[c.Guid]; !ok {
-			diff.Removed = append(diff.Removed, ConnectorId{Guid: c.Guid})
+		if _, ok := afterMap[c.Id]; !ok {
+			diff.Removed = append(diff.Removed, ConnectorId{Id: c.Id})
 		}
 	}
 	for _, c := range after {
-		if _, ok := beforeMap[c.Guid]; !ok {
+		if _, ok := beforeMap[c.Id]; !ok {
 			diff.Added = append(diff.Added, c)
 		} else {
-			connDiff := getConnectorDiff(beforeMap[c.Guid], c)
+			connDiff := getConnectorDiff(beforeMap[c.Id], c)
 			if !isConnectorDiffEmpty(connDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Connector ConnectorId   `json:"connector"`
 					Diff      ConnectorDiff `json:"diff"`
-				}{Connector: ConnectorId{Guid: c.Guid}, Diff: connDiff})
+				}{Connector: ConnectorId{Id: c.Id}, Diff: connDiff})
 			}
 		}
 	}
@@ -8503,18 +8504,18 @@ func isConnectorDiffEmpty(diff ConnectorDiff) bool {
 	return diff.Name == nil && diff.Description == nil && diff.Port == nil && diff.Mandatory == nil && diff.T == nil && diff.Point == nil && diff.Direction == nil && diff.Props == nil && diff.Attributes == nil
 }
 
-func getModelDiff(before, after Model) ModelDiff {
-	diff := ModelDiff{}
+func getRepresentationDiff(before, after Representation) RepresentationDiff {
+	diff := RepresentationDiff{}
 	if normalizeStr(before.Name) != normalizeStr(after.Name) {
 		diff.Name = after.Name
 	}
-	if before.File.Guid != after.File.Guid {
+	if before.File.Id != after.File.Id {
 		diff.File = &after.File
 	}
 	tagsEqual := len(before.Tags) == len(after.Tags)
 	if tagsEqual {
 		for i, t := range before.Tags {
-			if t.Guid != after.Tags[i].Guid {
+			if t.Id != after.Tags[i].Id {
 				tagsEqual = false
 				break
 			}
@@ -8533,33 +8534,33 @@ func getModelDiff(before, after Model) ModelDiff {
 	return diff
 }
 
-func getModelsDiff(before, after []Model) ModelsDiff {
-	diff := ModelsDiff{}
-	beforeMap := make(map[string]Model)
+func getRepresentationsDiff(before, after []Representation) RepresentationsDiff {
+	diff := RepresentationsDiff{}
+	beforeMap := make(map[string]Representation)
 	for _, m := range before {
-		beforeMap[m.Guid] = m
+		beforeMap[m.Id] = m
 	}
-	afterMap := make(map[string]Model)
+	afterMap := make(map[string]Representation)
 	for _, m := range after {
-		afterMap[m.Guid] = m
+		afterMap[m.Id] = m
 	}
 	for _, m := range before {
-		if _, ok := afterMap[m.Guid]; !ok {
-			diff.Removed = append(diff.Removed, ModelId{Guid: m.Guid})
+		if _, ok := afterMap[m.Id]; !ok {
+			diff.Removed = append(diff.Removed, RepresentationId{Id: m.Id})
 		}
 	}
 	for _, m := range after {
-		if bm, ok := beforeMap[m.Guid]; !ok {
+		if bm, ok := beforeMap[m.Id]; !ok {
 			diff.Added = append(diff.Added, m)
 		} else {
-			modelDiff := getModelDiff(bm, m)
-			if modelDiff.Name != nil || modelDiff.File != nil || modelDiff.Tags != nil || modelDiff.Description != nil || modelDiff.Attributes != nil {
+			representationDiff := getRepresentationDiff(bm, m)
+			if representationDiff.Name != nil || representationDiff.File != nil || representationDiff.Tags != nil || representationDiff.Description != nil || representationDiff.Attributes != nil {
 				diff.Updated = append(diff.Updated, struct {
-					Model ModelId   `json:"model"`
-					Diff  ModelDiff `json:"diff"`
+					Representation RepresentationId   `json:"representation"`
+					Diff  RepresentationDiff `json:"diff"`
 				}{
-					Model: ModelId{Guid: m.Guid},
-					Diff:  modelDiff,
+					Representation: RepresentationId{Id: m.Id},
+					Diff:  representationDiff,
 				})
 			}
 		}
@@ -8571,27 +8572,27 @@ func getPiecesDiff(before, after []Piece) PiecesDiff {
 	diff := PiecesDiff{}
 	beforeMap := make(map[string]Piece)
 	for _, p := range before {
-		beforeMap[p.Guid] = p
+		beforeMap[p.Id] = p
 	}
 	afterMap := make(map[string]Piece)
 	for _, p := range after {
-		afterMap[p.Guid] = p
+		afterMap[p.Id] = p
 	}
 	for _, p := range before {
-		if _, ok := afterMap[p.Guid]; !ok {
-			diff.Removed = append(diff.Removed, PieceId{Guid: p.Guid})
+		if _, ok := afterMap[p.Id]; !ok {
+			diff.Removed = append(diff.Removed, PieceId{Id: p.Id})
 		}
 	}
 	for _, p := range after {
-		if _, ok := beforeMap[p.Guid]; !ok {
+		if _, ok := beforeMap[p.Id]; !ok {
 			diff.Added = append(diff.Added, p)
 		} else {
-			pieceDiff := getPieceDiff(beforeMap[p.Guid], p)
+			pieceDiff := getPieceDiff(beforeMap[p.Id], p)
 			if !isPieceDiffEmpty(pieceDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Piece PieceId   `json:"piece"`
 					Diff  PieceDiff `json:"diff"`
-				}{Piece: PieceId{Guid: p.Guid}, Diff: pieceDiff})
+				}{Piece: PieceId{Id: p.Id}, Diff: pieceDiff})
 			}
 		}
 	}
@@ -8626,7 +8627,7 @@ func getPieceDiff(before, after Piece) PieceDiff {
 	}
 	if (before.Center == nil) != (after.Center == nil) || (before.Center != nil && after.Center != nil && (before.Center.U != after.Center.U || before.Center.V != after.Center.V)) {
 		if after.Center != nil {
-			diff.Center = &CoordDiff{U: &after.Center.U, V: &after.Center.V}
+			diff.Center = &CoordinateDiff{U: &after.Center.U, V: &after.Center.V}
 		}
 	}
 	if (before.MirrorPlane == nil) != (after.MirrorPlane == nil) || (before.MirrorPlane != nil && after.MirrorPlane != nil && !arePlanesEqual(*before.MirrorPlane, *after.MirrorPlane)) {
@@ -8672,27 +8673,27 @@ func getConnectionsDiff(before, after []Connection) ConnectionsDiff {
 	diff := ConnectionsDiff{}
 	beforeMap := make(map[string]Connection)
 	for _, c := range before {
-		beforeMap[c.Guid] = c
+		beforeMap[c.Id] = c
 	}
 	afterMap := make(map[string]Connection)
 	for _, c := range after {
-		afterMap[c.Guid] = c
+		afterMap[c.Id] = c
 	}
 	for _, c := range before {
-		if _, ok := afterMap[c.Guid]; !ok {
-			diff.Removed = append(diff.Removed, ConnectionId{Guid: c.Guid})
+		if _, ok := afterMap[c.Id]; !ok {
+			diff.Removed = append(diff.Removed, ConnectionId{Id: c.Id})
 		}
 	}
 	for _, c := range after {
-		if _, ok := beforeMap[c.Guid]; !ok {
+		if _, ok := beforeMap[c.Id]; !ok {
 			diff.Added = append(diff.Added, c)
 		} else {
-			connDiff := getConnectionDiff(beforeMap[c.Guid], c)
+			connDiff := getConnectionDiff(beforeMap[c.Id], c)
 			if !isConnectionDiffEmpty(connDiff) {
 				diff.Updated = append(diff.Updated, struct {
 					Connection ConnectionId   `json:"connection"`
 					Diff       ConnectionDiff `json:"diff"`
-				}{Connection: ConnectionId{Guid: c.Guid}, Diff: connDiff})
+				}{Connection: ConnectionId{Id: c.Id}, Diff: connDiff})
 			}
 		}
 	}
@@ -8702,15 +8703,15 @@ func getConnectionsDiff(before, after []Connection) ConnectionsDiff {
 func getSideDiff(before, after Side) *SideDiff {
 	diff := SideDiff{}
 	changed := false
-	if before.Piece.Guid != after.Piece.Guid {
+	if before.Piece.Id != after.Piece.Id {
 		diff.Piece = &after.Piece
 		changed = true
 	}
-	if (before.DesignPiece == nil) != (after.DesignPiece == nil) || (before.DesignPiece != nil && after.DesignPiece != nil && before.DesignPiece.Guid != after.DesignPiece.Guid) {
+	if (before.DesignPiece == nil) != (after.DesignPiece == nil) || (before.DesignPiece != nil && after.DesignPiece != nil && before.DesignPiece.Id != after.DesignPiece.Id) {
 		diff.DesignPiece = after.DesignPiece
 		changed = true
 	}
-	if (before.Connector == nil) != (after.Connector == nil) || (before.Connector != nil && after.Connector != nil && before.Connector.Guid != after.Connector.Guid) {
+	if (before.Connector == nil) != (after.Connector == nil) || (before.Connector != nil && after.Connector != nil && before.Connector.Id != after.Connector.Id) {
 		diff.Connector = after.Connector
 		changed = true
 	}
@@ -8801,7 +8802,7 @@ func areTypesEqual(a, b Type) bool {
 	if (a.Location == nil) != (b.Location == nil) {
 		return false
 	}
-	if a.Location != nil && a.Location.Guid != b.Location.Guid {
+	if a.Location != nil && a.Location.Id != b.Location.Id {
 		return false
 	}
 	if normalizeStr(a.Folder) != normalizeStr(b.Folder) {
@@ -8825,7 +8826,7 @@ func areTypesEqual(a, b Type) bool {
 	for _, ca := range a.Connectors {
 		found := false
 		for _, cb := range b.Connectors {
-			if ca.Guid == cb.Guid {
+			if ca.Id == cb.Id {
 				if !areConnectorsEqual(ca, cb) {
 					return false
 				}
@@ -8837,14 +8838,14 @@ func areTypesEqual(a, b Type) bool {
 			return false
 		}
 	}
-	if len(a.Models) != len(b.Models) {
+	if len(a.Representations) != len(b.Representations) {
 		return false
 	}
-	for _, ma := range a.Models {
+	for _, ma := range a.Representations {
 		found := false
-		for _, mb := range b.Models {
-			if ma.Guid == mb.Guid {
-				if !areModelsEqual(ma, mb) {
+		for _, mb := range b.Representations {
+			if ma.Id == mb.Id {
+				if !areRepresentationsEqual(ma, mb) {
 					return false
 				}
 				found = true
@@ -8883,7 +8884,7 @@ func areConnectorsEqual(a, b Connector) bool {
 	if (a.Port == nil) != (b.Port == nil) {
 		return false
 	}
-	if a.Port != nil && a.Port.Guid != b.Port.Guid {
+	if a.Port != nil && a.Port.Id != b.Port.Id {
 		return false
 	}
 	if !optBoolEqual(a.Mandatory, b.Mandatory) {
@@ -8898,18 +8899,18 @@ func areConnectorsEqual(a, b Connector) bool {
 	return true
 }
 
-func areModelsEqual(a, b Model) bool {
+func areRepresentationsEqual(a, b Representation) bool {
 	if normalizeStr(a.Name) != normalizeStr(b.Name) {
 		return false
 	}
-	if a.File.Guid != b.File.Guid {
+	if a.File.Id != b.File.Id {
 		return false
 	}
 	if len(a.Tags) != len(b.Tags) {
 		return false
 	}
 	for i, t := range a.Tags {
-		if t.Guid != b.Tags[i].Guid {
+		if t.Id != b.Tags[i].Id {
 			return false
 		}
 	}
@@ -8950,13 +8951,13 @@ func areDesignsEqual(a, b Design) bool {
 	if (a.ActiveLayer == nil) != (b.ActiveLayer == nil) {
 		return false
 	}
-	if a.ActiveLayer != nil && a.ActiveLayer.Guid != b.ActiveLayer.Guid {
+	if a.ActiveLayer != nil && a.ActiveLayer.Id != b.ActiveLayer.Id {
 		return false
 	}
 	if (a.Location == nil) != (b.Location == nil) {
 		return false
 	}
-	if a.Location != nil && a.Location.Guid != b.Location.Guid {
+	if a.Location != nil && a.Location.Id != b.Location.Id {
 		return false
 	}
 	if normalizeStr(a.Icon) != normalizeStr(b.Icon) {
@@ -8977,7 +8978,7 @@ func areDesignsEqual(a, b Design) bool {
 	for _, pa := range a.Pieces {
 		found := false
 		for _, pb := range b.Pieces {
-			if pa.Guid == pb.Guid {
+			if pa.Id == pb.Id {
 				if !arePiecesEqual(pa, pb) {
 					return false
 				}
@@ -8995,7 +8996,7 @@ func areDesignsEqual(a, b Design) bool {
 	for _, ca := range a.Connections {
 		found := false
 		for _, cb := range b.Connections {
-			if ca.Guid == cb.Guid {
+			if ca.Id == cb.Id {
 				if !areConnectionsEqual(ca, cb) {
 					return false
 				}
@@ -9032,13 +9033,13 @@ func arePiecesEqual(a, b Piece) bool {
 	if (a.Type == nil) != (b.Type == nil) {
 		return false
 	}
-	if a.Type != nil && a.Type.Guid != b.Type.Guid {
+	if a.Type != nil && a.Type.Id != b.Type.Id {
 		return false
 	}
 	if (a.Design == nil) != (b.Design == nil) {
 		return false
 	}
-	if a.Design != nil && a.Design.Guid != b.Design.Guid {
+	if a.Design != nil && a.Design.Id != b.Design.Id {
 		return false
 	}
 	if !optFloatEqual(a.Scale, b.Scale) {
@@ -9050,7 +9051,7 @@ func arePiecesEqual(a, b Piece) bool {
 	if a.Plane != nil && !arePlanesEqual(*a.Plane, *b.Plane) {
 		return false
 	}
-	if !areCoordsEqual(a.Center, b.Center) {
+	if !areCoordinatesEqual(a.Center, b.Center) {
 		return false
 	}
 	if (a.MirrorPlane == nil) != (b.MirrorPlane == nil) {
@@ -9081,10 +9082,10 @@ func arePiecesEqual(a, b Piece) bool {
 }
 
 func areConnectionsEqual(a, b Connection) bool {
-	if a.Connected.Piece.Guid != b.Connected.Piece.Guid {
+	if a.Connected.Piece.Id != b.Connected.Piece.Id {
 		return false
 	}
-	if a.Connecting.Piece.Guid != b.Connecting.Piece.Guid {
+	if a.Connecting.Piece.Id != b.Connecting.Piece.Id {
 		return false
 	}
 	if !areSidesEqual(a.Connected, b.Connected) {
@@ -9199,7 +9200,7 @@ func areFamiliesEqual(a, b Family) bool {
 	for _, pa := range a.Ports {
 		found := false
 		for _, pb := range b.Ports {
-			if pa.Guid == pb.Guid {
+			if pa.Id == pb.Id {
 				if !arePortsEqual(pa, pb) {
 					return false
 				}
@@ -9243,7 +9244,7 @@ func areFoldersEqual(a, b Folder) bool {
 	if (a.Parent == nil) != (b.Parent == nil) {
 		return false
 	}
-	if a.Parent != nil && a.Parent.Guid != b.Parent.Guid {
+	if a.Parent != nil && a.Parent.Id != b.Parent.Id {
 		return false
 	}
 	if normalizeStr(a.Description) != normalizeStr(b.Description) {
@@ -9268,7 +9269,7 @@ func areAuthorsEqual(a, b Author) bool {
 	return true
 }
 
-func areCoordsEqual(a, b *Coord) bool {
+func areCoordinatesEqual(a, b *Coordinate) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -9279,19 +9280,19 @@ func areCoordsEqual(a, b *Coord) bool {
 }
 
 func areSidesEqual(a, b Side) bool {
-	if a.Piece.Guid != b.Piece.Guid {
+	if a.Piece.Id != b.Piece.Id {
 		return false
 	}
 	if (a.DesignPiece == nil) != (b.DesignPiece == nil) {
 		return false
 	}
-	if a.DesignPiece != nil && a.DesignPiece.Guid != b.DesignPiece.Guid {
+	if a.DesignPiece != nil && a.DesignPiece.Id != b.DesignPiece.Id {
 		return false
 	}
 	if (a.Connector == nil) != (b.Connector == nil) {
 		return false
 	}
-	if a.Connector != nil && a.Connector.Guid != b.Connector.Guid {
+	if a.Connector != nil && a.Connector.Id != b.Connector.Id {
 		return false
 	}
 	return true
@@ -9304,8 +9305,8 @@ func areStatsEqual(a, b []Stat) bool {
 	for _, sa := range a {
 		found := false
 		for _, sb := range b {
-			if sa.Guid == sb.Guid {
-				if sa.Quality.Guid != sb.Quality.Guid {
+			if sa.Id == sb.Id {
+				if sa.Quality.Id != sb.Quality.Id {
 					return false
 				}
 				if !optFloatEqual(sa.Min, sb.Min) || !optFloatEqual(sa.Max, sb.Max) {
@@ -9335,7 +9336,7 @@ func areLayersEqual(a, b []Layer) bool {
 	for _, la := range a {
 		found := false
 		for _, lb := range b {
-			if la.Guid == lb.Guid {
+			if la.Id == lb.Id {
 				if la.Path != lb.Path {
 					return false
 				}
@@ -9372,7 +9373,7 @@ func areGroupsEqual(a, b []Group) bool {
 	for _, ga := range a {
 		found := false
 		for _, gb := range b {
-			if ga.Guid == gb.Guid {
+			if ga.Id == gb.Id {
 				if normalizeStr(ga.Name) != normalizeStr(gb.Name) {
 					return false
 				}
@@ -9489,13 +9490,13 @@ func kitdiffDeepEqualJSON(a, b any) bool {
 	return e1 == nil && e2 == nil && string(ja) == string(jb)
 }
 
-func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, base []map[string]any, raw map[string]any, onUpdated func(item map[string]any, diff map[string]any, p string)) map[string]any {
+func validateIdCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, base []map[string]any, raw map[string]any, onUpdated func(item map[string]any, diff map[string]any, p string)) map[string]any {
 	if raw == nil {
 		return nil
 	}
 	baseBy := map[string]map[string]any{}
 	for _, it := range base {
-		if g, ok := it["guid"].(string); ok {
+		if g, ok := it["id"].(string); ok {
 			baseBy[g] = it
 		}
 	}
@@ -9503,7 +9504,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 	if arr, ok := raw["removed"].([]any); ok {
 		for _, r := range arr {
 			if rm, ok := r.(map[string]any); ok {
-				if g, ok := rm["guid"].(string); ok {
+				if g, ok := rm["id"].(string); ok {
 					removedSet[g] = true
 				}
 			}
@@ -9533,13 +9534,13 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			if !ok {
 				continue
 			}
-			rg, _ := rm["guid"].(string)
+			rg, _ := rm["id"].(string)
 			if _, ok := baseBy[rg]; !ok {
 				kitdiffPush(ctx, "warnings", "kitdiff.remove.missing-target", path+": remove references missing "+idKey+" "+rg)
 				if ctx.heal && hRem != nil {
 					nr := hRem[:0]
 					for _, x := range hRem {
-						if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+						if m, ok := x.(map[string]any); ok && m["id"] == rg {
 							continue
 						}
 						nr = append(nr, x)
@@ -9553,7 +9554,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 	if arr, ok := raw["added"].([]any); ok {
 		for _, a := range arr {
 			if am, ok := a.(map[string]any); ok {
-				if g, ok := am["guid"].(string); ok {
+				if g, ok := am["id"].(string); ok {
 					addBy[g] = am
 				}
 			}
@@ -9565,7 +9566,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			if !ok {
 				continue
 			}
-			rg, _ := rm["guid"].(string)
+			rg, _ := rm["id"].(string)
 			orig := baseBy[rg]
 			add := addBy[rg]
 			if orig != nil && add != nil && kitdiffDeepEqualJSON(orig, add) {
@@ -9574,7 +9575,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 					if hRem != nil {
 						nr := hRem[:0]
 						for _, x := range hRem {
-							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+							if m, ok := x.(map[string]any); ok && m["id"] == rg {
 								continue
 							}
 							nr = append(nr, x)
@@ -9584,7 +9585,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 					if hAdd != nil {
 						na := hAdd[:0]
 						for _, x := range hAdd {
-							if m, ok := x.(map[string]any); ok && m["guid"] == rg {
+							if m, ok := x.(map[string]any); ok && m["id"] == rg {
 								continue
 							}
 							na = append(na, x)
@@ -9602,9 +9603,9 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			if !ok {
 				continue
 			}
-			ag, _ := am["guid"].(string)
+			ag, _ := am["id"].(string)
 			if seenAdd[ag] {
-				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-in-diff", path+": duplicate added "+idKey+" guid "+ag)
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-in-diff", path+": duplicate added "+idKey+" id "+ag)
 				if ctx.heal && hAdd != nil {
 					first := true
 					na := hAdd[:0]
@@ -9614,7 +9615,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 							na = append(na, x)
 							continue
 						}
-						if g, _ := m["guid"].(string); g == ag {
+						if g, _ := m["id"].(string); g == ag {
 							if first {
 								na = append(na, x)
 								first = false
@@ -9628,11 +9629,11 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			}
 			seenAdd[ag] = true
 			if afterRemove[ag] {
-				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-guid", path+": cannot add "+idKey+" "+ag+" that still exists after removes")
+				kitdiffPush(ctx, "errors", "kitdiff.add.duplicate-id", path+": cannot add "+idKey+" "+ag+" that still exists after removes")
 				if ctx.heal && hAdd != nil {
 					na := hAdd[:0]
 					for _, x := range hAdd {
-						if m, ok := x.(map[string]any); ok && m["guid"] == ag {
+						if m, ok := x.(map[string]any); ok && m["id"] == ag {
 							continue
 						}
 						na = append(na, x)
@@ -9652,19 +9653,19 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			if !ok {
 				continue
 			}
-			gid, _ := idObj["guid"].(string)
+			gid, _ := idObj["id"].(string)
 			p := path + "." + idKey + "[" + gid + "]"
 			if gid == "" {
 				kitdiffPush(ctx, "errors", "kitdiff.update.bad-id", p+": missing "+idKey+" id")
 				if ctx.heal && hUpd != nil {
-					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+					hUpd = filterUpdatesById(hUpd, idKey, gid)
 				}
 				continue
 			}
 			if !afterRemove[gid] {
 				kitdiffPush(ctx, "errors", "kitdiff.update.missing-target", p+": update targets "+idKey+" not present after removes")
 				if ctx.heal && hUpd != nil {
-					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+					hUpd = filterUpdatesById(hUpd, idKey, gid)
 				}
 				continue
 			}
@@ -9672,7 +9673,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 			if item == nil {
 				kitdiffPush(ctx, "errors", "kitdiff.update.missing-base", p+": "+idKey+" not found in base kit")
 				if ctx.heal && hUpd != nil {
-					hUpd = filterUpdatesByGuid(hUpd, idKey, gid)
+					hUpd = filterUpdatesById(hUpd, idKey, gid)
 				}
 				continue
 			}
@@ -9701,7 +9702,7 @@ func validateGuidCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, b
 	return out
 }
 
-func filterUpdatesByGuid(updates []any, idKey, gid string) []any {
+func filterUpdatesById(updates []any, idKey, gid string) []any {
 	n := updates[:0]
 	for _, u := range updates {
 		um, ok := u.(map[string]any)
@@ -9714,7 +9715,7 @@ func filterUpdatesByGuid(updates []any, idKey, gid string) []any {
 			n = append(n, u)
 			continue
 		}
-		if g, _ := idObj["guid"].(string); g == gid {
+		if g, _ := idObj["id"].(string); g == gid {
 			continue
 		}
 		n = append(n, u)
@@ -9744,9 +9745,9 @@ func mapToKitDiff(m map[string]any) KitDiff {
 }
 
 func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, path string, design map[string]any, diff map[string]any, refs map[string]map[string]bool) {
-	typeGuids := refs["typeGuids"]
-	designGuids := refs["designGuids"]
-	authorGuids := refs["authorGuids"]
+	typeIds := refs["typeIds"]
+	designIds := refs["designIds"]
+	authorIds := refs["authorIds"]
 	if da, ok := diff["authors"]; ok {
 		if arr, ok := da.([]any); ok {
 			for _, a := range arr {
@@ -9754,18 +9755,18 @@ func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, 
 				if !ok {
 					continue
 				}
-				if g, ok := am["guid"].(string); ok && g != "" && !authorGuids[g] {
+				if g, ok := am["id"].(string); ok && g != "" && !authorIds[g] {
 					kitdiffPush(ctx, "errors", "kitdiff.ref.author-missing", path+": author "+g+" not in kit")
 				}
 			}
 		} else if dm, ok := da.(map[string]any); ok {
 			authArr := toMapSlice(kitMap["authors"])
-			validateGuidCollectionDiffGo(ctx, path+".authors", "author", authArr, dm, nil)
+			validateIdCollectionDiffGo(ctx, path+".authors", "author", authArr, dm, nil)
 		}
 	}
 	if pd, ok := diff["pieces"].(map[string]any); ok {
 		pieces := toMapSlice(design["pieces"])
-		validateGuidCollectionDiffGo(ctx, path+".pieces", "piece", pieces, pd, nil)
+		validateIdCollectionDiffGo(ctx, path+".pieces", "piece", pieces, pd, nil)
 		if arr, ok := pd["added"].([]any); ok {
 			for _, a := range arr {
 				am, ok := a.(map[string]any)
@@ -9774,16 +9775,16 @@ func validateDesignDiffNestedGo(ctx *kitDiffValidateCtx, kitMap map[string]any, 
 				}
 				var tg string
 				if t, ok := am["type"].(map[string]any); ok {
-					tg, _ = t["guid"].(string)
+					tg, _ = t["id"].(string)
 				}
-				if tg != "" && !typeGuids[tg] {
+				if tg != "" && !typeIds[tg] {
 					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-type-missing", path+".pieces.added: type "+tg+" not in kit")
 				}
 				var dg string
 				if d, ok := am["design"].(map[string]any); ok {
-					dg, _ = d["guid"].(string)
+					dg, _ = d["id"].(string)
 				}
-				if dg != "" && !designGuids[dg] {
+				if dg != "" && !designIds[dg] {
 					kitdiffPush(ctx, "errors", "kitdiff.ref.piece-design-missing", path+".pieces.added: subdesign "+dg+" not in kit")
 				}
 			}
@@ -9805,10 +9806,10 @@ func toMapSlice(v any) []map[string]any {
 	return out
 }
 
-func guidSetFromKitEntities(v any) map[string]bool {
+func idSetFromKitEntities(v any) map[string]bool {
 	s := map[string]bool{}
 	for _, m := range toMapSlice(v) {
-		if g, ok := m["guid"].(string); ok {
+		if g, ok := m["id"].(string); ok {
 			s[g] = true
 		}
 	}
@@ -9826,20 +9827,20 @@ func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
 		_ = json.Unmarshal(b, &outDiff)
 	}
 	refs := map[string]map[string]bool{
-		"typeGuids":    guidSetFromKitEntities(km["types"]),
-		"designGuids":  guidSetFromKitEntities(km["designs"]),
-		"qualityGuids": guidSetFromKitEntities(km["qualities"]),
-		"fileGuids":    guidSetFromKitEntities(km["files"]),
-		"portGuids":    guidSetFromKitEntities(km["ports"]),
-		"conceptGuids": guidSetFromKitEntities(km["concepts"]),
-		"authorGuids":  guidSetFromKitEntities(km["authors"]),
+		"typeIds":    idSetFromKitEntities(km["types"]),
+		"designIds":  idSetFromKitEntities(km["designs"]),
+		"qualityIds": idSetFromKitEntities(km["qualities"]),
+		"fileIds":    idSetFromKitEntities(km["files"]),
+		"portIds":    idSetFromKitEntities(km["ports"]),
+		"conceptIds": idSetFromKitEntities(km["concepts"]),
+		"authorIds":  idSetFromKitEntities(km["authors"]),
 	}
 	runColl := func(key, idKey, arrKey string, onUpd func(item map[string]any, ddf map[string]any, p string)) {
 		part, ok := dm[key].(map[string]any)
 		if !ok || part == nil {
 			return
 		}
-		fixed := validateGuidCollectionDiffGo(ctx, key, idKey, toMapSlice(km[arrKey]), part, onUpd)
+		fixed := validateIdCollectionDiffGo(ctx, key, idKey, toMapSlice(km[arrKey]), part, onUpd)
 		if heal && outDiff != nil {
 			if fixed != nil && len(fixed) > 0 {
 				outDiff[key] = fixed
@@ -9860,7 +9861,7 @@ func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
 	runColl("folders", "folder", "folders", nil)
 	runColl("authors", "author", "authors", nil)
 	if a, ok := dm["attributes"].(map[string]any); ok {
-		validateGuidCollectionDiffGo(ctx, "kit.attributes", "attribute", toMapSlice(km["attributes"]), a, nil)
+		validateIdCollectionDiffGo(ctx, "kit.attributes", "attribute", toMapSlice(km["attributes"]), a, nil)
 	}
 	res := KitDiffValidationResult{Ok: len(ctx.errors) == 0, Errors: ctx.errors, Warnings: ctx.warnings}
 	if heal && outDiff != nil {
@@ -9872,13 +9873,13 @@ func ValidateKitDiff(kit Kit, diff KitDiff, heal bool) KitDiffValidationResult {
 
 func applyTypesDiff(items *[]Type, diff *TypesDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, t := range *items {
-			if !removedGuids[t.Guid] {
+			if !removedIds[t.Id] {
 				filtered = append(filtered, t)
 			}
 		}
@@ -9887,7 +9888,7 @@ func applyTypesDiff(items *[]Type, diff *TypesDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Type.Guid {
+				if (*items)[i].Id == u.Type.Id {
 					applyTypeDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -9939,8 +9940,8 @@ func applyTypeDiff(item *Type, diff *TypeDiff) {
 	if diff.Concepts != nil {
 		item.Concepts = diff.Concepts
 	}
-	if diff.Models != nil {
-		applyModelsDiff(&item.Models, diff.Models)
+	if diff.Representations != nil {
+		applyRepresentationsDiff(&item.Representations, diff.Representations)
 	}
 	if diff.Connectors != nil {
 		applyConnectorsDiff(&item.Connectors, diff.Connectors)
@@ -9955,13 +9956,13 @@ func applyTypeDiff(item *Type, diff *TypeDiff) {
 
 func applyConnectorsDiff(items *[]Connector, diff *ConnectorsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, c := range *items {
-			if !removedGuids[c.Guid] {
+			if !removedIds[c.Id] {
 				filtered = append(filtered, c)
 			}
 		}
@@ -9970,7 +9971,7 @@ func applyConnectorsDiff(items *[]Connector, diff *ConnectorsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Connector.Guid {
+				if (*items)[i].Id == u.Connector.Id {
 					applyConnectorDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10028,15 +10029,15 @@ func applyConnectorDiff(item *Connector, diff *ConnectorDiff) {
 	}
 }
 
-func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
+func applyRepresentationsDiff(items *[]Representation, diff *RepresentationsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, m := range *items {
-			if !removedGuids[m.Guid] {
+			if !removedIds[m.Id] {
 				filtered = append(filtered, m)
 			}
 		}
@@ -10045,8 +10046,8 @@ func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Model.Guid {
-					applyModelDiff(&(*items)[i], &u.Diff)
+				if (*items)[i].Id == u.Representation.Id {
+					applyRepresentationDiff(&(*items)[i], &u.Diff)
 					break
 				}
 			}
@@ -10057,7 +10058,7 @@ func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
 	}
 }
 
-func applyModelDiff(item *Model, diff *ModelDiff) {
+func applyRepresentationDiff(item *Representation, diff *RepresentationDiff) {
 	if diff.Name != nil {
 		item.Name = diff.Name
 	}
@@ -10077,13 +10078,13 @@ func applyModelDiff(item *Model, diff *ModelDiff) {
 
 func applyDesignsDiff(items *[]Design, diff *DesignsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, d := range *items {
-			if !removedGuids[d.Guid] {
+			if !removedIds[d.Id] {
 				filtered = append(filtered, d)
 			}
 		}
@@ -10092,7 +10093,7 @@ func applyDesignsDiff(items *[]Design, diff *DesignsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Design.Guid {
+				if (*items)[i].Id == u.Design.Id {
 					applyDesignDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10176,42 +10177,42 @@ func applyDesignDiff(item *Design, diff *DesignDiff) {
 func DesignWithDiff(base Design, diff DesignDiff) Design {
 	statusAttr := func(status string) Attribute {
 		return Attribute{
-			Guid:  "semio.diffStatus." + status,
+			Id:  "semio.diffStatus." + status,
 			Key:   "semio.diffStatus",
 			Value: ptrString(status),
 		}
 	}
 
-	removedPieceGuids := make(map[string]bool)
+	removedPieceIds := make(map[string]bool)
 	updatedPieceMap := make(map[string]PieceDiff)
 	if diff.Pieces != nil {
 		for _, r := range diff.Pieces.Removed {
-			removedPieceGuids[r.Guid] = true
+			removedPieceIds[r.Id] = true
 		}
 		for _, u := range diff.Pieces.Updated {
-			updatedPieceMap[u.Piece.Guid] = u.Diff
+			updatedPieceMap[u.Piece.Id] = u.Diff
 		}
 	}
 
-	removedConnGuids := make(map[string]bool)
+	removedConnIds := make(map[string]bool)
 	updatedConnMap := make(map[string]ConnectionDiff)
 	if diff.Connections != nil {
 		for _, r := range diff.Connections.Removed {
-			removedConnGuids[r.Guid] = true
+			removedConnIds[r.Id] = true
 		}
 		for _, u := range diff.Connections.Updated {
-			updatedConnMap[u.Connection.Guid] = u.Diff
+			updatedConnMap[u.Connection.Id] = u.Diff
 		}
 	}
 
 	resultPieces := make([]Piece, 0, len(base.Pieces))
 	for _, p := range base.Pieces {
 		pc := p
-		if removedPieceGuids[pc.Guid] {
+		if removedPieceIds[pc.Id] {
 			attrs := append([]Attribute{}, pc.Attributes...)
 			attrs = append(attrs, statusAttr("removed"))
 			pc.Attributes = attrs
-		} else if pDiff, ok := updatedPieceMap[pc.Guid]; ok {
+		} else if pDiff, ok := updatedPieceMap[pc.Id]; ok {
 			basePlane := pc.Plane
 			baseCenter := pc.Center
 			applyPieceDiff(&pc, &pDiff)
@@ -10241,11 +10242,11 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 	resultConns := make([]Connection, 0, len(base.Connections))
 	for _, c := range base.Connections {
 		cc := c
-		if removedConnGuids[cc.Guid] {
+		if removedConnIds[cc.Id] {
 			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("removed"))
 			cc.Attributes = attrs
-		} else if cDiff, ok := updatedConnMap[cc.Guid]; ok {
+		} else if cDiff, ok := updatedConnMap[cc.Id]; ok {
 			applyConnectionDiff(&cc, &cDiff)
 			attrs := append([]Attribute{}, cc.Attributes...)
 			attrs = append(attrs, statusAttr("modified"))
@@ -10275,13 +10276,13 @@ func DesignWithDiff(base Design, diff DesignDiff) Design {
 
 func applyPiecesDiff(items *[]Piece, diff *PiecesDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, p := range *items {
-			if !removedGuids[p.Guid] {
+			if !removedIds[p.Id] {
 				filtered = append(filtered, p)
 			}
 		}
@@ -10290,7 +10291,7 @@ func applyPiecesDiff(items *[]Piece, diff *PiecesDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Piece.Guid {
+				if (*items)[i].Id == u.Piece.Id {
 					applyPieceDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10355,7 +10356,7 @@ func applyPieceDiff(item *Piece, diff *PieceDiff) {
 	}
 	if diff.Center != nil {
 		if item.Center == nil {
-			item.Center = &Coord{}
+			item.Center = &Coordinate{}
 		}
 		if diff.Center.U != nil {
 			item.Center.U = *diff.Center.U
@@ -10424,13 +10425,13 @@ func applyPieceDiff(item *Piece, diff *PieceDiff) {
 
 func applyConnectionsDiff(items *[]Connection, diff *ConnectionsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, c := range *items {
-			if !removedGuids[c.Guid] {
+			if !removedIds[c.Id] {
 				filtered = append(filtered, c)
 			}
 		}
@@ -10439,7 +10440,7 @@ func applyConnectionsDiff(items *[]Connection, diff *ConnectionsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Connection.Guid {
+				if (*items)[i].Id == u.Connection.Id {
 					applyConnectionDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10504,13 +10505,13 @@ func applySideDiff(item *Side, diff *SideDiff) {
 
 func applyTagsDiff(items *[]Tag, diff *TagsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, t := range *items {
-			if !removedGuids[t.Guid] {
+			if !removedIds[t.Id] {
 				filtered = append(filtered, t)
 			}
 		}
@@ -10519,7 +10520,7 @@ func applyTagsDiff(items *[]Tag, diff *TagsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Tag.Guid {
+				if (*items)[i].Id == u.Tag.Id {
 					applyTagDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10548,13 +10549,13 @@ func applyTagDiff(item *Tag, diff *TagDiff) {
 
 func applyConceptsDiff(items *[]Concept, diff *ConceptsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, c := range *items {
-			if !removedGuids[c.Guid] {
+			if !removedIds[c.Id] {
 				filtered = append(filtered, c)
 			}
 		}
@@ -10563,7 +10564,7 @@ func applyConceptsDiff(items *[]Concept, diff *ConceptsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Concept.Guid {
+				if (*items)[i].Id == u.Concept.Id {
 					applyConceptDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10592,13 +10593,13 @@ func applyConceptDiff(item *Concept, diff *ConceptDiff) {
 
 func applyPortsDiff(items *[]Port, diff *PortsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, i := range *items {
-			if !removedGuids[i.Guid] {
+			if !removedIds[i.Id] {
 				filtered = append(filtered, i)
 			}
 		}
@@ -10607,7 +10608,7 @@ func applyPortsDiff(items *[]Port, diff *PortsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Port.Guid {
+				if (*items)[i].Id == u.Port.Id {
 					applyPortDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10642,13 +10643,13 @@ func applyPortDiff(item *Port, diff *PortDiff) {
 
 func applyFamiliesDiff(items *[]Family, diff *FamiliesDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, f := range *items {
-			if !removedGuids[f.Guid] {
+			if !removedIds[f.Id] {
 				filtered = append(filtered, f)
 			}
 		}
@@ -10657,7 +10658,7 @@ func applyFamiliesDiff(items *[]Family, diff *FamiliesDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Family.Guid {
+				if (*items)[i].Id == u.Family.Id {
 					applyFamilyDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10689,13 +10690,13 @@ func applyFamilyDiff(item *Family, diff *FamilyDiff) {
 
 func applyFilesDiff(items *[]File, diff *FilesDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, f := range *items {
-			if !removedGuids[f.Guid] {
+			if !removedIds[f.Id] {
 				filtered = append(filtered, f)
 			}
 		}
@@ -10704,7 +10705,7 @@ func applyFilesDiff(items *[]File, diff *FilesDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.File.Guid {
+				if (*items)[i].Id == u.File.Id {
 					applyFileDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10745,13 +10746,13 @@ func applyFileDiff(item *File, diff *FileDiff) {
 
 func applyFoldersDiff(items *[]Folder, diff *FoldersDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, f := range *items {
-			if !removedGuids[f.Guid] {
+			if !removedIds[f.Id] {
 				filtered = append(filtered, f)
 			}
 		}
@@ -10760,7 +10761,7 @@ func applyFoldersDiff(items *[]Folder, diff *FoldersDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Folder.Guid {
+				if (*items)[i].Id == u.Folder.Id {
 					applyFolderDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10789,13 +10790,13 @@ func applyFolderDiff(item *Folder, diff *FolderDiff) {
 
 func applyAuthorsDiff(items *[]Author, diff *AuthorsDiff) {
 	if diff.Removed != nil {
-		removedGuids := make(map[string]bool)
+		removedIds := make(map[string]bool)
 		for _, r := range diff.Removed {
-			removedGuids[r.Guid] = true
+			removedIds[r.Id] = true
 		}
 		filtered := (*items)[:0]
 		for _, a := range *items {
-			if !removedGuids[a.Guid] {
+			if !removedIds[a.Id] {
 				filtered = append(filtered, a)
 			}
 		}
@@ -10804,7 +10805,7 @@ func applyAuthorsDiff(items *[]Author, diff *AuthorsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Author.Guid {
+				if (*items)[i].Id == u.Author.Id {
 					applyAuthorDiff(&(*items)[i], &u.Diff)
 					break
 				}
@@ -10833,26 +10834,26 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 	return designs
 }
 
-func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationForFilter(representations []Representation, selectedTagIds []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
-	if len(selectedTagGuids) == 0 {
-		for i := range models {
-			if len(models[i].Tags) == 0 {
-				return &models[i]
+	if len(selectedTagIds) == 0 {
+		for i := range representations {
+			if len(representations[i].Tags) == 0 {
+				return &representations[i]
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
 
-	filtered := make([]Model, 0)
-	for _, model := range models {
+	filtered := make([]Representation, 0)
+	for _, representation := range representations {
 		matches := true
-		for _, selectedTagGuid := range selectedTagGuids {
+		for _, selectedTagId := range selectedTagIds {
 			found := false
-			for _, tag := range model.Tags {
-				if tag.Guid == selectedTagGuid {
+			for _, tag := range representation.Tags {
+				if tag.Id == selectedTagId {
 					found = true
 					break
 				}
@@ -10863,7 +10864,7 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 			}
 		}
 		if matches {
-			filtered = append(filtered, model)
+			filtered = append(filtered, representation)
 		}
 	}
 	if len(filtered) == 0 {
@@ -10872,24 +10873,24 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 
 	bestIndex := 0
 	bestScore := -1.0
-	for i, model := range filtered {
+	for i, representation := range filtered {
 		tagSet := make(map[string]bool)
 		selectedSet := make(map[string]bool)
-		for _, tag := range model.Tags {
-			tagSet[tag.Guid] = true
+		for _, tag := range representation.Tags {
+			tagSet[tag.Id] = true
 		}
-		for _, selectedTagGuid := range selectedTagGuids {
-			selectedSet[selectedTagGuid] = true
+		for _, selectedTagId := range selectedTagIds {
+			selectedSet[selectedTagId] = true
 		}
 		intersection := 0
 		union := len(tagSet)
-		for guid := range tagSet {
-			if selectedSet[guid] {
+		for id := range tagSet {
+			if selectedSet[id] {
 				intersection++
 			}
 		}
-		for guid := range selectedSet {
-			if !tagSet[guid] {
+		for id := range selectedSet {
+			if !tagSet[id] {
 				union++
 			}
 		}
@@ -10916,11 +10917,11 @@ type GlobFilter struct {
 }
 
 // 🧹KitFilter provides general-purpose filtering combining design-based transitive filtering with glob-based name filtering.
-// When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// When DesignId is set, first performs transitive design-scoped subset extraction.
 // 🏷️Glob filters on each entity kind are applied afterwards.
 type KitFilter struct {
-	DesignGuid string      `json:"designGuid,omitempty"`
-	ModelTags  []string    `json:"modelTags,omitempty"`
+	DesignId string      `json:"designId,omitempty"`
+	RepresentationTags  []string    `json:"representationTags,omitempty"`
 	Designs    *GlobFilter `json:"designs,omitempty"`
 	Types      *GlobFilter `json:"types,omitempty"`
 	Families   *GlobFilter `json:"families,omitempty"`
@@ -10970,91 +10971,91 @@ func MatchesGlobFilter(name string, filter *GlobFilter) bool {
 
 // 📦filterKitByDesign filters a kit to only include entities transitively related to a design.
 // Removes types not used by pieces, designs not the target, families without used ports,
-// 📄files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
-func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
+// 📄files not used by selected representations, tags/concepts only if referenced, and selects one representation per type based on tags.
+func filterKitByDesign(kit Kit, designId string, tags []string) Kit {
 	var design *Design
 	for i := range kit.Designs {
-		if kit.Designs[i].Guid == designGuid {
+		if kit.Designs[i].Id == designId {
 			design = &kit.Designs[i]
 			break
 		}
 	}
 	if design == nil {
-		return Kit{Guid: kit.Guid, Name: kit.Name, Version: kit.Version}
+		return Kit{Id: kit.Id, Name: kit.Name, Version: kit.Version}
 	}
 
 	pieces := design.Pieces
 
-	usedTypeGuids := make(map[string]bool)
-	usedDesignGuids := make(map[string]bool)
-	usedFamilyGuids := make(map[string]bool)
-	usedDesignGuids[designGuid] = true
+	usedTypeIds := make(map[string]bool)
+	usedDesignIds := make(map[string]bool)
+	usedFamilyIds := make(map[string]bool)
+	usedDesignIds[designId] = true
 	for _, family := range design.Families {
-		usedFamilyGuids[family.Guid] = true
+		usedFamilyIds[family.Id] = true
 	}
 
 	for _, piece := range pieces {
 		if piece.Type != nil {
-			usedTypeGuids[piece.Type.Guid] = true
+			usedTypeIds[piece.Type.Id] = true
 		}
 		if piece.Design != nil {
-			usedDesignGuids[piece.Design.Guid] = true
+			usedDesignIds[piece.Design.Id] = true
 		}
 	}
 
-	typeByGuid := make(map[string]*Type)
+	typeById := make(map[string]*Type)
 	for i := range kit.Types {
-		typeByGuid[kit.Types[i].Guid] = &kit.Types[i]
+		typeById[kit.Types[i].Id] = &kit.Types[i]
 	}
 	for i := range kit.Types {
 		for _, family := range kit.Types[i].Families {
-			if usedFamilyGuids[family.Guid] {
-				usedTypeGuids[kit.Types[i].Guid] = true
+			if usedFamilyIds[family.Id] {
+				usedTypeIds[kit.Types[i].Id] = true
 			}
 		}
 	}
 	for i := range kit.Designs {
 		for _, family := range kit.Designs[i].Families {
-			if usedFamilyGuids[family.Guid] {
-				usedDesignGuids[kit.Designs[i].Guid] = true
+			if usedFamilyIds[family.Id] {
+				usedDesignIds[kit.Designs[i].Id] = true
 			}
 		}
 	}
 
-	resolvedTagGuids := make([]string, 0)
+	resolvedTagIds := make([]string, 0)
 	for _, tagValue := range tags {
 		for _, tag := range kit.Tags {
-			if tag.Guid == tagValue {
-				resolvedTagGuids = append(resolvedTagGuids, tag.Guid)
+			if tag.Id == tagValue {
+				resolvedTagIds = append(resolvedTagIds, tag.Id)
 				break
 			}
 		}
 		for _, tag := range kit.Tags {
 			if tag.Name == tagValue {
-				resolvedTagGuids = append(resolvedTagGuids, tag.Guid)
+				resolvedTagIds = append(resolvedTagIds, tag.Id)
 			}
 		}
 	}
 
-	usedPortGuids := make(map[string]bool)
-	usedFileGuids := make(map[string]bool)
-	usedTagGuids := make(map[string]bool)
-	usedConceptGuids := make(map[string]bool)
-	usedQualityGuids := make(map[string]bool)
-	usedAuthorGuids := make(map[string]bool)
+	usedPortIds := make(map[string]bool)
+	usedFileIds := make(map[string]bool)
+	usedTagIds := make(map[string]bool)
+	usedConceptIds := make(map[string]bool)
+	usedQualityIds := make(map[string]bool)
+	usedAuthorIds := make(map[string]bool)
 	usedFolderNames := make(map[string]bool)
 
 	collectQualityFromProps := func(props []Prop) {
 		for _, prop := range props {
-			if prop.Quality.Guid != "" {
-				usedQualityGuids[prop.Quality.Guid] = true
+			if prop.Quality.Id != "" {
+				usedQualityIds[prop.Quality.Id] = true
 			}
 		}
 	}
 
-	selectedModels := make(map[string]*Model)
-	for typeGuid := range usedTypeGuids {
-		t, ok := typeByGuid[typeGuid]
+	selectedRepresentations := make(map[string]*Representation)
+	for typeId := range usedTypeIds {
+		t, ok := typeById[typeId]
 		if !ok {
 			continue
 		}
@@ -11063,25 +11064,25 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		}
 		for _, connector := range t.Connectors {
 			if connector.Port != nil {
-				usedPortGuids[connector.Port.Guid] = true
+				usedPortIds[connector.Port.Id] = true
 			}
 			collectQualityFromProps(connector.Props)
 		}
 		collectQualityFromProps(t.Props)
 		for _, authorId := range t.Authors {
-			usedAuthorGuids[authorId.Guid] = true
+			usedAuthorIds[authorId.Id] = true
 		}
 		for _, conceptId := range t.Concepts {
-			usedConceptGuids[conceptId.Guid] = true
+			usedConceptIds[conceptId.Id] = true
 		}
 
-		if len(t.Models) > 0 {
-			best := selectBestModelLike(t.Models, resolvedTagGuids)
+		if len(t.Representations) > 0 {
+			best := selectBestRepresentationLike(t.Representations, resolvedTagIds)
 			if best != nil {
-				selectedModels[typeGuid] = best
-				usedFileGuids[best.File.Guid] = true
+				selectedRepresentations[typeId] = best
+				usedFileIds[best.File.Id] = true
 				for _, tagId := range best.Tags {
-					usedTagGuids[tagId.Guid] = true
+					usedTagIds[tagId.Id] = true
 				}
 			}
 		}
@@ -11091,35 +11092,35 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		collectQualityFromProps(piece.Props)
 	}
 	for _, conceptId := range design.Concepts {
-		usedConceptGuids[conceptId.Guid] = true
+		usedConceptIds[conceptId.Id] = true
 	}
 	for _, authorId := range design.Authors {
-		usedAuthorGuids[authorId.Guid] = true
+		usedAuthorIds[authorId.Id] = true
 	}
 
 	portSnapshot := make([]string, 0)
-	for portGuid := range usedPortGuids {
-		portSnapshot = append(portSnapshot, portGuid)
+	for portId := range usedPortIds {
+		portSnapshot = append(portSnapshot, portId)
 	}
-	for _, portGuid := range portSnapshot {
+	for _, portId := range portSnapshot {
 		for _, family := range kit.Families {
 			for _, port := range family.Ports {
-				if port.Guid != portGuid {
+				if port.Id != portId {
 					continue
 				}
 				for _, compat := range port.CompatiblePorts {
-					usedPortGuids[compat.Guid] = true
+					usedPortIds[compat.Id] = true
 				}
 			}
 		}
 	}
 
-	for _, tagGuid := range resolvedTagGuids {
-		usedTagGuids[tagGuid] = true
+	for _, tagId := range resolvedTagIds {
+		usedTagIds[tagId] = true
 	}
 
 	result := Kit{
-		Guid:        kit.Guid,
+		Id:        kit.Id,
 		Name:        kit.Name,
 		Version:     kit.Version,
 		Description: kit.Description,
@@ -11135,20 +11136,20 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	}
 
 	for _, t := range kit.Types {
-		if !usedTypeGuids[t.Guid] {
+		if !usedTypeIds[t.Id] {
 			continue
 		}
 		filteredType := t
-		if model, ok := selectedModels[t.Guid]; ok {
-			filteredType.Models = []Model{*model}
+		if representation, ok := selectedRepresentations[t.Id]; ok {
+			filteredType.Representations = []Representation{*representation}
 		} else {
-			filteredType.Models = []Model{}
+			filteredType.Representations = []Representation{}
 		}
 		result.Types = append(result.Types, filteredType)
 	}
 
 	for _, d := range kit.Designs {
-		if usedDesignGuids[d.Guid] {
+		if usedDesignIds[d.Id] {
 			result.Designs = append(result.Designs, d)
 		}
 	}
@@ -11156,7 +11157,7 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		filteredFamily := family
 		filteredFamily.Ports = nil
 		for _, port := range family.Ports {
-			if usedPortGuids[port.Guid] {
+			if usedPortIds[port.Id] {
 				filteredFamily.Ports = append(filteredFamily.Ports, port)
 			}
 		}
@@ -11165,27 +11166,27 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		}
 	}
 	for _, f := range kit.Files {
-		if usedFileGuids[f.Guid] {
+		if usedFileIds[f.Id] {
 			result.Files = append(result.Files, f)
 		}
 	}
 	for _, t := range kit.Tags {
-		if usedTagGuids[t.Guid] {
+		if usedTagIds[t.Id] {
 			result.Tags = append(result.Tags, t)
 		}
 	}
 	for _, c := range kit.Concepts {
-		if usedConceptGuids[c.Guid] {
+		if usedConceptIds[c.Id] {
 			result.Concepts = append(result.Concepts, c)
 		}
 	}
 	for _, q := range kit.Qualities {
-		if usedQualityGuids[q.Guid] {
+		if usedQualityIds[q.Id] {
 			result.Qualities = append(result.Qualities, q)
 		}
 	}
 	for _, a := range kit.Authors {
-		if usedAuthorGuids[a.Guid] {
+		if usedAuthorIds[a.Id] {
 			result.Authors = append(result.Authors, a)
 		}
 	}
@@ -11199,12 +11200,12 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 }
 
 // 🎨FilterKit applies general-purpose filtering to a kit. Combines optional design-based transitive filtering
-// with glob-based name filtering. When DesignGuid is set, first performs transitive design-scoped subset extraction.
+// with glob-based name filtering. When DesignId is set, first performs transitive design-scoped subset extraction.
 // 🧩Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
 func FilterKit(kit Kit, filter KitFilter) Kit {
 	var base Kit
-	if filter.DesignGuid != "" {
-		base = filterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+	if filter.DesignId != "" {
+		base = filterKitByDesign(kit, filter.DesignId, filter.RepresentationTags)
 	} else {
 		base = kit
 	}
@@ -11216,7 +11217,7 @@ func FilterKit(kit Kit, filter KitFilter) Kit {
 	}
 
 	result := Kit{
-		Guid:        base.Guid,
+		Id:        base.Id,
 		Name:        base.Name,
 		Version:     base.Version,
 		Description: base.Description,
@@ -11288,30 +11289,30 @@ func FilterKit(kit Kit, filter KitFilter) Kit {
 	return result
 }
 
-// 🏷️selectBestModelLike selects the best model based on tag matching using Jaccard similarity.
+// 🏷️selectBestRepresentationLike selects the best representation based on tag matching using Jaccard similarity.
 // 🛠️Helper for filterKitByDesign.
-func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationLike(representations []Representation, selectedTagIds []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
-	if len(selectedTagGuids) == 0 {
-		for _, m := range models {
+	if len(selectedTagIds) == 0 {
+		for _, m := range representations {
 			if len(m.Tags) == 0 {
 				return &m
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
 
-	var filtered []Model
-	for _, m := range models {
-		modelTagGuids := make(map[string]bool)
+	var filtered []Representation
+	for _, m := range representations {
+		representationTagIds := make(map[string]bool)
 		for _, tag := range m.Tags {
-			modelTagGuids[tag.Guid] = true
+			representationTagIds[tag.Id] = true
 		}
 		allSelected := true
-		for _, guid := range selectedTagGuids {
-			if !modelTagGuids[guid] {
+		for _, id := range selectedTagIds {
+			if !representationTagIds[id] {
 				allSelected = false
 				break
 			}
@@ -11326,9 +11327,9 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	}
 
 	best := filtered[0]
-	bestScore := jaccardTagGuidsGo(best.Tags, selectedTagGuids)
+	bestScore := jaccardTagIdsGo(best.Tags, selectedTagIds)
 	for _, m := range filtered[1:] {
-		score := jaccardTagGuidsGo(m.Tags, selectedTagGuids)
+		score := jaccardTagIdsGo(m.Tags, selectedTagIds)
 		if score > bestScore {
 			best = m
 			bestScore = score
@@ -11337,28 +11338,28 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	return &best
 }
 
-// 🏷️jaccardTagGuidsGo computes Jaccard similarity coefficient between model tags and selected tags.
+// 🏷️jaccardTagIdsGo computes Jaccard similarity coefficient between representation tags and selected tags.
 // 🔑Helper for filterKitByDesign.
-func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
-	modelTagSet := make(map[string]bool)
-	for _, tag := range modelTags {
-		modelTagSet[tag.Guid] = true
+func jaccardTagIdsGo(representationTags []TagId, selectedTagIds []string) float64 {
+	representationTagSet := make(map[string]bool)
+	for _, tag := range representationTags {
+		representationTagSet[tag.Id] = true
 	}
 	selectedSet := make(map[string]bool)
-	for _, guid := range selectedTagGuids {
-		selectedSet[guid] = true
+	for _, id := range selectedTagIds {
+		selectedSet[id] = true
 	}
 
 	intersection := 0
 	union := 0
-	for guid := range selectedSet {
-		if modelTagSet[guid] {
+	for id := range selectedSet {
+		if representationTagSet[id] {
 			intersection++
 		}
 		union++
 	}
-	for guid := range modelTagSet {
-		if !selectedSet[guid] {
+	for id := range representationTagSet {
+		if !selectedSet[id] {
 			union++
 		}
 	}
@@ -11389,11 +11390,11 @@ func AddTypeToKit(kit Kit, typ Type) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🚚RemoveTypeFromKit creates a change that removes a type by GUID.
-func RemoveTypeFromKit(kit Kit, typeGuid string) KitChange {
+// 🚚RemoveTypeFromKit creates a change that removes a type by ID.
+func RemoveTypeFromKit(kit Kit, typeId string) KitChange {
 	forward := KitDiff{
 		Types: &TypesDiff{
-			Removed: []TypeId{{Guid: typeGuid}},
+			Removed: []TypeId{{Id: typeId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11415,11 +11416,11 @@ func AddDesignToKit(kit Kit, design Design) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// ➖RemoveDesignFromKit creates a change that removes a design by GUID.
-func RemoveDesignFromKit(kit Kit, designGuid string) KitChange {
+// ➖RemoveDesignFromKit creates a change that removes a design by ID.
+func RemoveDesignFromKit(kit Kit, designId string) KitChange {
 	forward := KitDiff{
 		Designs: &DesignsDiff{
-			Removed: []DesignId{{Guid: designGuid}},
+			Removed: []DesignId{{Id: designId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11441,11 +11442,11 @@ func AddFileToKit(kit Kit, file File) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// ❌RemoveFileFromKit creates a change that removes a file by GUID.
-func RemoveFileFromKit(kit Kit, fileGuid string) KitChange {
+// ❌RemoveFileFromKit creates a change that removes a file by ID.
+func RemoveFileFromKit(kit Kit, fileId string) KitChange {
 	forward := KitDiff{
 		Files: &FilesDiff{
-			Removed: []FileId{{Guid: fileGuid}},
+			Removed: []FileId{{Id: fileId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11467,11 +11468,11 @@ func AddFamilyToKit(kit Kit, family Family) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 👪RemoveFamilyFromKit creates a change that removes a family by GUID.
-func RemoveFamilyFromKit(kit Kit, familyGuid string) KitChange {
+// 👪RemoveFamilyFromKit creates a change that removes a family by ID.
+func RemoveFamilyFromKit(kit Kit, familyId string) KitChange {
 	forward := KitDiff{
 		Families: &FamiliesDiff{
-			Removed: []FamilyId{{Guid: familyGuid}},
+			Removed: []FamilyId{{Id: familyId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11493,11 +11494,11 @@ func AddTagToKit(kit Kit, tag Tag) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 🪹RemoveTagFromKit creates a change that removes a tag by GUID.
-func RemoveTagFromKit(kit Kit, tagGuid string) KitChange {
+// 🪹RemoveTagFromKit creates a change that removes a tag by ID.
+func RemoveTagFromKit(kit Kit, tagId string) KitChange {
 	forward := KitDiff{
 		Tags: &TagsDiff{
-			Removed: []TagId{{Guid: tagGuid}},
+			Removed: []TagId{{Id: tagId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11519,11 +11520,11 @@ func AddConceptToKit(kit Kit, concept Concept) KitChange {
 	return KitChange{Forward: forward, Backward: backward, Before: &kit, After: &after}
 }
 
-// 💡RemoveConceptFromKit creates a change that removes a concept by GUID.
-func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
+// 💡RemoveConceptFromKit creates a change that removes a concept by ID.
+func RemoveConceptFromKit(kit Kit, conceptId string) KitChange {
 	forward := KitDiff{
 		Concepts: &ConceptsDiff{
-			Removed: []ConceptId{{Guid: conceptGuid}},
+			Removed: []ConceptId{{Id: conceptId}},
 		},
 	}
 	after := deepCloneKit(kit)
@@ -11544,7 +11545,7 @@ func RemoveConceptFromKit(kit Kit, conceptGuid string) KitChange {
 // If no connections found: suggests types with same or compatible ports as the selected pieces.
 
 // FindReplaceableTypesInDesignsForPiecesInDesign finds replaceable types and designs for the selected pieces.
-func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Design, types []Type, ports []Port, selectionPieces []string) (typeGuids []string, designGuids []string) {
+func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Design, types []Type, ports []Port, selectionPieces []string) (typeIds []string, designIds []string) {
 	selectedPieceSet := make(map[string]bool)
 	for _, pg := range selectionPieces {
 		selectedPieceSet[pg] = true
@@ -11552,56 +11553,56 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 
 	pieceMap := make(map[string]Piece)
 	for _, piece := range design.Pieces {
-		pieceMap[piece.Guid] = piece
+		pieceMap[piece.Id] = piece
 	}
 
 	portMap := make(map[string]Port)
 	for _, p := range ports {
-		portMap[p.Guid] = p
+		portMap[p.Id] = p
 	}
 
 	typeMap := make(map[string]Type)
 	for _, t := range types {
-		typeMap[t.Guid] = t
+		typeMap[t.Id] = t
 	}
 
-	checkPortCompatibility := func(candidatePortGuid, requiredPortGuid string) bool {
-		if candidatePortGuid == "" || requiredPortGuid == "" {
+	checkPortCompatibility := func(candidatePortId, requiredPortId string) bool {
+		if candidatePortId == "" || requiredPortId == "" {
 			return false
 		}
-		if candidatePortGuid == requiredPortGuid {
+		if candidatePortId == requiredPortId {
 			return true
 		}
-		candidatePort, okCandidate := portMap[candidatePortGuid]
-		requiredPort, okRequired := portMap[requiredPortGuid]
+		candidatePort, okCandidate := portMap[candidatePortId]
+		requiredPort, okRequired := portMap[requiredPortId]
 		if !okCandidate || !okRequired {
 			return false
 		}
 		for _, compatiblePort := range candidatePort.CompatiblePorts {
-			if compatiblePort.Guid == requiredPortGuid {
+			if compatiblePort.Id == requiredPortId {
 				return true
 			}
 		}
 		for _, compatiblePort := range requiredPort.CompatiblePorts {
-			if compatiblePort.Guid == candidatePortGuid {
+			if compatiblePort.Id == candidatePortId {
 				return true
 			}
 		}
 		return false
 	}
 
-	getConnectorPortGuid := func(typeGuid, connectorGuid string) string {
-		if typeGuid == "" || connectorGuid == "" {
+	getConnectorPortId := func(typeId, connectorId string) string {
+		if typeId == "" || connectorId == "" {
 			return ""
 		}
-		candidateType, ok := typeMap[typeGuid]
+		candidateType, ok := typeMap[typeId]
 		if !ok {
 			return ""
 		}
 		for _, connector := range candidateType.Connectors {
-			if connector.Guid == connectorGuid {
+			if connector.Id == connectorId {
 				if connector.Port != nil {
-					return connector.Port.Guid
+					return connector.Port.Id
 				}
 				return ""
 			}
@@ -11609,31 +11610,31 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 		return ""
 	}
 
-	getOwnRequirementPortGuids := func(pieceGuid string) []string {
-		piece, ok := pieceMap[pieceGuid]
-		if !ok || piece.Type == nil || piece.Type.Guid == "" {
+	getOwnRequirementPortIds := func(pieceId string) []string {
+		piece, ok := pieceMap[pieceId]
+		if !ok || piece.Type == nil || piece.Type.Id == "" {
 			return []string{}
 		}
-		candidateType, ok := typeMap[piece.Type.Guid]
+		candidateType, ok := typeMap[piece.Type.Id]
 		if !ok {
 			return []string{}
 		}
-		requirementPortGuids := make([]string, 0, len(candidateType.Connectors))
+		requirementPortIds := make([]string, 0, len(candidateType.Connectors))
 		for _, connector := range candidateType.Connectors {
 			if connector.Port != nil {
-				requirementPortGuids = append(requirementPortGuids, connector.Port.Guid)
+				requirementPortIds = append(requirementPortIds, connector.Port.Id)
 			} else {
-				requirementPortGuids = append(requirementPortGuids, "")
+				requirementPortIds = append(requirementPortIds, "")
 			}
 		}
-		return requirementPortGuids
+		return requirementPortIds
 	}
 
-	getBoundaryRequirementPortGuids := func() []string {
-		requirementPortGuids := []string{}
+	getBoundaryRequirementPortIds := func() []string {
+		requirementPortIds := []string{}
 		for _, conn := range design.Connections {
-			connectedSelected := selectedPieceSet[conn.Connected.Piece.Guid]
-			connectingSelected := selectedPieceSet[conn.Connecting.Piece.Guid]
+			connectedSelected := selectedPieceSet[conn.Connected.Piece.Id]
+			connectingSelected := selectedPieceSet[conn.Connecting.Piece.Id]
 			if connectedSelected == connectingSelected {
 				continue
 			}
@@ -11642,38 +11643,38 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 			if connectedSelected {
 				otherSide = conn.Connecting
 			}
-			otherPiece, ok := pieceMap[otherSide.Piece.Guid]
+			otherPiece, ok := pieceMap[otherSide.Piece.Id]
 			if !ok || otherPiece.Type == nil {
-				requirementPortGuids = append(requirementPortGuids, "")
+				requirementPortIds = append(requirementPortIds, "")
 				continue
 			}
-			connectorGuid := ""
+			connectorId := ""
 			if otherSide.Connector != nil {
-				connectorGuid = otherSide.Connector.Guid
+				connectorId = otherSide.Connector.Id
 			}
-			requirementPortGuids = append(requirementPortGuids, getConnectorPortGuid(otherPiece.Type.Guid, connectorGuid))
+			requirementPortIds = append(requirementPortIds, getConnectorPortId(otherPiece.Type.Id, connectorId))
 		}
-		return requirementPortGuids
+		return requirementPortIds
 	}
 
-	getSelectionOwnRequirementPortGuids := func() []string {
-		requirementPortGuids := []string{}
-		for _, pieceGuid := range selectionPieces {
-			requirementPortGuids = append(requirementPortGuids, getOwnRequirementPortGuids(pieceGuid)...)
+	getSelectionOwnRequirementPortIds := func() []string {
+		requirementPortIds := []string{}
+		for _, pieceId := range selectionPieces {
+			requirementPortIds = append(requirementPortIds, getOwnRequirementPortIds(pieceId)...)
 		}
-		return requirementPortGuids
+		return requirementPortIds
 	}
 
-	requiredPortGuids := getBoundaryRequirementPortGuids()
-	if len(requiredPortGuids) == 0 {
-		requiredPortGuids = getSelectionOwnRequirementPortGuids()
+	requiredPortIds := getBoundaryRequirementPortIds()
+	if len(requiredPortIds) == 0 {
+		requiredPortIds = getSelectionOwnRequirementPortIds()
 	}
 
-	canSatisfyRequirements := func(requiredPortGuids []string, availablePortGuids []string) bool {
-		if len(requiredPortGuids) == 0 {
+	canSatisfyRequirements := func(requiredPortIds []string, availablePortIds []string) bool {
+		if len(requiredPortIds) == 0 {
 			return true
 		}
-		if len(availablePortGuids) < len(requiredPortGuids) {
+		if len(availablePortIds) < len(requiredPortIds) {
 			return false
 		}
 
@@ -11681,11 +11682,11 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 			connectorIndexes []int
 		}
 
-		requirementOptions := make([]requirementOption, 0, len(requiredPortGuids))
-		for _, requiredPortGuid := range requiredPortGuids {
+		requirementOptions := make([]requirementOption, 0, len(requiredPortIds))
+		for _, requiredPortId := range requiredPortIds {
 			connectorIndexes := []int{}
-			for connectorIndex, availablePortGuid := range availablePortGuids {
-				if checkPortCompatibility(availablePortGuid, requiredPortGuid) {
+			for connectorIndex, availablePortId := range availablePortIds {
+				if checkPortCompatibility(availablePortId, requiredPortId) {
 					connectorIndexes = append(connectorIndexes, connectorIndex)
 				}
 			}
@@ -11698,7 +11699,7 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 			return len(requirementOptions[i].connectorIndexes) < len(requirementOptions[j].connectorIndexes)
 		})
 
-		usedConnectorIndexes := make([]bool, len(availablePortGuids))
+		usedConnectorIndexes := make([]bool, len(availablePortIds))
 		var matchRequirements func(int) bool
 		matchRequirements = func(requirementIndex int) bool {
 			if requirementIndex >= len(requirementOptions) {
@@ -11719,88 +11720,88 @@ func FindReplaceableTypesInDesignsForPiecesInDesign(design Design, designs []Des
 		return matchRequirements(0)
 	}
 
-	candidateTypeAvailablePortGuids := func(candidateType Type) []string {
-		availablePortGuids := make([]string, 0, len(candidateType.Connectors))
+	candidateTypeAvailablePortIds := func(candidateType Type) []string {
+		availablePortIds := make([]string, 0, len(candidateType.Connectors))
 		for _, connector := range candidateType.Connectors {
 			if connector.Port != nil {
-				availablePortGuids = append(availablePortGuids, connector.Port.Guid)
+				availablePortIds = append(availablePortIds, connector.Port.Id)
 			} else {
-				availablePortGuids = append(availablePortGuids, "")
+				availablePortIds = append(availablePortIds, "")
 			}
 		}
-		return availablePortGuids
+		return availablePortIds
 	}
 
-	candidateDesignAvailablePortGuids := func(candidateDesign Design) []string {
+	candidateDesignAvailablePortIds := func(candidateDesign Design) []string {
 		consumedConnectorKeys := make(map[string]bool)
 		for _, conn := range candidateDesign.Connections {
 			for _, side := range []Side{conn.Connected, conn.Connecting} {
-				if side.Connector != nil && side.Connector.Guid != "" {
-					consumedConnectorKeys[side.Piece.Guid+"::"+side.Connector.Guid] = true
+				if side.Connector != nil && side.Connector.Id != "" {
+					consumedConnectorKeys[side.Piece.Id+"::"+side.Connector.Id] = true
 				}
 			}
 		}
 
-		availablePortGuids := []string{}
+		availablePortIds := []string{}
 		for _, piece := range candidateDesign.Pieces {
-			if piece.Type == nil || piece.Type.Guid == "" {
+			if piece.Type == nil || piece.Type.Id == "" {
 				continue
 			}
-			candidateType, ok := typeMap[piece.Type.Guid]
+			candidateType, ok := typeMap[piece.Type.Id]
 			if !ok {
 				continue
 			}
 			for _, connector := range candidateType.Connectors {
-				if consumedConnectorKeys[piece.Guid+"::"+connector.Guid] {
+				if consumedConnectorKeys[piece.Id+"::"+connector.Id] {
 					continue
 				}
 				if connector.Port != nil {
-					availablePortGuids = append(availablePortGuids, connector.Port.Guid)
+					availablePortIds = append(availablePortIds, connector.Port.Id)
 				} else {
-					availablePortGuids = append(availablePortGuids, "")
+					availablePortIds = append(availablePortIds, "")
 				}
 			}
 		}
-		return availablePortGuids
+		return availablePortIds
 	}
 
 	if len(selectionPieces) == 0 {
 		for _, candidateType := range types {
-			if len(candidateTypeAvailablePortGuids(candidateType)) == 0 {
-				typeGuids = append(typeGuids, candidateType.Guid)
+			if len(candidateTypeAvailablePortIds(candidateType)) == 0 {
+				typeIds = append(typeIds, candidateType.Id)
 			}
 		}
 		for _, candidateDesign := range designs {
-			if len(candidateDesignAvailablePortGuids(candidateDesign)) == 0 {
-				designGuids = append(designGuids, candidateDesign.Guid)
+			if len(candidateDesignAvailablePortIds(candidateDesign)) == 0 {
+				designIds = append(designIds, candidateDesign.Id)
 			}
 		}
-		return typeGuids, designGuids
+		return typeIds, designIds
 	}
 
-	isValidCandidate := func(availablePortGuids []string) bool {
-		return canSatisfyRequirements(requiredPortGuids, availablePortGuids)
+	isValidCandidate := func(availablePortIds []string) bool {
+		return canSatisfyRequirements(requiredPortIds, availablePortIds)
 	}
 
 	for _, candidateType := range types {
-		if isValidCandidate(candidateTypeAvailablePortGuids(candidateType)) {
-			typeGuids = append(typeGuids, candidateType.Guid)
+		if isValidCandidate(candidateTypeAvailablePortIds(candidateType)) {
+			typeIds = append(typeIds, candidateType.Id)
 		}
 	}
 
 	for _, candidateDesign := range designs {
-		if isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign)) {
-			designGuids = append(designGuids, candidateDesign.Guid)
+		if isValidCandidate(candidateDesignAvailablePortIds(candidateDesign)) {
+			designIds = append(designIds, candidateDesign.Id)
 		}
 	}
 
-	if typeGuids == nil {
-		typeGuids = []string{}
+	if typeIds == nil {
+		typeIds = []string{}
 	}
-	if designGuids == nil {
-		designGuids = []string{}
+	if designIds == nil {
+		designIds = []string{}
 	}
-	return typeGuids, designGuids
+	return typeIds, designIds
 }
 
 // #endregion 🔍Find Replaceable Types In Designs
@@ -11845,44 +11846,44 @@ func deepCloneKit(k Kit) Kit {
 // Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
 // Internal pieces are copied as-is. Parent-piece-exclusive parent-connection-inclusive pieces get semio.center and semio.plane attributes.
 // Non-internal connections include their external pieces marked with semio.piece.origin = "external".
-func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []string) Design {
+func CopyDesign(kit *Kit, design Design, pieceIds []string, connectionIds []string) Design {
 	selectedPieceSet := make(map[string]bool)
-	for _, g := range pieceGuids {
+	for _, g := range pieceIds {
 		selectedPieceSet[g] = true
 	}
 	selectedConnectionSet := make(map[string]bool)
-	for _, g := range connectionGuids {
+	for _, g := range connectionIds {
 		selectedConnectionSet[g] = true
 	}
 
-	// Build parent map: child guid -> (parent guid, connection)
+	// Build parent map: child id -> (parent id, connection)
 	type parentInfo struct {
-		parentGuid string
+		parentId string
 		connection Connection
 	}
 	parentMap := make(map[string]parentInfo)
 	for _, conn := range design.Connections {
-		parentMap[conn.Connecting.Piece.Guid] = parentInfo{conn.Connected.Piece.Guid, conn}
+		parentMap[conn.Connecting.Piece.Id] = parentInfo{conn.Connected.Piece.Id, conn}
 	}
 
 	// Flatten the design to get absolute planes/centers
-	flatDiff := FlattenDesignDiff(kit, design.Guid)
+	flatDiff := FlattenDesignDiff(kit, design.Id)
 	flatDesign := deepCloneDesign(design)
 	ApplyDesignDiff(&flatDesign, &flatDiff)
 	flatPieceMap := make(map[string]*Piece)
 	for i := range flatDesign.Pieces {
-		flatPieceMap[flatDesign.Pieces[i].Guid] = &flatDesign.Pieces[i]
+		flatPieceMap[flatDesign.Pieces[i].Id] = &flatDesign.Pieces[i]
 	}
 
 	var copyPieces []Piece
-	addedPieceGuids := make(map[string]bool)
+	addedPieceIds := make(map[string]bool)
 	var copyConnections []Connection
 
 	// Process selected pieces
-	for _, pieceGuid := range pieceGuids {
+	for _, pieceId := range pieceIds {
 		var piece *Piece
 		for i := range design.Pieces {
-			if design.Pieces[i].Guid == pieceGuid {
+			if design.Pieces[i].Id == pieceId {
 				piece = &design.Pieces[i]
 				break
 			}
@@ -11892,25 +11893,25 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 		}
 
 		isFixed := piece.Plane != nil
-		pInfo, isConnected := parentMap[pieceGuid]
+		pInfo, isConnected := parentMap[pieceId]
 
 		isInternalConnected := false
-		isInternalFixed := isFixed && selectedPieceSet[pieceGuid]
+		isInternalFixed := isFixed && selectedPieceSet[pieceId]
 		isPpExclPcIncl := false
 
 		if isConnected {
-			parentPieceSelected := selectedPieceSet[pInfo.parentGuid]
-			parentConnSelected := selectedConnectionSet[pInfo.connection.Guid]
+			parentPieceSelected := selectedPieceSet[pInfo.parentId]
+			parentConnSelected := selectedConnectionSet[pInfo.connection.Id]
 			isInternalConnected = parentPieceSelected && parentConnSelected
 			isPpExclPcIncl = !parentPieceSelected && parentConnSelected
 		}
 
 		if isInternalFixed || isInternalConnected {
 			copyPieces = append(copyPieces, deepClonePiece(*piece))
-			addedPieceGuids[pieceGuid] = true
+			addedPieceIds[pieceId] = true
 		} else if isPpExclPcIncl {
 			copied := deepClonePiece(*piece)
-			if flatPiece, ok := flatPieceMap[pieceGuid]; ok {
+			if flatPiece, ok := flatPieceMap[pieceId]; ok {
 				centerValue := `{"u":0,"v":0}`
 				if flatPiece.Center != nil {
 					data, _ := json.Marshal(flatPiece.Center)
@@ -11927,15 +11928,15 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 				)
 			}
 			copyPieces = append(copyPieces, copied)
-			addedPieceGuids[pieceGuid] = true
+			addedPieceIds[pieceId] = true
 		}
 	}
 
 	// Process selected connections
-	for _, connGuid := range connectionGuids {
+	for _, connId := range connectionIds {
 		var conn *Connection
 		for i := range design.Connections {
-			if design.Connections[i].Guid == connGuid {
+			if design.Connections[i].Id == connId {
 				conn = &design.Connections[i]
 				break
 			}
@@ -11944,10 +11945,10 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 			continue
 		}
 
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
-		connectedSelected := selectedPieceSet[connectedGuid]
-		connectingSelected := selectedPieceSet[connectingGuid]
+		connectedId := conn.Connected.Piece.Id
+		connectingId := conn.Connecting.Piece.Id
+		connectedSelected := selectedPieceSet[connectedId]
+		connectingSelected := selectedPieceSet[connectingId]
 
 		isInternal := connectedSelected && connectingSelected
 
@@ -11957,19 +11958,19 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 			// Orphaned, parent-excl-child-incl, or parent-incl-child-excl
 			copyConnections = append(copyConnections, deepCloneConnection(*conn))
 
-			var externalGuids []string
+			var externalIds []string
 			if !connectedSelected {
-				externalGuids = append(externalGuids, connectedGuid)
+				externalIds = append(externalIds, connectedId)
 			}
 			if !connectingSelected {
-				externalGuids = append(externalGuids, connectingGuid)
+				externalIds = append(externalIds, connectingId)
 			}
 
-			for _, extGuid := range externalGuids {
-				if !addedPieceGuids[extGuid] {
+			for _, extId := range externalIds {
+				if !addedPieceIds[extId] {
 					var extPiece *Piece
 					for i := range design.Pieces {
-						if design.Pieces[i].Guid == extGuid {
+						if design.Pieces[i].Id == extId {
 							extPiece = &design.Pieces[i]
 							break
 						}
@@ -11980,7 +11981,7 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 						extAttrs := []Attribute{
 							{Key: "semio.piece.origin", Value: &extVal},
 						}
-						if flatPiece, ok := flatPieceMap[extGuid]; ok {
+						if flatPiece, ok := flatPieceMap[extId]; ok {
 							centerValue := `{"u":0,"v":0}`
 							if flatPiece.Center != nil {
 								data, _ := json.Marshal(flatPiece.Center)
@@ -11990,7 +11991,7 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 						}
 						cloned.Attributes = append(cloned.Attributes, extAttrs...)
 						copyPieces = append(copyPieces, cloned)
-						addedPieceGuids[extGuid] = true
+						addedPieceIds[extId] = true
 					}
 				}
 			}
@@ -12005,73 +12006,73 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 
 // 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
 // Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+// Fixed pieces get -anchor offset applied to center; if coordinate is given, +coordinate offset is also applied.
 // Connected pieces with non-external parents are added as-is.
 // Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
 // the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
-// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
+// With coordinate, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coordinate + (anchor − child.center));
 // other internal clipboard connections keep deep-cloned u/v.
-func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
+func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coordinate *Coordinate) DesignDiff {
 	typesMap := make(map[string]*Type)
 	for i := range kit.Types {
-		typesMap[kit.Types[i].Guid] = &kit.Types[i]
+		typesMap[kit.Types[i].Id] = &kit.Types[i]
 	}
 	portsMap := make(map[string]*Port)
 	for familyIndex := range kit.Families {
 		for portIndex := range kit.Families[familyIndex].Ports {
-			portsMap[kit.Families[familyIndex].Ports[portIndex].Guid] = &kit.Families[familyIndex].Ports[portIndex]
+			portsMap[kit.Families[familyIndex].Ports[portIndex].Id] = &kit.Families[familyIndex].Ports[portIndex]
 		}
 	}
 
 	// Classify source pieces
-	externalOriginGuids := make(map[string]bool)
+	externalOriginIds := make(map[string]bool)
 	for _, piece := range source.Pieces {
 		for _, attr := range piece.Attributes {
 			if attr.Key == "semio.piece.origin" && attr.Value != nil && *attr.Value == "external" {
-				externalOriginGuids[piece.Guid] = true
+				externalOriginIds[piece.Id] = true
 			}
 		}
 	}
 
 	sourcePieceMap := make(map[string]*Piece)
 	for i := range source.Pieces {
-		sourcePieceMap[source.Pieces[i].Guid] = &source.Pieces[i]
+		sourcePieceMap[source.Pieces[i].Id] = &source.Pieces[i]
 	}
 
 	type parentInfo struct {
-		parentGuid string
+		parentId string
 		connection Connection
 	}
 	sourceParentMap := make(map[string]parentInfo)
 	for _, conn := range source.Connections {
-		childGuid := conn.Connecting.Piece.Guid
-		parentGuid := conn.Connected.Piece.Guid
-		prev, exists := sourceParentMap[childGuid]
+		childId := conn.Connecting.Piece.Id
+		parentId := conn.Connected.Piece.Id
+		prev, exists := sourceParentMap[childId]
 		if !exists {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+			sourceParentMap[childId] = parentInfo{parentId, conn}
 			continue
 		}
-		prevStub := externalOriginGuids[prev.parentGuid]
-		nextStub := externalOriginGuids[parentGuid]
+		prevStub := externalOriginIds[prev.parentId]
+		nextStub := externalOriginIds[parentId]
 		if prevStub != nextStub && nextStub {
-			sourceParentMap[childGuid] = parentInfo{parentGuid, conn}
+			sourceParentMap[childId] = parentInfo{parentId, conn}
 		}
 	}
 
 	// Compute bounding rectangle from flat centers
-	var centerCoords []Coord
+	var centerCoordinates []Coordinate
 	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
+		if externalOriginIds[piece.Id] {
 			continue
 		}
-		var center *Coord
+		var center *Coordinate
 		if piece.Center != nil {
 			center = piece.Center
 		}
 		if center == nil {
 			for _, attr := range piece.Attributes {
 				if attr.Key == "semio.center" && attr.Value != nil {
-					var c Coord
+					var c Coordinate
 					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
 						center = &c
 					}
@@ -12079,17 +12080,17 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 			}
 		}
 		if center != nil {
-			centerCoords = append(centerCoords, *center)
+			centerCoordinates = append(centerCoordinates, *center)
 		}
 	}
 
-	if len(centerCoords) == 0 {
-		centerCoords = append(centerCoords, Coord{})
+	if len(centerCoordinates) == 0 {
+		centerCoordinates = append(centerCoordinates, Coordinate{})
 	}
 
-	minU, maxU := centerCoords[0].U, centerCoords[0].U
-	minV, maxV := centerCoords[0].V, centerCoords[0].V
-	for _, c := range centerCoords[1:] {
+	minU, maxU := centerCoordinates[0].U, centerCoordinates[0].U
+	minV, maxV := centerCoordinates[0].V, centerCoordinates[0].V
+	for _, c := range centerCoordinates[1:] {
 		if c.U < minU {
 			minU = c.U
 		}
@@ -12104,28 +12105,28 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 		}
 	}
 
-	var anchor Coord
+	var anchor Coordinate
 	switch anchoring {
 	case "middle":
-		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
+		anchor = Coordinate{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
 	case "centroid":
 		sumU, sumV := 0.0, 0.0
-		for _, c := range centerCoords {
+		for _, c := range centerCoordinates {
 			sumU += c.U
 			sumV += c.V
 		}
-		n := float64(len(centerCoords))
-		anchor = Coord{U: sumU / n, V: sumV / n}
+		n := float64(len(centerCoordinates))
+		anchor = Coordinate{U: sumU / n, V: sumV / n}
 	case "bottomLeft":
-		anchor = Coord{U: minU, V: minV}
+		anchor = Coordinate{U: minU, V: minV}
 	case "bottomRight":
-		anchor = Coord{U: maxU, V: minV}
+		anchor = Coordinate{U: maxU, V: minV}
 	case "topLeft":
-		anchor = Coord{U: minU, V: maxV}
+		anchor = Coordinate{U: minU, V: maxV}
 	case "topRight":
-		anchor = Coord{U: maxU, V: maxV}
+		anchor = Coordinate{U: maxU, V: maxV}
 	default: // "original"
-		anchor = Coord{U: 0, V: 0}
+		anchor = Coordinate{U: 0, V: 0}
 	}
 
 	// Build target piece maps for matching
@@ -12137,25 +12138,25 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 	}
 
 	// Helper: check port compatibility
-	arePortsCompatible := func(portGuid1, portGuid2 string) bool {
-		if portGuid1 == "" || portGuid2 == "" {
+	arePortsCompatible := func(portId1, portId2 string) bool {
+		if portId1 == "" || portId2 == "" {
 			return false
 		}
-		if portGuid1 == portGuid2 {
+		if portId1 == portId2 {
 			return true
 		}
-		port1, ok1 := portsMap[portGuid1]
-		port2, ok2 := portsMap[portGuid2]
+		port1, ok1 := portsMap[portId1]
+		port2, ok2 := portsMap[portId2]
 		if !ok1 || !ok2 {
 			return false
 		}
 		for _, cp := range port1.CompatiblePorts {
-			if cp.Guid == portGuid2 {
+			if cp.Id == portId2 {
 				return true
 			}
 		}
 		for _, cp := range port2.CompatiblePorts {
-			if cp.Guid == portGuid1 {
+			if cp.Id == portId1 {
 				return true
 			}
 		}
@@ -12166,17 +12167,17 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 	areConnectorsCompatible := func(c1, c2 Connector) bool {
 		pg1, pg2 := "", ""
 		if c1.Port != nil {
-			pg1 = c1.Port.Guid
+			pg1 = c1.Port.Id
 		}
 		if c2.Port != nil {
-			pg2 = c2.Port.Guid
+			pg2 = c2.Port.Id
 		}
 		return arePortsCompatible(pg1, pg2)
 	}
 
 	// Helper: find matching connector on a type
-	findMatchingConnector := func(typeGuid string, sourceConnector Connector) *Connector {
-		t, ok := typesMap[typeGuid]
+	findMatchingConnector := func(typeId string, sourceConnector Connector) *Connector {
+		t, ok := typesMap[typeId]
 		if !ok {
 			return nil
 		}
@@ -12201,30 +12202,30 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 	// Process source pieces
 	for _, piece := range source.Pieces {
-		if externalOriginGuids[piece.Guid] {
+		if externalOriginIds[piece.Id] {
 			continue
 		}
 
 		isFixed := piece.Plane != nil
-		pInfo, isConnected := sourceParentMap[piece.Guid]
+		pInfo, isConnected := sourceParentMap[piece.Id]
 
 		if isFixed && !isConnected {
-			// Fixed piece: apply -anchor offset, then +coord if given
+			// Fixed piece: apply -anchor offset, then +coordinate if given
 			copied := deepClonePiece(piece)
-			center := Coord{}
+			center := Coordinate{}
 			if copied.Center != nil {
 				center = *copied.Center
 			}
-			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-			if coord != nil {
-				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+			center = Coordinate{U: center.U - anchor.U, V: center.V - anchor.V}
+			if coordinate != nil {
+				center = Coordinate{U: center.U + coordinate.U, V: center.V + coordinate.V}
 			}
 			copied.Center = &center
 			addedPieces = append(addedPieces, copied)
 		} else if isConnected {
-			if externalOriginGuids[pInfo.parentGuid] {
+			if externalOriginIds[pInfo.parentId] {
 				// Parent is external-origin: try to match in target
-				externalParent := sourcePieceMap[pInfo.parentGuid]
+				externalParent := sourcePieceMap[pInfo.parentId]
 				matched := false
 
 				extName := ""
@@ -12234,24 +12235,24 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 
 				if candidates, ok := targetPiecesByName[extName]; ok && extName != "" {
 					parentConn := pInfo.connection
-					isParentConnected := parentConn.Connected.Piece.Guid == pInfo.parentGuid
-					parentConnectorGuid := ""
+					isParentConnected := parentConn.Connected.Piece.Id == pInfo.parentId
+					parentConnectorId := ""
 					if isParentConnected {
 						if parentConn.Connected.Connector != nil {
-							parentConnectorGuid = parentConn.Connected.Connector.Guid
+							parentConnectorId = parentConn.Connected.Connector.Id
 						}
 					} else {
 						if parentConn.Connecting.Connector != nil {
-							parentConnectorGuid = parentConn.Connecting.Connector.Guid
+							parentConnectorId = parentConn.Connecting.Connector.Id
 						}
 					}
 
 					// Find the source parent connector
 					var sourceParentConnector *Connector
 					if externalParent.Type != nil {
-						if parentType, ok := typesMap[externalParent.Type.Guid]; ok {
+						if parentType, ok := typesMap[externalParent.Type.Id]; ok {
 							for i := range parentType.Connectors {
-								if parentType.Connectors[i].Guid == parentConnectorGuid {
+								if parentType.Connectors[i].Id == parentConnectorId {
 									sourceParentConnector = &parentType.Connectors[i]
 									break
 								}
@@ -12264,7 +12265,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 							if candidate.Type == nil {
 								continue
 							}
-							matchingConnector := findMatchingConnector(candidate.Type.Guid, *sourceParentConnector)
+							matchingConnector := findMatchingConnector(candidate.Type.Id, *sourceParentConnector)
 							if matchingConnector != nil {
 								matched = true
 								copied := deepClonePiece(piece)
@@ -12273,24 +12274,24 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 								copiedConn := deepCloneConnection(parentConn)
 								if isParentConnected {
 									copiedConn.Connected = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+										Piece:     PieceId{Id: candidate.Id},
+										Connector: &ConnectorId{Id: matchingConnector.Id},
 									}
 								} else {
 									copiedConn.Connecting = Side{
-										Piece:     PieceId{Guid: candidate.Guid},
-										Connector: &ConnectorId{Guid: matchingConnector.Guid},
+										Piece:     PieceId{Id: candidate.Id},
+										Connector: &ConnectorId{Id: matchingConnector.Id},
 									}
 								}
-								if coord != nil {
-									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
-									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
-									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
-										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
-									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+								if coordinate != nil {
+									connectedStub := externalOriginIds[parentConn.Connected.Piece.Id]
+									connectingStub := externalOriginIds[parentConn.Connecting.Piece.Id]
+									connMatchesParentage := (parentConn.Connecting.Piece.Id == piece.Id && parentConn.Connected.Piece.Id == pInfo.parentId) ||
+										(parentConn.Connected.Piece.Id == piece.Id && parentConn.Connecting.Piece.Id == pInfo.parentId)
+									// Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
 									// internal–internal source edges (neither side a stub) must keep cloned u/v.
 									if connMatchesParentage && connectedStub != connectingStub {
-										flatParentCenter := Coord{}
+										flatParentCenter := Coordinate{}
 										hasParentCenter := false
 										if candidate.Center != nil {
 											flatParentCenter = *candidate.Center
@@ -12320,7 +12321,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 											flatParentCenter = *externalParent.Center
 											hasParentCenter = true
 										}
-										flatChildCenter := Coord{}
+										flatChildCenter := Coordinate{}
 										hasChildCenter := false
 										for _, attr := range piece.Attributes {
 											if attr.Key == "semio.center" && attr.Value != nil {
@@ -12334,8 +12335,8 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 											hasChildCenter = true
 										}
 										if hasParentCenter && hasChildCenter {
-											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
-											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
+											offsetU := flatParentCenter.U - (coordinate.U + (anchor.U - flatChildCenter.U))
+											offsetV := flatParentCenter.V - (coordinate.V + (anchor.V - flatChildCenter.V))
 											copiedConn.U = offsetU
 											copiedConn.V = offsetV
 										}
@@ -12353,7 +12354,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 					copied := deepClonePiece(piece)
 					for _, attr := range piece.Attributes {
 						if attr.Key == "semio.center" && attr.Value != nil {
-							var c Coord
+							var c Coordinate
 							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
 								copied.Center = &c
 							}
@@ -12365,13 +12366,13 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 							}
 						}
 					}
-					center := Coord{}
+					center := Coordinate{}
 					if copied.Center != nil {
 						center = *copied.Center
 					}
-					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-					if coord != nil {
-						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+					center = Coordinate{U: center.U - anchor.U, V: center.V - anchor.V}
+					if coordinate != nil {
+						center = Coordinate{U: center.U + coordinate.U, V: center.V + coordinate.V}
 					}
 					copied.Center = &center
 					addedPieces = append(addedPieces, copied)
@@ -12384,19 +12385,19 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 	}
 
 	// Process source connections (non-external internal connections)
-	addedPieceGuids := make(map[string]bool)
+	addedPieceIds := make(map[string]bool)
 	for _, p := range addedPieces {
-		addedPieceGuids[p.Guid] = true
+		addedPieceIds[p.Id] = true
 	}
 	for _, conn := range source.Connections {
-		connectedGuid := conn.Connected.Piece.Guid
-		connectingGuid := conn.Connecting.Piece.Guid
+		connectedId := conn.Connected.Piece.Id
+		connectingId := conn.Connecting.Piece.Id
 
-		if externalOriginGuids[connectedGuid] || externalOriginGuids[connectingGuid] {
+		if externalOriginIds[connectedId] || externalOriginIds[connectingId] {
 			continue
 		}
 
-		if !addedPieceGuids[connectedGuid] || !addedPieceGuids[connectingGuid] {
+		if !addedPieceIds[connectedId] || !addedPieceIds[connectingId] {
 			continue
 		}
 
@@ -12434,7 +12435,7 @@ const (
 	EntityKindFamily     SemioEntityKind = "Family"
 	EntityKindPort       SemioEntityKind = "Port"
 	EntityKindProp       SemioEntityKind = "Prop"
-	EntityKindModel      SemioEntityKind = "Model"
+	EntityKindRepresentation      SemioEntityKind = "Representation"
 	EntityKindLayer      SemioEntityKind = "Layer"
 	EntityKindGroup      SemioEntityKind = "Group"
 	EntityKindStat       SemioEntityKind = "Stat"
@@ -12454,7 +12455,7 @@ const (
 // 📍DomainLocation identifies the entity and field where a validation problem occurs.
 type DomainLocation struct {
 	EntityKind SemioEntityKind `json:"entityKind"`
-	EntityGuid string          `json:"entityGuid,omitempty"`
+	EntityId string          `json:"entityId,omitempty"`
 	Field      string          `json:"field,omitempty"`
 }
 
@@ -12470,7 +12471,7 @@ type Problem struct {
 	Severity     Severity       `json:"severity,omitempty"`
 	Message      string         `json:"message"`
 	Location     DomainLocation `json:"entityKind,omitempty"`
-	RelatedGuids []string       `json:"relatedGuids,omitempty"`
+	RelatedIds []string       `json:"relatedIds,omitempty"`
 	Fixes        []Fix          `json:"fixes"`
 }
 
@@ -12482,14 +12483,14 @@ type ValidationResult struct {
 // 🗃️ValidationContext provides indexed access to kit entities for constraint evaluation.
 type ValidationContext struct {
 	Kit           Kit
-	TypesByGuid   map[string]*Type
-	DesignsByGuid map[string]*Design
-	PiecesByGuid  map[string]struct {
-		DesignGuid string
+	TypesById   map[string]*Type
+	DesignsById map[string]*Design
+	PiecesById  map[string]struct {
+		DesignId string
 		Piece      *Piece
 	}
-	ConnectorsByTypeGuid map[string][]Connector
-	ModelsByTypeGuid     map[string][]Model
+	ConnectorsByTypeId map[string][]Connector
+	RepresentationsByTypeId     map[string][]Representation
 }
 
 // ⚡Constraint is a function that evaluates a validation rule against a kit context.
@@ -12498,30 +12499,30 @@ type Constraint func(ctx *ValidationContext) []Problem
 func buildValidationContext(kit Kit) *ValidationContext {
 	ctx := &ValidationContext{
 		Kit:           kit,
-		TypesByGuid:   make(map[string]*Type),
-		DesignsByGuid: make(map[string]*Design),
-		PiecesByGuid: make(map[string]struct {
-			DesignGuid string
+		TypesById:   make(map[string]*Type),
+		DesignsById: make(map[string]*Design),
+		PiecesById: make(map[string]struct {
+			DesignId string
 			Piece      *Piece
 		}),
-		ConnectorsByTypeGuid: make(map[string][]Connector),
-		ModelsByTypeGuid:     make(map[string][]Model),
+		ConnectorsByTypeId: make(map[string][]Connector),
+		RepresentationsByTypeId:     make(map[string][]Representation),
 	}
 	for i := range kit.Types {
 		t := &kit.Types[i]
-		ctx.TypesByGuid[t.Guid] = t
-		ctx.ConnectorsByTypeGuid[t.Guid] = t.Connectors
-		ctx.ModelsByTypeGuid[t.Guid] = t.Models
+		ctx.TypesById[t.Id] = t
+		ctx.ConnectorsByTypeId[t.Id] = t.Connectors
+		ctx.RepresentationsByTypeId[t.Id] = t.Representations
 	}
 	for i := range kit.Designs {
 		d := &kit.Designs[i]
-		ctx.DesignsByGuid[d.Guid] = d
+		ctx.DesignsById[d.Id] = d
 		for j := range d.Pieces {
 			p := &d.Pieces[j]
-			ctx.PiecesByGuid[p.Guid] = struct {
-				DesignGuid string
+			ctx.PiecesById[p.Id] = struct {
+				DesignId string
 				Piece      *Piece
-			}{DesignGuid: d.Guid, Piece: p}
+			}{DesignId: d.Id, Piece: p}
 		}
 	}
 	return ctx
@@ -12549,161 +12550,161 @@ func makeFix(ctx *ValidationContext, title string, mutate func(clone *Kit)) Fix 
 	return Fix{Title: title, Diff: diff}
 }
 
-// ✔️GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
-func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
+// ✔️IdUniquenessConstraint checks that all entity IDs are unique within a kit.
+func IdUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	seen := make(map[string]SemioEntityKind)
-	check := func(entityKind SemioEntityKind, entityGuid string) {
-		if _, exists := seen[entityGuid]; exists {
+	check := func(entityKind SemioEntityKind, entityId string) {
+		if _, exists := seen[entityId]; exists {
 			problem := Problem{
-				ConstraintId: "guid-unique",
+				ConstraintId: "id-unique",
 				Severity:     SeverityError,
-				Message:      fmt.Sprintf("Duplicate GUID \"%s\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).", entityGuid),
-				Location:     DomainLocation{EntityKind: entityKind, EntityGuid: entityGuid, Field: "guid"},
-				RelatedGuids: []string{entityGuid},
+				Message:      fmt.Sprintf("Duplicate ID \"%s\". Entity IDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).", entityId),
+				Location:     DomainLocation{EntityKind: entityKind, EntityId: entityId, Field: "id"},
+				RelatedIds: []string{entityId},
 				Fixes: []Fix{
-					makeFix(ctx, "Regenerate GUID", func(clone *Kit) {
-						newGuid := Guid()
-						updateGuidEverywhere(clone, entityGuid, newGuid)
+					makeFix(ctx, "Regenerate ID", func(clone *Kit) {
+						newId := Id()
+						updateIdEverywhere(clone, entityId, newId)
 					}),
 				},
 			}
 			problems = append(problems, problem)
 		} else {
-			seen[entityGuid] = entityKind
+			seen[entityId] = entityKind
 		}
 	}
-	check(EntityKindKit, ctx.Kit.Guid)
+	check(EntityKindKit, ctx.Kit.Id)
 	for _, t := range ctx.Kit.Types {
-		check(EntityKindType, t.Guid)
+		check(EntityKindType, t.Id)
 	}
 	for _, d := range ctx.Kit.Designs {
-		check(EntityKindDesign, d.Guid)
+		check(EntityKindDesign, d.Id)
 		for _, p := range d.Pieces {
-			check(EntityKindPiece, p.Guid)
+			check(EntityKindPiece, p.Id)
 		}
 		for _, c := range d.Connections {
-			check(EntityKindConnection, c.Guid)
+			check(EntityKindConnection, c.Id)
 		}
 		for _, s := range d.Stats {
-			check(EntityKindStat, s.Guid)
+			check(EntityKindStat, s.Id)
 		}
 	}
 	for _, q := range ctx.Kit.Qualities {
-		check(EntityKindQuality, q.Guid)
+		check(EntityKindQuality, q.Id)
 	}
 	for _, family := range ctx.Kit.Families {
-		check(EntityKindFamily, family.Guid)
+		check(EntityKindFamily, family.Id)
 		for _, port := range family.Ports {
-			check(EntityKindPort, port.Guid)
+			check(EntityKindPort, port.Id)
 		}
 	}
 	for _, f := range ctx.Kit.Files {
-		check(EntityKindFile, f.Guid)
+		check(EntityKindFile, f.Id)
 	}
 	for _, f := range ctx.Kit.Folders {
-		check(EntityKindFolder, f.Guid)
+		check(EntityKindFolder, f.Id)
 	}
 	return problems
 }
 
-func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
-	if kit.Guid == oldGuid {
-		kit.Guid = newGuid
+func updateIdEverywhere(kit *Kit, oldId, newId string) {
+	if kit.Id == oldId {
+		kit.Id = newId
 	}
 	for i := range kit.Types {
 		t := &kit.Types[i]
-		if t.Guid == oldGuid {
-			t.Guid = newGuid
+		if t.Id == oldId {
+			t.Id = newId
 		}
 		for j := range t.Families {
-			if t.Families[j].Guid == oldGuid {
-				t.Families[j].Guid = newGuid
+			if t.Families[j].Id == oldId {
+				t.Families[j].Id = newId
 			}
 		}
 		for j := range t.Connectors {
-			if t.Connectors[j].Guid == oldGuid {
-				t.Connectors[j].Guid = newGuid
+			if t.Connectors[j].Id == oldId {
+				t.Connectors[j].Id = newId
 			}
 		}
-		for j := range t.Models {
-			if t.Models[j].Guid == oldGuid {
-				t.Models[j].Guid = newGuid
+		for j := range t.Representations {
+			if t.Representations[j].Id == oldId {
+				t.Representations[j].Id = newId
 			}
 		}
 	}
 	for i := range kit.Designs {
 		d := &kit.Designs[i]
-		if d.Guid == oldGuid {
-			d.Guid = newGuid
+		if d.Id == oldId {
+			d.Id = newId
 		}
 		for j := range d.Families {
-			if d.Families[j].Guid == oldGuid {
-				d.Families[j].Guid = newGuid
+			if d.Families[j].Id == oldId {
+				d.Families[j].Id = newId
 			}
 		}
 		for j := range d.Pieces {
 			p := &d.Pieces[j]
-			if p.Guid == oldGuid {
-				p.Guid = newGuid
+			if p.Id == oldId {
+				p.Id = newId
 			}
-			if p.Type != nil && p.Type.Guid == oldGuid {
-				p.Type.Guid = newGuid
+			if p.Type != nil && p.Type.Id == oldId {
+				p.Type.Id = newId
 			}
-			if p.Design != nil && p.Design.Guid == oldGuid {
-				p.Design.Guid = newGuid
+			if p.Design != nil && p.Design.Id == oldId {
+				p.Design.Id = newId
 			}
 		}
 		for j := range d.Connections {
 			c := &d.Connections[j]
-			if c.Guid == oldGuid {
-				c.Guid = newGuid
+			if c.Id == oldId {
+				c.Id = newId
 			}
-			if c.Connected.Piece.Guid == oldGuid {
-				c.Connected.Piece.Guid = newGuid
+			if c.Connected.Piece.Id == oldId {
+				c.Connected.Piece.Id = newId
 			}
-			if c.Connecting.Piece.Guid == oldGuid {
-				c.Connecting.Piece.Guid = newGuid
+			if c.Connecting.Piece.Id == oldId {
+				c.Connecting.Piece.Id = newId
 			}
-			if c.Connected.Connector != nil && c.Connected.Connector.Guid == oldGuid {
-				c.Connected.Connector.Guid = newGuid
+			if c.Connected.Connector != nil && c.Connected.Connector.Id == oldId {
+				c.Connected.Connector.Id = newId
 			}
-			if c.Connecting.Connector != nil && c.Connecting.Connector.Guid == oldGuid {
-				c.Connecting.Connector.Guid = newGuid
+			if c.Connecting.Connector != nil && c.Connecting.Connector.Id == oldId {
+				c.Connecting.Connector.Id = newId
 			}
 		}
 	}
 	for i := range kit.Families {
-		if kit.Families[i].Guid == oldGuid {
-			kit.Families[i].Guid = newGuid
+		if kit.Families[i].Id == oldId {
+			kit.Families[i].Id = newId
 		}
 		for j := range kit.Families[i].Ports {
-			if kit.Families[i].Ports[j].Guid == oldGuid {
-				kit.Families[i].Ports[j].Guid = newGuid
+			if kit.Families[i].Ports[j].Id == oldId {
+				kit.Families[i].Ports[j].Id = newId
 			}
 			for k := range kit.Families[i].Ports[j].CompatiblePorts {
-				if kit.Families[i].Ports[j].CompatiblePorts[k].Guid == oldGuid {
-					kit.Families[i].Ports[j].CompatiblePorts[k].Guid = newGuid
+				if kit.Families[i].Ports[j].CompatiblePorts[k].Id == oldId {
+					kit.Families[i].Ports[j].CompatiblePorts[k].Id = newId
 				}
 			}
 		}
 	}
 	for i := range kit.Qualities {
-		if kit.Qualities[i].Guid == oldGuid {
-			kit.Qualities[i].Guid = newGuid
+		if kit.Qualities[i].Id == oldId {
+			kit.Qualities[i].Id = newId
 		}
 	}
 	for i := range kit.Files {
-		if kit.Files[i].Guid == oldGuid {
-			kit.Files[i].Guid = newGuid
+		if kit.Files[i].Id == oldId {
+			kit.Files[i].Id = newId
 		}
 	}
 	for i := range kit.Folders {
-		if kit.Folders[i].Guid == oldGuid {
-			kit.Folders[i].Guid = newGuid
+		if kit.Folders[i].Id == oldId {
+			kit.Folders[i].Id = newId
 		}
-		if kit.Folders[i].Parent != nil && kit.Folders[i].Parent.Guid == oldGuid {
-			kit.Folders[i].Parent.Guid = newGuid
+		if kit.Folders[i].Parent != nil && kit.Folders[i].Parent.Id == oldId {
+			kit.Folders[i].Parent.Id = newId
 		}
 	}
 }
@@ -12731,20 +12732,20 @@ func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				typ := group[i]
-				relatedGuids := make([]string, len(group))
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
 				problem := Problem{
 					ConstraintId: "type-name-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate type name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindType, EntityGuid: typ.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Location:     DomainLocation{EntityKind: EntityKindType, EntityId: typ.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Types {
-								if clone.Types[j].Guid == typ.Guid {
+								if clone.Types[j].Id == typ.Id {
 									clone.Types[j].Name = generateUniqueName(name, siblingNames)
 									break
 								}
@@ -12782,20 +12783,20 @@ func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				design := group[i]
-				relatedGuids := make([]string, len(group))
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
 				problem := Problem{
 					ConstraintId: "design-name-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate design name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindDesign, EntityGuid: design.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Location:     DomainLocation{EntityKind: EntityKindDesign, EntityId: design.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Designs {
-								if clone.Designs[j].Guid == design.Guid {
+								if clone.Designs[j].Id == design.Id {
 									clone.Designs[j].Name = generateUniqueName(name, siblingNames)
 									break
 								}
@@ -12837,23 +12838,23 @@ func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				piece := group[i]
-				relatedGuids := make([]string, len(group))
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
-				designGuid := design.Guid
+				designId := design.Id
 				problem := Problem{
 					ConstraintId: "piece-name-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate piece name \"%s\" inside design \"%s\".", name, design.Name),
-					Location:     DomainLocation{EntityKind: EntityKindPiece, EntityGuid: piece.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Location:     DomainLocation{EntityKind: EntityKindPiece, EntityId: piece.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename piece \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Designs {
-								if clone.Designs[j].Guid == designGuid {
+								if clone.Designs[j].Id == designId {
 									for k := range clone.Designs[j].Pieces {
-										if clone.Designs[j].Pieces[k].Guid == piece.Guid {
+										if clone.Designs[j].Pieces[k].Id == piece.Id {
 											newName := generateUniqueName(name, allNames)
 											clone.Designs[j].Pieces[k].Name = &newName
 											break
@@ -12890,20 +12891,20 @@ func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 		}
 		for i := 1; i < len(group); i++ {
 			quality := group[i]
-			relatedGuids := make([]string, len(group))
+			relatedIds := make([]string, len(group))
 			for j, g := range group {
-				relatedGuids[j] = g.Guid
+				relatedIds[j] = g.Id
 			}
 			problem := Problem{
 				ConstraintId: "quality-name-unique",
 				Severity:     SeverityError,
 				Message:      fmt.Sprintf("Duplicate quality name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindQuality, EntityGuid: quality.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
+				Location:     DomainLocation{EntityKind: EntityKindQuality, EntityId: quality.Id, Field: "name"},
+				RelatedIds: relatedIds,
 				Fixes: []Fix{
 					makeFix(ctx, fmt.Sprintf("Rename quality \"%s\"", name), func(clone *Kit) {
 						for j := range clone.Qualities {
-							if clone.Qualities[j].Guid == quality.Guid {
+							if clone.Qualities[j].Id == quality.Id {
 								clone.Qualities[j].Name = generateUniqueName(name, allNames)
 								break
 							}
@@ -12936,21 +12937,21 @@ func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 		}
 		for i := 1; i < len(group); i++ {
 			iface := group[i]
-			relatedGuids := make([]string, len(group))
+			relatedIds := make([]string, len(group))
 			for j, g := range group {
-				relatedGuids[j] = g.Guid
+				relatedIds[j] = g.Id
 			}
 			problem := Problem{
 				ConstraintId: "port-name-unique",
 				Severity:     SeverityError,
 				Message:      fmt.Sprintf("Duplicate port name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindPort, EntityGuid: iface.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
+				Location:     DomainLocation{EntityKind: EntityKindPort, EntityId: iface.Id, Field: "name"},
+				RelatedIds: relatedIds,
 				Fixes: []Fix{
 					makeFix(ctx, fmt.Sprintf("Rename port \"%s\"", name), func(clone *Kit) {
 						for familyIndex := range clone.Families {
 							for portIndex := range clone.Families[familyIndex].Ports {
-								if clone.Families[familyIndex].Ports[portIndex].Guid == iface.Guid {
+								if clone.Families[familyIndex].Ports[portIndex].Id == iface.Id {
 									clone.Families[familyIndex].Ports[portIndex].Name = generateUniqueName(name, allNames)
 									return
 								}
@@ -12983,20 +12984,20 @@ func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 		}
 		for i := 1; i < len(group); i++ {
 			file := group[i]
-			relatedGuids := make([]string, len(group))
+			relatedIds := make([]string, len(group))
 			for j, g := range group {
-				relatedGuids[j] = g.Guid
+				relatedIds[j] = g.Id
 			}
 			problem := Problem{
 				ConstraintId: "file-name-unique",
 				Severity:     SeverityError,
 				Message:      fmt.Sprintf("Duplicate file name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindFile, EntityGuid: file.Guid, Field: "name"},
-				RelatedGuids: relatedGuids,
+				Location:     DomainLocation{EntityKind: EntityKindFile, EntityId: file.Id, Field: "name"},
+				RelatedIds: relatedIds,
 				Fixes: []Fix{
 					makeFix(ctx, fmt.Sprintf("Rename file \"%s\"", name), func(clone *Kit) {
 						for j := range clone.Files {
-							if clone.Files[j].Guid == file.Guid {
+							if clone.Files[j].Id == file.Id {
 								clone.Files[j].Name = generateUniqueName(name, allNames)
 								break
 							}
@@ -13015,11 +13016,11 @@ func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Folder)
 	for _, f := range ctx.Kit.Folders {
-		parentGuid := ""
+		parentId := ""
 		if f.Parent != nil {
-			parentGuid = f.Parent.Guid
+			parentId = f.Parent.Id
 		}
-		byParent[parentGuid] = append(byParent[parentGuid], f)
+		byParent[parentId] = append(byParent[parentId], f)
 	}
 	for _, siblings := range byParent {
 		names := make(map[string][]Folder)
@@ -13037,20 +13038,20 @@ func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				folder := group[i]
-				relatedGuids := make([]string, len(group))
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
 				problem := Problem{
 					ConstraintId: "folder-name-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate folder name \"%s\" among siblings.", name),
-					Location:     DomainLocation{EntityKind: EntityKindFolder, EntityGuid: folder.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Location:     DomainLocation{EntityKind: EntityKindFolder, EntityId: folder.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename folder \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Folders {
-								if clone.Folders[j].Guid == folder.Guid {
+								if clone.Folders[j].Id == folder.Id {
 									clone.Folders[j].Name = generateUniqueName(name, siblingNames)
 									break
 								}
@@ -13068,7 +13069,7 @@ func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 // 🔌ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
 func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
-	for typeGuid, connectors := range ctx.ConnectorsByTypeGuid {
+	for typeId, connectors := range ctx.ConnectorsByTypeId {
 		if len(connectors) == 0 {
 			continue
 		}
@@ -13086,7 +13087,7 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 				allNames[i] = *c.Name
 			}
 		}
-		typ := ctx.TypesByGuid[typeGuid]
+		typ := ctx.TypesById[typeId]
 		typeName := ""
 		if typ != nil {
 			typeName = typ.Name
@@ -13097,23 +13098,23 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				connector := group[i]
-				relatedGuids := make([]string, len(group))
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
-				tGuid := typeGuid
+				tId := typeId
 				problem := Problem{
 					ConstraintId: "connector-name-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate connector name \"%s\" inside type \"%s\".", name, typeName),
-					Location:     DomainLocation{EntityKind: EntityKindConnector, EntityGuid: connector.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Location:     DomainLocation{EntityKind: EntityKindConnector, EntityId: connector.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename connector \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Types {
-								if clone.Types[j].Guid == tGuid {
+								if clone.Types[j].Id == tId {
 									for k := range clone.Types[j].Connectors {
-										if clone.Types[j].Connectors[k].Guid == connector.Guid {
+										if clone.Types[j].Connectors[k].Id == connector.Id {
 											clone.Types[j].Connectors[k].Name = ptrString(generateUniqueName(name, allNames))
 											break
 										}
@@ -13131,28 +13132,28 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
-// 🗿ModelNameUniquenessConstraint checks that model names are unique within each type.
-func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+// 🗿RepresentationNameUniquenessConstraint checks that representation names are unique within each type.
+func RepresentationNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
-	for typeGuid, models := range ctx.ModelsByTypeGuid {
-		if len(models) == 0 {
+	for typeId, representations := range ctx.RepresentationsByTypeId {
+		if len(representations) == 0 {
 			continue
 		}
-		names := make(map[string][]Model)
-		for _, m := range models {
+		names := make(map[string][]Representation)
+		for _, m := range representations {
 			name := ""
 			if m.Name != nil {
 				name = *m.Name
 			}
 			names[name] = append(names[name], m)
 		}
-		allNames := make([]string, len(models))
-		for i, m := range models {
+		allNames := make([]string, len(representations))
+		for i, m := range representations {
 			if m.Name != nil {
 				allNames[i] = *m.Name
 			}
 		}
-		typ := ctx.TypesByGuid[typeGuid]
+		typ := ctx.TypesById[typeId]
 		typeName := ""
 		if typ != nil {
 			typeName = typ.Name
@@ -13162,26 +13163,26 @@ func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 				continue
 			}
 			for i := 1; i < len(group); i++ {
-				model := group[i]
-				relatedGuids := make([]string, len(group))
+				representation := group[i]
+				relatedIds := make([]string, len(group))
 				for j, g := range group {
-					relatedGuids[j] = g.Guid
+					relatedIds[j] = g.Id
 				}
-				tGuid := typeGuid
+				tId := typeId
 				problem := Problem{
-					ConstraintId: "model-name-unique",
+					ConstraintId: "representation-name-unique",
 					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate model name \"%s\" inside type \"%s\".", name, typeName),
-					Location:     DomainLocation{EntityKind: EntityKindModel, EntityGuid: model.Guid, Field: "name"},
-					RelatedGuids: relatedGuids,
+					Message:      fmt.Sprintf("Duplicate representation name \"%s\" inside type \"%s\".", name, typeName),
+					Location:     DomainLocation{EntityKind: EntityKindRepresentation, EntityId: representation.Id, Field: "name"},
+					RelatedIds: relatedIds,
 					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename model \"%s\"", name), func(clone *Kit) {
+						makeFix(ctx, fmt.Sprintf("Rename representation \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Types {
-								if clone.Types[j].Guid == tGuid {
-									for k := range clone.Types[j].Models {
-										if clone.Types[j].Models[k].Guid == model.Guid {
+								if clone.Types[j].Id == tId {
+									for k := range clone.Types[j].Representations {
+										if clone.Types[j].Representations[k].Id == representation.Id {
 											newName := generateUniqueName(name, allNames)
-											clone.Types[j].Models[k].Name = &newName
+											clone.Types[j].Representations[k].Name = &newName
 											break
 										}
 									}
@@ -13220,18 +13221,18 @@ func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 			}
 			for i := 1; i < len(group); i++ {
 				layer := group[i]
-				designGuid := design.Guid
+				designId := design.Id
 				problem := Problem{
 					ConstraintId: "layer-path-unique",
 					Severity:     SeverityError,
 					Message:      fmt.Sprintf("Duplicate layer path \"%s\" inside design \"%s\".", path, design.Name),
-					Location:     DomainLocation{EntityKind: EntityKindLayer, EntityGuid: layer.Guid, Field: "path"},
+					Location:     DomainLocation{EntityKind: EntityKindLayer, EntityId: layer.Id, Field: "path"},
 					Fixes: []Fix{
 						makeFix(ctx, fmt.Sprintf("Rename layer \"%s\"", path), func(clone *Kit) {
 							for j := range clone.Designs {
-								if clone.Designs[j].Guid == designGuid {
+								if clone.Designs[j].Id == designId {
 									for k := range clone.Designs[j].Layers {
-										if clone.Designs[j].Layers[k].Guid == layer.Guid {
+										if clone.Designs[j].Layers[k].Id == layer.Id {
 											clone.Designs[j].Layers[k].Path = generateUniqueName(path, allPaths)
 											break
 										}
@@ -13251,7 +13252,7 @@ func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // 📜DefaultConstraints lists all built-in validation constraints.
 var DefaultConstraints = []Constraint{
-	GuidUniquenessConstraint,
+	IdUniquenessConstraint,
 	TypeNameUniquenessConstraint,
 	DesignNameUniquenessConstraint,
 	PieceNameUniquenessConstraint,
@@ -13260,7 +13261,7 @@ var DefaultConstraints = []Constraint{
 	FileNameUniquenessConstraint,
 	FolderNameUniquenessConstraint,
 	ConnectorNameUniquenessConstraint,
-	ModelNameUniquenessConstraint,
+	RepresentationNameUniquenessConstraint,
 	LayerPathUniquenessConstraint,
 }
 
@@ -13298,7 +13299,7 @@ type ProblemSerialized struct {
 	Severity     string `json:"severity,omitempty"`
 	Message      string `json:"message"`
 	EntityKind   string `json:"entityKind"`
-	EntityGuid   string `json:"entityGuid"`
+	EntityId   string `json:"entityId"`
 	Fixes        []Fix  `json:"fixes"`
 }
 
@@ -13320,7 +13321,7 @@ func ToValidationResult(result ValidationResult) ValidationResultSerialized {
 			Severity:     severity,
 			Message:      p.Message,
 			EntityKind:   string(p.Location.EntityKind),
-			EntityGuid:   p.Location.EntityGuid,
+			EntityId:   p.Location.EntityId,
 			Fixes:        p.Fixes,
 		}
 	}
@@ -13337,7 +13338,7 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 			if problems[i].ConstraintId != problems[j].ConstraintId {
 				return problems[i].ConstraintId < problems[j].ConstraintId
 			}
-			return problems[i].EntityGuid < problems[j].EntityGuid
+			return problems[i].EntityId < problems[j].EntityId
 		})
 	}
 	sortedA := make([]ProblemSerialized, len(a.Problems))
@@ -13350,7 +13351,7 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 		if sortedA[i].ConstraintId != sortedB[i].ConstraintId ||
 			sortedA[i].Message != sortedB[i].Message ||
 			sortedA[i].EntityKind != sortedB[i].EntityKind ||
-			sortedA[i].EntityGuid != sortedB[i].EntityGuid {
+			sortedA[i].EntityId != sortedB[i].EntityId {
 			return false
 		}
 	}
@@ -13581,18 +13582,18 @@ type pieceNode struct {
 	plane *Plane
 }
 
-func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) *Connector {
+func getConnector(typesDict map[string]*Type, typ *Type, connectorId *string) *Connector {
 	if typ == nil {
 		return nil
 	}
-	if connectorGuid == nil || *connectorGuid == "" {
+	if connectorId == nil || *connectorId == "" {
 		if len(typ.Connectors) > 0 {
 			return &typ.Connectors[0]
 		}
 		return nil
 	}
 	for i := range typ.Connectors {
-		if typ.Connectors[i].Guid == *connectorGuid {
+		if typ.Connectors[i].Id == *connectorId {
 			return &typ.Connectors[i]
 		}
 	}
@@ -13603,96 +13604,96 @@ func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) 
 }
 
 // 🌤️FlattenDesignDiff computes absolute planes and centers for all pieces in a design (hot path; no report wrapper).
-func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
-	design := FindDesignInKit(kit, designGuid)
+func FlattenDesignDiff(kit *Kit, designId string) DesignDiff {
+	design := FindDesignInKit(kit, designId)
 	if design == nil || len(design.Pieces) == 0 {
 		return DesignDiff{}
 	}
 
 	removedConnList := make([]ConnectionId, 0, len(design.Connections))
 	for i := range design.Connections {
-		removedConnList = append(removedConnList, ConnectionId{Guid: design.Connections[i].Guid})
+		removedConnList = append(removedConnList, ConnectionId{Id: design.Connections[i].Id})
 	}
 
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
-		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+		typesDict[kit.Types[i].Id] = &kit.Types[i]
 	}
 
 	pieceMap := make(map[string]*Piece)
 	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+		pieceMap[design.Pieces[i].Id] = &design.Pieces[i]
 	}
 
 	piecePlanes := make(map[string]*Plane)
 	adjacency := make(map[string][]struct {
-		neighborGuid string
+		neighborId string
 		connection   *Connection
 	})
 
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcGuid := conn.Connected.Piece.Guid
-		tgtGuid := conn.Connecting.Piece.Guid
-		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+		srcId := conn.Connected.Piece.Id
+		tgtId := conn.Connecting.Piece.Id
+		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
-		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
-			neighborGuid string
+		adjacency[srcId] = append(adjacency[srcId], struct {
+			neighborId string
 			connection   *Connection
-		}{tgtGuid, conn})
-		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
-			neighborGuid string
+		}{tgtId, conn})
+		adjacency[tgtId] = append(adjacency[tgtId], struct {
+			neighborId string
 			connection   *Connection
-		}{srcGuid, conn})
+		}{srcId, conn})
 	}
 
 	// Save original centers before BFS modifies pieces in-place.
 	// pieceMap shares pointers with design.Pieces, so after BFS
-	// piece.Center and pieceMap[guid].Center are the same pointer.
-	originalCenters := make(map[string]*Coord)
+	// piece.Center and pieceMap[id].Center are the same pointer.
+	originalCenters := make(map[string]*Coordinate)
 	for _, p := range design.Pieces {
 		if p.Center != nil {
 			c := *p.Center
-			originalCenters[p.Guid] = &c
+			originalCenters[p.Id] = &c
 		}
 	}
 
 	visited := make(map[string]bool)
 	piecePaths := make(map[string]string)
-	var bfs func(rootGuid string)
-	bfs = func(rootGuid string) {
-		queue := []string{rootGuid}
-		visited[rootGuid] = true
-		piecePaths[rootGuid] = rootGuid
-		rootPiece := pieceMap[rootGuid]
+	var bfs func(rootId string)
+	bfs = func(rootId string) {
+		queue := []string{rootId}
+		visited[rootId] = true
+		piecePaths[rootId] = rootId
+		rootPiece := pieceMap[rootId]
 		if rootPiece.Plane != nil && rootPiece.Center != nil {
-			piecePlanes[rootGuid] = rootPiece.Plane
+			piecePlanes[rootId] = rootPiece.Plane
 		} else {
 			identityPlane := Plane{
 				Origin: Point{X: 0, Y: 0, Z: 0},
 				XAxis:  Vector{X: 1, Y: 0, Z: 0},
 				YAxis:  Vector{X: 0, Y: 1, Z: 0},
 			}
-			piecePlanes[rootGuid] = &identityPlane
+			piecePlanes[rootId] = &identityPlane
 		}
 
 		for len(queue) > 0 {
-			currentGuid := queue[0]
+			currentId := queue[0]
 			queue = queue[1:]
-			currentPlane := piecePlanes[currentGuid]
-			currentPiece := pieceMap[currentGuid]
+			currentPlane := piecePlanes[currentId]
+			currentPiece := pieceMap[currentId]
 
-			for _, neighbor := range adjacency[currentGuid] {
-				if visited[neighbor.neighborGuid] {
+			for _, neighbor := range adjacency[currentId] {
+				if visited[neighbor.neighborId] {
 					continue
 				}
-				visited[neighbor.neighborGuid] = true
-				neighborPiece := pieceMap[neighbor.neighborGuid]
+				visited[neighbor.neighborId] = true
+				neighborPiece := pieceMap[neighbor.neighborId]
 				conn := neighbor.connection
 
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Guid == currentGuid {
+				if conn.Connected.Piece.Id == currentId {
 					parentSide = &conn.Connected
 					childSide = &conn.Connecting
 				} else {
@@ -13702,34 +13703,34 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 
 				var parentType, childType *Type
 				if currentPiece.Type != nil {
-					parentType = typesDict[currentPiece.Type.Guid]
+					parentType = typesDict[currentPiece.Type.Id]
 				}
 				if neighborPiece.Type != nil {
-					childType = typesDict[neighborPiece.Type.Guid]
+					childType = typesDict[neighborPiece.Type.Id]
 				}
 
-				var parentConnectorGuid, childConnectorGuid *string
+				var parentConnectorId, childConnectorId *string
 				if parentSide.Connector != nil {
-					parentConnectorGuid = &parentSide.Connector.Guid
+					parentConnectorId = &parentSide.Connector.Id
 				}
 				if childSide.Connector != nil {
-					childConnectorGuid = &childSide.Connector.Guid
+					childConnectorId = &childSide.Connector.Id
 				}
 
-				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
-				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+				parentConnector := getConnector(typesDict, parentType, parentConnectorId)
+				childConnector := getConnector(typesDict, childType, childConnectorId)
 
 				if parentConnector == nil || childConnector == nil {
 					continue
 				}
 
 				childPlane := roundPlane(computeChildPlane(*currentPlane, *parentConnector, *childConnector, *conn))
-				piecePlanes[neighbor.neighborGuid] = &childPlane
+				piecePlanes[neighbor.neighborId] = &childPlane
 
 				radius := 2.697
 				verticalVExtra := 1.0
 				horizontalScale := 3.0633
-				var parentCenter Coord
+				var parentCenter Coordinate
 				if currentPiece.Center != nil {
 					parentCenter = *currentPiece.Center
 				}
@@ -13752,18 +13753,18 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 					}
 				}
 
-				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
+				childCenter := &Coordinate{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
 				neighborPiece.Center = childCenter
-				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
+				piecePaths[neighbor.neighborId] = piecePaths[currentId] + "," + neighbor.neighborId
 
-				queue = append(queue, neighbor.neighborGuid)
+				queue = append(queue, neighbor.neighborId)
 			}
 		}
 	}
 
 	for _, piece := range design.Pieces {
-		if !visited[piece.Guid] {
-			bfs(piece.Guid)
+		if !visited[piece.Id] {
+			bfs(piece.Id)
 		}
 	}
 
@@ -13774,7 +13775,7 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 
 	for i := range design.Pieces {
 		piece := &design.Pieces[i]
-		plane := piecePlanes[piece.Guid]
+		plane := piecePlanes[piece.Id]
 		if plane == nil {
 			continue
 		}
@@ -13790,26 +13791,26 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 			hasChanges = true
 		}
 
-		pieceFromMap := pieceMap[piece.Guid]
+		pieceFromMap := pieceMap[piece.Id]
 		if pieceFromMap.Center != nil {
-			origCenter := originalCenters[piece.Guid]
+			origCenter := originalCenters[piece.Id]
 			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
-				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
+				diff.Center = &CoordinateDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
 				hasChanges = true
 			}
 		}
 
 		if hasChanges {
-			if path, ok := piecePaths[piece.Guid]; ok {
+			if path, ok := piecePaths[piece.Id]; ok {
 				pathValue := path
 				diff.Attributes = &AttributesDiff{
-					Added: []Attribute{{Guid: Guid(), Key: "semio.path", Value: &pathValue}},
+					Added: []Attribute{{Id: Id(), Key: "semio.path", Value: &pathValue}},
 				}
 			}
 			updatedPieces = append(updatedPieces, struct {
 				Piece PieceId   `json:"piece"`
 				Diff  PieceDiff `json:"diff"`
-			}{Piece: PieceId{Guid: piece.Guid}, Diff: diff})
+			}{Piece: PieceId{Id: piece.Id}, Diff: diff})
 		}
 	}
 
@@ -13824,13 +13825,13 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 }
 
 // 🌤️FlattenDesign returns the canonical SemioReport with forward/backward DesignChange (merkle-cached on *Kit).
-func FlattenDesign(kit *Kit, designGuid string) SemioReport[DesignChange] {
+func FlattenDesign(kit *Kit, designId string) SemioReport[DesignChange] {
 	if kit == nil {
 		return semioReportErr[DesignChange]([]OperationNote{{Message: "nil kit"}})
 	}
-	design := FindDesignInKit(kit, designGuid)
+	design := FindDesignInKit(kit, designId)
 	if design == nil {
-		return semioReportErr[DesignChange]([]OperationNote{{Code: "flatten.design-not-found", Message: fmt.Sprintf("Design %q not found in kit", designGuid)}})
+		return semioReportErr[DesignChange]([]OperationNote{{Code: "flatten.design-not-found", Message: fmt.Sprintf("Design %q not found in kit", designId)}})
 	}
 	if len(design.Pieces) == 0 {
 		z := DesignChange{Forward: DesignDiff{}, Backward: DesignDiff{}}
@@ -13844,9 +13845,9 @@ func FlattenDesign(kit *Kit, designGuid string) SemioReport[DesignChange] {
 	}
 	kit.graphMu.Lock()
 	kit.ensureGraphMaps()
-	prev := kit.flattenMerkle[designGuid]
-	rep, next := FlattenDesignCached(kit, designGuid, prev)
-	kit.flattenMerkle[designGuid] = next
+	prev := kit.flattenMerkle[designId]
+	rep, next := FlattenDesignCached(kit, designId, prev)
+	kit.flattenMerkle[designId] = next
 	kit.graphMu.Unlock()
 	return rep
 }
@@ -14175,20 +14176,20 @@ func connectionDiffFromStructuralMoveVector(
 func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector) DesignDiff {
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
-		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+		typesDict[kit.Types[i].Id] = &kit.Types[i]
 	}
-	selectedGuids := make(map[string]bool)
+	selectedIds := make(map[string]bool)
 	for _, p := range pieces.Pieces {
-		selectedGuids[p.Guid] = true
+		selectedIds[p.Id] = true
 	}
-	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	parentMap := make(map[string]struct{ connectionId, parentId string })
 	for _, c := range design.Connections {
-		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
+		parentMap[c.Connecting.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Connected.Piece.Id}
 	}
-	fixedGuids := make(map[string]bool)
-	for guid := range selectedGuids {
-		if _, hasParent := parentMap[guid]; !hasParent {
-			fixedGuids[guid] = true
+	fixedIds := make(map[string]bool)
+	for id := range selectedIds {
+		if _, hasParent := parentMap[id]; !hasParent {
+			fixedIds[id] = true
 		}
 	}
 	var pieceUpdates []struct {
@@ -14197,10 +14198,10 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 	}
 	pieceMap := make(map[string]*Piece)
 	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+		pieceMap[design.Pieces[i].Id] = &design.Pieces[i]
 	}
-	for guid := range fixedGuids {
-		p, ok := pieceMap[guid]
+	for id := range fixedIds {
+		p, ok := pieceMap[id]
 		if !ok || p.Plane == nil {
 			continue
 		}
@@ -14209,65 +14210,65 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 			Piece PieceId   `json:"piece"`
 			Diff  PieceDiff `json:"diff"`
 		}{
-			Piece: PieceId{Guid: guid},
+			Piece: PieceId{Id: id},
 			Diff:  PieceDiff{Plane: &PlaneDiff{Origin: &orig}},
 		})
 	}
 	connMap := make(map[string]*Connection)
 	for i := range design.Connections {
-		connMap[design.Connections[i].Guid] = &design.Connections[i]
+		connMap[design.Connections[i].Id] = &design.Connections[i]
 	}
 	var connectionUpdates []struct {
 		Connection ConnectionId   `json:"connection"`
 		Diff       ConnectionDiff `json:"diff"`
 	}
-	for guid := range selectedGuids {
-		if fixedGuids[guid] {
+	for id := range selectedIds {
+		if fixedIds[id] {
 			continue
 		}
 		isDescendant := false
-		current := guid
+		current := id
 		for {
 			p, ok := parentMap[current]
 			if !ok {
 				break
 			}
-			if selectedGuids[p.parentGuid] {
+			if selectedIds[p.parentId] {
 				isDescendant = true
 				break
 			}
-			current = p.parentGuid
+			current = p.parentId
 		}
 		if isDescendant {
 			continue
 		}
-		parent, ok := parentMap[guid]
+		parent, ok := parentMap[id]
 		if !ok {
 			continue
 		}
-		connection := connMap[parent.connectionGuid]
+		connection := connMap[parent.connectionId]
 		if connection == nil {
 			continue
 		}
-		parentPiece := pieceMap[parent.parentGuid]
-		childPiece := pieceMap[guid]
+		parentPiece := pieceMap[parent.parentId]
+		childPiece := pieceMap[id]
 		if parentPiece == nil || childPiece == nil {
 			continue
 		}
 		if parentPiece.Type == nil || childPiece.Type == nil {
 			continue
 		}
-		parentType := typesDict[parentPiece.Type.Guid]
-		childType := typesDict[childPiece.Type.Guid]
+		parentType := typesDict[parentPiece.Type.Id]
+		childType := typesDict[childPiece.Type.Id]
 		parentConnector := getConnector(typesDict, parentType, func() *string {
 			if connection.Connected.Connector != nil {
-				return &connection.Connected.Connector.Guid
+				return &connection.Connected.Connector.Id
 			}
 			return nil
 		}())
 		childConnector := getConnector(typesDict, childType, func() *string {
 			if connection.Connecting.Connector != nil {
-				return &connection.Connecting.Connector.Guid
+				return &connection.Connecting.Connector.Id
 			}
 			return nil
 		}())
@@ -14289,7 +14290,7 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 			Connection ConnectionId   `json:"connection"`
 			Diff       ConnectionDiff `json:"diff"`
 		}{
-			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Connection: ConnectionId{Id: parent.connectionId},
 			Diff:       connDiff,
 		})
 		if vector.Rise != 0 {
@@ -14309,19 +14310,19 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 
 // 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
 // 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
-func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
-	selectedGuids := make(map[string]bool)
+func DragPiecesInDesign(design Design, pieces Design, offset Coordinate) DesignDiff {
+	selectedIds := make(map[string]bool)
 	for _, p := range pieces.Pieces {
-		selectedGuids[p.Guid] = true
+		selectedIds[p.Id] = true
 	}
-	parentMap := make(map[string]struct{ connectionGuid, parentGuid string })
+	parentMap := make(map[string]struct{ connectionId, parentId string })
 	for _, c := range design.Connections {
-		parentMap[c.Connecting.Piece.Guid] = struct{ connectionGuid, parentGuid string }{c.Guid, c.Connected.Piece.Guid}
+		parentMap[c.Connecting.Piece.Id] = struct{ connectionId, parentId string }{c.Id, c.Connected.Piece.Id}
 	}
-	fixedGuids := make(map[string]bool)
-	for guid := range selectedGuids {
-		if _, hasParent := parentMap[guid]; !hasParent {
-			fixedGuids[guid] = true
+	fixedIds := make(map[string]bool)
+	for id := range selectedIds {
+		if _, hasParent := parentMap[id]; !hasParent {
+			fixedIds[id] = true
 		}
 	}
 	var pieceUpdates []struct {
@@ -14330,18 +14331,18 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 	}
 	pieceMap := make(map[string]*Piece)
 	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+		pieceMap[design.Pieces[i].Id] = &design.Pieces[i]
 	}
-	for guid := range fixedGuids {
-		if p, ok := pieceMap[guid]; ok && p.Center != nil {
+	for id := range fixedIds {
+		if p, ok := pieceMap[id]; ok && p.Center != nil {
 			newU := p.Center.U + offset.U
 			newV := p.Center.V + offset.V
 			pieceUpdates = append(pieceUpdates, struct {
 				Piece PieceId   `json:"piece"`
 				Diff  PieceDiff `json:"diff"`
 			}{
-				Piece: PieceId{Guid: guid},
-				Diff:  PieceDiff{Center: &CoordDiff{U: &newU, V: &newV}},
+				Piece: PieceId{Id: id},
+				Diff:  PieceDiff{Center: &CoordinateDiff{U: &newU, V: &newV}},
 			})
 		}
 	}
@@ -14349,27 +14350,27 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 		Connection ConnectionId   `json:"connection"`
 		Diff       ConnectionDiff `json:"diff"`
 	}
-	for guid := range selectedGuids {
-		if fixedGuids[guid] {
+	for id := range selectedIds {
+		if fixedIds[id] {
 			continue
 		}
 		isDescendant := false
-		current := guid
+		current := id
 		for {
 			p, ok := parentMap[current]
 			if !ok {
 				break
 			}
-			if selectedGuids[p.parentGuid] {
+			if selectedIds[p.parentId] {
 				isDescendant = true
 				break
 			}
-			current = p.parentGuid
+			current = p.parentId
 		}
 		if isDescendant {
 			continue
 		}
-		parent, ok := parentMap[guid]
+		parent, ok := parentMap[id]
 		if !ok {
 			continue
 		}
@@ -14379,7 +14380,7 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 			Connection ConnectionId   `json:"connection"`
 			Diff       ConnectionDiff `json:"diff"`
 		}{
-			Connection: ConnectionId{Guid: parent.connectionGuid},
+			Connection: ConnectionId{Id: parent.connectionId},
 			Diff:       ConnectionDiff{U: &connU, V: &connV},
 		})
 	}
@@ -14407,19 +14408,19 @@ type FlatMerkleCacheEntry struct {
 	PlaneHash  string `json:"planeHash"`
 	CenterHash string `json:"centerHash"`
 	Plane      *Plane `json:"plane,omitempty"`
-	Center     *Coord `json:"center,omitempty"`
+	Center     *Coordinate `json:"center,omitempty"`
 }
 
-// 🌱hashPlaneRoot computes the root plane hash from only the piece guid and its fixed plane components.
-func hashPlaneRoot(guid string, plane *Plane) string {
+// 🌱hashPlaneRoot computes the root plane hash from only the piece id and its fixed plane components.
+func hashPlaneRoot(id string, plane *Plane) string {
 	w := &hashWriter{}
 	if plane == nil {
 		w.writeString("plane.root.identity")
-		w.writeString(guid)
+		w.writeString(id)
 		return w.digest()
 	}
 	w.writeString("plane.root")
-	w.writeString(guid)
+	w.writeString(id)
 	w.writeNumber(plane.Origin.X)
 	w.writeNumber(plane.Origin.Y)
 	w.writeNumber(plane.Origin.Z)
@@ -14458,16 +14459,16 @@ func hashPlaneChain(parentHash string, parentConnector, childConnector Connector
 	return w.digest()
 }
 
-// 🌱hashCenterRoot computes the root center hash from only the piece guid and its fixed center (identity when absent).
-func hashCenterRoot(guid string, center *Coord) string {
+// 🌱hashCenterRoot computes the root center hash from only the piece id and its fixed center (identity when absent).
+func hashCenterRoot(id string, center *Coordinate) string {
 	w := &hashWriter{}
 	if center == nil {
 		w.writeString("center.root.identity")
-		w.writeString(guid)
+		w.writeString(id)
 		return w.digest()
 	}
 	w.writeString("center.root")
-	w.writeString(guid)
+	w.writeString(id)
 	w.writeNumber(center.U)
 	w.writeNumber(center.V)
 	return w.digest()
@@ -14486,63 +14487,63 @@ func hashCenterChain(parentHash string, parentConnector Connector, connection Co
 }
 
 // 🌳ComputeFlatHashes returns {planeHash, centerHash} for every piece reachable from a root in each connected component of the design.
-func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes {
-	design := FindDesignInKit(kit, designGuid)
+func ComputeFlatHashes(kit *Kit, designId string) map[string]FlatMerkleHashes {
+	design := FindDesignInKit(kit, designId)
 	if design == nil || len(design.Pieces) == 0 {
 		return map[string]FlatMerkleHashes{}
 	}
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
-		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+		typesDict[kit.Types[i].Id] = &kit.Types[i]
 	}
 	pieceMap := make(map[string]*Piece)
 	pieceIndex := make(map[string]int)
 	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
-		pieceIndex[design.Pieces[i].Guid] = i
+		pieceMap[design.Pieces[i].Id] = &design.Pieces[i]
+		pieceIndex[design.Pieces[i].Id] = i
 	}
 	adjacency := make(map[string][]struct {
-		neighborGuid string
+		neighborId string
 		connection   *Connection
 	})
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcGuid := conn.Connected.Piece.Guid
-		tgtGuid := conn.Connecting.Piece.Guid
-		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+		srcId := conn.Connected.Piece.Id
+		tgtId := conn.Connecting.Piece.Id
+		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
-		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
-			neighborGuid string
+		adjacency[srcId] = append(adjacency[srcId], struct {
+			neighborId string
 			connection   *Connection
-		}{tgtGuid, conn})
-		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
-			neighborGuid string
+		}{tgtId, conn})
+		adjacency[tgtId] = append(adjacency[tgtId], struct {
+			neighborId string
 			connection   *Connection
-		}{srcGuid, conn})
+		}{srcId, conn})
 	}
 
 	componentOf := make(map[string]int)
 	var components [][]string
 	for i := range design.Pieces {
-		guid := design.Pieces[i].Guid
-		if _, ok := componentOf[guid]; ok {
+		id := design.Pieces[i].Id
+		if _, ok := componentOf[id]; ok {
 			continue
 		}
 		idx := len(components)
-		queue := []string{guid}
-		componentOf[guid] = idx
-		members := []string{guid}
+		queue := []string{id}
+		componentOf[id] = idx
+		members := []string{id}
 		for len(queue) > 0 {
 			cur := queue[0]
 			queue = queue[1:]
 			for _, nb := range adjacency[cur] {
-				if _, seen := componentOf[nb.neighborGuid]; seen {
+				if _, seen := componentOf[nb.neighborId]; seen {
 					continue
 				}
-				componentOf[nb.neighborGuid] = idx
-				members = append(members, nb.neighborGuid)
-				queue = append(queue, nb.neighborGuid)
+				componentOf[nb.neighborId] = idx
+				members = append(members, nb.neighborId)
+				queue = append(queue, nb.neighborId)
 			}
 		}
 		components = append(components, members)
@@ -14556,45 +14557,45 @@ func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes 
 		for _, g := range members {
 			memberSet[g] = true
 		}
-		var rootGuid string
+		var rootId string
 		for i := range design.Pieces {
 			p := &design.Pieces[i]
-			if !memberSet[p.Guid] {
+			if !memberSet[p.Id] {
 				continue
 			}
 			if p.Plane != nil && p.Center != nil {
-				rootGuid = p.Guid
+				rootId = p.Id
 				break
 			}
 		}
-		if rootGuid == "" {
+		if rootId == "" {
 			sorted := make([]string, len(members))
 			copy(sorted, members)
 			sort.Strings(sorted)
 			if len(sorted) == 0 {
 				continue
 			}
-			rootGuid = sorted[0]
+			rootId = sorted[0]
 		}
-		rootPiece := pieceMap[rootGuid]
-		planeHashes[rootGuid] = hashPlaneRoot(rootGuid, rootPiece.Plane)
-		centerHashes[rootGuid] = hashCenterRoot(rootGuid, rootPiece.Center)
+		rootPiece := pieceMap[rootId]
+		planeHashes[rootId] = hashPlaneRoot(rootId, rootPiece.Plane)
+		centerHashes[rootId] = hashCenterRoot(rootId, rootPiece.Center)
 
-		visited := map[string]bool{rootGuid: true}
-		queue := []string{rootGuid}
+		visited := map[string]bool{rootId: true}
+		queue := []string{rootId}
 		for len(queue) > 0 {
 			current := queue[0]
 			queue = queue[1:]
 			currentPiece := pieceMap[current]
 			for _, nb := range adjacency[current] {
-				if visited[nb.neighborGuid] {
+				if visited[nb.neighborId] {
 					continue
 				}
-				visited[nb.neighborGuid] = true
-				childId := nb.neighborGuid
+				visited[nb.neighborId] = true
+				childId := nb.neighborId
 				conn := nb.connection
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Guid == current {
+				if conn.Connected.Piece.Id == current {
 					parentSide = &conn.Connected
 					childSide = &conn.Connecting
 				} else {
@@ -14604,20 +14605,20 @@ func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes 
 				childPiece := pieceMap[childId]
 				var parentType, childType *Type
 				if currentPiece != nil && currentPiece.Type != nil {
-					parentType = typesDict[currentPiece.Type.Guid]
+					parentType = typesDict[currentPiece.Type.Id]
 				}
 				if childPiece != nil && childPiece.Type != nil {
-					childType = typesDict[childPiece.Type.Guid]
+					childType = typesDict[childPiece.Type.Id]
 				}
-				var parentConnectorGuid, childConnectorGuid *string
+				var parentConnectorId, childConnectorId *string
 				if parentSide.Connector != nil {
-					parentConnectorGuid = &parentSide.Connector.Guid
+					parentConnectorId = &parentSide.Connector.Id
 				}
 				if childSide.Connector != nil {
-					childConnectorGuid = &childSide.Connector.Guid
+					childConnectorId = &childSide.Connector.Id
 				}
-				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
-				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+				parentConnector := getConnector(typesDict, parentType, parentConnectorId)
+				childConnector := getConnector(typesDict, childType, childConnectorId)
 				if parentConnector == nil || childConnector == nil {
 					continue
 				}
@@ -14629,22 +14630,22 @@ func ComputeFlatHashes(kit *Kit, designGuid string) map[string]FlatMerkleHashes 
 	}
 
 	result := make(map[string]FlatMerkleHashes, len(planeHashes))
-	for guid, ph := range planeHashes {
-		result[guid] = FlatMerkleHashes{PlaneHash: ph, CenterHash: centerHashes[guid]}
+	for id, ph := range planeHashes {
+		result[id] = FlatMerkleHashes{PlaneHash: ph, CenterHash: centerHashes[id]}
 	}
 	return result
 }
 
 // 🧠FlattenDesignCached runs FlattenDesignDiff but reuses cached plane/center values whenever the merkle hash for a piece is unchanged.
-func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkleCacheEntry) (SemioReport[DesignChange], map[string]FlatMerkleCacheEntry) {
-	design := FindDesignInKit(kit, designGuid)
+func FlattenDesignCached(kit *Kit, designId string, cache map[string]FlatMerkleCacheEntry) (SemioReport[DesignChange], map[string]FlatMerkleCacheEntry) {
+	design := FindDesignInKit(kit, designId)
 	var before Design
 	hasBefore := design != nil && len(design.Pieces) > 0
 	if hasBefore {
 		before = deepCloneDesign(*design)
 	}
-	newHashes := ComputeFlatHashes(kit, designGuid)
-	diff := FlattenDesignDiff(kit, designGuid)
+	newHashes := ComputeFlatHashes(kit, designId)
+	diff := FlattenDesignDiff(kit, designId)
 	var backward DesignDiff
 	if hasBefore {
 		backward = inverseDesignDiff(before, diff)
@@ -14652,7 +14653,7 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 	updatedById := make(map[string]PieceDiff)
 	if diff.Pieces != nil {
 		for _, entry := range diff.Pieces.Updated {
-			updatedById[entry.Piece.Guid] = entry.Diff
+			updatedById[entry.Piece.Id] = entry.Diff
 		}
 	}
 	extractPlane := func(pd PieceDiff) *Plane {
@@ -14670,25 +14671,25 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 			YAxis:  Vector{X: *pd.Plane.YAxis.X, Y: *pd.Plane.YAxis.Y, Z: *pd.Plane.YAxis.Z},
 		}
 	}
-	extractCenter := func(pd PieceDiff) *Coord {
+	extractCenter := func(pd PieceDiff) *Coordinate {
 		if pd.Center == nil || pd.Center.U == nil || pd.Center.V == nil {
 			return nil
 		}
-		return &Coord{U: *pd.Center.U, V: *pd.Center.V}
+		return &Coordinate{U: *pd.Center.U, V: *pd.Center.V}
 	}
 	nextCache := make(map[string]FlatMerkleCacheEntry, len(newHashes))
-	for guid, hashes := range newHashes {
-		updated, hasUpdated := updatedById[guid]
+	for id, hashes := range newHashes {
+		updated, hasUpdated := updatedById[id]
 		var prev *FlatMerkleCacheEntry
 		if cache != nil {
-			if v, ok := cache[guid]; ok {
+			if v, ok := cache[id]; ok {
 				pv := v
 				prev = &pv
 			}
 		}
 		if prev == nil || !hasUpdated {
 			if hasUpdated {
-				nextCache[guid] = FlatMerkleCacheEntry{
+				nextCache[id] = FlatMerkleCacheEntry{
 					PlaneHash:  hashes.PlaneHash,
 					CenterHash: hashes.CenterHash,
 					Plane:      extractPlane(updated),
@@ -14705,7 +14706,7 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 		if prev.CenterHash == hashes.CenterHash {
 			reusedCenter = prev.Center
 		}
-		nextCache[guid] = FlatMerkleCacheEntry{
+		nextCache[id] = FlatMerkleCacheEntry{
 			PlaneHash:  hashes.PlaneHash,
 			CenterHash: hashes.CenterHash,
 			Plane:      reusedPlane,
@@ -14719,15 +14720,15 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 
 // #endregion 🌤️Flatten Design
 
-// #region 🔩Kit Model Export
+// #region 🔩Kit Representation Export
 
-// 📤ExportModelFormats maps supported export format extensions.
-var ExportModelFormats = map[string]string{
+// 📤ExportRepresentationFormats maps supported export format extensions.
+var ExportRepresentationFormats = map[string]string{
 	".glb":  ".glb",
 	".gltf": ".gltf",
 }
 
-// #region 🔧Kit Model Export Helpers
+// #region 🔧Kit Representation Export Helpers
 
 // 📤exportMeshData holds extracted or generated mesh geometry for a single type.
 type exportMeshData struct {
@@ -15107,43 +15108,43 @@ func exportParseGltfToMeshData(gltf map[string]interface{}, binData []byte) (*ex
 	}, nil
 }
 
-// 🧹exportFindModelForKind finds the best matching model for a type given tag filters.
-func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Model {
-	if len(typ.Models) == 0 {
+// 🧹exportFindRepresentationForKind finds the best matching representation for a type given tag filters.
+func exportFindRepresentationForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Representation {
+	if len(typ.Representations) == 0 {
 		return nil
 	}
 	if len(tags) == 0 {
-		for i := range typ.Models {
-			if len(typ.Models[i].Tags) == 0 {
-				return &typ.Models[i]
+		for i := range typ.Representations {
+			if len(typ.Representations[i].Tags) == 0 {
+				return &typ.Representations[i]
 			}
 		}
-		return &typ.Models[0]
+		return &typ.Representations[0]
 	}
-	selectedTagGuids := make(map[string]bool)
+	selectedTagIds := make(map[string]bool)
 	for _, t := range tags {
 		if _, ok := tagsDict[t]; ok {
-			selectedTagGuids[t] = true
+			selectedTagIds[t] = true
 			continue
 		}
 		for _, tag := range tagsDict {
 			if tag.Name == t {
-				selectedTagGuids[tag.Guid] = true
+				selectedTagIds[tag.Id] = true
 			}
 		}
 	}
-	bestModel := (*Model)(nil)
+	bestRepresentation := (*Representation)(nil)
 	bestScore := -1.0
-	for i := range typ.Models {
-		model := &typ.Models[i]
-		modelTagGuids := make(map[string]bool)
-		for _, tid := range model.Tags {
-			modelTagGuids[tid.Guid] = true
+	for i := range typ.Representations {
+		representation := &typ.Representations[i]
+		representationTagIds := make(map[string]bool)
+		for _, tid := range representation.Tags {
+			representationTagIds[tid.Id] = true
 		}
 		containsAll := true
 		intersection := 0
-		for guid := range selectedTagGuids {
-			if !modelTagGuids[guid] {
+		for id := range selectedTagIds {
+			if !representationTagIds[id] {
 				containsAll = false
 				break
 			}
@@ -15152,9 +15153,9 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 		if !containsAll {
 			continue
 		}
-		union := len(selectedTagGuids)
-		for guid := range modelTagGuids {
-			if !selectedTagGuids[guid] {
+		union := len(selectedTagIds)
+		for id := range representationTagIds {
+			if !selectedTagIds[id] {
 				union++
 			}
 		}
@@ -15164,26 +15165,26 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 		}
 		if score > bestScore {
 			bestScore = score
-			bestModel = model
+			bestRepresentation = representation
 		}
 	}
-	if bestModel != nil {
-		return bestModel
+	if bestRepresentation != nil {
+		return bestRepresentation
 	}
-	return &typ.Models[0]
+	return &typ.Representations[0]
 }
 
-// #endregion 🔧Kit Model Export Helpers
+// #endregion 🔧Kit Representation Export Helpers
 
-// 📐ExportDesignModel exports the 3D model of a design to GLB or glTF format.
-func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
-	if _, ok := ExportModelFormats[format]; !ok {
+// 📐ExportDesignRepresentation exports the 3D representation of a design to GLB or glTF format.
+func ExportDesignRepresentation(kit *Kit, designId string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
+	if _, ok := ExportRepresentationFormats[format]; !ok {
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
 
-	design := FindDesignInKit(kit, designGuid)
+	design := FindDesignInKit(kit, designId)
 	if design == nil {
-		return nil, fmt.Errorf("design not found: %s", designGuid)
+		return nil, fmt.Errorf("design not found: %s", designId)
 	}
 	if len(design.Pieces) == 0 {
 		return nil, fmt.Errorf("design has no pieces")
@@ -15191,81 +15192,81 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 	typesDict := make(map[string]*Type)
 	for i := range kit.Types {
-		typesDict[kit.Types[i].Guid] = &kit.Types[i]
+		typesDict[kit.Types[i].Id] = &kit.Types[i]
 	}
 	filesDict := make(map[string]*File)
 	for i := range kit.Files {
-		filesDict[kit.Files[i].Guid] = &kit.Files[i]
+		filesDict[kit.Files[i].Id] = &kit.Files[i]
 	}
 	tagsDict := make(map[string]*Tag)
 	for i := range kit.Tags {
-		tagsDict[kit.Tags[i].Guid] = &kit.Tags[i]
+		tagsDict[kit.Tags[i].Id] = &kit.Tags[i]
 	}
 	pieceMap := make(map[string]*Piece)
 	for i := range design.Pieces {
-		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
+		pieceMap[design.Pieces[i].Id] = &design.Pieces[i]
 	}
 
-	// #region 🌦️Kit Model Export BFS
+	// #region 🌦️Kit Representation Export BFS
 	piecePlanes := make(map[string]*Plane)
 	parentOf := make(map[string]string)
 	childrenOf := make(map[string][]string)
-	var rootPieceGuids []string
+	var rootPieceIds []string
 
 	adjacency := make(map[string][]struct {
-		neighborGuid string
+		neighborId string
 		connection   *Connection
 	})
 	for i := range design.Connections {
 		conn := &design.Connections[i]
-		srcGuid := conn.Connected.Piece.Guid
-		tgtGuid := conn.Connecting.Piece.Guid
-		if pieceMap[srcGuid] == nil || pieceMap[tgtGuid] == nil {
+		srcId := conn.Connected.Piece.Id
+		tgtId := conn.Connecting.Piece.Id
+		if pieceMap[srcId] == nil || pieceMap[tgtId] == nil {
 			continue
 		}
-		adjacency[srcGuid] = append(adjacency[srcGuid], struct {
-			neighborGuid string
+		adjacency[srcId] = append(adjacency[srcId], struct {
+			neighborId string
 			connection   *Connection
-		}{tgtGuid, conn})
-		adjacency[tgtGuid] = append(adjacency[tgtGuid], struct {
-			neighborGuid string
+		}{tgtId, conn})
+		adjacency[tgtId] = append(adjacency[tgtId], struct {
+			neighborId string
 			connection   *Connection
-		}{srcGuid, conn})
+		}{srcId, conn})
 	}
 
 	visited := make(map[string]bool)
-	var bfsExport func(rootGuid string)
-	bfsExport = func(rootGuid string) {
-		queue := []string{rootGuid}
-		visited[rootGuid] = true
-		rootPieceGuids = append(rootPieceGuids, rootGuid)
-		rootPiece := pieceMap[rootGuid]
+	var bfsExport func(rootId string)
+	bfsExport = func(rootId string) {
+		queue := []string{rootId}
+		visited[rootId] = true
+		rootPieceIds = append(rootPieceIds, rootId)
+		rootPiece := pieceMap[rootId]
 		if rootPiece.Plane != nil && rootPiece.Center != nil {
-			piecePlanes[rootGuid] = rootPiece.Plane
+			piecePlanes[rootId] = rootPiece.Plane
 		} else {
 			p := Plane{
 				Origin: Point{X: 0, Y: 0, Z: 0},
 				XAxis:  Vector{X: 1, Y: 0, Z: 0},
 				YAxis:  Vector{X: 0, Y: 1, Z: 0},
 			}
-			piecePlanes[rootGuid] = &p
+			piecePlanes[rootId] = &p
 		}
 		for len(queue) > 0 {
-			currentGuid := queue[0]
+			currentId := queue[0]
 			queue = queue[1:]
-			currentPlane := piecePlanes[currentGuid]
-			currentPiece := pieceMap[currentGuid]
+			currentPlane := piecePlanes[currentId]
+			currentPiece := pieceMap[currentId]
 
-			for _, neighbor := range adjacency[currentGuid] {
-				if visited[neighbor.neighborGuid] {
+			for _, neighbor := range adjacency[currentId] {
+				if visited[neighbor.neighborId] {
 					continue
 				}
-				visited[neighbor.neighborGuid] = true
-				neighborPiece := pieceMap[neighbor.neighborGuid]
+				visited[neighbor.neighborId] = true
+				neighborPiece := pieceMap[neighbor.neighborId]
 				conn := neighbor.connection
 
 				var parentSide, childSide *Side
-				if conn.Connected.Piece.Guid == currentGuid {
+				if conn.Connected.Piece.Id == currentId {
 					parentSide = &conn.Connected
 					childSide = &conn.Connecting
 				} else {
@@ -15275,65 +15276,65 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 				var parentType, childType *Type
 				if currentPiece.Type != nil {
-					parentType = typesDict[currentPiece.Type.Guid]
+					parentType = typesDict[currentPiece.Type.Id]
 				}
 				if neighborPiece.Type != nil {
-					childType = typesDict[neighborPiece.Type.Guid]
+					childType = typesDict[neighborPiece.Type.Id]
 				}
 
-				var parentConnectorGuid, childConnectorGuid *string
+				var parentConnectorId, childConnectorId *string
 				if parentSide.Connector != nil {
-					parentConnectorGuid = &parentSide.Connector.Guid
+					parentConnectorId = &parentSide.Connector.Id
 				}
 				if childSide.Connector != nil {
-					childConnectorGuid = &childSide.Connector.Guid
+					childConnectorId = &childSide.Connector.Id
 				}
 
-				parentConnector := getConnector(typesDict, parentType, parentConnectorGuid)
-				childConnector := getConnector(typesDict, childType, childConnectorGuid)
+				parentConnector := getConnector(typesDict, parentType, parentConnectorId)
+				childConnector := getConnector(typesDict, childType, childConnectorId)
 				if parentConnector == nil || childConnector == nil {
 					continue
 				}
 
 				childPlane := computeChildPlane(*currentPlane, *parentConnector, *childConnector, *conn)
-				piecePlanes[neighbor.neighborGuid] = &childPlane
-				parentOf[neighbor.neighborGuid] = currentGuid
-				childrenOf[currentGuid] = append(childrenOf[currentGuid], neighbor.neighborGuid)
+				piecePlanes[neighbor.neighborId] = &childPlane
+				parentOf[neighbor.neighborId] = currentId
+				childrenOf[currentId] = append(childrenOf[currentId], neighbor.neighborId)
 
-				queue = append(queue, neighbor.neighborGuid)
+				queue = append(queue, neighbor.neighborId)
 			}
 		}
 	}
 	for _, piece := range design.Pieces {
-		if !visited[piece.Guid] {
-			bfsExport(piece.Guid)
+		if !visited[piece.Id] {
+			bfsExport(piece.Id)
 		}
 	}
-	// #endregion 🌦️Kit Model Export BFS
+	// #endregion 🌦️Kit Representation Export BFS
 
-	// #region ⚙️Kit Model Export MeshData
+	// #region ⚙️Kit Representation Export MeshData
 	usedTypes := make(map[string]bool)
 	for _, piece := range design.Pieces {
 		if piece.Type != nil {
-			usedTypes[piece.Type.Guid] = true
+			usedTypes[piece.Type.Id] = true
 		}
 	}
 	typeMeshData := make(map[string]*exportMeshData)
 	typeMeshNames := make(map[string]string)
-	for typeGuid := range usedTypes {
-		typ := typesDict[typeGuid]
+	for typeId := range usedTypes {
+		typ := typesDict[typeId]
 		if typ == nil {
 			continue
 		}
-		model := exportFindModelForKind(typ, tags, tagsDict)
-		if model == nil {
+		representation := exportFindRepresentationForKind(typ, tags, tagsDict)
+		if representation == nil {
 			continue
 		}
-		file := filesDict[model.File.Guid]
+		file := filesDict[representation.File.Id]
 		if file == nil || file.Blob == nil || *file.Blob == "" {
 			continue
 		}
-		typeMeshNames[typeGuid] = file.Name
+		typeMeshNames[typeId] = file.Name
 		glbData, err := exportDecodeBlobToBytes(*file.Blob)
 		if err != nil || len(glbData) < 4 {
 			continue
@@ -15345,19 +15346,19 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		if err != nil {
 			continue
 		}
-		typeMeshData[typeGuid] = meshData
+		typeMeshData[typeId] = meshData
 	}
-	// #endregion ⚙️Kit Model Export MeshData
+	// #endregion ⚙️Kit Representation Export MeshData
 
-	// #region 💻Kit Model Export BuildGLTF
+	// #region 💻Kit Representation Export BuildGLTF
 	typeOrder := make([]string, 0, len(usedTypes))
-	for typeGuid := range typeMeshData {
-		typeOrder = append(typeOrder, typeGuid)
+	for typeId := range typeMeshData {
+		typeOrder = append(typeOrder, typeId)
 	}
 	sort.Strings(typeOrder)
 	typeMeshIndex := make(map[string]int)
-	for i, typeGuid := range typeOrder {
-		typeMeshIndex[typeGuid] = i
+	for i, typeId := range typeOrder {
+		typeMeshIndex[typeId] = i
 	}
 
 	var binBuf bytes.Buffer
@@ -15384,8 +15385,8 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	}
 	var gltfMeshList []exportMesh
 
-	for _, typeGuid := range typeOrder {
-		md := typeMeshData[typeGuid]
+	for _, typeId := range typeOrder {
+		md := typeMeshData[typeId]
 
 		for binBuf.Len()%4 != 0 {
 			binBuf.WriteByte(0)
@@ -15409,7 +15410,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		})
 
 		mi := exportMesh{positionAcc: posAccIdx}
-		if meshName, ok := typeMeshNames[typeGuid]; ok {
+		if meshName, ok := typeMeshNames[typeId]; ok {
 			mi.name = meshName
 		}
 		if md.indexCount > 0 {
@@ -15442,7 +15443,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 	pieceNodeIndex := make(map[string]int)
 	for i, piece := range design.Pieces {
-		pieceNodeIndex[piece.Guid] = i
+		pieceNodeIndex[piece.Id] = i
 	}
 
 	type exportNode struct {
@@ -15453,7 +15454,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	}
 	nodes := make([]exportNode, len(design.Pieces))
 	for i, piece := range design.Pieces {
-		plane := piecePlanes[piece.Guid]
+		plane := piecePlanes[piece.Id]
 		if plane == nil {
 			p := Plane{
 				Origin: Point{X: 0, Y: 0, Z: 0},
@@ -15464,8 +15465,8 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		}
 
 		var matrix [16]float64
-		if parentGuid, hasParent := parentOf[piece.Guid]; hasParent {
-			parentPlane := piecePlanes[parentGuid]
+		if parentId, hasParent := parentOf[piece.Id]; hasParent {
+			parentPlane := piecePlanes[parentId]
 			if parentPlane != nil {
 				parentMat := planeToMatrix(*parentPlane)
 				childMat := planeToMatrix(*plane)
@@ -15486,19 +15487,19 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 
 		meshIdx := -1
 		if piece.Type != nil {
-			if idx, ok := typeMeshIndex[piece.Type.Guid]; ok {
+			if idx, ok := typeMeshIndex[piece.Type.Id]; ok {
 				meshIdx = idx
 			}
 		}
 
-		name := piece.Guid
+		name := piece.Id
 		if piece.Name != nil && *piece.Name != "" {
 			name = *piece.Name
 		}
 
 		var childIndices []int
-		for _, childGuid := range childrenOf[piece.Guid] {
-			if idx, ok := pieceNodeIndex[childGuid]; ok {
+		for _, childId := range childrenOf[piece.Id] {
+			if idx, ok := pieceNodeIndex[childId]; ok {
 				childIndices = append(childIndices, idx)
 			}
 		}
@@ -15512,8 +15513,8 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	}
 
 	var sceneRootNodes []int
-	for _, rootGuid := range rootPieceGuids {
-		if idx, ok := pieceNodeIndex[rootGuid]; ok {
+	for _, rootId := range rootPieceIds {
+		if idx, ok := pieceNodeIndex[rootId]; ok {
 			sceneRootNodes = append(sceneRootNodes, idx)
 		}
 	}
@@ -15628,15 +15629,15 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	out.Write(binBytes)
 
 	return out.Bytes(), nil
-	// #endregion 💻Kit Model Export BuildGLTF
+	// #endregion 💻Kit Representation Export BuildGLTF
 }
 
-// #endregion 🔩Kit Model Export
+// #endregion 🔩Kit Representation Export
 
 // #region ❄️Geometric Insights
-// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+// Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
-// 📏GeometricInsights holds computed geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+// 📏GeometricInsights holds computed geometric KPIs for a GLB/GLTF representation in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
 type GeometricInsights struct {
 	BoundingBoxMin      Point
 	BoundingBoxMax      Point
@@ -15665,7 +15666,7 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	}
 	pos := md.positionBytes
 	idx := md.indexBytes
-	// Semio coords: x = glb.x, y = -glb.x, z = glb.y
+	// Semio coordinates: x = glb.x, y = -glb.x, z = glb.y
 	sxMin, syMin, szMin := math.MaxFloat64, math.MaxFloat64, math.MaxFloat64
 	sxMax, syMax, szMax := -math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64
 	var sumSx, sumSy, sumSz float64
@@ -15771,15 +15772,15 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	return out
 }
 
-// 📏GetGeometricInsightsForModel computes key performance indicators for the geometry of a GLB/GLTF model.
-func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) {
+// 📏GetGeometricInsightsForRepresentation computes key performance indicators for the geometry of a GLB/GLTF representation.
+func GetGeometricInsightsForRepresentation(representation interface{}) (GeometricInsights, error) {
 	var md *exportMeshData
 	var err error
-	switch v := model.(type) {
+	switch v := representation.(type) {
 	case string:
 		data, errRead := os.ReadFile(v)
 		if errRead != nil {
-			return GeometricInsights{}, fmt.Errorf("read model file: %w", errRead)
+			return GeometricInsights{}, fmt.Errorf("read representation file: %w", errRead)
 		}
 		lower := strings.ToLower(v)
 		if strings.HasSuffix(lower, ".glb") {
@@ -15815,7 +15816,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 			}
 			md, err = exportParseGltfToMeshData(gltf, binData)
 		} else {
-			return GeometricInsights{}, fmt.Errorf("model MUST be .glb or .gltf, got %s", v)
+			return GeometricInsights{}, fmt.Errorf("representation MUST be .glb or .gltf, got %s", v)
 		}
 	case []byte:
 		if len(v) >= 4 && binary.LittleEndian.Uint32(v[0:4]) == 0x46546C67 {
@@ -15846,7 +15847,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 			md, err = exportParseGltfToMeshData(gltf, binData)
 		}
 	default:
-		return GeometricInsights{}, fmt.Errorf("model must be string path or []byte, got %T", model)
+		return GeometricInsights{}, fmt.Errorf("representation must be string path or []byte, got %T", representation)
 	}
 	if err != nil {
 		return GeometricInsights{}, err
@@ -15859,7 +15860,13 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 // #region 📡SQLite
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
-// 🗄️KitFromSqlite reads a Kit from a SQLite database file
+// SemioKitSqliteSchemaVersion matches [`semio::io::sqlite::SCHEMA_VERSION`] in `semio/rs/lib.rs`.
+const SemioKitSqliteSchemaVersion = "2026-04-23-kit-vcs-sqlite-roundtrip"
+
+// SemioKitSqliteSchemaEngine matches [`semio::io::sqlite::SCHEMA_ENGINE`] in `semio/rs/lib.rs`.
+const SemioKitSqliteSchemaEngine = "semio-rs"
+
+// 🗄️KitFromSqlite reads a Kit from a SQLite database file (normalized `semio/sqlite/schema.sql`).
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -15869,13 +15876,10 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 
 	kit := &Kit{}
 
-	row := db.QueryRow("SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1")
-	var version, description, icon, image, preview, remote, homepage, license sql.NullString
-	if err := row.Scan(&kit.Guid, &kit.Name, &version, &description, &icon, &image, &preview, &remote, &homepage, &license); err != nil {
+	row := db.QueryRow(`SELECT id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at FROM kit LIMIT 1`)
+	var description, icon, image, preview, remote, homepage, license, uri, createdAt, updatedAt sql.NullString
+	if err := row.Scan(&kit.Id, &kit.Name, &description, &icon, &image, &preview, &remote, &homepage, &license, &uri, &createdAt, &updatedAt); err != nil {
 		return nil, fmt.Errorf("failed to scan kit: %w", err)
-	}
-	if version.Valid {
-		kit.Version = version.String
 	}
 	if description.Valid {
 		kit.Description = &description.String
@@ -15898,14 +15902,27 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	if license.Valid {
 		kit.License = &license.String
 	}
+	if createdAt.Valid {
+		kit.CreatedAt = createdAt.String
+	}
+	if updatedAt.Valid {
+		kit.UpdatedAt = updatedAt.String
+	}
+	_ = uri
 
-	types, err := loadTypes(db, kit.Guid)
+	families, err := loadFamilies(db, kit.Id)
+	if err != nil {
+		return nil, err
+	}
+	kit.Families = families
+
+	types, err := loadTypes(db, kit.Id)
 	if err != nil {
 		return nil, err
 	}
 	kit.Types = types
 
-	designs, err := loadDesigns(db, kit.Guid)
+	designs, err := loadDesigns(db, kit.Id, types)
 	if err != nil {
 		return nil, err
 	}
@@ -15914,9 +15931,93 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	return kit, nil
 }
 
+// 👪loadFamilies loads kit-level families and their ports.
+func loadFamilies(db *sql.DB, kitId string) ([]Family, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon FROM family WHERE kit_id = ? ORDER BY ordinal`, kitId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []Family
+	for rows.Next() {
+		var f Family
+		var description, icon sql.NullString
+		if err := rows.Scan(&f.Id, &f.Name, &description, &icon); err != nil {
+			return nil, err
+		}
+		if description.Valid {
+			f.Description = &description.String
+		}
+		if icon.Valid {
+			f.Icon = &icon.String
+		}
+		ports, err := loadPortsForFamily(db, kitId, f.Id)
+		if err != nil {
+			return nil, err
+		}
+		f.Ports = ports
+		out = append(out, f)
+	}
+	return out, nil
+}
+
+func loadPortsForFamily(db *sql.DB, kitId, familyId string) ([]Port, error) {
+	prows, err := db.Query(`SELECT id, name, icon, mandatory, t, description,
+		point_x, point_y, point_z, direction_x, direction_y, direction_z
+		FROM port WHERE kit_id = ? AND parent_family_id = ? ORDER BY ordinal`, kitId, familyId)
+	if err != nil {
+		return nil, err
+	}
+	defer prows.Close()
+
+	var ports []Port
+	for prows.Next() {
+		var p Port
+		var icon, description sql.NullString
+		var mandatory sql.NullInt64
+		var t sql.NullFloat64
+		var px, py, pz, dx, dy, dz sql.NullFloat64
+		if err := prows.Scan(&p.Id, &p.Name, &icon, &mandatory, &t, &description,
+			&px, &py, &pz, &dx, &dy, &dz); err != nil {
+			return nil, err
+		}
+		_ = mandatory
+		_ = t
+		_ = px
+		_ = py
+		_ = pz
+		_ = dx
+		_ = dy
+		_ = dz
+		if icon.Valid {
+			p.Icon = &icon.String
+		}
+		if description.Valid {
+			p.Description = &description.String
+		}
+		cprows, err := db.Query(`SELECT compatible_port_id FROM port_compatible_port WHERE port_id = ? ORDER BY ordinal`, p.Id)
+		if err != nil {
+			return nil, err
+		}
+		for cprows.Next() {
+			var cpid string
+			if err := cprows.Scan(&cpid); err != nil {
+				cprows.Close()
+				return nil, err
+			}
+			p.CompatiblePorts = append(p.CompatiblePorts, PortId{Id: cpid})
+		}
+		cprows.Close()
+		ports = append(ports, p)
+	}
+	return ports, nil
+}
+
 // 🏷️loadTypes loads all types belonging to a kit from the database
-func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
-	rows, err := db.Query("SELECT guid, name, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = ?", kitGuid)
+func loadTypes(db *sql.DB, kitId string) ([]Type, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at
+		FROM type WHERE kit_id = ? ORDER BY ordinal`, kitId)
 	if err != nil {
 		return nil, err
 	}
@@ -15925,17 +16026,13 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 	var types []Type
 	for rows.Next() {
 		var t Type
-		var folder, unit, description, icon, image sql.NullString
-		var stock sql.NullInt32
-		var isAbstract, virtual sql.NullBool
-		if err := rows.Scan(&t.Guid, &t.Name, &isAbstract, &folder, &stock, &virtual, &unit, &description, &icon, &image); err != nil {
+		var description, icon, image, unit, locationID, createdAt, updatedAt sql.NullString
+		var stock, virtual sql.NullInt64
+		if err := rows.Scan(&t.Id, &t.Name, &description, &icon, &image, &stock, &virtual, &unit, &locationID, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
-		if folder.Valid {
-			t.Folder = &folder.String
-		}
 		if stock.Valid {
-			s := int(stock.Int32)
+			s := int(stock.Int64)
 			t.Stock = &s
 		}
 		if unit.Valid {
@@ -15950,15 +16047,31 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 		if image.Valid {
 			t.Image = &image.String
 		}
-
-		if isAbstract.Valid {
-			t.IsAbstract = &isAbstract.Bool
-		}
 		if virtual.Valid {
-			t.Virtual = &virtual.Bool
+			v := virtual.Int64 != 0
+			t.Virtual = &v
 		}
+		if locationID.Valid {
+			t.Location = &LocationId{Id: locationID.String}
+		}
+		t.CreatedAt = createdAt.String
+		t.UpdatedAt = updatedAt.String
 
-		connectors, err := loadConnectors(db, t.Guid)
+		tfr, err := db.Query(`SELECT family_id FROM type_family WHERE type_id = ? ORDER BY ordinal`, t.Id)
+		if err != nil {
+			return nil, err
+		}
+		for tfr.Next() {
+			var fid string
+			if err := tfr.Scan(&fid); err != nil {
+				tfr.Close()
+				return nil, err
+			}
+			t.Families = append(t.Families, FamilyId{Id: fid})
+		}
+		tfr.Close()
+
+		connectors, err := loadConnectors(db, t.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -15970,10 +16083,9 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
 }
 
 // ➕loadDesigns loads all designs belonging to a kit from the database
-func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
-	rows, err := db.Query(`SELECT guid, name, unit, folder, 
-        is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
-        FROM design WHERE kit_guid = ?`, kitGuid)
+func loadDesigns(db *sql.DB, kitId string, types []Type) ([]Design, error) {
+	rows, err := db.Query(`SELECT id, name, description, icon, image, location_id, unit, created_at, updated_at
+        FROM design WHERE kit_id = ? ORDER BY ordinal`, kitId)
 	if err != nil {
 		return nil, err
 	}
@@ -15982,27 +16094,12 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 	var designs []Design
 	for rows.Next() {
 		var d Design
-		var unit, folder, description, icon, image sql.NullString
-		var isAbstract, canScale, canMirror sql.NullBool
-		var created, updated string
-		if err := rows.Scan(&d.Guid, &d.Name, &unit, &folder,
-			&isAbstract, &canScale, &canMirror, &description, &icon, &image, &created, &updated); err != nil {
+		var description, icon, image, locationID, unit, createdAt, updatedAt sql.NullString
+		if err := rows.Scan(&d.Id, &d.Name, &description, &icon, &image, &locationID, &unit, &createdAt, &updatedAt); err != nil {
 			return nil, err
 		}
 		if unit.Valid {
 			d.Unit = &unit.String
-		}
-		if folder.Valid {
-			d.Folder = &folder.String
-		}
-		if isAbstract.Valid {
-			d.IsAbstract = &isAbstract.Bool
-		}
-		if canScale.Valid {
-			d.CanScale = &canScale.Bool
-		}
-		if canMirror.Valid {
-			d.CanMirror = &canMirror.Bool
 		}
 		if description.Valid {
 			d.Description = &description.String
@@ -16013,16 +16110,33 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 		if image.Valid {
 			d.Image = &image.String
 		}
-		d.CreatedAt = created
-		d.UpdatedAt = updated
+		if locationID.Valid {
+			d.Location = &LocationId{Id: locationID.String}
+		}
+		d.CreatedAt = createdAt.String
+		d.UpdatedAt = updatedAt.String
 
-		pieces, err := loadPieces(db, d.Guid)
+		dfr, err := db.Query(`SELECT family_id FROM design_family WHERE design_id = ? ORDER BY ordinal`, d.Id)
+		if err != nil {
+			return nil, err
+		}
+		for dfr.Next() {
+			var fid string
+			if err := dfr.Scan(&fid); err != nil {
+				dfr.Close()
+				return nil, err
+			}
+			d.Families = append(d.Families, FamilyId{Id: fid})
+		}
+		dfr.Close()
+
+		pieces, err := loadPieces(db, d.Id)
 		if err != nil {
 			return nil, err
 		}
 		d.Pieces = pieces
 
-		connections, err := loadConnections(db, d.Guid)
+		connections, err := loadConnections(db, d.Id, pieces, types)
 		if err != nil {
 			return nil, err
 		}
@@ -16034,13 +16148,14 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
 }
 
 // 🧩loadPieces loads all pieces belonging to a design from the database
-func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
-	rows, err := db.Query(`SELECT guid, name, type_guid, design_guid_ref,
+func loadPieces(db *sql.DB, designId string) ([]Piece, error) {
+	rows, err := db.Query(`SELECT id, name, description,
         plane_origin_x, plane_origin_y, plane_origin_z,
         plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
         plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
-        center_u, center_v, scale, is_hidden, is_locked, color, description
-        FROM piece WHERE design_guid = ?`, designGuid)
+        center_x, center_y, center_z,
+        scale, hidden, locked, color, type_id, design_ref_id, design_id
+        FROM piece WHERE design_id = ? ORDER BY ordinal`, designId)
 	if err != nil {
 		return nil, err
 	}
@@ -16049,56 +16164,75 @@ func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
 	var pieces []Piece
 	for rows.Next() {
 		var p Piece
-		var name, typeGuid, designGuidRef, color, description sql.NullString
+		var name, typeId, designIdRef, color, description sql.NullString
 		var originX, originY, originZ, xAxisX, xAxisY, xAxisZ, yAxisX, yAxisY, yAxisZ sql.NullFloat64
-		var centerU, centerV, scale sql.NullFloat64
-		var isHidden, isLocked bool
-		if err := rows.Scan(&p.Guid, &name, &typeGuid, &designGuidRef,
+		var centerX, centerY, centerZ, scale sql.NullFloat64
+		var hidden, locked sql.NullInt64
+		var designID string
+		if err := rows.Scan(&p.Id, &name, &description,
 			&originX, &originY, &originZ, &xAxisX, &xAxisY, &xAxisZ, &yAxisX, &yAxisY, &yAxisZ,
-			&centerU, &centerV, &scale, &isHidden, &isLocked, &color, &description); err != nil {
+			&centerX, &centerY, &centerZ,
+			&scale, &hidden, &locked, &color, &typeId, &designIdRef, &designID); err != nil {
 			return nil, err
 		}
+		_ = designID
 		if name.Valid {
 			p.Name = &name.String
 		}
-		if typeGuid.Valid {
-			p.Type = &TypeId{Guid: typeGuid.String}
+		if typeId.Valid {
+			p.Type = &TypeId{Id: typeId.String}
 		}
-		if designGuidRef.Valid {
-			p.Design = &DesignId{Guid: designGuidRef.String}
+		if designIdRef.Valid {
+			p.Design = &DesignId{Id: designIdRef.String}
 		}
-		if originX.Valid {
+		if originX.Valid && originY.Valid && originZ.Valid &&
+			xAxisX.Valid && xAxisY.Valid && xAxisZ.Valid &&
+			yAxisX.Valid && yAxisY.Valid && yAxisZ.Valid {
 			p.Plane = &Plane{
 				Origin: Point{X: originX.Float64, Y: originY.Float64, Z: originZ.Float64},
 				XAxis:  Vector{X: xAxisX.Float64, Y: xAxisY.Float64, Z: xAxisZ.Float64},
 				YAxis:  Vector{X: yAxisX.Float64, Y: yAxisY.Float64, Z: yAxisZ.Float64},
 			}
 		}
-		if centerU.Valid && centerV.Valid {
-			p.Center = &Coord{U: centerU.Float64, V: centerV.Float64}
+		if centerX.Valid && centerY.Valid {
+			p.Center = &Coordinate{U: centerX.Float64, V: centerY.Float64}
 		}
 		if scale.Valid {
 			p.Scale = &scale.Float64
 		}
-		p.IsHidden = &isHidden
-		p.IsLocked = &isLocked
+		if hidden.Valid {
+			h := hidden.Int64 != 0
+			p.IsHidden = &h
+		}
+		if locked.Valid {
+			l := locked.Int64 != 0
+			p.IsLocked = &l
+		}
 		if color.Valid {
 			p.Color = &color.String
 		}
 		if description.Valid {
 			p.Description = &description.String
 		}
+		_ = centerZ
 		pieces = append(pieces, p)
 	}
 	return pieces, nil
 }
 
-// 🔌loadConnections loads all connections belonging to a design from the database
-func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
-	rows, err := db.Query(`SELECT guid, connected_piece_guid, connected_connector_guid,
-        connecting_piece_guid, connecting_connector_guid,
-        gap, shift, rise, rotation, turn, tilt, u, v, description
-        FROM connection WHERE design_guid = ?`, designGuid)
+// 🔌loadConnections loads all connections belonging to a design from the database.
+func loadConnections(db *sql.DB, designId string, pieces []Piece, types []Type) ([]Connection, error) {
+	pieceType := make(map[string]string)
+	for _, p := range pieces {
+		if p.Type != nil {
+			pieceType[p.Id] = p.Type.Id
+		}
+	}
+	rows, err := db.Query(`SELECT id,
+		connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+		connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+		gap, shift, rise, rotation, turn, tilt, x, y, description
+		FROM connection WHERE design_id = ? ORDER BY ordinal`, designId)
 	if err != nil {
 		return nil, err
 	}
@@ -16107,32 +16241,55 @@ func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
 	var connections []Connection
 	for rows.Next() {
 		var c Connection
-		var connectedConnectorGuid, connectingConnectorGuid sql.NullString
-		var u, v sql.NullFloat64
+		var id, cPiece, gPiece string
+		var cPort, cDesPiece, gPort, gDesPiece sql.NullString
+		var gap, shift, rise, rotation, turn, tilt, x, y sql.NullFloat64
 		var description sql.NullString
-		var gap, shift, rise, rotation, turn, tilt float64
-		if err := rows.Scan(&c.Guid, &c.Connected.Piece.Guid, &connectedConnectorGuid,
-			&c.Connecting.Piece.Guid, &connectingConnectorGuid,
-			&gap, &shift, &rise, &rotation, &turn, &tilt, &u, &v, &description); err != nil {
+		var cSide, gSide string
+		if err := rows.Scan(&id, &cSide, &cPiece, &cPort, &cDesPiece, &gSide, &gPiece, &gPort, &gDesPiece,
+			&gap, &shift, &rise, &rotation, &turn, &tilt, &x, &y, &description); err != nil {
 			return nil, err
 		}
-		if connectedConnectorGuid.Valid {
-			c.Connected.Connector = &ConnectorId{Guid: connectedConnectorGuid.String}
+		_ = cSide
+		_ = gSide
+		c.Id = id
+		c.Connected.Piece = PieceId{Id: cPiece}
+		if cDesPiece.Valid {
+			c.Connected.DesignPiece = &PieceId{Id: cDesPiece.String}
 		}
-		if connectingConnectorGuid.Valid {
-			c.Connecting.Connector = &ConnectorId{Guid: connectingConnectorGuid.String}
+		if connID := connectorIDForTypePort(types, pieceType[cPiece], cPort); connID != nil {
+			c.Connected.Connector = connID
 		}
-		c.Gap = gap
-		c.Shift = shift
-		c.Rise = rise
-		c.Rotation = rotation
-		c.Turn = turn
-		c.Tilt = tilt
-		if u.Valid {
-			c.U = u.Float64
+		c.Connecting.Piece = PieceId{Id: gPiece}
+		if gDesPiece.Valid {
+			c.Connecting.DesignPiece = &PieceId{Id: gDesPiece.String}
 		}
-		if v.Valid {
-			c.V = v.Float64
+		if connID := connectorIDForTypePort(types, pieceType[gPiece], gPort); connID != nil {
+			c.Connecting.Connector = connID
+		}
+		if gap.Valid {
+			c.Gap = gap.Float64
+		}
+		if shift.Valid {
+			c.Shift = shift.Float64
+		}
+		if rise.Valid {
+			c.Rise = rise.Float64
+		}
+		if rotation.Valid {
+			c.Rotation = rotation.Float64
+		}
+		if turn.Valid {
+			c.Turn = turn.Float64
+		}
+		if tilt.Valid {
+			c.Tilt = tilt.Float64
+		}
+		if x.Valid {
+			c.U = x.Float64
+		}
+		if y.Valid {
+			c.V = y.Float64
 		}
 		if description.Valid {
 			c.Description = &description.String
@@ -16142,11 +16299,27 @@ func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
 	return connections, nil
 }
 
+func connectorIDForTypePort(types []Type, typeID string, portID sql.NullString) *ConnectorId {
+	if !portID.Valid || typeID == "" {
+		return nil
+	}
+	for _, typ := range types {
+		if typ.Id != typeID {
+			continue
+		}
+		for i := range typ.Connectors {
+			co := &typ.Connectors[i]
+			if co.Port != nil && co.Port.Id == portID.String {
+				return &ConnectorId{Id: co.Id}
+			}
+		}
+	}
+	return nil
+}
+
 // 🔌loadConnectors loads all connectors belonging to a type from the database
-func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
-	rows, err := db.Query(`SELECT guid, name, point_x, point_y, point_z,
-        direction_x, direction_y, direction_z, t, mandatory, port_guid, description
-        FROM connector WHERE type_guid = ?`, typeGuid)
+func loadConnectors(db *sql.DB, typeId string) ([]Connector, error) {
+	rows, err := db.Query(`SELECT id, name, description, port_id FROM connector WHERE type_id = ? ORDER BY ordinal`, typeId)
 	if err != nil {
 		return nil, err
 	}
@@ -16155,22 +16328,18 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 	var connectors []Connector
 	for rows.Next() {
 		var c Connector
-		var name, portGuid, description sql.NullString
-		var pointX, pointY, pointZ, dirX, dirY, dirZ, t float64
-		var mandatory bool
-		if err := rows.Scan(&c.Guid, &name, &pointX, &pointY, &pointZ,
-			&dirX, &dirY, &dirZ, &t, &mandatory, &portGuid, &description); err != nil {
+		var name, description, portID sql.NullString
+		if err := rows.Scan(&c.Id, &name, &description, &portID); err != nil {
 			return nil, err
 		}
 		if name.Valid {
 			c.Name = &name.String
 		}
-		c.Point = Point{X: pointX, Y: pointY, Z: pointZ}
-		c.Direction = Vector{X: dirX, Y: dirY, Z: dirZ}
-		c.T = t
-		c.Mandatory = &mandatory
-		if portGuid.Valid {
-			c.Port = &PortId{Guid: portGuid.String}
+		c.Point = Point{}
+		c.Direction = Vector{}
+		c.T = 0
+		if portID.Valid {
+			c.Port = &PortId{Id: portID.String}
 		}
 		if description.Valid {
 			c.Description = &description.String
@@ -16180,8 +16349,149 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 	return connectors, nil
 }
 
+func kitSqliteTimestamps(k *Kit) (created, updated string) {
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	created = k.CreatedAt
+	if created == "" {
+		created = now
+	}
+	updated = k.UpdatedAt
+	if updated == "" {
+		updated = now
+	}
+	return created, updated
+}
+
+func portIDForConnector(types []Type, connectorID string) (string, error) {
+	for _, typ := range types {
+		for i := range typ.Connectors {
+			c := typ.Connectors[i]
+			if c.Id == connectorID {
+				if c.Port == nil {
+					return "", fmt.Errorf("connector %s has no port reference", connectorID)
+				}
+				return c.Port.Id, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("connector %s not found", connectorID)
+}
+
+func connectionSidePortID(types []Type, side Side) (*string, error) {
+	if side.Connector == nil {
+		return nil, nil
+	}
+	pid, err := portIDForConnector(types, side.Connector.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pid, nil
+}
+
+func insertPortRow(db *sql.DB, kitID string, familyID *string, port Port, ordinal int) error {
+	var fam any
+	if familyID != nil {
+		fam = *familyID
+	}
+	if _, err := db.Exec(`INSERT INTO port (
+			id, ordinal, name, icon, mandatory, t, description,
+			point_x, point_y, point_z, direction_x, direction_y, direction_z,
+			kit_id, parent_family_id
+		) VALUES (?, ?, ?, ?, NULL, NULL, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?)`,
+		port.Id, ordinal, port.Name, port.Icon, port.Description, kitID, fam,
+	); err != nil {
+		return fmt.Errorf("failed to insert port %s: %w", port.Id, err)
+	}
+	for cpi, cp := range port.CompatiblePorts {
+		if _, err := db.Exec(`INSERT INTO port_compatible_port (port_id, ordinal, compatible_port_id) VALUES (?, ?, ?)`,
+			port.Id, cpi, cp.Id); err != nil {
+			return fmt.Errorf("port_compatible_port: %w", err)
+		}
+	}
+	return nil
+}
+
+func insertPieceRow(db *sql.DB, designID string, p Piece, ordinal int) error {
+	var ox, oy, oz, xx, xy, xz, yx, yy, yz *float64
+	if p.Plane != nil {
+		ox = &p.Plane.Origin.X
+		oy = &p.Plane.Origin.Y
+		oz = &p.Plane.Origin.Z
+		xx = &p.Plane.XAxis.X
+		xy = &p.Plane.XAxis.Y
+		xz = &p.Plane.XAxis.Z
+		yx = &p.Plane.YAxis.X
+		yy = &p.Plane.YAxis.Y
+		yz = &p.Plane.YAxis.Z
+	}
+	var cx, cy, cz *float64
+	if p.Center != nil {
+		cx = &p.Center.U
+		cy = &p.Center.V
+	}
+	var mox, moy, moz, mxx, mxy, mxz, myx, myy, myz *float64
+	if p.MirrorPlane != nil {
+		mox = &p.MirrorPlane.Origin.X
+		moy = &p.MirrorPlane.Origin.Y
+		moz = &p.MirrorPlane.Origin.Z
+		mxx = &p.MirrorPlane.XAxis.X
+		mxy = &p.MirrorPlane.XAxis.Y
+		mxz = &p.MirrorPlane.XAxis.Z
+		myx = &p.MirrorPlane.YAxis.X
+		myy = &p.MirrorPlane.YAxis.Y
+		myz = &p.MirrorPlane.YAxis.Z
+	}
+	hidden := sql.NullInt64{}
+	if p.IsHidden != nil {
+		v := int64(0)
+		if *p.IsHidden {
+			v = 1
+		}
+		hidden = sql.NullInt64{Int64: v, Valid: true}
+	}
+	locked := sql.NullInt64{}
+	if p.IsLocked != nil {
+		v := int64(0)
+		if *p.IsLocked {
+			v = 1
+		}
+		locked = sql.NullInt64{Int64: v, Valid: true}
+	}
+	var typeID, designRef *string
+	if p.Type != nil {
+		typeID = &p.Type.Id
+	}
+	if p.Design != nil {
+		designRef = &p.Design.Id
+	}
+	_, err := db.Exec(`INSERT INTO piece (
+			id, ordinal, name, description,
+			plane_origin_x, plane_origin_y, plane_origin_z,
+			plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+			plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+			center_x, center_y, center_z, scale,
+			mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+			mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+			mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+			hidden, locked, color, type_id, design_ref_id, design_id
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.Id, ordinal, p.Name, p.Description,
+		ox, oy, oz, xx, xy, xz, yx, yy, yz,
+		cx, cy, cz, p.Scale,
+		mox, moy, moz, mxx, mxy, mxz, myx, myy, myz,
+		hidden, locked, p.Color, typeID, designRef, designID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert piece %s: %w", p.Id, err)
+	}
+	return nil
+}
+
 // ✏️KitToSqlite writes a Kit to a SQLite database file
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
+	if kit == nil {
+		return fmt.Errorf("kit is nil")
+	}
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return err
@@ -16196,81 +16506,152 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 		return fmt.Errorf("failed to disable foreign keys: %w", err)
 	}
 
-	if _, err := db.Exec(`INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-		kit.Guid, kit.Name, kit.Version, kit.Description, kit.Icon, kit.Image, kit.Preview, kit.Remote, kit.Homepage, kit.License); err != nil {
+	created, updated := kitSqliteTimestamps(kit)
+	vcsInitial := "{}"
+	if _, err := db.Exec(`INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?, ?, datetime('now'))`,
+		SemioKitSqliteSchemaVersion, SemioKitSqliteSchemaEngine); err != nil {
+		return fmt.Errorf("failed to insert semio_schema: %w", err)
+	}
+	if _, err := db.Exec(`INSERT INTO kit (
+			id, name, description, icon, image, preview, remote, homepage, license, uri, created_at, updated_at, vcs_initial_json
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		kit.Id, kit.Name, kit.Description, kit.Icon, kit.Image, kit.Preview, kit.Remote, kit.Homepage, kit.License, nil, created, updated, vcsInitial,
+	); err != nil {
 		return fmt.Errorf("failed to insert kit: %w", err)
 	}
 
-	for _, t := range kit.Types {
-		virtualVal := false
-		if t.Virtual != nil {
-			virtualVal = *t.Virtual
+	for fi := range kit.Families {
+		fam := kit.Families[fi]
+		if _, err := db.Exec(`INSERT INTO family (id, ordinal, name, description, icon, kit_id) VALUES (?, ?, ?, ?, ?, ?)`,
+			fam.Id, fi, fam.Name, fam.Description, fam.Icon, kit.Id); err != nil {
+			return fmt.Errorf("failed to insert family %s: %w", fam.Id, err)
 		}
-		isAbstractVal := false
-		if t.IsAbstract != nil {
-			isAbstractVal = *t.IsAbstract
-		}
-		if _, err := db.Exec(`INSERT INTO type (guid, name, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			t.Guid, t.Name, isAbstractVal, t.Folder, t.Stock, virtualVal, t.Unit, t.Description, t.Icon, t.Image, kit.Guid); err != nil {
-			return fmt.Errorf("failed to insert type %s: %w", t.Guid, err)
-		}
-		for _, c := range t.Connectors {
-			var portGuid *string
-			if c.Port != nil {
-				portGuid = &c.Port.Guid
-			}
-			if _, err := db.Exec(`INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				c.Guid, c.Name, c.Point.X, c.Point.Y, c.Point.Z, c.Direction.X, c.Direction.Y, c.Direction.Z, c.T, c.Mandatory, portGuid, c.Description, t.Guid); err != nil {
-				return fmt.Errorf("failed to insert connector %s: %w", c.Guid, err)
+		fid := fam.Id
+		for pi := range fam.Ports {
+			if err := insertPortRow(db, kit.Id, &fid, fam.Ports[pi], pi); err != nil {
+				return err
 			}
 		}
 	}
 
-	for _, d := range kit.Designs {
-		if _, err := db.Exec(`INSERT INTO design (guid, name, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?)`,
-			d.Guid, d.Name, d.Unit, d.Folder, d.IsAbstract, d.CanScale, d.CanMirror, d.Description, d.Icon, d.Image, kit.Guid); err != nil {
-			return fmt.Errorf("failed to insert design %s: %w", d.Guid, err)
+	for ti := range kit.Types {
+		t := kit.Types[ti]
+		virtualVal := sql.NullInt64{}
+		if t.Virtual != nil {
+			v := int64(0)
+			if *t.Virtual {
+				v = 1
+			}
+			virtualVal = sql.NullInt64{Int64: v, Valid: true}
 		}
-		for _, p := range d.Pieces {
-			var typeGuid, designRef *string
-			if p.Type != nil {
-				typeGuid = &p.Type.Guid
-			}
-			if p.Design != nil {
-				designRef = &p.Design.Guid
-			}
-			var ox, oy, oz, xx, xy, xz, yx, yy, yz *float64
-			if p.Plane != nil {
-				ox, oy, oz = &p.Plane.Origin.X, &p.Plane.Origin.Y, &p.Plane.Origin.Z
-				xx, xy, xz = &p.Plane.XAxis.X, &p.Plane.XAxis.Y, &p.Plane.XAxis.Z
-				yx, yy, yz = &p.Plane.YAxis.X, &p.Plane.YAxis.Y, &p.Plane.YAxis.Z
-			}
-			var cu, cv *float64
-			if p.Center != nil {
-				cu, cv = &p.Center.U, &p.Center.V
-			}
-			if _, err := db.Exec(`INSERT INTO piece (guid, name, type_guid, design_guid_ref, plane_origin_x, plane_origin_y, plane_origin_z, plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z, center_u, center_v, scale, is_hidden, is_locked, color, description, design_guid)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				p.Guid, p.Name, typeGuid, designRef, ox, oy, oz, xx, xy, xz, yx, yy, yz, cu, cv, p.Scale, p.IsHidden, p.IsLocked, p.Color, p.Description, d.Guid); err != nil {
-				return fmt.Errorf("failed to insert piece %s: %w", p.Guid, err)
+		var stock sql.NullInt64
+		if t.Stock != nil {
+			stock = sql.NullInt64{Int64: int64(*t.Stock), Valid: true}
+		}
+		var locID *string
+		if t.Location != nil {
+			locID = &t.Location.Id
+		}
+		var createdT, updatedT any
+		createdT = t.CreatedAt
+		if t.CreatedAt == "" {
+			createdT = nil
+		}
+		updatedT = t.UpdatedAt
+		if t.UpdatedAt == "" {
+			updatedT = nil
+		}
+		if _, err := db.Exec(`INSERT INTO type (
+				id, ordinal, name, description, icon, image, stock, virtual, unit, location_id, created_at, updated_at, kit_id
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			t.Id, ti, t.Name, t.Description, t.Icon, t.Image, stock, virtualVal, t.Unit, locID, createdT, updatedT, kit.Id,
+		); err != nil {
+			return fmt.Errorf("failed to insert type %s: %w", t.Id, err)
+		}
+		for fi := range t.Families {
+			ref := t.Families[fi]
+			if _, err := db.Exec(`INSERT INTO type_family (type_id, family_id, ordinal) VALUES (?, ?, ?)`, t.Id, ref.Id, fi); err != nil {
+				return fmt.Errorf("failed to insert type_family for type %s: %w", t.Id, err)
 			}
 		}
-		for _, c := range d.Connections {
-			var cdConnGuid, cgConnGuid *string
-			if c.Connected.Connector != nil {
-				cdConnGuid = &c.Connected.Connector.Guid
+		for ci := range t.Connectors {
+			c := t.Connectors[ci]
+			if c.Port == nil {
+				return fmt.Errorf("connector %s on type %s needs port_id for SQLite", c.Id, t.Id)
 			}
-			if c.Connecting.Connector != nil {
-				cgConnGuid = &c.Connecting.Connector.Guid
+			cname := ""
+			if c.Name != nil {
+				cname = *c.Name
 			}
-			if _, err := db.Exec(`INSERT INTO connection (guid, connected_piece_guid, connected_connector_guid, connecting_piece_guid, connecting_connector_guid, gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				c.Guid, c.Connected.Piece.Guid, cdConnGuid, c.Connecting.Piece.Guid, cgConnGuid, c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Guid); err != nil {
-				return fmt.Errorf("failed to insert connection %s: %w", c.Guid, err)
+			if _, err := db.Exec(`INSERT INTO connector (id, ordinal, name, description, port_id, type_id) VALUES (?, ?, ?, ?, ?, ?)`,
+				c.Id, ci, cname, c.Description, c.Port.Id, t.Id); err != nil {
+				return fmt.Errorf("failed to insert connector %s: %w", c.Id, err)
+			}
+		}
+	}
+
+	for di := range kit.Designs {
+		d := kit.Designs[di]
+		var locID *string
+		if d.Location != nil {
+			locID = &d.Location.Id
+		}
+		var createdD, updatedD any
+		createdD = d.CreatedAt
+		if d.CreatedAt == "" {
+			createdD = nil
+		}
+		updatedD = d.UpdatedAt
+		if d.UpdatedAt == "" {
+			updatedD = nil
+		}
+		if _, err := db.Exec(`INSERT INTO design (
+				id, ordinal, name, description, icon, image, location_id, unit, created_at, updated_at, kit_id
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			d.Id, di, d.Name, d.Description, d.Icon, d.Image, locID, d.Unit, createdD, updatedD, kit.Id,
+		); err != nil {
+			return fmt.Errorf("failed to insert design %s: %w", d.Id, err)
+		}
+		for fi := range d.Families {
+			ref := d.Families[fi]
+			if _, err := db.Exec(`INSERT INTO design_family (design_id, family_id, ordinal) VALUES (?, ?, ?)`, d.Id, ref.Id, fi); err != nil {
+				return fmt.Errorf("failed to insert design_family: %w", err)
+			}
+		}
+		for pi := range d.Pieces {
+			if err := insertPieceRow(db, d.Id, d.Pieces[pi], pi); err != nil {
+				return err
+			}
+		}
+		for ci := range d.Connections {
+			c := d.Connections[ci]
+			cpid, err := connectionSidePortID(kit.Types, c.Connected)
+			if err != nil {
+				return fmt.Errorf("connection %s connected side: %w", c.Id, err)
+			}
+			gpid, err := connectionSidePortID(kit.Types, c.Connecting)
+			if err != nil {
+				return fmt.Errorf("connection %s connecting side: %w", c.Id, err)
+			}
+			var cdes, gdes *string
+			if c.Connected.DesignPiece != nil {
+				cdes = &c.Connected.DesignPiece.Id
+			}
+			if c.Connecting.DesignPiece != nil {
+				gdes = &c.Connecting.DesignPiece.Id
+			}
+			if _, err := db.Exec(`INSERT INTO connection (
+					id, ordinal,
+					connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+					connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+					gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				c.Id, ci,
+				fmt.Sprintf("%s:connected", c.Id), c.Connected.Piece.Id, cpid, cdes,
+				fmt.Sprintf("%s:connecting", c.Id), c.Connecting.Piece.Id, gpid, gdes,
+				c.Gap, c.Shift, c.Rise, c.Rotation, c.Turn, c.Tilt, c.U, c.V, c.Description, d.Id,
+			); err != nil {
+				return fmt.Errorf("failed to insert connection %s: %w", c.Id, err)
 			}
 		}
 	}
@@ -16339,7 +16720,7 @@ func buildFilePath(kit *Kit, file *File) string {
 	if file.Folder == nil {
 		return file.Name
 	}
-	folderPath := buildFolderPath(kit, file.Folder.Guid)
+	folderPath := buildFolderPath(kit, file.Folder.Id)
 	if folderPath == "" {
 		return file.Name
 	}
@@ -16347,13 +16728,13 @@ func buildFilePath(kit *Kit, file *File) string {
 }
 
 // 🧱buildFolderPath constructs the folder path from the folder hierarchy
-func buildFolderPath(kit *Kit, folderGuid string) string {
+func buildFolderPath(kit *Kit, folderId string) string {
 	for _, f := range kit.Folders {
-		if f.Guid == folderGuid {
+		if f.Id == folderId {
 			if f.Parent == nil {
 				return f.Name
 			}
-			parentPath := buildFolderPath(kit, f.Parent.Guid)
+			parentPath := buildFolderPath(kit, f.Parent.Id)
 			if parentPath == "" {
 				return f.Name
 			}

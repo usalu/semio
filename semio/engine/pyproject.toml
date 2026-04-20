@@ -23,7 +23,7 @@ dependencies = [
     "pytransform3d>=3.14.1",
     "requests>=2.32.3",
     "sqlalchemy>=2.0.41",
-    "sqlmodel>=0.0.24",
+    "sqlrepresentation>=0.0.24",
     "starlette>=0.46.2",
     "uvicorn[standard]>=0.34.3",
     "mcp[cli]>=1.25.0",
@@ -81,18 +81,6 @@ exclude_also = [
 ]
 
 ignore_errors = true
-
-[tool.tox]
-legacy_tox_ini = """
-    [tox]
-    isolated_build = true
-
-    [testenv]
-    skip_install = true
-    allowlist_externals = uv
-    commands_pre = uv sync
-    commands = uv run pytest
-"""
 
 [tool.pylint.'MESSAGES CONTROL']
 extension-pkg-whitelist = "pydantic"

@@ -11,7 +11,7 @@ pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 pub use axum::extract::{Path, State};
 pub use axum::http::StatusCode;
 pub use axum::response::{IntoResponse, Response};
-pub use axum::routing::{get, post};
+pub use axum::routing::{get, post, put};
 pub use axum::{Json, Router};
 pub use dashmap::DashMap;
 pub use futures::{SinkExt, StreamExt};
@@ -108,7 +108,7 @@ pub use field_patch::*;
 #[serde(rename_all = "snake_case")]
 pub enum EntityKind {
     Kit, Author, Location, Folder, File, Tag, Concept, Port, Quality,
-    Benchmark, Type, Model, Connector, Prop, Attribute, Design, Layer,
+    Benchmark, Type, Representation, Connector, Prop, Attribute, Design, Layer,
     Piece, Group, Connection, Stat,
 }
 
@@ -430,7 +430,7 @@ pub struct TypeState {
     pub description: Option<String>, pub icon: Option<String>, pub image: Option<String>,
     pub folder: Option<String>, pub unit: Option<String>, pub stock: Option<i32>,
     pub is_abstract: Option<bool>, pub virtual_type: Option<bool>, pub location_id: Option<Uuid>,
-    pub connectors: BTreeMap<Uuid, ConnectorState>, pub models: BTreeMap<Uuid, ModelState>,
+    pub connectors: BTreeMap<Uuid, ConnectorState>, pub representations: BTreeMap<Uuid, RepresentationState>,
     pub props: BTreeMap<Uuid, PropState>, pub lifecycle: Lifecycle,
 }
 
@@ -443,7 +443,7 @@ pub struct ConnectorState {
 }
 
 #[derive(Debug, Clone)]
-pub struct ModelState { pub model_id: Uuid, pub file_id: Uuid, pub name: Option<String>, pub description: Option<String>, pub lifecycle: Lifecycle }
+pub struct RepresentationState { pub representation_id: Uuid, pub file_id: Uuid, pub name: Option<String>, pub description: Option<String>, pub lifecycle: Lifecycle }
 
 #[derive(Debug, Clone)]
 pub struct PropState { pub prop_id: Uuid, pub quality_id: Uuid, pub value: String, pub unit: Option<String>, pub lifecycle: Lifecycle }
@@ -519,8 +519,8 @@ use super::*;
 pub enum SessionError {
     #[error("session not found: {0}")]
     SessionNotFound(String),
-    #[error("entity not found: {kind} {guid}")]
-    EntityNotFound { kind: String, guid: String },
+    #[error("entity not found: {kind} {id}")]
+    EntityNotFound { kind: String, id: String },
     #[error("conflict on property {property}: {reason}")]
     Conflict { property: String, reason: String },
     #[error("validation error: {0}")]
@@ -646,7 +646,7 @@ async fn create_core_tables(pool: &PgPool) {
     create_core_kit(pool).await; create_core_author(pool).await; create_core_location(pool).await;
     create_core_folder(pool).await; create_core_file(pool).await; create_core_tag(pool).await;
     create_core_concept(pool).await; create_core_port(pool).await; create_core_quality(pool).await;
-    create_core_type(pool).await; create_core_connector(pool).await; create_core_model(pool).await;
+    create_core_type(pool).await; create_core_connector(pool).await; create_core_representation(pool).await;
     create_core_prop(pool).await; create_core_attribute(pool).await; create_core_design(pool).await;
     create_core_layer(pool).await; create_core_piece(pool).await; create_core_group(pool).await;
     create_core_connection(pool).await; create_core_stat(pool).await;
@@ -749,12 +749,12 @@ async fn create_core_connector(pool: &PgPool) {
     )", "core.connector").await;
 }
 
-async fn create_core_model(pool: &PgPool) {
-    exec(pool, "CREATE TABLE IF NOT EXISTS core.model (
-        session_id UUID NOT NULL, model_id UUID NOT NULL, type_id UUID NOT NULL, file_id UUID NOT NULL,
+async fn create_core_representation(pool: &PgPool) {
+    exec(pool, "CREATE TABLE IF NOT EXISTS core.representation (
+        session_id UUID NOT NULL, representation_id UUID NOT NULL, type_id UUID NOT NULL, file_id UUID NOT NULL,
         name TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, model_id)
-    )", "core.model").await;
+        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, representation_id)
+    )", "core.representation").await;
 }
 
 async fn create_core_prop(pool: &PgPool) {
@@ -920,19 +920,92 @@ pub async fn create_pool(database_url: &str) -> PgPool {
     PgPoolOptions::new().max_connections(20).connect(database_url).await.expect("failed to connect to PostgreSQL")
 }
 
-pub async fn create_session(pool: &PgPool, session_id: Uuid, kit_id: Uuid, kit_name: &str) -> Result<Uuid, SessionError> {
+fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
+    let id = kit_json
+        .get("id")
+        .and_then(|value| value.as_str())
+        .ok_or_else(|| SessionError::Validation("kit snapshot must include string id".into()))?;
+    Uuid::parse_str(id)
+        .map_err(|err| SessionError::Validation(format!("invalid kit id '{id}': {err}")))
+}
+
+fn session_kit_name<'a>(kit_json: &'a serde_json::Value) -> Result<&'a str, SessionError> {
+    kit_json
+        .get("name")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| SessionError::Validation("kit snapshot must include string name".into()))
+}
+
+fn session_kit_string(kit_json: &serde_json::Value, field: &str) -> Option<String> {
+    kit_json
+        .get(field)
+        .and_then(|value| value.as_str())
+        .map(|value| value.to_string())
+}
+
+fn initial_session_kit(
+    fallback_kit_id: Uuid,
+    fallback_kit_name: &str,
+    initial_kit: Option<&serde_json::Value>,
+) -> Result<(Uuid, String, serde_json::Value), SessionError> {
+    match initial_kit {
+        Some(kit_json) => Ok((
+            session_kit_id(kit_json)?,
+            session_kit_name(kit_json)?.to_string(),
+            kit_json.clone(),
+        )),
+        None => Ok((
+            fallback_kit_id,
+            fallback_kit_name.to_string(),
+            serde_json::json!({
+                "id": fallback_kit_id,
+                "name": fallback_kit_name,
+                "types": [],
+                "designs": [],
+                "authors": [],
+                "tags": [],
+                "concepts": [],
+                "ports": [],
+                "qualities": [],
+                "folders": [],
+                "files": [],
+                "createdAt": chrono_now_iso(),
+                "updatedAt": chrono_now_iso(),
+            }),
+        )),
+    }
+}
+
+pub async fn create_session(
+    pool: &PgPool,
+    session_id: Uuid,
+    fallback_kit_id: Uuid,
+    fallback_kit_name: &str,
+    initial_kit: Option<&serde_json::Value>,
+) -> Result<Uuid, SessionError> {
+    let (kit_id, kit_name, initial_kit) =
+        initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
     let owner_token = Uuid::now_v7();
     let mut tx = pool.begin().await?;
     sqlx_core::query::query("INSERT INTO runtime.session (session_id, root_kit_id, owner_token) VALUES ($1, $2, $3)")
         .bind(session_id).bind(kit_id).bind(owner_token).execute(&mut *tx).await?;
-    sqlx_core::query::query("INSERT INTO core.kit (session_id, kit_id, name) VALUES ($1, $2, $3)")
-        .bind(session_id).bind(kit_id).bind(kit_name).execute(&mut *tx).await?;
-    // Store initial baseline snapshot at version 0
-    let initial_kit = serde_json::json!({
-        "guid": kit_id, "name": kit_name,
-        "types": [], "designs": [], "authors": [], "tags": [],
-        "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
-    });
+    sqlx_core::query::query(
+        "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .bind(&kit_name)
+        .bind(session_kit_string(&initial_kit, "version"))
+        .bind(session_kit_string(&initial_kit, "description"))
+        .bind(session_kit_string(&initial_kit, "icon"))
+        .bind(session_kit_string(&initial_kit, "image"))
+        .bind(session_kit_string(&initial_kit, "preview"))
+        .bind(session_kit_string(&initial_kit, "remote"))
+        .bind(session_kit_string(&initial_kit, "homepage"))
+        .bind(session_kit_string(&initial_kit, "license"))
+        .execute(&mut *tx).await?;
     sqlx_core::query::query(
         "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, 0, $2)"
     ).bind(session_id).bind(&initial_kit).execute(&mut *tx).await?;
@@ -964,6 +1037,56 @@ pub async fn bump_semio_version(pool: &PgPool, session_id: Uuid, new_version: Se
     sqlx_core::query::query("UPDATE runtime.session SET semio_version = $2, updated_at = now() WHERE session_id = $1")
         .bind(session_id).bind(new_version).execute(pool).await?;
     Ok(())
+}
+
+pub async fn replace_session_snapshot(
+    pool: &PgPool,
+    session_id: Uuid,
+    kit_json: &serde_json::Value,
+) -> Result<(DomainVersion, SemioVersion), SessionError> {
+    let kit_id = session_kit_id(kit_json)?;
+    let kit_name = session_kit_name(kit_json)?.to_string();
+    let (domain_version, semio_version) = load_session_meta(pool, session_id).await?;
+    let mut tx = pool.begin().await?;
+    sqlx_core::query::query(
+        "UPDATE runtime.session SET root_kit_id = $2, updated_at = now() WHERE session_id = $1"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query("DELETE FROM core.kit WHERE session_id = $1")
+        .bind(session_id)
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query(
+        "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .bind(&kit_name)
+        .bind(session_kit_string(kit_json, "version"))
+        .bind(session_kit_string(kit_json, "description"))
+        .bind(session_kit_string(kit_json, "icon"))
+        .bind(session_kit_string(kit_json, "image"))
+        .bind(session_kit_string(kit_json, "preview"))
+        .bind(session_kit_string(kit_json, "remote"))
+        .bind(session_kit_string(kit_json, "homepage"))
+        .bind(session_kit_string(kit_json, "license"))
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query(
+        "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, domain_version) DO UPDATE SET kit_json = $3, created_at = now()"
+    )
+        .bind(session_id)
+        .bind(domain_version)
+        .bind(kit_json)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok((domain_version, semio_version))
 }
 
 pub async fn load_session_state(pool: &PgPool, session_id: Uuid) -> Result<SessionState, SessionError> {
@@ -1058,7 +1181,7 @@ async fn load_types(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, TypeState
     Ok(rows.into_iter().map(|r| (r.0, TypeState {
         type_id: r.0, name: r.1, parent_type_id: r.2, description: r.3, icon: r.4, image: r.5,
         folder: r.6, unit: r.7, stock: r.8, is_abstract: r.9, virtual_type: r.10, location_id: r.11,
-        connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+        connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
     })).collect())
 }
 
@@ -1218,7 +1341,7 @@ pub async fn resolve_share_token(pool: &PgPool, token: Uuid) -> Result<ResolvedS
         "SELECT session_id, access_mode, entity_kind, entity_id, label FROM runtime.share_token
          WHERE token = $1 AND (expires_at IS NULL OR expires_at > now())"
     ).bind(token).fetch_optional(pool).await?
-     .ok_or_else(|| SessionError::EntityNotFound { kind: "share_token".into(), guid: token.to_string() })?;
+     .ok_or_else(|| SessionError::EntityNotFound { kind: "share_token".into(), id: token.to_string() })?;
     let access_mode = match row.1.as_str() { "owner" => AccessMode::Owner, _ => AccessMode::Viewer };
     Ok(ResolvedShareToken { session_id: row.0, access_mode, entity_kind: row.2, entity_id: row.3, label: row.4 })
 }
@@ -1329,26 +1452,26 @@ pub async fn get_version_at_time(pool: &PgPool, session_id: Uuid, seconds_ago: i
 pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
     let types: Vec<serde_json::Value> = state.types.values().filter(|t| t.lifecycle.is_active()).map(|t| {
         serde_json::json!({
-            "guid": t.type_id, "name": t.name,
+            "id": t.type_id, "name": t.name,
             "description": t.description, "icon": t.icon, "image": t.image,
             "folder": t.folder, "unit": t.unit, "stock": t.stock,
             "isAbstract": t.is_abstract, "virtual": t.virtual_type,
-            "parent": t.parent_type_id.map(|guid| serde_json::json!({ "guid": guid })),
-            "location": t.location_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "parent": t.parent_type_id.map(|id| serde_json::json!({ "id": id })),
+            "location": t.location_id.map(|id| serde_json::json!({ "id": id })),
             "connectors": t.connectors.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({
-                "guid": c.connector_id,
+                "id": c.connector_id,
                 "name": c.name,
                 "t": c.t,
                 "point": { "x": c.point[0], "y": c.point[1], "z": c.point[2] },
                 "direction": { "x": c.direction[0], "y": c.direction[1], "z": c.direction[2] },
                 "description": c.description,
-                "port": c.port_id.map(|guid| serde_json::json!({ "guid": guid })),
+                "port": c.port_id.map(|id| serde_json::json!({ "id": id })),
                 "mandatory": c.mandatory,
                 "maxChildren": c.max_children,
             })).collect::<Vec<_>>(),
-            "models": t.models.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
-                "guid": m.model_id,
-                "file": { "guid": m.file_id },
+            "representations": t.representations.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
+                "id": m.representation_id,
+                "file": { "id": m.file_id },
                 "name": m.name,
                 "description": m.description,
             })).collect::<Vec<_>>(),
@@ -1357,25 +1480,25 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
     let designs: Vec<serde_json::Value> = state.designs.values().filter(|d| d.lifecycle.is_active()).map(|d| {
         let pieces: Vec<serde_json::Value> = d.pieces.values().filter(|p| p.lifecycle.is_active()).map(|p| {
             serde_json::json!({
-                "guid": p.piece_id, "name": p.name, "type": p.type_id,
+                "id": p.piece_id, "name": p.name, "type": p.type_id,
                 "center": p.center.map(|c| serde_json::json!({"u": c[0], "v": c[1]})),
                 "isHidden": p.is_hidden, "isLocked": p.is_locked,
                 "color": p.color, "description": p.description,
-                "design": { "guid": d.design_id },
+                "design": { "id": d.design_id },
             })
         }).collect();
         let connections: Vec<serde_json::Value> = d.connections.values().filter(|c| c.lifecycle.is_active()).map(|c| {
             serde_json::json!({
-                "guid": c.connection_id,
+                "id": c.connection_id,
                 "connected": {
-                    "piece": { "guid": c.connected_piece_id },
-                    "designPiece": c.connected_design_piece_id.map(|guid| serde_json::json!({ "guid": guid })),
-                    "connector": c.connected_connector_id.map(|guid| serde_json::json!({ "guid": guid })),
+                    "piece": { "id": c.connected_piece_id },
+                    "designPiece": c.connected_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                    "connector": c.connected_connector_id.map(|id| serde_json::json!({ "id": id })),
                 },
                 "connecting": {
-                    "piece": { "guid": c.connecting_piece_id },
-                    "designPiece": c.connecting_design_piece_id.map(|guid| serde_json::json!({ "guid": guid })),
-                    "connector": c.connecting_connector_id.map(|guid| serde_json::json!({ "guid": guid })),
+                    "piece": { "id": c.connecting_piece_id },
+                    "designPiece": c.connecting_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                    "connector": c.connecting_connector_id.map(|id| serde_json::json!({ "id": id })),
                 },
                 "gap": c.gap, "shift": c.shift, "rise": c.rise,
                 "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
@@ -1383,38 +1506,38 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
             })
         }).collect();
         serde_json::json!({
-            "guid": d.design_id, "name": d.name,
+            "id": d.design_id, "name": d.name,
             "description": d.description, "icon": d.icon, "image": d.image,
             "folder": d.folder, "unit": d.unit, "isAbstract": d.is_abstract,
             "canScale": d.can_scale, "canMirror": d.can_mirror,
-            "parent": d.parent_design_id.map(|guid| serde_json::json!({ "guid": guid })),
-            "activeLayer": d.active_layer_id.map(|guid| serde_json::json!({ "guid": guid })),
-            "location": d.location_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "parent": d.parent_design_id.map(|id| serde_json::json!({ "id": id })),
+            "activeLayer": d.active_layer_id.map(|id| serde_json::json!({ "id": id })),
+            "location": d.location_id.map(|id| serde_json::json!({ "id": id })),
             "pieces": pieces, "connections": connections,
         })
     }).collect();
     let authors: Vec<serde_json::Value> = state.authors.values().filter(|a| a.lifecycle.is_active()).map(|a| {
-        serde_json::json!({"guid": a.author_id, "name": a.name, "email": a.email})
+        serde_json::json!({"id": a.author_id, "name": a.name, "email": a.email})
     }).collect();
     let tags: Vec<serde_json::Value> = state.tags.values().filter(|t| t.lifecycle.is_active()).map(|t| {
-        serde_json::json!({"guid": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})
+        serde_json::json!({"id": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})
     }).collect();
     let concepts: Vec<serde_json::Value> = state.concepts.values().filter(|c| c.lifecycle.is_active()).map(|c| {
-        serde_json::json!({"guid": c.concept_id, "name": c.name, "description": c.description, "icon": c.icon})
+        serde_json::json!({"id": c.concept_id, "name": c.name, "description": c.description, "icon": c.icon})
     }).collect();
     let ports: Vec<serde_json::Value> = state.ports.values().filter(|p| p.lifecycle.is_active()).map(|p| {
         serde_json::json!({
-            "guid": p.port_id,
+            "id": p.port_id,
             "name": p.name,
             "description": p.description,
             "icon": p.icon,
             "maxChildren": p.max_children,
-            "compatiblePorts": p.compatible_port_ids.iter().map(|guid| serde_json::json!({ "guid": guid })).collect::<Vec<_>>(),
+            "compatiblePorts": p.compatible_port_ids.iter().map(|id| serde_json::json!({ "id": id })).collect::<Vec<_>>(),
         })
     }).collect();
     let qualities: Vec<serde_json::Value> = state.qualities.values().filter(|q| q.lifecycle.is_active()).map(|q| {
         serde_json::json!({
-            "guid": q.quality_id,
+            "id": q.quality_id,
             "key": q.key,
             "name": q.name,
             "description": q.description,
@@ -1424,25 +1547,25 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
     }).collect();
     let folders: Vec<serde_json::Value> = state.folders.values().filter(|f| f.lifecycle.is_active()).map(|f| {
         serde_json::json!({
-            "guid": f.folder_id,
+            "id": f.folder_id,
             "name": f.name,
-            "parent": f.parent_folder_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "parent": f.parent_folder_id.map(|id| serde_json::json!({ "id": id })),
             "description": f.description,
         })
     }).collect();
     let files: Vec<serde_json::Value> = state.files.values().filter(|f| f.lifecycle.is_active()).map(|f| {
         serde_json::json!({
-            "guid": f.file_id,
+            "id": f.file_id,
             "name": f.name,
             "remote": f.remote,
-            "folder": f.folder_id.map(|guid| serde_json::json!({ "guid": guid })),
+            "folder": f.folder_id.map(|id| serde_json::json!({ "id": id })),
             "size": f.size,
             "hash": f.hash,
             "blob": f.blob,
         })
     }).collect();
     serde_json::json!({
-        "guid": state.kit.kit_id, "name": state.kit.name,
+        "id": state.kit.kit_id, "name": state.kit.name,
         "version": state.kit.version, "description": state.kit.description,
         "icon": state.kit.icon, "image": state.kit.image,
         "preview": state.kit.preview, "remote": state.kit.remote,
@@ -1474,8 +1597,8 @@ pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json
             "Created" => {
                 let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
                 let mut entity = snapshot.clone();
-                if !entity.get("guid").is_some() {
-                    entity["guid"] = serde_json::Value::String(entity_id.to_string());
+                if !entity.get("id").is_some() {
+                    entity["id"] = serde_json::Value::String(entity_id.to_string());
                 }
                 match entity_kind {
                     "type" => push_to_array(kit, "types", entity),
@@ -1551,7 +1674,7 @@ pub fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::V
 pub fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
     if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
         for d in designs.iter_mut() {
-            if d.get("guid").and_then(|g| g.as_str()) == Some(design_id) {
+            if d.get("id").and_then(|g| g.as_str()) == Some(design_id) {
                 if let Some(arr) = d.get_mut(key).and_then(|v| v.as_array_mut()) {
                     arr.push(item.clone());
                 } else {
@@ -1566,7 +1689,7 @@ pub fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &
 pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
         for item in arr.iter_mut() {
-            if item.get("guid").and_then(|g| g.as_str()) == Some(entity_id) {
+            if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
                 if let Some(obj) = item.as_object_mut() {
                     if let Some(f) = fields.as_object() {
                         for (k, v) in f {
@@ -1583,12 +1706,12 @@ pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, 
 pub fn update_in_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, entity_id: &str, fields: &serde_json::Value) {
     if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
         for design in designs.iter_mut() {
-            if design.get("guid").and_then(|g| g.as_str()) != Some(design_id) {
+            if design.get("id").and_then(|g| g.as_str()) != Some(design_id) {
                 continue;
             }
             if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
                 for item in items.iter_mut() {
-                    if item.get("guid").and_then(|g| g.as_str()) == Some(entity_id) {
+                    if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
                         if let Some(obj) = item.as_object_mut() {
                             if let Some(f) = fields.as_object() {
                                 for (k, v) in f {
@@ -1606,7 +1729,7 @@ pub fn update_in_design_array(kit: &mut serde_json::Value, design_id: &str, key:
 
 pub fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
     if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
-        arr.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
+        arr.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
     }
 }
 
@@ -1614,7 +1737,7 @@ pub fn remove_from_design_arrays(kit: &mut serde_json::Value, key: &str, entity_
     if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
         for design in designs.iter_mut() {
             if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
-                items.retain(|item| item.get("guid").and_then(|g| g.as_str()) != Some(entity_id));
+                items.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
             }
         }
     }
@@ -1800,7 +1923,7 @@ impl SessionActor {
                     type_id: create.entity_id, name: name.to_string(), parent_type_id: None, description: None,
                     icon: None, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                     virtual_type: None, location_id: None,
-                    connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                    connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
                 });
                 changes.push(EntityChange::Created { entity_kind: EntityKind::Type, entity_id: create.entity_id, snapshot: create.fields.clone() });
             }
@@ -2119,6 +2242,8 @@ impl SessionDirectory {
 
     pub fn remove(&self, session_id: &Uuid) { self.sessions.remove(session_id); }
 
+    pub fn deactivate(&self, session_id: SessionId) { self.sessions.remove(&session_id.0); }
+
     //#region 🔖Admin Introspection
 
     /// Snapshot of all currently-active session actors with WS connection counts.
@@ -2183,7 +2308,7 @@ pub fn router(state: AppState) -> Router<()> {
     Router::new()
         .route("/health", get(health))
         .route("/sessions", post(handler_create_session))
-        .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot))
+        .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot).put(handler_put_snapshot))
         .route("/sessions/{session_id}/commands/domain", post(handler_post_domain_command))
         .route("/sessions/{session_id}/commands/semio", post(handler_post_semio_command))
         .route("/sessions/{session_id}/kit/at/{lookback}", get(handler_get_kit_at_lookback))
@@ -2201,7 +2326,10 @@ pub fn router(state: AppState) -> Router<()> {
 async fn health() -> &'static str { "ok" }
 
 #[derive(Deserialize)]
-pub struct CreateSessionRequest { kit_name: String }
+pub struct CreateSessionRequest {
+    kit_name: String,
+    kit: Option<serde_json::Value>,
+}
 
 #[derive(Serialize)]
 pub struct CreateSessionResponse { session_id: Uuid, kit_id: Uuid, owner_token: Uuid }
@@ -2211,19 +2339,38 @@ async fn handler_create_session(
 ) -> Result<Json<CreateSessionResponse>, SessionError> {
     let session_id = Uuid::now_v7();
     let kit_id = Uuid::now_v7();
-    let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name).await?;
-    Ok(Json(CreateSessionResponse { session_id, kit_id, owner_token }))
+    let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name, req.kit.as_ref()).await?;
+    let response_kit_id = req.kit.as_ref().map(session_kit_id).transpose()?.unwrap_or(kit_id);
+    Ok(Json(CreateSessionResponse { session_id, kit_id: response_kit_id, owner_token }))
 }
 
 async fn handler_get_snapshot(
     State(state): State<AppState>, Path(session_id): Path<Uuid>,
 ) -> Result<Json<SessionSnapshot>, SessionError> {
-    let handle = state.directory.get_or_activate(SessionId(session_id)).await
-        .ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-    let (tx, rx) = oneshot::channel();
-    handle.command_tx.send(ActorMessage::GetSnapshot { reply: tx }).await.map_err(|_| SessionError::ActorGone)?;
-    let snapshot = rx.await.map_err(|_| SessionError::ActorGone)?;
-    Ok(Json(snapshot))
+    let (domain_version, semio_version) = load_session_meta(&state.pool, session_id).await?;
+    let kit = reconstruct_kit_at_version(&state.pool, session_id, domain_version).await?;
+    Ok(Json(SessionSnapshot { session_id, domain_version, semio_version, kit }))
+}
+
+#[derive(Deserialize)]
+pub struct ReplaceSnapshotRequest {
+    kit: serde_json::Value,
+}
+
+async fn handler_put_snapshot(
+    State(state): State<AppState>,
+    Path(session_id): Path<Uuid>,
+    headers: HeaderMap,
+    Json(req): Json<ReplaceSnapshotRequest>,
+) -> Result<Json<SessionSnapshot>, SessionError> {
+    let bearer = extract_bearer(&headers);
+    let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+    if access != AccessMode::Owner {
+        return Err(SessionError::Forbidden("write access requires owner token".into()));
+    }
+    let (domain_version, semio_version) = replace_session_snapshot(&state.pool, session_id, &req.kit).await?;
+    state.directory.deactivate(SessionId(session_id));
+    Ok(Json(SessionSnapshot { session_id, domain_version, semio_version, kit: req.kit }))
 }
 
 #[derive(Deserialize)]
@@ -3363,7 +3510,7 @@ use super::*;
 
     #[test]
     pub fn entity_not_found_returns_404() {
-        assert_eq!(status_of(SessionError::EntityNotFound { kind: "type".into(), guid: "abc".into() }), StatusCode::NOT_FOUND);
+        assert_eq!(status_of(SessionError::EntityNotFound { kind: "type".into(), id: "abc".into() }), StatusCode::NOT_FOUND);
     }
 
     #[test]
@@ -3499,7 +3646,7 @@ use super::*;
         let mut ts = TypeState {
             type_id: tid, name: "Box".into(), parent_type_id: None, description: None, icon: None, image: None,
             folder: None, unit: None, stock: None, is_abstract: None, virtual_type: None, location_id: None,
-            connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+            connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
         };
         ts.connectors.insert(cid, ConnectorState {
             connector_id: cid, name: Some("top".into()), t: 0.5,
@@ -3599,22 +3746,22 @@ use super::*;
             types: BTreeMap::new(), designs: BTreeMap::new(), semio_people: BTreeMap::new(),
         };
         for t in types_json {
-            let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
+            let id = Uuid::parse_str(t["id"].as_str().unwrap()).unwrap();
             let name = t["name"].as_str().unwrap().to_string();
             let parent_id = t.get("parent").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok());
             let desc = t.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
             let icon = t.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string());
-            state.types.insert(guid, TypeState {
-                type_id: guid, name, parent_type_id: parent_id, description: desc,
+            state.types.insert(id, TypeState {
+                type_id: id, name, parent_type_id: parent_id, description: desc,
                 icon, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
         }
         assert_eq!(state.types.len(), 50, "state should contain all 50 metabolism types");
-        let capsule_guid = Uuid::parse_str("71749140-9db9-43f6-bd81-d89011667b80").unwrap();
-        assert!(state.types.contains_key(&capsule_guid), "should have Capsule type");
-        assert_eq!(state.types[&capsule_guid].name, "Capsule");
+        let capsule_id = Uuid::parse_str("71749140-9db9-43f6-bd81-d89011667b80").unwrap();
+        assert!(state.types.contains_key(&capsule_id), "should have Capsule type");
+        assert_eq!(state.types[&capsule_id].name, "Capsule");
     }
 
     #[test]
@@ -3623,9 +3770,9 @@ use super::*;
         let types_json = kit_json["types"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
         for t in types_json {
-            let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
+            let id = Uuid::parse_str(t["id"].as_str().unwrap()).unwrap();
             let fields = serde_json::json!({"name": t["name"]});
-            commands.push(DomainCommand::CreateType(CreateEntity { entity_id: guid, fields }));
+            commands.push(DomainCommand::CreateType(CreateEntity { entity_id: id, fields }));
         }
         assert_eq!(commands.len(), 50);
         let batch = DomainCommand::Batch(DomainBatch { commands });
@@ -3680,7 +3827,7 @@ use super::*;
     #[test]
     pub fn nakagin_build_design_state() {
         let design_json = load_nakagin_design_json();
-        let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
+        let design_id = Uuid::parse_str(design_json["id"].as_str().unwrap()).unwrap();
         let mut ds = DesignState {
             design_id, name: design_json["name"].as_str().unwrap().to_string(),
             parent_design_id: None, description: None, icon: None, image: None,
@@ -3691,7 +3838,7 @@ use super::*;
             groups: BTreeMap::new(), stats: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
         };
         for p in design_json["pieces"].as_array().unwrap() {
-            let pid = Uuid::parse_str(p["guid"].as_str().unwrap()).unwrap();
+            let pid = Uuid::parse_str(p["id"].as_str().unwrap()).unwrap();
             let name = p.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
             let center = p.get("center").and_then(|c| {
                 let u = c.get("u")?.as_f64()?;
@@ -3708,7 +3855,7 @@ use super::*;
             });
         }
         for c in design_json["connections"].as_array().unwrap() {
-            let cid = Uuid::parse_str(c["guid"].as_str().unwrap()).unwrap();
+            let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
             let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
             let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
@@ -3749,11 +3896,11 @@ use super::*;
     #[test]
     pub fn nakagin_create_piece_commands_for_all_pieces() {
         let design_json = load_nakagin_design_json();
-        let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
+        let design_id = Uuid::parse_str(design_json["id"].as_str().unwrap()).unwrap();
         let pieces_json = design_json["pieces"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
         for p in pieces_json {
-            let pid = Uuid::parse_str(p["guid"].as_str().unwrap()).unwrap();
+            let pid = Uuid::parse_str(p["id"].as_str().unwrap()).unwrap();
             let fields = serde_json::json!({"name": p.get("name")});
             commands.push(DomainCommand::CreatePiece(CreatePiece { piece_id: pid, design_id, fields }));
         }
@@ -3763,11 +3910,11 @@ use super::*;
     #[test]
     pub fn nakagin_create_connection_commands_for_all_connections() {
         let design_json = load_nakagin_design_json();
-        let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
+        let design_id = Uuid::parse_str(design_json["id"].as_str().unwrap()).unwrap();
         let conns_json = design_json["connections"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
         for c in conns_json {
-            let cid = Uuid::parse_str(c["guid"].as_str().unwrap()).unwrap();
+            let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
             let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
             let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str()).unwrap_or("");
             let fields = serde_json::json!({
@@ -3926,7 +4073,7 @@ use super::*;
         let kit_json = load_metabolism_kit_json();
         let design_json = load_nakagin_design_json();
         let session_id = Uuid::now_v7();
-        let kit_id = Uuid::parse_str(kit_json["guid"].as_str().unwrap()).unwrap();
+        let kit_id = Uuid::parse_str(kit_json["id"].as_str().unwrap()).unwrap();
         let mut state = SessionState {
             session_id: SessionId(session_id), domain_version: 0, semio_version: 0,
             status: SessionStatus::Active,
@@ -3948,21 +4095,21 @@ use super::*;
         };
         // Add all 50 types
         for t in kit_json["types"].as_array().unwrap() {
-            let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
-            state.types.insert(guid, TypeState {
-                type_id: guid, name: t["name"].as_str().unwrap().to_string(),
+            let id = Uuid::parse_str(t["id"].as_str().unwrap()).unwrap();
+            state.types.insert(id, TypeState {
+                type_id: id, name: t["name"].as_str().unwrap().to_string(),
                 parent_type_id: None, description: t.get("description").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 icon: t.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
             state.domain_version += 1;
         }
         assert_eq!(state.types.len(), 50);
         assert_eq!(state.domain_version, 50);
         // Add nakagin design with 180 pieces and 179 connections
-        let design_id = Uuid::parse_str(design_json["guid"].as_str().unwrap()).unwrap();
+        let design_id = Uuid::parse_str(design_json["id"].as_str().unwrap()).unwrap();
         let mut ds = DesignState {
             design_id, name: design_json["name"].as_str().unwrap().to_string(),
             parent_design_id: None, description: None, icon: None, image: None,
@@ -3972,7 +4119,7 @@ use super::*;
             groups: BTreeMap::new(), stats: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
         };
         for p in design_json["pieces"].as_array().unwrap() {
-            let pid = Uuid::parse_str(p["guid"].as_str().unwrap()).unwrap();
+            let pid = Uuid::parse_str(p["id"].as_str().unwrap()).unwrap();
             ds.pieces.insert(pid, PieceState {
                 piece_id: pid, name: p.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 type_id: None, design_ref_id: None, plane: None,
@@ -3985,7 +4132,7 @@ use super::*;
             state.domain_version += 1;
         }
         for c in design_json["connections"].as_array().unwrap() {
-            let cid = Uuid::parse_str(c["guid"].as_str().unwrap()).unwrap();
+            let cid = Uuid::parse_str(c["id"].as_str().unwrap()).unwrap();
             let connected_piece = c.get("connected").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
                 .and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
             let connecting_piece = c.get("connecting").and_then(|v| v.get("piece")).and_then(|v| v.as_str())
@@ -4050,19 +4197,19 @@ use super::*;
         let mut commands: Vec<DomainCommand> = Vec::new();
         if let Some(removed) = diff.get("types").and_then(|t| t.get("removed")).and_then(|r| r.as_array()) {
             for r in removed {
-                if let Some(guid_str) = r.get("guid").and_then(|g| g.as_str()) {
-                    if let Ok(guid) = Uuid::parse_str(guid_str) {
-                        commands.push(DomainCommand::DeleteType(DeleteEntity { entity_id: guid }));
+                if let Some(id_str) = r.get("id").and_then(|g| g.as_str()) {
+                    if let Ok(id) = Uuid::parse_str(id_str) {
+                        commands.push(DomainCommand::DeleteType(DeleteEntity { entity_id: id }));
                     }
                 }
             }
         }
         if let Some(updated) = diff.get("types").and_then(|t| t.get("updated")).and_then(|u| u.as_array()) {
             for u in updated {
-                if let Some(guid_str) = u.get("guid").and_then(|g| g.as_str()) {
-                    if let Ok(guid) = Uuid::parse_str(guid_str) {
+                if let Some(id_str) = u.get("id").and_then(|g| g.as_str()) {
+                    if let Ok(id) = Uuid::parse_str(id_str) {
                         commands.push(DomainCommand::PatchType(PatchEntity {
-                            entity_id: guid, fields: u.clone(),
+                            entity_id: id, fields: u.clone(),
                         }));
                     }
                 }
@@ -4145,14 +4292,33 @@ use super::*;
         assert_eq!(kit_json["description"].as_str().unwrap(), "A test");
         assert!(kit_json["types"].as_array().unwrap().is_empty());
         assert!(kit_json["designs"].as_array().unwrap().is_empty());
-        assert!(kit_json["guid"].as_str().is_some());
+        assert!(kit_json["id"].as_str().is_some());
         assert!(kit_json["createdAt"].as_str().is_some());
+    }
+
+    #[test]
+    pub fn session_kit_identity_helpers_require_id_and_name() {
+        let id = Uuid::now_v7();
+        let kit_json = serde_json::json!({
+            "id": id,
+            "name": "Remote Snapshot",
+            "description": "transport-level baseline"
+        });
+        assert_eq!(session_kit_id(&kit_json).unwrap(), id);
+        assert_eq!(session_kit_name(&kit_json).unwrap(), "Remote Snapshot");
+        assert_eq!(session_kit_string(&kit_json, "description").as_deref(), Some("transport-level baseline"));
+
+        let missing_id = serde_json::json!({"name": "Broken"});
+        assert!(matches!(session_kit_id(&missing_id), Err(SessionError::Validation(_))));
+
+        let missing_name = serde_json::json!({"id": id});
+        assert!(matches!(session_kit_name(&missing_name), Err(SessionError::Validation(_))));
     }
 
     #[test]
     pub fn serialize_session_kit_with_types_and_designs() {
         let kit_json_src = load_metabolism_kit_json();
-        let kid = Uuid::parse_str(kit_json_src["guid"].as_str().unwrap()).unwrap();
+        let kid = Uuid::parse_str(kit_json_src["id"].as_str().unwrap()).unwrap();
         let mut state = SessionState {
             session_id: SessionId(Uuid::now_v7()), domain_version: 10, semio_version: 0,
             status: SessionStatus::Active,
@@ -4168,7 +4334,7 @@ use super::*;
                 type_id: tid, name: format!("Type{}", i), parent_type_id: None, description: None,
                 icon: None, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
         }
         let kit_json = serialize_session_kit(&state);
@@ -4178,13 +4344,13 @@ use super::*;
 
     #[test]
     pub fn apply_change_log_create_type() {
-        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
+        let mut kit = serde_json::json!({"id": "abc", "name": "Kit", "types": [], "designs": []});
         let type_id = Uuid::now_v7();
         let changes = serde_json::json!([{
             "op": "Created",
             "entity_kind": "type",
             "entity_id": type_id.to_string(),
-            "snapshot": {"guid": type_id.to_string(), "name": "NewType"}
+            "snapshot": {"id": type_id.to_string(), "name": "NewType"}
         }]);
         apply_change_log_to_kit(&mut kit, &changes);
         let types = kit["types"].as_array().unwrap();
@@ -4194,7 +4360,7 @@ use super::*;
 
     #[test]
     pub fn apply_change_log_update_kit_name() {
-        let mut kit = serde_json::json!({"guid": "abc", "name": "OldName", "types": []});
+        let mut kit = serde_json::json!({"id": "abc", "name": "OldName", "types": []});
         let changes = serde_json::json!([{
             "op": "Updated",
             "entity_kind": "kit",
@@ -4208,9 +4374,9 @@ use super::*;
     #[test]
     pub fn apply_change_log_delete_type() {
         let type_id = Uuid::now_v7().to_string();
-        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
-            {"guid": type_id, "name": "ToDelete"},
-            {"guid": "other", "name": "Keep"}
+        let mut kit = serde_json::json!({"id": "abc", "name": "Kit", "types": [
+            {"id": type_id, "name": "ToDelete"},
+            {"id": "other", "name": "Keep"}
         ]});
         let changes = serde_json::json!([{
             "op": "Deleted",
@@ -4226,8 +4392,8 @@ use super::*;
     #[test]
     pub fn apply_change_log_update_type_fields() {
         let type_id = Uuid::now_v7().to_string();
-        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [
-            {"guid": type_id, "name": "OldName", "description": null}
+        let mut kit = serde_json::json!({"id": "abc", "name": "Kit", "types": [
+            {"id": type_id, "name": "OldName", "description": null}
         ]});
         let changes = serde_json::json!([{
             "op": "Updated",
@@ -4243,13 +4409,13 @@ use super::*;
 
     #[test]
     pub fn apply_multiple_change_logs_sequentially() {
-        let mut kit = serde_json::json!({"guid": "abc", "name": "Kit", "types": [], "designs": []});
+        let mut kit = serde_json::json!({"id": "abc", "name": "Kit", "types": [], "designs": []});
         let t1 = Uuid::now_v7().to_string();
         let t2 = Uuid::now_v7().to_string();
         // First: create two types
         let changes1 = serde_json::json!([
-            {"op": "Created", "entity_kind": "type", "entity_id": t1, "snapshot": {"guid": t1, "name": "A"}},
-            {"op": "Created", "entity_kind": "type", "entity_id": t2, "snapshot": {"guid": t2, "name": "B"}},
+            {"op": "Created", "entity_kind": "type", "entity_id": t1, "snapshot": {"id": t1, "name": "A"}},
+            {"op": "Created", "entity_kind": "type", "entity_id": t2, "snapshot": {"id": t2, "name": "B"}},
         ]);
         apply_change_log_to_kit(&mut kit, &changes1);
         assert_eq!(kit["types"].as_array().unwrap().len(), 2);
@@ -4501,7 +4667,7 @@ use super::*;
 
         let session_id = Uuid::now_v7();
         let kit_json = load_metabolism_kit_json();
-        let kit_id = Uuid::parse_str(kit_json["guid"].as_str().unwrap()).unwrap();
+        let kit_id = Uuid::parse_str(kit_json["id"].as_str().unwrap()).unwrap();
         create_session(&pool, session_id, kit_id, "Metabolism").await.unwrap();
 
         let state = load_session_state(&pool, session_id).await.unwrap();
@@ -4517,9 +4683,9 @@ use super::*;
         let types_json = kit_json["types"].as_array().unwrap();
         let mut commands: Vec<DomainCommand> = Vec::new();
         for t in types_json {
-            let guid = Uuid::parse_str(t["guid"].as_str().unwrap()).unwrap();
+            let id = Uuid::parse_str(t["id"].as_str().unwrap()).unwrap();
             commands.push(DomainCommand::CreateType(CreateEntity {
-                entity_id: guid, fields: serde_json::json!({"name": t["name"]}),
+                entity_id: id, fields: serde_json::json!({"name": t["name"]}),
             }));
         }
         let batch = DomainCommand::Batch(DomainBatch { commands });
@@ -4662,7 +4828,7 @@ use super::*;
                 "actor_person_id": Uuid::now_v7(),
                 "base_domain_version": 0,
                 "kind": "CreateDesign",
-                "payload": {"entity_id": design_id, "fields": {"guid": design_id, "name": "Remote Design"}}
+                "payload": {"entity_id": design_id, "fields": {"id": design_id, "name": "Remote Design"}}
             }))
             .send()
             .await
@@ -4679,7 +4845,7 @@ use super::*;
                 "actor_person_id": Uuid::now_v7(),
                 "base_domain_version": 1,
                 "kind": "CreatePiece",
-                "payload": {"piece_id": piece_id, "design_id": design_id, "fields": {"guid": piece_id, "design_id": design_id, "name": "Remote Piece"}}
+                "payload": {"piece_id": piece_id, "design_id": design_id, "fields": {"id": piece_id, "design_id": design_id, "name": "Remote Piece"}}
             }))
             .send()
             .await

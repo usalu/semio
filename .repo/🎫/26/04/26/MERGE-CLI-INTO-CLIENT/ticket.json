@@ -1,0 +1,13 @@
+{
+  "title": "Merge CLI Into Client",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Merge semio/cli into semio/client and remove the semio/cli folder. Update existing references, extend existing tests only, and verify the repository passes relevant checks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1384"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient",
+  "sessions": [
+    "⚪f4ca5e1b79ab480f82e19f9062b40bcc"
+  ]
+}

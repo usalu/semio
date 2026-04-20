@@ -1,0 +1,10 @@
+{
+  "title": "Play Site Tests And Layering",
+  "emoji": "🎮",
+  "status": "open",
+  "description": "Make semio/play all tests pass without removing test functionality. Respect layering: rs\u003c-graphql\u003c-js\u003c-react\u003c-sketchpad; sketchpad only uses react. Fix implementation as needed.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪c8f00876dd2a4d59a2fd373f6ed8cee7"
+  ]
+}

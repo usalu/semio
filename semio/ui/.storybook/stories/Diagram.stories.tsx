@@ -1,11 +1,11 @@
 // #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Diagram.stories.tsx
-// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designGuid).
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designId).
 // Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio/js";
+import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio/react";
 import { SemioDiagram as Diagram } from "@semio/ui";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
@@ -15,13 +15,13 @@ import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.
 // #region 🖥️Data
 
 const kit = Kit.ensure(metabolismKit as unknown as Kit);
-const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
-const flatOp = kit.runFlattenDesign(rawDesign.guid);
+const rawDesign = (metabolismKit.designs ?? []).find((d) => d.id === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
+const flatOp = kit.runFlattenDesign(rawDesign.id);
 if (!flatOp.ok) throw new Error(flatOp.errors.map((e) => e.message).join("; "));
 const flattenChange = flatOp.diff;
 const nakaginDesign = new Design(JSON.parse(JSON.stringify(rawDesign)) as DesignPlain, kit);
 nakaginDesign.applyDiff({ pieces: flattenChange.forward.pieces });
-const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
+const firstPieceId = (nakaginDesign.pieces ?? [])[0]?.id ?? "";
 const designDiff = nakaginDiff as any;
 
 // #endregion 🖥️Data
@@ -46,12 +46,12 @@ export const Default: Story = {
     design: nakaginDesign,
     designDiff,
     defaultSelection: {
-      pieceGuids: ["71e18c51-7752-46bb-917e-31874504b259", "0a23d9c7-b75b-4166-8730-351367df9f8a", "019daa00-0000-7000-b000-000000000001"],
-      connectionGuids: ["40be9d59-91e8-4d8c-87b5-c5da567a4f9c", "019daa00-0000-7000-b000-000000000011"],
+      pieceIds: ["71e18c51-7752-46bb-917e-31874504b259", "0a23d9c7-b75b-4166-8730-351367df9f8a", "019daa00-0000-7000-b000-000000000001"],
+      connectionIds: ["40be9d59-91e8-4d8c-87b5-c5da567a4f9c", "019daa00-0000-7000-b000-000000000011"],
     },
     title: "Diagram",
-    onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
-    onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
+    onPieceClick: (piece) => console.info("Piece clicked", piece.id),
+    onConnectionClick: (connection) => console.info("Connection clicked", connection.id),
   },
   render: (args) => frame(<Diagram {...args} />),
 };
@@ -70,11 +70,11 @@ export const Diff: Story = {
 export const Selection: Story = {
   args: {
     design: nakaginDesign,
-    defaultSelection: { pieceGuids: [firstPieceGuid], connectionGuids: [] },
+    defaultSelection: { pieceIds: [firstPieceId], connectionIds: [] },
     diffEnabled: false,
     title: "Selection",
-    onPieceClick: (piece) => console.info("Piece clicked", piece.guid),
-    onConnectionClick: (connection) => console.info("Connection clicked", connection.guid),
+    onPieceClick: (piece) => console.info("Piece clicked", piece.id),
+    onConnectionClick: (connection) => console.info("Connection clicked", connection.id),
   },
   render: (args) => frame(<Diagram {...args} />),
 };

@@ -14,11 +14,15 @@
 
 import React, { useEffect, useState, useCallback, lazy, Suspense } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { createFolderKitStore, createSessionKitStore } from "@semio/sketchpad";
-import type { KitFolderAdapter, KitJsonFileAdapter } from "@semio/sketchpad";
-import type { SketchpadKitStoreFactory } from "@semio/sketchpad";
-import { createJsonFileKitStore } from "@semio/sketchpad";
-import { InMemoryKitStore } from "@semio/js";
+import {
+  createFolderKitStore,
+  createJsonFileKitStore,
+  createSessionKitStore,
+  InMemoryKitStore,
+  type KitFolderAdapter,
+  type KitJsonFileAdapter,
+} from "@semio/react";
+import type { SketchpadKitStoreFactory } from "@semio/react";
 
 import "./globals.css";
 

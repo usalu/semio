@@ -259,20 +259,20 @@
   <data name="attribute_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\attribute_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_cache_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_cache_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_cache_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_cache_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="semio_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\semio_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -355,23 +355,23 @@
   <data name="attribute_id_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\attribute_id_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_diff_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_diff_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_diff_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_diff_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_diff_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_diff_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_diff_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_diff_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="models_diff_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\models_diff_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representations_diff_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representations_diff_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="models_diff_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\models_diff_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representations_diff_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representations_diff_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_id_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_id_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_id_serialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_id_serialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_id_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_id_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_id_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_id_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="file_diff_deserialize_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\file_diff_deserialize_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -610,8 +610,8 @@
   <data name="connector_id_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\connector_id_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_id_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_id_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_id_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_id_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="type_id_modify_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\type_id_modify_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -868,8 +868,8 @@
   <data name="quality_id_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\quality_id_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_id_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_id_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_id_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_id_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="type_id_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\type_id_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -910,10 +910,10 @@
   <data name="connectors_diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\assets\icons\connectors_diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="model_diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\model_diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representation_diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representation_diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="models_diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\assets\icons\models_diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="representations_diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\assets\icons\representations_diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

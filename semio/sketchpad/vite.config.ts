@@ -61,7 +61,7 @@ const __filename = fileURLToPath(import.meta.url);
  * Path MUST be derived from __filename.
  **/
 const __dirname = path.dirname(__filename);
-const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "models"]);
+const RUNTIME_ASSET_DIRECTORIES = new Set(["badges", "cursors", "fonts", "icons", "images", "logo", "representations"]);
 
 function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: any, res: any, next: any) => void) => void } }, fsMod: typeof import("fs")) {
   const sketchpadPublicPath = path.resolve(__dirname, "public");
@@ -115,6 +115,7 @@ export default defineConfig(async ({ mode }) => {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },
@@ -167,6 +168,9 @@ export default defineConfig(async ({ mode }) => {
       rollupOptions: {
         external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism.kit.semio.json", "fs", "path", "url"],
       },
+    },
+    worker: {
+      format: "es",
     },
     ssr: {
       noExternal: ["golden-layout"],

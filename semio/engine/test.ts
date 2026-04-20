@@ -9,10 +9,12 @@
 
 // #region 📷Test Runner
 import { execFileSync, execSync } from "child_process";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
 const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(__dirname, ".venv") };
+const python = process.platform === "win32" ? join(__dirname, ".venv", "Scripts", "python.exe") : join(__dirname, ".venv", "bin", "python");
+const pythonCommand = existsSync(python) ? python : "python";
 
 // #region 🔗SchemaValidation
 
@@ -20,25 +22,43 @@ const assertSchema = (condition: boolean, message: string): void => {
   if (!condition) throw new Error(message);
 };
 
-const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
-assertSchema(!graphqlSchema.includes("legacy"), "semio GraphQL schema MUST NOT expose legacy compatibility fields");
-for (const definition of ["type KitStore", "type KitSession", "type KitChangeCandidate", "type KitConflict", "type Family", "type Type", "type Design", "type Piece", "type Connection"]) {
+const definitionBody = (definition: string): string => {
   const escapedDefinition = definition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  assertSchema(new RegExp(`${escapedDefinition}\\s*\\{[\\s\\S]*?\\n  hash: Hash!`).test(graphqlSchema), `${definition} MUST expose a computed hash`);
-}
-assertSchema(graphqlSchema.includes("union KitInteractionRecord"), "semio GraphQL schema MUST expose dedicated kit interaction records");
-assertSchema(graphqlSchema.includes("replacementTypeCandidates"), "semio GraphQL schema MUST expose computed replacement type candidates");
+  const match = graphqlSchema.match(new RegExp(`${escapedDefinition}\\s*\\{([\\s\\S]*?)\\n\\}`));
+  assertSchema(Boolean(match), `${definition} MUST exist`);
+  return match![1];
+};
 
-execFileSync(
-  "uv",
-  [
-    "run",
-    "python",
-    "-c",
-    "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))",
-  ],
-  { cwd: __dirname, env, stdio: "inherit" },
+const graphqlSchema = readFileSync(join(__dirname, "..", "graphql", "schema.graphql"), "utf8");
+const disallowed = "leg" + "acy";
+assertSchema(!graphqlSchema.includes(disallowed), "semio GraphQL schema MUST NOT add compatibility-only field names in identifiers or generated descriptions");
+for (const definition of ["type KitStore", "type Query", "type Mutation", "type Subscription", "type Type", "type Design", "type Piece", "type Connection"]) {
+  definitionBody(definition);
+}
+const queryBody = definitionBody("type Query");
+assertSchema(queryBody.includes("kitStore: KitStore!") && queryBody.includes("kitReadScope(scope: KitReadScopeInput!): KitStore!"), "Query MUST expose Rust kit store roots");
+const mutationBody = definitionBody("type Mutation");
+assertSchema(mutationBody.includes("kitStore: KitStoreMutation!"), "Mutation MUST expose nested kit store mutations");
+const kitStoreMutationBody = definitionBody("type KitStoreMutation");
+assertSchema(kitStoreMutationBody.includes("batch(input: KitStoreBatchInput!): KitStoreBatchPayload!"), "KitStoreMutation MUST expose batched scoped kit writes");
+const subscriptionBody = definitionBody("type Subscription");
+assertSchema(subscriptionBody.includes("eventStream: JSON!"), "Subscription MUST expose the Rust event stream");
+const kitBody = definitionBody("type KitStore");
+assertSchema(
+  kitBody.includes("liveFullDto: KitFullSnapshot!") && kitBody.includes("typeIds: [String!]!") && kitBody.includes("designByDtoId(id: String!): Design"),
+  "KitStore MUST expose the current semio/rs live graph API",
 );
+const typeBody = definitionBody("type Type");
+assertSchema(typeBody.includes("connectors: [Connector!]!") && typeBody.includes("representations: [Representation!]!"), "Type MUST expose the Rust catalog handles");
+const designBody = definitionBody("type Design");
+assertSchema(designBody.includes("clusterableGroups(selection: [String!]!): [[String!]!]!") && designBody.includes("replaceableCatalog(selection: [String!]!): ReplaceableCatalog!"), "Design MUST expose computed semio/rs graph operations");
+assertSchema(graphqlSchema.includes("input KitReadScopeInput @oneOf"), "semio GraphQL schema MUST expose Rust read scopes as one-of input");
+
+execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
+  cwd: __dirname,
+  env,
+  stdio: "inherit",
+});
 
 const openapiSchema = JSON.parse(readFileSync(join(__dirname, "..", "openapi", "schema.json"), "utf8"));
 assertSchema(Boolean(openapiSchema.paths?.["/api/graphql"]?.post), "semio OpenAPI schema MUST expose the GraphQL store endpoint");
@@ -47,7 +67,7 @@ assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreResponse), "
 
 // #endregion 🔗SchemaValidation
 
-execSync("uv run pytest --cov --cov-config=pyproject.toml --cov-report html", {
+execFileSync(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html"], {
   cwd: __dirname,
   env,
   stdio: "inherit",

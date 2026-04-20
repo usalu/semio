@@ -18,7 +18,7 @@ computer-aided
 component-based
 computer-generated
 port-based
-modeling
+representationing
 rewriting
 thinking
 semio

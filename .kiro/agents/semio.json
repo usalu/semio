@@ -7,8 +7,7 @@
       "command": "go",
       "args": [
         "run",
-        "./repo/cli",
-        "mcp"
+        "./repo/kiro"
       ]
     }
   },
@@ -98,27 +97,27 @@
   "hooks": {
     "agentSpawn": [
       {
-        "command": "go run ./repo/cli hook agentSpawn kiro-cli"
+        "command": "go run ./repo/mcp hook agentSpawn kiro-cli"
       }
     ],
     "userPromptSubmit": [
       {
-        "command": "go run ./repo/cli hook userPromptSubmit kiro-cli"
+        "command": "go run ./repo/mcp hook userPromptSubmit kiro-cli"
       }
     ],
     "preToolUse": [
       {
-        "command": "go run ./repo/cli hook preToolUse kiro-cli"
+        "command": "go run ./repo/mcp hook preToolUse kiro-cli"
       }
     ],
     "postToolUse": [
       {
-        "command": "go run ./repo/cli hook postToolUse kiro-cli"
+        "command": "go run ./repo/mcp hook postToolUse kiro-cli"
       }
     ],
     "stop": [
       {
-        "command": "go run ./repo/cli hook stop kiro-cli"
+        "command": "go run ./repo/mcp hook stop kiro-cli"
       }
     ]
   },

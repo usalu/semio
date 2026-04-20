@@ -2,102 +2,102 @@
   "hooks": {
     "afterAgentResponse": [
       {
-        "command": "go run ./repo/cli hook afterAgentResponse cursor-chat"
+        "command": "go run ./repo/cursor hook afterAgentResponse"
       }
     ],
     "afterAgentThought": [
       {
-        "command": "go run ./repo/cli hook afterAgentThought cursor-chat"
+        "command": "go run ./repo/cursor hook afterAgentThought"
       }
     ],
     "afterFileEdit": [
       {
-        "command": "go run ./repo/cli hook afterFileEdit cursor-chat"
+        "command": "go run ./repo/cursor hook afterFileEdit"
       }
     ],
     "afterMCPExecution": [
       {
-        "command": "go run ./repo/cli hook afterMCPExecution cursor-chat"
+        "command": "go run ./repo/cursor hook afterMCPExecution"
       }
     ],
     "afterShellExecution": [
       {
-        "command": "go run ./repo/cli hook afterShellExecution cursor-chat"
+        "command": "go run ./repo/cursor hook afterShellExecution"
       }
     ],
     "afterTabFileEdit": [
       {
-        "command": "go run ./repo/cli hook afterTabFileEdit cursor-chat"
+        "command": "go run ./repo/cursor hook afterTabFileEdit"
       }
     ],
     "beforeMCPExecution": [
       {
-        "command": "go run ./repo/cli hook beforeMCPExecution cursor-chat"
+        "command": "go run ./repo/cursor hook beforeMCPExecution"
       }
     ],
     "beforeReadFile": [
       {
-        "command": "go run ./repo/cli hook beforeReadFile cursor-chat"
+        "command": "go run ./repo/cursor hook beforeReadFile"
       }
     ],
     "beforeShellExecution": [
       {
-        "command": "go run ./repo/cli hook beforeShellExecution cursor-chat"
+        "command": "go run ./repo/cursor hook beforeShellExecution"
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "go run ./repo/cli hook beforeSubmitPrompt cursor-chat"
+        "command": "go run ./repo/cursor hook beforeSubmitPrompt"
       }
     ],
     "beforeTabFileRead": [
       {
-        "command": "go run ./repo/cli hook beforeTabFileRead cursor-chat"
+        "command": "go run ./repo/cursor hook beforeTabFileRead"
       }
     ],
     "postToolUse": [
       {
-        "command": "go run ./repo/cli hook postToolUse cursor-chat"
+        "command": "go run ./repo/cursor hook postToolUse"
       }
     ],
     "postToolUseFailure": [
       {
-        "command": "go run ./repo/cli hook postToolUseFailure cursor-chat"
+        "command": "go run ./repo/cursor hook postToolUseFailure"
       }
     ],
     "preCompact": [
       {
-        "command": "go run ./repo/cli hook preCompact cursor-chat"
+        "command": "go run ./repo/cursor hook preCompact"
       }
     ],
     "preToolUse": [
       {
-        "command": "go run ./repo/cli hook preToolUse cursor-chat"
+        "command": "go run ./repo/cursor hook preToolUse"
       }
     ],
     "sessionEnd": [
       {
-        "command": "go run ./repo/cli hook sessionEnd cursor-chat"
+        "command": "go run ./repo/cursor hook sessionEnd"
       }
     ],
     "sessionStart": [
       {
-        "command": "go run ./repo/cli hook sessionStart cursor-chat"
+        "command": "go run ./repo/cursor hook sessionStart"
       }
     ],
     "stop": [
       {
-        "command": "go run ./repo/cli hook stop cursor-chat"
+        "command": "go run ./repo/cursor hook stop"
       }
     ],
     "subagentStart": [
       {
-        "command": "go run ./repo/cli hook subagentStart cursor-chat"
+        "command": "go run ./repo/cursor hook subagentStart"
       }
     ],
     "subagentStop": [
       {
-        "command": "go run ./repo/cli hook subagentStop cursor-chat"
+        "command": "go run ./repo/cursor hook subagentStop"
       }
     ]
   },

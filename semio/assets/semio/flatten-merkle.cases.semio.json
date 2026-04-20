@@ -1,17 +1,17 @@
 {
-  "description": "🌳Shared test cases for merkle-tree based plane/center hashing in flattenDesign. Each case loads a kit, selects a design by path, computes baseline flat merkle hashes, applies the listed mutations to a clone of the kit, recomputes hashes, and asserts that the set of pieces whose plane/center hash changed matches the expectations. Paths use dotted notation (e.g. 'plane.origin.x'). Pieces and connections are selected by their guid.",
+  "description": "🌳Shared test cases for merkle-tree based plane/center hashing in flattenDesign. Each case loads a kit, selects a design by path, computes baseline flat merkle hashes, applies the listed mutations to a clone of the kit, recomputes hashes, and asserts that the set of pieces whose plane/center hash changed matches the expectations. Paths use dotted notation (e.g. 'plane.origin.x'). Pieces and connections are selected by their id.",
   "parity": {
     "description": "🧪Cross-language reference hashes: every implementation MUST produce these exact lowercase hex sha256 values for the listed pieces when flattening the specified design path of the given kit without mutations.",
     "kit": "metabolism.kit.semio.json",
     "designPath": ["Nakagin Capsule Tower"],
     "expectedHashes": [
       {
-        "pieceGuid": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+        "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
         "planeHash": "ad8a923756fe73d84190135710c09cc3dafff280c5f23de5e98b6252d7958ba6",
         "centerHash": "334c87eed98599cae04e43a9cba40308c344452c904bac5661e60cbc153c0ad0"
       },
       {
-        "pieceGuid": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952",
+        "pieceId": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952",
         "planeHash": "8abc6a800a6e2ccff839dea3c9458c16cd6ea4672b81f886a6162837a28f952b",
         "centerHash": "8ed02a0f649b2bb9a3d171e68e1fd8332f10045918fd32d7719a40eff12ce95d"
       }
@@ -35,7 +35,7 @@
       "mutations": [
         {
           "kind": "pieceField",
-          "pieceGuid": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
           "path": "description",
           "value": "mutated description should not affect hashes"
         }
@@ -52,7 +52,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "description",
           "value": "mutated connection description"
         }
@@ -69,7 +69,7 @@
       "mutations": [
         {
           "kind": "pieceField",
-          "pieceGuid": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
           "path": "plane.origin.x",
           "value": 5.25
         }
@@ -86,7 +86,7 @@
       "mutations": [
         {
           "kind": "pieceField",
-          "pieceGuid": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+          "pieceId": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
           "path": "center.u",
           "value": 7.5
         }
@@ -103,7 +103,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "gap",
           "value": 3.5
         }
@@ -123,7 +123,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "rotation",
           "value": 45
         }
@@ -141,7 +141,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "tilt",
           "value": 10
         }
@@ -158,7 +158,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "shift",
           "value": 1.5
         }
@@ -175,7 +175,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "u",
           "value": 5.5
         }
@@ -193,7 +193,7 @@
       "mutations": [
         {
           "kind": "connectionField",
-          "connectionGuid": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
+          "connectionId": "cc0d14f5-11b2-4258-ac52-287d0d46b23b",
           "path": "v",
           "value": 4.25
         }

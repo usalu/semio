@@ -1,5 +1,5 @@
 {
-  "guid": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
+  "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
   "name": "Metabolism",
   "version": "r25.07-1",
   "description": "🏗 Everything for metabolistic architecture.",
@@ -13,99 +13,99 @@
   "updatedAt": "2025-11-23T01:10:21.03Z",
   "concepts": [
     {
-      "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa",
+      "id": "019adc5e-40ee-789d-a877-5baef7bc79fa",
       "name": "living-architecture"
     },
     {
-      "guid": "019adc5e-9205-7364-a213-66fda12e5120",
+      "id": "019adc5e-9205-7364-a213-66fda12e5120",
       "name": "organic-city"
     },
     {
-      "guid": "a49b61b1-4c98-4258-bfe5-8e02ef5a92fa",
+      "id": "a49b61b1-4c98-4258-bfe5-8e02ef5a92fa",
       "name": "kit-of-parts"
     }
   ],
   "tags": [
     {
-      "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-      "name": "model/gltf-binary"
+      "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
+      "name": "representation/gltf-binary"
     },
     {
-      "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-      "name": "model/vnd.3dm"
+      "id": "348efbfa-e275-4dda-9f66-229917c6b4ab",
+      "name": "representation/vnd.3dm"
     },
     {
-      "guid": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
+      "id": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
       "name": "1to500"
     },
     {
-      "guid": "14c03d58-6241-48e8-9ffe-89fc268124d2",
+      "id": "14c03d58-6241-48e8-9ffe-89fc268124d2",
       "name": "1to200"
     },
     {
-      "guid": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
+      "id": "34b6308b-0600-4a8e-aff6-a70b9f27caac",
       "name": "application/octet-stream"
     },
     {
-      "guid": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-      "name": "model/vnd.speckle+json"
+      "id": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
+      "name": "representation/vnd.speckle+json"
     },
     {
-      "guid": "7181512a-ee78-493d-963f-d224ba8b2b91",
+      "id": "7181512a-ee78-493d-963f-d224ba8b2b91",
       "name": "collider"
     }
   ],
   "types": [
     {
-      "guid": "71749140-9db9-43f6-bd81-d89011667b80",
+      "id": "71749140-9db9-43f6-bd81-d89011667b80",
       "name": "Capsule",
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
+      "id": "4ca3b87b-cd76-4228-9f7e-1459b711f0ab",
       "name": "Ellipsoid",
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "bb34f42f-68d6-418b-a613-545ca1d2aa14",
+      "id": "bb34f42f-68d6-418b-a613-545ca1d2aa14",
       "name": "Trapezoid",
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "04e9b156-97a8-4db0-8bb1-f582c5955a79",
+      "id": "04e9b156-97a8-4db0-8bb1-f582c5955a79",
       "name": "Balcony",
       "isAbstract": true,
       "createdAt": "2025-11-23T01:10:21.293Z",
       "updatedAt": "2025-11-23T01:10:21.293Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
+      "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73",
       "name": "Base",
       "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
       "icon": "icons/base.svg",
@@ -117,12 +117,12 @@
       "updatedAt": "2025-11-23T01:10:21.034Z",
       "families": [
         {
-          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+          "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
         }
       ]
     },
     {
-      "guid": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
+      "id": "3ac9d05f-9f0c-4759-9d2e-f9a4a908a8f4",
       "name": "Blob",
       "description": "🏩 A blobby two storey office building with an entrance hall and access to the staircases and elevators of the round cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
       "icon": "icons/base_blob.svg",
@@ -134,12 +134,12 @@
       "updatedAt": "2025-11-23T01:10:21.052Z",
       "families": [
         {
-          "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
+          "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4"
         }
       ]
     },
     {
-      "guid": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
+      "id": "0e240cd2-7f98-42b6-af39-34e7ee4fad35",
       "name": "Bridge",
       "description": "🏢 A bridge with two segments an addition on the west along the main path.",
       "icon": "",
@@ -152,7 +152,7 @@
       "families": []
     },
     {
-      "guid": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
+      "id": "49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e",
       "name": "Capital",
       "description": "🏗 A roof that has the skin of a cut extruded cuboid.",
       "icon": "icons/capital.svg",
@@ -164,12 +164,12 @@
       "updatedAt": "2025-11-23T01:10:21.111Z",
       "families": [
         {
-          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+          "id": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
         }
       ]
     },
     {
-      "guid": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
+      "id": "cf1e2cfe-e9b0-41bd-bf69-b6ed0d0016d9",
       "name": "Cylindric Capital",
       "description": "🏥 A roof that has the skin of a cut extruded cylinder.",
       "icon": "icons/cylindric-capital.svg",
@@ -181,12 +181,12 @@
       "updatedAt": "2025-11-23T01:10:21.113Z",
       "families": [
         {
-          "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
+          "id": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b"
         }
       ]
     },
     {
-      "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
+      "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
       "name": "\\",
       "description": "🏛 An apartment capsule for one person. It has the entrance on the back and has the view to the front.",
       "icon": "icons/capsule_backslash.svg",
@@ -198,12 +198,12 @@
       "updatedAt": "2025-11-23T01:10:21.115Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
+      "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5",
       "name": "/",
       "description": "🌉 An apartment capsule for one person. It has the entrance on the back and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_slash.svg",
@@ -215,12 +215,12 @@
       "updatedAt": "2025-11-23T01:10:21.117Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "e1878572-0fe1-4780-b877-90df9b25d31f",
+      "id": "e1878572-0fe1-4780-b877-90df9b25d31f",
       "name": "q",
       "description": "🗼 An apartment capsule for one person. It has the entrance on the back and has the view to the side.",
       "icon": "icons/capsule_q.svg",
@@ -232,12 +232,12 @@
       "updatedAt": "2025-11-23T01:10:21.119Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "357b841f-b121-463c-88a6-153d7cbf272f",
+      "id": "357b841f-b121-463c-88a6-153d7cbf272f",
       "name": "p",
       "description": "🏭 An apartment capsule for one person. It has the entrance on the back and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_p.svg",
@@ -249,12 +249,12 @@
       "updatedAt": "2025-11-23T01:10:21.121Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "818f2a23-569b-47cb-a69c-147694beb815",
+      "id": "818f2a23-569b-47cb-a69c-147694beb815",
       "name": "J",
       "description": "🏬 An apartment capsule for one person. It has the entrance on the side and has the view to the front.",
       "icon": "icons/capsule_J.svg",
@@ -266,12 +266,12 @@
       "updatedAt": "2025-11-23T01:10:21.123Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
+      "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd",
       "name": "L",
       "description": "🏨 An apartment capsule for one person. It has the entrance on the side and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_L.svg",
@@ -283,12 +283,12 @@
       "updatedAt": "2025-11-23T01:10:21.125Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "214a30f8-adfc-40de-840b-151d9f7e17dd",
+      "id": "214a30f8-adfc-40de-840b-151d9f7e17dd",
       "name": "s",
       "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
       "icon": "icons/capsule_s.svg",
@@ -300,12 +300,12 @@
       "updatedAt": "2025-11-23T01:10:21.128Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
+      "id": "cc9a4330-537f-49c2-a70d-5e6383b535f5",
       "name": "z",
       "description": "🏫 An apartment capsule for one person. It has the entrance on the side and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule_z.svg",
@@ -317,12 +317,12 @@
       "updatedAt": "2025-11-23T01:10:21.131Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "f1779b1f-2324-4bad-86da-773a1e90b57c",
+      "id": "f1779b1f-2324-4bad-86da-773a1e90b57c",
       "name": "\\",
       "description": "🏦 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "icon": "icons/capsule-with-balcony_backslash.svg",
@@ -334,12 +334,12 @@
       "updatedAt": "2025-11-23T01:10:21.133Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
+      "id": "3697e115-c2e7-4279-b09a-03e1d1e9c21e",
       "name": "/",
       "description": "🏣 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_slash.svg",
@@ -351,12 +351,12 @@
       "updatedAt": "2025-11-23T01:10:21.136Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "7ca051a6-8752-4ff2-9430-71a80114a88e",
+      "id": "7ca051a6-8752-4ff2-9430-71a80114a88e",
       "name": "q",
       "description": "🏤 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "icon": "icons/capsule-with-balcony_q.svg",
@@ -368,12 +368,12 @@
       "updatedAt": "2025-11-23T01:10:21.139Z",
       "families": [
         {
-          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+          "id": "95a75018-ffc5-416b-8aa4-373259aba06e"
         }
       ]
     },
     {
-      "guid": "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
+      "id": "6cbd2d9c-5710-452c-af7a-6859cfb0151a",
       "name": "p",
       "description": "🏚 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_p.svg",
@@ -385,12 +385,12 @@
       "updatedAt": "2025-11-23T01:10:21.144Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "af980393-c613-47c2-88a4-461298b0b8f9",
+      "id": "af980393-c613-47c2-88a4-461298b0b8f9",
       "name": "J",
       "description": "🏘 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "icon": "icons/capsule-with-balcony_J.svg",
@@ -402,12 +402,12 @@
       "updatedAt": "2025-11-23T01:10:21.149Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "8ee84149-4198-4223-ae89-3021ad2950c7",
+      "id": "8ee84149-4198-4223-ae89-3021ad2950c7",
       "name": "L",
       "description": "🏙 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_L.svg",
@@ -419,12 +419,12 @@
       "updatedAt": "2025-11-23T01:10:21.151Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "5aa65d97-778b-4449-be63-7948730d64bc",
+      "id": "5aa65d97-778b-4449-be63-7948730d64bc",
       "name": "s",
       "description": "🕌 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "icon": "icons/capsule-with-balcony_s.svg",
@@ -436,12 +436,12 @@
       "updatedAt": "2025-11-23T01:10:21.205Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
+      "id": "bfb4b43c-8e75-4265-b64a-7ebe4f62e099",
       "name": "z",
       "description": "🕍 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/capsule-with-balcony_z.svg",
@@ -453,12 +453,12 @@
       "updatedAt": "2025-11-23T01:10:21.207Z",
       "families": [
         {
-          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+          "id": "95a75018-ffc5-416b-8aa4-373259aba06e"
         }
       ]
     },
     {
-      "guid": "c90e216d-d899-4709-995b-5abfcce75bcb",
+      "id": "c90e216d-d899-4709-995b-5abfcce75bcb",
       "name": "\\",
       "description": "🕋 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_backslash.svg",
@@ -470,12 +470,12 @@
       "updatedAt": "2025-11-23T01:10:21.21Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "eefe6d3e-f18d-474e-b82e-04bb406d290f",
+      "id": "eefe6d3e-f18d-474e-b82e-04bb406d290f",
       "name": "/",
       "description": "🛕 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_slash.svg",
@@ -487,12 +487,12 @@
       "updatedAt": "2025-11-23T01:10:21.212Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
+      "id": "ccb67521-5ca1-42cf-bd81-4058c6c5348d",
       "name": "q",
       "description": "🏡 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_q.svg",
@@ -504,12 +504,12 @@
       "updatedAt": "2025-11-23T01:10:21.214Z",
       "families": [
         {
-          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+          "id": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
         }
       ]
     },
     {
-      "guid": "4b8563c5-37ad-49e8-9b6c-d635378bffce",
+      "id": "4b8563c5-37ad-49e8-9b6c-d635378bffce",
       "name": "p",
       "description": "🛖 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_p.svg",
@@ -521,12 +521,12 @@
       "updatedAt": "2025-11-23T01:10:21.216Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "5af2d54e-309c-46a6-8454-c91b957a59f9",
+      "id": "5af2d54e-309c-46a6-8454-c91b957a59f9",
       "name": "J",
       "description": "🔧 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_J.svg",
@@ -538,12 +538,12 @@
       "updatedAt": "2025-11-23T01:10:21.218Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
+      "id": "a53546d1-09bf-44e9-a2c4-2e58b1b6d3dd",
       "name": "L",
       "description": "🔨 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_L.svg",
@@ -555,12 +555,12 @@
       "updatedAt": "2025-11-23T01:10:21.22Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "aa34760a-d543-46c8-afa1-d83a38d42f2b",
+      "id": "aa34760a-d543-46c8-afa1-d83a38d42f2b",
       "name": "s",
       "description": "🪛 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
       "icon": "icons/ellipsoid-capsule_s.svg",
@@ -572,12 +572,12 @@
       "updatedAt": "2025-11-23T01:10:21.222Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
+      "id": "f1ed96ef-8dd0-4c2e-9d6e-91ac366f2364",
       "name": "z",
       "description": "🪜 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the . It is mirrored compared to the normal one.",
       "icon": "icons/ellipsoid-capsule_z.svg",
@@ -589,12 +589,12 @@
       "updatedAt": "2025-11-23T01:10:21.224Z",
       "families": [
         {
-          "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
+          "id": "3fd42278-1ee8-4bb4-80c6-6d8762740215"
         }
       ]
     },
     {
-      "guid": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
+      "id": "93b1cab5-ad4b-422b-a0e0-8b0de23a8534",
       "name": "\\",
       "description": "🧱 An apartment capsule of the variant \\ with a balcony for one person. It has the entrance on theback and has the view to the front.",
       "icon": "icons/trapezoid-capsule_backslash.svg",
@@ -606,12 +606,12 @@
       "updatedAt": "2025-11-23T01:10:21.227Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
+      "id": "5ee4ad14-091f-42f4-a357-09fc16c3ae39",
       "name": "/",
       "description": "🪵 An apartment capsule of the variant / with a balcony for one person. It has the entrance on theback and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_slash.svg",
@@ -623,12 +623,12 @@
       "updatedAt": "2025-11-23T01:10:21.228Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "34ddd546-4df3-480c-9aa3-880fb51b8016",
+      "id": "34ddd546-4df3-480c-9aa3-880fb51b8016",
       "name": "q",
       "description": "🔩 An apartment capsule of the variant q with a balcony for one person. It has the entrance on theback and has the view to the side.",
       "icon": "icons/trapezoid-capsule_q.svg",
@@ -640,12 +640,12 @@
       "updatedAt": "2025-11-23T01:10:21.23Z",
       "families": [
         {
-          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+          "id": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
         }
       ]
     },
     {
-      "guid": "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
+      "id": "e913ffae-6ae9-44e0-b516-1cc763bfefe7",
       "name": "p",
       "description": "🧰 An apartment capsule of the variant p with a balcony for one person. It has the entrance on theback and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_p.svg",
@@ -657,12 +657,12 @@
       "updatedAt": "2025-11-23T01:10:21.232Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "7ec14f29-b730-4000-b66d-aa304767e8c1",
+      "id": "7ec14f29-b730-4000-b66d-aa304767e8c1",
       "name": "J",
       "description": "🪓 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
       "icon": "icons/trapezoid-capsule_J.svg",
@@ -674,12 +674,12 @@
       "updatedAt": "2025-11-23T01:10:21.234Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
+      "id": "4cc5a1ea-0fde-4af4-81c5-afa069e6fef5",
       "name": "L",
       "description": "🔑 An apartment capsule of the variant L with a balcony for one person. It has the entrance on theside and has the view to the front. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_L.svg",
@@ -691,12 +691,12 @@
       "updatedAt": "2025-11-23T01:10:21.236Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
+      "id": "67917609-d54d-4afc-9f9a-6e3abc0d18a4",
       "name": "s",
       "description": "🗝 An apartment capsule of the variant s with a balcony for one person. It has the entrance on theside and has the view to the side.",
       "icon": "icons/trapezoid-capsule_s.svg",
@@ -708,12 +708,12 @@
       "updatedAt": "2025-11-23T01:10:21.238Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "94c31826-ae8e-432a-9a27-73346f49c704",
+      "id": "94c31826-ae8e-432a-9a27-73346f49c704",
       "name": "z",
       "description": "🚪 An apartment capsule of the variant z with a balcony for one person. It has the entrance on theside and has the view to the side. It is mirrored compared to the normal one.",
       "icon": "icons/trapezoid-capsule_z.svg",
@@ -725,12 +725,12 @@
       "updatedAt": "2025-11-23T01:10:21.24Z",
       "families": [
         {
-          "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
+          "id": "e623f97a-cafc-4671-8f01-d6ff67e581d3"
         }
       ]
     },
     {
-      "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
+      "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7",
       "name": "Tambour",
       "description": "🏰 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour.svg",
@@ -742,12 +742,12 @@
       "updatedAt": "2025-11-23T01:10:21.247Z",
       "families": [
         {
-          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+          "id": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
         }
       ]
     },
     {
-      "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
+      "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918",
       "name": "First Storey",
       "description": "🪟 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_first-storey.svg",
@@ -759,12 +759,12 @@
       "updatedAt": "2025-11-23T01:10:21.251Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
+      "id": "49233ca9-f005-4d15-b515-2a18a94dd7a8",
       "name": "Last Storey",
       "description": "🛗 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_last-storey.svg",
@@ -776,12 +776,12 @@
       "updatedAt": "2025-11-23T01:10:21.268Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
+      "id": "1b1fcf80-0acc-4456-bc16-71f69c5df571",
       "name": "Single Storey",
       "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
       "icon": "icons/tambour_single-storey.svg",
@@ -793,12 +793,12 @@
       "updatedAt": "2025-11-23T01:10:21.272Z",
       "families": [
         {
-          "guid": "2df6bbea-349b-4a91-8e12-cb734110e854"
+          "id": "2df6bbea-349b-4a91-8e12-cb734110e854"
         }
       ]
     },
     {
-      "guid": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
+      "id": "cc3cbc26-1126-4d8a-ac4f-fc87becda0a7",
       "name": "Cylindric Tambour",
       "description": "🛏 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour.svg",
@@ -810,12 +810,12 @@
       "updatedAt": "2025-11-23T01:10:21.276Z",
       "families": [
         {
-          "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
+          "id": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515"
         }
       ]
     },
     {
-      "guid": "2951ab00-3891-4d50-b887-26f1d308bfef",
+      "id": "2951ab00-3891-4d50-b887-26f1d308bfef",
       "name": "First Storey",
       "description": "🪑 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_first-storey.svg",
@@ -827,12 +827,12 @@
       "updatedAt": "2025-11-23T01:10:21.28Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "0271dcc8-c961-4ecf-8591-9f8027252174",
+      "id": "0271dcc8-c961-4ecf-8591-9f8027252174",
       "name": "Last Storey",
       "description": "🚿 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_last-storey.svg",
@@ -844,12 +844,12 @@
       "updatedAt": "2025-11-23T01:10:21.284Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     },
     {
-      "guid": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
+      "id": "277e1960-c3c8-4186-9a83-8f7eb66bcf28",
       "name": "Single Storey",
       "description": "🛁 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
       "icon": "icons/cylindric-tambour_single-storey.svg",
@@ -861,19 +861,19 @@
       "updatedAt": "2025-11-23T01:10:21.288Z",
       "families": [
         {
-          "guid": "95a75018-ffc5-416b-8aa4-373259aba06e"
+          "id": "95a75018-ffc5-416b-8aa4-373259aba06e"
         }
       ]
     },
     {
-      "guid": "019d8734-03bb-774e-b52e-68d4f010e939",
+      "id": "019d8734-03bb-774e-b52e-68d4f010e939",
       "name": "semio.sketchpad.app.kit.defaultTypeName",
       "families": []
     }
   ],
   "designs": [
     {
-      "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
+      "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef",
       "name": "Nakagin Capsule Tower",
       "description": "🏺 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
       "icon": "icons/nakagin-capsule-tower.svg",
@@ -883,12 +883,12 @@
       "updatedAt": "2025-11-23T01:10:21.335Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
+      "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
       "name": "Slanted",
       "description": "🚕 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "icon": "icons/nakagin-capsule-tower_slanted.svg",
@@ -898,12 +898,12 @@
       "updatedAt": "2025-11-23T01:10:21.875Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f",
+      "id": "38f0f014-ceba-42df-9339-4aab84bfbc1f",
       "name": "Twisted",
       "description": "🚙 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "icon": "icons/nakagin-capsule-tower_twisted.svg",
@@ -913,12 +913,12 @@
       "updatedAt": "2025-11-23T01:10:22.324Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452",
+      "id": "c3ee87b6-7453-49bc-8d7b-9405892f9452",
       "name": "Dancing",
       "description": "🚓 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "icon": "icons/nakagin-capsule-tower_dancing_axonometry_explosion.svg",
@@ -928,12 +928,12 @@
       "updatedAt": "2025-11-23T01:10:22.721Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
+      "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8",
       "name": "Capsule Dream",
       "description": "🚗 A wild dream of capsule towers.",
       "icon": "icons/capsule-dream.svg",
@@ -943,12 +943,12 @@
       "updatedAt": "2025-11-23T01:10:23.177Z",
       "families": [
         {
-          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+          "id": "64c20e73-04e3-482b-8564-d239558c7da0"
         }
       ]
     },
     {
-      "guid": "d7e12638-9749-471b-937e-a6e5523778ff",
+      "id": "d7e12638-9749-471b-937e-a6e5523778ff",
       "name": "Flat",
       "description": "🚒 A wild dream of capsule towers.",
       "icon": "icons/capsule-dream.svg",
@@ -958,12 +958,12 @@
       "updatedAt": "2025-11-23T01:11:03.4Z",
       "families": [
         {
-          "guid": "64c20e73-04e3-482b-8564-d239558c7da0"
+          "id": "64c20e73-04e3-482b-8564-d239558c7da0"
         }
       ]
     },
     {
-      "guid": "79fa8945-b47d-4896-965f-f921067cbae2",
+      "id": "79fa8945-b47d-4896-965f-f921067cbae2",
       "name": "Flat",
       "description": "🛻 The expolsion axonometry of a futuristic variant of the Nakagin Capsule Tower where two towers are dancing with each other. The capsules are ellipsoids around a round shaft and a blob base.",
       "icon": "icons/nakagin-capsule-tower_dancing_axonometry_explosion.svg",
@@ -973,12 +973,12 @@
       "updatedAt": "2025-11-23T01:11:04.468Z",
       "families": [
         {
-          "guid": "df795386-edf1-4408-84c6-d38c94a222d7"
+          "id": "df795386-edf1-4408-84c6-d38c94a222d7"
         }
       ]
     },
     {
-      "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
+      "id": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
       "name": "Flat",
       "description": "🚑 The digital shadow of the former Nakagin Capsule Tower which was a mixed-use residential and office tower designed by architect Kisho Kurokawa and located in Shimbashi, Tokyo, Japan. Completed in 1972, the building was a rare remaining example of Japanese Metabolism, an architectural movement emblematic of Japan's postwar cultural resurgence.",
       "icon": "icons/nakagin-capsule-tower.svg",
@@ -988,12 +988,12 @@
       "updatedAt": "2025-11-23T01:11:04.537Z",
       "families": [
         {
-          "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
+          "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327"
         }
       ]
     },
     {
-      "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
+      "id": "019ab4e0-8da8-7217-946f-5b5a83aca0e3",
       "name": "Flat",
       "description": "🚚 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
       "icon": "icons/nakagin-capsule-tower_slanted.svg",
@@ -1003,12 +1003,12 @@
       "updatedAt": "2025-11-23T01:11:04.613Z",
       "families": [
         {
-          "guid": "50812682-1e66-4fe3-8765-618bc654b098"
+          "id": "50812682-1e66-4fe3-8765-618bc654b098"
         }
       ]
     },
     {
-      "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95",
+      "id": "019ab4e0-cb2a-7613-a16a-ae086e331c95",
       "name": "Flat",
       "description": "🚛 A twisted variant of the Nakagin Capsule Tower where the capsules are trapezoids and towers are round with the floors twisting in one direction.",
       "icon": "icons/nakagin-capsule-tower_twisted.svg",
@@ -1018,2318 +1018,2318 @@
       "updatedAt": "2025-11-23T01:11:04.687Z",
       "families": [
         {
-          "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
+          "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3"
         }
       ]
     }
   ],
   "qualities": [
     {
-      "guid": "0277667d-d058-576b-a0ac-ee48fc04728f",
+      "id": "0277667d-d058-576b-a0ac-ee48fc04728f",
       "key": "base height",
       "name": "base height"
     },
     {
-      "guid": "c31cba81-c188-5697-bc48-32ca96a7adeb",
+      "id": "c31cba81-c188-5697-bc48-32ca96a7adeb",
       "key": "bottom",
       "name": "bottom"
     },
     {
-      "guid": "c3326230-4951-5e08-9752-d934dbc5a88f",
+      "id": "c3326230-4951-5e08-9752-d934dbc5a88f",
       "key": "construction cost",
       "name": "construction cost"
     },
     {
-      "guid": "7ed15c6b-b191-5da7-94a8-4443649d3593",
+      "id": "7ed15c6b-b191-5da7-94a8-4443649d3593",
       "key": "construction global warming potential",
       "name": "construction global warming potential",
       "uri": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
     {
-      "guid": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
+      "id": "81444a2f-b7a1-5990-9a12-d6a6bfa79591",
       "key": "cooling energy demand",
       "name": "cooling energy demand",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "guid": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
+      "id": "acfbe1bc-a5a4-5779-827a-d169f4a2fa1d",
       "key": "core",
       "name": "core"
     },
     {
-      "guid": "222ed5bf-e54e-517e-ae40-5c38223ad47f",
+      "id": "222ed5bf-e54e-517e-ae40-5c38223ad47f",
       "key": "core diameter",
       "name": "core diameter",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter"
     },
     {
-      "guid": "7ae421f1-0fae-5abc-9d12-418cc2554466",
+      "id": "7ae421f1-0fae-5abc-9d12-418cc2554466",
       "key": "core length",
       "name": "core length"
     },
     {
-      "guid": "7bddbd10-d23b-52fa-a4c3-7a666113c906",
+      "id": "7bddbd10-d23b-52fa-a4c3-7a666113c906",
       "key": "core width",
       "name": "core width"
     },
     {
-      "guid": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
+      "id": "857420e0-ca2b-575c-9de8-f00ebbc7037c",
       "key": "cores",
       "name": "cores"
     },
     {
-      "guid": "e4fd71dc-c975-517d-ad00-ce079786c8ec",
+      "id": "e4fd71dc-c975-517d-ad00-ce079786c8ec",
       "key": "diameter",
       "name": "diameter",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Diameter"
     },
     {
-      "guid": "50f87918-dba9-5648-83d0-5f4ad4187c5d",
+      "id": "50f87918-dba9-5648-83d0-5f4ad4187c5d",
       "key": "door height",
       "name": "door height"
     },
     {
-      "guid": "5b3c1358-dbba-5e4a-bc46-0ccb667fa4a4",
+      "id": "5b3c1358-dbba-5e4a-bc46-0ccb667fa4a4",
       "key": "door offset",
       "name": "door offset"
     },
     {
-      "guid": "6835a3c2-0497-52fa-a228-1f165d001efc",
+      "id": "6835a3c2-0497-52fa-a228-1f165d001efc",
       "key": "door width",
       "name": "door width"
     },
     {
-      "guid": "57e73feb-2abb-55ca-aa5e-dcb681776237",
+      "id": "57e73feb-2abb-55ca-aa5e-dcb681776237",
       "key": "east",
       "name": "east"
     },
     {
-      "guid": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
+      "id": "7cfe065b-c0da-5e2c-8789-9f7a860773c2",
       "key": "effective floor area",
       "name": "effective floor area",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/NetFloorArea"
     },
     {
-      "guid": "897d53c2-dcc3-598a-acb3-ff641af00dae",
+      "id": "897d53c2-dcc3-598a-acb3-ff641af00dae",
       "key": "entrance",
       "name": "entrance"
     },
     {
-      "guid": "32349526-a576-53e0-af16-f878b0def4ec",
+      "id": "32349526-a576-53e0-af16-f878b0def4ec",
       "key": "floor height",
       "name": "floor height",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
-      "guid": "6f32e795-2224-5b55-be90-6a1745c4aeeb",
+      "id": "6f32e795-2224-5b55-be90-6a1745c4aeeb",
       "key": "gap",
       "name": "gap"
     },
     {
-      "guid": "39e02526-7bab-55db-ac15-a09a55bd23d1",
+      "id": "39e02526-7bab-55db-ac15-a09a55bd23d1",
       "key": "ground floor height",
       "name": "ground floor height",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/GrossHeight"
     },
     {
-      "guid": "64cc900f-72ec-5e7b-91af-78251b681bde",
+      "id": "64cc900f-72ec-5e7b-91af-78251b681bde",
       "key": "heating energy demand",
       "name": "heating energy demand",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "guid": "64c6503a-d6fe-5874-9449-83289d105141",
+      "id": "64c6503a-d6fe-5874-9449-83289d105141",
       "key": "height",
       "name": "height"
     },
     {
-      "guid": "2a708afc-050a-5aa2-87ca-756726994230",
+      "id": "2a708afc-050a-5aa2-87ca-756726994230",
       "key": "height low",
       "name": "height low"
     },
     {
-      "guid": "9b38a58b-9873-50ee-87eb-f51a3fa38279",
+      "id": "9b38a58b-9873-50ee-87eb-f51a3fa38279",
       "key": "height side",
       "name": "height side"
     },
     {
-      "guid": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c",
+      "id": "bad342fd-fb92-5ef0-9a7c-2ebf89b5a44c",
       "key": "heigth",
       "name": "heigth",
       "uri": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Height"
     },
     {
-      "guid": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
+      "id": "207308ce-22f5-5338-bc24-6ddf10b14a3a",
       "key": "income",
       "name": "income"
     },
     {
-      "guid": "9a71931b-2837-571d-9169-83229724d78f",
+      "id": "9a71931b-2837-571d-9169-83229724d78f",
       "key": "length",
       "name": "length",
       "uri": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Length"
     },
     {
-      "guid": "8ba1a60d-25af-52f0-8dca-515239be5c77",
+      "id": "8ba1a60d-25af-52f0-8dca-515239be5c77",
       "key": "maintenance expenses",
       "name": "maintenance expenses"
     },
     {
-      "guid": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
+      "id": "d275c0f3-ca32-5d4f-bb0a-b376c227696d",
       "key": "mirrored",
       "name": "mirrored"
     },
     {
-      "guid": "cebf60ec-cdac-50be-947a-227fbe6ffae7",
+      "id": "cebf60ec-cdac-50be-947a-227fbe6ffae7",
       "key": "operational cost",
       "name": "operational cost"
     },
     {
-      "guid": "6d49703d-3f1a-5657-be01-bb9893094695",
+      "id": "6d49703d-3f1a-5657-be01-bb9893094695",
       "key": "operational energy cost",
       "name": "operational energy cost"
     },
     {
-      "guid": "ab3f6488-2804-5a2a-af74-65618a218f44",
+      "id": "ab3f6488-2804-5a2a-af74-65618a218f44",
       "key": "operational global warming potential",
       "name": "operational global warming potential",
       "uri": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
     {
-      "guid": "63b2504f-ef83-5491-917f-c80b4100377b",
+      "id": "63b2504f-ef83-5491-917f-c80b4100377b",
       "key": "parapet height",
       "name": "parapet height"
     },
     {
-      "guid": "ff792fa5-ab8c-5c60-bc53-b211a2d577b1",
+      "id": "ff792fa5-ab8c-5c60-bc53-b211a2d577b1",
       "key": "peak",
       "name": "peak"
     },
     {
-      "guid": "1353a304-141e-5a56-9ff3-8649b37de118",
+      "id": "1353a304-141e-5a56-9ff3-8649b37de118",
       "key": "platform",
       "name": "platform"
     },
     {
-      "guid": "e4c4a387-32a6-52d2-b0bb-a5e452272eb2",
+      "id": "e4c4a387-32a6-52d2-b0bb-a5e452272eb2",
       "key": "platform east length",
       "name": "platform east length"
     },
     {
-      "guid": "3f17d8c5-c460-555f-be31-a99797da842c",
+      "id": "3f17d8c5-c460-555f-be31-a99797da842c",
       "key": "platform west length",
       "name": "platform west length"
     },
     {
-      "guid": "0c4588c1-f88f-544b-b41b-b5af6d52a1b5",
+      "id": "0c4588c1-f88f-544b-b41b-b5af6d52a1b5",
       "key": "primary rod diameter",
       "name": "primary rod diameter"
     },
     {
-      "guid": "eded115b-256c-5752-8756-923d0aecf8fd",
+      "id": "eded115b-256c-5752-8756-923d0aecf8fd",
       "key": "return",
       "name": "return"
     },
     {
-      "guid": "49e9512a-b7f7-5c60-bdee-b52871c9a14a",
+      "id": "49e9512a-b7f7-5c60-bdee-b52871c9a14a",
       "key": "secondary rod diameter",
       "name": "secondary rod diameter"
     },
     {
-      "guid": "aed5edc4-5c23-5d5e-852b-e8670ad517ee",
+      "id": "aed5edc4-5c23-5d5e-852b-e8670ad517ee",
       "key": "specific energy demand",
       "name": "specific energy demand",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "guid": "65d42370-990c-533d-a2ed-386714af2f46",
+      "id": "65d42370-990c-533d-a2ed-386714af2f46",
       "key": "specific operational global warming potential",
       "name": "specific operational global warming potential",
       "uri": "https://identifier.buildingsmart.org/uri/etim/etim/9.0/prop/EF016979"
     },
     {
-      "guid": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
+      "id": "c1c756ba-a1ac-53ce-a87d-9d69bc4b34cb",
       "key": "storey",
       "name": "storey",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
-      "guid": "4ee58b7f-fa02-57d2-be88-cb4892dba393",
+      "id": "4ee58b7f-fa02-57d2-be88-cb4892dba393",
       "key": "storeys",
       "name": "storeys",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingStorey"
     },
     {
-      "guid": "dba0671e-04a8-5545-a083-eb28b44d3453",
+      "id": "dba0671e-04a8-5545-a083-eb28b44d3453",
       "key": "technical equipment energy demand",
       "name": "technical equipment energy demand",
       "uri": "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/EnergyConsumption"
     },
     {
-      "guid": "47de7486-1a85-5087-ae70-26eb605118ae",
+      "id": "47de7486-1a85-5087-ae70-26eb605118ae",
       "key": "tertiary rod diameter",
       "name": "tertiary rod diameter"
     },
     {
-      "guid": "da620d27-98eb-5f7f-8a80-9b7515d38058",
+      "id": "da620d27-98eb-5f7f-8a80-9b7515d38058",
       "key": "top",
       "name": "top"
     },
     {
-      "guid": "2b8403af-d98f-5dee-8cd4-200f00259960",
+      "id": "2b8403af-d98f-5dee-8cd4-200f00259960",
       "key": "view",
       "name": "view"
     },
     {
-      "guid": "6d64b819-904f-5d95-acba-224c238381df",
+      "id": "6d64b819-904f-5d95-acba-224c238381df",
       "key": "wall thickness",
       "name": "wall thickness"
     },
     {
-      "guid": "f22fdb7a-6cf2-5143-9aa2-f3710eb49a19",
+      "id": "f22fdb7a-6cf2-5143-9aa2-f3710eb49a19",
       "key": "wasp rotation",
       "name": "wasp rotation"
     },
     {
-      "guid": "b9812fff-c5be-5fa5-9a02-077e9ff09177",
+      "id": "b9812fff-c5be-5fa5-9a02-077e9ff09177",
       "key": "west",
       "name": "west"
     },
     {
-      "guid": "0121fb9c-374e-53aa-8118-4d3eb421337c",
+      "id": "0121fb9c-374e-53aa-8118-4d3eb421337c",
       "key": "width",
       "name": "width",
       "uri": "https://search.bsdd.buildingsmart.org/uri/buildingsmart/ifc/4.3/prop/Width"
     },
     {
-      "guid": "d7c99a8a-ffa4-5c22-b964-5497965df15d",
+      "id": "d7c99a8a-ffa4-5c22-b964-5497965df15d",
       "key": "window shape",
       "name": "window shape"
     }
   ],
   "files": [
     {
-      "guid": "457d2061-ac4b-4317-8563-ba41afffd149",
+      "id": "457d2061-ac4b-4317-8563-ba41afffd149",
       "name": "base.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
+      "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4",
       "name": "base_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "97262145-c4e5-48e1-8495-6a1142413430",
+      "id": "97262145-c4e5-48e1-8495-6a1142413430",
       "name": "base_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
+      "id": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
       "name": "e5267da44d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e5267da44d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "4bc08213-a92c-4765-901b-129ffdb1a773",
+      "id": "4bc08213-a92c-4765-901b-129ffdb1a773",
       "name": "b394acfd5c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b394acfd5c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "abba142d-f36a-44d9-a7f8-59fe103fd8f2",
+      "id": "abba142d-f36a-44d9-a7f8-59fe103fd8f2",
       "name": "base_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "fa4b2b76-8e0a-40a7-ba41-db9b65af6772",
+      "id": "fa4b2b76-8e0a-40a7-ba41-db9b65af6772",
       "name": "base_blob.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a72ffd83-9e0a-43ab-921e-ac714f734fcb",
+      "id": "a72ffd83-9e0a-43ab-921e-ac714f734fcb",
       "name": "base_blob_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "680517c0-8aa5-400a-b468-5b9819af0633",
+      "id": "680517c0-8aa5-400a-b468-5b9819af0633",
       "name": "e5d9d8631c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5d9d8631c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e5d9d8631c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8b07d530-8721-441c-9981-4335d6423941",
+      "id": "8b07d530-8721-441c-9981-4335d6423941",
       "name": "base_blob_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "60ab88c2-f108-4b9c-ab31-dc94980ad0e8",
+      "id": "60ab88c2-f108-4b9c-ab31-dc94980ad0e8",
       "name": "2069b62658",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2069b62658",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2069b62658",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b20c7434-2ad4-4473-aa25-3a4ae5e42917",
+      "id": "b20c7434-2ad4-4473-aa25-3a4ae5e42917",
       "name": "base_blob_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "60ace9d9-441d-412a-8c91-69e7993fafee",
+      "id": "60ace9d9-441d-412a-8c91-69e7993fafee",
       "name": "bridge.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "64003882-e928-4797-8a2c-3eff2fe6672d",
+      "id": "64003882-e928-4797-8a2c-3eff2fe6672d",
       "name": "bridge_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "219bae4a-c46f-429e-84fe-4c9578d87809",
+      "id": "219bae4a-c46f-429e-84fe-4c9578d87809",
       "name": "833a270493",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/833a270493",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "bc3a4802-5b4c-4140-a7f6-4ad96337f956",
+      "id": "bc3a4802-5b4c-4140-a7f6-4ad96337f956",
       "name": "bridge_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0128e985-92ca-400e-a542-2ffeee759d1f",
+      "id": "0128e985-92ca-400e-a542-2ffeee759d1f",
       "name": "c7c924a1d6",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c7c924a1d6",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0e72fdac-3e8b-4d79-9059-4b8d0e5ef8e1",
+      "id": "0e72fdac-3e8b-4d79-9059-4b8d0e5ef8e1",
       "name": "bridge_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a1bfac3f-7cc1-446a-b0c4-b8ef054f898a",
+      "id": "a1bfac3f-7cc1-446a-b0c4-b8ef054f898a",
       "name": "capital.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a6017279-ca20-4ecf-be25-10355160f6e5",
+      "id": "a6017279-ca20-4ecf-be25-10355160f6e5",
       "name": "capital_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b29d3b19-7939-410a-a72b-67a3b1ae1451",
+      "id": "b29d3b19-7939-410a-a72b-67a3b1ae1451",
       "name": "capital_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d610cb86-4b57-45b4-8ed1-9b795654a2cd",
+      "id": "d610cb86-4b57-45b4-8ed1-9b795654a2cd",
       "name": "82fd28f19e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/82fd28f19e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "358e52e6-ab47-401a-986a-326f5d283181",
+      "id": "358e52e6-ab47-401a-986a-326f5d283181",
       "name": "90435c0046",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/90435c0046",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "bef3cf4a-c0e3-4911-b28b-52c0cfdba08d",
+      "id": "bef3cf4a-c0e3-4911-b28b-52c0cfdba08d",
       "name": "capital_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "668ada8f-d4f6-4078-8abd-bd3da48dab89",
+      "id": "668ada8f-d4f6-4078-8abd-bd3da48dab89",
       "name": "cylindric-capital.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2258dde4-c58e-42d0-afd8-41b08b5ac3a8",
+      "id": "2258dde4-c58e-42d0-afd8-41b08b5ac3a8",
       "name": "cylindric-capital_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9eaca635-e131-4680-a5ae-54bbd8186a3b",
+      "id": "9eaca635-e131-4680-a5ae-54bbd8186a3b",
       "name": "ae4ed21120",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ae4ed21120",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a417cbf7-92e7-4c41-92f2-a7ca552d5c20",
+      "id": "a417cbf7-92e7-4c41-92f2-a7ca552d5c20",
       "name": "cylindric-capital_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "beb251f4-fa46-4803-a2b2-1501bc640d5e",
+      "id": "beb251f4-fa46-4803-a2b2-1501bc640d5e",
       "name": "9e40d26d9a",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/9e40d26d9a",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "5785da7d-bc33-43cc-9af4-ba32a97e1f3a",
+      "id": "5785da7d-bc33-43cc-9af4-ba32a97e1f3a",
       "name": "cylindric-capital_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dd19ec2a-5988-4d98-96af-5d283202a176",
+      "id": "dd19ec2a-5988-4d98-96af-5d283202a176",
       "name": "capsule_backslash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "4861d978-471b-4209-9672-6e36ab9a8e00",
+      "id": "4861d978-471b-4209-9672-6e36ab9a8e00",
       "name": "capsule_backslash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "80dce738-0ecd-4284-ac41-b43b15584706",
+      "id": "80dce738-0ecd-4284-ac41-b43b15584706",
       "name": "capsule_backslash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a6dced24-c3bd-4e8a-bb7e-be254be5e233",
+      "id": "a6dced24-c3bd-4e8a-bb7e-be254be5e233",
       "name": "6f52c1e6b1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/6f52c1e6b1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0390441f-8f91-4b31-8047-03255a80ba6d",
+      "id": "0390441f-8f91-4b31-8047-03255a80ba6d",
       "name": "45ab357369",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/45ab357369",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0e0853b5-3b6a-43c1-b01f-5e06c4d381f7",
+      "id": "0e0853b5-3b6a-43c1-b01f-5e06c4d381f7",
       "name": "capsule_backslash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9fb7699c-8455-4048-ab8b-9621d7756b16",
+      "id": "9fb7699c-8455-4048-ab8b-9621d7756b16",
       "name": "capsule_slash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dbbe2673-08fa-4455-bb9c-d2a8b2e6ef56",
+      "id": "dbbe2673-08fa-4455-bb9c-d2a8b2e6ef56",
       "name": "capsule_slash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b034c1d8-b4cd-43b8-960a-f66c94199e13",
+      "id": "b034c1d8-b4cd-43b8-960a-f66c94199e13",
       "name": "capsule_slash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "696cca22-22c5-4d32-8d34-cb84eae840ff",
+      "id": "696cca22-22c5-4d32-8d34-cb84eae840ff",
       "name": "e6c366306e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e6c366306e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ba4f4226-4704-4f35-98b3-dd7be00d1ef8",
+      "id": "ba4f4226-4704-4f35-98b3-dd7be00d1ef8",
       "name": "f16baa9eba",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f16baa9eba",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9eb26f5c-298a-4278-9642-7af195780fa2",
+      "id": "9eb26f5c-298a-4278-9642-7af195780fa2",
       "name": "capsule_slash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8f673acd-546e-4813-bd14-43e72f0f9bcd",
+      "id": "8f673acd-546e-4813-bd14-43e72f0f9bcd",
       "name": "capsule_q.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "88498599-1acc-42f1-8e26-ac92bb5775f5",
+      "id": "88498599-1acc-42f1-8e26-ac92bb5775f5",
       "name": "capsule_q_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "861030fe-8d65-4aa9-ab1b-c1a35feb2dc5",
+      "id": "861030fe-8d65-4aa9-ab1b-c1a35feb2dc5",
       "name": "capsule_q_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "67a1dee1-2c0d-4fd7-b351-819304427c75",
+      "id": "67a1dee1-2c0d-4fd7-b351-819304427c75",
       "name": "9442aab847",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/9442aab847",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9d426011-150a-4068-aeb8-e26c651b1ea1",
+      "id": "9d426011-150a-4068-aeb8-e26c651b1ea1",
       "name": "29526c7d12",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/29526c7d12",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cabfb439-82e6-4783-800e-7586ce84304d",
+      "id": "cabfb439-82e6-4783-800e-7586ce84304d",
       "name": "capsule_q_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "23ccc298-3c2e-41d9-bd55-f0aa8be80098",
+      "id": "23ccc298-3c2e-41d9-bd55-f0aa8be80098",
       "name": "capsule_p.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8708fd11-32df-4dbe-a6fd-16b15ef6b3d2",
+      "id": "8708fd11-32df-4dbe-a6fd-16b15ef6b3d2",
       "name": "capsule_p_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "555456e5-4660-4162-88e1-7abf2cd35eb9",
+      "id": "555456e5-4660-4162-88e1-7abf2cd35eb9",
       "name": "capsule_p_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a92ebdcd-feda-4770-9d30-b5514e8068a4",
+      "id": "a92ebdcd-feda-4770-9d30-b5514e8068a4",
       "name": "b3a9105a14",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b3a9105a14",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b3a9105a14",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2e0fc953-d022-49dc-96a9-60c8db12e1cd",
+      "id": "2e0fc953-d022-49dc-96a9-60c8db12e1cd",
       "name": "ff37b776dd",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ff37b776dd",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ff37b776dd",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f89de653-6ae4-460c-b323-8d79609604aa",
+      "id": "f89de653-6ae4-460c-b323-8d79609604aa",
       "name": "capsule_p_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cc3a1265-5a8e-46a6-93b4-7dfc2692f699",
+      "id": "cc3a1265-5a8e-46a6-93b4-7dfc2692f699",
       "name": "capsule_J.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8ed4a467-688c-44ba-9bdd-7c55f669f58b",
+      "id": "8ed4a467-688c-44ba-9bdd-7c55f669f58b",
       "name": "capsule_J_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "5f01b22c-f64e-4c59-9b89-15a623c6500a",
+      "id": "5f01b22c-f64e-4c59-9b89-15a623c6500a",
       "name": "capsule_J_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "047fa3a3-c1b6-4441-8a21-72927ee298be",
+      "id": "047fa3a3-c1b6-4441-8a21-72927ee298be",
       "name": "b7243eed93",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b7243eed93",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b5859cf6-06e1-4de7-bac2-8aaf106c533e",
+      "id": "b5859cf6-06e1-4de7-bac2-8aaf106c533e",
       "name": "5004160f7d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/5004160f7d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "1904c5ed-94f0-435a-a451-cf1187c4dfd6",
+      "id": "1904c5ed-94f0-435a-a451-cf1187c4dfd6",
       "name": "capsule_J_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cc2964b0-834c-4c69-b0a8-6f1efe30c036",
+      "id": "cc2964b0-834c-4c69-b0a8-6f1efe30c036",
       "name": "capsule_L.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2041ebb2-1821-4589-8662-d56ab45e2d31",
+      "id": "2041ebb2-1821-4589-8662-d56ab45e2d31",
       "name": "capsule_L_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "4fa09247-b20d-4454-a935-9e1e6378543b",
+      "id": "4fa09247-b20d-4454-a935-9e1e6378543b",
       "name": "capsule_L_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "65a40426-58f8-4e60-88ad-67169551fbdb",
+      "id": "65a40426-58f8-4e60-88ad-67169551fbdb",
       "name": "b8c26ca1c9",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b8c26ca1c9",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b3811fb5-ff47-4255-9b04-ee3d28757506",
+      "id": "b3811fb5-ff47-4255-9b04-ee3d28757506",
       "name": "a6e1f7d736",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/a6e1f7d736",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ba2162f3-847e-4e49-961d-86cc13698bcd",
+      "id": "ba2162f3-847e-4e49-961d-86cc13698bcd",
       "name": "capsule_L_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f622872b-af33-4270-9930-b9ed5391a303",
+      "id": "f622872b-af33-4270-9930-b9ed5391a303",
       "name": "capsule_s.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0a7fb853-b342-45c3-8911-80f39e173a36",
+      "id": "0a7fb853-b342-45c3-8911-80f39e173a36",
       "name": "capsule_s_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "be47097e-3448-4843-9af3-294807a127ba",
+      "id": "be47097e-3448-4843-9af3-294807a127ba",
       "name": "capsule_s_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d72ab2c5-15fb-4a3a-ba78-c74f6a38ccee",
+      "id": "d72ab2c5-15fb-4a3a-ba78-c74f6a38ccee",
       "name": "0da1e26dff",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/0da1e26dff",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9d68a983-b4a7-4397-b5a8-03a437bdd190",
+      "id": "9d68a983-b4a7-4397-b5a8-03a437bdd190",
       "name": "a3b1c730a1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/a3b1c730a1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "252a6188-8e14-4031-8183-1bf5ef02de63",
+      "id": "252a6188-8e14-4031-8183-1bf5ef02de63",
       "name": "capsule_s_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cde4704c-c232-47a7-99ef-70df93eaa6f3",
+      "id": "cde4704c-c232-47a7-99ef-70df93eaa6f3",
       "name": "capsule_z.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a46b91c8-b498-4526-94f4-2b06e66771fc",
+      "id": "a46b91c8-b498-4526-94f4-2b06e66771fc",
       "name": "capsule_z_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "34e7ac6f-7761-405a-9ec8-80e8e24ad16b",
+      "id": "34e7ac6f-7761-405a-9ec8-80e8e24ad16b",
       "name": "capsule_z_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a881a711-2ccd-413d-a16b-3da868deb583",
+      "id": "a881a711-2ccd-413d-a16b-3da868deb583",
       "name": "c696cc23a3",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c696cc23a3",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "6a382e0e-0cf2-4b83-9afa-437b46e04ba3",
+      "id": "6a382e0e-0cf2-4b83-9afa-437b46e04ba3",
       "name": "532cc5697c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/532cc5697c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "e16f8346-29b9-407d-9f6e-9d7d13993072",
+      "id": "e16f8346-29b9-407d-9f6e-9d7d13993072",
       "name": "capsule_z_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "43954e4e-e841-47e3-84f3-77e37fbcd3ce",
+      "id": "43954e4e-e841-47e3-84f3-77e37fbcd3ce",
       "name": "capsule-with-balcony_backslash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "71bcc6fd-fdbe-40b5-be41-fb4834673545",
+      "id": "71bcc6fd-fdbe-40b5-be41-fb4834673545",
       "name": "capsule-with-balcony_backslash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "caa7c9cd-208d-42b9-a1ce-95b4aabefa94",
+      "id": "caa7c9cd-208d-42b9-a1ce-95b4aabefa94",
       "name": "capsule-with-balcony_backslash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a2d4868d-0100-4559-b424-b1e1ca125c50",
+      "id": "a2d4868d-0100-4559-b424-b1e1ca125c50",
       "name": "capsule-with-balcony_backslash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b145bad7-53ed-4a49-97f3-f1232d4ad464",
+      "id": "b145bad7-53ed-4a49-97f3-f1232d4ad464",
       "name": "capsule-with-balcony_slash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "65e79198-f3a5-48c8-845b-e2ec703f31e6",
+      "id": "65e79198-f3a5-48c8-845b-e2ec703f31e6",
       "name": "capsule-with-balcony_slash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d4188351-2ac2-48cf-8808-d30ae6c3376a",
+      "id": "d4188351-2ac2-48cf-8808-d30ae6c3376a",
       "name": "capsule-with-balcony_slash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b782a9ac-921f-4f59-94a0-8cec527517f5",
+      "id": "b782a9ac-921f-4f59-94a0-8cec527517f5",
       "name": "capsule-with-balcony_slash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dcbf9c3c-36fc-44d1-9d79-d80bb271ebeb",
+      "id": "dcbf9c3c-36fc-44d1-9d79-d80bb271ebeb",
       "name": "capsule-with-balcony_q.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cf69fa77-ebed-4b3d-83aa-17d997a845cd",
+      "id": "cf69fa77-ebed-4b3d-83aa-17d997a845cd",
       "name": "capsule-with-balcony_q_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "94de0ee5-2549-42c0-a05f-0a972bb4dd0f",
+      "id": "94de0ee5-2549-42c0-a05f-0a972bb4dd0f",
       "name": "capsule-with-balcony_q_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "3ad43827-451c-45ca-881a-09d4fe5d74b3",
+      "id": "3ad43827-451c-45ca-881a-09d4fe5d74b3",
       "name": "capsule-with-balcony_q_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a242decb-d77c-41e2-bf47-8680f047ea9f",
+      "id": "a242decb-d77c-41e2-bf47-8680f047ea9f",
       "name": "capsule-with-balcony_p.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "087ce77d-9bfd-49b6-b928-205d68679298",
+      "id": "087ce77d-9bfd-49b6-b928-205d68679298",
       "name": "capsule-with-balcony_p_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0ba8d061-4db9-4d8f-902b-d6c740c7fba8",
+      "id": "0ba8d061-4db9-4d8f-902b-d6c740c7fba8",
       "name": "capsule-with-balcony_p_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "52ad7622-c76c-4440-a3e4-75b9141c90ec",
+      "id": "52ad7622-c76c-4440-a3e4-75b9141c90ec",
       "name": "capsule-with-balcony_p_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b7a00347-1c1c-4309-9bc7-2234b6f697f0",
+      "id": "b7a00347-1c1c-4309-9bc7-2234b6f697f0",
       "name": "capsule-with-balcony_J.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8d90002a-a861-4928-a2a6-eb222f7ff3df",
+      "id": "8d90002a-a861-4928-a2a6-eb222f7ff3df",
       "name": "capsule-with-balcony_J_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "33241cc6-7ea2-4a37-8cf2-9c1ebda40c00",
+      "id": "33241cc6-7ea2-4a37-8cf2-9c1ebda40c00",
       "name": "capsule-with-balcony_J_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2bbd6ec4-1883-478d-bc06-699743f81fc3",
+      "id": "2bbd6ec4-1883-478d-bc06-699743f81fc3",
       "name": "capsule-with-balcony_J_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2876d907-ffe0-4342-8357-06e5a25026a5",
+      "id": "2876d907-ffe0-4342-8357-06e5a25026a5",
       "name": "capsule-with-balcony_L.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "aaffcb14-90d4-47f6-9fe0-5fa61ef7e45b",
+      "id": "aaffcb14-90d4-47f6-9fe0-5fa61ef7e45b",
       "name": "capsule-with-balcony_L_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "78798178-6281-4610-9e59-c8abdf32c719",
+      "id": "78798178-6281-4610-9e59-c8abdf32c719",
       "name": "capsule-with-balcony_L_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2ed1c725-df8f-4103-bfbe-dabbcd64eb2a",
+      "id": "2ed1c725-df8f-4103-bfbe-dabbcd64eb2a",
       "name": "capsule-with-balcony_L_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "07fdbe4e-c95c-468a-a5c0-73792b58f105",
+      "id": "07fdbe4e-c95c-468a-a5c0-73792b58f105",
       "name": "capsule-with-balcony_s.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d581e840-73f2-461d-8275-7de1b72e1fe5",
+      "id": "d581e840-73f2-461d-8275-7de1b72e1fe5",
       "name": "capsule-with-balcony_s_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "3df250fe-f7d2-4e75-8e78-0fdb992349aa",
+      "id": "3df250fe-f7d2-4e75-8e78-0fdb992349aa",
       "name": "capsule-with-balcony_s_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d3a10ead-e632-460b-8625-d70b4d9edaaf",
+      "id": "d3a10ead-e632-460b-8625-d70b4d9edaaf",
       "name": "capsule-with-balcony_s_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "54809963-e626-4050-a668-48d4fd4a5a78",
+      "id": "54809963-e626-4050-a668-48d4fd4a5a78",
       "name": "capsule-with-balcony_z.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d2fdf360-0ec5-4bf9-a7ae-2515f38b7dcf",
+      "id": "d2fdf360-0ec5-4bf9-a7ae-2515f38b7dcf",
       "name": "capsule-with-balcony_z_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cd2b1775-ced3-4fd8-966f-24e92cd256a0",
+      "id": "cd2b1775-ced3-4fd8-966f-24e92cd256a0",
       "name": "capsule-with-balcony_z_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "958f56d8-207b-43a9-9421-7126611dacca",
+      "id": "958f56d8-207b-43a9-9421-7126611dacca",
       "name": "capsule-with-balcony_z_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "44b5c157-6b82-43df-8b8c-042ce52b82af",
+      "id": "44b5c157-6b82-43df-8b8c-042ce52b82af",
       "name": "ellipsoid-capsule_backslash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "106b09ef-59c1-4f8d-b631-9f5d1d53d19a",
+      "id": "106b09ef-59c1-4f8d-b631-9f5d1d53d19a",
       "name": "ellipsoid-capsule_backslash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "951cdc1c-c53d-4434-8a09-397457cba97e",
+      "id": "951cdc1c-c53d-4434-8a09-397457cba97e",
       "name": "ellipsoid-capsule_backslash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "22a8bb79-f315-47a4-aab1-4d1d7ea5caec",
+      "id": "22a8bb79-f315-47a4-aab1-4d1d7ea5caec",
       "name": "f8a0750f34",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f8a0750f34",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f8a0750f34",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "466c1466-5643-4977-94ec-c83e42d1cbaf",
+      "id": "466c1466-5643-4977-94ec-c83e42d1cbaf",
       "name": "08abe6efbe",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/08abe6efbe",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/08abe6efbe",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "de8d745c-b412-44d9-b807-ab41651245e2",
+      "id": "de8d745c-b412-44d9-b807-ab41651245e2",
       "name": "ellipsoid-capsule_backslash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "69185ab5-7eab-4a06-b69f-3cbbcd1639a4",
+      "id": "69185ab5-7eab-4a06-b69f-3cbbcd1639a4",
       "name": "ellipsoid-capsule_slash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7a6787a8-a891-4c1e-a13a-e6050d6c7e3b",
+      "id": "7a6787a8-a891-4c1e-a13a-e6050d6c7e3b",
       "name": "ellipsoid-capsule_slash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dd5c65e6-90f4-4a8e-8d1b-8072d5e18c35",
+      "id": "dd5c65e6-90f4-4a8e-8d1b-8072d5e18c35",
       "name": "ellipsoid-capsule_slash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "68ef5788-2c2b-4abd-a2f4-40176d897f51",
+      "id": "68ef5788-2c2b-4abd-a2f4-40176d897f51",
       "name": "d7c20e7ea4",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/d7c20e7ea4",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/d7c20e7ea4",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "363f396e-20b8-42bc-b378-6738d182a23d",
+      "id": "363f396e-20b8-42bc-b378-6738d182a23d",
       "name": "2a87d1fb6f",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a87d1fb6f",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2a87d1fb6f",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "07c68d3b-a9cf-4082-b2df-1ae5d7a9b7b4",
+      "id": "07c68d3b-a9cf-4082-b2df-1ae5d7a9b7b4",
       "name": "ellipsoid-capsule_slash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "39b8a0d7-0114-4400-89d8-e8f4c38a3364",
+      "id": "39b8a0d7-0114-4400-89d8-e8f4c38a3364",
       "name": "ellipsoid-capsule_q.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2856c3d3-1fc5-4b44-9a5c-652e83e51846",
+      "id": "2856c3d3-1fc5-4b44-9a5c-652e83e51846",
       "name": "ellipsoid-capsule_q_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "eaa51e4d-74c6-49ce-88dc-6baf60e8f12c",
+      "id": "eaa51e4d-74c6-49ce-88dc-6baf60e8f12c",
       "name": "ellipsoid-capsule_q_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "547d7752-6c37-41ca-9051-e7cab9927518",
+      "id": "547d7752-6c37-41ca-9051-e7cab9927518",
       "name": "58af8da8c8",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/58af8da8c8",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/58af8da8c8",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "25117331-f15e-4072-a6f7-f0036e64ff91",
+      "id": "25117331-f15e-4072-a6f7-f0036e64ff91",
       "name": "d6ddf1d05d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/d6ddf1d05d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/d6ddf1d05d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "350230e0-c1da-4920-9434-7b492ce57f37",
+      "id": "350230e0-c1da-4920-9434-7b492ce57f37",
       "name": "ellipsoid-capsule_q_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b98266ba-a971-4a8c-9e39-a194b6614e3e",
+      "id": "b98266ba-a971-4a8c-9e39-a194b6614e3e",
       "name": "ellipsoid-capsule_p.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "c0ed4fc4-1b66-4f46-853a-d1482724c4b9",
+      "id": "c0ed4fc4-1b66-4f46-853a-d1482724c4b9",
       "name": "ellipsoid-capsule_p_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f4d792da-e94a-4d9a-be33-24a2604f106c",
+      "id": "f4d792da-e94a-4d9a-be33-24a2604f106c",
       "name": "ellipsoid-capsule_p_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f65c1b96-6a45-49ea-92cb-4543c490c9f4",
+      "id": "f65c1b96-6a45-49ea-92cb-4543c490c9f4",
       "name": "80ad44ffe9",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/80ad44ffe9",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/80ad44ffe9",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "603c03a2-de2f-48c9-8d02-f8cafc1772b2",
+      "id": "603c03a2-de2f-48c9-8d02-f8cafc1772b2",
       "name": "0c53ae86dc",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/0c53ae86dc",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/0c53ae86dc",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9d922868-6af1-4df7-8a10-ddda701d0f23",
+      "id": "9d922868-6af1-4df7-8a10-ddda701d0f23",
       "name": "ellipsoid-capsule_p_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "54037bc5-024c-46f6-953b-44a13685aa44",
+      "id": "54037bc5-024c-46f6-953b-44a13685aa44",
       "name": "ellipsoid-capsule_J.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7f7ab867-ada1-4379-9dbd-0b9017b8237f",
+      "id": "7f7ab867-ada1-4379-9dbd-0b9017b8237f",
       "name": "ellipsoid-capsule_J_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "5a3137a7-1ab3-4eb6-9729-f031df79c2d2",
+      "id": "5a3137a7-1ab3-4eb6-9729-f031df79c2d2",
       "name": "ellipsoid-capsule_J_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "df9a83b1-b64e-4512-a7f9-8ebda035f602",
+      "id": "df9a83b1-b64e-4512-a7f9-8ebda035f602",
       "name": "22564f1ee2",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/22564f1ee2",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/22564f1ee2",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "060fe9d3-813d-48a0-b34c-49b19207bcc7",
+      "id": "060fe9d3-813d-48a0-b34c-49b19207bcc7",
       "name": "19c41d4361",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/19c41d4361",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/19c41d4361",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "bcda1fa3-522d-4b0a-86b5-bc23381ee7f7",
+      "id": "bcda1fa3-522d-4b0a-86b5-bc23381ee7f7",
       "name": "ellipsoid-capsule_J_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "5e2e137a-9453-47bb-b44b-16257bc63a28",
+      "id": "5e2e137a-9453-47bb-b44b-16257bc63a28",
       "name": "ellipsoid-capsule_L.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "300417fb-1c34-4663-ad7b-b46ae61d10af",
+      "id": "300417fb-1c34-4663-ad7b-b46ae61d10af",
       "name": "ellipsoid-capsule_L_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "33eaa3e0-20ea-4cc2-97f2-b78f0b166644",
+      "id": "33eaa3e0-20ea-4cc2-97f2-b78f0b166644",
       "name": "ellipsoid-capsule_L_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ff6cef28-b283-42ee-be35-99722201d7b4",
+      "id": "ff6cef28-b283-42ee-be35-99722201d7b4",
       "name": "c35e56f23a",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c35e56f23a",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c35e56f23a",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "74717c18-be6e-4dc1-9195-face2675a2a8",
+      "id": "74717c18-be6e-4dc1-9195-face2675a2a8",
       "name": "fa19ddafc5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/fa19ddafc5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/fa19ddafc5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "6e2260dc-a355-401f-b81d-5d60de6d3aa5",
+      "id": "6e2260dc-a355-401f-b81d-5d60de6d3aa5",
       "name": "ellipsoid-capsule_L_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "083b9bbc-469a-43fd-8adf-d570901b8f9a",
+      "id": "083b9bbc-469a-43fd-8adf-d570901b8f9a",
       "name": "ellipsoid-capsule_s.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "19252695-3cf5-4a44-8a4e-5bc65b243e79",
+      "id": "19252695-3cf5-4a44-8a4e-5bc65b243e79",
       "name": "ellipsoid-capsule_s_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9fbb6b21-2170-476a-9da8-3d8062077725",
+      "id": "9fbb6b21-2170-476a-9da8-3d8062077725",
       "name": "ellipsoid-capsule_s_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "c091698f-856c-42af-bdeb-3006d5b94af7",
+      "id": "c091698f-856c-42af-bdeb-3006d5b94af7",
       "name": "c5306eb015",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5306eb015",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c5306eb015",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "19f618b6-303d-488c-ab32-11585a5ded77",
+      "id": "19f618b6-303d-488c-ab32-11585a5ded77",
       "name": "bfdbce0be1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/bfdbce0be1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/bfdbce0be1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "6475668d-8d6b-4b96-94ce-bc0cc58cbc25",
+      "id": "6475668d-8d6b-4b96-94ce-bc0cc58cbc25",
       "name": "ellipsoid-capsule_s_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d5ee4f4c-5a99-483f-85b7-312d7cf22ecc",
+      "id": "d5ee4f4c-5a99-483f-85b7-312d7cf22ecc",
       "name": "ellipsoid-capsule_z.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "844e58df-9f1c-461b-8ced-b135c1acbea4",
+      "id": "844e58df-9f1c-461b-8ced-b135c1acbea4",
       "name": "ellipsoid-capsule_z_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "54d7525f-2a88-411e-9d70-8176938b0d1e",
+      "id": "54d7525f-2a88-411e-9d70-8176938b0d1e",
       "name": "ellipsoid-capsule_z_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "c8787b7f-9d23-423d-b706-cfbabff4a9c0",
+      "id": "c8787b7f-9d23-423d-b706-cfbabff4a9c0",
       "name": "ada7ff222e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ada7ff222e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ada7ff222e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f20c16df-03ab-4664-a9fb-bff3d8ad6787",
+      "id": "f20c16df-03ab-4664-a9fb-bff3d8ad6787",
       "name": "ba36f367e7",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ba36f367e7",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ba36f367e7",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "82d8c469-7c0f-4ea0-b8cb-a4a36978f35f",
+      "id": "82d8c469-7c0f-4ea0-b8cb-a4a36978f35f",
       "name": "ellipsoid-capsule_z_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d4c4699d-bdec-4388-8518-fa1c0e891937",
+      "id": "d4c4699d-bdec-4388-8518-fa1c0e891937",
       "name": "trapezoid-capsule_backslash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "fd241ab9-bf40-4dfb-b4b0-e1a52aad7925",
+      "id": "fd241ab9-bf40-4dfb-b4b0-e1a52aad7925",
       "name": "trapezoid-capsule_backslash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0a492a18-66d6-4ec8-8aba-0ddeadce843c",
+      "id": "0a492a18-66d6-4ec8-8aba-0ddeadce843c",
       "name": "trapezoid-capsule_backslash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "600409c4-6f43-44c3-9f5f-798a9c98603f",
+      "id": "600409c4-6f43-44c3-9f5f-798a9c98603f",
       "name": "trapezoid-capsule_backslash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7499d64b-152b-49bc-984a-67555b51a69d",
+      "id": "7499d64b-152b-49bc-984a-67555b51a69d",
       "name": "trapezoid-capsule_slash.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "c9574732-6c34-4fff-b762-e89f0a0cba1e",
+      "id": "c9574732-6c34-4fff-b762-e89f0a0cba1e",
       "name": "trapezoid-capsule_slash_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ef96186f-900f-45f2-a65c-80e3a302badc",
+      "id": "ef96186f-900f-45f2-a65c-80e3a302badc",
       "name": "trapezoid-capsule_slash_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "bf1754b8-9a46-46c8-ab7a-f1be90642ee6",
+      "id": "bf1754b8-9a46-46c8-ab7a-f1be90642ee6",
       "name": "trapezoid-capsule_slash_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2417db97-2c8a-4ff6-8df1-cd4a899f5132",
+      "id": "2417db97-2c8a-4ff6-8df1-cd4a899f5132",
       "name": "trapezoid-capsule_q.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7d909df3-0da9-4ce5-ad62-474e9d9f3485",
+      "id": "7d909df3-0da9-4ce5-ad62-474e9d9f3485",
       "name": "trapezoid-capsule_q_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "636d2ee3-e8ce-4762-83aa-f3d895b58206",
+      "id": "636d2ee3-e8ce-4762-83aa-f3d895b58206",
       "name": "trapezoid-capsule_q_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cb3c1329-bee6-465e-8e35-045939d815c4",
+      "id": "cb3c1329-bee6-465e-8e35-045939d815c4",
       "name": "trapezoid-capsule_q_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "84bb1a7f-dca3-410f-b574-ab1bb2724aef",
+      "id": "84bb1a7f-dca3-410f-b574-ab1bb2724aef",
       "name": "trapezoid-capsule_p.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a43459bf-97db-4b18-907d-778b251dcde1",
+      "id": "a43459bf-97db-4b18-907d-778b251dcde1",
       "name": "trapezoid-capsule_p_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8a8b76d3-e51d-4ba9-8266-9d75ceea0ef8",
+      "id": "8a8b76d3-e51d-4ba9-8266-9d75ceea0ef8",
       "name": "trapezoid-capsule_p_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b4d9058a-491c-4060-b6c1-ef981f1a3fd1",
+      "id": "b4d9058a-491c-4060-b6c1-ef981f1a3fd1",
       "name": "trapezoid-capsule_p_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "146888b5-4e0c-4c43-bffa-ad6a3b1c7d0f",
+      "id": "146888b5-4e0c-4c43-bffa-ad6a3b1c7d0f",
       "name": "trapezoid-capsule_J.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2c95a56c-d98c-4270-9833-17fd56227fc0",
+      "id": "2c95a56c-d98c-4270-9833-17fd56227fc0",
       "name": "trapezoid-capsule_J_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a8226275-90e6-4782-ae45-61d71d1eb118",
+      "id": "a8226275-90e6-4782-ae45-61d71d1eb118",
       "name": "trapezoid-capsule_J_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "de7f29e8-41ab-4d42-8181-f97ed28525ff",
+      "id": "de7f29e8-41ab-4d42-8181-f97ed28525ff",
       "name": "trapezoid-capsule_J_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "47c9485b-6532-4901-9e86-4321d1ef0d67",
+      "id": "47c9485b-6532-4901-9e86-4321d1ef0d67",
       "name": "trapezoid-capsule_L.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "4911d33c-7fed-47ad-90f1-0fe247d71726",
+      "id": "4911d33c-7fed-47ad-90f1-0fe247d71726",
       "name": "trapezoid-capsule_L_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "80389eca-ce2b-4530-b9ca-f56ecacca8aa",
+      "id": "80389eca-ce2b-4530-b9ca-f56ecacca8aa",
       "name": "trapezoid-capsule_L_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "a151f391-2454-49e9-9328-f608ef0a4293",
+      "id": "a151f391-2454-49e9-9328-f608ef0a4293",
       "name": "trapezoid-capsule_L_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2d0c5008-2693-4936-b8a3-7d0f4aa622f9",
+      "id": "2d0c5008-2693-4936-b8a3-7d0f4aa622f9",
       "name": "trapezoid-capsule_s.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "70048762-2b1d-4d0c-97c2-c5b6e5d13063",
+      "id": "70048762-2b1d-4d0c-97c2-c5b6e5d13063",
       "name": "trapezoid-capsule_s_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "6c2c1d29-c4bb-4e4a-ae89-fde1464bbafa",
+      "id": "6c2c1d29-c4bb-4e4a-ae89-fde1464bbafa",
       "name": "trapezoid-capsule_s_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "adced4c4-db20-4682-aff1-41ed3ebfebfd",
+      "id": "adced4c4-db20-4682-aff1-41ed3ebfebfd",
       "name": "trapezoid-capsule_s_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d38b355a-67f6-471d-8ff9-54711187cf50",
+      "id": "d38b355a-67f6-471d-8ff9-54711187cf50",
       "name": "trapezoid-capsule_z.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0ec3d645-49fe-4db9-af86-51f8945057ed",
+      "id": "0ec3d645-49fe-4db9-af86-51f8945057ed",
       "name": "trapezoid-capsule_z_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "62396bce-5d7b-44ac-b635-573a1dbefc8b",
+      "id": "62396bce-5d7b-44ac-b635-573a1dbefc8b",
       "name": "trapezoid-capsule_z_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7d8e6a51-7090-498b-8d79-61bb6277f0cf",
+      "id": "7d8e6a51-7090-498b-8d79-61bb6277f0cf",
       "name": "trapezoid-capsule_z_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "e9b22e2e-9758-4ffb-af68-5c3912faa23e",
+      "id": "e9b22e2e-9758-4ffb-af68-5c3912faa23e",
       "name": "tambour.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "3f5e3593-ce7c-4814-a1c9-840d148198fc",
+      "id": "3f5e3593-ce7c-4814-a1c9-840d148198fc",
       "name": "tambour_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0c8bfde3-01b7-4089-8705-2bac50a51377",
+      "id": "0c8bfde3-01b7-4089-8705-2bac50a51377",
       "name": "tambour_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f4d153b3-0103-42c3-a97d-114a0e42b02f",
+      "id": "f4d153b3-0103-42c3-a97d-114a0e42b02f",
       "name": "f9222724e5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f9222724e5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "63c16e3d-4b4a-432e-843d-e317c8fee653",
+      "id": "63c16e3d-4b4a-432e-843d-e317c8fee653",
       "name": "b27c179b7d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b27c179b7d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "538999f4-fdf4-4f24-a2d0-54948a93c32f",
+      "id": "538999f4-fdf4-4f24-a2d0-54948a93c32f",
       "name": "tambour_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ee7fe950-9f12-4023-a76f-bd98120b4ac3",
+      "id": "ee7fe950-9f12-4023-a76f-bd98120b4ac3",
       "name": "tambour_first-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ff3ced51-4ee3-43c3-9785-dbbc3d64ff48",
+      "id": "ff3ced51-4ee3-43c3-9785-dbbc3d64ff48",
       "name": "tambour_first-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "72b9e739-94eb-4980-b277-7004e55fd7a0",
+      "id": "72b9e739-94eb-4980-b277-7004e55fd7a0",
       "name": "tambour_first-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dbe8f319-b629-4b00-9669-af09dabae35e",
+      "id": "dbe8f319-b629-4b00-9669-af09dabae35e",
       "name": "89d6e55762",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/89d6e55762",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/89d6e55762",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "45c18ed8-3bcc-43b5-93b6-ba06141b9aec",
+      "id": "45c18ed8-3bcc-43b5-93b6-ba06141b9aec",
       "name": "c5850e2821",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5850e2821",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c5850e2821",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ab1933a0-003c-4003-953e-22621e30ca8c",
+      "id": "ab1933a0-003c-4003-953e-22621e30ca8c",
       "name": "tambour_first-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d749dfc8-31b5-4f31-b22d-f3d1e25c0196",
+      "id": "d749dfc8-31b5-4f31-b22d-f3d1e25c0196",
       "name": "tambour_last-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "de929a5d-388c-4de8-b4bc-c7a38049cee4",
+      "id": "de929a5d-388c-4de8-b4bc-c7a38049cee4",
       "name": "tambour_last-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "3ebd69c2-9332-439b-90bd-1db4b4dab0b1",
+      "id": "3ebd69c2-9332-439b-90bd-1db4b4dab0b1",
       "name": "tambour_last-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "c7009b50-f020-4b83-9ccb-bb3b67bb8c01",
+      "id": "c7009b50-f020-4b83-9ccb-bb3b67bb8c01",
       "name": "53dc156694",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/53dc156694",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/53dc156694",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "424b8b84-f474-40d2-9896-267fa76e5b22",
+      "id": "424b8b84-f474-40d2-9896-267fa76e5b22",
       "name": "345fa2173d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/345fa2173d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/345fa2173d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "99125f93-96d3-4c62-ba6b-040ab2ef88c5",
+      "id": "99125f93-96d3-4c62-ba6b-040ab2ef88c5",
       "name": "tambour_last-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0b0f6abf-6837-4e07-8473-6617d2bd0328",
+      "id": "0b0f6abf-6837-4e07-8473-6617d2bd0328",
       "name": "tambour_single-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f84871d7-97d5-49bc-891e-2cbba7807120",
+      "id": "f84871d7-97d5-49bc-891e-2cbba7807120",
       "name": "tambour_single-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "20fb3aa2-a2a7-4d51-9212-f0d9a3a4599a",
+      "id": "20fb3aa2-a2a7-4d51-9212-f0d9a3a4599a",
       "name": "tambour_single-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "69e6522b-f41d-4cde-84df-1540d503e357",
+      "id": "69e6522b-f41d-4cde-84df-1540d503e357",
       "name": "73566dc911",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/73566dc911",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/73566dc911",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "d768cb0d-4df9-4b25-bcdd-f734a65f8874",
+      "id": "d768cb0d-4df9-4b25-bcdd-f734a65f8874",
       "name": "8965b08c83",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/8965b08c83",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/8965b08c83",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "7270bea8-30dc-4ba6-a0b7-0f92bc8dbb58",
+      "id": "7270bea8-30dc-4ba6-a0b7-0f92bc8dbb58",
       "name": "tambour_single-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "fad515aa-1aed-4b7e-8b86-9a1dd0d1b315",
+      "id": "fad515aa-1aed-4b7e-8b86-9a1dd0d1b315",
       "name": "cylindric-tambour.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9d5554ad-9217-454b-82f8-f0e6b6357bb0",
+      "id": "9d5554ad-9217-454b-82f8-f0e6b6357bb0",
       "name": "cylindric-tambour_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "b9edbe7d-cd0c-415f-9b34-e53b15db7100",
+      "id": "b9edbe7d-cd0c-415f-9b34-e53b15db7100",
       "name": "cylindric-tambour_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "83efb9fd-2a00-4e2c-a41e-9c0558bd0a41",
+      "id": "83efb9fd-2a00-4e2c-a41e-9c0558bd0a41",
       "name": "2a6977ed68",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a6977ed68",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2a6977ed68",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "ba3e5e65-dc46-4a1d-be65-2dff7cb68617",
+      "id": "ba3e5e65-dc46-4a1d-be65-2dff7cb68617",
       "name": "1152f570e6",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/1152f570e6",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/1152f570e6",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "006bbc35-6362-4306-ae0f-3a466e5b5e80",
+      "id": "006bbc35-6362-4306-ae0f-3a466e5b5e80",
       "name": "cylindric-tambour_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "635c6c6b-b35c-46b9-b322-7624b18bfdd6",
+      "id": "635c6c6b-b35c-46b9-b322-7624b18bfdd6",
       "name": "cylindric-tambour_first-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "cab672ec-b261-4ad5-825a-fe526779f27d",
+      "id": "cab672ec-b261-4ad5-825a-fe526779f27d",
       "name": "cylindric-tambour_first-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "64c9885f-6f21-417d-99e8-56bf45c256db",
+      "id": "64c9885f-6f21-417d-99e8-56bf45c256db",
       "name": "cylindric-tambour_first-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "235698db-ac79-4bc4-914d-a0e0947f859d",
+      "id": "235698db-ac79-4bc4-914d-a0e0947f859d",
       "name": "b862062ab5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b862062ab5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b862062ab5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0e456bc2-6f1d-4785-89bc-d3e27a49a117",
+      "id": "0e456bc2-6f1d-4785-89bc-d3e27a49a117",
       "name": "152ecb7f14",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/152ecb7f14",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/152ecb7f14",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "668de050-a36b-4bbf-a34a-175c3925cc5e",
+      "id": "668de050-a36b-4bbf-a34a-175c3925cc5e",
       "name": "cylindric-tambour_first-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "2ea14999-4a5a-4e5b-bd33-0881f7405cb4",
+      "id": "2ea14999-4a5a-4e5b-bd33-0881f7405cb4",
       "name": "cylindric-tambour_last-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "e08a6386-8a60-4646-9085-e24067fe851c",
+      "id": "e08a6386-8a60-4646-9085-e24067fe851c",
       "name": "cylindric-tambour_last-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "adc740e3-3894-4ef5-8c2c-ed365a587d75",
+      "id": "adc740e3-3894-4ef5-8c2c-ed365a587d75",
       "name": "cylindric-tambour_last-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "6ba2d1ea-7db9-48eb-bcc0-663059b34c81",
+      "id": "6ba2d1ea-7db9-48eb-bcc0-663059b34c81",
       "name": "ec423cca22",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ec423cca22",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ec423cca22",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "0784a6d6-1fab-4396-b416-8ce69089bba2",
+      "id": "0784a6d6-1fab-4396-b416-8ce69089bba2",
       "name": "4088e8e156",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/4088e8e156",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/4088e8e156",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "dfd9e97b-ef62-42a0-b334-8a5e765b511e",
+      "id": "dfd9e97b-ef62-42a0-b334-8a5e765b511e",
       "name": "cylindric-tambour_last-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "da025dae-e682-4a32-917a-62214602f78d",
+      "id": "da025dae-e682-4a32-917a-62214602f78d",
       "name": "cylindric-tambour_single-storey.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "8b74f1f2-1fde-42c5-a463-fd6257b9224d",
+      "id": "8b74f1f2-1fde-42c5-a463-fd6257b9224d",
       "name": "cylindric-tambour_single-storey_1to500.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "febf9346-921f-478e-bab8-08b00c4b091f",
+      "id": "febf9346-921f-478e-bab8-08b00c4b091f",
       "name": "cylindric-tambour_single-storey_1to200.3dm",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "52485930-198d-4628-b4d2-a2632e04bf7b",
+      "id": "52485930-198d-4628-b4d2-a2632e04bf7b",
       "name": "6e372d67ee",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/6e372d67ee",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/6e372d67ee",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "f4f60b8a-44c1-4dfc-8cc0-fab3e256fe35",
+      "id": "f4f60b8a-44c1-4dfc-8cc0-fab3e256fe35",
       "name": "025c85ea51",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/025c85ea51",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/025c85ea51",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
-      "guid": "9917af67-eb6f-44a2-8062-f9f820b4993e",
+      "id": "9917af67-eb6f-44a2-8062-f9f820b4993e",
       "name": "cylindric-tambour_single-storey_collider.glb",
       "folder": {
-        "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+        "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
       },
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
@@ -3337,7 +3337,7 @@
   ],
   "folders": [
     {
-      "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f",
+      "id": "019adc83-0113-75e0-90b2-9d0912f1d60f",
       "name": "representations",
       "createdAt": "2025-12-02T00:42:44.370Z",
       "updatedAt": "2025-12-02T00:42:44.370Z"
@@ -3345,228 +3345,228 @@
   ],
   "authors": [
     {
-      "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88",
+      "id": "e3d5369e-b103-42a8-960a-7960c75f0f88",
       "name": "Ueli Saluz",
       "email": "ueli@semio-tech.com"
     }
   ],
   "families": [
     {
-      "guid": "2df6bbea-349b-4a91-8e12-cb734110e854",
+      "id": "2df6bbea-349b-4a91-8e12-cb734110e854",
       "name": "Capsule"
     },
     {
-      "guid": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
+      "id": "92b5a4d5-1b88-41e4-84b8-32b0e174aec4",
       "name": "Base"
     },
     {
-      "guid": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b",
+      "id": "f334ecbe-4533-4c3d-8f8c-ba34b43bbb3b",
       "name": "Capital"
     },
     {
-      "guid": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
+      "id": "9f37e388-2a68-4da3-8a56-70ec8bd54327",
       "name": "Nakagin Capsule Tower",
       "ports": [
         {
-          "guid": "019ab243-21f3-7380-93c6-994a9a023448",
+          "id": "019ab243-21f3-7380-93c6-994a9a023448",
           "name": "core circular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
+              "id": "019ab243-21f3-7380-93c6-9e678ad2f321"
             }
           ]
         },
         {
-          "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
+          "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
           "name": "core circular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+              "id": "019ab243-21f3-7380-93c6-994a9a023448"
             }
           ]
         },
         {
-          "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
+          "id": "019ab243-21f3-7380-93c6-a04a8b137527",
           "name": "core rectangular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+              "id": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
+          "id": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
           "name": "core rectangular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
+              "id": "019ab243-21f3-7380-93c6-a04a8b137527"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
+          "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "name": "door capsule east",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+              "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
+          "id": "019ab243-21f4-73df-8cb4-4f2766b68b25",
           "name": "door capsule west",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+              "id": "019ab243-21f4-73df-8cb4-57263e420e70"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
+          "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
           "name": "door tambour east",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25"
+              "id": "019ab243-21f4-73df-8cb4-4f2766b68b25"
             },
             {
-              "guid": "019ab243-21f4-73df-8cb4-58d90f95991e"
+              "id": "019ab243-21f4-73df-8cb4-58d90f95991e"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
+          "id": "019ab243-21f4-73df-8cb4-57263e420e70",
           "name": "door tambour west",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
+              "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
             },
             {
-              "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
+              "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
+          "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
           "name": "platform east",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
+              "id": "019ab243-21f4-73df-8cb4-57263e420e70"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
+          "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
           "name": "platform west",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
+              "id": "019ab243-21f4-73df-8cb4-50266f6860b8"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
+          "id": "019ab243-21f4-73df-8cb4-60ea93872506",
           "name": "roof circular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
+              "id": "019ab243-21f4-73df-8cb4-671a4aea23eb"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
+          "id": "019ab243-21f4-73df-8cb4-671a4aea23eb",
           "name": "roof circular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
+              "id": "019ab243-21f4-73df-8cb4-60ea93872506"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
+          "id": "019ab243-21f4-73df-8cb4-6b15b40049fb",
           "name": "roof rectangular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
+              "id": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
+          "id": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
           "name": "roof rectangular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb"
+              "id": "019ab243-21f4-73df-8cb4-6b15b40049fb"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
+          "id": "019ab243-21f4-73df-8cb4-73ce526cb47c",
           "name": "tambour circular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
+              "id": "019ab243-21f4-73df-8cb4-76bc3f56347a"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
+          "id": "019ab243-21f4-73df-8cb4-76bc3f56347a",
           "name": "tambour circular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
+              "id": "019ab243-21f4-73df-8cb4-73ce526cb47c"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
+          "id": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
           "name": "tambour rectangular bottom",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
+              "id": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
             }
           ]
         },
         {
-          "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
+          "id": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
           "name": "tambour rectangular top",
           "compatiblePorts": [
             {
-              "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
+              "id": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
             }
           ]
         }
       ]
     },
     {
-      "guid": "50812682-1e66-4fe3-8765-618bc654b098",
+      "id": "50812682-1e66-4fe3-8765-618bc654b098",
       "name": "Slanted"
     },
     {
-      "guid": "95a75018-ffc5-416b-8aa4-373259aba06e",
+      "id": "95a75018-ffc5-416b-8aa4-373259aba06e",
       "name": "Ellipsoid"
     },
     {
-      "guid": "df795386-edf1-4408-84c6-d38c94a222d7",
+      "id": "df795386-edf1-4408-84c6-d38c94a222d7",
       "name": "Dancing"
     },
     {
-      "guid": "3fd42278-1ee8-4bb4-80c6-6d8762740215",
+      "id": "3fd42278-1ee8-4bb4-80c6-6d8762740215",
       "name": "Trapezoid"
     },
     {
-      "guid": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
+      "id": "d60e4566-69cf-4c00-86e6-b6f828f1f9b3",
       "name": "Twisted"
     },
     {
-      "guid": "e623f97a-cafc-4671-8f01-d6ff67e581d3",
+      "id": "e623f97a-cafc-4671-8f01-d6ff67e581d3",
       "name": "Balcony"
     },
     {
-      "guid": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515",
+      "id": "c39008ac-bf6b-4c0d-8a4a-0e0e4005e515",
       "name": "Tambour"
     },
     {
-      "guid": "64c20e73-04e3-482b-8564-d239558c7da0",
+      "id": "64c20e73-04e3-482b-8564-d239558c7da0",
       "name": "Capsule Dream"
     }
   ]

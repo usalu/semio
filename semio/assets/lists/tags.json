@@ -5,11 +5,11 @@
     "description": "Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals. Leading AI textbooks define the field as the study of 'intelligent agents': any device that perceives its environment and takes actions that maximize its chance of successfully achieving its goals.",
     "reference": "https://en.wikipedia.org/wiki/Artificial_intelligence"
   },
-  "building-information-modeling": {
-    "name": "Building Information Modeling",
+  "building-information-representationing": {
+    "name": "Building Information Representationing",
     "abbreviation": "BIM",
-    "description": "Building Information Modeling (BIM) is a process involving the generation and management of digital representations of physical and functional characteristics of places. BIMs are digital files (often but not always in proprietary formats and containing proprietary data) which can be extracted, exchanged or networked to support decision-making regarding a built asset.",
-    "reference": "https://en.wikipedia.org/wiki/Building_information_modeling"
+    "description": "Building Information Representationing (BIM) is a process involving the generation and management of digital representations of physical and functional characteristics of places. BIMs are digital files (often but not always in proprietary formats and containing proprietary data) which can be extracted, exchanged or networked to support decision-making regarding a built asset.",
+    "reference": "https://en.wikipedia.org/wiki/Building_information_representationing"
   },
   "computer-aided-architectural-design": {
     "name": "Computer Aided Architectural Design",
@@ -23,11 +23,11 @@
     "description": "Parametric design is a design method where features (such as building elements and engineering components) are shaped according to algorithmic processes, in contrast to more direct manipulation. In this approach, parameters and rules determine the relationship between design intent and design response.",
     "reference": "https://en.wikipedia.org/wiki/Parametric_design"
   },
-  "procedural-modeling": {
-    "name": "Procedural Modeling",
+  "procedural-representationing": {
+    "name": "Procedural Representationing",
     "abbreviation": "PM",
-    "description": "Procedural modeling is an umbrella term for a number of techniques in computer graphics to create 3D models and textures from sets of rules. L-Systems, fractals, and generative modeling are procedural modeling techniques since they apply algorithms for producing scenes.",
-    "reference": "https://en.wikipedia.org/wiki/Procedural_modeling"
+    "description": "Procedural representationing is an umbrella term for a number of techniques in computer graphics to create 3D representations and textures from sets of rules. L-Systems, fractals, and generative representationing are procedural representationing techniques since they apply algorithms for producing scenes.",
+    "reference": "https://en.wikipedia.org/wiki/Procedural_representationing"
   },
   "generative-design": {
     "name": "Generative Design",
@@ -74,13 +74,13 @@
   "graph-rewriting": {
     "name": "Graph Rewriting",
     "abbreviation": "GR",
-    "description": "Graph rewriting, also called graph transformation, is the process of creating a new graph out of an original graph by applying graph rewrite rules. It is used in various fields like software engineering, model-driven engineering, and algorithm design.",
+    "description": "Graph rewriting, also called graph transformation, is the process of creating a new graph out of an original graph by applying graph rewrite rules. It is used in various fields like software engineering, representation-driven engineering, and algorithm design.",
     "reference": "https://en.wikipedia.org/wiki/Graph_rewriting"
   },
   "design-prototypes": {
     "name": "Design Prototypes",
     "abbreviation": "DP",
-    "description": "A prototype is an early sample, model, or release of a product built to test a concept or process. It is used to evaluate a new design to enhance precision by system analysts and users.",
+    "description": "A prototype is an early sample, representation, or release of a product built to test a concept or process. It is used to evaluate a new design to enhance precision by system analysts and users.",
     "reference": "https://en.wikipedia.org/wiki/Prototype"
   },
   "design-systems": {

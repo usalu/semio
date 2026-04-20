@@ -419,10 +419,10 @@ if (-not $SkipRepoBootstrap) {
     Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("install") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--all-packages", "--all-groups", "--python", $script:PythonKind) -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $uvPath -ArgumentList @("sync", "--python", $script:PythonKind) -WorkingDirectory (Join-Path $repoRoot "coda\assistant")
-    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo\cli\cli.exe"), "./repo/cli") -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo\client\client.exe"), "./repo/mcp") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $dotnetPath -ArgumentList @("restore", "Monorepo.sln") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $npmPath -ArgumentList @("run", "git:setup") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("run", "./repo/cli", "configure", "--repo", $repoRoot) -WorkingDirectory $repoRoot
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("run", "./repo/mcp", "configure", "--repo", $repoRoot) -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot
 }
 #endregion 🧱RepoBootstrap

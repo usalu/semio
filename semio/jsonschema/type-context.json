@@ -21,6 +21,32 @@
             "title": "Attribute",
             "type": "object"
         },
+        "PortId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "PortId",
+            "type": "object"
+        },
+        "FamilyId": {
+            "properties": {
+                "id": {
+                    "maxLength": 128,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "FamilyId",
+            "type": "object"
+        },
         "Connector": {
             "description": "Context fields for understanding a connector by an LLM.",
             "properties": {
@@ -30,46 +56,20 @@
                     "title": "Id",
                     "type": "string"
                 },
+                "name": {
+                    "default": "",
+                    "maxLength": 256,
+                    "title": "Name",
+                    "type": "string"
+                },
                 "description": {
                     "default": "",
                     "maxLength": 512,
                     "title": "Description",
                     "type": "string"
                 },
-                "is_mandatory": {
-                    "default": false,
-                    "title": "Is Mandatory",
-                    "type": "boolean"
-                },
-                "maxChildren": {
-                    "default": 1,
-                    "minimum": 0,
-                    "title": "Maxchildren",
-                    "type": "integer"
-                },
                 "port": {
-                    "default": "",
-                    "maxLength": 64,
-                    "title": "Port",
-                    "type": "string"
-                },
-                "compatiblePorts": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "title": "Compatibleports",
-                    "type": "array"
-                },
-                "point": {
-                    "$ref": "#/$defs/Point"
-                },
-                "direction": {
-                    "$ref": "#/$defs/Vector"
-                },
-                "t": {
-                    "default": 0.0,
-                    "title": "T",
-                    "type": "number"
+                    "$ref": "#/$defs/PortId"
                 },
                 "attributes": {
                     "items": {
@@ -80,8 +80,7 @@
                 }
             },
             "required": [
-                "point",
-                "direction"
+                "port"
             ],
             "title": "Connector",
             "type": "object"
@@ -179,12 +178,6 @@
             "title": "Description",
             "type": "string"
         },
-        "variant": {
-            "default": "",
-            "maxLength": 64,
-            "title": "Variant",
-            "type": "string"
-        },
         "stock": {
             "default": 2147483647,
             "title": "Stock",
@@ -211,6 +204,13 @@
                 }
             ],
             "default": null
+        },
+        "families": {
+            "items": {
+                "$ref": "#/$defs/FamilyId"
+            },
+            "title": "Families",
+            "type": "array"
         },
         "connectors": {
             "items": {

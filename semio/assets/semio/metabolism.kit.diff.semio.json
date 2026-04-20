@@ -11,13 +11,13 @@
   "types": {
     "removed": [
       {
-        "guid": "71749140-9db9-43f6-bd81-d89011667b80"
+        "id": "71749140-9db9-43f6-bd81-d89011667b80"
       }
     ],
     "updated": [
       {
         "type": {
-          "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+          "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
         },
         "diff": {
           "name": "Base Modified",
@@ -27,22 +27,22 @@
           "icon": "updated-base-icon.svg",
           "image": "updated-base-image.png",
           "description": "Updated base type description",
-          "models": {
+          "representations": {
             "removed": [
               {
-                "guid": "c1b9624e-51ed-459c-8f9c-497e39768cc3"
+                "id": "c1b9624e-51ed-459c-8f9c-497e39768cc3"
               }
             ],
             "updated": [
               {
-                "model": {
-                  "guid": "c2aded58-7995-4ea5-b990-91bd44482bcb"
+                "representation": {
+                  "id": "c2aded58-7995-4ea5-b990-91bd44482bcb"
                 },
                 "diff": {
                   "name": "base_1to500_modified",
                   "tags": [
                     {
-                      "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                      "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
                     }
                   ]
                 }
@@ -50,17 +50,17 @@
             ],
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000001",
-                "name": "new-test-model",
+                "id": "019caa00-0000-7000-a000-000000000001",
+                "name": "new-test-representation",
                 "tags": [
                   {
-                    "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+                    "id": "348efbfa-e275-4dda-9f66-229917c6b4ab"
                   }
                 ],
                 "file": {
-                  "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+                  "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
                 },
-                "description": "A newly added model",
+                "description": "A newly added representation",
                 "attributes": []
               }
             ]
@@ -68,13 +68,13 @@
           "connectors": {
             "removed": [
               {
-                "guid": "c5465220-19ba-4443-8f1d-617c832dd13c"
+                "id": "c5465220-19ba-4443-8f1d-617c832dd13c"
               }
             ],
             "updated": [
               {
                 "connector": {
-                  "guid": "d25a91ed-b124-4e5b-8e7e-af832541c953"
+                  "id": "d25a91ed-b124-4e5b-8e7e-af832541c953"
                 },
                 "diff": {
                   "name": "c1-modified",
@@ -94,7 +94,7 @@
                   "attributes": {
                     "added": [
                       {
-                        "guid": "019caa00-0000-7000-a000-000000000002",
+                        "id": "019caa00-0000-7000-a000-000000000002",
                         "key": "conn.meta",
                         "value": "test",
                         "definition": "Connector attribute"
@@ -106,7 +106,7 @@
             ],
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000003",
+                "id": "019caa00-0000-7000-a000-000000000003",
                 "name": "new-connector",
                 "t": 0.5,
                 "point": {
@@ -121,7 +121,7 @@
                 },
                 "description": "Newly added connector",
                 "port": {
-                  "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
+                  "id": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
                 },
                 "mandatory": true,
                 "props": [],
@@ -132,7 +132,7 @@
           "attributes": {
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000004",
+                "id": "019caa00-0000-7000-a000-000000000004",
                 "key": "type.meta",
                 "value": "test-value",
                 "definition": "Type attribute"
@@ -144,27 +144,27 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-000000000005",
+        "id": "019caa00-0000-7000-a000-000000000005",
         "name": "New Comprehensive Type",
         "isAbstract": false,
         "folder": "new-type-folder",
-        "models": [
+        "representations": [
           {
-            "guid": "019caa00-0000-7000-a000-00000000000b",
-            "name": "new-model",
+            "id": "019caa00-0000-7000-a000-00000000000b",
+            "name": "new-representation",
             "tags": [
               {
-                "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+                "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
               }
             ],
             "file": {
-              "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+              "id": "457d2061-ac4b-4317-8563-ba41afffd149"
             },
-            "description": "New model",
+            "description": "New representation",
             "attributes": [
               {
-                "guid": "019caa00-0000-7000-a000-00000000000c",
-                "key": "new.model.attr",
+                "id": "019caa00-0000-7000-a000-00000000000c",
+                "key": "new.representation.attr",
                 "value": "val"
               }
             ]
@@ -172,7 +172,7 @@
         ],
         "connectors": [
           {
-            "guid": "019caa00-0000-7000-a000-000000000007",
+            "id": "019caa00-0000-7000-a000-000000000007",
             "name": "test-connector",
             "t": 0,
             "point": {
@@ -187,14 +187,14 @@
             },
             "description": "Test connector",
             "port": {
-              "guid": "019ab243-21f3-7380-93c6-994a9a023448"
+              "id": "019ab243-21f3-7380-93c6-994a9a023448"
             },
             "mandatory": false,
             "props": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000008",
+                "id": "019caa00-0000-7000-a000-000000000008",
                 "quality": {
-                  "guid": "019caa00-0000-7000-a000-000000000009"
+                  "id": "019caa00-0000-7000-a000-000000000009"
                 },
                 "value": "100",
                 "attributes": []
@@ -202,7 +202,7 @@
             ],
             "attributes": [
               {
-                "guid": "019caa00-0000-7000-a000-00000000000a",
+                "id": "019caa00-0000-7000-a000-00000000000a",
                 "key": "new.conn.attr",
                 "value": "val"
               }
@@ -211,9 +211,9 @@
         ],
         "props": [
           {
-            "guid": "019caa00-0000-7000-a000-00000000000d",
+            "id": "019caa00-0000-7000-a000-00000000000d",
             "quality": {
-              "guid": "019caa00-0000-7000-a000-00000000000e"
+              "id": "019caa00-0000-7000-a000-00000000000e"
             },
             "value": "yes",
             "attributes": []
@@ -225,16 +225,16 @@
         "createdAt": "2025-12-23T13:40:58.750Z",
         "updatedAt": "2025-12-23T13:40:58.750Z",
         "location": {
-          "guid": "019caa00-0000-7000-a000-000000000006"
+          "id": "019caa00-0000-7000-a000-000000000006"
         },
         "authors": [
           {
-            "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+            "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
           }
         ],
         "concepts": [
           {
-            "guid": "019adc5e-9205-7364-a213-66fda12e5120"
+            "id": "019adc5e-9205-7364-a213-66fda12e5120"
           }
         ],
         "icon": "new-type-icon.svg",
@@ -242,7 +242,7 @@
         "description": "A new type added for testing",
         "attributes": [
           {
-            "guid": "019caa00-0000-7000-a000-00000000000f",
+            "id": "019caa00-0000-7000-a000-00000000000f",
             "key": "new.type.attr",
             "value": "new-val",
             "definition": "New attribute"
@@ -254,37 +254,37 @@
   "designs": {
     "removed": [
       {
-        "guid": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
+        "id": "9a890dd4-0a9c-48ac-920a-9e62666465ef"
       },
       {
-        "guid": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
+        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
       },
       {
-        "guid": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
+        "id": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
       },
       {
-        "guid": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
+        "id": "c3ee87b6-7453-49bc-8d7b-9405892f9452"
       },
       {
-        "guid": "d7e12638-9749-471b-937e-a6e5523778ff"
+        "id": "d7e12638-9749-471b-937e-a6e5523778ff"
       },
       {
-        "guid": "79fa8945-b47d-4896-965f-f921067cbae2"
+        "id": "79fa8945-b47d-4896-965f-f921067cbae2"
       },
       {
-        "guid": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf"
+        "id": "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf"
       },
       {
-        "guid": "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
+        "id": "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
       },
       {
-        "guid": "019ab4e0-cb2a-7613-a16a-ae086e331c95"
+        "id": "019ab4e0-cb2a-7613-a16a-ae086e331c95"
       }
     ],
     "updated": [
       {
         "design": {
-          "guid": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
+          "id": "37ba7ec4-9023-4be7-9ab6-e0ebc80007f8"
         },
         "diff": {
           "name": "Capsule Dream Modified",
@@ -294,22 +294,22 @@
           "description": "Updated design description",
           "authors": [
             {
-              "guid": "5c2e7719-dec3-4f21-9c47-b7081410219a"
+              "id": "5c2e7719-dec3-4f21-9c47-b7081410219a"
             },
             {
-              "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+              "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
             }
           ],
           "pieces": {
             "removed": [
               {
-                "guid": "739c5e32-217f-4d03-b7b6-78b9c0cda46a"
+                "id": "739c5e32-217f-4d03-b7b6-78b9c0cda46a"
               }
             ],
             "updated": [
               {
                 "piece": {
-                  "guid": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
+                  "id": "ddd6320b-ae3d-4121-9b28-fc091011f79a"
                 },
                 "diff": {
                   "name": "piece-modified",
@@ -321,7 +321,7 @@
             ],
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000010",
+                "id": "019caa00-0000-7000-a000-000000000010",
                 "name": "new-test-piece",
                 "plane": {
                   "origin": {
@@ -371,19 +371,19 @@
           "connections": {
             "removed": [
               {
-                "guid": "c18d2e83-0821-4ab7-9547-494021854fc1"
+                "id": "c18d2e83-0821-4ab7-9547-494021854fc1"
               },
               {
-                "guid": "23d871a4-a4a9-46b2-bc25-9d196d8c0418"
+                "id": "23d871a4-a4a9-46b2-bc25-9d196d8c0418"
               },
               {
-                "guid": "d75e9ac3-bb29-403e-9ec2-90f4f4e0dbe7"
+                "id": "d75e9ac3-bb29-403e-9ec2-90f4f4e0dbe7"
               }
             ],
             "updated": [
               {
                 "connection": {
-                  "guid": "883929fa-4fea-4eae-bc93-ae08b7271527"
+                  "id": "883929fa-4fea-4eae-bc93-ae08b7271527"
                 },
                 "diff": {
                   "gap": 100,
@@ -400,7 +400,7 @@
             ],
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000011",
+                "id": "019caa00-0000-7000-a000-000000000011",
                 "connected": {},
                 "connecting": {},
                 "gap": 10,
@@ -419,7 +419,7 @@
           "attributes": {
             "added": [
               {
-                "guid": "019caa00-0000-7000-a000-000000000012",
+                "id": "019caa00-0000-7000-a000-000000000012",
                 "key": "design.new.attr",
                 "value": "new-design-attr",
                 "definition": "New design attribute"
@@ -431,14 +431,14 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-000000000016",
+        "id": "019caa00-0000-7000-a000-000000000016",
         "name": "New Comprehensive Design",
         "families": [],
         "isAbstract": false,
         "folder": "new-design-folder",
         "pieces": [
           {
-            "guid": "019caa00-0000-7000-a000-000000000013",
+            "id": "019caa00-0000-7000-a000-000000000013",
             "name": "new-design-piece-1",
             "plane": {
               "origin": {
@@ -462,7 +462,7 @@
             "attributes": []
           },
           {
-            "guid": "019caa00-0000-7000-a000-000000000014",
+            "id": "019caa00-0000-7000-a000-000000000014",
             "name": "new-design-piece-2",
             "plane": {
               "origin": {
@@ -488,7 +488,7 @@
         ],
         "_connections": [
           {
-            "guid": "019caa00-0000-7000-a000-000000000018",
+            "id": "019caa00-0000-7000-a000-000000000018",
             "connected": {},
             "connecting": {},
             "gap": 0,
@@ -499,9 +499,9 @@
         "stats": [],
         "props": [
           {
-            "guid": "019caa00-0000-7000-a000-000000000019",
+            "id": "019caa00-0000-7000-a000-000000000019",
             "quality": {
-              "guid": "019caa00-0000-7000-a000-00000000001a"
+              "id": "019caa00-0000-7000-a000-00000000001a"
             },
             "value": "test",
             "attributes": []
@@ -509,29 +509,29 @@
         ],
         "layers": [
           {
-            "guid": "019caa00-0000-7000-a000-000000000015",
+            "id": "019caa00-0000-7000-a000-000000000015",
             "path": "default",
             "attributes": []
           }
         ],
         "activeLayer": {
-          "guid": "019caa00-0000-7000-a000-000000000015"
+          "id": "019caa00-0000-7000-a000-000000000015"
         },
         "groups": [],
         "canScale": true,
         "canMirror": false,
         "unit": "mm",
         "location": {
-          "guid": "019caa00-0000-7000-a000-000000000017"
+          "id": "019caa00-0000-7000-a000-000000000017"
         },
         "authors": [
           {
-            "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+            "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
           }
         ],
         "concepts": [
           {
-            "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+            "id": "019adc5e-40ee-789d-a877-5baef7bc79fa"
           }
         ],
         "icon": "new-design-icon.svg",
@@ -539,7 +539,7 @@
         "description": "New design for testing",
         "attributes": [
           {
-            "guid": "019caa00-0000-7000-a000-00000000001b",
+            "id": "019caa00-0000-7000-a000-00000000001b",
             "key": "new.design.attr",
             "value": "val"
           }
@@ -552,28 +552,28 @@
   "tags": {
     "removed": [
       {
-        "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
+        "id": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
       }
     ],
     "updated": [
       {
         "tag": {
-          "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
+          "id": "348efbfa-e275-4dda-9f66-229917c6b4ab"
         },
         "diff": {
-          "name": "model/vnd.3dm Modified"
+          "name": "representation/vnd.3dm Modified"
         }
       }
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-00000000001c",
+        "id": "019caa00-0000-7000-a000-00000000001c",
         "name": "New Test Tag",
         "description": "New tag",
         "icon": "test-tag.svg",
         "attributes": [
           {
-            "guid": "019caa00-0000-7000-a000-00000000001d",
+            "id": "019caa00-0000-7000-a000-00000000001d",
             "key": "tag.source",
             "value": "generator"
           }
@@ -584,13 +584,13 @@
   "concepts": {
     "removed": [
       {
-        "guid": "019adc5e-40ee-789d-a877-5baef7bc79fa"
+        "id": "019adc5e-40ee-789d-a877-5baef7bc79fa"
       }
     ],
     "updated": [
       {
         "concept": {
-          "guid": "019adc5e-9205-7364-a213-66fda12e5120"
+          "id": "019adc5e-9205-7364-a213-66fda12e5120"
         },
         "diff": {
           "name": "organic-city Modified"
@@ -599,7 +599,7 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-00000000001e",
+        "id": "019caa00-0000-7000-a000-00000000001e",
         "name": "New Concept",
         "description": "New",
         "icon": "concept.svg",
@@ -610,13 +610,13 @@
   "files": {
     "removed": [
       {
-        "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
+        "id": "457d2061-ac4b-4317-8563-ba41afffd149"
       }
     ],
     "updated": [
       {
         "file": {
-          "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
+          "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
         },
         "diff": {
           "name": "updated-base_1to500.3dm"
@@ -625,11 +625,11 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-000000000021",
+        "id": "019caa00-0000-7000-a000-000000000021",
         "name": "new-file.txt",
         "remote": "https://example.com/new-file.txt",
         "folder": {
-          "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
         "size": 42,
         "hash": "sha256:newfilehash",
@@ -642,7 +642,7 @@
     "updated": [
       {
         "folder": {
-          "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
         "diff": {
           "name": "representations-modified"
@@ -651,10 +651,10 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-000000000022",
+        "id": "019caa00-0000-7000-a000-000000000022",
         "name": "test-folder",
         "parent": {
-          "guid": "019adc83-0113-75e0-90b2-9d0912f1d60f"
+          "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
         "description": "New folder",
         "attributes": [],
@@ -666,7 +666,7 @@
     "updated": [
       {
         "author": {
-          "guid": "e3d5369e-b103-42a8-960a-7960c75f0f88"
+          "id": "e3d5369e-b103-42a8-960a-7960c75f0f88"
         },
         "diff": {
           "name": "Ueli Saluz Modified",
@@ -676,7 +676,7 @@
     ],
     "added": [
       {
-        "guid": "019caa00-0000-7000-a000-000000000020",
+        "id": "019caa00-0000-7000-a000-000000000020",
         "name": "Test Author",
         "email": "test@example.com",
         "attributes": []

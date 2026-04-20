@@ -1,12 +1,50 @@
 # Prompts
 
-## Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
+---
+
+Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
 
 ---
 
-## Welche konstruktiven Verbindungen gibt es, um wiederverwendete Stahlbetonteile zu fügen?
+Welche konstruktiven Verbindungen gibt es, um wiederverwendete Stahlbetonteile zu fügen?
 
-## Berichte
+---
+
+Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
+
+---
+
+```
+1.
+
+Analysieren Sie das Software-Ecosystem SOFTWARE (LINK).
+
+2.
+
+Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele, etc.
+
+3.
+
+Finden Sie alle Architektur und Ingenieurbüros, welche dieses Tool verwenden und welche Gebäude mit diesem Tool nachweislich verwendet wurde.
+```
+
+---
+
+```
+1.
+
+Analysieren Sie die NORM (LINK) im Detail.
+
+2.
+
+Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele, etc.
+
+3.
+
+Finden Sie alle Architektur und Ingenieurbüros, welche dieses Tool verwenden und welche Gebäude mit diesem Tool nachweislich verwendet wurde.
+```
+
+---
 
 Erstellen Sie einen Bericht mit den
 

@@ -206,6 +206,23 @@
       }
     },
     {
+      "name": "🛠️dev👤semio🏪store📊graphiql",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo run -p semio-store",
+      "env": {
+        "RUST_LOG": "info",
+        "SEMIO_STORE_PORT": "4010"
+      },
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://127\\.0\\.0\\.1:4010/graphiql)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev👤semio🖱️sketchpad",
       "type": "node-terminal",
       "request": "launch",
@@ -382,7 +399,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/cli&serverArgs=mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/mcp&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {

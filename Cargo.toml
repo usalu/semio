@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "semio/rs",
+    "semio/store",
 ]
 
 resolver = "2"

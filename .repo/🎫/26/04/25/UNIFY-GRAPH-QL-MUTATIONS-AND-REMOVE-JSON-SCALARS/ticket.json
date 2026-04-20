@@ -1,0 +1,11 @@
+{
+  "title": "Unify GraphQL Mutations and Remove JSON Scalars",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Refactor semio/graphql so the schema uses explicit GraphQL kinds instead of JSON primitives, replace the fragmented mutation surface with a clean nested mutation that batches arbitrary commands without repeating shared identifiers, and adjust semio/rs plus semio/js to match. Validate with relevant tests and runtime-facing checks.",
+  "summary": "Replaced the semio GraphQL SDL mutation surface with a nested `kitStore.batch` command API and removed `JSON` from the schema, added a typed batch executor path in `semio/rs`, and migrated the JS GraphQL transport plus design/store command helpers to the new batch mutation path while preserving existing client call sites.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9cf2a9e5cd944590ad735fef4ed65d5a"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "sess-think2",
+  "uri": "repo://session/sess-think2",
+  "client": "cursor-chat",
+  "second": "2026-04-22T10:34:50Z",
+  "checkpoint": "0232f6b109bb7d271130cc4ee3ae74c5e870c347",
+  "contributor": "unknown",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "0232f6b109bb7d271130cc4ee3ae74c5e870c347",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-04-22T10:34:50Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "bea1fde80153204a6428b8f6c0e8508ff3f4fb73",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-04-22T11:22:50Z",
+        "session": "sess-think2"
+      },
+      "native": {
+        "event": {
+          "native": {
+            "event": {
+              "text": "Thinking deeply",
+              "hook_event_name": "afterAgentThought"
+            }
+          },
+          "session_id": "sess-think2"
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -18,6 +18,7 @@
     "incremental": false,
     "noEmit": true,
     "types": [
+      "node",
       "react",
       "react-dom",
       "vitest/importMeta"
@@ -41,6 +42,12 @@
       ],
       "@semio/js/*": [
         "../js/*"
+      ],
+      "@semio/rs-wasm": [
+        "../rs/pkg"
+      ],
+      "@semio/rs-wasm/*": [
+        "../rs/pkg/*"
       ],
       "@elements/ui": [
         "../../elements/ui/index.tsx"

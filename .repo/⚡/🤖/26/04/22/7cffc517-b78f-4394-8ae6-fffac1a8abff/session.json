@@ -1,0 +1,40 @@
+{
+  "id": "7cffc517-b78f-4394-8ae6-fffac1a8abff",
+  "uri": "repo://session/7cffc517-b78f-4394-8ae6-fffac1a8abff",
+  "client": "claude-code",
+  "second": "2026-04-22T20:36:48Z",
+  "checkpoint": "39a493ca158de74255d284de137f4a719eb606ae",
+  "contributor": "unknown",
+  "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\7cffc517-b78f-4394-8ae6-fffac1a8abff.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "39a493ca158de74255d284de137f4a719eb606ae",
+        "client": "claude-code",
+        "contributor": "unknown",
+        "kind": "agent.tool.code.edit.starting",
+        "second": "2026-04-22T20:36:48Z",
+        "session": "7cffc517-b78f-4394-8ae6-fffac1a8abff",
+        "transcript": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\7cffc517-b78f-4394-8ae6-fffac1a8abff.jsonl"
+      },
+      "native": {
+        "event": {
+          "session_id": "7cffc517-b78f-4394-8ae6-fffac1a8abff",
+          "transcript_path": "C:\\Users\\Ueli\\.claude\\projects\\c--git-semio\\7cffc517-b78f-4394-8ae6-fffac1a8abff.jsonl",
+          "cwd": "C:\\git\\semio",
+          "permission_mode": "bypassPermissions",
+          "hook_event_name": "PermissionRequest",
+          "tool_name": "Edit",
+          "tool_input": {
+            "file_path": "c:\\git\\semio\\.vscode\\settings.json",
+            "old_string": "  \"rust-analyzer.linkedProjects\": [\n    \"semio/rs/Cargo.toml\"\n  ],\n  \"rust-analyzer.testExplorer\": true,",
+            "new_string": "  \"rust-analyzer.linkedProjects\": [\n    \"semio/rs/Cargo.toml\"\n  ],\n  \"rust-analyzer.testExplorer\": true,\n  \"rust-analyzer.rustfmt.rangeFormatting.enable\": true,\n  \"[rust]\": {\n    \"editor.defaultFormatter\": \"rust-lang.rust-analyzer\",\n    \"editor.formatOnSave\": true\n  },\n  \"[toml]\": {\n    \"editor.defaultFormatter\": \"tamasfe.even-better-toml\"\n  },",
+            "replace_all": false
+          },
+          "permission_suggestions": []
+        }
+      },
+      "response": {}
+    }
+  ]
+}

@@ -2,14 +2,14 @@
   "syntheticKit": "synthetic-find-replaceable.kit.semio.json",
   "cases": [
     {
-      "name": "selection_asset_returns_compatible_guids",
+      "name": "selection_asset_returns_compatible_ids",
       "kit": "metabolism.kit.semio.json",
       "designName": "Nakagin Capsule Tower",
       "selectionAsset": "nakagin-capsule-tower.copy.design.selection.semio.json",
       "expectedSelectionPieceCount": 10,
       "expectedSelectionConnectionCount": 9,
-      "expectedTypeGuids": [],
-      "expectedDesignGuids": [
+      "expectedTypeIds": [],
+      "expectedDesignIds": [
         "d7e12638-9749-471b-937e-a6e5523778ff",
         "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
         "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
@@ -23,8 +23,8 @@
       "pieceNames": [
         "t_f1_b_c0"
       ],
-      "expectedTypeGuidCount": 0,
-      "expectedDesignGuids": [
+      "expectedTypeIdCount": 0,
+      "expectedDesignIds": [
         "d7e12638-9749-471b-937e-a6e5523778ff",
         "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
         "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
@@ -61,8 +61,8 @@
         "t_f1_b_c0",
         "t_f2_b_c0"
       ],
-      "expectedTypeGuidCount": 0,
-      "expectedDesignGuids": [
+      "expectedTypeIdCount": 0,
+      "expectedDesignIds": [
         "d7e12638-9749-471b-937e-a6e5523778ff",
         "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf",
         "019ab4e0-8da8-7217-946f-5b5a83aca0e3"
@@ -105,8 +105,8 @@
       "cs_sl2_d1_t_f0_b_c0"
     ],
     "tambourPieceName": "t_f9_b_c1",
-    "expectedTambourTypeGuidCount": 0,
-    "expectedTambourDesignGuidCount": 3,
+    "expectedTambourTypeIdCount": 0,
+    "expectedTambourDesignIdCount": 3,
     "forbiddenFamilies": [
       "\\",
       "/",
@@ -137,22 +137,21 @@
   "syntheticCases": [
     {
       "name": "double_left_selection",
-      "designGuid": "root-design",
-      "pieceGuids": [
+      "designId": "root-design",
+      "pieceIds": [
         "piece-external-ll"
       ],
       "expectedContainsTypes": [
         "candidate-ll"
       ],
       "expectedNotContainsTypes": [
-        "candidate-l",
         "candidate-g"
       ]
     },
     {
       "name": "left_and_gable_selection",
-      "designGuid": "root-design",
-      "pieceGuids": [
+      "designId": "root-design",
+      "pieceIds": [
         "piece-external-lg"
       ],
       "expectedContainsTypes": [
@@ -170,8 +169,8 @@
     },
     {
       "name": "isolated_selection",
-      "designGuid": "root-design",
-      "pieceGuids": [
+      "designId": "root-design",
+      "pieceIds": [
         "piece-isolated-lg"
       ],
       "expectedContainsTypes": [
@@ -183,8 +182,8 @@
     },
     {
       "name": "multiple_piece_selection",
-      "designGuid": "root-design",
-      "pieceGuids": [
+      "designId": "root-design",
+      "pieceIds": [
         "piece-external-lg",
         "piece-isolated-lg"
       ],

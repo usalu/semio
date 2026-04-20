@@ -9,17 +9,27 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
+import path from "path";
 import { defineConfig } from "vitest/config";
+
+const semioWasmBg = path.resolve(__dirname, "../rs/pkg/semio_bg.wasm");
 
 // Vitest configuration for the domain-only semio package.
 // Export MUST target only domain tests and avoid sketchpad/browser plugins.
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg"),
+    },
+  },
   test: {
     name: "semio",
     environment: "node",
+    globals: true,
     testTimeout: 30000,
     include: ["index.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
+    env: { SEMIO_WASM_BG_PATH: semioWasmBg },
   },
 });
 // #endregion 🗄️Configuration

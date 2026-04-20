@@ -20,13 +20,77 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
-## [👤semio]
+## 🧩semio
 
-## [👤semio📚js]()
+###
 
-## [👤semio📚js🗃️sketchpad]()
+### 🦀 rs
 
-## [👤semio📚js🗃️sketchpad💻designtsx](repo://file/semio/js/sketchpad/Design.tsx)
+We have different backbones:
+
+- dev backbone (complete embedded json file)
+- local backbone (.semio/kit.db sqlite file for all data excluding files and .semio/blobs/BLOBHASH.EXT for files.)
+- remote backbone (stub for bidirectional connection to semio/hub)
+  We have three in-memory kit graphs:
+- wip (current)
+- merged (testbed for applying changes from wip to authorative)
+- authorative (from backbone)
+  We have a coordinator task that on changes clears the merged graph, pulls the authorative and tries to apply the changes from wip. On success it proposes the changes to the server. On conflicts it saves the conflicts.
+  How would you architect the backbones?
+
+---
+
+We want to add support for backbones (persisted out-of-process kit graphs).
+Requirements:
+
+- Keep two kit graphs in-memory (wip and backbone)
+- Both are non-blocking and can be updated all the time
+- Bidirectional communication
+- Synchronization mechanism with first-class conflict resolution support
+  How would you architect this?
+
+---
+
+Testing every single command of the store in every order is not an option.
+We want to have a small dev test ui where we can check every single feature of the store manually.
+
+- Every single command MUST be testable and have clean ui (dropdowns, etc)
+- An events notification, so we see if the correct events are fired.
+- Inspection that the commands produce correct diffs.
+- Materialized kit snapshots
+  What are the options?
+  We want to minimal tooling so mistake surface is minimal.
+
+Here are the specs of our system:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+---
+
+### 🟨js
+
+We have an async backend that has CQRS Dual-Bus Actor Model.
+Every request is fire-and-forget and returns an id.
+There MUST be no state on the store and every read is a request to the backend.
+There is an event stream that returns results which contain the information.
+Now we want to implement a clean Typescript Store class.
+How would you architect this?
 
 ## 🧰repo
 
@@ -246,6 +310,66 @@ TODO: Introduce version to artifacts (design,type,shape)
 TODO: Introduce Design/Interpolate algorithm.
 
 semio:
+
+---
+
+semio/rs, semio/js, semio/react:
+All kit data that is being modified over commands MUST always be scoped within a transaction which is scoped within a draft which is scoped whithin `the kit` or an alternative (always the latest checkpoint of `the kit` or an alternative)
+e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
+Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+
+---
+
+semio/rs, semio/js, semio/react:
+All kit data that is being read MUST either for `the kit`, a checkpoint, an alternative, a draft or a transaction.
+e.g. in react there MUST be Scopes for everything. Depending in which scope all CRUDs are executed different.
+Make sure that semio/rs wip - graphql- semio/js stores and semio/react are refactored accordingly.
+
+---
+
+The following strict layers MUST be achieved:
+semio/rs <-graphql- semio/js <-store- semio/react <-hooks/components- semio/sketchpad
+
+Every layer MUST only know about the layer above implementation details.
+
+semio/rs:
+
+- All domain logic MUST be exclusively here
+- All caching MUST be exlclusively here
+- One process (wasm web worker or os native)
+- Async, non blocking
+- All external kit modification MUST be exclusively over semantic commantics.
+- All commands are async and just return an id. The success/result/error message is sent over events. It is the task of the clients to keep track of requests and responses.
+- All internal kit modification (in-memory adjustment + cache invalidation) MUST happen centrally over kit diffs. Ever command MUST NOT edit the state but return a kit diff.
+- Every kit change command MUST define a function that returns for concrete input parameters a kit diff.
+- Every kit change command MUST define a function that returns for a list of kit change commands with specific input paramters that performs the inverse of the command.
+
+semio/rs <-graphql- semio/js
+
+- Birdirectional actor model
+
+semio/js:
+
+- Thin client to semio/rs
+- Exposes Store classes with 100% typesafe methods, subscription callbacks, etc
+
+semio/react
+
+- Thin client to semio/js
+- Exports typed kit reads hooks with `useSyncExternalStore` that uses the subscriptions from the store
+- Exports types kit mutations with `useCallback`
+
+semio/sketchpad:
+
+- Only uses semio/react for kit reads and mutations
+- Local selection
+
+---
+
+semio/rs, semio/js, semio/react:
+Make sure that semio/js exposes clean Stores with events etc.
+semio/react MUST be typesafe and just export all mutations with `useCallback`, all state with `useSyncExternalStore`
+There MUST be complete parity between commands, events, stores, classes, hooks, etc
 
 Currently everything uses mostly functional style programming.
 We are rewriting everythingy to be stateful in order to avoid expensive copy of memory.
@@ -592,6 +716,48 @@ There MUST be only one schema, no migrations or legacy api support.
 
 #### schema
 
+---
+
+semio:
+The schema in the repo is not yet consistent.
+semio has been extended by version-control.
+Everything that previously was `kit` is now `kit snapshot`.
+The metabolism asset also shows the new snapshot format.
+
+Here a few things I noticed (incomplete):
+
+- Artifacts (Design and Types) have no parent, no variant, no view but only family
+- A family has ports.
+- Kit Change is not forward kit diff and backward kit diff but forward list of kit change commands and backward list of kit change commands.
+- Kit snapshots have an optional alternative id (if not the snapshot comes from `the kit`),
+- Kits dont have release or version.
+
+Here some specs:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors. Checkpoint ids are a hash that is computed by the changes and the parent hash.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit. They have optional checkpointId (if not then it is the root snapshot), optional sessionId, optional draftId, optional transactionId.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+Requirments:
+
+- All code, assets, test, docs, etc MUST have the same schema and api. No legacy api or backwards compatibility.
+
+---
+
 Introduce a new entity: family
 It replaced the old artifact (type or design) parent mechanism.
 The shift is from artifact inheritance to family composition.
@@ -656,6 +822,48 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 ### 🧮algorithms
 
 semio algorithms:
+
+Remove all native adapters. The new architecture uses semio/rs as single-source of truth and just rexports it with semio/js, semio/react, semio/ui
+
+When starting session then draft then transaction and then sending multiple kit changes, then transaction undo should revert the last kit change. When refreshing the live snapshot it still shows the new value and doesnt revert.
+
+---
+
+Kit/Store:
+Introduce a window kind such as gitkraken for the complete history (root, checkpoints, alternatives, drafts)
+
+The best ideas from GitKraken:
+
+- Chronological vertical sorting for checkpoints (latest top), leaves good space for message
+- Left column for alternatives
+
+Notable difference to git:
+
+- Alternatives is not pointer to a commit but a list of checkpoints (highlight the complete line on hover)
+- Everything exists at the same time (unlike git where you need to checkout)
+
+Here the specs:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+---
+
 It is just a clean visualization boad but some things are not right. The output MUST always have the diff applied (not withDiff but just applied). e.g. the output from flattenDesign still has connections in the diagram
 
 All boards are pure proxies to the native implemenations. There MUST be no additional domain logic. E.g. drag is showing the correct piece centers but somehow the connections are missing and the diff is showing the wrong information. You MUST refactor all boards to be 100% clean and just ui for calling the native functions.
@@ -741,11 +949,454 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 ### 🟨js
 
+semio/js:
+
+---
+
+Everything MUST be 100% typesafe. No Record, no strings, no json.
+Extend semio/rs with semio/graphql if necessary.
+
+---
+
+Refactor everything to be 100% typesafe.
+All methods MUST NOT use any generic, unknown, Record, Json or anything.
+Just \*Dtos (input, id, full, metadata, etc).
+
+---
+
+Every store MUST be 100% typesafe.
+The store MUST NOT leak commands and only export clean stores with methods and subscriptions for events.
+There MUST be a subscription method for every single event that exists with proper types.
+Extens semio/rs which produces semio/graphql if necessary.
+
+---
+
+```ts
+export interface KitStoreClient {
+ getDto(): any;
+ getSnapshot(): Promise<any>;
+ setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult>;
+ addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
+ removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
+ applyDesignDiff(designId: string, diff: unknown): Promise<SetResult>;
+ applyKitDiff(diff: unknown): Promise<SetResult>;
+ clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
+ dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
+ movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
+ fixPieces(designId: string, pieceIds: string[]): Promise<SetResult>;
+ flattenDesign(designId: string): Promise<SetResult>;
+ expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
+ deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
+ changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
+ pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult>;
+ createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult>;
+ createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
+ createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
+ getPiecesMetadata(designId: string): Promise<any>;
+ getPieces(designId: string): Promise<any>;
+ getConnections(designId: string): Promise<any>;
+ getDesigns(): Promise<any>;
+ getTypes(): Promise<any>;
+ getAuthors(): Promise<any>;
+ getKitMetadata(): Promise<any>;
+ undo(): Promise<SetResult>;
+ redo(): Promise<SetResult>;
+ canUndo(): Promise<boolean>;
+ canRedo(): Promise<boolean>;
+ subscribe(cb: (ev: any) => void): () => void;
+ dispose(): void;
+
+ execute(cmd: unknown): Promise<KitStoreExecuteResult>;
+ executeRead(cmds: unknown[]): Promise<any[]>;
+ vcsState(): Promise<any>;
+ theKitDto(): Promise<any>;
+ materializeAt(id: string): Promise<any>;
+ attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
+ detachBackbone(): Promise<SetResult>;
+ backboneStatus(): Promise<KitStoreWireBackboneStatus>;
+ listConflicts(): Promise<KitStoreWireKitConflict[]>;
+ resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
+ syncNow(): Promise<SetResult>;
+}
+```
+
 ### 🦀rs
 
 semio/rs:
+
+---
+
+Check semio/grapql and you will see that it is not clean.
+Refactor it.
+There MUST be no disitinction between Live, normal Stores, Gql, etc
+Every read MUST happen within a scope.
+Undo/Redo is only defined on draft level and transaction level.
+
+---
+
+semio/rs and semio/js:
+
+Refactor the kit store to have exclusively graphql as control plane. You MUST NOT add it ontop but change everything. You MUST NOT use ids but only use pointers. Directly resolve in-memory. Don't add a new struct and directly add #[Object] to the existing stores. The old enum-based control plane MUST NOT be there afterwards. Only graphql query for reads, graphql mutation for updates and graphql subscribtions for events.
+
+---
+
+The current commands are semantically abreviated, not clean (e.g. remove others), not complete (plenty of properties are missing, both stored and computed properties). Absolutely everything MUST be readable by a ready command. It works similar to graphql (just as a reference, dont leak graphql into the code).
+
+e.g. Here some snippets.
+
+```rs
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommand {
+        ReadTypeFullCommand,
+        ReadTypeMetadataCommand,
+        ReadTypeShallowCommand,
+        ReadTypeIdCommand,
+        ReadTypeNameCommand,
+        ReadTypeDescriptionCommand,
+        ReadTypeIconCommand,
+        ...
+        ReadTypeConnectorsCommand,
+        ReadTypeRepresentationsCommand,
+        ReadTypeFamiliesCommand,
+        ReadTypeFamilyCommands{
+            id: FamilyIdDto,
+            commands: Vec<ReadFamilyCommand>,
+        },
+        ReadConnectorCommands {
+            id: ConnectorIdDto,
+            commands: Vec<ReadConnectorCommand>,
+        },
+        ReadRepresentationCommands {
+            id: RepresentationIdDto,
+            commands: Vec<ReadRepresentationCommand>,
+        },
+        ReadPortCommands {
+            id: PortIdDto,
+            commands: Vec<ReadPortCommand>,
+        }
+    }
+  ...
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommand {
+        ReadPieceFullCommand,
+        ReadPieceShallowCommand,
+        ReadPieceMetadataCommand,
+        ReadPieceIdCommand,
+        ReadPieceNameCommand,
+        ReadPieceDescriptionCommand,
+        ReadPieceTypeCommand { commands: Vec<ReadTypeCommand> },
+        ReadPiecePoseCommand { commands: Vec<ReadPoseCommand> },
+        ReadPieceCenterCommand { commands: Vec<ReadCenterCommand> },
+        ReadPieceFlatCenterCommand { commands: Vec<ReadCenterCommand> },
+        ReadPiecePlaneCommand { commands: Vec<ReadPlaneCommand> },
+        ReadPieceFlatPlaneCommand { commands: Vec<ReadPlaneCommand> },
+        ReadPieceParentPieceCommand { commands: Vec<ReadPieceCommand> },
+        ReadPieceParentConnectionCommand { commands: Vec<ReadConnectionCommand> },
+        ReadPieceParentDesignCommand { commands: Vec<ReadDesignCommand> },
+        ReadPiecePropsCommand { },
+        ReadPieceAttributesCommand { },
+        ...
+    }
+```
+
+You MUST fully implement all commands and have everything statically types. Use the same api for downstream clients (such as semio/js, semio/react, semio/algorithms)
+
+semio is greenfield.Dont keep any smelly legacy api or backwards compatiblity. All code, assets, tests, docs MUST be 100% aligned.
+
+---
+
+Generalize the kit store.
+
+Goal:
+We want to add support for backbones.
+Requirements:
+
+- Keep two kit graphs in-memory (wip and backbone)
+- Everything is non-blocking (wip can make changes, backbone can make changes, synchronizer syncs, coordinates merges, and writes conflicts into a registry, etc)
+
+Here the new specs:
+
+- `kit store` is the master process and is full control plane to do everything. It has three concurrent tasks: wip kit, backbone kit stub and kit coordinator. It has a kit conflict registry to manage conflicts between the wip kit and the backbone kit.
+- `wip kit` is an async task that is a replica of the kit graph.
+- `backbone kit stub` an async task kit graph stub to an authorative persisted out-of-process kit graph.
+- `kit backbone` is an authorative single-writer out-of-process kit persitance (dev backbone [fully embedded], local backbone, remote backbone).
+- `kit graph` is a complete in-memory kit graph (including history, sessions, drafts, transactions, etc)
+- `kit coordinator` is an asnyc task to coordinate the wip kit process and the backbone kit graph process.
+- `kit history` is the complete history of a kit (initial kit, checkpoints, alternatives)
+- `kit checkpoint tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit change` is a forward list of kit change commands and a backward list of kit change commands.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+struct KitStore {
+wip: WipKit, // local fully materialized replica
+backbone: BackboneKitStub, // local cache + RPC proxy to remote authority
+coordinator: KitCoordinator, // sync, merge, conflict tracking
+conflicts: ConflictRegistry,
+}
+
+---
+
+The schema of a kit is not yet right. Check metabolism asset and adjust the code in rust.
+e.g.
+
+- Coordinate has u and v
+- Offset has u and v
+- Camera has position, forward and up
+- Location has longitude, latitude and altitude, etc
+- Folder doesnt have string path but name, parent, etc
+- ...
+  There are plenty more mismatches.
+  Another one is that types and designs have families. And families have ports.
+  Make sure to get everything right and adjust events, structs, enums, commands, etc
+
+The way commands work is not clean.
+Every command MUST return a kit diff and then every entity MUST implement one central method where a kit diff is applied to the entity in-memory. The order is always, deleted first, then updated, then added. This way pointer modification, events, cache invalidation are handeled centrally.
+
+First, Every `kit change command` MUST return a diff.
+
+Then, introduce a new `compact` method for a list of changes that tries to compact the changes into the least amount of changes.
+
+Previously kit changes were stored as forward (kit diff) + backward diff (kit diff).
+From now on, a `kit change` is forward (list of kit change commands) + inverse (list of kit change commands).
+This means that changes are no longer actual data that changed but just the parameters for the command.
+The actual materialized kit is then computed on the fly by applying all forward command.
+
+e.g.
+
+```rs
+ pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
+            if self.gap == v {
+                return Ok(());
+            }
+            self.gap = v;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: self.entity_ref(),
+                field: "gap",
+            });
+            self.bubble();
+            Ok(())
+        }
+```
+
+should be:
+
+```rs
+ pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
+            if self.gap == v {
+                return Ok(());
+            }
+            self.gap = v;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: self.entity_ref(),
+                field: "gap",
+            });
+            self.bubble();
+            Ok(())
+        }
+```
+
+There MUST be granular commands for every single property of every single entity. Currently it is very incomplete. See the schema (just as a reference, dont leak graphql into the code).
+
+Alternative is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`. An alternative is different to git (which is just a named pointer). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+
+Kits MUST be extended with a version-control-like system:
+
+- `kit store` is the master and offers the api to do everything.
+- `wip kit` is the in-memory replica of the kit graph.
+- `backbone kit stub` a the in-memory kit graph stub to an authorative persisted out-of-process kit graph.
+- `kit graph` is the complete kit graph (including history, sessions, drafts, transactions, etc)
+- `kit history` is the complete history of a kit (initial kit, checkpoints, alternatives)
+- `kit checkpoint tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit change` is a forward list of kit change commands and a backward list of kit change commands.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+```rs
+pub enum ReadTypeCommand {
+  Everything {},
+  Name {},
+  Description {},
+  Connectors {},
+  Representations {},
+  ...
+  ReadConnectorCommands {id: ConnectorIdDto, commands: Vec <ReadConnectorCommand>}
+  ReadRepresentationCommands {id: RepresentationIdDto, commands: Vec <ReadRepresentationCommand>}
+  ...
+}
+
+pub enum ReadKitCommand {
+  Everything {},
+  Name {},
+  Description {},
+  Types {},
+  ...
+  ReadTypeCommands {id: TypeIdDto, commands: Vec <ReadTypeCommand>}
+  ReadDesignCommands {id: DesignIdDto, commands: Vec <ReadDesignCommand>}
+}
+
+pub enum ChangePieceCommand {
+  Name {name: String},
+  FixPiece { },
+  DragPiece {offset: Vec2},
+  ...
+}
+
+pub enum ChangeDesignCommand {
+  ChangePieceCommands {piece_id: PieceIdDto, commands: Vec <ChangePieceCommand>}
+  ...
+}
+
+pub enum ChangeKitCommand {
+  Name {name: String},
+  ...
+  ChangeTypeCommands {type_id: TypeIdDto, commands: Vec <ChangeTypeCommand>},
+  ChangeDesignCommands {design_id: DesignIdDto, commands: Vec <ChangeDesignCommand>}
+  ...
+}
+
+pub enum KitCheckpointCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>}
+}
+
+pub enum TransactionCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  ChangeKitCommands {commands: Vec <ChangeKitCommand>}
+  Finalize {},
+  Abort {},
+  Undo {},
+  UndoAll {},
+  CanUndo {},
+  Redo {},
+  RedoAll {},
+  CanRedo {},
+}
+
+pub enum KitDraftCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>}
+  StartTransaction {},
+  FinalizeToKitCheckpoint {message: String},
+  Abort {},
+  Undo {count: i32 }, // -1 for all
+  CanUndo {count: i32}, // -1 for all
+  Redo {count: i32}, // -1 for all
+  CanRedo {count: i32}, // -1 for all
+  ExecuteTransactionCommands {id: TransactionIdDto, commands: Vec <TransactionCommand>}
+}
+
+pub enum SessionCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  NewDraft {checkpoint_id: KitCheckpointIdDto},
+  ExecuteKitDraftCommands {id: KitDraftIdDto, commands: Vec <KitDraftCommand>}
+}
+
+pub enum KitCheckpointCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+
+}
+
+pub enum KitAlternativeCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  UnifyKitCheckpointsToSingleKitCheckpoint {message: String}
+}
+
+pub enum KitStoreCommand {
+  NewSession {},
+  EndSession {id: SessionIdDto},
+  ExecuteSessionCommands {id: SessionIdDto, commands: Vec <SessionCommand>}
+  ExecuteKitCheckpointCommands {id: KitCheckpointIdDto, commands: Vec <KitCheckpointCommand>}
+  ExecuteKitAlternativeCommands {id: KitAlternativeIdDto, commands: Vec <KitAlternativeCommand>}
+  ReadKitCommands {commands: Vec <KitReadCommand>}
+}
+```
+
+```json
+[
+ {
+  "readKitCommands": {
+   "commands": [
+    {
+     "everything": {}
+    }
+   ]
+  }
+ },
+ {
+  "newSession": {}
+ },
+ {
+  "id": "session1",
+  "commands": [
+   {
+    "id": "draft1",
+    "commands": [
+     {
+      "id": "transaction1",
+      "commands": [
+       {
+        "id": "change1"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
+```
+
+Introduce pose to pieces. Pose is a container for plane and center (same as side is a container for piece, connector and designPiece). Make sure that center and plane are still independantly updatable and when e.g. center is updating no event for plane update is fired and vice versa. The parent of course updates (pose updated, piece updated, kit updated still fires.)
+Make sure alternatives() is a piece method and returns all types and designs that the piece can be replaced with. The alternatives MUST NOT create an invalid design (because of connectors that are not replaceable with compatible ones, etc). There are already descriptions about this algorithm.
+Make sure semio/algorithms runs, the tests are complete, etc.
+
+Make sure drag (invalidates center cache of child pieces), move (invalidates plane cache of child pieces), fix (takes flat pose, removes the parent connection, sets pose to children and removes the child connections) are piece methods.
+
+Add a path method which returns an array of piece references which is the path from the fixed piece until the piece (starting with the fixed piece). The path is computed by calling the the path of the parent piece and adding itself.
+
+pub fn flat_plane(&self) -> Plane
+MUST not call the flatten map but instead calculate the flat plane (either when plane is set then return flat plane or otherwise calculate it based on the parent piece type connector and parent piece flat plane. Make sure to cache it according the dependency).
+E.g. when the parent flat plane changes then the cache gets invalided.
+Another example is when a piece is deleted then the design store sets the correct parent piece and parent connection reference on the updated pieces.
+
 The code is very smelly and incomplete.
 You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents. Mutations always happen on the lowest level possible. When it doesnt affect others, then it happens locally. As soon as the mutation affects others, then parent that has a complete picture is responsible for mutating.
+
+The code is very smelly and incomplete.
+You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents (e.g. design is responsible for managing pieces and connections)
+
+One example:
+`pub fn delete_pieces_and_connections_in_design` is a design method and MUST update the parent pointer of the pieces. The pieces only provide mutation that doesnt affect anything else (such as name, etc). Some properties have dependencies (e.g. the flat plane of a piece depens on the flat plane of the parent piece and the parent connection parameters, the connector being use, etc). Make sure this is properly cached and only is recomputed when needed.
+
+Refactor all such functions in the same way.
+
 e.g. mod such as flatten MUST NOT exist and instead be methods such on design (keeps track of setting parent/child pointer for pieces and connections), pieces (use parent flat plane to derive flat plane)
 Achieve a pointer reference such as this schema:
 
@@ -803,14 +1454,184 @@ Requirements:
 - All methods are implemented inside the class (not just facade to pure function)
   Here is the target:
 
-### graphql
+### 🏪store
+
+semio/store:
+
+The code is outdated and semio/rs now uses graphql. Expose a graphql api instead of json rpc.
+Add a dev command that start graphiql to launch.json
+
+Create a new rust binary (new bundle) that imports from semio/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
+Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
+
+### ⭕graphql
 
 semio/graphql:
+
+The schema is outdated and doesnt match from semio/rs. Update it to match exactly the property shape, naming, etc.
+e.g. interactions dont exists anymore.
+
 Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
+
+### 💾sqlite
+
+semio/sqlite:
+
+The schema is not clean. Dont use any json. Use only normalized tables. The schema MUST match with
+
+### 🐘postgres
+
+semio/postgres:
+Extend the sql schema to match the new version-control-features (parts are already implemeted in semio/rs)
+here some specs:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+---
+
+Update the rest to match metabolism json
+
+### ⚛️react
+
+semio/react:
+Create a react library that exports all semio hooks.
+
+Work with providers.
+
+Use a long lived
+
+You MUST
+
+e.g.
+
+// <KitProvider>
+
+// <BackboneProvider folder={folder}> for local kits
+// <BackboneProvider file={file}> for dev kits
+// <BackboneProvider url={url}> for remote kits
+
+// either usePiece*() inside <PieceProvider guid={piece.guid}> or usePiece*(GUID)
+usePieceName():String
+usePieceDescription():String
+usePieceTypeId():TypeId
+usePieceDesignId():DesignId
+usePieceBlueprintId():TypeId|DesignId
+usePiecePlane():Plane
+usePieceCenter():Coordinate
+usePieceFlatPlane():Plane
+usePieceFlatCenter():Coordinate
+useParentPieceId():PieceId
+useParentConnectionId():ConnectionId
+useChildPiecesIds():PieceId[]
+useChildConnectionsIds():ConnectionId[]
 
 ### ✏️sketchpad
 
 semio/sketchpad:
+Extend the current Versions window kind to a complete VersionsApp.
+The KitApp, DesignApp, TypeApp are all bound to an active
+
+---
+
+Remove quality app.
+
+---
+
+Refactor state managment to be clean hooks such as
+You MUST use one Store section where you
+
+- One global state machine for sketchpad and all apps.
+- The consumers of the hooks MUST NOT know anything about xstate.
+- Derive canSet\* from transition property from the state machine
+
+e.g.
+
+- No XState duplicates
+- No useSyncDeep, useSyncExternalStore, etc
+
+---
+
+Get everything running again.
+Requirements:
+
+- No functionality is removed from sketchpad
+- No functionality is removed from the sketchpad tests
+- Session, Drafts, Transaction live in semio/rs
+- Only kit hook imports from semio/react
+- semio/react only rexports plain stores from semio/js
+- No domain logic or caching (only semio/rs caches and has business logic)
+
+---
+
+Remove all stores for kit data completly.
+Only import semio/react hooks for kit data.
+Requirements:
+
+- No domain logic and caching in semio/js, semio/react, semio/ui, semio/sketchpad. Domain logic and caching MUST be in semio/rs.
+- semio/js wraps semio/rs into a nice store and uses #[wasm_bindgen(js_name = execute)]
+- semio/ract exports the store as clean components. No direct interaction with command-style of semio/rs
+- No kit hook definitions, no kit stores and no kit state management regarding in semio/sketchpad.
+- No direction execution of commands in semio/react. No command semantics.
+- No diff based mutation in semio/js, semio/react, semio/sketchpad. Mutations are only over commands.
+- You MUST use `useSyncExternalStore` in semio/react which updates when semio/rs sends the exact event. You MUST NOT do any filtering/computation/caching in semio/react and you MUST NOT use `useMemo`.
+- You MUST export single hooks for everything in semio/react.
+
+e.g.
+semio/rs uses impl PieceStore uses `self.computed_flat_plane()`
+semio/rs exports `ReadPieceCommand::ReadPieceFlatPlaneCommand => ReadPieceCommandOutput::ReadPieceFlatPlaneCommand`
+semio/js uses directly the ReadPieceFlatPlaneCommand command from semio/rs
+semio/js exports `class PieceStore` with `flatPlane()`
+semio/react exports usePieceFlatPlane and PieceContext
+semio/sketchpad uses `[plane,planeStatus] = usePieceFlatPlane()` within a <PieceScope>
+
+useTypesIds()
+useTypesMetadata()
+useShallowType()
+useCreateType()
+useDeleteType()
+
+This pattern MUST be used for everything.
+
+semio is a greenfield project. Dont keep any legacy api or backwards compatibility. All code, assets, tests, docs MUST be 100% aligned.
+
+---
+
+Recently a big architectural change was started:
+We have rust store implementation with wasm `semio/rs`, and a `semio/js` adapter which uses the rust web worker, `semio/react` library which reexports `semio/js` the store functionality for react (hooks, context, etc), a general and hook consumer client `semio/sketchpad`
+
+Requirements:
+
+- No kit hooks in semio/sketchpad.
+- Kit hooks come exclusively from semio/react.
+- No domain logic in semio/sketchpad, semio/js, semio/react. All domain logic is only in semio/rs.
+- No schema differences, all code, assets, tests, etc MUST 100% match, no legacy api or backwards compatibility.
+- Dont remove any functionality from sketchpad tests
+
+Make sure everything works.
+
+Here a tiny example that doesnt work:
+e.g. when editing the name of the kit in the details panel I get:
+Uncaught TypeError: Cannot read properties of null (reading 'change')
+at onLazyChange (index.tsx:15876:139)
+at handleBlur (index.tsx:13080:7)
+
+Finish it and get all playwright tests passing.
 
 The drag is increadibly unperformant.
 Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.
@@ -958,6 +1779,54 @@ Disentangle semio grasshopper from the engine. The CRUDs should happen in Semio.
 ###
 
 repo:
+
+---
+
+./repo:
+Create custom mcp servers for every ide that expose native integrations.
+The descriptions for every tool call and resource MUST be with native ide terminology and MUST NOT leak any other ides. The instruction MUST feel like .repo is native in all the systems.
+The descriptions for every tool call MUST NOT describe what the tool does but MUST describe exclusively when the tool MUST be used.
+Every integration includes:
+
+- native ticket integration
+- native agent hook integration
+
+semio/cursor/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the file to the ticket folder.
+e.g. the plan `.cursor/plans/kit_store_backbone_generalization_fe75d494.plan.md` has the id `fe75d494`
+
+semio/kiro/main.go
+Add an optional spec id to ticket open and ticket reopen.
+On ticket close move all files and folders from the spec folder to the ticket folder
+e.g. the spec `.kiro\specs\semio-js-thin-client-refactor\**` has the id `semio-js-thin-client-refactor`
+
+For the others research where the memory files are tracked and then use the same mechanism as the others. This differs per operating system because the files are not part of the repository.
+
+semio/copilot/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Copilot memory folder to the ticket folder.
+e.g. the plan `~/.copilot/projects/<project-name>/memory/<id>.md` (macOS/Linux) or `%USERPROFILE%\.copilot\projects\<project-name>\memory\<id>.md` (Windows) has the id `<id>`
+
+semio/claude/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Claude plans folder to the ticket folder.
+e.g. the plan `~/.claude/plans/<id>.md` (macOS/Linux) or `%USERPROFILE%\.claude\plans\<id>.md` (Windows) has the id `<id>`
+
+semio/codex/main.go
+Add an optional plan id to ticket open and ticket reopen.
+On ticket close move the plan file from the local Codex memory folder to the ticket folder.
+e.g. the plan `~/.codex/memory/<project-name>/<id>.md` (macOS/Linux) or `%USERPROFILE%\.codex\memory\<project-name>\<id>.md` (Windows) has the id `<id>`
+
+---
+
+Refactor the repo/cli/main.go into three files:
+repo/client/main.go // all shared code client code
+repo/cli/main.go // all cli code (cobra etc)
+repo/mcp/main.go // all mcp code
+
+---
+
 Every single definition MUST have a unique emoji and a non-generic description. Currently there are missing, wrong, random emojis, same for description.
 Check the complete monorepo manually and dont solve the problem with creating new scripts that again randomly automate generic emojis or descriptions. Dont stop until all programming languages are completed.
 
@@ -5293,11 +6162,43 @@ Here some policies for js/semio:
 - Sketchpad.tsx and the other app files (Home.tsx, Kit.tsx, Design.tsx, Type.tsx, Quality.tsx, Docs.tsx, Feedback.tsx) should follow the open/closed principle. Sketchpad.tsx should only import from elements.tsx, semio.ts, shared.ts. The apps should only import from Sketchpad.tsx, elements.tsx, semio.ts, shared.ts.
   If the file is deleted then sketchpad should work, if a new file is added, the new app should work. The hook should scan for all static and dynamic imports that violate the above policies.
 
-### ⌨️cli
+### ⌨️client
 
 ####
 
-repo cli:
+repo client:
+
+---
+
+Extend/Refactor the loc command
+Add markdown language.
+Ignore all folders with .\* and only include
+Add another row `Code` such as which is just
+Add another row `Markup` such html, md, mdx
+Add another row `Data` such as json, yaml, etc (e.g. for json count every key as a line even if it is single line).
+Add another row `Total` which is everything
+Sort rows by loc
+Add --by-contributor=<alias> flag e.g. `--by-contributor=ueli` It MUST work with history and show the history
+Always show % of everything
+
+---
+
+Add a loc command that shows three metrics: loc, edited loc (cummulative over all commits), added loc (cummulative over all commits), removed loc (cummulative over all commits) for the five languages.
+Exclude .repo and gitignored folders.
+
+Use cloc for the total loc. Use git diffs for differences.
+
+e.g. on windows: cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust
+
+Optionally add a --history flag that shows how the loc changed over the dev branch `⛳wip`
+Make sure that it doesnt need alter the current directly to calculate the history.
+Enable --byContributors to show the contributions of a contributor (derived from git first author)
+When both flag are present combined them to only show the history of the contributor.
+
+Make sure to render it nice with colored terminal for humans, nice markdown for llms, and json for apis.
+
+---
+
 The .repo folder should be only created once at the monoreporoot. Regardless if for caching, testing, etc
 
 Dont create new event.json files for the session events but add them directly to session.json as event array.
@@ -7215,6 +8116,41 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
     - STATUTE
 
 #### 🫡commands
+
+Introduce a new command `merge prepare` that performs preparation for a special merge.
+
+`merge prepare`:
+Preconditions:
+
+- You are on the latest commit of the dev branch (a contributor branch `{{.DevEmoji}}{{.DevAlias}}/⛳wip`)
+  e.g. `🐙ueli/⛳wip`
+- The dev branch has a linear history to the `⛳wip` branch.
+- The dev branch has no uncommitted changes.
+
+Steps:
+
+1. Create a new signed tag on the current commit `{{.DevEmoji}}{{.DevAlias}}🎆{{.YY}}🌙{{.MM}}☀️{{.DD}}🚩`
+   e.g. `git tag -s -m "🐙ueli🎆26🌙04☀️20🚩" "🐙ueli🎆26🌙04☀️20🚩"`
+2. Push the tag to the remote repository
+   e.g. `git push origin 🐙ueli🎆26🌙04☀️20🚩`
+3. Squash all linear changes. If there are rebase conflicts, discard the changes until the rebase is successful.
+   e.g. `git rebase -s -S -i HEAD~10`
+4. Checkout parent commit before the squashed commit
+5. Compute loc from the parent commit
+   e.g. on Windows: `cloc . --vcs=git --exclude-dir=.repo --include-lang=TypeScript,Go,C#,Python,Rust`
+6. Save the loc locally
+7. Checkout the squashed commit and rename
+
+Introduce a command for renaming.
+Rename all files that are not git ignored.
+e.g. repo rename "model" "representation"
+renames:
+
+- MODEL to REPRESENTATION
+- model to representation
+- Model to Representation
+- etc
+  regardless if part of variables, classes, casing, ...
 
 Rename `tree` to command to `search`.
 

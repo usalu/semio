@@ -59,7 +59,7 @@ function reactCjsFacadeResolvePlugin(opts: CjsFacadeResolveOpts): Plugin {
       if (n === "scheduler" || (n.includes("scheduler/index.js") && !n.includes("/cjs/scheduler."))) {
         return opts.schedulerEntry;
       }
-      // `stats.js` ships as legacy UMD/CJS; Vite may serve `/@fs/.../build/stats.min.js` directly and break default import.
+      // `stats.js` ships as UMD/CJS; Vite may serve `/@fs/.../build/stats.min.js` directly and break default import.
       // Force the ESM-compatible implementation from `three/examples` so drei `Stats` can load in Electron dev.
       if (n === "stats.js" || n.endsWith("/stats.js")) {
         return opts.statsEntry;
