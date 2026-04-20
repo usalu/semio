@@ -72,7 +72,12 @@ fn main() {
             let pieces: Vec<_> = req
                 .piece_guids
                 .iter()
-                .filter_map(|g| design.piece_by_guid(g).cloned())
+                .filter_map(|g| {
+                    design
+                        .pieces
+                        .as_ref()
+                        .and_then(|ps| ps.iter().find(|p| p.guid == *g).cloned())
+                })
                 .collect();
             let connections: Vec<_> = req
                 .connection_guids

@@ -5771,8 +5771,7 @@ mod apply_diff {
     impl Design {
         /// Maps [`Piece::type_ref`] values present in this design for [`Design::apply_diff`] without a full [`Kit`].
         pub fn types_from_pieces(&self) -> HashMap<String, Arc<Type>> {
-            self
-                .pieces
+            self.pieces
                 .as_ref()
                 .into_iter()
                 .flatten()
@@ -5997,11 +5996,7 @@ mod apply_diff {
     }
     impl Connector {
         /// 🔖Applies a connector diff.
-        pub fn apply_diff(
-            &mut self,
-            diff: &ConnectorDiff,
-            ports: &HashMap<String, Arc<Port>>,
-        ) {
+        pub fn apply_diff(&mut self, diff: &ConnectorDiff, ports: &HashMap<String, Arc<Port>>) {
             if let Some(value) = &diff.point {
                 self.point.x += value.x;
                 self.point.y += value.y;
@@ -6291,11 +6286,7 @@ mod apply_diff {
     /// </remarks>
     impl Connection {
         /// 🔖Applies a connection diff.
-        pub fn apply_diff(
-            &mut self,
-            diff: &ConnectionDiff,
-            pieces: &HashMap<String, Arc<Piece>>,
-        ) {
+        pub fn apply_diff(&mut self, diff: &ConnectionDiff, pieces: &HashMap<String, Arc<Piece>>) {
             let prev_connected_connector_guid =
                 self.connected.connector.as_ref().map(|c| c.guid.clone());
             let prev_connecting_connector_guid =
@@ -6899,7 +6890,9 @@ mod apply_diff {
                 Concept::apply_diff,
                 |c| Concept::from(c),
             );
-            apply_collection_diff(&mut self.tags, &diff.tags, Tag::apply_diff, |t| Tag::from(t));
+            apply_collection_diff(&mut self.tags, &diff.tags, Tag::apply_diff, |t| {
+                Tag::from(t)
+            });
             apply_collection_diff(&mut self.ports, &diff.ports, Port::apply_diff, |p| {
                 Port::from(p)
             });
@@ -6916,7 +6909,9 @@ mod apply_diff {
                 Quality::apply_diff,
                 |q| Quality::from(q),
             );
-            apply_collection_diff(&mut self.files, &diff.files, File::apply_diff, |x| x.clone());
+            apply_collection_diff(&mut self.files, &diff.files, File::apply_diff, |x| {
+                x.clone()
+            });
             apply_collection_diff(&mut self.folders, &diff.folders, Folder::apply_diff, |f| {
                 Folder::from(f)
             });
@@ -17758,6 +17753,11 @@ impl Piece {
         });
         diff
     }
+
+    /// Local semantic edits only (name); does not update layout-derived state — that flows from the owning [`crate::Design`] / flatten graph.
+    pub fn rename(&mut self, name: Option<String>) {
+        self.name = name;
+    }
 }
 
 impl Connection {
@@ -18299,743 +18299,735 @@ impl Author {
 
 //#region 🔖Flatten
 /// Affine helpers used by [`Connection::child_plane_matrix`].
-    pub struct FlattenAffine;
+pub struct FlattenAffine;
 
-    impl FlattenAffine {
-        pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
-            let rot = q.to_rotation_matrix();
-            let m = rot.matrix();
-            Matrix4::new(
-                m[(0, 0)],
-                m[(0, 1)],
-                m[(0, 2)],
-                0.0,
-                m[(1, 0)],
-                m[(1, 1)],
-                m[(1, 2)],
-                0.0,
-                m[(2, 0)],
-                m[(2, 1)],
-                m[(2, 2)],
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-            )
-        }
-
-        pub fn translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
-            Matrix4::new(
-                1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
-            )
-        }
-
-        pub fn apply_mat_vec3(
-            m: &Matrix4<f64>,
-            v: &nalgebra::Vector3<f64>,
-        ) -> nalgebra::Vector3<f64> {
-            nalgebra::Vector3::new(
-                m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
-                m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
-                m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
-            )
-        }
+impl FlattenAffine {
+    pub fn quat_to_matrix4(q: &nalgebra::UnitQuaternion<f64>) -> Matrix4<f64> {
+        let rot = q.to_rotation_matrix();
+        let m = rot.matrix();
+        Matrix4::new(
+            m[(0, 0)],
+            m[(0, 1)],
+            m[(0, 2)],
+            0.0,
+            m[(1, 0)],
+            m[(1, 1)],
+            m[(1, 2)],
+            0.0,
+            m[(2, 0)],
+            m[(2, 1)],
+            m[(2, 2)],
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        )
     }
 
-    pub struct PieceFlattenParent<'a> {
-        pub parent_piece_guid: &'a str,
-        pub conn: &'a Connection,
-        pub from_connected: bool,
+    pub fn translation(x: f64, y: f64, z: f64) -> Matrix4<f64> {
+        Matrix4::new(
+            1.0, 0.0, 0.0, x, 0.0, 1.0, 0.0, y, 0.0, 0.0, 1.0, z, 0.0, 0.0, 0.0, 1.0,
+        )
     }
 
-    /// Shared graph structure (incremental BFS); **does not** store centralized matrix/center caches.
-    pub struct FlattenGraphInner<'a> {
-        kit: &'a Kit,
-        design: &'a Design,
-        pieces_map: HashMap<&'a str, &'a Arc<Piece>>,
-        adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>>,
-        bfs_queue: RefCell<VecDeque<String>>,
-        bfs_visited: RefCell<HashSet<String>>,
-        next_seed_index: RefCell<usize>,
-        parent_of: RefCell<HashMap<String, PieceFlattenParent<'a>>>,
-        children_of: RefCell<HashMap<String, Vec<String>>>,
-        piece_paths: RefCell<HashMap<String, String>>,
-        nodes: RefCell<HashMap<String, Rc<FlattenPieceState<'a>>>>,
+    pub fn apply_mat_vec3(m: &Matrix4<f64>, v: &nalgebra::Vector3<f64>) -> nalgebra::Vector3<f64> {
+        nalgebra::Vector3::new(
+            m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
+            m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
+            m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
+        )
+    }
+}
+
+pub struct PieceFlattenParent<'a> {
+    pub parent_piece_guid: &'a str,
+    pub conn: &'a Connection,
+    pub from_connected: bool,
+}
+
+/// Shared graph structure (incremental BFS); **does not** store centralized matrix/center caches.
+pub struct FlattenGraphInner<'a> {
+    kit: &'a Kit,
+    design: &'a Design,
+    pieces_map: HashMap<&'a str, &'a Arc<Piece>>,
+    adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>>,
+    bfs_queue: RefCell<VecDeque<String>>,
+    bfs_visited: RefCell<HashSet<String>>,
+    next_seed_index: RefCell<usize>,
+    parent_of: RefCell<HashMap<String, PieceFlattenParent<'a>>>,
+    children_of: RefCell<HashMap<String, Vec<String>>>,
+    piece_paths: RefCell<HashMap<String, String>>,
+    nodes: RefCell<HashMap<String, Rc<FlattenPieceState<'a>>>>,
+}
+
+/// Per-piece flatten state and **local** memoization for derived geometry.
+pub struct FlattenPieceState<'a> {
+    graph: std::rc::Weak<FlattenGraphInner<'a>>,
+    guid: String,
+    matrix_memo: RefCell<Option<Matrix4<f64>>>,
+    center_memo: RefCell<Option<Coord>>,
+}
+
+impl<'a> FlattenPieceState<'a> {
+    pub fn guid(&self) -> &str {
+        &self.guid
     }
 
-    /// Per-piece flatten state and **local** memoization for derived geometry.
-    pub struct FlattenPieceState<'a> {
-        graph: std::rc::Weak<FlattenGraphInner<'a>>,
-        guid: String,
-        matrix_memo: RefCell<Option<Matrix4<f64>>>,
-        center_memo: RefCell<Option<Coord>>,
+    pub fn clear_geometry_memo(&self) {
+        *self.matrix_memo.borrow_mut() = None;
+        *self.center_memo.borrow_mut() = None;
     }
 
-    impl<'a> FlattenPieceState<'a> {
-        pub fn guid(&self) -> &str {
-            &self.guid
+    pub fn world_matrix(&self) -> Matrix4<f64> {
+        if let Some(m) = *self.matrix_memo.borrow() {
+            return m;
         }
-
-        pub fn clear_geometry_memo(&self) {
-            *self.matrix_memo.borrow_mut() = None;
-            *self.center_memo.borrow_mut() = None;
-        }
-
-        pub fn world_matrix(&self) -> Matrix4<f64> {
-            if let Some(m) = *self.matrix_memo.borrow() {
-                return m;
-            }
-            let graph_rc = match self.graph.upgrade() {
-                Some(g) => g,
-                None => return Matrix4::identity(),
-            };
-            graph_rc.ensure_piece_reachable(&self.guid);
-            let piece = match graph_rc.pieces_map.get(self.guid.as_str()) {
-                Some(p) => *p,
-                None => return Matrix4::identity(),
-            };
-            let m = if let Some(edge) = graph_rc.parent_of.borrow().get(&self.guid) {
-                let parent = FlattenGraphInner::piece_state(&graph_rc, edge.parent_piece_guid);
-                let conn_m = graph_rc
-                    .kit
-                    .connection_matrix_fast(&graph_rc.pieces_map, edge.conn, edge.from_connected)
-                    .unwrap_or_else(Matrix4::identity);
-                parent.world_matrix() * conn_m
-            } else {
-                piece
-                    .plane
-                    .as_ref()
-                    .map(|p| p.to_matrix())
-                    .unwrap_or_else(Matrix4::identity)
-            };
-            *self.matrix_memo.borrow_mut() = Some(m);
-            m
-        }
-
-        pub fn flat_plane(&self) -> Plane {
-            Plane::from_matrix(&self.world_matrix()).round()
-        }
-
-        pub fn flat_center(&self) -> Coord {
-            if let Some(c) = self.center_memo.borrow().as_ref() {
-                return c.clone();
-            }
-            let graph_rc = match self.graph.upgrade() {
-                Some(g) => g,
-                None => return Coord { u: 0.0, v: 0.0 },
-            };
-            graph_rc.ensure_piece_reachable(&self.guid);
-            let piece = match graph_rc.pieces_map.get(self.guid.as_str()) {
-                Some(p) => *p,
-                None => return Coord { u: 0.0, v: 0.0 },
-            };
-            const RADIUS: f64 = 2.697;
-            const VERTICAL_V_EXTRA: f64 = 1.0;
-            const HORIZONTAL_SCALE: f64 = 3.0633;
-            let c = if let Some(edge) = graph_rc.parent_of.borrow().get(&self.guid) {
-                let parent = FlattenGraphInner::piece_state(&graph_rc, edge.parent_piece_guid);
-                let parent_center = parent.flat_center();
-                let (parent_side, _child_side) = if edge.from_connected {
-                    (&edge.conn.connected, &edge.conn.connecting)
-                } else {
-                    (&edge.conn.connecting, &edge.conn.connected)
-                };
-                let parent_connector = graph_rc
-                    .kit
-                    .connector_for_side_fast(&graph_rc.pieces_map, parent_side)
-                    .expect("parent connector validated when tree was built");
-                let conn_u = edge.conn.u.unwrap_or(0.0);
-                let conn_v = edge.conn.v.unwrap_or(0.0);
-                let (child_u, child_v) =
-                    if parent_center.u.abs() < 0.0001 && parent_center.v.abs() < 0.0001 {
-                        let angle = 2.0 * PI * parent_connector.t;
-                        (RADIUS * angle.sin(), RADIUS * angle.cos())
-                    } else {
-                        let is_vertical = parent_connector.direction.z.abs() > 0.5;
-                        if is_vertical {
-                            (
-                                parent_center.u + conn_u,
-                                parent_center.v + conn_v + VERTICAL_V_EXTRA,
-                            )
-                        } else {
-                            (
-                                parent_center.u + conn_u * HORIZONTAL_SCALE,
-                                parent_center.v + conn_v * HORIZONTAL_SCALE,
-                            )
-                        }
-                    };
-                Coord {
-                    u: (child_u * 1_000_000.0).round() / 1_000_000.0,
-                    v: (child_v * 1_000_000.0).round() / 1_000_000.0,
-                }
-            } else {
-                piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 })
-            };
-            *self.center_memo.borrow_mut() = Some(c.clone());
-            c
-        }
-    }
-
-    impl<'a> FlattenGraphInner<'a> {
-        fn piece_state(graph: &Rc<FlattenGraphInner<'a>>, guid: &str) -> Rc<FlattenPieceState<'a>> {
-            graph
-                .nodes
-                .borrow_mut()
-                .entry(guid.to_string())
-                .or_insert_with(|| {
-                    Rc::new(FlattenPieceState {
-                        graph: std::rc::Rc::downgrade(graph),
-                        guid: guid.to_string(),
-                        matrix_memo: RefCell::new(None),
-                        center_memo: RefCell::new(None),
-                    })
-                })
-                .clone()
-        }
-
-        pub fn ensure_piece_reachable(&self, piece_guid: &str) {
-            loop {
-                if self.parent_of.borrow().contains_key(piece_guid) {
-                    return;
-                }
-                if self.bfs_visited.borrow().contains(piece_guid) {
-                    return;
-                }
-                if !self.expand_one_bfs_step() {
-                    return;
-                }
-            }
-        }
-
-        fn expand_one_bfs_step(&self) -> bool {
-            let pieces = self
-                .design
-                .pieces
+        let graph_rc = match self.graph.upgrade() {
+            Some(g) => g,
+            None => return Matrix4::identity(),
+        };
+        graph_rc.ensure_piece_reachable(&self.guid);
+        let piece = match graph_rc.pieces_map.get(self.guid.as_str()) {
+            Some(p) => *p,
+            None => return Matrix4::identity(),
+        };
+        let m = if let Some(edge) = graph_rc.parent_of.borrow().get(&self.guid) {
+            let parent = FlattenGraphInner::piece_state(&graph_rc, edge.parent_piece_guid);
+            let conn_m = graph_rc
+                .kit
+                .connection_matrix_fast(&graph_rc.pieces_map, edge.conn, edge.from_connected)
+                .unwrap_or_else(Matrix4::identity);
+            parent.world_matrix() * conn_m
+        } else {
+            piece
+                .plane
                 .as_ref()
-                .map(|p| p.as_slice())
-                .unwrap_or(&[]);
+                .map(|p| p.to_matrix())
+                .unwrap_or_else(Matrix4::identity)
+        };
+        *self.matrix_memo.borrow_mut() = Some(m);
+        m
+    }
 
-            let mut queue = self.bfs_queue.borrow_mut();
-            if queue.is_empty() {
-                let mut idx = self.next_seed_index.borrow_mut();
-                while *idx < pieces.len() {
-                    let p = &pieces[*idx];
-                    *idx += 1;
-                    if !self.bfs_visited.borrow().contains(&p.guid) {
-                        self.bfs_visited.borrow_mut().insert(p.guid.clone());
-                        self.piece_paths
-                            .borrow_mut()
-                            .insert(p.guid.clone(), p.guid.clone());
-                        queue.push_back(p.guid.clone());
-                        return true;
+    pub fn flat_plane(&self) -> Plane {
+        Plane::from_matrix(&self.world_matrix()).round()
+    }
+
+    pub fn flat_center(&self) -> Coord {
+        if let Some(c) = self.center_memo.borrow().as_ref() {
+            return c.clone();
+        }
+        let graph_rc = match self.graph.upgrade() {
+            Some(g) => g,
+            None => return Coord { u: 0.0, v: 0.0 },
+        };
+        graph_rc.ensure_piece_reachable(&self.guid);
+        let piece = match graph_rc.pieces_map.get(self.guid.as_str()) {
+            Some(p) => *p,
+            None => return Coord { u: 0.0, v: 0.0 },
+        };
+        const RADIUS: f64 = 2.697;
+        const VERTICAL_V_EXTRA: f64 = 1.0;
+        const HORIZONTAL_SCALE: f64 = 3.0633;
+        let c = if let Some(edge) = graph_rc.parent_of.borrow().get(&self.guid) {
+            let parent = FlattenGraphInner::piece_state(&graph_rc, edge.parent_piece_guid);
+            let parent_center = parent.flat_center();
+            let (parent_side, _child_side) = if edge.from_connected {
+                (&edge.conn.connected, &edge.conn.connecting)
+            } else {
+                (&edge.conn.connecting, &edge.conn.connected)
+            };
+            let parent_connector = graph_rc
+                .kit
+                .connector_for_side_fast(&graph_rc.pieces_map, parent_side)
+                .expect("parent connector validated when tree was built");
+            let conn_u = edge.conn.u.unwrap_or(0.0);
+            let conn_v = edge.conn.v.unwrap_or(0.0);
+            let (child_u, child_v) =
+                if parent_center.u.abs() < 0.0001 && parent_center.v.abs() < 0.0001 {
+                    let angle = 2.0 * PI * parent_connector.t;
+                    (RADIUS * angle.sin(), RADIUS * angle.cos())
+                } else {
+                    let is_vertical = parent_connector.direction.z.abs() > 0.5;
+                    if is_vertical {
+                        (
+                            parent_center.u + conn_u,
+                            parent_center.v + conn_v + VERTICAL_V_EXTRA,
+                        )
+                    } else {
+                        (
+                            parent_center.u + conn_u * HORIZONTAL_SCALE,
+                            parent_center.v + conn_v * HORIZONTAL_SCALE,
+                        )
                     }
-                }
-                return false;
+                };
+            Coord {
+                u: (child_u * 1_000_000.0).round() / 1_000_000.0,
+                v: (child_v * 1_000_000.0).round() / 1_000_000.0,
             }
+        } else {
+            piece.center.clone().unwrap_or(Coord { u: 0.0, v: 0.0 })
+        };
+        *self.center_memo.borrow_mut() = Some(c.clone());
+        c
+    }
+}
 
-            let current_guid = queue.pop_front().expect("queue non-empty");
-            drop(queue);
+impl<'a> FlattenGraphInner<'a> {
+    fn piece_state(graph: &Rc<FlattenGraphInner<'a>>, guid: &str) -> Rc<FlattenPieceState<'a>> {
+        graph
+            .nodes
+            .borrow_mut()
+            .entry(guid.to_string())
+            .or_insert_with(|| {
+                Rc::new(FlattenPieceState {
+                    graph: std::rc::Rc::downgrade(graph),
+                    guid: guid.to_string(),
+                    matrix_memo: RefCell::new(None),
+                    center_memo: RefCell::new(None),
+                })
+            })
+            .clone()
+    }
 
-            let neighbors = self
-                .adjacency
+    pub fn ensure_piece_reachable(&self, piece_guid: &str) {
+        loop {
+            if self.parent_of.borrow().contains_key(piece_guid) {
+                return;
+            }
+            if self.bfs_visited.borrow().contains(piece_guid) {
+                return;
+            }
+            if !self.expand_one_bfs_step() {
+                return;
+            }
+        }
+    }
+
+    fn expand_one_bfs_step(&self) -> bool {
+        let pieces = self
+            .design
+            .pieces
+            .as_ref()
+            .map(|p| p.as_slice())
+            .unwrap_or(&[]);
+
+        let mut queue = self.bfs_queue.borrow_mut();
+        if queue.is_empty() {
+            let mut idx = self.next_seed_index.borrow_mut();
+            while *idx < pieces.len() {
+                let p = &pieces[*idx];
+                *idx += 1;
+                if !self.bfs_visited.borrow().contains(&p.guid) {
+                    self.bfs_visited.borrow_mut().insert(p.guid.clone());
+                    self.piece_paths
+                        .borrow_mut()
+                        .insert(p.guid.clone(), p.guid.clone());
+                    queue.push_back(p.guid.clone());
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        let current_guid = queue.pop_front().expect("queue non-empty");
+        drop(queue);
+
+        let neighbors = self
+            .adjacency
+            .get(&current_guid)
+            .cloned()
+            .unwrap_or_default();
+        for (neighbor_guid, conn, is_connected) in neighbors {
+            if self.bfs_visited.borrow().contains(&neighbor_guid) {
+                continue;
+            }
+            let (parent_side, _child_side) = if is_connected {
+                (&conn.connected, &conn.connecting)
+            } else {
+                (&conn.connecting, &conn.connected)
+            };
+            if self
+                .kit
+                .connector_for_side_fast(&self.pieces_map, parent_side)
+                .is_none()
+            {
+                continue;
+            }
+            if self
+                .kit
+                .connection_matrix_fast(&self.pieces_map, conn, is_connected)
+                .is_none()
+            {
+                continue;
+            }
+            let parent_piece_guid = self
+                .pieces_map
+                .get(current_guid.as_str())
+                .expect("current vertex is a design piece")
+                .guid
+                .as_str();
+            self.parent_of.borrow_mut().insert(
+                neighbor_guid.clone(),
+                PieceFlattenParent {
+                    parent_piece_guid,
+                    conn,
+                    from_connected: is_connected,
+                },
+            );
+            self.children_of
+                .borrow_mut()
+                .entry(current_guid.clone())
+                .or_default()
+                .push(neighbor_guid.clone());
+
+            let parent_path = self
+                .piece_paths
+                .borrow()
                 .get(&current_guid)
                 .cloned()
                 .unwrap_or_default();
-            for (neighbor_guid, conn, is_connected) in neighbors {
-                if self.bfs_visited.borrow().contains(&neighbor_guid) {
-                    continue;
-                }
-                let (parent_side, _child_side) = if is_connected {
-                    (&conn.connected, &conn.connecting)
-                } else {
-                    (&conn.connecting, &conn.connected)
-                };
-                if self
-                    .kit
-                    .connector_for_side_fast(&self.pieces_map, parent_side)
-                    .is_none()
-                {
-                    continue;
-                }
-                if self
-                    .kit
-                    .connection_matrix_fast(&self.pieces_map, conn, is_connected)
-                    .is_none()
-                {
-                    continue;
-                }
-                let parent_piece_guid = self
-                    .pieces_map
-                    .get(current_guid.as_str())
-                    .expect("current vertex is a design piece")
-                    .guid
-                    .as_str();
-                self.parent_of.borrow_mut().insert(
-                    neighbor_guid.clone(),
-                    PieceFlattenParent {
-                        parent_piece_guid,
-                        conn,
-                        from_connected: is_connected,
-                    },
-                );
-                self.children_of
-                    .borrow_mut()
-                    .entry(current_guid.clone())
+            self.piece_paths.borrow_mut().insert(
+                neighbor_guid.clone(),
+                format!("{},{}", parent_path, neighbor_guid),
+            );
+            self.bfs_visited.borrow_mut().insert(neighbor_guid.clone());
+            self.bfs_queue.borrow_mut().push_back(neighbor_guid);
+        }
+        true
+    }
+
+    pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
+        self.ensure_piece_reachable(piece_guid);
+        self.parent_of
+            .borrow()
+            .get(piece_guid)
+            .map(|e| e.parent_piece_guid)
+    }
+
+    pub fn semio_path_string(&self, piece_guid: &str) -> Option<String> {
+        self.ensure_piece_reachable(piece_guid);
+        self.piece_paths.borrow().get(piece_guid).cloned()
+    }
+}
+
+/// Resolve flattened geometry for one design: lazy tree expansion with per-piece memo on [`FlattenPieceState`].
+/// Call [`FlattenDesign::piece`] / [`FlattenPiece::flat_plane`] / [`FlattenPiece::flat_center`] for evaluation (rendering, export of a slice, etc.).
+/// Only call [`FlattenDesign::to_design_change`] when explicitly persisting a flattened layout — that path expands the whole design and builds diffs.
+pub struct FlattenDesign<'a> {
+    inner: Rc<FlattenGraphInner<'a>>,
+}
+
+impl<'a> FlattenDesign<'a> {
+    pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
+        let design = kit.design_by_guid(design_guid)?;
+        let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
+        let connections = design
+            .connections
+            .as_ref()
+            .map(|c| c.as_slice())
+            .unwrap_or(&[]);
+        let pieces_map: HashMap<&str, &Arc<Piece>> =
+            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        let mut adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>> = HashMap::new();
+        for conn in connections {
+            let src = conn.connected.piece.guid.as_str();
+            let tgt = conn.connecting.piece.guid.as_str();
+            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                adjacency
+                    .entry(src.to_string())
                     .or_default()
-                    .push(neighbor_guid.clone());
-
-                let parent_path = self
-                    .piece_paths
-                    .borrow()
-                    .get(&current_guid)
-                    .cloned()
-                    .unwrap_or_default();
-                self.piece_paths.borrow_mut().insert(
-                    neighbor_guid.clone(),
-                    format!("{},{}", parent_path, neighbor_guid),
-                );
-                self.bfs_visited.borrow_mut().insert(neighbor_guid.clone());
-                self.bfs_queue.borrow_mut().push_back(neighbor_guid);
+                    .push((tgt.to_string(), conn, true));
+                adjacency
+                    .entry(tgt.to_string())
+                    .or_default()
+                    .push((src.to_string(), conn, false));
             }
-            true
         }
 
-        pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
-            self.ensure_piece_reachable(piece_guid);
-            self.parent_of
-                .borrow()
-                .get(piece_guid)
-                .map(|e| e.parent_piece_guid)
-        }
+        Some(Self {
+            inner: Rc::new(FlattenGraphInner {
+                kit,
+                design,
+                pieces_map,
+                adjacency,
+                bfs_queue: RefCell::new(VecDeque::new()),
+                bfs_visited: RefCell::new(HashSet::new()),
+                next_seed_index: RefCell::new(0),
+                parent_of: RefCell::new(HashMap::new()),
+                children_of: RefCell::new(HashMap::new()),
+                piece_paths: RefCell::new(HashMap::new()),
+                nodes: RefCell::new(HashMap::new()),
+            }),
+        })
+    }
 
-        pub fn semio_path_string(&self, piece_guid: &str) -> Option<String> {
-            self.ensure_piece_reachable(piece_guid);
-            self.piece_paths.borrow().get(piece_guid).cloned()
+    pub fn design(&self) -> &'a Design {
+        self.inner.design
+    }
+
+    pub fn piece(&self, piece_guid: &str) -> FlattenPiece<'a> {
+        self.inner.ensure_piece_reachable(piece_guid);
+        FlattenPiece {
+            state: FlattenGraphInner::piece_state(&self.inner, piece_guid),
         }
     }
 
-    /// Resolve flattened geometry for one design: lazy tree expansion with per-piece memo on [`FlattenPieceState`].
-    /// Call [`FlattenDesign::piece`] / [`FlattenPiece::flat_plane`] / [`FlattenPiece::flat_center`] for evaluation (rendering, export of a slice, etc.).
-    /// Only call [`FlattenDesign::to_design_change`] when explicitly persisting a flattened layout — that path expands the whole design and builds diffs.
-    pub struct FlattenDesign<'a> {
-        inner: Rc<FlattenGraphInner<'a>>,
+    pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
+        self.inner.parent_piece_guid(piece_guid)
     }
 
-    impl<'a> FlattenDesign<'a> {
-        pub fn try_new(kit: &'a Kit, design_guid: &str) -> Option<Self> {
-            let design = kit.design_by_guid(design_guid)?;
-            let pieces = design.pieces.as_ref().map(|p| p.as_slice()).unwrap_or(&[]);
-            let connections = design
-                .connections
-                .as_ref()
-                .map(|c| c.as_slice())
-                .unwrap_or(&[]);
-            let pieces_map: HashMap<&str, &Arc<Piece>> =
-                pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+    pub fn expand_entire_design(&self) {
+        while self.inner.expand_one_bfs_step() {}
+    }
 
-            let mut adjacency: HashMap<String, Vec<(String, &'a Connection, bool)>> =
-                HashMap::new();
-            for conn in connections {
-                let src = conn.connected.piece.guid.as_str();
-                let tgt = conn.connecting.piece.guid.as_str();
-                if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                    adjacency.entry(src.to_string()).or_default().push((
-                        tgt.to_string(),
-                        conn,
-                        true,
-                    ));
-                    adjacency.entry(tgt.to_string()).or_default().push((
-                        src.to_string(),
-                        conn,
-                        false,
-                    ));
-                }
+    pub fn invalidate_flat_geometry_below(&self, piece_guid: &str) {
+        let mut stack = vec![piece_guid.to_string()];
+        while let Some(g) = stack.pop() {
+            if let Some(n) = self.inner.nodes.borrow().get(&g) {
+                n.clear_geometry_memo();
             }
-
-            Some(Self {
-                inner: Rc::new(FlattenGraphInner {
-                    kit,
-                    design,
-                    pieces_map,
-                    adjacency,
-                    bfs_queue: RefCell::new(VecDeque::new()),
-                    bfs_visited: RefCell::new(HashSet::new()),
-                    next_seed_index: RefCell::new(0),
-                    parent_of: RefCell::new(HashMap::new()),
-                    children_of: RefCell::new(HashMap::new()),
-                    piece_paths: RefCell::new(HashMap::new()),
-                    nodes: RefCell::new(HashMap::new()),
-                }),
-            })
-        }
-
-        pub fn design(&self) -> &'a Design {
-            self.inner.design
-        }
-
-        pub fn piece(&self, piece_guid: &str) -> FlattenPiece<'a> {
-            self.inner.ensure_piece_reachable(piece_guid);
-            FlattenPiece {
-                state: FlattenGraphInner::piece_state(&self.inner, piece_guid),
-            }
-        }
-
-        pub fn parent_piece_guid(&self, piece_guid: &str) -> Option<&'a str> {
-            self.inner.parent_piece_guid(piece_guid)
-        }
-
-        pub fn expand_entire_design(&self) {
-            while self.inner.expand_one_bfs_step() {}
-        }
-
-        pub fn invalidate_flat_geometry_below(&self, piece_guid: &str) {
-            let mut stack = vec![piece_guid.to_string()];
-            while let Some(g) = stack.pop() {
-                if let Some(n) = self.inner.nodes.borrow().get(&g) {
-                    n.clear_geometry_memo();
-                }
-                if let Some(chs) = self.inner.children_of.borrow().get(&g) {
-                    for c in chs.clone() {
-                        stack.push(c.clone());
-                    }
+            if let Some(chs) = self.inner.children_of.borrow().get(&g) {
+                for c in chs.clone() {
+                    stack.push(c.clone());
                 }
             }
         }
+    }
 
-        pub fn to_design_change(&self) -> DesignChange {
-            self.expand_entire_design();
-            let design_guid = self.inner.design.guid.clone();
-            let before_design = self.inner.design.clone();
-            let pieces = self
-                .inner
-                .design
-                .pieces
-                .as_ref()
-                .map(|p| p.as_slice())
-                .unwrap_or(&[]);
-            let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
+    pub fn to_design_change(&self) -> DesignChange {
+        self.expand_entire_design();
+        let design_guid = self.inner.design.guid.clone();
+        let before_design = self.inner.design.clone();
+        let pieces = self
+            .inner
+            .design
+            .pieces
+            .as_ref()
+            .map(|p| p.as_slice())
+            .unwrap_or(&[]);
+        let mut updated_pieces: Vec<DiffUpdate<PieceDiff>> = Vec::new();
 
-            for piece in pieces {
-                let fp = FlattenPiece {
-                    state: FlattenGraphInner::piece_state(&self.inner, piece.guid.as_str()),
-                };
-                let new_plane = fp.flat_plane();
-                let center = fp.flat_center();
+        for piece in pieces {
+            let fp = FlattenPiece {
+                state: FlattenGraphInner::piece_state(&self.inner, piece.guid.as_str()),
+            };
+            let new_plane = fp.flat_plane();
+            let center = fp.flat_center();
 
-                let plane_needs_update = match &piece.plane {
-                    Some(existing) => !existing.approx_eq(&new_plane),
-                    None => true,
-                };
-
-                let center_needs_update = match &piece.center {
-                    Some(existing) => {
-                        (existing.u - center.u).abs() > 0.0001
-                            || (existing.v - center.v).abs() > 0.0001
-                    }
-                    None => true,
-                };
-
-                if plane_needs_update || center_needs_update {
-                    let path_attr = self
-                        .inner
-                        .semio_path_string(piece.guid.as_str())
-                        .map(|path| CollectionDiff {
-                            added: Some(vec![AttributeDto {
-                                guid: SemioUtil::generate_guid(),
-                                key: "semio.path".to_string(),
-                                value: Some(path),
-                                definition: None,
-                            }]),
-                            removed: None,
-                            updated: None,
-                        });
-                    updated_pieces.push(DiffUpdate {
-                        key: "piece".to_string(),
-                        guid: piece.guid.clone(),
-                        diff: PieceDiff {
-                            guid: piece.guid.clone(),
-                            plane: if plane_needs_update {
-                                Some(Some(PlaneDto::from(&new_plane)))
-                            } else {
-                                None
-                            },
-                            center: if center_needs_update {
-                                Some(Some(CoordDto::from(&center)))
-                            } else {
-                                None
-                            },
-                            attributes: path_attr,
-                            ..Default::default()
-                        },
-                    });
-                }
-            }
-
-            let mut forward = DesignDiff {
-                guid: design_guid.clone(),
-                ..Default::default()
+            let plane_needs_update = match &piece.plane {
+                Some(existing) => !existing.approx_eq(&new_plane),
+                None => true,
             };
 
-            if !updated_pieces.is_empty() {
-                forward.pieces = Some(CollectionDiff {
-                    added: None,
-                    removed: None,
-                    updated: Some(updated_pieces),
+            let center_needs_update = match &piece.center {
+                Some(existing) => {
+                    (existing.u - center.u).abs() > 0.0001 || (existing.v - center.v).abs() > 0.0001
+                }
+                None => true,
+            };
+
+            if plane_needs_update || center_needs_update {
+                let path_attr = self
+                    .inner
+                    .semio_path_string(piece.guid.as_str())
+                    .map(|path| CollectionDiff {
+                        added: Some(vec![AttributeDto {
+                            guid: SemioUtil::generate_guid(),
+                            key: "semio.path".to_string(),
+                            value: Some(path),
+                            definition: None,
+                        }]),
+                        removed: None,
+                        updated: None,
+                    });
+                updated_pieces.push(DiffUpdate {
+                    key: "piece".to_string(),
+                    guid: piece.guid.clone(),
+                    diff: PieceDiff {
+                        guid: piece.guid.clone(),
+                        plane: if plane_needs_update {
+                            Some(Some(PlaneDto::from(&new_plane)))
+                        } else {
+                            None
+                        },
+                        center: if center_needs_update {
+                            Some(Some(CoordDto::from(&center)))
+                        } else {
+                            None
+                        },
+                        attributes: path_attr,
+                        ..Default::default()
+                    },
                 });
             }
+        }
 
-            let types_map = self.inner.kit.types_map_index();
-            let designs_map = self.inner.kit.designs_map_index();
-            let mut after_design = before_design.clone();
-            after_design.apply_diff(&forward, &types_map, &designs_map);
-            let backward = after_design.diff_from(&before_design);
+        let mut forward = DesignDiff {
+            guid: design_guid.clone(),
+            ..Default::default()
+        };
 
-            DesignChange {
-                forward,
-                backward,
-                author: None,
-                time: None,
-                before: Some(before_design),
-                after: Some(after_design),
+        if !updated_pieces.is_empty() {
+            forward.pieces = Some(CollectionDiff {
+                added: None,
+                removed: None,
+                updated: Some(updated_pieces),
+            });
+        }
+
+        let types_map = self.inner.kit.types_map_index();
+        let designs_map = self.inner.kit.designs_map_index();
+        let mut after_design = before_design.clone();
+        after_design.apply_diff(&forward, &types_map, &designs_map);
+        let backward = after_design.diff_from(&before_design);
+
+        DesignChange {
+            forward,
+            backward,
+            author: None,
+            time: None,
+            before: Some(before_design),
+            after: Some(after_design),
+        }
+    }
+
+    pub fn merkle_hashes(&self) -> HashMap<String, FlatMerkleHashes> {
+        let pieces = self
+            .inner
+            .design
+            .pieces
+            .as_ref()
+            .map(|p| p.as_slice())
+            .unwrap_or(&[]);
+        if pieces.is_empty() {
+            return HashMap::new();
+        }
+        let connections = self
+            .inner
+            .design
+            .connections
+            .as_ref()
+            .map(|c| c.as_slice())
+            .unwrap_or(&[]);
+        let pieces_map: HashMap<&str, &Arc<Piece>> =
+            pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
+
+        let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
+        for conn in connections {
+            let src = conn.connected.piece.guid.as_str();
+            let tgt = conn.connecting.piece.guid.as_str();
+            if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
+                adjacency.entry(src).or_default().push((tgt, conn, true));
+                adjacency.entry(tgt).or_default().push((src, conn, false));
             }
         }
 
-        pub fn merkle_hashes(&self) -> HashMap<String, FlatMerkleHashes> {
-            let pieces = self
-                .inner
-                .design
-                .pieces
-                .as_ref()
-                .map(|p| p.as_slice())
-                .unwrap_or(&[]);
-            if pieces.is_empty() {
-                return HashMap::new();
-            }
-            let connections = self
-                .inner
-                .design
-                .connections
-                .as_ref()
-                .map(|c| c.as_slice())
-                .unwrap_or(&[]);
-            let pieces_map: HashMap<&str, &Arc<Piece>> =
-                pieces.iter().map(|p| (p.guid.as_str(), p)).collect();
-
-            let mut adjacency: HashMap<&str, Vec<(&str, &Connection, bool)>> = HashMap::new();
-            for conn in connections {
-                let src = conn.connected.piece.guid.as_str();
-                let tgt = conn.connecting.piece.guid.as_str();
-                if pieces_map.contains_key(src) && pieces_map.contains_key(tgt) {
-                    adjacency.entry(src).or_default().push((tgt, conn, true));
-                    adjacency.entry(tgt).or_default().push((src, conn, false));
+        let mut components: Vec<Vec<&str>> = Vec::new();
+        {
+            let mut component_visited: HashSet<&str> = HashSet::new();
+            for piece in pieces {
+                let guid = piece.guid.as_str();
+                if component_visited.contains(guid) {
+                    continue;
                 }
-            }
-
-            let mut components: Vec<Vec<&str>> = Vec::new();
-            {
-                let mut component_visited: HashSet<&str> = HashSet::new();
-                for piece in pieces {
-                    let guid = piece.guid.as_str();
-                    if component_visited.contains(guid) {
-                        continue;
-                    }
-                    let mut component = Vec::new();
-                    let mut queue: VecDeque<&str> = VecDeque::new();
-                    queue.push_back(guid);
-                    component_visited.insert(guid);
-                    while let Some(cur) = queue.pop_front() {
-                        component.push(cur);
-                        if let Some(neighbors) = adjacency.get(cur) {
-                            for &(neigh, _, _) in neighbors {
-                                if !component_visited.contains(neigh) {
-                                    component_visited.insert(neigh);
-                                    queue.push_back(neigh);
-                                }
-                            }
-                        }
-                    }
-                    components.push(component);
-                }
-            }
-
-            let mut plane_hashes: HashMap<String, String> = HashMap::new();
-            let mut center_hashes: HashMap<String, String> = HashMap::new();
-
-            for component in &components {
-                let component_set: HashSet<&str> = component.iter().copied().collect();
-
-                let mut root: Option<&str> = None;
-                for piece in pieces {
-                    let g = piece.guid.as_str();
-                    if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some()
-                    {
-                        root = Some(g);
-                        break;
-                    }
-                }
-                if root.is_none() {
-                    let mut sorted: Vec<&str> = component.iter().copied().collect();
-                    sorted.sort();
-                    root = sorted.first().copied();
-                }
-                let root_guid = match root {
-                    Some(g) => g,
-                    None => continue,
-                };
-                let root_piece = match pieces_map.get(root_guid) {
-                    Some(p) => *p,
-                    None => continue,
-                };
-                plane_hashes.insert(
-                    root_guid.to_string(),
-                    Plane::flatten_merkle_root_hash(root_guid, root_piece.plane.as_ref()),
-                );
-                center_hashes.insert(
-                    root_guid.to_string(),
-                    Coord::flatten_merkle_root_hash(root_guid, root_piece.center.as_ref()),
-                );
-
-                let mut bfs_visited: HashSet<&str> = HashSet::new();
-                bfs_visited.insert(root_guid);
+                let mut component = Vec::new();
                 let mut queue: VecDeque<&str> = VecDeque::new();
-                queue.push_back(root_guid);
+                queue.push_back(guid);
+                component_visited.insert(guid);
                 while let Some(cur) = queue.pop_front() {
-                    let parent_plane_hash = match plane_hashes.get(cur).cloned() {
-                        Some(h) => h,
-                        None => continue,
-                    };
-                    let parent_center_hash = match center_hashes.get(cur).cloned() {
-                        Some(h) => h,
-                        None => continue,
-                    };
+                    component.push(cur);
                     if let Some(neighbors) = adjacency.get(cur) {
-                        for &(neigh, conn, is_connected) in neighbors {
-                            if bfs_visited.contains(neigh) {
-                                continue;
+                        for &(neigh, _, _) in neighbors {
+                            if !component_visited.contains(neigh) {
+                                component_visited.insert(neigh);
+                                queue.push_back(neigh);
                             }
-                            let (parent_side, child_side) = if is_connected {
-                                (&conn.connected, &conn.connecting)
-                            } else {
-                                (&conn.connecting, &conn.connected)
-                            };
-                            let parent_connector = match self
-                                .inner
-                                .kit
-                                .connector_for_side_fast(&pieces_map, parent_side)
-                            {
-                                Some(c) => c,
-                                None => continue,
-                            };
-                            let child_connector = match self
-                                .inner
-                                .kit
-                                .connector_for_side_fast(&pieces_map, child_side)
-                            {
-                                Some(c) => c,
-                                None => continue,
-                            };
-                            plane_hashes.insert(
-                                neigh.to_string(),
-                                conn.flatten_merkle_plane_chain_hash(
-                                    &parent_plane_hash,
-                                    &parent_connector,
-                                    &child_connector,
-                                ),
-                            );
-                            center_hashes.insert(
-                                neigh.to_string(),
-                                conn.flatten_merkle_center_chain_hash(
-                                    &parent_center_hash,
-                                    &parent_connector,
-                                ),
-                            );
-                            bfs_visited.insert(neigh);
-                            queue.push_back(neigh);
                         }
                     }
                 }
+                components.push(component);
             }
+        }
 
-            let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
-            for (guid, plane_hash) in plane_hashes {
-                if let Some(center_hash) = center_hashes.get(&guid).cloned() {
-                    result.insert(
-                        guid,
-                        FlatMerkleHashes {
-                            plane_hash,
-                            center_hash,
-                        },
-                    );
+        let mut plane_hashes: HashMap<String, String> = HashMap::new();
+        let mut center_hashes: HashMap<String, String> = HashMap::new();
+
+        for component in &components {
+            let component_set: HashSet<&str> = component.iter().copied().collect();
+
+            let mut root: Option<&str> = None;
+            for piece in pieces {
+                let g = piece.guid.as_str();
+                if component_set.contains(g) && piece.plane.is_some() && piece.center.is_some() {
+                    root = Some(g);
+                    break;
                 }
             }
-            result
-        }
-    }
+            if root.is_none() {
+                let mut sorted: Vec<&str> = component.iter().copied().collect();
+                sorted.sort();
+                root = sorted.first().copied();
+            }
+            let root_guid = match root {
+                Some(g) => g,
+                None => continue,
+            };
+            let root_piece = match pieces_map.get(root_guid) {
+                Some(p) => *p,
+                None => continue,
+            };
+            plane_hashes.insert(
+                root_guid.to_string(),
+                Plane::flatten_merkle_root_hash(root_guid, root_piece.plane.as_ref()),
+            );
+            center_hashes.insert(
+                root_guid.to_string(),
+                Coord::flatten_merkle_root_hash(root_guid, root_piece.center.as_ref()),
+            );
 
-    pub struct FlattenPiece<'a> {
-        pub(crate) state: Rc<FlattenPieceState<'a>>,
-    }
-
-    impl<'a> Clone for FlattenPiece<'a> {
-        fn clone(&self) -> Self {
-            FlattenPiece {
-                state: Rc::clone(&self.state),
+            let mut bfs_visited: HashSet<&str> = HashSet::new();
+            bfs_visited.insert(root_guid);
+            let mut queue: VecDeque<&str> = VecDeque::new();
+            queue.push_back(root_guid);
+            while let Some(cur) = queue.pop_front() {
+                let parent_plane_hash = match plane_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                let parent_center_hash = match center_hashes.get(cur).cloned() {
+                    Some(h) => h,
+                    None => continue,
+                };
+                if let Some(neighbors) = adjacency.get(cur) {
+                    for &(neigh, conn, is_connected) in neighbors {
+                        if bfs_visited.contains(neigh) {
+                            continue;
+                        }
+                        let (parent_side, child_side) = if is_connected {
+                            (&conn.connected, &conn.connecting)
+                        } else {
+                            (&conn.connecting, &conn.connected)
+                        };
+                        let parent_connector = match self
+                            .inner
+                            .kit
+                            .connector_for_side_fast(&pieces_map, parent_side)
+                        {
+                            Some(c) => c,
+                            None => continue,
+                        };
+                        let child_connector = match self
+                            .inner
+                            .kit
+                            .connector_for_side_fast(&pieces_map, child_side)
+                        {
+                            Some(c) => c,
+                            None => continue,
+                        };
+                        plane_hashes.insert(
+                            neigh.to_string(),
+                            conn.flatten_merkle_plane_chain_hash(
+                                &parent_plane_hash,
+                                &parent_connector,
+                                &child_connector,
+                            ),
+                        );
+                        center_hashes.insert(
+                            neigh.to_string(),
+                            conn.flatten_merkle_center_chain_hash(
+                                &parent_center_hash,
+                                &parent_connector,
+                            ),
+                        );
+                        bfs_visited.insert(neigh);
+                        queue.push_back(neigh);
+                    }
+                }
             }
         }
+
+        let mut result: HashMap<String, FlatMerkleHashes> = HashMap::new();
+        for (guid, plane_hash) in plane_hashes {
+            if let Some(center_hash) = center_hashes.get(&guid).cloned() {
+                result.insert(
+                    guid,
+                    FlatMerkleHashes {
+                        plane_hash,
+                        center_hash,
+                    },
+                );
+            }
+        }
+        result
+    }
+}
+
+pub struct FlattenPiece<'a> {
+    pub(crate) state: Rc<FlattenPieceState<'a>>,
+}
+
+impl<'a> Clone for FlattenPiece<'a> {
+    fn clone(&self) -> Self {
+        FlattenPiece {
+            state: Rc::clone(&self.state),
+        }
+    }
+}
+
+impl<'a> FlattenPiece<'a> {
+    pub fn guid(&self) -> &str {
+        self.state.guid()
     }
 
-    impl<'a> FlattenPiece<'a> {
-        pub fn guid(&self) -> &str {
-            self.state.guid()
-        }
+    pub fn world_matrix(&self) -> Matrix4<f64> {
+        self.state.world_matrix()
+    }
 
-        pub fn world_matrix(&self) -> Matrix4<f64> {
-            self.state.world_matrix()
-        }
+    pub fn flat_plane(&self) -> Plane {
+        self.state.flat_plane()
+    }
 
-        pub fn flat_plane(&self) -> Plane {
-            self.state.flat_plane()
-        }
+    pub fn flat_center(&self) -> Coord {
+        self.state.flat_center()
+    }
 
-        pub fn flat_center(&self) -> Coord {
-            self.state.flat_center()
-        }
+    pub fn parent(&self) -> Option<FlattenPiece<'a>> {
+        let g = self.state.graph.upgrade()?;
+        g.ensure_piece_reachable(&self.state.guid);
+        let parent_guid: Option<String> = g
+            .parent_of
+            .borrow()
+            .get(&self.state.guid)
+            .map(|e| e.parent_piece_guid.to_string());
+        let pg = parent_guid?;
+        Some(FlattenPiece {
+            state: FlattenGraphInner::piece_state(&g, &pg),
+        })
+    }
 
-        pub fn parent(&self) -> Option<FlattenPiece<'a>> {
-            let g = self.state.graph.upgrade()?;
-            g.ensure_piece_reachable(&self.state.guid);
-            let parent_guid: Option<String> = g
-                .parent_of
-                .borrow()
-                .get(&self.state.guid)
-                .map(|e| e.parent_piece_guid.to_string());
-            let pg = parent_guid?;
-            Some(FlattenPiece {
-                state: FlattenGraphInner::piece_state(&g, &pg),
+    pub fn children(&self) -> Vec<FlattenPiece<'a>> {
+        let g = match self.state.graph.upgrade() {
+            Some(inner) => inner,
+            None => return vec![],
+        };
+        g.ensure_piece_reachable(&self.state.guid);
+        let child_guids: Vec<String> = g
+            .children_of
+            .borrow()
+            .get(&self.state.guid)
+            .cloned()
+            .unwrap_or_default();
+        child_guids
+            .into_iter()
+            .map(|guid| FlattenPiece {
+                state: FlattenGraphInner::piece_state(&g, &guid),
             })
-        }
-
-        pub fn children(&self) -> Vec<FlattenPiece<'a>> {
-            let g = match self.state.graph.upgrade() {
-                Some(inner) => inner,
-                None => return vec![],
-            };
-            g.ensure_piece_reachable(&self.state.guid);
-            let child_guids: Vec<String> = g
-                .children_of
-                .borrow()
-                .get(&self.state.guid)
-                .cloned()
-                .unwrap_or_default();
-            child_guids
-                .into_iter()
-                .map(|guid| FlattenPiece {
-                    state: FlattenGraphInner::piece_state(&g, &guid),
-                })
-                .collect()
-        }
+            .collect()
     }
+}
 //#endregion
 
 impl Kit {
@@ -19614,128 +19606,14 @@ impl Kit {
         }
     }
 
-    /// Deletes pieces and connections from a design, returning a canonical `SemioReport<DesignDiff>`.
-    /// Removes stale connections referencing deleted pieces.
-    /// Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
+    /// Deletes pieces and connections from a design — forwards to [`Design::delete_pieces_and_connections_report`].
     pub fn delete_pieces_and_connections_in_design(
         &self,
         design: &Design,
         piece_guids: &[String],
         connection_guids: &[String],
     ) -> SemioReport<DesignDiff> {
-        let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
-        let connections = design.connections.as_deref().unwrap_or(&[]);
-
-        let mut stale_connection_guids: HashSet<String> = HashSet::new();
-        for conn in connections {
-            if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
-                || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
-            {
-                stale_connection_guids.insert(conn.guid.clone());
-            }
-        }
-
-        let mut all_removed_connection_guids: HashSet<String> =
-            connection_guids.iter().cloned().collect();
-        all_removed_connection_guids.extend(stale_connection_guids);
-
-        let mut fixed_piece_guids: Vec<String> = Vec::new();
-        for conn_guid in &all_removed_connection_guids {
-            let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
-                Some(c) => c,
-                None => continue,
-            };
-            let connecting_guid = &conn.connecting.piece.guid;
-            if deleted_piece_set.contains(connecting_guid.as_str()) {
-                continue;
-            }
-            let has_other_parent = connections.iter().any(|c| {
-                c.connecting.piece.guid == *connecting_guid
-                    && !all_removed_connection_guids.contains(&c.guid)
-            });
-            if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
-                fixed_piece_guids.push(connecting_guid.clone());
-            }
-        }
-
-        let flat_rep = self.flatten_for(design);
-        if !flat_rep.ok {
-            return SemioReport::err(flat_rep.errors);
-        }
-        let fd =
-            FlattenDesign::try_new(self, &design.guid).expect("flatten succeeded implies layout");
-        let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
-        if let Some(pieces) = &design.pieces {
-            for piece in pieces {
-                let fp = fd.piece(piece.guid.as_str());
-                flat_piece_map.insert(
-                    piece.guid.clone(),
-                    (Some(fp.flat_plane()), Some(fp.flat_center())),
-                );
-            }
-        }
-
-        let pieces_removed: Vec<RemovedItem> = piece_guids
-            .iter()
-            .map(|g| RemovedItem { guid: g.clone() })
-            .collect();
-        let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
-            .iter()
-            .map(|g| {
-                let (flat_plane, flat_center) = flat_piece_map
-                    .get(g)
-                    .cloned()
-                    .unwrap_or((Some(Plane::default()), Some(Coord::default())));
-                DiffUpdate {
-                    key: "piece".to_string(),
-                    guid: g.clone(),
-                    diff: PieceDiff {
-                        guid: g.clone(),
-                        plane: Some(flat_plane.as_ref().map(PlaneDto::from)),
-                        center: Some(flat_center.as_ref().map(CoordDto::from)),
-                        ..Default::default()
-                    },
-                }
-            })
-            .collect();
-        let mut sorted_removed_connections: Vec<String> =
-            all_removed_connection_guids.into_iter().collect();
-        sorted_removed_connections.sort();
-        let connections_removed: Vec<RemovedItem> = sorted_removed_connections
-            .iter()
-            .map(|g| RemovedItem { guid: g.clone() })
-            .collect();
-
-        let mut diff = DesignDiff {
-            guid: design.guid.clone(),
-            ..Default::default()
-        };
-
-        if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
-            diff.pieces = Some(CollectionDiff {
-                removed: if pieces_removed.is_empty() {
-                    None
-                } else {
-                    Some(pieces_removed)
-                },
-                updated: if pieces_updated.is_empty() {
-                    None
-                } else {
-                    Some(pieces_updated)
-                },
-                added: None,
-            });
-        }
-
-        if !connections_removed.is_empty() {
-            diff.connections = Some(CollectionDiff {
-                removed: Some(connections_removed),
-                updated: None,
-                added: None,
-            });
-        }
-
-        SemioReport::ok_with(diff, flat_rep.warnings, flat_rep.infos)
+        design.delete_pieces_and_connections_report(self, piece_guids, connection_guids)
     }
 
     pub fn find_type_entity<'a>(&'a self, t: &Type) -> Option<&'a Type> {
@@ -20315,16 +20193,163 @@ impl Design {
         kit.flatten_for(self)
     }
 
-    /// Deletes pieces and connections using entity references; expands stale connection removals.
+    /// Computes a reversible diff that removes the given pieces (by GUID list) and connections from this design.
+    /// Removes stale connections that reference deleted pieces. Pieces that become roots after connection removal
+    /// receive plane/center from the memoized flatten graph ([`FlattenPieceState`] caches derived geometry).
+    pub fn delete_pieces_and_connections_report(
+        &self,
+        kit: &Kit,
+        piece_guids: &[String],
+        connection_guids: &[String],
+    ) -> SemioReport<DesignDiff> {
+        let deleted_piece_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+        let connections = self.connections.as_deref().unwrap_or(&[]);
+
+        let mut stale_connection_guids: HashSet<String> = HashSet::new();
+        for conn in connections {
+            if deleted_piece_set.contains(conn.connected.piece.guid.as_str())
+                || deleted_piece_set.contains(conn.connecting.piece.guid.as_str())
+            {
+                stale_connection_guids.insert(conn.guid.clone());
+            }
+        }
+
+        let mut all_removed_connection_guids: HashSet<String> =
+            connection_guids.iter().cloned().collect();
+        all_removed_connection_guids.extend(stale_connection_guids);
+
+        let mut fixed_piece_guids: Vec<String> = Vec::new();
+        for conn_guid in &all_removed_connection_guids {
+            let conn = match connections.iter().find(|c| &c.guid == conn_guid) {
+                Some(c) => c,
+                None => continue,
+            };
+            let connecting_guid = &conn.connecting.piece.guid;
+            if deleted_piece_set.contains(connecting_guid.as_str()) {
+                continue;
+            }
+            let has_other_parent = connections.iter().any(|c| {
+                c.connecting.piece.guid == *connecting_guid
+                    && !all_removed_connection_guids.contains(&c.guid)
+            });
+            if !has_other_parent && !fixed_piece_guids.contains(connecting_guid) {
+                fixed_piece_guids.push(connecting_guid.clone());
+            }
+        }
+
+        let flat_rep = kit.flatten_for(self);
+        if !flat_rep.ok {
+            return SemioReport::err(flat_rep.errors);
+        }
+        let fd = FlattenDesign::try_new(kit, &self.guid).expect("flatten succeeded implies layout");
+        let mut flat_piece_map: HashMap<String, (Option<Plane>, Option<Coord>)> = HashMap::new();
+        if let Some(pieces) = &self.pieces {
+            for piece in pieces {
+                let fp = fd.piece(piece.guid.as_str());
+                flat_piece_map.insert(
+                    piece.guid.clone(),
+                    (Some(fp.flat_plane()), Some(fp.flat_center())),
+                );
+            }
+        }
+
+        let pieces_removed: Vec<RemovedItem> = piece_guids
+            .iter()
+            .map(|g| RemovedItem { guid: g.clone() })
+            .collect();
+        let pieces_updated: Vec<DiffUpdate<PieceDiff>> = fixed_piece_guids
+            .iter()
+            .map(|g| {
+                let (flat_plane, flat_center) = flat_piece_map
+                    .get(g)
+                    .cloned()
+                    .unwrap_or((Some(Plane::default()), Some(Coord::default())));
+                DiffUpdate {
+                    key: "piece".to_string(),
+                    guid: g.clone(),
+                    diff: PieceDiff {
+                        guid: g.clone(),
+                        plane: Some(flat_plane.as_ref().map(PlaneDto::from)),
+                        center: Some(flat_center.as_ref().map(CoordDto::from)),
+                        ..Default::default()
+                    },
+                }
+            })
+            .collect();
+        let mut sorted_removed_connections: Vec<String> =
+            all_removed_connection_guids.into_iter().collect();
+        sorted_removed_connections.sort();
+        let connections_removed: Vec<RemovedItem> = sorted_removed_connections
+            .iter()
+            .map(|g| RemovedItem { guid: g.clone() })
+            .collect();
+
+        let mut diff = DesignDiff {
+            guid: self.guid.clone(),
+            ..Default::default()
+        };
+
+        if !pieces_removed.is_empty() || !pieces_updated.is_empty() {
+            diff.pieces = Some(CollectionDiff {
+                removed: if pieces_removed.is_empty() {
+                    None
+                } else {
+                    Some(pieces_removed)
+                },
+                updated: if pieces_updated.is_empty() {
+                    None
+                } else {
+                    Some(pieces_updated)
+                },
+                added: None,
+            });
+        }
+
+        if !connections_removed.is_empty() {
+            diff.connections = Some(CollectionDiff {
+                removed: Some(connections_removed),
+                updated: None,
+                added: None,
+            });
+        }
+
+        SemioReport::ok_with(diff, flat_rep.warnings, flat_rep.infos)
+    }
+
+    /// Deletes pieces and connections using graph handles: [`Arc<Piece>`] rows from this design’s `pieces`
+    /// list (pointer identity preferred) and [`Connection`] values whose GUID exists in this design.
     pub fn delete_pieces_and_connections(
         &self,
         kit: &Kit,
-        pieces: &[Piece],
+        pieces: &[Arc<Piece>],
         connections: &[Connection],
     ) -> SemioReport<DesignDiff> {
+        for p in pieces {
+            let belongs = self.pieces.as_ref().map_or(false, |v| {
+                v.iter().any(|dp| Arc::ptr_eq(dp, p) || dp.guid == p.guid)
+            });
+            if !belongs {
+                return SemioReport::err(vec![OperationNote {
+                    code: Some("design.delete.unknown-piece".into()),
+                    message: format!("Piece {} is not part of this design graph.", p.guid),
+                }]);
+            }
+        }
+        for c in connections {
+            let belongs = self
+                .connections
+                .as_ref()
+                .map_or(false, |v| v.iter().any(|dc| dc.guid == c.guid));
+            if !belongs {
+                return SemioReport::err(vec![OperationNote {
+                    code: Some("design.delete.unknown-connection".into()),
+                    message: format!("Connection {} is not in this design.", c.guid),
+                }]);
+            }
+        }
         let piece_guids: Vec<String> = pieces.iter().map(|p| p.guid.clone()).collect();
         let connection_guids: Vec<String> = connections.iter().map(|c| c.guid.clone()).collect();
-        kit.delete_pieces_and_connections_in_design(self, &piece_guids, &connection_guids)
+        self.delete_pieces_and_connections_report(kit, &piece_guids, &connection_guids)
     }
 
     pub fn drag_pieces(&self, pieces: &[Piece], offset: &Coord) -> DesignDiff {
@@ -20522,29 +20547,55 @@ pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGr
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum KitGranularEvent {
     /// A piece was added to a design.
-    PieceAdded { design_guid: String, piece_guid: String },
+    PieceAdded {
+        design_guid: String,
+        piece_guid: String,
+    },
     /// A piece was removed from a design.
-    PieceRemoved { design_guid: String, piece_guid: String },
+    PieceRemoved {
+        design_guid: String,
+        piece_guid: String,
+    },
     /// One or more fields on a piece changed.
-    PieceUpdated { design_guid: String, piece_guid: String, fields: Vec<String> },
+    PieceUpdated {
+        design_guid: String,
+        piece_guid: String,
+        fields: Vec<String>,
+    },
     /// A connection was added to a design.
-    ConnectionAdded { design_guid: String, connection_guid: String },
+    ConnectionAdded {
+        design_guid: String,
+        connection_guid: String,
+    },
     /// A connection was removed from a design.
-    ConnectionRemoved { design_guid: String, connection_guid: String },
+    ConnectionRemoved {
+        design_guid: String,
+        connection_guid: String,
+    },
     /// One or more fields on a connection changed.
-    ConnectionUpdated { design_guid: String, connection_guid: String, fields: Vec<String> },
+    ConnectionUpdated {
+        design_guid: String,
+        connection_guid: String,
+        fields: Vec<String>,
+    },
     /// A type was added to the kit.
     TypeAdded { type_guid: String },
     /// A type was removed from the kit.
     TypeRemoved { type_guid: String },
     /// One or more fields on a type changed.
-    TypeUpdated { type_guid: String, fields: Vec<String> },
+    TypeUpdated {
+        type_guid: String,
+        fields: Vec<String>,
+    },
     /// A design was added to the kit.
     DesignAdded { design_guid: String },
     /// A design was removed from the kit.
     DesignRemoved { design_guid: String },
     /// One or more fields on a design changed (excluding pieces/connections which have their own events).
-    DesignUpdated { design_guid: String, fields: Vec<String> },
+    DesignUpdated {
+        design_guid: String,
+        fields: Vec<String>,
+    },
     /// Kit-level metadata changed (name, version, description, etc.).
     KitMetadataUpdated { fields: Vec<String> },
 }
@@ -20557,15 +20608,33 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
 
     // Kit-level metadata
     let mut kit_fields = Vec::new();
-    if diff.name.is_some() { kit_fields.push("name".to_string()); }
-    if diff.version.is_some() { kit_fields.push("version".to_string()); }
-    if diff.description.is_some() { kit_fields.push("description".to_string()); }
-    if diff.icon.is_some() { kit_fields.push("icon".to_string()); }
-    if diff.image.is_some() { kit_fields.push("image".to_string()); }
-    if diff.preview.is_some() { kit_fields.push("preview".to_string()); }
-    if diff.remote.is_some() { kit_fields.push("remote".to_string()); }
-    if diff.homepage.is_some() { kit_fields.push("homepage".to_string()); }
-    if diff.license.is_some() { kit_fields.push("license".to_string()); }
+    if diff.name.is_some() {
+        kit_fields.push("name".to_string());
+    }
+    if diff.version.is_some() {
+        kit_fields.push("version".to_string());
+    }
+    if diff.description.is_some() {
+        kit_fields.push("description".to_string());
+    }
+    if diff.icon.is_some() {
+        kit_fields.push("icon".to_string());
+    }
+    if diff.image.is_some() {
+        kit_fields.push("image".to_string());
+    }
+    if diff.preview.is_some() {
+        kit_fields.push("preview".to_string());
+    }
+    if diff.remote.is_some() {
+        kit_fields.push("remote".to_string());
+    }
+    if diff.homepage.is_some() {
+        kit_fields.push("homepage".to_string());
+    }
+    if diff.license.is_some() {
+        kit_fields.push("license".to_string());
+    }
     if !kit_fields.is_empty() {
         events.push(KitGranularEvent::KitMetadataUpdated { fields: kit_fields });
     }
@@ -20574,30 +20643,58 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
     if let Some(ref types_diff) = diff.types {
         if let Some(ref added) = types_diff.added {
             for t in added {
-                events.push(KitGranularEvent::TypeAdded { type_guid: t.guid.clone() });
+                events.push(KitGranularEvent::TypeAdded {
+                    type_guid: t.guid.clone(),
+                });
             }
         }
         if let Some(ref removed) = types_diff.removed {
             for r in removed {
-                events.push(KitGranularEvent::TypeRemoved { type_guid: r.guid.clone() });
+                events.push(KitGranularEvent::TypeRemoved {
+                    type_guid: r.guid.clone(),
+                });
             }
         }
         if let Some(ref updated) = types_diff.updated {
             for u in updated {
                 let mut fields = Vec::new();
                 let d = &u.diff;
-                if d.name.is_some() { fields.push("name".to_string()); }
-                if d.description.is_some() { fields.push("description".to_string()); }
-                if d.icon.is_some() { fields.push("icon".to_string()); }
-                if d.image.is_some() { fields.push("image".to_string()); }
-                if d.folder.is_some() { fields.push("folder".to_string()); }
-                if d.unit.is_some() { fields.push("unit".to_string()); }
-                if d.stock.is_some() { fields.push("stock".to_string()); }
-                if d.is_abstract.is_some() { fields.push("isAbstract".to_string()); }
-                if d.models.is_some() { fields.push("models".to_string()); }
-                if d.connectors.is_some() { fields.push("connectors".to_string()); }
-                if d.props.is_some() { fields.push("props".to_string()); }
-                if d.attributes.is_some() { fields.push("attributes".to_string()); }
+                if d.name.is_some() {
+                    fields.push("name".to_string());
+                }
+                if d.description.is_some() {
+                    fields.push("description".to_string());
+                }
+                if d.icon.is_some() {
+                    fields.push("icon".to_string());
+                }
+                if d.image.is_some() {
+                    fields.push("image".to_string());
+                }
+                if d.folder.is_some() {
+                    fields.push("folder".to_string());
+                }
+                if d.unit.is_some() {
+                    fields.push("unit".to_string());
+                }
+                if d.stock.is_some() {
+                    fields.push("stock".to_string());
+                }
+                if d.is_abstract.is_some() {
+                    fields.push("isAbstract".to_string());
+                }
+                if d.models.is_some() {
+                    fields.push("models".to_string());
+                }
+                if d.connectors.is_some() {
+                    fields.push("connectors".to_string());
+                }
+                if d.props.is_some() {
+                    fields.push("props".to_string());
+                }
+                if d.attributes.is_some() {
+                    fields.push("attributes".to_string());
+                }
                 if !fields.is_empty() {
                     events.push(KitGranularEvent::TypeUpdated {
                         type_guid: u.guid.clone(),
@@ -20612,12 +20709,16 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
     if let Some(ref designs_diff) = diff.designs {
         if let Some(ref added) = designs_diff.added {
             for d in added {
-                events.push(KitGranularEvent::DesignAdded { design_guid: d.guid.clone() });
+                events.push(KitGranularEvent::DesignAdded {
+                    design_guid: d.guid.clone(),
+                });
             }
         }
         if let Some(ref removed) = designs_diff.removed {
             for r in removed {
-                events.push(KitGranularEvent::DesignRemoved { design_guid: r.guid.clone() });
+                events.push(KitGranularEvent::DesignRemoved {
+                    design_guid: r.guid.clone(),
+                });
             }
         }
         if let Some(ref updated) = designs_diff.updated {
@@ -20627,15 +20728,33 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
 
                 // Design-level fields
                 let mut fields = Vec::new();
-                if d.name.is_some() { fields.push("name".to_string()); }
-                if d.description.is_some() { fields.push("description".to_string()); }
-                if d.icon.is_some() { fields.push("icon".to_string()); }
-                if d.image.is_some() { fields.push("image".to_string()); }
-                if d.folder.is_some() { fields.push("folder".to_string()); }
-                if d.unit.is_some() { fields.push("unit".to_string()); }
-                if d.is_abstract.is_some() { fields.push("isAbstract".to_string()); }
-                if d.props.is_some() { fields.push("props".to_string()); }
-                if d.attributes.is_some() { fields.push("attributes".to_string()); }
+                if d.name.is_some() {
+                    fields.push("name".to_string());
+                }
+                if d.description.is_some() {
+                    fields.push("description".to_string());
+                }
+                if d.icon.is_some() {
+                    fields.push("icon".to_string());
+                }
+                if d.image.is_some() {
+                    fields.push("image".to_string());
+                }
+                if d.folder.is_some() {
+                    fields.push("folder".to_string());
+                }
+                if d.unit.is_some() {
+                    fields.push("unit".to_string());
+                }
+                if d.is_abstract.is_some() {
+                    fields.push("isAbstract".to_string());
+                }
+                if d.props.is_some() {
+                    fields.push("props".to_string());
+                }
+                if d.attributes.is_some() {
+                    fields.push("attributes".to_string());
+                }
                 if !fields.is_empty() {
                     events.push(KitGranularEvent::DesignUpdated {
                         design_guid: design_guid.clone(),
@@ -20665,16 +20784,36 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
                         for pu in updated {
                             let mut pf = Vec::new();
                             let pd = &pu.diff;
-                            if pd.name.is_some() { pf.push("name".to_string()); }
-                            if pd.description.is_some() { pf.push("description".to_string()); }
-                            if pd.type_ref.is_some() { pf.push("type".to_string()); }
-                            if pd.design.is_some() { pf.push("design".to_string()); }
-                            if pd.plane.is_some() { pf.push("plane".to_string()); }
-                            if pd.center.is_some() { pf.push("center".to_string()); }
-                            if pd.scale.is_some() { pf.push("scale".to_string()); }
-                            if pd.color.is_some() { pf.push("color".to_string()); }
-                            if pd.props.is_some() { pf.push("props".to_string()); }
-                            if pd.attributes.is_some() { pf.push("attributes".to_string()); }
+                            if pd.name.is_some() {
+                                pf.push("name".to_string());
+                            }
+                            if pd.description.is_some() {
+                                pf.push("description".to_string());
+                            }
+                            if pd.type_ref.is_some() {
+                                pf.push("type".to_string());
+                            }
+                            if pd.design.is_some() {
+                                pf.push("design".to_string());
+                            }
+                            if pd.plane.is_some() {
+                                pf.push("plane".to_string());
+                            }
+                            if pd.center.is_some() {
+                                pf.push("center".to_string());
+                            }
+                            if pd.scale.is_some() {
+                                pf.push("scale".to_string());
+                            }
+                            if pd.color.is_some() {
+                                pf.push("color".to_string());
+                            }
+                            if pd.props.is_some() {
+                                pf.push("props".to_string());
+                            }
+                            if pd.attributes.is_some() {
+                                pf.push("attributes".to_string());
+                            }
                             if !pf.is_empty() {
                                 events.push(KitGranularEvent::PieceUpdated {
                                     design_guid: design_guid.clone(),
@@ -20708,16 +20847,36 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
                         for cu in updated {
                             let mut cf = Vec::new();
                             let cd = &cu.diff;
-                            if cd.gap.is_some() { cf.push("gap".to_string()); }
-                            if cd.shift.is_some() { cf.push("shift".to_string()); }
-                            if cd.rise.is_some() { cf.push("rise".to_string()); }
-                            if cd.rotation.is_some() { cf.push("rotation".to_string()); }
-                            if cd.turn.is_some() { cf.push("turn".to_string()); }
-                            if cd.tilt.is_some() { cf.push("tilt".to_string()); }
-                            if cd.connected.is_some() { cf.push("connected".to_string()); }
-                            if cd.connecting.is_some() { cf.push("connecting".to_string()); }
-                            if cd.description.is_some() { cf.push("description".to_string()); }
-                            if cd.attributes.is_some() { cf.push("attributes".to_string()); }
+                            if cd.gap.is_some() {
+                                cf.push("gap".to_string());
+                            }
+                            if cd.shift.is_some() {
+                                cf.push("shift".to_string());
+                            }
+                            if cd.rise.is_some() {
+                                cf.push("rise".to_string());
+                            }
+                            if cd.rotation.is_some() {
+                                cf.push("rotation".to_string());
+                            }
+                            if cd.turn.is_some() {
+                                cf.push("turn".to_string());
+                            }
+                            if cd.tilt.is_some() {
+                                cf.push("tilt".to_string());
+                            }
+                            if cd.connected.is_some() {
+                                cf.push("connected".to_string());
+                            }
+                            if cd.connecting.is_some() {
+                                cf.push("connecting".to_string());
+                            }
+                            if cd.description.is_some() {
+                                cf.push("description".to_string());
+                            }
+                            if cd.attributes.is_some() {
+                                cf.push("attributes".to_string());
+                            }
                             if !cf.is_empty() {
                                 events.push(KitGranularEvent::ConnectionUpdated {
                                     design_guid: design_guid.clone(),
@@ -21779,11 +21938,7 @@ mod tests {
             let mut flat_design = design.clone();
             let types_map = kit.types_map_index();
             let designs_map = kit.designs_map_index();
-            flat_design.apply_diff(
-                &flat_design_change.forward,
-                &types_map,
-                &designs_map,
-            );
+            flat_design.apply_diff(&flat_design_change.forward, &types_map, &designs_map);
 
             let expected_pieces = expected_design
                 .pieces
@@ -22100,12 +22255,10 @@ mod tests {
                         })
                         .expect("Design not found");
 
-                    let filtered = kit.filter(
-                        &KitFilter {
-                            design_guid: Some(design.guid.clone()),
-                            ..Default::default()
-                        },
-                    );
+                    let filtered = kit.filter(&KitFilter {
+                        design_guid: Some(design.guid.clone()),
+                        ..Default::default()
+                    });
 
                     assert_eq!(
                         filtered.designs.as_ref().map(|v| v.len()).unwrap_or(0),
@@ -22240,12 +22393,10 @@ mod tests {
                         })
                         .expect("Design not found");
 
-                    let filtered = kit.filter(
-                        &KitFilter {
-                            design_guid: Some(design.guid.clone()),
-                            ..Default::default()
-                        },
-                    );
+                    let filtered = kit.filter(&KitFilter {
+                        design_guid: Some(design.guid.clone()),
+                        ..Default::default()
+                    });
 
                     assert_eq!(filtered.guid, kit.guid);
                     assert_eq!(filtered.name, kit.name);
@@ -22265,15 +22416,13 @@ mod tests {
                         .type_include
                         .as_ref()
                         .expect("typeInclude missing");
-                    let filtered = kit.filter(
-                        &KitFilter {
-                            types: Some(GlobFilter {
-                                include: Some(patterns.clone()),
-                                exclude: None,
-                            }),
-                            ..Default::default()
-                        },
-                    );
+                    let filtered = kit.filter(&KitFilter {
+                        types: Some(GlobFilter {
+                            include: Some(patterns.clone()),
+                            exclude: None,
+                        }),
+                        ..Default::default()
+                    });
                     let types = filtered.types.as_ref().unwrap();
                     assert!(!types.is_empty());
                     for t in types {
@@ -22299,15 +22448,13 @@ mod tests {
                         .as_ref()
                         .expect("typeExclude missing");
                     let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
-                    let filtered = kit.filter(
-                        &KitFilter {
-                            types: Some(GlobFilter {
-                                include: None,
-                                exclude: Some(patterns.clone()),
-                            }),
-                            ..Default::default()
-                        },
-                    );
+                    let filtered = kit.filter(&KitFilter {
+                        types: Some(GlobFilter {
+                            include: None,
+                            exclude: Some(patterns.clone()),
+                        }),
+                        ..Default::default()
+                    });
                     let types = filtered.types.as_ref().unwrap();
                     assert!(types.len() < total_types);
                     for t in types {
@@ -22334,15 +22481,13 @@ mod tests {
                         .design_include
                         .as_ref()
                         .expect("designInclude missing");
-                    let filtered = kit.filter(
-                        &KitFilter {
-                            designs: Some(GlobFilter {
-                                include: Some(patterns.clone()),
-                                exclude: None,
-                            }),
-                            ..Default::default()
-                        },
-                    );
+                    let filtered = kit.filter(&KitFilter {
+                        designs: Some(GlobFilter {
+                            include: Some(patterns.clone()),
+                            exclude: None,
+                        }),
+                        ..Default::default()
+                    });
                     let designs = filtered.designs.as_ref().unwrap();
                     assert!(!designs.is_empty());
                     for d in designs {
@@ -22397,22 +22542,18 @@ mod tests {
                                 .find(|d| d.name == *design_name && d.parent.is_none())
                         })
                         .expect("Design not found");
-                    let design_filtered = kit.filter(
-                        &KitFilter {
-                            design_guid: Some(design.guid.clone()),
-                            ..Default::default()
-                        },
-                    );
-                    let combined_filtered = kit.filter(
-                        &KitFilter {
-                            design_guid: Some(design.guid.clone()),
-                            types: Some(GlobFilter {
-                                include: None,
-                                exclude: Some(exclude_patterns.clone()),
-                            }),
-                            ..Default::default()
-                        },
-                    );
+                    let design_filtered = kit.filter(&KitFilter {
+                        design_guid: Some(design.guid.clone()),
+                        ..Default::default()
+                    });
+                    let combined_filtered = kit.filter(&KitFilter {
+                        design_guid: Some(design.guid.clone()),
+                        types: Some(GlobFilter {
+                            include: None,
+                            exclude: Some(exclude_patterns.clone()),
+                        }),
+                        ..Default::default()
+                    });
                     assert!(
                         combined_filtered
                             .types
@@ -25448,8 +25589,11 @@ mod tests {
                 proposer.start_session().await.unwrap();
                 reviewer.start_session().await.unwrap();
 
-                let change =
-                    backbone_rename_change("backbone-dev-guid", "Backbone Dev", "Backbone Dev Edited");
+                let change = backbone_rename_change(
+                    "backbone-dev-guid",
+                    "Backbone Dev",
+                    "Backbone Dev Edited",
+                );
                 let revision = timeout(Duration::from_secs(2), proposer.propose_change(change))
                     .await
                     .unwrap()
@@ -25463,7 +25607,8 @@ mod tests {
                 let persisted = import_dev_kit(kit_path.to_str().unwrap()).unwrap();
                 assert_eq!(persisted.name, "Backbone Dev Edited");
 
-                let ledger_path = std::path::PathBuf::from(format!("{}.ledger.json", kit_path.display()));
+                let ledger_path =
+                    std::path::PathBuf::from(format!("{}.ledger.json", kit_path.display()));
                 let ledger: Value =
                     serde_json::from_str(&std::fs::read_to_string(ledger_path).unwrap()).unwrap();
                 assert_eq!(ledger["revision"], 1);
@@ -25514,7 +25659,10 @@ mod tests {
                 assert_eq!(started.interaction_timeout, Duration::from_millis(250));
 
                 sleep(Duration::from_millis(650)).await;
-                assert_eq!(client.interaction_warning(), InteractionLockWarning::IdleTimeout);
+                assert_eq!(
+                    client.interaction_warning(),
+                    InteractionLockWarning::IdleTimeout
+                );
 
                 let change = backbone_rename_change(
                     "backbone-timeout-guid",
@@ -25543,7 +25691,7 @@ mod tests {
                     write
                         .send(WsMessage::Text(
                             serde_json::json!({
-                                "type": "welcome",
+                                "kind": "welcome",
                                 "interaction_timeout_ms": 5000u64,
                                 "revision": 0u64,
                                 "kit_json": kit_json
@@ -25555,12 +25703,15 @@ mod tests {
                         .unwrap();
 
                     let session_start = read.next().await.unwrap().unwrap();
-                    assert!(session_start.into_text().unwrap().contains("\"session_start\""));
+                    assert!(session_start
+                        .into_text()
+                        .unwrap()
+                        .contains("\"session_start\""));
 
                     write
                         .send(WsMessage::Text(
                             serde_json::json!({
-                                "type": "session_ack",
+                                "kind": "session_ack",
                                 "interaction_timeout_ms": 5000u64,
                                 "client_id": "remote-client"
                             })
@@ -25572,14 +25723,14 @@ mod tests {
 
                     let propose = read.next().await.unwrap().unwrap().into_text().unwrap();
                     let propose: Value = serde_json::from_str(&propose).unwrap();
-                    assert_eq!(propose["type"], "propose");
+                    assert_eq!(propose["kind"], "propose");
                     let candidate_id = propose["candidate_id"].as_str().unwrap().to_string();
                     let change = propose["change"].clone();
 
                     write
                         .send(WsMessage::Text(
                             serde_json::json!({
-                                "type": "agreement_request",
+                                "kind": "agreement_request",
                                 "candidate_id": candidate_id,
                                 "change": change
                             })
@@ -25591,13 +25742,13 @@ mod tests {
 
                     let vote = read.next().await.unwrap().unwrap().into_text().unwrap();
                     let vote: Value = serde_json::from_str(&vote).unwrap();
-                    assert_eq!(vote["type"], "vote");
+                    assert_eq!(vote["kind"], "vote");
                     assert_eq!(vote["agree"], true);
 
                     write
                         .send(WsMessage::Text(
                             serde_json::json!({
-                                "type": "committed",
+                                "kind": "committed",
                                 "candidate_id": candidate_id,
                                 "revision": 1u64,
                                 "change": change
@@ -26197,6 +26348,1245 @@ mod benchmark {
 pub use benchmark::*;
 
 #[cfg(not(target_arch = "wasm32"))]
-mod kit_backbone_async;
+mod kit_backbone_async {
+    //! Collaborative async kit backbones (native targets only).
+    //!
+    //! Pattern: optimistic local [`Kit`] + authoritative snapshot on the backbone with a linear
+    //! commit ledger. Sessions carry an interaction timeout chosen by the backbone; when it fires,
+    //! collaborators are disconnected and [`InteractionLockWarning`] signals UI to offer reconnect vs.
+    //! offline save (see [`KitBackboneHandle::interaction_warning`]).
+    //!
+    //! Change flow: a client submits a validated [`KitGraphChange`]; the backbone asks every other
+    //! session-holder to validate and agree (`AgreementNeeded` retries until the consensus deadline).
+    //!
+    //! ### `RemoteKitBackbone` wire protocol (`semio-kit-backbone/1`)
+    //!
+    //! Text WebSocket frames carry JSON with a `kind` discriminator ([`RemoteWireMsg`]). A semio-hub endpoint should persist the
+    //! authoritative kit + ledger in Postgres / object storage; this crate implements the client peer.
+    //!
+    //! [`Kit`] graphs are domain-mutable and are not `Send`; the authoritative backbone therefore runs
+    //! on a dedicated OS thread while [`KitStateSnapshot`] exposes `Arc<str>` kit JSON for `watchers.
+
+    use crate::{
+        export_dev_kit, export_local_kit, extract_granular_events, import_dev_kit,
+        import_local_kit, remap_kit_file_bytes, remove_stale_local_assets, Kit, KitGranularEvent,
+        KitGraphChange, Result, SemioError, SemioUtil,
+    };
+    use futures::{SinkExt, StreamExt};
+    use serde::{Deserialize, Serialize};
+    use std::collections::{HashMap, HashSet};
+    use std::path::{Path, PathBuf};
+    use std::sync::Arc;
+    use std::time::{Duration, Instant};
+    use std::{
+        sync::mpsc::{self, Receiver, RecvTimeoutError, Sender},
+        thread,
+    };
+    use tokio::sync::{oneshot, watch, Mutex};
+    use tokio_tungstenite::tungstenite::Message as WsMessage;
+
+    type StdResult<T, E> = std::result::Result<T, E>;
+
+    // ——— Public config / surface warnings —————————————————————————————————————————
+
+    /// Backbone-defined timeouts (interaction idle + consensus retry window).
+    #[derive(Debug, Clone)]
+    pub struct BackboneRuntimeConfig {
+        pub interaction_timeout: Duration,
+        pub consensus_deadline: Duration,
+        pub consensus_broadcast_interval: Duration,
+    }
+
+    impl Default for BackboneRuntimeConfig {
+        fn default() -> Self {
+            Self {
+                interaction_timeout: Duration::from_secs(120),
+                consensus_deadline: Duration::from_secs(120),
+                consensus_broadcast_interval: Duration::from_millis(750),
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum InteractionLockWarning {
+        None,
+        IdleTimeout,
+        Disconnected,
+    }
+
+    #[derive(Clone)]
+    pub struct KitStateSnapshot {
+        kit_json: Arc<str>,
+        pub revision: u64,
+        pub interaction_lock: InteractionLockWarning,
+        /// 🔔 Granular events extracted from the last committed change (empty for initial snapshot).
+        pub granular_events: Arc<Vec<KitGranularEvent>>,
+    }
+
+    impl KitStateSnapshot {
+        pub fn kit(&self) -> Result<Kit> {
+            Kit::from_json_str(self.kit_json.as_ref())
+        }
+
+        pub fn kit_json(&self) -> Arc<str> {
+            Arc::clone(&self.kit_json)
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct SessionStarted {
+        pub client_id: String,
+        pub interaction_timeout: Duration,
+    }
+
+    #[derive(Debug, Clone)]
+    pub enum BackboneEvent {
+        AgreementNeeded {
+            candidate_id: String,
+            change: KitGraphChange,
+        },
+        Committed {
+            revision: u64,
+            change: KitGraphChange,
+        },
+        SessionIdleTimeout,
+        Disconnected {
+            reason: String,
+        },
+    }
+
+    type ClientId = String;
+
+    // ——— Ledger ————————————————————————————————————————————————————————————————
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct LedgerFile {
+        revision: u64,
+        entries: Vec<LedgerEntry>,
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    struct LedgerEntry {
+        seq: u64,
+        change: KitGraphChange,
+    }
+
+    fn dev_ledger_path(kit_path: &Path) -> PathBuf {
+        PathBuf::from(format!("{}.ledger.json", kit_path.display()))
+    }
+
+    fn local_ledger_path(folder: &Path) -> PathBuf {
+        folder.join(".semio").join("kit.ledger.json")
+    }
+
+    fn load_ledger(path: &Path) -> Result<LedgerFile> {
+        if !path.exists() {
+            return Ok(LedgerFile {
+                revision: 0,
+                entries: vec![],
+            });
+        }
+        let s = std::fs::read_to_string(path).map_err(|e| SemioError::Database {
+            message: format!("read ledger {}: {}", path.display(), e),
+        })?;
+        serde_json::from_str(&s).map_err(|e| SemioError::Serialization {
+            message: format!("ledger {}: {}", path.display(), e),
+        })
+    }
+
+    fn save_ledger(path: &Path, ledger: &LedgerFile) -> Result<()> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| SemioError::Database {
+                message: format!("mkdir {}: {}", parent.display(), e),
+            })?;
+        }
+        let json = serde_json::to_string_pretty(ledger).map_err(|e| SemioError::Serialization {
+            message: format!("serialize ledger: {}", e),
+        })?;
+        let tmp = path.with_extension("tmp");
+        std::fs::write(&tmp, json).map_err(|e| SemioError::Database {
+            message: format!("write {}: {}", tmp.display(), e),
+        })?;
+        std::fs::rename(&tmp, path).map_err(|e| SemioError::Database {
+            message: format!("rename ledger: {}", e),
+        })?;
+        Ok(())
+    }
+
+    fn snapshot_from_kit(
+        kit: &Kit,
+        revision: u64,
+        lock: InteractionLockWarning,
+    ) -> Result<KitStateSnapshot> {
+        Ok(KitStateSnapshot {
+            kit_json: Arc::from(kit.to_json_pretty()?.into_boxed_str()),
+            revision,
+            interaction_lock: lock,
+            granular_events: Arc::new(Vec::new()),
+        })
+    }
+
+    fn snapshot_from_kit_with_events(
+        kit: &Kit,
+        revision: u64,
+        lock: InteractionLockWarning,
+        events: Vec<KitGranularEvent>,
+    ) -> Result<KitStateSnapshot> {
+        Ok(KitStateSnapshot {
+            kit_json: Arc::from(kit.to_json_pretty()?.into_boxed_str()),
+            revision,
+            interaction_lock: lock,
+            granular_events: Arc::new(events),
+        })
+    }
+
+    // ——— Authority —————————————————————————————————————————————————————————————
+
+    enum PersistKind {
+        Dev {
+            kit_path: PathBuf,
+        },
+        Local {
+            folder: PathBuf,
+            files: HashMap<String, Vec<u8>>,
+        },
+    }
+
+    struct ClientSession {
+        active: bool,
+        last_touch: Instant,
+        notify: Sender<BackboneEvent>,
+    }
+
+    struct PendingConsensus {
+        id: String,
+        change: KitGraphChange,
+        votes: HashMap<ClientId, Option<bool>>,
+        deadline: Instant,
+        last_broadcast: Instant,
+        finish: oneshot::Sender<Result<u64>>,
+    }
+
+    struct KitBackboneAuthority {
+        /// Authoritative kit as JSON so the backbone thread stays `Send` (`Kit` uses interior mutability).
+        kit_json: String,
+        revision: u64,
+        ledger: LedgerFile,
+        persist: PersistKind,
+        clients: HashMap<ClientId, ClientSession>,
+        pending: Option<PendingConsensus>,
+        config: BackboneRuntimeConfig,
+    }
+
+    impl KitBackboneAuthority {
+        fn kit(&self) -> Result<Kit> {
+            Kit::from_json_str(&self.kit_json)
+        }
+
+        fn set_kit(&mut self, kit: &Kit) -> Result<()> {
+            self.kit_json = kit.to_json_pretty()?;
+            Ok(())
+        }
+
+        fn session_ids(&self) -> Vec<ClientId> {
+            self.clients
+                .iter()
+                .filter(|(_, s)| s.active)
+                .map(|(id, _)| id.clone())
+                .collect()
+        }
+
+        fn persist_snapshot(&mut self) -> Result<()> {
+            let kit = self.kit()?;
+            match &mut self.persist {
+                PersistKind::Dev { kit_path } => {
+                    export_dev_kit(
+                        &kit,
+                        kit_path
+                            .to_str()
+                            .ok_or_else(|| SemioError::InvalidOperation {
+                                message: "Dev kit path is not UTF-8".into(),
+                            })?,
+                    )?;
+                    save_ledger(&dev_ledger_path(kit_path), &self.ledger)?;
+                }
+                PersistKind::Local { folder, files } => {
+                    let folder_s = folder
+                        .to_str()
+                        .ok_or_else(|| SemioError::InvalidOperation {
+                            message: "Local folder path is not UTF-8".into(),
+                        })?;
+                    export_local_kit(&kit, files, folder_s)?;
+                    save_ledger(&local_ledger_path(folder), &self.ledger)?;
+                }
+            }
+            Ok(())
+        }
+
+        fn apply_committed_change(&mut self, change: &KitGraphChange) -> Result<()> {
+            let mut kit = self.kit()?;
+            let before = kit.clone();
+            let diff = change
+                .validation
+                .diff
+                .as_ref()
+                .unwrap_or(&change.forward)
+                .clone();
+            kit.apply_diff(&diff);
+
+            if let PersistKind::Local { files, folder } = &mut self.persist {
+                let prev = files.clone();
+                *files = remap_kit_file_bytes(&before, &kit, files)?;
+                let folder_s = folder.to_str().unwrap();
+                remove_stale_local_assets(folder_s, &prev, files)?;
+            }
+
+            self.set_kit(&kit)?;
+
+            self.revision += 1;
+            let seq = self.revision;
+            self.ledger.revision = self.revision;
+            self.ledger.entries.push(LedgerEntry {
+                seq,
+                change: change.clone(),
+            });
+            self.persist_snapshot()?;
+            Ok(())
+        }
+    }
+
+    enum AuthRequest {
+        Register {
+            reply: oneshot::Sender<(
+                ClientId,
+                Receiver<BackboneEvent>,
+                watch::Receiver<KitStateSnapshot>,
+            )>,
+        },
+        StartSession {
+            id: ClientId,
+            reply: oneshot::Sender<Result<SessionStarted>>,
+        },
+        Touch {
+            id: ClientId,
+        },
+        Propose {
+            id: ClientId,
+            change: KitGraphChange,
+            reply: oneshot::Sender<Result<u64>>,
+        },
+        Vote {
+            id: ClientId,
+            candidate_id: String,
+            agree: bool,
+        },
+    }
+
+    fn broadcast_kit(
+        state: &KitBackboneAuthority,
+        snapshot_tx: &watch::Sender<KitStateSnapshot>,
+    ) -> Result<()> {
+        let snap = snapshot_from_kit(&state.kit()?, state.revision, InteractionLockWarning::None)?;
+        let _ = snapshot_tx.send(snap);
+        Ok(())
+    }
+
+    fn broadcast_kit_with_change(
+        state: &KitBackboneAuthority,
+        snapshot_tx: &watch::Sender<KitStateSnapshot>,
+        change: &KitGraphChange,
+    ) -> Result<()> {
+        let events = extract_granular_events(change);
+        let snap = snapshot_from_kit_with_events(
+            &state.kit()?,
+            state.revision,
+            InteractionLockWarning::None,
+            events,
+        )?;
+        let _ = snapshot_tx.send(snap);
+        Ok(())
+    }
+
+    fn authority_main_loop(
+        rx: Receiver<AuthRequest>,
+        mut state: KitBackboneAuthority,
+        snapshot_tx: watch::Sender<KitStateSnapshot>,
+    ) {
+        let tick = Duration::from_millis(250);
+        let _ = broadcast_kit(&state, &snapshot_tx);
+
+        loop {
+            match rx.recv_timeout(tick) {
+                Ok(req) => handle_auth_request(req, &mut state, &snapshot_tx),
+                Err(RecvTimeoutError::Timeout) => {
+                    tick_idle_and_consensus(&mut state, &snapshot_tx);
+                }
+                Err(RecvTimeoutError::Disconnected) => break,
+            }
+        }
+    }
+
+    fn handle_auth_request(
+        req: AuthRequest,
+        state: &mut KitBackboneAuthority,
+        snapshot_tx: &watch::Sender<KitStateSnapshot>,
+    ) {
+        match req {
+            AuthRequest::Register { reply } => {
+                let id = SemioUtil::generate_guid();
+                let (tx, rx_ev) = mpsc::channel::<BackboneEvent>();
+                let snap = snapshot_tx.subscribe();
+                let _ = reply.send((id.clone(), rx_ev, snap));
+                state.clients.insert(
+                    id,
+                    ClientSession {
+                        active: false,
+                        last_touch: Instant::now(),
+                        notify: tx,
+                    },
+                );
+            }
+            AuthRequest::StartSession { id, reply } => {
+                let res = if let Some(s) = state.clients.get_mut(&id) {
+                    s.active = true;
+                    s.last_touch = Instant::now();
+                    Ok(SessionStarted {
+                        client_id: id.clone(),
+                        interaction_timeout: state.config.interaction_timeout,
+                    })
+                } else {
+                    Err(SemioError::InvalidOperation {
+                        message: "Unknown backbone client".into(),
+                    })
+                };
+                let _ = reply.send(res);
+            }
+            AuthRequest::Touch { id } => {
+                if let Some(s) = state.clients.get_mut(&id) {
+                    s.last_touch = Instant::now();
+                }
+            }
+            AuthRequest::Vote {
+                id,
+                candidate_id,
+                agree,
+            } => {
+                let Some(p) = state.pending.as_mut() else {
+                    return;
+                };
+                if p.id != candidate_id || !p.votes.contains_key(&id) {
+                    return;
+                }
+                p.votes.insert(id.clone(), Some(agree));
+
+                let any_no = p.votes.values().any(|v| matches!(v, Some(false)));
+                if any_no {
+                    let pending = state.pending.take().unwrap();
+                    let _ = pending.finish.send(Err(SemioError::InvalidOperation {
+                        message: "Consensus rejected the candidate".into(),
+                    }));
+                    return;
+                }
+
+                let unanimous_yes = p.votes.values().all(|v| matches!(v, Some(true)));
+                if unanimous_yes {
+                    let pending = state.pending.take().unwrap();
+                    let change = pending.change.clone();
+                    match state.apply_committed_change(&change) {
+                        Ok(()) => {
+                            let rev = state.revision;
+                            let _ = broadcast_kit_with_change(state, snapshot_tx, &change);
+                            let committed = BackboneEvent::Committed {
+                                revision: rev,
+                                change: change.clone(),
+                            };
+                            for (_, c) in &state.clients {
+                                let _ = c.notify.send(committed.clone());
+                            }
+                            let _ = pending.finish.send(Ok(rev));
+                        }
+                        Err(e) => {
+                            let _ = pending.finish.send(Err(e));
+                        }
+                    }
+                }
+            }
+            AuthRequest::Propose { id, change, reply } => {
+                let holders = state.session_ids();
+                if !holders.contains(&id) {
+                    let _ = reply.send(Err(SemioError::InvalidOperation {
+                        message: "start_session required before proposing".into(),
+                    }));
+                    return;
+                }
+
+                let kit = match state.kit() {
+                    Ok(k) => k,
+                    Err(e) => {
+                        let _ = reply.send(Err(e));
+                        return;
+                    }
+                };
+                let validation = kit.validate_diff(&change.forward, false);
+                if !validation.ok || !validation.errors.is_empty() {
+                    let _ = reply.send(Err(SemioError::Validation {
+                        message: validation
+                            .errors
+                            .first()
+                            .map(|e| e.message.clone())
+                            .unwrap_or_else(|| "validation failed".into()),
+                    }));
+                    return;
+                }
+
+                let mut touch = change.clone();
+                touch.validation = validation;
+
+                if state.pending.is_some() {
+                    let _ = reply.send(Err(SemioError::InvalidOperation {
+                        message: "Another change is awaiting consensus".into(),
+                    }));
+                    return;
+                }
+
+                let voters: HashSet<ClientId> = holders.iter().cloned().collect();
+                if voters.is_empty() {
+                    let _ = reply.send(Err(SemioError::InvalidOperation {
+                        message: "No active sessions".into(),
+                    }));
+                    return;
+                }
+
+                if voters.len() == 1 && voters.contains(&id) {
+                    match state.apply_committed_change(&touch) {
+                        Ok(()) => {
+                            let rev = state.revision;
+                            let _ = broadcast_kit_with_change(state, snapshot_tx, &touch);
+                            let committed = BackboneEvent::Committed {
+                                revision: rev,
+                                change: touch.clone(),
+                            };
+                            for (_, c) in &state.clients {
+                                let _ = c.notify.send(committed.clone());
+                            }
+                            let _ = reply.send(Ok(rev));
+                        }
+                        Err(e) => {
+                            let _ = reply.send(Err(e));
+                        }
+                    }
+                    return;
+                }
+
+                let candidate_id = SemioUtil::generate_guid();
+                let mut votes = HashMap::new();
+                for v in &voters {
+                    votes.insert(v.clone(), None);
+                }
+
+                state.pending = Some(PendingConsensus {
+                    id: candidate_id.clone(),
+                    change: touch.clone(),
+                    votes,
+                    deadline: Instant::now() + state.config.consensus_deadline,
+                    last_broadcast: Instant::now(),
+                    finish: reply,
+                });
+
+                let ev = BackboneEvent::AgreementNeeded {
+                    candidate_id: candidate_id.clone(),
+                    change: touch.clone(),
+                };
+                for (cid, c) in &state.clients {
+                    if voters.contains(cid) {
+                        let _ = c.notify.send(ev.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    fn tick_idle_and_consensus(
+        state: &mut KitBackboneAuthority,
+        snapshot_tx: &watch::Sender<KitStateSnapshot>,
+    ) {
+        let now = Instant::now();
+        let timeout = state.config.interaction_timeout;
+
+        let mut timed_out = Vec::new();
+        for (cid, s) in &state.clients {
+            if s.active && now.duration_since(s.last_touch) > timeout {
+                timed_out.push(cid.clone());
+            }
+        }
+        for cid in timed_out {
+            if let Some(mut s) = state.clients.remove(&cid) {
+                s.active = false;
+                let _ = s.notify.send(BackboneEvent::SessionIdleTimeout);
+            }
+            match state.kit() {
+                Ok(ref kit) => {
+                    if let Ok(snap) =
+                        snapshot_from_kit(kit, state.revision, InteractionLockWarning::IdleTimeout)
+                    {
+                        let _ = snapshot_tx.send(snap);
+                    }
+                }
+                Err(_) => {}
+            }
+        }
+
+        if let Some(p) = state.pending.as_ref() {
+            if now > p.deadline {
+                let pending = state.pending.take().unwrap();
+                let _ = pending.finish.send(Err(SemioError::InvalidOperation {
+                    message: "Consensus timed out".into(),
+                }));
+                return;
+            }
+        }
+
+        if let Some(p) = state.pending.as_mut() {
+            if now.duration_since(p.last_broadcast) >= state.config.consensus_broadcast_interval {
+                p.last_broadcast = now;
+                let ev = BackboneEvent::AgreementNeeded {
+                    candidate_id: p.id.clone(),
+                    change: p.change.clone(),
+                };
+                for (cid, vote) in &p.votes {
+                    if vote.is_none() {
+                        if let Some(c) = state.clients.get(cid) {
+                            let _ = c.notify.send(ev.clone());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn spawn_agreement_worker(
+        client_id: ClientId,
+        rx_ev: Receiver<BackboneEvent>,
+        auth_tx: Sender<AuthRequest>,
+        snapshot_rx: watch::Receiver<KitStateSnapshot>,
+    ) {
+        thread::spawn(move || {
+            while let Ok(ev) = rx_ev.recv() {
+                let BackboneEvent::AgreementNeeded {
+                    candidate_id,
+                    change,
+                } = ev
+                else {
+                    continue;
+                };
+                let snap = snapshot_rx.borrow().clone();
+                if snap.interaction_lock != InteractionLockWarning::None {
+                    let _ = auth_tx.send(AuthRequest::Vote {
+                        id: client_id.clone(),
+                        candidate_id,
+                        agree: false,
+                    });
+                    continue;
+                }
+                let kit = match snap.kit() {
+                    Ok(k) => k,
+                    Err(_) => {
+                        let _ = auth_tx.send(AuthRequest::Vote {
+                            id: client_id.clone(),
+                            candidate_id,
+                            agree: false,
+                        });
+                        continue;
+                    }
+                };
+                let v = kit.validate_diff(&change.forward, false);
+                let agree = v.ok && v.errors.is_empty();
+                let _ = auth_tx.send(AuthRequest::Vote {
+                    id: client_id.clone(),
+                    candidate_id,
+                    agree,
+                });
+            }
+        });
+    }
+
+    /// Handle to the collaborative backbone (clone for additional peers in-process).
+    #[derive(Clone)]
+    pub struct KitBackboneHandle {
+        auth_tx: Sender<AuthRequest>,
+        client_id: ClientId,
+        kit_state: watch::Receiver<KitStateSnapshot>,
+    }
+
+    impl KitBackboneHandle {
+        pub async fn start_session(&self) -> Result<SessionStarted> {
+            let (tx, rx) = oneshot::channel();
+            self.auth_tx
+                .send(AuthRequest::StartSession {
+                    id: self.client_id.clone(),
+                    reply: tx,
+                })
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "Backbone authority stopped".into(),
+                })?;
+            rx.await.map_err(|_| SemioError::InvalidOperation {
+                message: "Backbone authority stopped".into(),
+            })?
+        }
+
+        pub fn touch(&self) -> Result<()> {
+            self.auth_tx
+                .send(AuthRequest::Touch {
+                    id: self.client_id.clone(),
+                })
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "Backbone authority stopped".into(),
+                })
+        }
+
+        pub fn interaction_warning(&self) -> InteractionLockWarning {
+            self.kit_state.borrow().interaction_lock
+        }
+
+        pub fn subscribe_kit_state(&self) -> watch::Receiver<KitStateSnapshot> {
+            self.kit_state.clone()
+        }
+
+        pub async fn propose_change(&self, change: KitGraphChange) -> Result<u64> {
+            let (tx, rx) = oneshot::channel();
+            self.auth_tx
+                .send(AuthRequest::Propose {
+                    id: self.client_id.clone(),
+                    change,
+                    reply: tx,
+                })
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "Backbone authority stopped".into(),
+                })?;
+            rx.await.map_err(|_| SemioError::InvalidOperation {
+                message: "Backbone authority stopped".into(),
+            })?
+        }
+    }
+
+    /// In-process collaborative hub (OS thread). Connect peers via [`KitBackboneHub::connect`].
+    pub struct KitBackboneHub {
+        tx: Sender<AuthRequest>,
+        _join: thread::JoinHandle<()>,
+    }
+
+    impl KitBackboneHub {
+        pub async fn connect(&self) -> Result<KitBackboneHandle> {
+            let (tx, rx) = oneshot::channel();
+            self.tx
+                .send(AuthRequest::Register { reply: tx })
+                .map_err(|_| SemioError::InvalidOperation {
+                    message: "Backbone authority stopped".into(),
+                })?;
+            let (client_id, rx_ev, kit_state) =
+                rx.await.map_err(|_| SemioError::InvalidOperation {
+                    message: "Backbone authority stopped".into(),
+                })?;
+            let auth_tx = self.tx.clone();
+            spawn_agreement_worker(client_id.clone(), rx_ev, auth_tx.clone(), kit_state.clone());
+            Ok(KitBackboneHandle {
+                auth_tx,
+                client_id,
+                kit_state,
+            })
+        }
+    }
+
+    fn spawn_authority(
+        state: KitBackboneAuthority,
+        snapshot_tx: watch::Sender<KitStateSnapshot>,
+    ) -> KitBackboneHub {
+        let (tx, rx) = mpsc::channel::<AuthRequest>();
+        let join = thread::spawn(move || {
+            authority_main_loop(rx, state, snapshot_tx);
+        });
+        KitBackboneHub { tx, _join: join }
+    }
+
+    // ——— Dev —————————————————————————————————————————————————————————————————————
+
+    pub struct DevKitBackbone;
+
+    impl DevKitBackbone {
+        pub async fn spawn(
+            kit_json_path: impl AsRef<Path>,
+            initial_kit_if_missing: Option<Kit>,
+            config: BackboneRuntimeConfig,
+        ) -> Result<KitBackboneHub> {
+            let kit_path = kit_json_path.as_ref().to_path_buf();
+            let path_str = kit_path
+                .to_str()
+                .ok_or_else(|| SemioError::InvalidOperation {
+                    message: "Dev kit path is not UTF-8".into(),
+                })?;
+
+            let (kit, ledger) = if kit_path.exists() {
+                let k = import_dev_kit(path_str)?;
+                let ledger = load_ledger(&dev_ledger_path(&kit_path))?;
+                (k, ledger)
+            } else if let Some(k) = initial_kit_if_missing {
+                export_dev_kit(&k, path_str)?;
+                save_ledger(
+                    &dev_ledger_path(&kit_path),
+                    &LedgerFile {
+                        revision: 0,
+                        entries: vec![],
+                    },
+                )?;
+                (
+                    import_dev_kit(path_str)?,
+                    load_ledger(&dev_ledger_path(&kit_path))?,
+                )
+            } else {
+                return Err(SemioError::InvalidOperation {
+                    message: "Dev kit file missing and no initial kit provided".into(),
+                });
+            };
+
+            let revision = ledger.revision.max(ledger.entries.len() as u64);
+
+            let kit_json = kit.to_json_pretty()?;
+            let state = KitBackboneAuthority {
+                kit_json,
+                revision,
+                ledger,
+                persist: PersistKind::Dev {
+                    kit_path: kit_path.clone(),
+                },
+                clients: HashMap::new(),
+                pending: None,
+                config,
+            };
+
+            let init_snap =
+                snapshot_from_kit(&state.kit()?, state.revision, InteractionLockWarning::None)?;
+            let (snapshot_tx, _) = watch::channel(init_snap);
+
+            Ok(spawn_authority(state, snapshot_tx))
+        }
+    }
+
+    // ——— Local ———————————————————————————————————————————————————————————————————
+
+    pub struct LocalKitBackbone;
+
+    impl LocalKitBackbone {
+        pub async fn spawn(
+            folder_path: impl AsRef<Path>,
+            initial_kit_if_missing: Option<Kit>,
+            config: BackboneRuntimeConfig,
+        ) -> Result<KitBackboneHub> {
+            let folder = folder_path.as_ref().to_path_buf();
+            let folder_s = folder
+                .to_str()
+                .ok_or_else(|| SemioError::InvalidOperation {
+                    message: "Local folder path is not UTF-8".into(),
+                })?;
+
+            std::fs::create_dir_all(&folder).map_err(|e| SemioError::Database {
+                message: format!("mkdir {}: {}", folder.display(), e),
+            })?;
+
+            let (kit, files, ledger) = if folder.join(".semio").join("kit.db").exists()
+                || folder.join(".semio").join("kit.ledger.json").exists()
+            {
+                let imported = import_local_kit(folder_s)?;
+                let ledger = load_ledger(&local_ledger_path(&folder))?;
+                (imported.kit, imported.files, ledger)
+            } else if let Some(k) = initial_kit_if_missing {
+                let empty = HashMap::new();
+                export_local_kit(&k, &empty, folder_s)?;
+                save_ledger(
+                    &local_ledger_path(&folder),
+                    &LedgerFile {
+                        revision: 0,
+                        entries: vec![],
+                    },
+                )?;
+                let imported = import_local_kit(folder_s)?;
+                (
+                    imported.kit,
+                    imported.files,
+                    load_ledger(&local_ledger_path(&folder))?,
+                )
+            } else {
+                return Err(SemioError::InvalidOperation {
+                    message: "Local kit missing and no initial kit provided".into(),
+                });
+            };
+
+            let revision = ledger.revision.max(ledger.entries.len() as u64);
+
+            let kit_json = kit.to_json_pretty()?;
+            let state = KitBackboneAuthority {
+                kit_json,
+                revision,
+                ledger,
+                persist: PersistKind::Local { folder, files },
+                clients: HashMap::new(),
+                pending: None,
+                config,
+            };
+
+            let init_snap =
+                snapshot_from_kit(&state.kit()?, state.revision, InteractionLockWarning::None)?;
+            let (snapshot_tx, _) = watch::channel(init_snap);
+
+            Ok(spawn_authority(state, snapshot_tx))
+        }
+    }
+
+    // ——— Remote (WebSocket client) —————————————————————————————————————————————————
+
+    #[derive(Debug, Serialize, Deserialize)]
+    #[serde(tag = "kind")]
+    pub enum RemoteWireMsg {
+        #[serde(rename = "hello")]
+        Hello { protocol: String, role: String },
+        #[serde(rename = "welcome")]
+        Welcome {
+            interaction_timeout_ms: u64,
+            revision: u64,
+            kit_json: String,
+        },
+        #[serde(rename = "session_start")]
+        SessionStart,
+        #[serde(rename = "session_ack")]
+        SessionAck {
+            interaction_timeout_ms: u64,
+            client_id: String,
+        },
+        #[serde(rename = "heartbeat")]
+        Heartbeat,
+        #[serde(rename = "propose")]
+        Propose {
+            candidate_id: String,
+            change: KitGraphChange,
+        },
+        #[serde(rename = "agreement_request")]
+        AgreementRequest {
+            candidate_id: String,
+            change: KitGraphChange,
+        },
+        #[serde(rename = "vote")]
+        Vote { candidate_id: String, agree: bool },
+        #[serde(rename = "committed")]
+        Committed {
+            #[serde(default)]
+            candidate_id: Option<String>,
+            revision: u64,
+            change: KitGraphChange,
+        },
+        #[serde(rename = "reject")]
+        Reject {
+            candidate_id: String,
+            reason: String,
+        },
+        #[serde(rename = "session_timeout")]
+        SessionTimeout,
+        #[serde(rename = "disconnect")]
+        Disconnect { reason: String },
+    }
+
+    type WsStream = tokio_tungstenite::WebSocketStream<
+        tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+    >;
+    type WsSink = futures::stream::SplitSink<WsStream, WsMessage>;
+
+    #[derive(Clone)]
+    pub struct RemoteKitSession {
+        write: Arc<Mutex<WsSink>>,
+        kit_state: watch::Receiver<KitStateSnapshot>,
+        interaction_timeout: Duration,
+        client_id: String,
+        pending: Arc<Mutex<HashMap<String, oneshot::Sender<Result<u64>>>>>,
+    }
+
+    impl RemoteKitSession {
+        pub fn interaction_warning(&self) -> InteractionLockWarning {
+            self.kit_state.borrow().interaction_lock
+        }
+
+        pub fn subscribe_kit_state(&self) -> watch::Receiver<KitStateSnapshot> {
+            self.kit_state.clone()
+        }
+
+        pub fn remote_client_id(&self) -> &str {
+            &self.client_id
+        }
+
+        pub async fn start_session(&self) -> Result<SessionStarted> {
+            Ok(SessionStarted {
+                client_id: self.client_id.clone(),
+                interaction_timeout: self.interaction_timeout,
+            })
+        }
+
+        pub async fn touch(&self) -> Result<()> {
+            self.send_json(&RemoteWireMsg::Heartbeat).await
+        }
+
+        pub async fn propose_change(&self, change: KitGraphChange) -> Result<u64> {
+            let candidate_id = SemioUtil::generate_guid();
+            let (tx, rx) = oneshot::channel();
+            {
+                let mut g = self.pending.lock().await;
+                g.insert(candidate_id.clone(), tx);
+            }
+            self.send_json(&RemoteWireMsg::Propose {
+                candidate_id,
+                change,
+            })
+            .await?;
+            rx.await.map_err(|_| SemioError::InvalidOperation {
+                message: "Remote backbone closed during propose".into(),
+            })?
+        }
+
+        async fn send_json(&self, msg: &RemoteWireMsg) -> Result<()> {
+            let txt = serde_json::to_string(msg).map_err(|e| SemioError::Serialization {
+                message: format!("{}", e),
+            })?;
+            let mut w = self.write.lock().await;
+            w.send(WsMessage::Text(txt.into()))
+                .await
+                .map_err(|e| SemioError::Database {
+                    message: format!("ws send: {}", e),
+                })
+        }
+    }
+
+    pub struct RemoteKitBackbone;
+
+    impl RemoteKitBackbone {
+        pub async fn connect(
+            websocket_url: &str,
+        ) -> Result<(RemoteKitSession, tokio::task::JoinHandle<Result<()>>)> {
+            let url = url::Url::parse(websocket_url).map_err(|e| SemioError::InvalidOperation {
+                message: format!("Bad WebSocket URL: {}", e),
+            })?;
+            let (ws, _) = tokio_tungstenite::connect_async(url.as_str())
+                .await
+                .map_err(|e| SemioError::Database {
+                    message: format!("WebSocket connect failed: {}", e),
+                })?;
+            let (mut write, mut read) = ws.split();
+
+            let hello = RemoteWireMsg::Hello {
+                protocol: "semio-kit-backbone/1".into(),
+                role: "client".into(),
+            };
+            let txt = serde_json::to_string(&hello).map_err(|e| SemioError::Serialization {
+                message: format!("{}", e),
+            })?;
+            write
+                .send(WsMessage::Text(txt.into()))
+                .await
+                .map_err(|e| SemioError::Database {
+                    message: format!("ws send: {}", e),
+                })?;
+
+            let welcome = loop {
+                let msg = read.next().await.ok_or_else(|| SemioError::Database {
+                    message: "WebSocket closed before welcome".into(),
+                })?;
+                let msg = msg.map_err(|e| SemioError::Database {
+                    message: format!("ws: {}", e),
+                })?;
+                if let WsMessage::Text(t) = msg {
+                    let m: RemoteWireMsg =
+                        serde_json::from_str(&t).map_err(|e| SemioError::Serialization {
+                            message: format!("welcome parse: {}", e),
+                        })?;
+                    if let RemoteWireMsg::Welcome {
+                        interaction_timeout_ms,
+                        revision,
+                        kit_json,
+                    } = m
+                    {
+                        break (interaction_timeout_ms, revision, kit_json);
+                    }
+                }
+            };
+
+            let kit_json = welcome.2.clone();
+            let kit = Kit::from_json_str(&kit_json)?;
+            let init_snap = snapshot_from_kit(&kit, welcome.1, InteractionLockWarning::None)?;
+            let (snapshot_tx, snapshot_rx) = watch::channel(init_snap);
+
+            let sess_start = RemoteWireMsg::SessionStart;
+            let txt =
+                serde_json::to_string(&sess_start).map_err(|e| SemioError::Serialization {
+                    message: format!("{}", e),
+                })?;
+            write
+                .send(WsMessage::Text(txt.into()))
+                .await
+                .map_err(|e| SemioError::Database {
+                    message: format!("ws send: {}", e),
+                })?;
+
+            let session_ack = loop {
+                let msg = read.next().await.ok_or_else(|| SemioError::Database {
+                    message: "WebSocket closed before session_ack".into(),
+                })?;
+                let msg = msg.map_err(|e| SemioError::Database {
+                    message: format!("ws: {}", e),
+                })?;
+                if let WsMessage::Text(t) = msg {
+                    let m: RemoteWireMsg =
+                        serde_json::from_str(&t).map_err(|e| SemioError::Serialization {
+                            message: format!("session_ack parse: {}", e),
+                        })?;
+                    if let RemoteWireMsg::SessionAck {
+                        interaction_timeout_ms,
+                        client_id,
+                    } = m
+                    {
+                        break (interaction_timeout_ms, client_id);
+                    }
+                }
+            };
+
+            let write = Arc::new(Mutex::new(write));
+            let pending: Arc<Mutex<HashMap<String, oneshot::Sender<Result<u64>>>>> =
+                Arc::new(Mutex::new(HashMap::new()));
+
+            let session = RemoteKitSession {
+                write: write.clone(),
+                kit_state: snapshot_rx,
+                interaction_timeout: Duration::from_millis(session_ack.0.max(1)),
+                client_id: session_ack.1,
+                pending: pending.clone(),
+            };
+
+            let reader = tokio::spawn(remote_reader_loop(
+                read,
+                write,
+                snapshot_tx,
+                welcome.1,
+                kit_json,
+                pending,
+            ));
+
+            Ok((session, reader))
+        }
+    }
+
+    async fn remote_reader_loop<S>(
+        mut read: S,
+        write: Arc<Mutex<WsSink>>,
+        snapshot_tx: watch::Sender<KitStateSnapshot>,
+        mut revision: u64,
+        mut kit_json: String,
+        pending: Arc<Mutex<HashMap<String, oneshot::Sender<Result<u64>>>>>,
+    ) -> Result<()>
+    where
+        S: StreamExt<Item = StdResult<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
+    {
+        while let Some(msg) = read.next().await {
+            let msg = msg.map_err(|e| SemioError::Database {
+                message: format!("ws read: {}", e),
+            })?;
+            if let WsMessage::Text(t) = msg {
+                let m: RemoteWireMsg =
+                    serde_json::from_str(&t).map_err(|e| SemioError::Serialization {
+                        message: format!("remote msg: {}", e),
+                    })?;
+                match m {
+                    RemoteWireMsg::AgreementRequest {
+                        candidate_id,
+                        change,
+                    } => {
+                        let agree = match Kit::from_json_str(&kit_json) {
+                            Ok(kit) => {
+                                let v = kit.validate_diff(&change.forward, false);
+                                v.ok && v.errors.is_empty()
+                            }
+                            Err(e) => return Err(e),
+                        };
+                        let vote = RemoteWireMsg::Vote {
+                            candidate_id,
+                            agree,
+                        };
+                        let txt = serde_json::to_string(&vote).map_err(|e| {
+                            SemioError::Serialization {
+                                message: format!("{}", e),
+                            }
+                        })?;
+                        let mut w = write.lock().await;
+                        let _ = w.send(WsMessage::Text(txt.into())).await;
+                    }
+                    RemoteWireMsg::Committed {
+                        candidate_id,
+                        revision: rev,
+                        change,
+                    } => {
+                        revision = rev;
+                        let diff = change
+                            .validation
+                            .diff
+                            .as_ref()
+                            .unwrap_or(&change.forward)
+                            .clone();
+                        let complete = candidate_id.clone();
+                        let events = extract_granular_events(&change);
+                        {
+                            let mut kit = Kit::from_json_str(&kit_json)?;
+                            kit.apply_diff(&diff);
+                            kit_json = kit.to_json_pretty()?;
+                            if let Ok(snap) = snapshot_from_kit_with_events(
+                                &kit,
+                                revision,
+                                InteractionLockWarning::None,
+                                events,
+                            ) {
+                                let _ = snapshot_tx.send(snap);
+                            }
+                        }
+                        if let Some(cid) = complete {
+                            let tx_opt = pending.lock().await.remove(&cid);
+                            if let Some(tx) = tx_opt {
+                                let _ = tx.send(Ok(revision));
+                            }
+                        }
+                    }
+                    RemoteWireMsg::Reject {
+                        candidate_id,
+                        reason,
+                    } => {
+                        if let Some(tx) = pending.lock().await.remove(&candidate_id) {
+                            let _ = tx.send(Err(SemioError::InvalidOperation { message: reason }));
+                        }
+                    }
+                    RemoteWireMsg::SessionTimeout => {
+                        let kit = Kit::from_json_str(&kit_json)?;
+                        if let Ok(snap) =
+                            snapshot_from_kit(&kit, revision, InteractionLockWarning::IdleTimeout)
+                        {
+                            let _ = snapshot_tx.send(snap);
+                        }
+                    }
+                    RemoteWireMsg::Disconnect { reason } => {
+                        let kit = Kit::from_json_str(&kit_json)?;
+                        if let Ok(snap) =
+                            snapshot_from_kit(&kit, revision, InteractionLockWarning::Disconnected)
+                        {
+                            let _ = snapshot_tx.send(snap);
+                        }
+                        return Err(SemioError::InvalidOperation { message: reason });
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
+    }
+} // 🦴KitBackboneAsync
 #[cfg(not(target_arch = "wasm32"))]
 pub use kit_backbone_async::*;
