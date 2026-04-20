@@ -27,8 +27,10 @@ use base64::Engine;
 use nalgebra::{Matrix4, Point3, Vector3};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::PI;
+use std::rc::Rc;
 use std::sync::{Arc, Weak};
 use thiserror::Error;
 use uuid::Uuid;
@@ -3493,162 +3495,105 @@ mod model_types_kit {
             })?;
             Self::from_dto(kw)
         }
+
+        /// 🔄Deep-equal comparison that normalizes list ordering before comparing DTO JSON.
+        pub fn are_equal(&self, other: &Kit) -> bool {
+            fn normalize(k: &mut Kit) {
+                if let Some(v) = k.concepts.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.tags.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.types.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.designs.as_mut() {
+                    for d in v.iter_mut() {
+                        let d = Arc::make_mut(d);
+                        if let Some(f) = d.families.as_mut() {
+                            f.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(p) = d.props.as_mut() {
+                            p.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(c) = d.concepts.as_mut() {
+                            c.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(a) = d.authors.as_mut() {
+                            a.sort_by(|x, y| x.guid.cmp(&y.guid));
+                        }
+                        if let Some(p) = d.pieces.as_mut() {
+                            p.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(c) = d.connections.as_mut() {
+                            c.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(l) = d.layers.as_mut() {
+                            l.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(g) = d.groups.as_mut() {
+                            g.sort_by(|a, b| a.guid.cmp(&b.guid));
+                            for grp in g.iter_mut() {
+                                if let Some(pp) = grp.pieces.as_mut() {
+                                    pp.sort_by(|a, b| a.guid.cmp(&b.guid));
+                                }
+                            }
+                        }
+                        if let Some(s) = d.stats.as_mut() {
+                            s.sort_by(|a, b| a.guid.cmp(&b.guid));
+                        }
+                        if let Some(a) = d.attributes.as_mut() {
+                            a.sort_by(|x, y| x.guid.cmp(&y.guid));
+                        }
+                    }
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.ports.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.qualities.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.files.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.folders.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.authors.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+                if let Some(v) = k.attributes.as_mut() {
+                    v.sort_by(|a, b| a.guid.cmp(&b.guid));
+                }
+            }
+            let mut ac = self.clone();
+            let mut bc = other.clone();
+            normalize(&mut ac);
+            normalize(&mut bc);
+            match (
+                serde_json::to_value(ac.to_dto()),
+                serde_json::to_value(bc.to_dto()),
+            ) {
+                (Ok(va), Ok(vb)) => va == vb,
+                _ => false,
+            }
+        }
     }
 } // ⏱️Kit
 pub use model_types_kit::*;
 
 mod serialization {
 
-    /// <summary>💾serialize kit.</summary>
+    /// <summary>�supported 3D model file extensions and helpers.</summary>
     use super::*;
-
-    pub fn serialize_kit(kit: &Kit) -> Result<String> {
-        kit.to_json_pretty()
-    }
-    /// <summary>💾deserialize kit.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn deserialize_kit(json: &str) -> Result<Kit> {
-        Kit::from_json_str(json)
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn serialize_design(design: &Design) -> Result<String> {
-        serde_json::to_string_pretty(&design.to_dto()).map_err(|e| SemioError::Serialization {
-            message: e.to_string(),
-        })
-    }
-    /// <summary>💾deserialize design.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn deserialize_design(json: &str) -> Result<Design> {
-        let dw: DesignDto = serde_json::from_str(json).map_err(|e| SemioError::Serialization {
-            message: e.to_string(),
-        })?;
-        Design::from_dto(dw, &std::collections::HashMap::new())
-    }
-
-    /// <summary>💾serialize type.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn serialize_type(t: &Type) -> Result<String> {
-        serde_json::to_string_pretty(&t.to_dto()).map_err(|e| SemioError::Serialization {
-            message: e.to_string(),
-        })
-    }
-    /// <summary>💾deserialize type.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn deserialize_type(json: &str) -> Result<Type> {
-        let tw: TypeDto = serde_json::from_str(json).map_err(|e| SemioError::Serialization {
-            message: e.to_string(),
-        })?;
-        Type::from_dto(tw, &std::collections::HashMap::new())
-    }
-    /// <remarks>
-    /// </remarks>
-    pub fn are_kits_equal(a: &Kit, b: &Kit) -> bool {
-        /// Align list ordering before comparing exported [`KitDto`] JSON (`to_dto` output is
-        /// order-sensitive even when domain graphs are equivalent).
-        fn normalize(k: &mut Kit) {
-            if let Some(v) = k.concepts.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.tags.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.types.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.designs.as_mut() {
-                for d in v.iter_mut() {
-                    let d = Arc::make_mut(d);
-                    if let Some(f) = d.families.as_mut() {
-                        f.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(p) = d.props.as_mut() {
-                        p.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(c) = d.concepts.as_mut() {
-                        c.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(a) = d.authors.as_mut() {
-                        a.sort_by(|x, y| x.guid.cmp(&y.guid));
-                    }
-                    if let Some(p) = d.pieces.as_mut() {
-                        p.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(c) = d.connections.as_mut() {
-                        c.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(l) = d.layers.as_mut() {
-                        l.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(g) = d.groups.as_mut() {
-                        g.sort_by(|a, b| a.guid.cmp(&b.guid));
-                        for grp in g.iter_mut() {
-                            if let Some(pp) = grp.pieces.as_mut() {
-                                pp.sort_by(|a, b| a.guid.cmp(&b.guid));
-                            }
-                        }
-                    }
-                    if let Some(s) = d.stats.as_mut() {
-                        s.sort_by(|a, b| a.guid.cmp(&b.guid));
-                    }
-                    if let Some(a) = d.attributes.as_mut() {
-                        a.sort_by(|x, y| x.guid.cmp(&y.guid));
-                    }
-                }
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.ports.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.qualities.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.files.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.folders.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.authors.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-            if let Some(v) = k.attributes.as_mut() {
-                v.sort_by(|a, b| a.guid.cmp(&b.guid));
-            }
-        }
-        let mut ac = a.clone();
-        let mut bc = b.clone();
-        normalize(&mut ac);
-        normalize(&mut bc);
-        match (
-            serde_json::to_value(ac.to_dto()),
-            serde_json::to_value(bc.to_dto()),
-        ) {
-            (Ok(va), Ok(vb)) => va == vb,
-            _ => false,
-        }
-    }
-    /// <summary>🔄compares two designs entities for deep equality.</summary>
-    /// <remarks>
-    /// </remarks>
-    pub fn are_designs_equal(a: &Design, b: &Design) -> bool {
-        a == b
-    }
-    /// <summary>🔄compares two types entities for deep equality.</summary>
-    pub fn are_types_equal(a: &Type, b: &Type) -> bool {
-        a == b
-    }
 
     /// <summary>🗿the list of supported 3D model file extensions.</summary>
     pub const SUPPORTED_MODEL_EXTENSIONS: &[&str] = &[
         "gltf", "glb", "fbx", "obj", "dae", "3ds", "stl", "ply", "usdz", "vrm", "ifc", "3mf",
     ];
-    /// <remarks>
-    /// </remarks>
+
     pub fn is_supported_model_extension(ext: &str) -> bool {
         SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
     }
@@ -5914,7 +5859,7 @@ mod apply_diff {
                 if let Some(idx) = types.iter().position(|t| t.guid == u.guid) {
                     {
                         let t = Arc::make_mut(&mut types[idx]);
-                        apply_type_diff(t, &u.diff, &type_map, ports_map);
+                        t.apply_diff(&u.diff, &type_map, ports_map);
                     }
                     type_map.insert(u.guid.clone(), types[idx].clone());
                 }
@@ -5960,7 +5905,7 @@ mod apply_diff {
                 if let Some(idx) = designs.iter().position(|d| d.guid == u.guid) {
                     {
                         let d_mut = Arc::make_mut(&mut designs[idx]);
-                        apply_design_diff(d_mut, &u.diff, types_map, &design_map);
+                        d_mut.apply_diff(&u.diff, types_map, &design_map);
                     }
                     design_map.insert(u.guid.clone(), designs[idx].clone());
                 }
@@ -6804,172 +6749,187 @@ mod apply_diff {
     }
 
     /// 🔖<summary>🔖apply_quality_diff holds the data fields for a apply_quality_diff record.</summary>
-    pub fn apply_quality_diff(item: &mut Quality, diff: &QualityDiff) {
-        if let Some(value) = &diff.key {
-            item.key = value.clone();
+    impl Quality {
+        /// 🔖Applies a quality diff.
+        pub fn apply_diff(&mut self, diff: &QualityDiff) {
+            if let Some(value) = &diff.key {
+                self.key = value.clone();
+            }
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.kind {
+                self.kind = value.clone();
+            }
+            if let Some(value) = &diff.default_value {
+                self.default_value = *value;
+            }
+            if let Some(value) = &diff.formula {
+                self.formula = value.clone();
+            }
+            if let Some(value) = &diff.default_si_unit {
+                self.default_si_unit = value.clone();
+            }
+            if let Some(value) = &diff.default_imperial_unit {
+                self.default_imperial_unit = value.clone();
+            }
+            if let Some(value) = &diff.min {
+                self.min = *value;
+            }
+            if let Some(value) = &diff.is_min_excluded {
+                self.is_min_excluded = *value;
+            }
+            if let Some(value) = &diff.max {
+                self.max = *value;
+            }
+            if let Some(value) = &diff.is_max_excluded {
+                self.is_max_excluded = *value;
+            }
+            if let Some(value) = &diff.can_scale {
+                self.can_scale = *value;
+            }
+            if let Some(value) = &diff.uri {
+                self.uri = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(value) = &diff.kind {
-            item.kind = value.clone();
-        }
-        if let Some(value) = &diff.default_value {
-            item.default_value = *value;
-        }
-        if let Some(value) = &diff.formula {
-            item.formula = value.clone();
-        }
-        if let Some(value) = &diff.default_si_unit {
-            item.default_si_unit = value.clone();
-        }
-        if let Some(value) = &diff.default_imperial_unit {
-            item.default_imperial_unit = value.clone();
-        }
-        if let Some(value) = &diff.min {
-            item.min = *value;
-        }
-        if let Some(value) = &diff.is_min_excluded {
-            item.is_min_excluded = *value;
-        }
-        if let Some(value) = &diff.max {
-            item.max = *value;
-        }
-        if let Some(value) = &diff.is_max_excluded {
-            item.is_max_excluded = *value;
-        }
-        if let Some(value) = &diff.can_scale {
-            item.can_scale = *value;
-        }
-        if let Some(value) = &diff.uri {
-            item.uri = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
     /// 🔖<summary>🔖apply_file_diff holds the data fields for a apply_file_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_file_diff(item: &mut File, diff: &FileDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(value) = &diff.remote {
-            item.remote = value.clone();
-        }
-        if let Some(value) = &diff.folder {
-            item.folder = value.clone();
-        }
-        if let Some(value) = &diff.size {
-            item.size = *value;
-        }
-        if let Some(value) = &diff.hash {
-            item.hash = value.clone();
+    impl File {
+        /// 🔖Applies a file diff.
+        pub fn apply_diff(&mut self, diff: &FileDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.remote {
+                self.remote = value.clone();
+            }
+            if let Some(value) = &diff.folder {
+                self.folder = value.clone();
+            }
+            if let Some(value) = &diff.size {
+                self.size = *value;
+            }
+            if let Some(value) = &diff.hash {
+                self.hash = value.clone();
+            }
         }
     }
     /// 🔖<remarks>
     /// </remarks>
-    pub fn apply_folder_diff(item: &mut Folder, diff: &FolderDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Folder {
+        /// 🔖Applies a folder diff.
+        pub fn apply_diff(&mut self, diff: &FolderDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.parent {
+                self.parent = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.parent {
-            item.parent = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
 
     /// 🔖<summary>🔖apply_author_diff holds the data fields for a apply_author_diff record.</summary>
-    pub fn apply_author_diff(item: &mut Author, diff: &AuthorDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
+    impl Author {
+        /// 🔖Applies an author diff.
+        pub fn apply_diff(&mut self, diff: &AuthorDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.email {
+                self.email = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
         }
-        if let Some(value) = &diff.email {
-            item.email = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
     }
     /// 🔖<summary>🔖apply_kit_diff holds the data fields for a apply_kit_diff record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
-        if let Some(value) = &diff.name {
-            item.name = value.clone();
-        }
-        if let Some(value) = &diff.version {
-            item.version = value.clone();
-        }
-        if let Some(value) = &diff.description {
-            item.description = value.clone();
-        }
-        if let Some(value) = &diff.icon {
-            item.icon = value.clone();
-        }
-        if let Some(value) = &diff.image {
-            item.image = value.clone();
-        }
-        if let Some(value) = &diff.preview {
-            item.preview = value.clone();
-        }
-        if let Some(value) = &diff.remote {
-            item.remote = value.clone();
-        }
-        if let Some(value) = &diff.homepage {
-            item.homepage = value.clone();
-        }
-        if let Some(value) = &diff.license {
-            item.license = value.clone();
-        }
-        apply_collection_diff(
-            &mut item.concepts,
-            &diff.concepts,
-            apply_concept_diff,
-            |c| Concept::from(c),
-        );
-        apply_collection_diff(&mut item.tags, &diff.tags, apply_tag_diff, |t| Tag::from(t));
-        apply_collection_diff(&mut item.ports, &diff.ports, apply_interface_diff, |p| {
-            Port::from(p)
-        });
+    impl Kit {
+        /// 🔖Applies a kit diff.
+        pub fn apply_diff(&mut self, diff: &KitDiff) {
+            if let Some(value) = &diff.name {
+                self.name = value.clone();
+            }
+            if let Some(value) = &diff.version {
+                self.version = value.clone();
+            }
+            if let Some(value) = &diff.description {
+                self.description = value.clone();
+            }
+            if let Some(value) = &diff.icon {
+                self.icon = value.clone();
+            }
+            if let Some(value) = &diff.image {
+                self.image = value.clone();
+            }
+            if let Some(value) = &diff.preview {
+                self.preview = value.clone();
+            }
+            if let Some(value) = &diff.remote {
+                self.remote = value.clone();
+            }
+            if let Some(value) = &diff.homepage {
+                self.homepage = value.clone();
+            }
+            if let Some(value) = &diff.license {
+                self.license = value.clone();
+            }
+            apply_collection_diff(
+                &mut self.concepts,
+                &diff.concepts,
+                Concept::apply_diff,
+                |c| Concept::from(c),
+            );
+            apply_collection_diff(&mut self.tags, &diff.tags, Tag::apply_diff, |t| Tag::from(t));
+            apply_collection_diff(&mut self.ports, &diff.ports, Port::apply_diff, |p| {
+                Port::from(p)
+            });
 
-        let ports_map = kit_ports_arc_map(item);
-        apply_kit_types_patch(item, diff.types.as_ref(), &ports_map);
+            let ports_map = self.ports_arc_map();
+            apply_kit_types_patch(self, diff.types.as_ref(), &ports_map);
 
-        let types_map = kit_types_map_index(item);
-        apply_kit_designs_patch(item, diff.designs.as_ref(), &types_map);
+            let types_map = self.types_map_index();
+            apply_kit_designs_patch(self, diff.designs.as_ref(), &types_map);
 
-        apply_collection_diff(
-            &mut item.qualities,
-            &diff.qualities,
-            apply_quality_diff,
-            |q| Quality::from(q),
-        );
-        apply_collection_diff(&mut item.files, &diff.files, apply_file_diff, |x| x.clone());
-        apply_collection_diff(&mut item.folders, &diff.folders, apply_folder_diff, |f| {
-            Folder::from(f)
-        });
-        apply_collection_diff(&mut item.authors, &diff.authors, apply_author_diff, |a| {
-            Author::from(a)
-        });
-        apply_collection_diff(
-            &mut item.attributes,
-            &diff.attributes,
-            apply_attribute_diff,
-            |a| Attribute::from(a),
-        );
+            apply_collection_diff(
+                &mut self.qualities,
+                &diff.qualities,
+                Quality::apply_diff,
+                |q| Quality::from(q),
+            );
+            apply_collection_diff(&mut self.files, &diff.files, File::apply_diff, |x| x.clone());
+            apply_collection_diff(&mut self.folders, &diff.folders, Folder::apply_diff, |f| {
+                Folder::from(f)
+            });
+            apply_collection_diff(&mut self.authors, &diff.authors, Author::apply_diff, |a| {
+                Author::from(a)
+            });
+            apply_collection_diff(
+                &mut self.attributes,
+                &diff.attributes,
+                Attribute::apply_diff,
+                |a| Attribute::from(a),
+            );
+        }
     }
 } // ✈️ApplyDiff
 pub use apply_diff::*;
@@ -7127,7 +7087,136 @@ mod filter {
     /// 🎨Internal design-based transitive kit filtering.
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected models, and keeps at most one model per type according to the optional tags.
-    pub fn filter_kit_by_design(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
+    impl Kit {
+        /// 🎨Filters the kit to a design-scoped subset. Removes types not used by pieces,
+        /// ports not used by connectors of used types, files not used by selected models.
+        pub fn filter_by_design(&self, design_guid: &str, tags: Option<&[String]>) -> Kit {
+            filter_kit_by_design_impl(self, design_guid, tags)
+        }
+
+        /// 🔖Applies a general-purpose kit filter. Combines optional design-based transitive
+        /// filtering with glob-based name filtering.
+        pub fn filter(&self, filter: &KitFilter) -> Kit {
+            let base = if let Some(design_guid) = &filter.design_guid {
+                filter_kit_by_design_impl(self, design_guid, filter.model_tags.as_deref())
+            } else {
+                self.clone()
+            };
+
+            let has_glob_filters = filter.designs.is_some()
+                || filter.types.is_some()
+                || filter.ports.is_some()
+                || filter.files.is_some()
+                || filter.tags.is_some()
+                || filter.concepts.is_some()
+                || filter.qualities.is_some()
+                || filter.authors.is_some()
+                || filter.folders.is_some();
+
+            if !has_glob_filters {
+                return base;
+            }
+
+            Kit {
+                guid: base.guid,
+                name: base.name,
+                version: base.version,
+                description: base.description,
+                icon: base.icon,
+                image: base.image,
+                preview: base.preview,
+                remote: base.remote,
+                homepage: base.homepage,
+                license: base.license,
+                types: Some(
+                    base.types
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                designs: Some(
+                    base.designs
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                ports: Some(
+                    base.ports
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                files: Some(
+                    base.files
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                tags: Some(
+                    base.tags
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                concepts: Some(
+                    base.concepts
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                qualities: Some(
+                    base.qualities
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                folders: Some(
+                    base.folders
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                authors: Some(
+                    base.authors
+                        .as_deref()
+                        .unwrap_or(&[])
+                        .iter()
+                        .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
+                        .cloned()
+                        .collect(),
+                ),
+                attributes: base.attributes,
+                created_at: base.created_at,
+                updated_at: base.updated_at,
+            }
+        }
+    }
+
+    fn filter_kit_by_design_impl(kit: &Kit, design_guid: &str, tags: Option<&[String]>) -> Kit {
         let design = match kit.design_by_guid(design_guid) {
             Some(design) => design,
             None => {
@@ -7412,128 +7501,6 @@ mod filter {
             attributes: kit.attributes.clone(),
             created_at: kit.created_at.clone(),
             updated_at: kit.updated_at.clone(),
-        }
-    }
-
-    /// 🔖General-purpose kit filter. Combines optional design-based transitive filtering with glob-based name filtering.
-    /// When design_guid is set, first performs transitive design-scoped subset extraction.
-    /// Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
-    pub fn filter_kit(kit: &Kit, filter: &KitFilter) -> Kit {
-        let base = if let Some(design_guid) = &filter.design_guid {
-            filter_kit_by_design(kit, design_guid, filter.model_tags.as_deref())
-        } else {
-            kit.clone()
-        };
-
-        let has_glob_filters = filter.designs.is_some()
-            || filter.types.is_some()
-            || filter.ports.is_some()
-            || filter.files.is_some()
-            || filter.tags.is_some()
-            || filter.concepts.is_some()
-            || filter.qualities.is_some()
-            || filter.authors.is_some()
-            || filter.folders.is_some();
-
-        if !has_glob_filters {
-            return base;
-        }
-
-        Kit {
-            guid: base.guid,
-            name: base.name,
-            version: base.version,
-            description: base.description,
-            icon: base.icon,
-            image: base.image,
-            preview: base.preview,
-            remote: base.remote,
-            homepage: base.homepage,
-            license: base.license,
-            types: Some(
-                base.types
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|t| matches_glob_filter(&t.name, filter.types.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            designs: Some(
-                base.designs
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|d| matches_glob_filter(&d.name, filter.designs.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            ports: Some(
-                base.ports
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|p| matches_glob_filter(&p.name, filter.ports.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            files: Some(
-                base.files
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|f| matches_glob_filter(&f.name, filter.files.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            tags: Some(
-                base.tags
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|t| matches_glob_filter(&t.name, filter.tags.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            concepts: Some(
-                base.concepts
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|c| matches_glob_filter(&c.name, filter.concepts.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            qualities: Some(
-                base.qualities
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|q| matches_glob_filter(&q.name, filter.qualities.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            folders: Some(
-                base.folders
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|f| matches_glob_filter(&f.name, filter.folders.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            authors: Some(
-                base.authors
-                    .as_deref()
-                    .unwrap_or(&[])
-                    .iter()
-                    .filter(|a| matches_glob_filter(&a.name, filter.authors.as_ref()))
-                    .cloned()
-                    .collect(),
-            ),
-            attributes: base.attributes,
-            created_at: base.created_at,
-            updated_at: base.updated_at,
         }
     }
 } // 🧩Filter
@@ -9559,25 +9526,27 @@ mod validation_types {
         pub problems: Vec<ValidationProblem>,
     }
 
-    /// 🔖<summary>🔖validate_kit holds the data fields for a validate_kit record.</summary>
-    pub fn validate_kit(kit: &Kit) -> ValidationResult {
-        let mut problems = Vec::new();
+    impl Kit {
+        /// 🔖Validates the kit and returns validation problems.
+        pub fn validate(&self) -> ValidationResult {
+            let mut problems = Vec::new();
 
-        check_guid_uniqueness_constraint(kit, &mut problems);
-        check_type_name_uniqueness(kit, &mut problems);
-        check_design_name_uniqueness(kit, &mut problems);
-        check_piece_name_uniqueness(kit, &mut problems);
-        check_connection_name_uniqueness(kit, &mut problems);
-        check_connector_name_uniqueness(kit, &mut problems);
-        check_model_name_uniqueness(kit, &mut problems);
-        check_layer_path_uniqueness(kit, &mut problems);
-        check_quality_name_uniqueness(kit, &mut problems);
-        check_port_name_uniqueness(kit, &mut problems);
-        check_file_name_uniqueness(kit, &mut problems);
-        check_folder_name_uniqueness(kit, &mut problems);
-        check_description_emoji_unique(kit, &mut problems);
+            check_guid_uniqueness_constraint(self, &mut problems);
+            check_type_name_uniqueness(self, &mut problems);
+            check_design_name_uniqueness(self, &mut problems);
+            check_piece_name_uniqueness(self, &mut problems);
+            check_connection_name_uniqueness(self, &mut problems);
+            check_connector_name_uniqueness(self, &mut problems);
+            check_model_name_uniqueness(self, &mut problems);
+            check_layer_path_uniqueness(self, &mut problems);
+            check_quality_name_uniqueness(self, &mut problems);
+            check_port_name_uniqueness(self, &mut problems);
+            check_file_name_uniqueness(self, &mut problems);
+            check_folder_name_uniqueness(self, &mut problems);
+            check_description_emoji_unique(self, &mut problems);
 
-        ValidationResult { problems }
+            ValidationResult { problems }
+        }
     }
     /// 🔒<summary>🧪check_guid_uniqueness_constraint holds the data fields for a check_guid_uniqueness_constraint record.</summary>
     /// <remarks>
@@ -11129,7 +11098,7 @@ mod zip_import_export {
             let kit_str = String::from_utf8(kit_json).map_err(|e| SemioError::Database {
                 message: format!("Invalid UTF-8 in kit.json: {}", e),
             })?;
-            let mut kit = deserialize_kit(&kit_str)?;
+            let mut kit = Kit::from_json_str(&kit_str)?;
 
             let file_paths: Vec<String> = kit
                 .files
@@ -11164,7 +11133,7 @@ mod zip_import_export {
                 }
             }
 
-            let kit_json = serialize_kit(&kit_for_zip)?;
+            let kit_json = kit_for_zip.to_json_pretty()?;
 
             let zip_file = std::fs::File::create(zip_path).map_err(|e| SemioError::Database {
                 message: format!("Failed to create zip: {}", e),
@@ -11410,13 +11379,13 @@ mod kit_workflow {
     pub fn import_dev_kit(path: &str) -> Result<Kit> {
         let content = std::fs::read_to_string(path)
             .map_err(|error| io_semio_error("Failed to read kit file", error))?;
-        deserialize_kit(&content)
+        Kit::from_json_str(&content)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     /// 📤<summary>🔖export_dev_kit holds the data fields for a export_dev_kit record.</summary>
     pub fn export_dev_kit(kit: &Kit, path: &str) -> Result<()> {
-        let json = serialize_kit(kit)?;
+        let json = kit.to_json_pretty()?;
         std::fs::write(path, json)
             .map_err(|error| io_semio_error("Failed to write kit file", error))
     }
@@ -11523,7 +11492,7 @@ mod kit_workflow {
             String::from_utf8(bytes.to_vec()).map_err(|error| SemioError::Serialization {
                 message: format!("Failed to decode remote kit JSON from {}: {}", url, error),
             })?;
-        let kit = deserialize_kit(&json)?;
+        let kit = Kit::from_json_str(&json)?;
         Ok(zip_roundtrip::KitImportResult {
             kit,
             files: HashMap::new(),
@@ -11534,7 +11503,7 @@ mod kit_workflow {
     /// 🔖<summary>🔖edit_transport_kit holds the data fields for a edit_transport_kit record.</summary>
     pub fn edit_transport_kit(kit: &Kit, diff: &KitDiff) -> Kit {
         let mut edited = kit.clone();
-        apply_kit_diff(&mut edited, diff);
+        edited.apply_diff(diff);
         edited
     }
 
@@ -11593,11 +11562,11 @@ mod kit_kind_types {
             Self { json }
         }
         pub fn to_kit(&self) -> Result<Kit> {
-            deserialize_kit(&self.json)
+            Kit::from_json_str(&self.json)
         }
         pub fn from_kit(kit: &Kit) -> Result<Self> {
             Ok(Self {
-                json: serialize_kit(kit)?,
+                json: kit.to_json_pretty()?,
             })
         }
     }
@@ -11612,12 +11581,12 @@ mod kit_kind_types {
         fn kit(&self) -> &Kit;
         fn kit_mut(&mut self) -> &mut Kit;
         fn apply(&mut self, diff: &KitDiff) {
-            apply_kit_diff(self.kit_mut(), diff);
+            self.kit_mut().apply_diff(diff);
         }
         fn import_transport(&mut self, transport: &TransportKit) -> Result<()> {
             let imported = transport.to_kit()?;
             let diff = self.kit().diff_from(&imported);
-            apply_kit_diff(self.kit_mut(), &diff);
+            self.kit_mut().apply_diff(&diff);
             Ok(())
         }
         fn export_transport(&self) -> Result<TransportKit> {
@@ -11730,8 +11699,8 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "serializeKit")]
         pub fn wasm_serialize_kit(kit_json: &str) -> JsValue {
-            match deserialize_kit(kit_json) {
-                Ok(kit) => match serialize_kit(&kit) {
+            match Kit::from_json_str(kit_json) {
+                Ok(kit) => match kit.to_json_pretty() {
                     Ok(json) => to_js_value(WasmResult::success(json)),
                     Err(e) => to_js_value(WasmResult::<String>::failure(e.to_string())),
                 },
@@ -11741,7 +11710,7 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "deserializeKit")]
         pub fn wasm_deserialize_kit(json: &str) -> JsValue {
-            match deserialize_kit(json) {
+            match Kit::from_json_str(json) {
                 Ok(kit) => to_js_value(WasmResult::success(kit)),
                 Err(e) => to_js_value(WasmResult::<Kit>::failure(e.to_string())),
             }
@@ -11749,9 +11718,9 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "validateKit")]
         pub fn wasm_validate_kit(kit_json: &str) -> JsValue {
-            match deserialize_kit(kit_json) {
+            match Kit::from_json_str(kit_json) {
                 Ok(kit) => {
-                    let result = validate_kit(&kit);
+                    let result = kit.validate();
                     to_js_value(WasmResult::success(result))
                 }
                 Err(e) => to_js_value(WasmResult::<ValidationResult>::failure(e.to_string())),
@@ -11761,9 +11730,9 @@ mod wasm_bindings {
         #[wasm_bindgen(js_name = "areKitsEqual")]
         pub fn wasm_are_kits_equal(kit_a_json: &str, kit_b_json: &str) -> JsValue {
             let result = (|| -> Result<bool> {
-                let kit_a = deserialize_kit(kit_a_json)?;
-                let kit_b = deserialize_kit(kit_b_json)?;
-                Ok(are_kits_equal(&kit_a, &kit_b))
+                let kit_a = Kit::from_json_str(kit_a_json)?;
+                let kit_b = Kit::from_json_str(kit_b_json)?;
+                Ok(kit_a.are_equal(&kit_b))
             })();
             match result {
                 Ok(equal) => to_js_value(WasmResult::success(equal)),
@@ -11773,7 +11742,7 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "flattenDesign")]
         pub fn wasm_flatten_design(kit_json: &str, design_guid: &str) -> JsValue {
-            match deserialize_kit(kit_json) {
+            match Kit::from_json_str(kit_json) {
                 Ok(kit) => {
                     let rep = kit.flatten_design_report(design_guid);
                     to_js_value(WasmResult::success(rep))
@@ -11811,7 +11780,7 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "findTypeInKit")]
         pub fn wasm_find_type_in_kit(kit_json: &str, guid: &str) -> JsValue {
-            match deserialize_kit(kit_json) {
+            match Kit::from_json_str(kit_json) {
                 Ok(kit) => match kit.type_by_guid(guid) {
                     Some(t) => to_js_value(WasmResult::success(t.clone())),
                     None => to_js_value(WasmResult::<Type>::failure(format!(
@@ -11825,7 +11794,7 @@ mod wasm_bindings {
 
         #[wasm_bindgen(js_name = "findDesignInKit")]
         pub fn wasm_find_design_in_kit(kit_json: &str, guid: &str) -> JsValue {
-            match deserialize_kit(kit_json) {
+            match Kit::from_json_str(kit_json) {
                 Ok(kit) => match kit.design_by_guid(guid) {
                     Some(d) => to_js_value(WasmResult::success(d.clone())),
                     None => to_js_value(WasmResult::<Design>::failure(format!(
@@ -15587,7 +15556,14 @@ mod kit_diff_validation {
         }
     }
 
-    pub fn validate_kit_diff(kit: &Kit, diff: &KitDiff, heal: bool) -> KitDiffValidationResult {
+    impl Kit {
+        /// 🔖Validates a kit diff against the kit and optionally heals it.
+        pub fn validate_diff(&self, diff: &KitDiff, heal: bool) -> KitDiffValidationResult {
+            validate_kit_diff_impl(self, diff, heal)
+        }
+    }
+
+    fn validate_kit_diff_impl(kit: &Kit, diff: &KitDiff, heal: bool) -> KitDiffValidationResult {
         let mut ctx = KitDiffValidateCtx {
             errors: vec![],
             warnings: vec![],
@@ -17159,7 +17135,7 @@ impl KitOperation {
         let Some(ch) = self.undo_stack.pop() else {
             return false;
         };
-        apply_kit_diff(kit, &ch.backward);
+        kit.apply_diff(&ch.backward);
         self.redo_stack.push(ch);
         true
     }
@@ -17172,7 +17148,7 @@ impl KitOperation {
         let Some(ch) = self.redo_stack.pop() else {
             return false;
         };
-        apply_kit_diff(kit, &ch.forward);
+        kit.apply_diff(&ch.forward);
         self.undo_stack.push(ch);
         true
     }
@@ -18321,18 +18297,8 @@ impl Author {
     }
 }
 
-mod flatten {
-    //! Incremental flatten spanning tree over a design. Geometry caches live on [`FlattenPieceState`], not on the shared graph object.
-
-    use super::*;
-    use nalgebra::Matrix4;
-    use std::cell::RefCell;
-    use std::collections::{HashMap, HashSet, VecDeque};
-    use std::f64::consts::PI;
-    use std::rc::{Rc, Weak};
-    use std::sync::Arc;
-
-    /// Affine helpers used by [`Connection::child_plane_matrix`].
+//#region 🔖Flatten
+/// Affine helpers used by [`Connection::child_plane_matrix`].
     pub struct FlattenAffine;
 
     impl FlattenAffine {
@@ -18400,7 +18366,7 @@ mod flatten {
 
     /// Per-piece flatten state and **local** memoization for derived geometry.
     pub struct FlattenPieceState<'a> {
-        graph: Weak<FlattenGraphInner<'a>>,
+        graph: std::rc::Weak<FlattenGraphInner<'a>>,
         guid: String,
         matrix_memo: RefCell<Option<Matrix4<f64>>>,
         center_memo: RefCell<Option<Coord>>,
@@ -18519,7 +18485,7 @@ mod flatten {
                 .entry(guid.to_string())
                 .or_insert_with(|| {
                     Rc::new(FlattenPieceState {
-                        graph: Rc::downgrade(graph),
+                        graph: std::rc::Rc::downgrade(graph),
                         guid: guid.to_string(),
                         matrix_memo: RefCell::new(None),
                         center_memo: RefCell::new(None),
@@ -18819,10 +18785,10 @@ mod flatten {
                 });
             }
 
-            let types_map = kit_types_map_index(self.inner.kit);
-            let designs_map = kit_designs_map_index(self.inner.kit);
+            let types_map = self.inner.kit.types_map_index();
+            let designs_map = self.inner.kit.designs_map_index();
             let mut after_design = before_design.clone();
-            apply_design_diff(&mut after_design, &forward, &types_map, &designs_map);
+            after_design.apply_diff(&forward, &types_map, &designs_map);
             let backward = after_design.diff_from(&before_design);
 
             DesignChange {
@@ -19070,8 +19036,7 @@ mod flatten {
                 .collect()
         }
     }
-}
-pub use flatten::{FlattenAffine, FlattenDesign, FlattenPiece, PieceFlattenParent};
+//#endregion
 
 impl Kit {
     /// Semantic kit identity: deterministic merkle hash over domain collections (not JSON serialization).
@@ -19631,7 +19596,7 @@ impl Kit {
     /// Diff that undoes `forward` when applied after `forward` has been applied to `self`.
     pub fn inverse_forward_diff(&self, forward: &KitDiff) -> KitDiff {
         let mut after = self.clone();
-        apply_kit_diff(&mut after, forward);
+        after.apply_diff(forward);
         after.diff_from(self)
     }
 
@@ -20288,10 +20253,10 @@ impl Design {
 
     /// Diff that undoes `forward` when applied after `forward` has been applied to `self`.
     pub fn inverse_forward_diff(&self, forward: &DesignDiff) -> DesignDiff {
-        let types_map = types_from_design_pieces(self);
+        let types_map = Design::types_from_pieces(self);
         let designs_map = HashMap::new();
         let mut after = self.clone();
-        apply_design_diff(&mut after, forward, &types_map, &designs_map);
+        after.apply_diff(forward, &types_map, &designs_map);
         after.diff_from(self)
     }
 
@@ -20487,7 +20452,7 @@ impl Concept {
 
     pub fn delete(&self, kit: &mut Kit) -> Result<()> {
         let kd = kit_diff_remove_concept(kit, self);
-        apply_kit_diff(kit, &kd);
+        kit.apply_diff(&kd);
         Ok(())
     }
 }
@@ -20520,14 +20485,14 @@ impl Tag {
             }),
             ..KitDiff::default()
         };
-        apply_kit_diff(kit, &kd);
+        kit.apply_diff(&kd);
         Ok(())
     }
 }
 
 // ——— KitGraphChange (aligns with TypeScript `KitChange` for graph mutations: diffs + pre-apply validation)
 
-/// Bidirectional kit graph edit with [`KitDiffValidationResult`] captured before [`apply_kit_diff`].
+/// Bidirectional kit graph edit with [`KitDiffValidationResult`] captured before [`Kit::apply_diff`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct KitGraphChange {
     pub forward: KitDiff,
@@ -20742,7 +20707,7 @@ impl KitGraphSession {
             });
         }
         for step in tx.steps.iter().rev() {
-            apply_kit_diff(&mut g.kit, &step.backward);
+            g.kit.apply_diff(&step.backward);
         }
         Ok(())
     }
@@ -20767,7 +20732,7 @@ impl KitGraphSession {
         })?;
         let sk = &tx.start_kit;
         let forward_raw = sk.diff_from(&g.kit);
-        let validation = validate_kit_diff(sk, &forward_raw, false);
+        let validation = sk.validate_diff(&forward_raw, false);
         if !validation.ok || !validation.errors.is_empty() {
             g.open_transactions.insert(transaction_id.to_string(), tx);
             return Err(SemioError::Validation {
@@ -20833,7 +20798,7 @@ impl KitGraphSession {
             tx.steps.pop()
         };
         let Some(ch) = ch else { return Ok(()) };
-        apply_kit_diff(&mut g.kit, &ch.backward);
+        g.kit.apply_diff(&ch.backward);
         g.open_transactions
             .get_mut(transaction_id)
             .expect("transaction id checked")
@@ -20867,7 +20832,7 @@ impl KitGraphSession {
             tx.redo_steps.pop()
         };
         let Some(ch) = ch else { return Ok(()) };
-        apply_kit_diff(&mut g.kit, &ch.forward);
+        g.kit.apply_diff(&ch.forward);
         g.open_transactions
             .get_mut(transaction_id)
             .expect("transaction id checked")
@@ -20891,7 +20856,7 @@ impl KitGraphSession {
         let Some(ch) = g.history_past.pop() else {
             return Ok(());
         };
-        apply_kit_diff(&mut g.kit, &ch.backward);
+        g.kit.apply_diff(&ch.backward);
         g.history_future.push(ch);
         Ok(())
     }
@@ -20911,7 +20876,7 @@ impl KitGraphSession {
         let Some(ch) = g.history_future.pop() else {
             return Ok(());
         };
-        apply_kit_diff(&mut g.kit, &ch.forward);
+        g.kit.apply_diff(&ch.forward);
         g.history_past.push(ch);
         Ok(())
     }
@@ -20946,7 +20911,7 @@ impl KitGraphSessionInner {
             });
         }
 
-        let validation = validate_kit_diff(&self.kit, &diff, false);
+        let validation = self.kit.validate_diff(&diff, false);
         if !validation.ok || !validation.errors.is_empty() {
             self.is_conflicted = true;
             return Err(SemioError::Validation {
@@ -20972,7 +20937,7 @@ impl KitGraphSessionInner {
 
         let diff_to_apply = validation.diff.clone().unwrap_or_else(|| diff.clone());
         let backward = self.kit.inverse_forward_diff(&diff_to_apply);
-        apply_kit_diff(&mut self.kit, &diff_to_apply);
+        self.kit.apply_diff(&diff_to_apply);
 
         let change = KitGraphChange {
             forward: diff_to_apply,
@@ -21591,10 +21556,9 @@ mod tests {
             assert!(flat_rep.ok, "flatten_design failed: {:?}", flat_rep.errors);
             let flat_design_change = flat_rep.diff.expect("flatten ok implies diff");
             let mut flat_design = design.clone();
-            let types_map = kit_types_map_index(kit);
-            let designs_map = kit_designs_map_index(kit);
-            apply_design_diff(
-                &mut flat_design,
+            let types_map = kit.types_map_index();
+            let designs_map = kit.designs_map_index();
+            flat_design.apply_diff(
                 &flat_design_change.forward,
                 &types_map,
                 &designs_map,
@@ -21789,10 +21753,10 @@ mod tests {
                 #[test]
                 pub fn metabolism() {
                     let kit = load_kit("metabolism.kit.semio.json");
-                    let json = serialize_kit(&kit).unwrap();
-                    let restored = deserialize_kit(&json).unwrap();
+                    let json = kit.to_json_pretty().unwrap();
+                    let restored = Kit::from_json_str(&json).unwrap();
                     assert!(
-                        are_kits_equal(&kit, &restored),
+                        kit.are_equal(&restored),
                         "JSON -> Memory -> JSON: serialized and deserialized kit should be equal"
                     );
 
@@ -21824,7 +21788,7 @@ mod tests {
                     let result =
                         crate::zip_roundtrip::import_kit_from_zip(roundtrip_path_str).unwrap();
                     assert!(
-                        are_kits_equal(&kit, &result.kit),
+                        kit.are_equal(&result.kit),
                         "ZIP -> JSON: roundtrip kit should be equal"
                     );
                     assert_eq!(
@@ -21915,8 +21879,7 @@ mod tests {
                         })
                         .expect("Design not found");
 
-                    let filtered = filter_kit(
-                        &kit,
+                    let filtered = kit.filter(
                         &KitFilter {
                             design_guid: Some(design.guid.clone()),
                             ..Default::default()
@@ -22056,8 +22019,7 @@ mod tests {
                         })
                         .expect("Design not found");
 
-                    let filtered = filter_kit(
-                        &kit,
+                    let filtered = kit.filter(
                         &KitFilter {
                             design_guid: Some(design.guid.clone()),
                             ..Default::default()
@@ -22082,8 +22044,7 @@ mod tests {
                         .type_include
                         .as_ref()
                         .expect("typeInclude missing");
-                    let filtered = filter_kit(
-                        &kit,
+                    let filtered = kit.filter(
                         &KitFilter {
                             types: Some(GlobFilter {
                                 include: Some(patterns.clone()),
@@ -22117,8 +22078,7 @@ mod tests {
                         .as_ref()
                         .expect("typeExclude missing");
                     let total_types = kit.types.as_ref().map(|v| v.len()).unwrap_or(0);
-                    let filtered = filter_kit(
-                        &kit,
+                    let filtered = kit.filter(
                         &KitFilter {
                             types: Some(GlobFilter {
                                 include: None,
@@ -22153,8 +22113,7 @@ mod tests {
                         .design_include
                         .as_ref()
                         .expect("designInclude missing");
-                    let filtered = filter_kit(
-                        &kit,
+                    let filtered = kit.filter(
                         &KitFilter {
                             designs: Some(GlobFilter {
                                 include: Some(patterns.clone()),
@@ -22183,7 +22142,7 @@ mod tests {
                         .find(|c| c.name == "empty_filter")
                         .expect("glob case not found");
                     let kit = load_kit(&glob_case.kit);
-                    let filtered = filter_kit(&kit, &KitFilter::default());
+                    let filtered = kit.filter(&KitFilter::default());
                     assert_eq!(
                         filtered.types.as_ref().map(|v| v.len()),
                         kit.types.as_ref().map(|v| v.len())
@@ -22217,15 +22176,13 @@ mod tests {
                                 .find(|d| d.name == *design_name && d.parent.is_none())
                         })
                         .expect("Design not found");
-                    let design_filtered = filter_kit(
-                        &kit,
+                    let design_filtered = kit.filter(
                         &KitFilter {
                             design_guid: Some(design.guid.clone()),
                             ..Default::default()
                         },
                     );
-                    let combined_filtered = filter_kit(
-                        &kit,
+                    let combined_filtered = kit.filter(
                         &KitFilter {
                             design_guid: Some(design.guid.clone()),
                             types: Some(GlobFilter {
@@ -22845,9 +22802,9 @@ mod tests {
                         let change = kit_original.change_to(&kit_diffed);
 
                         let mut applied_forward = kit_original.clone();
-                        apply_kit_diff(&mut applied_forward, &change.forward);
+                        applied_forward.apply_diff(&change.forward);
                         assert!(
-                            are_kits_equal(&applied_forward, &kit_diffed),
+                            applied_forward.are_equal(&kit_diffed),
                             "ApplyKitDiff forward: applied kit doesn't match expected diffed kit"
                         );
                     }
@@ -22866,7 +22823,7 @@ mod tests {
                         let kit_diffed = load_kit("metabolism.kit.diffed.semio.json");
                         let change = kit_original.change_to(&kit_diffed);
                         let mut applied_inverse = kit_diffed.clone();
-                        apply_kit_diff(&mut applied_inverse, &change.backward);
+                        applied_inverse.apply_diff(&change.backward);
                         let tmp_dir = std::env::temp_dir();
                         std::fs::write(
                             tmp_dir.join("inverse_applied.json"),
@@ -22879,7 +22836,7 @@ mod tests {
                         )
                         .unwrap();
                         assert!(
-                            are_kits_equal(&applied_inverse, &kit_original),
+                            applied_inverse.are_equal(&kit_original),
                             "ApplyKitDiff inverse: applied inverse kit doesn't match original kit"
                         );
                     }
@@ -23245,7 +23202,7 @@ mod tests {
                         .expect("Failed to read paste target design");
                     let paste_dw: DesignDto =
                         serde_json::from_str(&paste_target_data).expect("paste target wire");
-                    let paste_types = kit_types_map_index(&kit);
+                    let paste_types = kit.types_map_index();
                     let paste_target =
                         Design::from_dto(paste_dw, &paste_types).expect("paste target design");
 
@@ -23833,11 +23790,11 @@ mod tests {
                     let diff: DesignDiff = load_asset(&case.diff);
 
                     let expected_dw: DesignDto = load_asset(&case.expected);
-                    let tm = kit_types_map_index(&kit);
+                    let tm = kit.types_map_index();
                     let expected =
                         Design::from_dto(expected_dw, &tm).expect("expected design wire");
 
-                    let result = design_with_diff(design.as_ref(), &diff);
+                    let result = Design::with_diff(design.as_ref(), &diff);
 
                     let result_pieces = result.pieces.as_ref().expect("No pieces in result");
                     let expected_pieces = expected.pieces.as_ref().expect("No pieces in expected");
@@ -23938,7 +23895,7 @@ mod tests {
                 #[test]
                 pub fn design_pieces_offset_diff_design() {
                     let kit = load_kit("metabolism.kit.semio.json");
-                    let types_map = kit_types_map_index(&kit);
+                    let types_map = kit.types_map_index();
                     let design_path = Path::new(ASSETS_DIR).join("drag/design.semio.json");
                     let design_data =
                         fs::read_to_string(&design_path).expect("Failed to read design");
@@ -24098,7 +24055,7 @@ mod tests {
                     #[test]
                     pub fn metabolism_kit_validate_empty_report() {
                         let kit = load_kit("metabolism.kit.semio.json");
-                        let result = validate_kit(&kit);
+                        let result = kit.validate();
                         assert!(result.problems.is_empty());
                     }
                 }
@@ -24109,7 +24066,7 @@ mod tests {
                     #[test]
                     pub fn invalid_kit_validate_invalid_report() {
                         let kit = load_kit("invalid.kit.semio.json");
-                        let result = validate_kit(&kit);
+                        let result = kit.validate();
                         let expected = load_validation_result("validation.semio.json");
                         assert_eq!(
                             result.problems.len(),
@@ -24129,7 +24086,7 @@ mod tests {
                             }
                         }
 
-                        let result = validate_kit(&kit);
+                        let result = kit.validate();
                         assert!(
                             result.problems.iter().all(|problem| {
                                 problem.constraint_id != "description-missing-emoji"
@@ -24173,7 +24130,7 @@ mod tests {
                         let asset: Asset = serde_json::from_str(&data).expect("parse asset");
                         let tiny_kit = Kit::from_dto(asset.tiny_kit).expect("tiny kit wire");
                         for c in asset.cases {
-                            let r = crate::validate_kit_diff(&tiny_kit, &c.diff, false);
+                            let r = tiny_kit.validate_diff(&c.diff, false);
                             assert_eq!(
                                 r.ok, c.expect_ok,
                                 "case {}: err={:?} warn={:?}",
@@ -24212,7 +24169,7 @@ mod tests {
                             r#"{"designs":{"updated":[{"design":{"guid":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}"#,
                         )
                         .expect("bad diff");
-                        let r = crate::validate_kit_diff(&tiny_kit, &bad, true);
+                        let r = tiny_kit.validate_diff(&bad, true);
                         let d = r.diff.expect("healed diff");
                         assert!(
                             d.designs.is_none()
@@ -24734,12 +24691,12 @@ mod tests {
 
                     export_dev_kit(&kit, path_str).unwrap();
                     let imported = import_dev_kit(path_str).unwrap();
-                    assert!(are_kits_equal(&kit, &imported));
+                    assert!(kit.are_equal(&imported));
 
                     let edited = edit_dev_kit(path_str, &diff).unwrap();
                     let persisted = import_dev_kit(path_str).unwrap();
                     assert_eq!(edited.name, "Workflow Kit Edited");
-                    assert!(are_kits_equal(&edited, &persisted));
+                    assert!(edited.are_equal(&persisted));
                 }
 
                 #[test]
@@ -24753,13 +24710,13 @@ mod tests {
 
                     export_local_kit(&kit, &files, folder_path_str).unwrap();
                     let imported = import_local_kit(folder_path_str).unwrap();
-                    assert!(are_kits_equal(&kit, &imported.kit));
+                    assert!(kit.are_equal(&imported.kit));
                     assert_eq!(imported.files, files);
 
                     let edited = edit_local_kit(folder_path_str, &diff).unwrap();
                     let reloaded = import_local_kit(folder_path_str).unwrap();
                     assert_eq!(edited.name, "Workflow Kit Edited");
-                    assert!(are_kits_equal(&edited, &reloaded.kit));
+                    assert!(edited.are_equal(&reloaded.kit));
                     assert!(!folder_path.join(old_path).exists());
                     assert!(folder_path.join(new_path).exists());
                 }
@@ -24774,13 +24731,13 @@ mod tests {
 
                     zip_roundtrip::export_kit_to_zip(&kit, &files, archive_path_str).unwrap();
                     let imported = zip_roundtrip::import_kit_from_zip(archive_path_str).unwrap();
-                    assert!(are_kits_equal(&kit, &imported.kit));
+                    assert!(kit.are_equal(&imported.kit));
                     assert_eq!(imported.files, files);
 
                     let edited = edit_archive_kit(archive_path_str, &diff).unwrap();
                     let reloaded = zip_roundtrip::import_kit_from_zip(archive_path_str).unwrap();
                     assert_eq!(edited.name, "Workflow Kit Edited");
-                    assert!(are_kits_equal(&edited, &reloaded.kit));
+                    assert!(edited.are_equal(&reloaded.kit));
                     assert!(reloaded.files.contains_key("renamed-assets/renamed.txt"));
                     assert!(!reloaded.files.contains_key("assets/hello.txt"));
                 }
@@ -24789,7 +24746,7 @@ mod tests {
                 pub fn remote_workflow_supports_json_and_zip_sources() {
                     let (kit, files) = workflow_kit_fixture();
                     let diff = workflow_diff();
-                    let json_body = serialize_kit(&kit).unwrap().into_bytes();
+                    let json_body = kit.to_json_pretty().unwrap().into_bytes();
 
                     let temp_dir = tempfile::tempdir().unwrap();
                     let archive_path = temp_dir.path().join("remote.semio.zip");
@@ -24811,16 +24768,16 @@ mod tests {
                         TestHttpRoute {
                             path: "/kit.json".to_string(),
                             content_type: "application/json".to_string(),
-                            body: serialize_kit(&kit).unwrap().into_bytes(),
+                            body: kit.to_json_pretty().unwrap().into_bytes(),
                         },
                     ]);
 
                     let json_import = import_remote_kit(&format!("{}/kit.json", base_url)).unwrap();
-                    assert!(are_kits_equal(&kit, &json_import.kit));
+                    assert!(kit.are_equal(&json_import.kit));
                     assert!(json_import.files.is_empty());
 
                     let zip_import = import_remote_kit(&format!("{}/kit.zip", base_url)).unwrap();
-                    assert!(are_kits_equal(&kit, &zip_import.kit));
+                    assert!(kit.are_equal(&zip_import.kit));
                     assert_eq!(zip_import.files, files);
 
                     let edited = edit_remote_kit(&format!("{}/kit.json", base_url), &diff).unwrap();
@@ -25188,6 +25145,277 @@ mod tests {
             }
         } // 🧶KitKind Tests
         pub use kit_kind_tests::*;
+
+        #[cfg(not(target_arch = "wasm32"))]
+        mod kit_backbone_async_tests {
+            // #region 🦴KitBackboneAsyncTests
+            // 🦴KitBackboneAsyncTests verifies native async authoritative backbones.
+
+            use super::*;
+            use futures::{SinkExt, StreamExt};
+            use serde_json::Value;
+            use std::time::Duration;
+            use tempfile::tempdir;
+            use tokio::net::TcpListener;
+            use tokio::time::{sleep, timeout};
+            use tokio_tungstenite::tungstenite::Message as WsMessage;
+
+            /// 🧪Small kit fixture for backbone authority tests.
+            fn backbone_test_kit(guid: &str, name: &str) -> Kit {
+                Kit {
+                    guid: guid.to_string(),
+                    name: name.to_string(),
+                    version: None,
+                    description: None,
+                    icon: None,
+                    image: None,
+                    preview: None,
+                    remote: None,
+                    homepage: None,
+                    license: None,
+                    concepts: None,
+                    tags: None,
+                    types: None,
+                    designs: None,
+                    ports: None,
+                    qualities: None,
+                    files: None,
+                    folders: None,
+                    authors: None,
+                    attributes: None,
+                    created_at: None,
+                    updated_at: None,
+                }
+            }
+
+            /// 🧪Backbone graph change that renames a kit.
+            fn backbone_rename_change(guid: &str, before: &str, after: &str) -> KitGraphChange {
+                kit_graph_change_from_diffs(
+                    KitDiff {
+                        guid: guid.to_string(),
+                        name: Some(after.to_string()),
+                        ..Default::default()
+                    },
+                    KitDiff {
+                        guid: guid.to_string(),
+                        name: Some(before.to_string()),
+                        ..Default::default()
+                    },
+                )
+            }
+
+            /// 🧪Runtime config with short but deterministic test timeouts.
+            fn backbone_test_config() -> BackboneRuntimeConfig {
+                BackboneRuntimeConfig {
+                    interaction_timeout: Duration::from_millis(250),
+                    consensus_deadline: Duration::from_secs(2),
+                    consensus_broadcast_interval: Duration::from_millis(40),
+                }
+            }
+
+            #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+            async fn dev_backbone_persists_authoritative_linear_history_after_consensus() {
+                let temp = tempdir().unwrap();
+                let kit_path = temp.path().join("dev.kit.semio.json");
+                let kit = backbone_test_kit("backbone-dev-guid", "Backbone Dev");
+                let hub = DevKitBackbone::spawn(&kit_path, Some(kit), backbone_test_config())
+                    .await
+                    .unwrap();
+                let proposer = hub.connect().await.unwrap();
+                let reviewer = hub.connect().await.unwrap();
+
+                proposer.start_session().await.unwrap();
+                reviewer.start_session().await.unwrap();
+
+                let change =
+                    backbone_rename_change("backbone-dev-guid", "Backbone Dev", "Backbone Dev Edited");
+                let revision = timeout(Duration::from_secs(2), proposer.propose_change(change))
+                    .await
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(revision, 1);
+
+                let snapshot = reviewer.subscribe_kit_state();
+                assert_eq!(snapshot.borrow().revision, 1);
+                assert_eq!(snapshot.borrow().kit().unwrap().name, "Backbone Dev Edited");
+
+                let persisted = import_dev_kit(kit_path.to_str().unwrap()).unwrap();
+                assert_eq!(persisted.name, "Backbone Dev Edited");
+
+                let ledger_path = std::path::PathBuf::from(format!("{}.ledger.json", kit_path.display()));
+                let ledger: Value =
+                    serde_json::from_str(&std::fs::read_to_string(ledger_path).unwrap()).unwrap();
+                assert_eq!(ledger["revision"], 1);
+                assert_eq!(ledger["entries"][0]["seq"], 1);
+            }
+
+            #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+            async fn local_backbone_persists_authoritative_kit_db_and_ledger() {
+                let temp = tempdir().unwrap();
+                let kit = backbone_test_kit("backbone-local-guid", "Backbone Local");
+                let hub = LocalKitBackbone::spawn(temp.path(), Some(kit), backbone_test_config())
+                    .await
+                    .unwrap();
+                let client = hub.connect().await.unwrap();
+
+                client.start_session().await.unwrap();
+
+                let change = backbone_rename_change(
+                    "backbone-local-guid",
+                    "Backbone Local",
+                    "Backbone Local Edited",
+                );
+                let revision = client.propose_change(change).await.unwrap();
+                assert_eq!(revision, 1);
+
+                let imported = import_local_kit(temp.path().to_str().unwrap()).unwrap();
+                assert_eq!(imported.kit.name, "Backbone Local Edited");
+                assert!(temp.path().join(".semio").join("kit.db").exists());
+
+                let ledger_path = temp.path().join(".semio").join("kit.ledger.json");
+                let ledger: Value =
+                    serde_json::from_str(&std::fs::read_to_string(ledger_path).unwrap()).unwrap();
+                assert_eq!(ledger["revision"], 1);
+                assert_eq!(ledger["entries"][0]["seq"], 1);
+            }
+
+            #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+            async fn backbone_locks_timed_out_client_interactions() {
+                let temp = tempdir().unwrap();
+                let kit_path = temp.path().join("timeout.kit.semio.json");
+                let kit = backbone_test_kit("backbone-timeout-guid", "Backbone Timeout");
+                let hub = DevKitBackbone::spawn(&kit_path, Some(kit), backbone_test_config())
+                    .await
+                    .unwrap();
+                let client = hub.connect().await.unwrap();
+
+                let started = client.start_session().await.unwrap();
+                assert_eq!(started.interaction_timeout, Duration::from_millis(250));
+
+                sleep(Duration::from_millis(650)).await;
+                assert_eq!(client.interaction_warning(), InteractionLockWarning::IdleTimeout);
+
+                let change = backbone_rename_change(
+                    "backbone-timeout-guid",
+                    "Backbone Timeout",
+                    "Backbone Timeout Edited",
+                );
+                let err = client.propose_change(change).await.unwrap_err();
+                assert!(format!("{:?}", err).contains("start_session required"));
+            }
+
+            #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+            async fn remote_backbone_uses_websocket_session_vote_and_commit_protocol() {
+                let kit = backbone_test_kit("backbone-remote-guid", "Backbone Remote");
+                let kit_json = kit.to_json_pretty().unwrap();
+                let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+                let url = format!("ws://{}", listener.local_addr().unwrap());
+
+                let server = tokio::spawn(async move {
+                    let (stream, _) = listener.accept().await.unwrap();
+                    let ws = tokio_tungstenite::accept_async(stream).await.unwrap();
+                    let (mut write, mut read) = ws.split();
+
+                    let hello = read.next().await.unwrap().unwrap();
+                    assert!(hello.into_text().unwrap().contains("\"hello\""));
+
+                    write
+                        .send(WsMessage::Text(
+                            serde_json::json!({
+                                "type": "welcome",
+                                "interaction_timeout_ms": 5000u64,
+                                "revision": 0u64,
+                                "kit_json": kit_json
+                            })
+                            .to_string()
+                            .into(),
+                        ))
+                        .await
+                        .unwrap();
+
+                    let session_start = read.next().await.unwrap().unwrap();
+                    assert!(session_start.into_text().unwrap().contains("\"session_start\""));
+
+                    write
+                        .send(WsMessage::Text(
+                            serde_json::json!({
+                                "type": "session_ack",
+                                "interaction_timeout_ms": 5000u64,
+                                "client_id": "remote-client"
+                            })
+                            .to_string()
+                            .into(),
+                        ))
+                        .await
+                        .unwrap();
+
+                    let propose = read.next().await.unwrap().unwrap().into_text().unwrap();
+                    let propose: Value = serde_json::from_str(&propose).unwrap();
+                    assert_eq!(propose["type"], "propose");
+                    let candidate_id = propose["candidate_id"].as_str().unwrap().to_string();
+                    let change = propose["change"].clone();
+
+                    write
+                        .send(WsMessage::Text(
+                            serde_json::json!({
+                                "type": "agreement_request",
+                                "candidate_id": candidate_id,
+                                "change": change
+                            })
+                            .to_string()
+                            .into(),
+                        ))
+                        .await
+                        .unwrap();
+
+                    let vote = read.next().await.unwrap().unwrap().into_text().unwrap();
+                    let vote: Value = serde_json::from_str(&vote).unwrap();
+                    assert_eq!(vote["type"], "vote");
+                    assert_eq!(vote["agree"], true);
+
+                    write
+                        .send(WsMessage::Text(
+                            serde_json::json!({
+                                "type": "committed",
+                                "candidate_id": candidate_id,
+                                "revision": 1u64,
+                                "change": change
+                            })
+                            .to_string()
+                            .into(),
+                        ))
+                        .await
+                        .unwrap();
+                });
+
+                let (session, reader) = RemoteKitBackbone::connect(&url).await.unwrap();
+                let started = session.start_session().await.unwrap();
+                assert_eq!(started.client_id, "remote-client");
+
+                let change = backbone_rename_change(
+                    "backbone-remote-guid",
+                    "Backbone Remote",
+                    "Backbone Remote Edited",
+                );
+                let revision = timeout(Duration::from_secs(2), session.propose_change(change))
+                    .await
+                    .unwrap()
+                    .unwrap();
+                assert_eq!(revision, 1);
+                assert_eq!(
+                    session.subscribe_kit_state().borrow().kit().unwrap().name,
+                    "Backbone Remote Edited"
+                );
+
+                reader.abort();
+                server.await.unwrap();
+                let _ = reader.await;
+            }
+
+            // #endregion
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        pub use kit_backbone_async_tests::*;
 
         mod hash_tests {
             // 🎖️Hash Tests
@@ -25629,8 +25857,8 @@ mod benchmark {
             let _diff_inverse = metabolism_change.backward;
 
             bench("Roundtrip/Metabolism", || {
-                let serialized = serialize_kit(&kit_metabolism).unwrap();
-                let restored = deserialize_kit(&serialized).unwrap();
+                let serialized = kit_metabolism.to_json_pretty().unwrap();
+                let restored = Kit::from_json_str(&serialized).unwrap();
                 if restored != kit_metabolism {
                     panic!("Roundtrip/Metabolism output does not match test expectation");
                 }
@@ -25638,8 +25866,8 @@ mod benchmark {
 
             bench("Diff/Metabolism", || {
                 let mut k2 = kit_original.clone();
-                apply_kit_diff(&mut k2, &diff_forward);
-                if !are_kits_equal(&k2, &kit_diffed) {
+                k2.apply_diff(&diff_forward);
+                if !k2.are_equal(&kit_diffed) {
                     panic!("Diff/Metabolism forward output does not match test expectation");
                 }
             });
@@ -25725,14 +25953,14 @@ mod benchmark {
             });
 
             bench("Validation/Invalid Kit", || {
-                let result = validate_kit(&kit_invalid);
+                let result = kit_invalid.validate();
                 if result.problems.is_empty() {
                     panic!("Validation/Invalid Kit output does not match test expectation");
                 }
             });
 
             bench("Validation/Metabolism", || {
-                let result = validate_kit(&kit_metabolism);
+                let result = kit_metabolism.validate();
                 if !result.problems.is_empty() {
                     panic!("Validation/Metabolism output does not match test expectation");
                 }

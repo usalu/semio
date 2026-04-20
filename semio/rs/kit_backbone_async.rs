@@ -17,9 +17,9 @@
 //! on a dedicated OS thread while [`KitStateSnapshot`] exposes `Arc<str>` kit JSON for `watchers.
 
 use crate::{
-    apply_kit_diff, deserialize_kit, export_dev_kit, export_local_kit, import_dev_kit,
-    import_local_kit, remap_kit_file_bytes, remove_stale_local_assets, serialize_kit,
-    validate_kit_diff, Kit, KitGraphChange, Result, SemioError, SemioUtil,
+    export_dev_kit, export_local_kit, import_dev_kit,
+    import_local_kit, remap_kit_file_bytes, remove_stale_local_assets,
+    Kit, KitGraphChange, Result, SemioError, SemioUtil,
 };
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
@@ -72,7 +72,7 @@ pub struct KitStateSnapshot {
 
 impl KitStateSnapshot {
     pub fn kit(&self) -> Result<Kit> {
-        deserialize_kit(self.kit_json.as_ref())
+        Kit::from_json_str(self.kit_json.as_ref())
     }
 
     pub fn kit_json(&self) -> Arc<str> {
@@ -162,7 +162,7 @@ fn save_ledger(path: &Path, ledger: &LedgerFile) -> Result<()> {
 
 fn snapshot_from_kit(kit: &Kit, revision: u64, lock: InteractionLockWarning) -> Result<KitStateSnapshot> {
     Ok(KitStateSnapshot {
-        kit_json: Arc::from(serialize_kit(kit)?.into_boxed_str()),
+        kit_json: Arc::from(kit.to_json_pretty()?.into_boxed_str()),
         revision,
         interaction_lock: lock,
     })
@@ -206,11 +206,11 @@ struct AuthorityState {
 
 impl AuthorityState {
     fn kit(&self) -> Result<Kit> {
-        deserialize_kit(&self.kit_json)
+        Kit::from_json_str(&self.kit_json)
     }
 
     fn set_kit(&mut self, kit: &Kit) -> Result<()> {
-        self.kit_json = serialize_kit(kit)?;
+        self.kit_json = kit.to_json_pretty()?;
         Ok(())
     }
 
@@ -253,7 +253,7 @@ impl AuthorityState {
             .as_ref()
             .unwrap_or(&change.forward)
             .clone();
-        apply_kit_diff(&mut kit, &diff);
+        kit.apply_diff(&diff);
 
         if let PersistKind::Local { files, folder } = &mut self.persist {
             let prev = files.clone();
@@ -432,7 +432,7 @@ fn handle_auth_request(
                     return;
                 }
             };
-            let validation = validate_kit_diff(&kit, &change.forward, false);
+            let validation = kit.validate_diff(&change.forward, false);
             if !validation.ok || !validation.errors.is_empty() {
                 let _ = reply.send(Err(SemioError::Validation {
                     message: validation
@@ -603,7 +603,7 @@ fn spawn_agreement_worker(
                     continue;
                 }
             };
-            let v = validate_kit_diff(&kit, &change.forward, false);
+            let v = kit.validate_diff(&change.forward, false);
             let agree = v.ok && v.errors.is_empty();
             let _ = auth_tx.send(AuthRequest::Vote {
                 id: client_id.clone(),
@@ -751,7 +751,7 @@ impl DevKitBackbone {
 
         let revision = ledger.revision.max(ledger.entries.len() as u64);
 
-        let kit_json = serialize_kit(&kit)?;
+        let kit_json = kit.to_json_pretty()?;
         let state = AuthorityState {
             kit_json,
             revision,
@@ -817,7 +817,7 @@ impl LocalKitBackbone {
 
         let revision = ledger.revision.max(ledger.entries.len() as u64);
 
-        let kit_json = serialize_kit(&kit)?;
+        let kit_json = kit.to_json_pretty()?;
         let state = AuthorityState {
             kit_json,
             revision,
@@ -1016,8 +1016,8 @@ impl RemoteKitBackbone {
             }
         };
 
-        let mut kit_json = welcome.2.clone();
-        let kit = deserialize_kit(&kit_json)?;
+        let kit_json = welcome.2.clone();
+        let kit = Kit::from_json_str(&kit_json)?;
         let init_snap = snapshot_from_kit(&kit, welcome.1, InteractionLockWarning::None)?;
         let (snapshot_tx, snapshot_rx) = watch::channel(init_snap);
 
@@ -1107,9 +1107,9 @@ where
                     candidate_id,
                     change,
                 } => {
-                    let agree = match deserialize_kit(&kit_json) {
+                    let agree = match Kit::from_json_str(&kit_json) {
                         Ok(kit) => {
-                            let v = validate_kit_diff(&kit, &change.forward, false);
+                            let v = kit.validate_diff(&change.forward, false);
                             v.ok && v.errors.is_empty()
                         }
                         Err(e) => return Err(e),
@@ -1138,9 +1138,9 @@ where
                         .clone();
                     let complete = candidate_id.clone();
                     {
-                        let mut kit = deserialize_kit(&kit_json)?;
-                        apply_kit_diff(&mut kit, &diff);
-                        kit_json = serialize_kit(&kit)?;
+                        let mut kit = Kit::from_json_str(&kit_json)?;
+                        kit.apply_diff(&diff);
+                        kit_json = kit.to_json_pretty()?;
                         if let Ok(snap) =
                             snapshot_from_kit(&kit, revision, InteractionLockWarning::None)
                         {
@@ -1163,7 +1163,7 @@ where
                     }
                 }
                 RemoteWireMsg::SessionTimeout => {
-                    let kit = deserialize_kit(&kit_json)?;
+                    let kit = Kit::from_json_str(&kit_json)?;
                     if let Ok(snap) = snapshot_from_kit(
                         &kit,
                         revision,
@@ -1173,7 +1173,7 @@ where
                     }
                 }
                 RemoteWireMsg::Disconnect { reason } => {
-                    let kit = deserialize_kit(&kit_json)?;
+                    let kit = Kit::from_json_str(&kit_json)?;
                     if let Ok(snap) = snapshot_from_kit(
                         &kit,
                         revision,
