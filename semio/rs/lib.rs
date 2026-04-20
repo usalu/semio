@@ -20525,17 +20525,19 @@ pub struct KitGraphChange {
     pub validation: KitDiffValidationResult,
 }
 
-/// [`KitGraphChange`] from precomputed diffs without running the validation pipeline (validation is a no-op success).
-pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGraphChange {
-    KitGraphChange {
-        forward,
-        backward,
-        validation: KitDiffValidationResult {
-            ok: true,
-            errors: vec![],
-            warnings: vec![],
-            diff: None,
-        },
+impl KitGraphChange {
+    /// Precomputed forward/backward diffs without running the validation pipeline (validation is a no-op success).
+    pub fn from_diffs(forward: KitDiff, backward: KitDiff) -> Self {
+        Self {
+            forward,
+            backward,
+            validation: KitDiffValidationResult {
+                ok: true,
+                errors: vec![],
+                warnings: vec![],
+                diff: None,
+            },
+        }
     }
 }
 
@@ -20600,298 +20602,309 @@ pub enum KitGranularEvent {
     KitMetadataUpdated { fields: Vec<String> },
 }
 
-/// Extracts granular events from a committed [`KitGraphChange`].
-/// Uses the effective diff (validation.diff if present, otherwise forward).
+impl KitGraphChange {
+    /// Granular events for this change. Uses the effective diff (`validation.diff` if present, otherwise `forward`).
+    pub fn granular_events(&self) -> Vec<KitGranularEvent> {
+        let diff = self.validation.diff.as_ref().unwrap_or(&self.forward);
+        let mut events = Vec::new();
+
+        // Kit-level metadata
+        let mut kit_fields = Vec::new();
+        if diff.name.is_some() {
+            kit_fields.push("name".to_string());
+        }
+        if diff.version.is_some() {
+            kit_fields.push("version".to_string());
+        }
+        if diff.description.is_some() {
+            kit_fields.push("description".to_string());
+        }
+        if diff.icon.is_some() {
+            kit_fields.push("icon".to_string());
+        }
+        if diff.image.is_some() {
+            kit_fields.push("image".to_string());
+        }
+        if diff.preview.is_some() {
+            kit_fields.push("preview".to_string());
+        }
+        if diff.remote.is_some() {
+            kit_fields.push("remote".to_string());
+        }
+        if diff.homepage.is_some() {
+            kit_fields.push("homepage".to_string());
+        }
+        if diff.license.is_some() {
+            kit_fields.push("license".to_string());
+        }
+        if !kit_fields.is_empty() {
+            events.push(KitGranularEvent::KitMetadataUpdated { fields: kit_fields });
+        }
+
+        // Types
+        if let Some(ref types_diff) = diff.types {
+            if let Some(ref added) = types_diff.added {
+                for t in added {
+                    events.push(KitGranularEvent::TypeAdded {
+                        type_guid: t.guid.clone(),
+                    });
+                }
+            }
+            if let Some(ref removed) = types_diff.removed {
+                for r in removed {
+                    events.push(KitGranularEvent::TypeRemoved {
+                        type_guid: r.guid.clone(),
+                    });
+                }
+            }
+            if let Some(ref updated) = types_diff.updated {
+                for u in updated {
+                    let mut fields = Vec::new();
+                    let d = &u.diff;
+                    if d.name.is_some() {
+                        fields.push("name".to_string());
+                    }
+                    if d.description.is_some() {
+                        fields.push("description".to_string());
+                    }
+                    if d.icon.is_some() {
+                        fields.push("icon".to_string());
+                    }
+                    if d.image.is_some() {
+                        fields.push("image".to_string());
+                    }
+                    if d.folder.is_some() {
+                        fields.push("folder".to_string());
+                    }
+                    if d.unit.is_some() {
+                        fields.push("unit".to_string());
+                    }
+                    if d.stock.is_some() {
+                        fields.push("stock".to_string());
+                    }
+                    if d.is_abstract.is_some() {
+                        fields.push("isAbstract".to_string());
+                    }
+                    if d.representations.is_some() {
+                        fields.push("representations".to_string());
+                    }
+                    if d.connectors.is_some() {
+                        fields.push("connectors".to_string());
+                    }
+                    if d.props.is_some() {
+                        fields.push("props".to_string());
+                    }
+                    if d.attributes.is_some() {
+                        fields.push("attributes".to_string());
+                    }
+                    if !fields.is_empty() {
+                        events.push(KitGranularEvent::TypeUpdated {
+                            type_guid: u.guid.clone(),
+                            fields,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Designs and their pieces/connections
+        if let Some(ref designs_diff) = diff.designs {
+            if let Some(ref added) = designs_diff.added {
+                for d in added {
+                    events.push(KitGranularEvent::DesignAdded {
+                        design_guid: d.guid.clone(),
+                    });
+                }
+            }
+            if let Some(ref removed) = designs_diff.removed {
+                for r in removed {
+                    events.push(KitGranularEvent::DesignRemoved {
+                        design_guid: r.guid.clone(),
+                    });
+                }
+            }
+            if let Some(ref updated) = designs_diff.updated {
+                for u in updated {
+                    let design_guid = u.guid.clone();
+                    let d = &u.diff;
+
+                    // Design-level fields
+                    let mut fields = Vec::new();
+                    if d.name.is_some() {
+                        fields.push("name".to_string());
+                    }
+                    if d.description.is_some() {
+                        fields.push("description".to_string());
+                    }
+                    if d.icon.is_some() {
+                        fields.push("icon".to_string());
+                    }
+                    if d.image.is_some() {
+                        fields.push("image".to_string());
+                    }
+                    if d.folder.is_some() {
+                        fields.push("folder".to_string());
+                    }
+                    if d.unit.is_some() {
+                        fields.push("unit".to_string());
+                    }
+                    if d.is_abstract.is_some() {
+                        fields.push("isAbstract".to_string());
+                    }
+                    if d.props.is_some() {
+                        fields.push("props".to_string());
+                    }
+                    if d.attributes.is_some() {
+                        fields.push("attributes".to_string());
+                    }
+                    if !fields.is_empty() {
+                        events.push(KitGranularEvent::DesignUpdated {
+                            design_guid: design_guid.clone(),
+                            fields,
+                        });
+                    }
+
+                    // Pieces within this design
+                    if let Some(ref pieces_diff) = d.pieces {
+                        if let Some(ref added) = pieces_diff.added {
+                            for p in added {
+                                events.push(KitGranularEvent::PieceAdded {
+                                    design_guid: design_guid.clone(),
+                                    piece_guid: p.guid.clone(),
+                                });
+                            }
+                        }
+                        if let Some(ref removed) = pieces_diff.removed {
+                            for r in removed {
+                                events.push(KitGranularEvent::PieceRemoved {
+                                    design_guid: design_guid.clone(),
+                                    piece_guid: r.guid.clone(),
+                                });
+                            }
+                        }
+                        if let Some(ref updated) = pieces_diff.updated {
+                            for pu in updated {
+                                let mut pf = Vec::new();
+                                let pd = &pu.diff;
+                                if pd.name.is_some() {
+                                    pf.push("name".to_string());
+                                }
+                                if pd.description.is_some() {
+                                    pf.push("description".to_string());
+                                }
+                                if pd.type_ref.is_some() {
+                                    pf.push("type".to_string());
+                                }
+                                if pd.design.is_some() {
+                                    pf.push("design".to_string());
+                                }
+                                if pd.plane.is_some() {
+                                    pf.push("plane".to_string());
+                                }
+                                if pd.center.is_some() {
+                                    pf.push("center".to_string());
+                                }
+                                if pd.scale.is_some() {
+                                    pf.push("scale".to_string());
+                                }
+                                if pd.color.is_some() {
+                                    pf.push("color".to_string());
+                                }
+                                if pd.props.is_some() {
+                                    pf.push("props".to_string());
+                                }
+                                if pd.attributes.is_some() {
+                                    pf.push("attributes".to_string());
+                                }
+                                if !pf.is_empty() {
+                                    events.push(KitGranularEvent::PieceUpdated {
+                                        design_guid: design_guid.clone(),
+                                        piece_guid: pu.guid.clone(),
+                                        fields: pf,
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Connections within this design
+                    if let Some(ref connections_diff) = d.connections {
+                        if let Some(ref added) = connections_diff.added {
+                            for c in added {
+                                events.push(KitGranularEvent::ConnectionAdded {
+                                    design_guid: design_guid.clone(),
+                                    connection_guid: c.guid.clone(),
+                                });
+                            }
+                        }
+                        if let Some(ref removed) = connections_diff.removed {
+                            for r in removed {
+                                events.push(KitGranularEvent::ConnectionRemoved {
+                                    design_guid: design_guid.clone(),
+                                    connection_guid: r.guid.clone(),
+                                });
+                            }
+                        }
+                        if let Some(ref updated) = connections_diff.updated {
+                            for cu in updated {
+                                let mut cf = Vec::new();
+                                let cd = &cu.diff;
+                                if cd.gap.is_some() {
+                                    cf.push("gap".to_string());
+                                }
+                                if cd.shift.is_some() {
+                                    cf.push("shift".to_string());
+                                }
+                                if cd.rise.is_some() {
+                                    cf.push("rise".to_string());
+                                }
+                                if cd.rotation.is_some() {
+                                    cf.push("rotation".to_string());
+                                }
+                                if cd.turn.is_some() {
+                                    cf.push("turn".to_string());
+                                }
+                                if cd.tilt.is_some() {
+                                    cf.push("tilt".to_string());
+                                }
+                                if cd.connected.is_some() {
+                                    cf.push("connected".to_string());
+                                }
+                                if cd.connecting.is_some() {
+                                    cf.push("connecting".to_string());
+                                }
+                                if cd.description.is_some() {
+                                    cf.push("description".to_string());
+                                }
+                                if cd.attributes.is_some() {
+                                    cf.push("attributes".to_string());
+                                }
+                                if !cf.is_empty() {
+                                    events.push(KitGranularEvent::ConnectionUpdated {
+                                        design_guid: design_guid.clone(),
+                                        connection_guid: cu.guid.clone(),
+                                        fields: cf,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        events
+    }
+}
+
+#[deprecated(note = "use KitGraphChange::from_diffs")]
+pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGraphChange {
+    KitGraphChange::from_diffs(forward, backward)
+}
+
+#[deprecated(note = "use KitGraphChange::granular_events")]
 pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent> {
-    let diff = change.validation.diff.as_ref().unwrap_or(&change.forward);
-    let mut events = Vec::new();
-
-    // Kit-level metadata
-    let mut kit_fields = Vec::new();
-    if diff.name.is_some() {
-        kit_fields.push("name".to_string());
-    }
-    if diff.version.is_some() {
-        kit_fields.push("version".to_string());
-    }
-    if diff.description.is_some() {
-        kit_fields.push("description".to_string());
-    }
-    if diff.icon.is_some() {
-        kit_fields.push("icon".to_string());
-    }
-    if diff.image.is_some() {
-        kit_fields.push("image".to_string());
-    }
-    if diff.preview.is_some() {
-        kit_fields.push("preview".to_string());
-    }
-    if diff.remote.is_some() {
-        kit_fields.push("remote".to_string());
-    }
-    if diff.homepage.is_some() {
-        kit_fields.push("homepage".to_string());
-    }
-    if diff.license.is_some() {
-        kit_fields.push("license".to_string());
-    }
-    if !kit_fields.is_empty() {
-        events.push(KitGranularEvent::KitMetadataUpdated { fields: kit_fields });
-    }
-
-    // Types
-    if let Some(ref types_diff) = diff.types {
-        if let Some(ref added) = types_diff.added {
-            for t in added {
-                events.push(KitGranularEvent::TypeAdded {
-                    type_guid: t.guid.clone(),
-                });
-            }
-        }
-        if let Some(ref removed) = types_diff.removed {
-            for r in removed {
-                events.push(KitGranularEvent::TypeRemoved {
-                    type_guid: r.guid.clone(),
-                });
-            }
-        }
-        if let Some(ref updated) = types_diff.updated {
-            for u in updated {
-                let mut fields = Vec::new();
-                let d = &u.diff;
-                if d.name.is_some() {
-                    fields.push("name".to_string());
-                }
-                if d.description.is_some() {
-                    fields.push("description".to_string());
-                }
-                if d.icon.is_some() {
-                    fields.push("icon".to_string());
-                }
-                if d.image.is_some() {
-                    fields.push("image".to_string());
-                }
-                if d.folder.is_some() {
-                    fields.push("folder".to_string());
-                }
-                if d.unit.is_some() {
-                    fields.push("unit".to_string());
-                }
-                if d.stock.is_some() {
-                    fields.push("stock".to_string());
-                }
-                if d.is_abstract.is_some() {
-                    fields.push("isAbstract".to_string());
-                }
-                if d.representations.is_some() {
-                    fields.push("representations".to_string());
-                }
-                if d.connectors.is_some() {
-                    fields.push("connectors".to_string());
-                }
-                if d.props.is_some() {
-                    fields.push("props".to_string());
-                }
-                if d.attributes.is_some() {
-                    fields.push("attributes".to_string());
-                }
-                if !fields.is_empty() {
-                    events.push(KitGranularEvent::TypeUpdated {
-                        type_guid: u.guid.clone(),
-                        fields,
-                    });
-                }
-            }
-        }
-    }
-
-    // Designs and their pieces/connections
-    if let Some(ref designs_diff) = diff.designs {
-        if let Some(ref added) = designs_diff.added {
-            for d in added {
-                events.push(KitGranularEvent::DesignAdded {
-                    design_guid: d.guid.clone(),
-                });
-            }
-        }
-        if let Some(ref removed) = designs_diff.removed {
-            for r in removed {
-                events.push(KitGranularEvent::DesignRemoved {
-                    design_guid: r.guid.clone(),
-                });
-            }
-        }
-        if let Some(ref updated) = designs_diff.updated {
-            for u in updated {
-                let design_guid = u.guid.clone();
-                let d = &u.diff;
-
-                // Design-level fields
-                let mut fields = Vec::new();
-                if d.name.is_some() {
-                    fields.push("name".to_string());
-                }
-                if d.description.is_some() {
-                    fields.push("description".to_string());
-                }
-                if d.icon.is_some() {
-                    fields.push("icon".to_string());
-                }
-                if d.image.is_some() {
-                    fields.push("image".to_string());
-                }
-                if d.folder.is_some() {
-                    fields.push("folder".to_string());
-                }
-                if d.unit.is_some() {
-                    fields.push("unit".to_string());
-                }
-                if d.is_abstract.is_some() {
-                    fields.push("isAbstract".to_string());
-                }
-                if d.props.is_some() {
-                    fields.push("props".to_string());
-                }
-                if d.attributes.is_some() {
-                    fields.push("attributes".to_string());
-                }
-                if !fields.is_empty() {
-                    events.push(KitGranularEvent::DesignUpdated {
-                        design_guid: design_guid.clone(),
-                        fields,
-                    });
-                }
-
-                // Pieces within this design
-                if let Some(ref pieces_diff) = d.pieces {
-                    if let Some(ref added) = pieces_diff.added {
-                        for p in added {
-                            events.push(KitGranularEvent::PieceAdded {
-                                design_guid: design_guid.clone(),
-                                piece_guid: p.guid.clone(),
-                            });
-                        }
-                    }
-                    if let Some(ref removed) = pieces_diff.removed {
-                        for r in removed {
-                            events.push(KitGranularEvent::PieceRemoved {
-                                design_guid: design_guid.clone(),
-                                piece_guid: r.guid.clone(),
-                            });
-                        }
-                    }
-                    if let Some(ref updated) = pieces_diff.updated {
-                        for pu in updated {
-                            let mut pf = Vec::new();
-                            let pd = &pu.diff;
-                            if pd.name.is_some() {
-                                pf.push("name".to_string());
-                            }
-                            if pd.description.is_some() {
-                                pf.push("description".to_string());
-                            }
-                            if pd.type_ref.is_some() {
-                                pf.push("type".to_string());
-                            }
-                            if pd.design.is_some() {
-                                pf.push("design".to_string());
-                            }
-                            if pd.plane.is_some() {
-                                pf.push("plane".to_string());
-                            }
-                            if pd.center.is_some() {
-                                pf.push("center".to_string());
-                            }
-                            if pd.scale.is_some() {
-                                pf.push("scale".to_string());
-                            }
-                            if pd.color.is_some() {
-                                pf.push("color".to_string());
-                            }
-                            if pd.props.is_some() {
-                                pf.push("props".to_string());
-                            }
-                            if pd.attributes.is_some() {
-                                pf.push("attributes".to_string());
-                            }
-                            if !pf.is_empty() {
-                                events.push(KitGranularEvent::PieceUpdated {
-                                    design_guid: design_guid.clone(),
-                                    piece_guid: pu.guid.clone(),
-                                    fields: pf,
-                                });
-                            }
-                        }
-                    }
-                }
-
-                // Connections within this design
-                if let Some(ref connections_diff) = d.connections {
-                    if let Some(ref added) = connections_diff.added {
-                        for c in added {
-                            events.push(KitGranularEvent::ConnectionAdded {
-                                design_guid: design_guid.clone(),
-                                connection_guid: c.guid.clone(),
-                            });
-                        }
-                    }
-                    if let Some(ref removed) = connections_diff.removed {
-                        for r in removed {
-                            events.push(KitGranularEvent::ConnectionRemoved {
-                                design_guid: design_guid.clone(),
-                                connection_guid: r.guid.clone(),
-                            });
-                        }
-                    }
-                    if let Some(ref updated) = connections_diff.updated {
-                        for cu in updated {
-                            let mut cf = Vec::new();
-                            let cd = &cu.diff;
-                            if cd.gap.is_some() {
-                                cf.push("gap".to_string());
-                            }
-                            if cd.shift.is_some() {
-                                cf.push("shift".to_string());
-                            }
-                            if cd.rise.is_some() {
-                                cf.push("rise".to_string());
-                            }
-                            if cd.rotation.is_some() {
-                                cf.push("rotation".to_string());
-                            }
-                            if cd.turn.is_some() {
-                                cf.push("turn".to_string());
-                            }
-                            if cd.tilt.is_some() {
-                                cf.push("tilt".to_string());
-                            }
-                            if cd.connected.is_some() {
-                                cf.push("connected".to_string());
-                            }
-                            if cd.connecting.is_some() {
-                                cf.push("connecting".to_string());
-                            }
-                            if cd.description.is_some() {
-                                cf.push("description".to_string());
-                            }
-                            if cd.attributes.is_some() {
-                                cf.push("attributes".to_string());
-                            }
-                            if !cf.is_empty() {
-                                events.push(KitGranularEvent::ConnectionUpdated {
-                                    design_guid: design_guid.clone(),
-                                    connection_guid: cu.guid.clone(),
-                                    fields: cf,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    events
+    change.granular_events()
 }
 
 // ——— Backbone (TypeScript `Backbone` parallel)
@@ -21040,6 +21053,12 @@ impl KitGraphSession {
                 message: "KitGraphSession mutex poisoned".into(),
             })?;
         g.commit_graph(diff, opts)
+    }
+
+    /// Alias for [`Self::commit`] (parallel to TypeScript `commitKitGraphChange`).
+    #[inline]
+    pub fn commit_graph_change(&self, diff: KitDiff, opts: KitCommitOptions) -> Result<KitGraphChange> {
+        self.commit(diff, opts)
     }
 
     pub fn start_transaction(&self) -> Result<String> {
@@ -21351,12 +21370,13 @@ impl KitGraphSessionInner {
 }
 
 /// Applies a validated graph mutation on [`KitGraphSession`] (low-level parallel to TypeScript `commitKitGraphChange`).
+#[deprecated(note = "use KitGraphSession::commit or KitGraphSession::commit_graph_change")]
 pub fn commit_kit_graph_change(
     session: &KitGraphSession,
     diff: KitDiff,
     opts: KitCommitOptions,
 ) -> Result<KitGraphChange> {
-    session.commit(diff, opts)
+    session.commit_graph_change(diff, opts)
 }
 
 // 🏦FlattenDesign
@@ -25552,7 +25572,7 @@ mod tests {
 
             /// 🧪Backbone graph change that renames a kit.
             fn backbone_rename_change(guid: &str, before: &str, after: &str) -> KitGraphChange {
-                kit_graph_change_from_diffs(
+                KitGraphChange::from_diffs(
                     KitDiff {
                         guid: guid.to_string(),
                         name: Some(after.to_string()),
@@ -26368,9 +26388,9 @@ mod kit_backbone_async {
     //! on a dedicated OS thread while [`KitStateSnapshot`] exposes `Arc<str>` kit JSON for `watchers.
 
     use crate::{
-        export_dev_kit, export_local_kit, extract_granular_events, import_dev_kit,
-        import_local_kit, remap_kit_file_bytes, remove_stale_local_assets, Kit, KitGranularEvent,
-        KitGraphChange, Result, SemioError, SemioUtil,
+        export_dev_kit, export_local_kit, import_dev_kit, import_local_kit, remap_kit_file_bytes,
+        remove_stale_local_assets, Kit, KitGranularEvent, KitGraphChange, Result, SemioError,
+        SemioUtil,
     };
     use futures::{SinkExt, StreamExt};
     use serde::{Deserialize, Serialize};
@@ -26696,7 +26716,7 @@ mod kit_backbone_async {
         snapshot_tx: &watch::Sender<KitStateSnapshot>,
         change: &KitGraphChange,
     ) -> Result<()> {
-        let events = extract_granular_events(change);
+        let events = change.granular_events();
         let snap = snapshot_from_kit_with_events(
             &state.kit()?,
             state.revision,
@@ -27535,7 +27555,7 @@ mod kit_backbone_async {
                             .unwrap_or(&change.forward)
                             .clone();
                         let complete = candidate_id.clone();
-                        let events = extract_granular_events(&change);
+                        let events = change.granular_events();
                         {
                             let mut kit = Kit::from_json_str(&kit_json)?;
                             kit.apply_diff(&diff);

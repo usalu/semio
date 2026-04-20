@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Core domain library in Go implementing the semio data representation, SQLite kit I/O, and operations.
+// Core domain library in Go implementing the semio data model, SQLite kit I/O, and operations.
 
 // #endregion 🧲Header
 
@@ -16375,11 +16375,11 @@ func blobEncode(data []byte, filename string) string {
 func mimeFromFilename(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
 	mimes := map[string]string{
-		".stl":  "representation/stl",
-		".obj":  "representation/obj",
-		".glb":  "representation/gltf-binary",
-		".gltf": "representation/gltf+json",
-		".3dm":  "representation/vnd.3dm",
+		".stl":  "model/stl",
+		".obj":  "model/obj",
+		".glb":  "model/gltf-binary",
+		".gltf": "model/gltf+json",
+		".3dm":  "model/vnd.3dm",
 		".png":  "image/png",
 		".jpg":  "image/jpeg",
 		".jpeg": "image/jpeg",

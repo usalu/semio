@@ -746,6 +746,13 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 semio/rs:
 The code is very smelly and incomplete.
 You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
+Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents (e.g. design is responsible for managing pieces and connections)
+
+One example:
+`pub fn delete_pieces_and_connections_in_design` is a design method and MUST update the parent pointer of the pieces. The pieces only provide mutation that doesnt affect anything else (such as name, etc). Some properties have dependencies (e.g. the flat plane of a piece depens on the flat plane of the parent piece and the parent connection parameters, the connector being use, etc). Make sure this is properly cached and only is recomputed when needed.
+
+Refactor all such functions in the same way.
+
 e.g. mod such as flatten MUST NOT exist and instead be methods such on design (keeps track of setting parent/child pointer for pieces and connections), pieces (use parent flat plane to derive flat plane)
 Achieve a pointer reference such as this schema:
 
