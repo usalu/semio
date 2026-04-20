@@ -105,24 +105,24 @@ public class BridgeRegistryTests
 public class LayerServiceTests
 {
     [Fact]
-    public void BuildModelLayerPath_WithTags_ReturnsCorrectPath()
+    public void BuildRepresentationLayerPath_WithTags_ReturnsCorrectPath()
     {
-        var path = LayerService.BuildModelLayerPath("Metabolism", "CapsuleA", new[] { "floor", "unit" });
-        Assert.Equal("semio::Metabolism::Types::CapsuleA::Models::floor-unit", path);
+        var path = LayerService.BuildRepresentationLayerPath("Metabolism", "CapsuleA", new[] { "floor", "unit" });
+        Assert.Equal("semio::Metabolism::Types::CapsuleA::Representations::floor-unit", path);
     }
 
     [Fact]
-    public void BuildModelLayerPath_WithEmptyTags_ReturnsDefault()
+    public void BuildRepresentationLayerPath_WithEmptyTags_ReturnsDefault()
     {
-        var path = LayerService.BuildModelLayerPath("Metabolism", "CapsuleA", Array.Empty<string>());
-        Assert.Equal("semio::Metabolism::Types::CapsuleA::Models::default", path);
+        var path = LayerService.BuildRepresentationLayerPath("Metabolism", "CapsuleA", Array.Empty<string>());
+        Assert.Equal("semio::Metabolism::Types::CapsuleA::Representations::default", path);
     }
 
     [Fact]
-    public void BuildModelLayerPath_WithSingleTag_ReturnsCorrectPath()
+    public void BuildRepresentationLayerPath_WithSingleTag_ReturnsCorrectPath()
     {
-        var path = LayerService.BuildModelLayerPath("MyKit", "Wall", new[] { "exterior" });
-        Assert.Equal("semio::MyKit::Types::Wall::Models::exterior", path);
+        var path = LayerService.BuildRepresentationLayerPath("MyKit", "Wall", new[] { "exterior" });
+        Assert.Equal("semio::MyKit::Types::Wall::Representations::exterior", path);
     }
 }
 
@@ -167,12 +167,12 @@ public class BridgeProtocolTests
     }
 
     [Fact]
-    public void ImportModelRequest_DefaultValues_AreCorrect()
+    public void ImportRepresentationRequest_DefaultValues_AreCorrect()
     {
-        var request = new ImportModelRequest();
+        var request = new ImportRepresentationRequest();
         Assert.Equal("", request.KitName);
         Assert.Equal("", request.TypeName);
-        Assert.Equal("", request.ModelGuid);
+        Assert.Equal("", request.RepresentationGuid);
         Assert.Equal("", request.FileUrl);
         Assert.NotNull(request.Tags);
         Assert.Empty(request.Tags);

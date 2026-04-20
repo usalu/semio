@@ -1,14 +1,14 @@
 ### Summary
 
-Rhino 8 plugin with embedded React UI for importing semio kits and models into Rhino documents.
+Rhino 8 plugin with embedded React UI for importing semio kits and representations into Rhino documents.
 
 ### Specs
 
 - Bundle contains two packages: `ui` (npm/React) and `rhp` (.NET/RhinoCommon).
 - The `rhp` plugin registers a dockable panel hosting WebView2 with the React `ui`.
-- The `ui` displays a tree view of kits, types, models, and designs.
+- The `ui` displays a tree view of kits, types, representations, and designs.
 - Import Kit action loads a semio kit into the tree.
-- Import Model action creates Rhino geometry on layers: `semio > KITNAME > Types > TYPENAME > Models > MODELTAGS`.
+- Import Representation action creates Rhino geometry on layers: `semio > KITNAME > Types > TYPENAME > Representations > REPRESENTATIONTAGS`.
 - Bridge protocol uses JSON-RPC style messages between React and C#.
 
 ### Docs
@@ -20,8 +20,8 @@ Kits                    # Import action
   KIT
     Types
       TYPE
-        Models
-          Model         # Import action
+        Representations
+          Representation         # Import action
     Designs
       Design
 ```
@@ -33,8 +33,8 @@ semio
   KITNAME
     Types
       TYPENAME
-        Models
-          MODELTAGS
+        Representations
+          REPRESENTATIONTAGS
 ```
 
 ### Requirements

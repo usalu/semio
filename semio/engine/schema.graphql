@@ -72,7 +72,7 @@ input TypeInputNode {
   isAbstract: Boolean = null
   folder: String = null
   location: LocationInputNode = null
-  models: [ModelInputNode] = null
+  representations: [RepresentationInputNode] = null
   connectors: [ConnectorInputNode] = null
   props: [PropInputNode] = null
   authors: [String] = null
@@ -87,8 +87,8 @@ input LocationInputNode {
   altitude: Float = null
 }
 
-"""🔖GraphQL input node for model mutations."""
-input ModelInputNode {
+"""🔖GraphQL input node for representation mutations."""
+input RepresentationInputNode {
   url: String!
   file: String!
   name: String = null

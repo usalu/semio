@@ -108,9 +108,9 @@ export async function run(ctx) {
           if (
             files.length > 200 &&
             typeof files[0]?.blob === "string" &&
-            files[0].blob.startsWith("data:model/")
+            files[0].blob.startsWith("data:representation/")
           ) {
-            return { guid: s.guid, fileCount: files.length, hasModelBlob: true };
+            return { guid: s.guid, fileCount: files.length, hasRepresentationBlob: true };
           }
         }
         return null;
@@ -142,7 +142,7 @@ export async function run(ctx) {
 
   await clickById("semio.sketchpad.app.home.toolbar.openFile");
   const loadedFileKit = await waitFor("file kit loaded in session store", readMetabolismFileKitFromStore);
-  assert.ok(loadedFileKit.hasModelBlob, "file-opened kit should keep embedded model blobs in session");
+  assert.ok(loadedFileKit.hasRepresentationBlob, "file-opened kit should keep embedded representation blobs in session");
   assert.ok(loadedFileKit.fileCount > 200, "file-opened kit should expose files in session");
   const persistedAfterFile = await readPersistedKits();
   assert.deepStrictEqual(

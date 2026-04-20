@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Core domain library in Go implementing the semio data model, SQLite kit I/O, and operations.
+// Core domain library in Go implementing the semio data representation, SQLite kit I/O, and operations.
 
 // #endregion 🧲Header
 
@@ -362,8 +362,8 @@ type ConceptId struct {
 	Guid string `json:"guid"`
 }
 
-// 🗿ModelId identifies a model entity by GUID.
-type ModelId struct {
+// 🗿RepresentationId identifies a representation entity by GUID.
+type RepresentationId struct {
 	Guid string `json:"guid"`
 }
 
@@ -1140,10 +1140,10 @@ type ConceptMeta struct {
 
 // #endregion 💡Concept
 
-// #region 🗿Model
+// #region 🗿Representation
 
-// 🗿Model represents a 3D model reference linking a file with tags and description.
-type Model struct {
+// 🗿Representation represents a 3D representation reference linking a file with tags and description.
+type Representation struct {
 	Guid        string      `json:"guid"`
 	File        FileId      `json:"file"`
 	Name        *string     `json:"name,omitempty"`
@@ -1152,8 +1152,8 @@ type Model struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// 🖼️ModelDiff represents a partial update to a model's file, name, tags or description.
-type ModelDiff struct {
+// 🖼️RepresentationDiff represents a partial update to a representation's file, name, tags or description.
+type RepresentationDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
 	Tags        []TagId         `json:"tags,omitempty"`
@@ -1161,25 +1161,25 @@ type ModelDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// 🎴ModelsDiff represents batched model additions, removals and per-model updates.
-type ModelsDiff struct {
-	Removed []ModelId `json:"removed,omitempty"`
+// 🎴RepresentationsDiff represents batched representation additions, removals and per-representation updates.
+type RepresentationsDiff struct {
+	Removed []RepresentationId `json:"removed,omitempty"`
 	Updated []struct {
-		Model ModelId   `json:"model"`
-		Diff  ModelDiff `json:"diff"`
+		Representation RepresentationId   `json:"representation"`
+		Diff  RepresentationDiff `json:"diff"`
 	} `json:"updated,omitempty"`
-	Added []Model `json:"added,omitempty"`
+	Added []Representation `json:"added,omitempty"`
 }
 
-// 🎭ModelMeta represents the scalar-only view of a model excluding tags and attributes.
-type ModelMeta struct {
+// 🎭RepresentationMeta represents the scalar-only view of a representation excluding tags and attributes.
+type RepresentationMeta struct {
 	Guid        string  `json:"guid"`
 	File        FileId  `json:"file"`
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-// #endregion 🗿Model
+// #endregion 🗿Representation
 
 // #region 🔌Connector
 
@@ -1253,7 +1253,7 @@ type ConnectorMeta struct {
 
 // #region 🧱Type
 
-// 🧱Type represents a component blueprint with models, connectors and hierarchical inheritance.
+// 🧱Type represents a component blueprint with representations, connectors and hierarchical inheritance.
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1264,7 +1264,7 @@ type Type struct {
 	Stock       *int        `json:"stock,omitempty"`
 	Location    *LocationId `json:"location,omitempty"`
 	Folder      *string     `json:"folder,omitempty"`
-	Models      []Model     `json:"models,omitempty"`
+	Representations      []Representation     `json:"representations,omitempty"`
 	Connectors  []Connector `json:"connectors,omitempty"`
 	Props       []Prop      `json:"props,omitempty"`
 	Authors     []AuthorId  `json:"authors,omitempty"`
@@ -1277,7 +1277,7 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
-// ⚒️TypeDiff represents a partial update to a type's name, models, connectors or props.
+// ⚒️TypeDiff represents a partial update to a type's name, representations, connectors or props.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Families    []FamilyId      `json:"families,omitempty"`
@@ -1287,7 +1287,7 @@ type TypeDiff struct {
 	Stock       *int            `json:"stock,omitempty"`
 	Location    *LocationId     `json:"location,omitempty"`
 	Folder      *string         `json:"folder,omitempty"`
-	Models      *ModelsDiff     `json:"models,omitempty"`
+	Representations      *RepresentationsDiff     `json:"representations,omitempty"`
 	Connectors  *ConnectorsDiff `json:"connectors,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
 	Authors     []AuthorId      `json:"authors,omitempty"`
@@ -1336,7 +1336,7 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
-// 🧊TypeMeta represents the scalar-only view of a type excluding models, connectors, props and attributes.
+// 🧊TypeMeta represents the scalar-only view of a type excluding representations, connectors, props and attributes.
 type TypeMeta struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1365,7 +1365,7 @@ type TypeShallow struct {
 	Stock       *int            `json:"stock,omitempty"`
 	Location    *LocationId     `json:"location,omitempty"`
 	Folder      *string         `json:"folder,omitempty"`
-	Models      []ModelMeta     `json:"models,omitempty"`
+	Representations      []RepresentationMeta     `json:"representations,omitempty"`
 	Connectors  []ConnectorMeta `json:"connectors,omitempty"`
 	Props       []PropMeta      `json:"props,omitempty"`
 	Authors     []AuthorId      `json:"authors,omitempty"`
@@ -2215,7 +2215,7 @@ type TagChange = Change[Tag, TagDiff]
 
 type ConceptChange = Change[Concept, ConceptDiff]
 
-type ModelChange = Change[Model, ModelDiff]
+type RepresentationChange = Change[Representation, RepresentationDiff]
 
 type ConnectorChange = Change[Connector, ConnectorDiff]
 
@@ -2486,9 +2486,9 @@ func ToConceptMeta(c Concept) ConceptMeta {
 	return ConceptMeta{Guid: c.Guid, Name: c.Name, Description: c.Description, Icon: c.Icon, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
 }
 
-// 🗿ToModelMeta converts a Model to its scalar-only Meta view.
-func ToModelMeta(m Model) ModelMeta {
-	return ModelMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
+// 🗿ToRepresentationMeta converts a Representation to its scalar-only Meta view.
+func ToRepresentationMeta(m Representation) RepresentationMeta {
+	return RepresentationMeta{Guid: m.Guid, File: m.File, Name: m.Name, Description: m.Description}
 }
 
 // 🔌ToConnectorMeta converts a Connector to its scalar-only Meta view.
@@ -2528,9 +2528,9 @@ func ToTypeMeta(t Type) TypeMeta {
 
 // 🏗️ToTypeShallow converts a Type to its Shallow overview with scalar-only nested items.
 func ToTypeShallow(t Type) TypeShallow {
-	models := make([]ModelMeta, len(t.Models))
-	for i, m := range t.Models {
-		models[i] = ToModelMeta(m)
+	representations := make([]RepresentationMeta, len(t.Representations))
+	for i, m := range t.Representations {
+		representations[i] = ToRepresentationMeta(m)
 	}
 	connectors := make([]ConnectorMeta, len(t.Connectors))
 	for i, c := range t.Connectors {
@@ -2544,7 +2544,7 @@ func ToTypeShallow(t Type) TypeShallow {
 	for i, a := range t.Attributes {
 		attributes[i] = ToAttributeMeta(a)
 	}
-	return TypeShallow{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Models: models, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
+	return TypeShallow{Guid: t.Guid, Name: t.Name, Families: t.Families, IsAbstract: t.IsAbstract, Virtual: t.Virtual, Unit: t.Unit, Stock: t.Stock, Location: t.Location, Folder: t.Folder, Representations: representations, Connectors: connectors, Props: props, Authors: t.Authors, Concepts: t.Concepts, Icon: t.Icon, Image: t.Image, Description: t.Description, Attributes: attributes, CreatedAt: t.CreatedAt, UpdatedAt: t.UpdatedAt}
 }
 
 // 📐ToDesignMeta converts a Design to its scalar-only Meta view.
@@ -3208,10 +3208,10 @@ func HashConcept(c Concept) string {
 	return w.digest()
 }
 
-// 🗿HashModel computes SHA-256 hash of a Model entity.
-func HashModel(m Model) string {
+// 🗿HashRepresentation computes SHA-256 hash of a Representation entity.
+func HashRepresentation(m Representation) string {
 	w := &hashWriter{}
-	w.writeString("Model")
+	w.writeString("Representation")
 	if len(m.Attributes) > 0 {
 		w.writeString("attributes")
 		hashes := make([]string, len(m.Attributes))
@@ -3352,11 +3352,11 @@ func HashType(t Type) string {
 		w.writeString("location")
 		w.writeString(t.Location.Guid)
 	}
-	if len(t.Models) > 0 {
-		w.writeString("models")
-		hashes := make([]string, len(t.Models))
-		for i, m := range t.Models {
-			hashes[i] = HashModel(m)
+	if len(t.Representations) > 0 {
+		w.writeString("representations")
+		hashes := make([]string, len(t.Representations))
+		for i, m := range t.Representations {
+			hashes[i] = HashRepresentation(m)
 		}
 		w.writeHashList(hashes)
 	}
@@ -4522,9 +4522,9 @@ func HashConceptsDiff(d ConceptsDiff) string {
 		removed, updated, added)
 }
 
-func HashModelDiff(d ModelDiff) string {
+func HashRepresentationDiff(d RepresentationDiff) string {
 	w := &hashWriter{}
-	w.writeString("ModelDiff")
+	w.writeString("RepresentationDiff")
 	if d.Attributes != nil {
 		w.writeString("attributes")
 		w.writeHash(HashAttributesDiff(*d.Attributes))
@@ -4546,7 +4546,7 @@ func HashModelDiff(d ModelDiff) string {
 	return w.digest()
 }
 
-func HashModelsDiff(d ModelsDiff) string {
+func HashRepresentationsDiff(d RepresentationsDiff) string {
 	removed := make([]string, len(d.Removed))
 	for i, r := range d.Removed {
 		removed[i] = r.Guid
@@ -4559,15 +4559,15 @@ func HashModelsDiff(d ModelsDiff) string {
 		updated = append(updated, struct {
 			key  string
 			diff interface{}
-		}{key: u.Model.Guid, diff: u.Diff})
+		}{key: u.Representation.Guid, diff: u.Diff})
 	}
 	var added []interface{}
 	for _, a := range d.Added {
 		added = append(added, a)
 	}
-	return hashCollectionDiffGeneric("ModelsDiff", "ModelDiffUpdate", "model",
-		func(e interface{}) string { return HashModel(e.(Model)) },
-		func(d interface{}) string { return HashModelDiff(d.(ModelDiff)) },
+	return hashCollectionDiffGeneric("RepresentationsDiff", "RepresentationDiffUpdate", "representation",
+		func(e interface{}) string { return HashRepresentation(e.(Representation)) },
+		func(d interface{}) string { return HashRepresentationDiff(d.(RepresentationDiff)) },
 		removed, updated, added)
 }
 
@@ -4671,9 +4671,9 @@ func HashTypeDiff(d TypeDiff) string {
 		w.writeString("location")
 		w.writeBool(false)
 	}
-	if d.Models != nil {
-		w.writeString("models")
-		w.writeHash(HashModelsDiff(*d.Models))
+	if d.Representations != nil {
+		w.writeString("representations")
+		w.writeHash(HashRepresentationsDiff(*d.Representations))
 	}
 	writeOptStringDiff(w, "name", d.Name)
 	if len(d.Families) > 0 {
@@ -6158,9 +6158,9 @@ func getTypeDiff(before, after Type) TypeDiff {
 	if len(connDiff.Added) > 0 || len(connDiff.Removed) > 0 || len(connDiff.Updated) > 0 {
 		diff.Connectors = &connDiff
 	}
-	modelsDiff := getModelsDiff(before.Models, after.Models)
-	if len(modelsDiff.Added) > 0 || len(modelsDiff.Removed) > 0 || len(modelsDiff.Updated) > 0 {
-		diff.Models = &modelsDiff
+	representationsDiff := getRepresentationsDiff(before.Representations, after.Representations)
+	if len(representationsDiff.Added) > 0 || len(representationsDiff.Removed) > 0 || len(representationsDiff.Updated) > 0 {
+		diff.Representations = &representationsDiff
 	}
 	propsDiff := getPropsDiff(before.Props, after.Props)
 	if len(propsDiff.Added) > 0 || len(propsDiff.Removed) > 0 || len(propsDiff.Updated) > 0 {
@@ -6174,7 +6174,7 @@ func getTypeDiff(before, after Type) TypeDiff {
 }
 
 func isTypeDiffEmpty(diff TypeDiff) bool {
-	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Models == nil && diff.Props == nil && diff.Attributes == nil
+	return diff.Name == nil && diff.Families == nil && diff.IsAbstract == nil && diff.Virtual == nil && diff.Unit == nil && diff.Stock == nil && diff.Location == nil && diff.Folder == nil && diff.Icon == nil && diff.Image == nil && diff.Description == nil && diff.Authors == nil && diff.Concepts == nil && diff.Connectors == nil && diff.Representations == nil && diff.Props == nil && diff.Attributes == nil
 }
 
 func getDesignsDiff(before, after []Design) DesignsDiff {
@@ -6833,9 +6833,9 @@ func inverseTypeDiff(original Type, appliedDiff TypeDiff) TypeDiff {
 	if appliedDiff.Concepts != nil {
 		inverse.Concepts = original.Concepts
 	}
-	if appliedDiff.Models != nil {
-		modelsDiff := inverseModelsDiff(original.Models, *appliedDiff.Models)
-		inverse.Models = &modelsDiff
+	if appliedDiff.Representations != nil {
+		representationsDiff := inverseRepresentationsDiff(original.Representations, *appliedDiff.Representations)
+		inverse.Representations = &representationsDiff
 	}
 	if appliedDiff.Connectors != nil {
 		connDiff := inverseConnectorsDiff(original.Connectors, *appliedDiff.Connectors)
@@ -7397,10 +7397,10 @@ func inverseConnectorDiff(original Connector, appliedDiff ConnectorDiff) Connect
 	return inverse
 }
 
-func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
-	inverse := ModelsDiff{}
+func inverseRepresentationsDiff(original []Representation, appliedDiff RepresentationsDiff) RepresentationsDiff {
+	inverse := RepresentationsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, ModelId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, RepresentationId{Guid: added.Guid})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, m := range original {
@@ -7412,12 +7412,12 @@ func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
 	}
 	for _, updated := range appliedDiff.Updated {
 		for _, m := range original {
-			if m.Guid == updated.Model.Guid {
-				inverseDiff := inverseModelDiff(m, updated.Diff)
+			if m.Guid == updated.Representation.Guid {
+				inverseDiff := inverseRepresentationDiff(m, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
-					Model ModelId   `json:"model"`
-					Diff  ModelDiff `json:"diff"`
-				}{Model: ModelId{Guid: m.Guid}, Diff: inverseDiff})
+					Representation RepresentationId   `json:"representation"`
+					Diff  RepresentationDiff `json:"diff"`
+				}{Representation: RepresentationId{Guid: m.Guid}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -7425,8 +7425,8 @@ func inverseModelsDiff(original []Model, appliedDiff ModelsDiff) ModelsDiff {
 	return inverse
 }
 
-func inverseModelDiff(original Model, appliedDiff ModelDiff) ModelDiff {
-	inverse := ModelDiff{}
+func inverseRepresentationDiff(original Representation, appliedDiff RepresentationDiff) RepresentationDiff {
+	inverse := RepresentationDiff{}
 	if appliedDiff.Name != nil {
 		inverse.Name = original.Name
 	}
@@ -8503,8 +8503,8 @@ func isConnectorDiffEmpty(diff ConnectorDiff) bool {
 	return diff.Name == nil && diff.Description == nil && diff.Port == nil && diff.Mandatory == nil && diff.T == nil && diff.Point == nil && diff.Direction == nil && diff.Props == nil && diff.Attributes == nil
 }
 
-func getModelDiff(before, after Model) ModelDiff {
-	diff := ModelDiff{}
+func getRepresentationDiff(before, after Representation) RepresentationDiff {
+	diff := RepresentationDiff{}
 	if normalizeStr(before.Name) != normalizeStr(after.Name) {
 		diff.Name = after.Name
 	}
@@ -8533,33 +8533,33 @@ func getModelDiff(before, after Model) ModelDiff {
 	return diff
 }
 
-func getModelsDiff(before, after []Model) ModelsDiff {
-	diff := ModelsDiff{}
-	beforeMap := make(map[string]Model)
+func getRepresentationsDiff(before, after []Representation) RepresentationsDiff {
+	diff := RepresentationsDiff{}
+	beforeMap := make(map[string]Representation)
 	for _, m := range before {
 		beforeMap[m.Guid] = m
 	}
-	afterMap := make(map[string]Model)
+	afterMap := make(map[string]Representation)
 	for _, m := range after {
 		afterMap[m.Guid] = m
 	}
 	for _, m := range before {
 		if _, ok := afterMap[m.Guid]; !ok {
-			diff.Removed = append(diff.Removed, ModelId{Guid: m.Guid})
+			diff.Removed = append(diff.Removed, RepresentationId{Guid: m.Guid})
 		}
 	}
 	for _, m := range after {
 		if bm, ok := beforeMap[m.Guid]; !ok {
 			diff.Added = append(diff.Added, m)
 		} else {
-			modelDiff := getModelDiff(bm, m)
-			if modelDiff.Name != nil || modelDiff.File != nil || modelDiff.Tags != nil || modelDiff.Description != nil || modelDiff.Attributes != nil {
+			representationDiff := getRepresentationDiff(bm, m)
+			if representationDiff.Name != nil || representationDiff.File != nil || representationDiff.Tags != nil || representationDiff.Description != nil || representationDiff.Attributes != nil {
 				diff.Updated = append(diff.Updated, struct {
-					Model ModelId   `json:"model"`
-					Diff  ModelDiff `json:"diff"`
+					Representation RepresentationId   `json:"representation"`
+					Diff  RepresentationDiff `json:"diff"`
 				}{
-					Model: ModelId{Guid: m.Guid},
-					Diff:  modelDiff,
+					Representation: RepresentationId{Guid: m.Guid},
+					Diff:  representationDiff,
 				})
 			}
 		}
@@ -8837,14 +8837,14 @@ func areTypesEqual(a, b Type) bool {
 			return false
 		}
 	}
-	if len(a.Models) != len(b.Models) {
+	if len(a.Representations) != len(b.Representations) {
 		return false
 	}
-	for _, ma := range a.Models {
+	for _, ma := range a.Representations {
 		found := false
-		for _, mb := range b.Models {
+		for _, mb := range b.Representations {
 			if ma.Guid == mb.Guid {
-				if !areModelsEqual(ma, mb) {
+				if !areRepresentationsEqual(ma, mb) {
 					return false
 				}
 				found = true
@@ -8898,7 +8898,7 @@ func areConnectorsEqual(a, b Connector) bool {
 	return true
 }
 
-func areModelsEqual(a, b Model) bool {
+func areRepresentationsEqual(a, b Representation) bool {
 	if normalizeStr(a.Name) != normalizeStr(b.Name) {
 		return false
 	}
@@ -9939,8 +9939,8 @@ func applyTypeDiff(item *Type, diff *TypeDiff) {
 	if diff.Concepts != nil {
 		item.Concepts = diff.Concepts
 	}
-	if diff.Models != nil {
-		applyModelsDiff(&item.Models, diff.Models)
+	if diff.Representations != nil {
+		applyRepresentationsDiff(&item.Representations, diff.Representations)
 	}
 	if diff.Connectors != nil {
 		applyConnectorsDiff(&item.Connectors, diff.Connectors)
@@ -10028,7 +10028,7 @@ func applyConnectorDiff(item *Connector, diff *ConnectorDiff) {
 	}
 }
 
-func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
+func applyRepresentationsDiff(items *[]Representation, diff *RepresentationsDiff) {
 	if diff.Removed != nil {
 		removedGuids := make(map[string]bool)
 		for _, r := range diff.Removed {
@@ -10045,8 +10045,8 @@ func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
 	if diff.Updated != nil {
 		for _, u := range diff.Updated {
 			for i := range *items {
-				if (*items)[i].Guid == u.Model.Guid {
-					applyModelDiff(&(*items)[i], &u.Diff)
+				if (*items)[i].Guid == u.Representation.Guid {
+					applyRepresentationDiff(&(*items)[i], &u.Diff)
 					break
 				}
 			}
@@ -10057,7 +10057,7 @@ func applyModelsDiff(items *[]Model, diff *ModelsDiff) {
 	}
 }
 
-func applyModelDiff(item *Model, diff *ModelDiff) {
+func applyRepresentationDiff(item *Representation, diff *RepresentationDiff) {
 	if diff.Name != nil {
 		item.Name = diff.Name
 	}
@@ -10833,25 +10833,25 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 	return designs
 }
 
-func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationForFilter(representations []Representation, selectedTagGuids []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
 	if len(selectedTagGuids) == 0 {
-		for i := range models {
-			if len(models[i].Tags) == 0 {
-				return &models[i]
+		for i := range representations {
+			if len(representations[i].Tags) == 0 {
+				return &representations[i]
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
 
-	filtered := make([]Model, 0)
-	for _, model := range models {
+	filtered := make([]Representation, 0)
+	for _, representation := range representations {
 		matches := true
 		for _, selectedTagGuid := range selectedTagGuids {
 			found := false
-			for _, tag := range model.Tags {
+			for _, tag := range representation.Tags {
 				if tag.Guid == selectedTagGuid {
 					found = true
 					break
@@ -10863,7 +10863,7 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 			}
 		}
 		if matches {
-			filtered = append(filtered, model)
+			filtered = append(filtered, representation)
 		}
 	}
 	if len(filtered) == 0 {
@@ -10872,10 +10872,10 @@ func selectBestModelForFilter(models []Model, selectedTagGuids []string) *Model 
 
 	bestIndex := 0
 	bestScore := -1.0
-	for i, model := range filtered {
+	for i, representation := range filtered {
 		tagSet := make(map[string]bool)
 		selectedSet := make(map[string]bool)
-		for _, tag := range model.Tags {
+		for _, tag := range representation.Tags {
 			tagSet[tag.Guid] = true
 		}
 		for _, selectedTagGuid := range selectedTagGuids {
@@ -10920,7 +10920,7 @@ type GlobFilter struct {
 // 🏷️Glob filters on each entity kind are applied afterwards.
 type KitFilter struct {
 	DesignGuid string      `json:"designGuid,omitempty"`
-	ModelTags  []string    `json:"modelTags,omitempty"`
+	RepresentationTags  []string    `json:"representationTags,omitempty"`
 	Designs    *GlobFilter `json:"designs,omitempty"`
 	Types      *GlobFilter `json:"types,omitempty"`
 	Families   *GlobFilter `json:"families,omitempty"`
@@ -10970,7 +10970,7 @@ func MatchesGlobFilter(name string, filter *GlobFilter) bool {
 
 // 📦filterKitByDesign filters a kit to only include entities transitively related to a design.
 // Removes types not used by pieces, designs not the target, families without used ports,
-// 📄files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
+// 📄files not used by selected representations, tags/concepts only if referenced, and selects one representation per type based on tags.
 func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 	var design *Design
 	for i := range kit.Designs {
@@ -11052,7 +11052,7 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 		}
 	}
 
-	selectedModels := make(map[string]*Model)
+	selectedRepresentations := make(map[string]*Representation)
 	for typeGuid := range usedTypeGuids {
 		t, ok := typeByGuid[typeGuid]
 		if !ok {
@@ -11075,10 +11075,10 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 			usedConceptGuids[conceptId.Guid] = true
 		}
 
-		if len(t.Models) > 0 {
-			best := selectBestModelLike(t.Models, resolvedTagGuids)
+		if len(t.Representations) > 0 {
+			best := selectBestRepresentationLike(t.Representations, resolvedTagGuids)
 			if best != nil {
-				selectedModels[typeGuid] = best
+				selectedRepresentations[typeGuid] = best
 				usedFileGuids[best.File.Guid] = true
 				for _, tagId := range best.Tags {
 					usedTagGuids[tagId.Guid] = true
@@ -11139,10 +11139,10 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 			continue
 		}
 		filteredType := t
-		if model, ok := selectedModels[t.Guid]; ok {
-			filteredType.Models = []Model{*model}
+		if representation, ok := selectedRepresentations[t.Guid]; ok {
+			filteredType.Representations = []Representation{*representation}
 		} else {
-			filteredType.Models = []Model{}
+			filteredType.Representations = []Representation{}
 		}
 		result.Types = append(result.Types, filteredType)
 	}
@@ -11204,7 +11204,7 @@ func filterKitByDesign(kit Kit, designGuid string, tags []string) Kit {
 func FilterKit(kit Kit, filter KitFilter) Kit {
 	var base Kit
 	if filter.DesignGuid != "" {
-		base = filterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+		base = filterKitByDesign(kit, filter.DesignGuid, filter.RepresentationTags)
 	} else {
 		base = kit
 	}
@@ -11288,30 +11288,30 @@ func FilterKit(kit Kit, filter KitFilter) Kit {
 	return result
 }
 
-// 🏷️selectBestModelLike selects the best model based on tag matching using Jaccard similarity.
+// 🏷️selectBestRepresentationLike selects the best representation based on tag matching using Jaccard similarity.
 // 🛠️Helper for filterKitByDesign.
-func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationLike(representations []Representation, selectedTagGuids []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
 	if len(selectedTagGuids) == 0 {
-		for _, m := range models {
+		for _, m := range representations {
 			if len(m.Tags) == 0 {
 				return &m
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
 
-	var filtered []Model
-	for _, m := range models {
-		modelTagGuids := make(map[string]bool)
+	var filtered []Representation
+	for _, m := range representations {
+		representationTagGuids := make(map[string]bool)
 		for _, tag := range m.Tags {
-			modelTagGuids[tag.Guid] = true
+			representationTagGuids[tag.Guid] = true
 		}
 		allSelected := true
 		for _, guid := range selectedTagGuids {
-			if !modelTagGuids[guid] {
+			if !representationTagGuids[guid] {
 				allSelected = false
 				break
 			}
@@ -11337,12 +11337,12 @@ func selectBestModelLike(models []Model, selectedTagGuids []string) *Model {
 	return &best
 }
 
-// 🏷️jaccardTagGuidsGo computes Jaccard similarity coefficient between model tags and selected tags.
+// 🏷️jaccardTagGuidsGo computes Jaccard similarity coefficient between representation tags and selected tags.
 // 🔑Helper for filterKitByDesign.
-func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
-	modelTagSet := make(map[string]bool)
-	for _, tag := range modelTags {
-		modelTagSet[tag.Guid] = true
+func jaccardTagGuidsGo(representationTags []TagId, selectedTagGuids []string) float64 {
+	representationTagSet := make(map[string]bool)
+	for _, tag := range representationTags {
+		representationTagSet[tag.Guid] = true
 	}
 	selectedSet := make(map[string]bool)
 	for _, guid := range selectedTagGuids {
@@ -11352,12 +11352,12 @@ func jaccardTagGuidsGo(modelTags []TagId, selectedTagGuids []string) float64 {
 	intersection := 0
 	union := 0
 	for guid := range selectedSet {
-		if modelTagSet[guid] {
+		if representationTagSet[guid] {
 			intersection++
 		}
 		union++
 	}
-	for guid := range modelTagSet {
+	for guid := range representationTagSet {
 		if !selectedSet[guid] {
 			union++
 		}
@@ -12434,7 +12434,7 @@ const (
 	EntityKindFamily     SemioEntityKind = "Family"
 	EntityKindPort       SemioEntityKind = "Port"
 	EntityKindProp       SemioEntityKind = "Prop"
-	EntityKindModel      SemioEntityKind = "Model"
+	EntityKindRepresentation      SemioEntityKind = "Representation"
 	EntityKindLayer      SemioEntityKind = "Layer"
 	EntityKindGroup      SemioEntityKind = "Group"
 	EntityKindStat       SemioEntityKind = "Stat"
@@ -12489,7 +12489,7 @@ type ValidationContext struct {
 		Piece      *Piece
 	}
 	ConnectorsByTypeGuid map[string][]Connector
-	ModelsByTypeGuid     map[string][]Model
+	RepresentationsByTypeGuid     map[string][]Representation
 }
 
 // ⚡Constraint is a function that evaluates a validation rule against a kit context.
@@ -12505,13 +12505,13 @@ func buildValidationContext(kit Kit) *ValidationContext {
 			Piece      *Piece
 		}),
 		ConnectorsByTypeGuid: make(map[string][]Connector),
-		ModelsByTypeGuid:     make(map[string][]Model),
+		RepresentationsByTypeGuid:     make(map[string][]Representation),
 	}
 	for i := range kit.Types {
 		t := &kit.Types[i]
 		ctx.TypesByGuid[t.Guid] = t
 		ctx.ConnectorsByTypeGuid[t.Guid] = t.Connectors
-		ctx.ModelsByTypeGuid[t.Guid] = t.Models
+		ctx.RepresentationsByTypeGuid[t.Guid] = t.Representations
 	}
 	for i := range kit.Designs {
 		d := &kit.Designs[i]
@@ -12626,9 +12626,9 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 				t.Connectors[j].Guid = newGuid
 			}
 		}
-		for j := range t.Models {
-			if t.Models[j].Guid == oldGuid {
-				t.Models[j].Guid = newGuid
+		for j := range t.Representations {
+			if t.Representations[j].Guid == oldGuid {
+				t.Representations[j].Guid = newGuid
 			}
 		}
 	}
@@ -13131,23 +13131,23 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
-// 🗿ModelNameUniquenessConstraint checks that model names are unique within each type.
-func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+// 🗿RepresentationNameUniquenessConstraint checks that representation names are unique within each type.
+func RepresentationNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
-	for typeGuid, models := range ctx.ModelsByTypeGuid {
-		if len(models) == 0 {
+	for typeGuid, representations := range ctx.RepresentationsByTypeGuid {
+		if len(representations) == 0 {
 			continue
 		}
-		names := make(map[string][]Model)
-		for _, m := range models {
+		names := make(map[string][]Representation)
+		for _, m := range representations {
 			name := ""
 			if m.Name != nil {
 				name = *m.Name
 			}
 			names[name] = append(names[name], m)
 		}
-		allNames := make([]string, len(models))
-		for i, m := range models {
+		allNames := make([]string, len(representations))
+		for i, m := range representations {
 			if m.Name != nil {
 				allNames[i] = *m.Name
 			}
@@ -13162,26 +13162,26 @@ func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 				continue
 			}
 			for i := 1; i < len(group); i++ {
-				model := group[i]
+				representation := group[i]
 				relatedGuids := make([]string, len(group))
 				for j, g := range group {
 					relatedGuids[j] = g.Guid
 				}
 				tGuid := typeGuid
 				problem := Problem{
-					ConstraintId: "model-name-unique",
+					ConstraintId: "representation-name-unique",
 					Severity:     SeverityError,
-					Message:      fmt.Sprintf("Duplicate model name \"%s\" inside type \"%s\".", name, typeName),
-					Location:     DomainLocation{EntityKind: EntityKindModel, EntityGuid: model.Guid, Field: "name"},
+					Message:      fmt.Sprintf("Duplicate representation name \"%s\" inside type \"%s\".", name, typeName),
+					Location:     DomainLocation{EntityKind: EntityKindRepresentation, EntityGuid: representation.Guid, Field: "name"},
 					RelatedGuids: relatedGuids,
 					Fixes: []Fix{
-						makeFix(ctx, fmt.Sprintf("Rename model \"%s\"", name), func(clone *Kit) {
+						makeFix(ctx, fmt.Sprintf("Rename representation \"%s\"", name), func(clone *Kit) {
 							for j := range clone.Types {
 								if clone.Types[j].Guid == tGuid {
-									for k := range clone.Types[j].Models {
-										if clone.Types[j].Models[k].Guid == model.Guid {
+									for k := range clone.Types[j].Representations {
+										if clone.Types[j].Representations[k].Guid == representation.Guid {
 											newName := generateUniqueName(name, allNames)
-											clone.Types[j].Models[k].Name = &newName
+											clone.Types[j].Representations[k].Name = &newName
 											break
 										}
 									}
@@ -13260,7 +13260,7 @@ var DefaultConstraints = []Constraint{
 	FileNameUniquenessConstraint,
 	FolderNameUniquenessConstraint,
 	ConnectorNameUniquenessConstraint,
-	ModelNameUniquenessConstraint,
+	RepresentationNameUniquenessConstraint,
 	LayerPathUniquenessConstraint,
 }
 
@@ -14719,15 +14719,15 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 
 // #endregion 🌤️Flatten Design
 
-// #region 🔩Kit Model Export
+// #region 🔩Kit Representation Export
 
-// 📤ExportModelFormats maps supported export format extensions.
-var ExportModelFormats = map[string]string{
+// 📤ExportRepresentationFormats maps supported export format extensions.
+var ExportRepresentationFormats = map[string]string{
 	".glb":  ".glb",
 	".gltf": ".gltf",
 }
 
-// #region 🔧Kit Model Export Helpers
+// #region 🔧Kit Representation Export Helpers
 
 // 📤exportMeshData holds extracted or generated mesh geometry for a single type.
 type exportMeshData struct {
@@ -15107,18 +15107,18 @@ func exportParseGltfToMeshData(gltf map[string]interface{}, binData []byte) (*ex
 	}, nil
 }
 
-// 🧹exportFindModelForKind finds the best matching model for a type given tag filters.
-func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Model {
-	if len(typ.Models) == 0 {
+// 🧹exportFindRepresentationForKind finds the best matching representation for a type given tag filters.
+func exportFindRepresentationForKind(typ *Type, tags []string, tagsDict map[string]*Tag) *Representation {
+	if len(typ.Representations) == 0 {
 		return nil
 	}
 	if len(tags) == 0 {
-		for i := range typ.Models {
-			if len(typ.Models[i].Tags) == 0 {
-				return &typ.Models[i]
+		for i := range typ.Representations {
+			if len(typ.Representations[i].Tags) == 0 {
+				return &typ.Representations[i]
 			}
 		}
-		return &typ.Models[0]
+		return &typ.Representations[0]
 	}
 	selectedTagGuids := make(map[string]bool)
 	for _, t := range tags {
@@ -15132,18 +15132,18 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 			}
 		}
 	}
-	bestModel := (*Model)(nil)
+	bestRepresentation := (*Representation)(nil)
 	bestScore := -1.0
-	for i := range typ.Models {
-		model := &typ.Models[i]
-		modelTagGuids := make(map[string]bool)
-		for _, tid := range model.Tags {
-			modelTagGuids[tid.Guid] = true
+	for i := range typ.Representations {
+		representation := &typ.Representations[i]
+		representationTagGuids := make(map[string]bool)
+		for _, tid := range representation.Tags {
+			representationTagGuids[tid.Guid] = true
 		}
 		containsAll := true
 		intersection := 0
 		for guid := range selectedTagGuids {
-			if !modelTagGuids[guid] {
+			if !representationTagGuids[guid] {
 				containsAll = false
 				break
 			}
@@ -15153,7 +15153,7 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 			continue
 		}
 		union := len(selectedTagGuids)
-		for guid := range modelTagGuids {
+		for guid := range representationTagGuids {
 			if !selectedTagGuids[guid] {
 				union++
 			}
@@ -15164,20 +15164,20 @@ func exportFindModelForKind(typ *Type, tags []string, tagsDict map[string]*Tag) 
 		}
 		if score > bestScore {
 			bestScore = score
-			bestModel = model
+			bestRepresentation = representation
 		}
 	}
-	if bestModel != nil {
-		return bestModel
+	if bestRepresentation != nil {
+		return bestRepresentation
 	}
-	return &typ.Models[0]
+	return &typ.Representations[0]
 }
 
-// #endregion 🔧Kit Model Export Helpers
+// #endregion 🔧Kit Representation Export Helpers
 
-// 📐ExportDesignModel exports the 3D model of a design to GLB or glTF format.
-func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
-	if _, ok := ExportModelFormats[format]; !ok {
+// 📐ExportDesignRepresentation exports the 3D representation of a design to GLB or glTF format.
+func ExportDesignRepresentation(kit *Kit, designGuid string, format string, tags []string, options map[string]interface{}) ([]byte, error) {
+	if _, ok := ExportRepresentationFormats[format]; !ok {
 		return nil, fmt.Errorf("unsupported format: %s", format)
 	}
 
@@ -15206,7 +15206,7 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		pieceMap[design.Pieces[i].Guid] = &design.Pieces[i]
 	}
 
-	// #region 🌦️Kit Model Export BFS
+	// #region 🌦️Kit Representation Export BFS
 	piecePlanes := make(map[string]*Plane)
 	parentOf := make(map[string]string)
 	childrenOf := make(map[string][]string)
@@ -15309,9 +15309,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 			bfsExport(piece.Guid)
 		}
 	}
-	// #endregion 🌦️Kit Model Export BFS
+	// #endregion 🌦️Kit Representation Export BFS
 
-	// #region ⚙️Kit Model Export MeshData
+	// #region ⚙️Kit Representation Export MeshData
 	usedTypes := make(map[string]bool)
 	for _, piece := range design.Pieces {
 		if piece.Type != nil {
@@ -15325,11 +15325,11 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		if typ == nil {
 			continue
 		}
-		model := exportFindModelForKind(typ, tags, tagsDict)
-		if model == nil {
+		representation := exportFindRepresentationForKind(typ, tags, tagsDict)
+		if representation == nil {
 			continue
 		}
-		file := filesDict[model.File.Guid]
+		file := filesDict[representation.File.Guid]
 		if file == nil || file.Blob == nil || *file.Blob == "" {
 			continue
 		}
@@ -15347,9 +15347,9 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 		}
 		typeMeshData[typeGuid] = meshData
 	}
-	// #endregion ⚙️Kit Model Export MeshData
+	// #endregion ⚙️Kit Representation Export MeshData
 
-	// #region 💻Kit Model Export BuildGLTF
+	// #region 💻Kit Representation Export BuildGLTF
 	typeOrder := make([]string, 0, len(usedTypes))
 	for typeGuid := range typeMeshData {
 		typeOrder = append(typeOrder, typeGuid)
@@ -15628,15 +15628,15 @@ func ExportDesignModel(kit *Kit, designGuid string, format string, tags []string
 	out.Write(binBytes)
 
 	return out.Bytes(), nil
-	// #endregion 💻Kit Model Export BuildGLTF
+	// #endregion 💻Kit Representation Export BuildGLTF
 }
 
-// #endregion 🔩Kit Model Export
+// #endregion 🔩Kit Representation Export
 
 // #region ❄️Geometric Insights
-// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+// Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
-// 📏GeometricInsights holds computed geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+// 📏GeometricInsights holds computed geometric KPIs for a GLB/GLTF representation in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
 type GeometricInsights struct {
 	BoundingBoxMin      Point
 	BoundingBoxMax      Point
@@ -15771,15 +15771,15 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	return out
 }
 
-// 📏GetGeometricInsightsForModel computes key performance indicators for the geometry of a GLB/GLTF model.
-func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) {
+// 📏GetGeometricInsightsForRepresentation computes key performance indicators for the geometry of a GLB/GLTF representation.
+func GetGeometricInsightsForRepresentation(representation interface{}) (GeometricInsights, error) {
 	var md *exportMeshData
 	var err error
-	switch v := model.(type) {
+	switch v := representation.(type) {
 	case string:
 		data, errRead := os.ReadFile(v)
 		if errRead != nil {
-			return GeometricInsights{}, fmt.Errorf("read model file: %w", errRead)
+			return GeometricInsights{}, fmt.Errorf("read representation file: %w", errRead)
 		}
 		lower := strings.ToLower(v)
 		if strings.HasSuffix(lower, ".glb") {
@@ -15815,7 +15815,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 			}
 			md, err = exportParseGltfToMeshData(gltf, binData)
 		} else {
-			return GeometricInsights{}, fmt.Errorf("model MUST be .glb or .gltf, got %s", v)
+			return GeometricInsights{}, fmt.Errorf("representation MUST be .glb or .gltf, got %s", v)
 		}
 	case []byte:
 		if len(v) >= 4 && binary.LittleEndian.Uint32(v[0:4]) == 0x46546C67 {
@@ -15846,7 +15846,7 @@ func GetGeometricInsightsForModel(model interface{}) (GeometricInsights, error) 
 			md, err = exportParseGltfToMeshData(gltf, binData)
 		}
 	default:
-		return GeometricInsights{}, fmt.Errorf("model must be string path or []byte, got %T", model)
+		return GeometricInsights{}, fmt.Errorf("representation must be string path or []byte, got %T", representation)
 	}
 	if err != nil {
 		return GeometricInsights{}, err
@@ -16375,11 +16375,11 @@ func blobEncode(data []byte, filename string) string {
 func mimeFromFilename(filename string) string {
 	ext := strings.ToLower(filepath.Ext(filename))
 	mimes := map[string]string{
-		".stl":  "model/stl",
-		".obj":  "model/obj",
-		".glb":  "model/gltf-binary",
-		".gltf": "model/gltf+json",
-		".3dm":  "model/vnd.3dm",
+		".stl":  "representation/stl",
+		".obj":  "representation/obj",
+		".glb":  "representation/gltf-binary",
+		".gltf": "representation/gltf+json",
+		".3dm":  "representation/vnd.3dm",
 		".png":  "image/png",
 		".jpg":  "image/jpeg",
 		".jpeg": "image/jpeg",

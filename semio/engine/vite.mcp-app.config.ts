@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
-// Bundles React, @semio/ui, and @modelcontextprotocol/ext-apps into one inlined HTML file.
+// Bundles React, @semio/ui, and @representationcontextprotocol/ext-apps into one inlined HTML file.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
 // #endregion 🧲Header
@@ -15,7 +15,7 @@ import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
 // #region 🪵ZodJitlessPlugin
-// Specs: Zod v4 (dependency of @modelcontextprotocol/ext-apps) uses `new Function()`
+// Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`
 // for JIT-compiled object parsing which violates CSP `script-src` in MCP App hosts.
 // This plugin patches Zod's `allowsEval` check and `Doc.compile()` to never use
 // dynamic code generation, forcing Zod to fall back to its interpreted parser.

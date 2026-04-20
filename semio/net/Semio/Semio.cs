@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Core .NET library implementing the semio domain model and serialization.
+// Core .NET library implementing the semio domain representation and serialization.
 
 #endregion 🧲Header
 
@@ -46,7 +46,7 @@ using SharpGLTF.Geometry;
 using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Materials;
 using SharpGLTF.Scenes;
-using GltfModel = SharpGLTF.Schema2.ModelRoot;
+using GltfRepresentation = SharpGLTF.Schema2.RepresentationRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
 #endregion ⛩️Imports
@@ -1662,7 +1662,7 @@ public static class SemioValidator
         {
             CheckGuid("Type", t.Guid);
             foreach (var connector in t.Connectors) CheckGuid("Connector", connector.Guid);
-            foreach (var model in t.Models) CheckGuid("Model", model.Guid);
+            foreach (var representation in t.Representations) CheckGuid("Representation", representation.Guid);
         }
         foreach (var d in kit.Designs)
         {
@@ -1744,7 +1744,7 @@ public static class SemioValidator
 
         foreach (var t in kit.Types)
         {
-            var nameGroups = t.Models.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
+            var nameGroups = t.Representations.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
             foreach (var nameGroup in nameGroups)
             {
                 var list = nameGroup.ToList();
@@ -1752,7 +1752,7 @@ public static class SemioValidator
                 {
                     foreach (var entity in list.Skip(1))
                     {
-                        issues.Add(new Issue { ConstraintId = "model-name-unique", Message = $"Duplicate model name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Model", EntityGuid = entity.Guid });
+                        issues.Add(new Issue { ConstraintId = "representation-name-unique", Message = $"Duplicate representation name \"{nameGroup.Key}\" inside type \"{t.Name}\".", EntityKind = "Representation", EntityGuid = entity.Guid });
                     }
                 }
             }
@@ -2032,11 +2032,11 @@ public class PropDiffUpdate
     public PropDiff? Diff { get; set; }
 }
 
-public class ModelDiffUpdate
+public class RepresentationDiffUpdate
 {
-    [JsonProperty("model")]
-    public ModelId Model { get; set; } = new();
-    public ModelDiff? Diff { get; set; }
+    [JsonProperty("representation")]
+    public RepresentationId Representation { get; set; } = new();
+    public RepresentationDiff? Diff { get; set; }
 }
 
 public class ConnectorDiffUpdate
@@ -2136,7 +2136,7 @@ public class PortChange : Change<Port, PortDiff> { }
 public class PropChange : Change<Prop, PropDiff> { }
 public class TagChange : Change<Tag, TagDiff> { }
 public class ConceptChange : Change<Concept, ConceptDiff> { }
-public class ModelChange : Change<Model, ModelDiff> { }
+public class RepresentationChange : Change<Representation, RepresentationDiff> { }
 public class ConnectorChange : Change<Connector, ConnectorDiff> { }
 public class TypeChange : Change<Type, TypeDiff> { }
 public class LayerChange : Change<Layer, LayerDiff> { }
@@ -3190,20 +3190,20 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 
 
-#region 🗿Model
-// Implementations MUST reference a 3D model with URI, MIME type, and local plane.
+#region 🗿Representation
+// Implementations MUST reference a 3D representation with URI, MIME type, and local plane.
 
-public class ModelId : Entity<ModelId>
+public class RepresentationId : Entity<RepresentationId>
 {
     public string Guid { get; set; } = "";
-    public static implicit operator ModelId(Model model) => new() { Guid = model.Guid };
-    public static implicit operator ModelId(ModelDiff diff) => new() { Guid = diff.Guid ?? "" };
+    public static implicit operator RepresentationId(Representation representation) => new() { Guid = representation.Guid };
+    public static implicit operator RepresentationId(RepresentationDiff diff) => new() { Guid = diff.Guid ?? "" };
     public string ToIdString() => $"{Guid}";
     public string ToHumanIdString() => $"{Guid}";
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
 
-public class ModelDiff : Entity<ModelDiff>
+public class RepresentationDiff : Entity<RepresentationDiff>
 {
     private readonly HashSet<string> _setProperties = new();
     private string? _guid;
@@ -3227,12 +3227,12 @@ public class ModelDiff : Entity<ModelDiff>
     public bool ShouldSerializeTags() => _setProperties.Contains("Tags");
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
-    public static implicit operator ModelDiff(ModelId id) => new() { Guid = id.Guid };
-    public static implicit operator ModelDiff(Model model) => new() { Guid = model.Guid, Name = model.Name, File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
+    public static implicit operator RepresentationDiff(RepresentationId id) => new() { Guid = id.Guid };
+    public static implicit operator RepresentationDiff(Representation representation) => new() { Guid = representation.Guid, Name = representation.Name, File = representation.File, Description = representation.Description, Tags = representation.Tags, Attributes = representation.Attributes };
 
-    public ModelDiff MergeDiff(ModelDiff other)
+    public RepresentationDiff MergeDiff(RepresentationDiff other)
     {
-        return new ModelDiff
+        return new RepresentationDiff
         {
             Guid = other.Guid ?? Guid,
             Name = string.IsNullOrEmpty(other.Name) ? Name : other.Name,
@@ -3244,15 +3244,15 @@ public class ModelDiff : Entity<ModelDiff>
     }
 }
 
-public class ModelsDiff : Entity<ModelsDiff>
+public class RepresentationsDiff : Entity<RepresentationsDiff>
 {
-    public List<ModelId> Removed { get; set; } = new();
-    public List<Model> Added { get; set; } = new();
-    public List<ModelDiffUpdate> Updated { get; set; } = new();
+    public List<RepresentationId> Removed { get; set; } = new();
+    public List<Representation> Added { get; set; } = new();
+    public List<RepresentationDiffUpdate> Updated { get; set; } = new();
 
-    public ModelsDiff MergeDiff(ModelsDiff other)
+    public RepresentationsDiff MergeDiff(RepresentationsDiff other)
     {
-        return new ModelsDiff
+        return new RepresentationsDiff
         {
             Removed = Removed.Concat(other.Removed).Distinct().ToList(),
             Added = Added.Concat(other.Added).ToList(),
@@ -3260,10 +3260,10 @@ public class ModelsDiff : Entity<ModelsDiff>
         };
     }
 
-    public static implicit operator ModelsDiff(List<Model> models) => new() { Updated = models.Select(r => new ModelDiffUpdate { Model = r, Diff = (ModelDiff)r }).ToList() };
+    public static implicit operator RepresentationsDiff(List<Representation> representations) => new() { Updated = representations.Select(r => new RepresentationDiffUpdate { Representation = r, Diff = (RepresentationDiff)r }).ToList() };
 }
 
-public class Model : Entity<Model>
+public class Representation : Entity<Representation>
 {
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
@@ -3272,45 +3272,45 @@ public class Model : Entity<Model>
     public List<TagId> Tags { get; set; } = new();
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Model(ModelId id) => new() { Guid = id.Guid };
-    public static implicit operator Model(ModelDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", File = diff.File ?? new(), Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes?.Added ?? new() };
+    public static implicit operator Representation(RepresentationId id) => new() { Guid = id.Guid };
+    public static implicit operator Representation(RepresentationDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", File = diff.File ?? new(), Description = diff.Description, Tags = diff.Tags, Attributes = diff.Attributes?.Added ?? new() };
 
-    public static Model ApplyDiff(Model model, ModelDiff diff)
+    public static Representation ApplyDiff(Representation representation, RepresentationDiff diff)
     {
-        return new Model
+        return new Representation
         {
-            Guid = model.Guid,
-            Name = string.IsNullOrEmpty(diff.Name) ? model.Name : diff.Name,
-            File = diff.File ?? model.File,
-            Description = string.IsNullOrEmpty(diff.Description) ? model.Description : diff.Description,
-            Tags = diff.Tags?.Any() == true ? diff.Tags : model.Tags,
-            Attributes = diff.Attributes is not null ? AttributesDiff.Apply(model.Attributes, diff.Attributes) : model.Attributes
+            Guid = representation.Guid,
+            Name = string.IsNullOrEmpty(diff.Name) ? representation.Name : diff.Name,
+            File = diff.File ?? representation.File,
+            Description = string.IsNullOrEmpty(diff.Description) ? representation.Description : diff.Description,
+            Tags = diff.Tags?.Any() == true ? diff.Tags : representation.Tags,
+            Attributes = diff.Attributes is not null ? AttributesDiff.Apply(representation.Attributes, diff.Attributes) : representation.Attributes
         };
     }
 
-    public static ModelDiff CreateDiff(Model model)
+    public static RepresentationDiff CreateDiff(Representation representation)
     {
-        return new ModelDiff
+        return new RepresentationDiff
         {
-            Guid = model.Guid,
-            Name = model.Name,
-            File = model.File,
-            Description = model.Description,
-            Tags = model.Tags,
-            Attributes = model.Attributes
+            Guid = representation.Guid,
+            Name = representation.Name,
+            File = representation.File,
+            Description = representation.Description,
+            Tags = representation.Tags,
+            Attributes = representation.Attributes
         };
     }
 
-    public static ModelDiff InverseDiff(Model model, ModelDiff appliedDiff)
+    public static RepresentationDiff InverseDiff(Representation representation, RepresentationDiff appliedDiff)
     {
-        return new ModelDiff
+        return new RepresentationDiff
         {
-            Guid = model.Guid,
-            Name = !string.IsNullOrEmpty(appliedDiff.Name) ? model.Name : null,
-            File = appliedDiff.File != null ? model.File : null,
-            Description = !string.IsNullOrEmpty(appliedDiff.Description) ? model.Description : "",
-            Tags = appliedDiff.Tags.Any() ? model.Tags : new List<TagId>(),
-            Attributes = appliedDiff.Attributes != null ? model.Attributes : null
+            Guid = representation.Guid,
+            Name = !string.IsNullOrEmpty(appliedDiff.Name) ? representation.Name : null,
+            File = appliedDiff.File != null ? representation.File : null,
+            Description = !string.IsNullOrEmpty(appliedDiff.Description) ? representation.Description : "",
+            Tags = appliedDiff.Tags.Any() ? representation.Tags : new List<TagId>(),
+            Attributes = appliedDiff.Attributes != null ? representation.Attributes : null
         };
     }
 
@@ -3336,15 +3336,15 @@ public class Model : Entity<Model>
 
     public override string ToString() => $"Mod({ToHumanIdString()})";
 
-    public static Model Find(List<Model> models, List<string> tagGuids)
+    public static Representation Find(List<Representation> representations, List<string> tagGuids)
     {
-        var model = models.FirstOrDefault(m => tagGuids.All(id => m.Tags.Any(t => t.Guid == id)));
-        if (model == null) throw new Exception($"Model with tags {string.Join(", ", tagGuids)} not found in models");
-        return model;
+        var representation = representations.FirstOrDefault(m => tagGuids.All(id => m.Tags.Any(t => t.Guid == id)));
+        if (representation == null) throw new Exception($"Representation with tags {string.Join(", ", tagGuids)} not found in representations");
+        return representation;
     }
 }
 
-#endregion 🗿Model
+#endregion 🗿Representation
 
 
 
@@ -3644,7 +3644,7 @@ public class Connector : Entity<Connector>
 
 
 #region 🧱Type
-// Implementations MUST compose ports, connectors, and models into a parametric type.
+// Implementations MUST compose ports, connectors, and representations into a parametric type.
 
 public class TypeId : Entity<TypeId>
 {
@@ -3672,7 +3672,7 @@ public class TypeDiff : Entity<TypeDiff>
     private string _uri = "";
     private string _unit = "";
     private Location? _location;
-    private ModelsDiff? _models;
+    private RepresentationsDiff? _representations;
     private ConnectorsDiff? _connectors;
     private List<AuthorId>? _authors;
     private AttributesDiff? _attributes;
@@ -3693,7 +3693,7 @@ public class TypeDiff : Entity<TypeDiff>
     public string Uri { get => _uri; set { _uri = value; _setProperties.Add("Uri"); } }
     public string Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
     public Location? Location { get => _location; set { _location = value; _setProperties.Add("Location"); } }
-    public ModelsDiff? Models { get => _models; set { _models = value; _setProperties.Add("Models"); } }
+    public RepresentationsDiff? Representations { get => _representations; set { _representations = value; _setProperties.Add("Representations"); } }
     public ConnectorsDiff? Connectors { get => _connectors; set { _connectors = value; _setProperties.Add("Connectors"); } }
     public List<AuthorId>? Authors { get => _authors; set { _authors = value; _setProperties.Add("Authors"); } }
     public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
@@ -3714,7 +3714,7 @@ public class TypeDiff : Entity<TypeDiff>
     public bool ShouldSerializeUri() => _setProperties.Contains("Uri");
     public bool ShouldSerializeUnit() => _setProperties.Contains("Unit");
     public bool ShouldSerializeLocation() => _setProperties.Contains("Location");
-    public bool ShouldSerializeModels() => _setProperties.Contains("Models");
+    public bool ShouldSerializeRepresentations() => _setProperties.Contains("Representations");
     public bool ShouldSerializeConnectors() => _setProperties.Contains("Connectors");
     public bool ShouldSerializeAuthors() => _setProperties.Contains("Authors");
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
@@ -3735,7 +3735,7 @@ public class TypeDiff : Entity<TypeDiff>
             Uri = string.IsNullOrEmpty(other.Uri) ? Uri : other.Uri,
             Unit = string.IsNullOrEmpty(other.Unit) ? Unit : other.Unit,
             Location = other.Location ?? Location,
-            Models = other.Models is not null ? (other.Models.MergeDiff(Models ?? new ModelsDiff())) : Models,
+            Representations = other.Representations is not null ? (other.Representations.MergeDiff(Representations ?? new RepresentationsDiff())) : Representations,
             Connectors = other.Connectors is not null ? (other.Connectors.MergeDiff(Connectors ?? new ConnectorsDiff())) : Connectors,
             Authors = other.Authors is not null && other.Authors.Any() ? other.Authors : Authors,
             Attributes = other.Attributes is not null ? other.Attributes.MergeDiff(Attributes ?? new AttributesDiff()) : Attributes,
@@ -3744,7 +3744,7 @@ public class TypeDiff : Entity<TypeDiff>
     }
 
     public static implicit operator TypeDiff(TypeId id) => new() { Guid = id.Guid };
-    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new ModelDiffUpdate { Model = m, Diff = Model.CreateDiff(m) }).ToList() }, Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = Connector.CreateDiff(p) }).ToList() }, Authors = type.Authors, Concepts = type.Concepts };
+    public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Representations = new RepresentationsDiff { Added = new List<Representation>(), Removed = new List<RepresentationId>(), Updated = type.Representations.Select(m => new RepresentationDiffUpdate { Representation = m, Diff = Representation.CreateDiff(m) }).ToList() }, Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = Connector.CreateDiff(p) }).ToList() }, Authors = type.Authors, Concepts = type.Concepts };
 }
 
 public class TypesDiff : Entity<TypesDiff>
@@ -3771,7 +3771,7 @@ public class Type : Entity<Type>
     public string? Uri { get; set; }
     public Location? Location { get; set; }
     public string? Unit { get; set; }
-    public List<Model> Models { get; set; } = new();
+    public List<Representation> Representations { get; set; } = new();
     public List<Connector> Connectors { get; set; } = new();
     public List<Prop> Props { get; set; } = new();
     public List<AuthorId> Authors { get; set; } = new();
@@ -3802,7 +3802,7 @@ public class Type : Entity<Type>
         Uri = diff.Uri,
         Unit = diff.Unit,
         Location = diff.Location,
-        Models = diff.Models?.Added ?? new(),
+        Representations = diff.Representations?.Added ?? new(),
         Connectors = diff.Connectors?.Added ?? new(),
         Authors = diff.Authors ?? new(),
         Attributes = diff.Attributes?.Added ?? new(),
@@ -3815,11 +3815,11 @@ public class Type : Entity<Type>
 
     public static Type ApplyDiff(Type type, TypeDiff diff)
     {
-        var models = type.Models;
+        var representations = type.Representations;
         var connectors = type.Connectors;
 
-        if (diff.Models is not null)
-            models = ApplyModelsDiff(type.Models, diff.Models);
+        if (diff.Representations is not null)
+            representations = ApplyRepresentationsDiff(type.Representations, diff.Representations);
         if (diff.Connectors is not null)
             connectors = ApplyConnectorsDiff(type.Connectors, diff.Connectors);
 
@@ -3835,7 +3835,7 @@ public class Type : Entity<Type>
             Uri = diff.Uri ?? type.Uri,
             Unit = diff.Unit ?? type.Unit,
             Location = diff.Location ?? type.Location,
-            Models = models,
+            Representations = representations,
             Connectors = connectors,
             Authors = diff.Authors is not null && diff.Authors.Any() ? diff.Authors : type.Authors,
             Attributes = diff.Attributes is not null ? AttributesDiff.Apply(type.Attributes, diff.Attributes) : type.Attributes,
@@ -3846,14 +3846,14 @@ public class Type : Entity<Type>
         };
     }
 
-    private static List<Model> ApplyModelsDiff(List<Model> original, ModelsDiff diff)
+    private static List<Representation> ApplyRepresentationsDiff(List<Representation> original, RepresentationsDiff diff)
     {
         var result = original.Where(m => !diff.Removed.Any(r => r.Guid == m.Guid)).ToList();
         foreach (var updated in diff.Updated)
         {
-            var index = result.FindIndex(m => m.Guid == updated.Model.Guid);
+            var index = result.FindIndex(m => m.Guid == updated.Representation.Guid);
             if (index >= 0 && updated.Diff != null)
-                result[index] = Model.ApplyDiff(result[index], updated.Diff);
+                result[index] = Representation.ApplyDiff(result[index], updated.Diff);
         }
         result.AddRange(diff.Added);
         return result;
@@ -3886,7 +3886,7 @@ public class Type : Entity<Type>
             Uri = type.Uri,
             Unit = type.Unit,
             Location = type.Location,
-            Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new ModelDiffUpdate { Model = m, Diff = Model.CreateDiff(m) }).ToList() },
+            Representations = new RepresentationsDiff { Added = new List<Representation>(), Removed = new List<RepresentationId>(), Updated = type.Representations.Select(m => new RepresentationDiffUpdate { Representation = m, Diff = Representation.CreateDiff(m) }).ToList() },
             Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = Connector.CreateDiff(p) }).ToList() },
             Authors = type.Authors,
             Attributes = type.Attributes,
@@ -3907,7 +3907,7 @@ public class Type : Entity<Type>
             Uri = !string.IsNullOrEmpty(appliedDiff.Uri) ? type.Uri : "",
             Unit = !string.IsNullOrEmpty(appliedDiff.Unit) ? type.Unit : "",
             Location = appliedDiff.Location is not null ? type.Location : null,
-            Models = appliedDiff.Models is not null ? new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new ModelDiffUpdate { Model = m, Diff = Model.CreateDiff(m) }).ToList() } : null,
+            Representations = appliedDiff.Representations is not null ? new RepresentationsDiff { Added = new List<Representation>(), Removed = new List<RepresentationId>(), Updated = type.Representations.Select(m => new RepresentationDiffUpdate { Representation = m, Diff = Representation.CreateDiff(m) }).ToList() } : null,
             Connectors = appliedDiff.Connectors is not null ? new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = Connector.CreateDiff(p) }).ToList() } : null,
             Authors = appliedDiff.Authors is not null && appliedDiff.Authors.Any() ? type.Authors : null,
             Attributes = appliedDiff.Attributes is not null ? type.Attributes : null
@@ -3924,12 +3924,12 @@ public class Type : Entity<Type>
             errors.AddRange(errorsPort.Select(e => $"A connector({connector.ToHumanIdString()}) is invalid: " + e));
         }
 
-        foreach (var model in Models)
+        foreach (var representation in Representations)
         {
-            var (isValidModel, errorsModel) = model.Validate();
-            isValid = isValid && isValidModel;
-            errors.AddRange(errorsModel.Select(e =>
-                $"A model({model.ToHumanIdString()}) is invalid: " + e));
+            var (isValidRepresentation, errorsRepresentation) = representation.Validate();
+            isValid = isValid && isValidRepresentation;
+            errors.AddRange(errorsRepresentation.Select(e =>
+                $"A representation({representation.ToHumanIdString()}) is invalid: " + e));
         }
 
         foreach (var author in Authors)
@@ -3972,15 +3972,15 @@ public class Type : Entity<Type>
         return connector;
     }
 
-    public Model FindModel(List<string> tags)
+    public Representation FindRepresentation(List<string> tags)
     {
-        if (Models == null || Models.Count == 0)
-            throw new ArgumentException($"No models available in type {Name}");
+        if (Representations == null || Representations.Count == 0)
+            throw new ArgumentException($"No representations available in type {Name}");
 
-        var indices = Models.Select(r => Utility.Jaccard(r.Tags.Select(t => t.Guid), tags)).ToList();
+        var indices = Representations.Select(r => Utility.Jaccard(r.Tags.Select(t => t.Guid), tags)).ToList();
         var maxIndex = indices.Max();
         var maxIndexIndex = indices.IndexOf(maxIndex);
-        return Models[maxIndexIndex];
+        return Representations[maxIndexIndex];
     }
 
     public string FindAttributeValue(string name, string defaultValue = "")
@@ -4011,7 +4011,7 @@ public class Type : Entity<Type>
             Virtual = Virtual,
             Location = Location,
             Unit = Unit,
-            Models = Models,
+            Representations = Representations,
             Connectors = Connectors,
             Props = Props,
             Authors = Authors,
@@ -8129,7 +8129,7 @@ public partial class Kit : Entity<Kit>
     public class KitFilter
     {
         public string? DesignGuid { get; set; }
-        public string[]? ModelTags { get; set; }
+        public string[]? RepresentationTags { get; set; }
         public GlobFilter? Designs { get; set; }
         public GlobFilter? Types { get; set; }
         public GlobFilter? Ports { get; set; }
@@ -8170,7 +8170,7 @@ public partial class Kit : Entity<Kit>
     /// <summary>📐Filters a kit to only include entities related to a specific design.</summary>
     /// <remarks>
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
-    /// files not used by selected models, and keeps at most one model per type according to the optional tags.
+    /// files not used by selected representations, and keeps at most one representation per type according to the optional tags.
     /// </remarks>
     private static Kit FilterKitByDesign(Kit kit, string designGuid, string[]? tags = null)
     {
@@ -8209,7 +8209,7 @@ public partial class Kit : Entity<Kit>
         var usedQualityGuids = new HashSet<string>();
         var usedAuthorGuids = new HashSet<string>();
         var usedFolderNames = new HashSet<string>();
-        var selectedModels = new Dictionary<string, Model>();
+        var selectedRepresentations = new Dictionary<string, Representation>();
 
         void CollectQualityFromProps(IEnumerable<Prop>? props)
         {
@@ -8232,12 +8232,12 @@ public partial class Kit : Entity<Kit>
             foreach (var concept in type.Concepts ?? new List<ConceptId>())
                 if (!string.IsNullOrEmpty(concept.Guid)) usedConceptGuids.Add(concept.Guid);
 
-            if ((type.Models?.Count ?? 0) > 0)
+            if ((type.Representations?.Count ?? 0) > 0)
             {
-                var best = ExportFindMatchingModel(kit, type, resolvedTagGuids.ToArray());
+                var best = ExportFindMatchingRepresentation(kit, type, resolvedTagGuids.ToArray());
                 if (best != null)
                 {
-                    selectedModels[typeGuid] = best;
+                    selectedRepresentations[typeGuid] = best;
                     if (!string.IsNullOrEmpty(best.File?.Guid)) usedFileGuids.Add(best.File.Guid);
                     foreach (var tag in best.Tags ?? new List<TagId>())
                         if (!string.IsNullOrEmpty(tag.Guid)) usedTagGuids.Add(tag.Guid);
@@ -8263,7 +8263,7 @@ public partial class Kit : Entity<Kit>
             .Select(t =>
             {
                 var clone = Entity<Type>.DeepClone(t)!;
-                clone.Models = selectedModels.TryGetValue(t.Guid, out var model) ? new List<Model> { model } : new List<Model>();
+                clone.Representations = selectedRepresentations.TryGetValue(t.Guid, out var representation) ? new List<Representation> { representation } : new List<Representation>();
                 return clone;
             })
             .ToList();
@@ -8301,7 +8301,7 @@ public partial class Kit : Entity<Kit>
     public static Kit FilterKit(Kit kit, KitFilter filter)
     {
         var baseKit = !string.IsNullOrEmpty(filter.DesignGuid)
-            ? FilterKitByDesign(kit, filter.DesignGuid, filter.ModelTags)
+            ? FilterKitByDesign(kit, filter.DesignGuid, filter.RepresentationTags)
             : kit;
 
         var hasGlobFilters = filter.Designs != null || filter.Types != null || filter.Ports != null ||
@@ -8450,7 +8450,7 @@ public class PortMeta
     public int? MaxChildren { get; set; }
 }
 
-public class ModelMeta
+public class RepresentationMeta
 {
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
@@ -8572,7 +8572,7 @@ public class TypeShallow
     public string? Unit { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public List<ModelMeta> Models { get; set; } = new();
+    public List<RepresentationMeta> Representations { get; set; } = new();
     public List<ConnectorMeta> Connectors { get; set; } = new();
     public List<PropMeta> Props { get; set; } = new();
     public List<AuthorId> Authors { get; set; } = new();
@@ -8779,7 +8779,7 @@ public static class MetaShallowConversions
         Icon = p.Icon
     };
 
-    public static ModelMeta ToMeta(this Model m) => new()
+    public static RepresentationMeta ToMeta(this Representation m) => new()
     {
         Guid = m.Guid,
         Name = m.Name,
@@ -8896,7 +8896,7 @@ public static class MetaShallowConversions
         Unit = t.Unit,
         CreatedAt = t.CreatedAt,
         UpdatedAt = t.UpdatedAt,
-        Models = t.Models.Select(m => m.ToMeta()).ToList(),
+        Representations = t.Representations.Select(m => m.ToMeta()).ToList(),
         Connectors = t.Connectors.Select(c => c.ToMeta()).ToList(),
         Props = t.Props.Select(p => p.ToMeta()).ToList(),
         Authors = t.Authors,
@@ -9562,10 +9562,10 @@ public static class Hashing
         return w.Digest();
     }
 
-    public static string HashModel(Model m)
+    public static string HashRepresentation(Representation m)
     {
         var w = new HashWriter();
-        w.WriteString("Model");
+        w.WriteString("Representation");
         if (m.Attributes?.Count > 0)
         {
             w.WriteString("attributes");
@@ -9694,10 +9694,10 @@ public static class Hashing
             w.WriteString("location");
             w.WriteString(t.Location.Guid);
         }
-        if (t.Models?.Count > 0)
+        if (t.Representations?.Count > 0)
         {
-            w.WriteString("models");
-            w.WriteHashList(t.Models.Select(HashModel).ToList());
+            w.WriteString("representations");
+            w.WriteHashList(t.Representations.Select(HashRepresentation).ToList());
         }
         w.WriteString("name");
         w.WriteString(t.Name);
@@ -10624,10 +10624,10 @@ public static class Hashing
         return w.Digest();
     }
 
-    public static string HashModelDiff(ModelDiff d)
+    public static string HashRepresentationDiff(RepresentationDiff d)
     {
         var w = new HashWriter();
-        w.WriteString("ModelDiff");
+        w.WriteString("RepresentationDiff");
         if (d.ShouldSerializeAttributes() && d.Attributes != null)
         {
             w.WriteString("attributes");
@@ -10648,15 +10648,15 @@ public static class Hashing
         return w.Digest();
     }
 
-    public static string HashModelsDiff(ModelsDiff d)
+    public static string HashRepresentationsDiff(RepresentationsDiff d)
     {
         return HashCollectionDiffGeneric(
-            "ModelsDiff", "ModelDiffUpdate", "model",
-            (Model m) => HashModel(m),
-            (ModelDiff md) => HashModelDiff(md),
+            "RepresentationsDiff", "RepresentationDiffUpdate", "representation",
+            (Representation m) => HashRepresentation(m),
+            (RepresentationDiff md) => HashRepresentationDiff(md),
             d.Removed?.Select(r => r.Guid).ToList() ?? new List<string>(),
-            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Model.Guid, u.Diff!)).ToList() ?? new List<(string, ModelDiff)>(),
-            d.Added ?? new List<Model>());
+            d.Updated?.Where(u => u.Diff != null).Select(u => (u.Representation.Guid, u.Diff!)).ToList() ?? new List<(string, RepresentationDiff)>(),
+            d.Added ?? new List<Representation>());
     }
 
     public static string HashConnectorDiff(ConnectorDiff d)
@@ -10755,10 +10755,10 @@ public static class Hashing
             w.WriteString("location");
             w.WriteBool(false);
         }
-        if (d.ShouldSerializeModels() && d.Models != null)
+        if (d.ShouldSerializeRepresentations() && d.Representations != null)
         {
-            w.WriteString("models");
-            w.WriteHash(HashModelsDiff(d.Models));
+            w.WriteString("representations");
+            w.WriteHash(HashRepresentationsDiff(d.Representations));
         }
         WriteDiffOptString(w, "name", d.Name, d.ShouldSerializeName());
         if (d.ShouldSerializeParent() && d.Parent != null)
@@ -12178,14 +12178,14 @@ public partial class Kit
 
 #endregion 🌤️Flatten Design
 
-#region 🔩Kit Model Export
-// Callers MUST use ExportDesignModel to produce a valid 3D file from a design.
+#region 🔩Kit Representation Export
+// Callers MUST use ExportDesignRepresentation to produce a valid 3D file from a design.
 
 public partial class Kit
 {
 
     /// <summary>📺Supported export formats keyed by file extension.</summary>
-    public static Dictionary<string, string> ExportModelFormats => new()
+    public static Dictionary<string, string> ExportRepresentationFormats => new()
     {
         { ".glb", "GL Transmission Format Binary" },
         { ".gltf", "GL Transmission Format" },
@@ -12194,16 +12194,16 @@ public partial class Kit
     };
 
     /// <summary>
-    /// Exports the 3D model of a design to the specified format.
+    /// Exports the 3D representation of a design to the specified format.
     /// Uses block definitions for types and instances for pieces.
     /// Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
     /// </summary>
-    public static byte[] ExportDesignModel(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
+    public static byte[] ExportDesignRepresentation(Kit kit, string designId, string format = ".glb", string[] tags = null, Dictionary<string, object> options = null)
     {
         if (tags == null) tags = Array.Empty<string>();
         if (options == null) options = new Dictionary<string, object>();
-        if (!ExportModelFormats.ContainsKey(format))
-            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportModelFormats.Keys)}", nameof(format));
+        if (!ExportRepresentationFormats.ContainsKey(format))
+            throw new ArgumentException($"Unsupported export format: {format}. Supported: {string.Join(", ", ExportRepresentationFormats.Keys)}", nameof(format));
 
         var design = FindDesign(kit, designId);
         var pieces = design.Pieces ?? new List<Piece>();
@@ -12336,10 +12336,10 @@ public partial class Kit
             if (string.IsNullOrEmpty(typeGuid) || typeMeshBuilders.ContainsKey(typeGuid)) continue;
             if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
 
-            var model = ExportFindMatchingModel(kit, type, tags);
-            if (model != null)
+            var representation = ExportFindMatchingRepresentation(kit, type, tags);
+            if (representation != null)
             {
-                var file = kit.Files?.FirstOrDefault(f => f.Guid == model.File.Guid);
+                var file = kit.Files?.FirstOrDefault(f => f.Guid == representation.File.Guid);
                 if (file?.Blob != null)
                 {
                     var fileBytes = ExportBlobToBytes(file.Blob);
@@ -12395,7 +12395,7 @@ public partial class Kit
         return ExportSceneBuilderToFormat(sceneBuilder, format);
     }
 
-    #region 🔧Kit Model Export Helpers
+    #region 🔧Kit Representation Export Helpers
 
     private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
     {
@@ -12437,13 +12437,13 @@ public partial class Kit
         return Convert.FromBase64String(base64);
     }
 
-    public static Model ExportFindMatchingModel(Kit kit, Type type, string[] tags)
+    public static Representation ExportFindMatchingRepresentation(Kit kit, Type type, string[] tags)
     {
-        if (type.Models == null || type.Models.Count == 0) return null;
+        if (type.Representations == null || type.Representations.Count == 0) return null;
         if (tags == null || tags.Length == 0)
         {
-            var defaultModel = type.Models.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
-            return defaultModel ?? type.Models[0];
+            var defaultRepresentation = type.Representations.FirstOrDefault(m => m.Tags == null || m.Tags.Count == 0);
+            return defaultRepresentation ?? type.Representations[0];
         }
         var kitTags = kit.Tags ?? new List<Tag>();
         var selectedTagGuids = new HashSet<string>();
@@ -12458,31 +12458,31 @@ public partial class Kit
             foreach (var tag in kitTags.Where(t => t.Name == tagValue))
                 selectedTagGuids.Add(tag.Guid);
         }
-        Model bestModel = null;
+        Representation bestRepresentation = null;
         double bestScore = -1;
-        foreach (var model in type.Models)
+        foreach (var representation in type.Representations)
         {
-            var modelTagGuids = new HashSet<string>((model.Tags ?? new List<TagId>()).Select(t => t.Guid));
-            if (!selectedTagGuids.All(modelTagGuids.Contains)) continue;
-            var intersection = modelTagGuids.Intersect(selectedTagGuids).Count();
-            var union = modelTagGuids.Union(selectedTagGuids).Count();
+            var representationTagGuids = new HashSet<string>((representation.Tags ?? new List<TagId>()).Select(t => t.Guid));
+            if (!selectedTagGuids.All(representationTagGuids.Contains)) continue;
+            var intersection = representationTagGuids.Intersect(selectedTagGuids).Count();
+            var union = representationTagGuids.Union(selectedTagGuids).Count();
             var score = union > 0 ? (double)intersection / union : 0;
             if (score > bestScore)
             {
                 bestScore = score;
-                bestModel = model;
+                bestRepresentation = representation;
             }
         }
-        if (bestModel != null) return bestModel;
-        return type.Models[0];
+        if (bestRepresentation != null) return bestRepresentation;
+        return type.Representations[0];
     }
 
     private static IMeshBuilder<MaterialBuilder> ExportGlbToMeshBuilder(byte[] glbBytes, string name)
     {
-        var srcModel = GltfModel.ReadGLB(new MemoryStream(glbBytes));
+        var srcRepresentation = GltfRepresentation.ReadGLB(new MemoryStream(glbBytes));
         var meshBuilder = new MeshBuilder<VertexPositionNormal>(name);
 
-        foreach (var srcMesh in srcModel.LogicalMeshes)
+        foreach (var srcMesh in srcRepresentation.LogicalMeshes)
         {
             foreach (var srcPrim in srcMesh.Primitives)
             {
@@ -12570,15 +12570,15 @@ public partial class Kit
 
     private static byte[] ExportSceneBuilderToFormat(SceneBuilder sceneBuilder, string format)
     {
-        var modelRoot = sceneBuilder.ToGltf2();
-        modelRoot.Asset.Generator = "semio";
+        var representationRoot = sceneBuilder.ToGltf2();
+        representationRoot.Asset.Generator = "semio";
 
         switch (format)
         {
             case ".glb":
                 {
                     using var ms = new MemoryStream();
-                    modelRoot.WriteGLB(ms);
+                    representationRoot.WriteGLB(ms);
                     return ms.ToArray();
                 }
             case ".gltf":
@@ -12587,8 +12587,8 @@ public partial class Kit
                     System.IO.Directory.CreateDirectory(tmpDir);
                     try
                     {
-                        var gltfPath = System.IO.Path.Combine(tmpDir, "model.gltf");
-                        modelRoot.SaveGLTF(gltfPath);
+                        var gltfPath = System.IO.Path.Combine(tmpDir, "representation.gltf");
+                        representationRoot.SaveGLTF(gltfPath);
                         var gltfJson = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(gltfPath));
                         foreach (var buffer in gltfJson["buffers"] as Newtonsoft.Json.Linq.JArray ?? new Newtonsoft.Json.Linq.JArray())
                         {
@@ -12617,18 +12617,18 @@ public partial class Kit
                     }
                 }
             case ".obj":
-                return ExportModelRootToObj(modelRoot);
+                return ExportRepresentationRootToObj(representationRoot);
             case ".stl":
-                return ExportModelRootToStl(modelRoot);
+                return ExportRepresentationRootToStl(representationRoot);
             default:
                 throw new ArgumentException($"Unsupported export format: {format}");
         }
     }
 
     #region ❄️Geometric Insights
-    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+    // Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
-    /// <summary>🔷Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
+    /// <summary>🔷Geometric KPIs for a GLB/GLTF representation in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).</summary>
     public class GeometricInsights
     {
         public Point? BoundingBoxMin { get; set; }
@@ -12652,36 +12652,36 @@ public partial class Kit
         public int EulerCharacteristic { get; set; }
     }
 
-    public static GeometricInsights GetGeometricInsightsForModel(object model)
+    public static GeometricInsights GetGeometricInsightsForRepresentation(object representation)
     {
-        GltfModel root;
-        if (model is string path)
+        GltfRepresentation root;
+        if (representation is string path)
         {
             if (!System.IO.File.Exists(path))
-                throw new FileNotFoundException("Model file not found", path);
+                throw new FileNotFoundException("Representation file not found", path);
             var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
             if (ext != ".glb" && ext != ".gltf")
-                throw new ArgumentException("Model MUST be .glb or .gltf", nameof(model));
-            root = GltfModel.Load(path);
+                throw new ArgumentException("Representation MUST be .glb or .gltf", nameof(representation));
+            root = GltfRepresentation.Load(path);
         }
-        else if (model is byte[] bytes)
+        else if (representation is byte[] bytes)
         {
             using var ms = new MemoryStream(bytes);
             if (bytes.Length >= 4 && Encoding.ASCII.GetString(bytes, 0, 4) == "glTF")
-                root = GltfModel.ReadGLB(ms);
+                root = GltfRepresentation.ReadGLB(ms);
             else
             {
                 var tmp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "semio_gltf_" + System.Guid.NewGuid().ToString("N") + ".gltf");
                 try
                 {
                     System.IO.File.WriteAllBytes(tmp, bytes);
-                    root = GltfModel.Load(tmp);
+                    root = GltfRepresentation.Load(tmp);
                 }
                 finally { try { System.IO.File.Delete(tmp); } catch { } }
             }
         }
         else
-            throw new ArgumentException("Model must be string path or byte[]", nameof(model));
+            throw new ArgumentException("Representation must be string path or byte[]", nameof(representation));
 
         var out_ = new GeometricInsights();
         double sxMin = double.MaxValue, syMin = double.MaxValue, szMin = double.MaxValue;
@@ -12768,14 +12768,14 @@ public partial class Kit
 
     #endregion ❄️Geometric Insights
 
-    private static byte[] ExportModelRootToObj(GltfModel model)
+    private static byte[] ExportRepresentationRootToObj(GltfRepresentation representation)
     {
         var sb = new StringBuilder();
         sb.AppendLine("# Generated by semio");
         int vertexOffset = 1;
         int normalOffset = 1;
 
-        foreach (var node in model.DefaultScene.VisualChildren)
+        foreach (var node in representation.DefaultScene.VisualChildren)
             ExportNodeToObj(node, System.Numerics.Matrix4x4.Identity, sb, ref vertexOffset, ref normalOffset);
 
         return Encoding.UTF8.GetBytes(sb.ToString());
@@ -12849,11 +12849,11 @@ public partial class Kit
             ExportNodeToObj(child, worldMatrix, sb, ref vertexOffset, ref normalOffset);
     }
 
-    private static byte[] ExportModelRootToStl(GltfModel model)
+    private static byte[] ExportRepresentationRootToStl(GltfRepresentation representation)
     {
         var triangles = new List<(System.Numerics.Vector3 normal, System.Numerics.Vector3 v0, System.Numerics.Vector3 v1, System.Numerics.Vector3 v2)>();
 
-        foreach (var node in model.DefaultScene.VisualChildren)
+        foreach (var node in representation.DefaultScene.VisualChildren)
             ExportNodeToStlTriangles(node, System.Numerics.Matrix4x4.Identity, triangles);
 
         using var ms = new MemoryStream();
@@ -12911,10 +12911,10 @@ public partial class Kit
             ExportNodeToStlTriangles(child, worldMatrix, triangles);
     }
 
-    #endregion 🔧Kit Model Export Helpers
+    #endregion 🔧Kit Representation Export Helpers
 }
 
-#endregion 🔩Kit Model Export
+#endregion 🔩Kit Representation Export
 
 
 
@@ -13632,7 +13632,7 @@ public static class KitSqlite
                 UpdatedAt = reader.IsDBNull(13) ? DateTime.MinValue : DateTime.Parse(reader.GetString(13), null, System.Globalization.DateTimeStyles.RoundtripKind)
             };
             t.Connectors = LoadConnectors(connection, t.Guid);
-            t.Models = LoadModels(connection, t.Guid);
+            t.Representations = LoadRepresentations(connection, t.Guid);
             t.Props = LoadTypeProps(connection, t.Guid);
             t.Concepts = LoadTypeConcepts(connection, t.Guid);
             t.Authors = LoadTypeAuthors(connection, t.Guid);
@@ -13713,35 +13713,35 @@ public static class KitSqlite
         return new List<Prop>();
     }
 
-    private static List<Model> LoadModels(SqliteConnection connection, string typeGuid)
+    private static List<Representation> LoadRepresentations(SqliteConnection connection, string typeGuid)
     {
-        var models = new List<Model>();
+        var representations = new List<Representation>();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT guid, file_guid, name, description FROM model WHERE type_guid = @typeGuid ORDER BY rowid";
+        cmd.CommandText = "SELECT guid, file_guid, name, description FROM representation WHERE type_guid = @typeGuid ORDER BY rowid";
         cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
-            var m = new Model
+            var m = new Representation
             {
                 Guid = reader.GetString(0),
                 File = new FileId { Guid = reader.GetString(1) },
                 Name = reader.IsDBNull(2) ? null : reader.GetString(2),
                 Description = reader.IsDBNull(3) ? null : reader.GetString(3)
             };
-            m.Tags = LoadModelTags(connection, m.Guid);
-            m.Attributes = LoadAttributes(connection, "model_guid", m.Guid);
-            models.Add(m);
+            m.Tags = LoadRepresentationTags(connection, m.Guid);
+            m.Attributes = LoadAttributes(connection, "representation_guid", m.Guid);
+            representations.Add(m);
         }
-        return models;
+        return representations;
     }
 
-    private static List<TagId> LoadModelTags(SqliteConnection connection, string modelGuid)
+    private static List<TagId> LoadRepresentationTags(SqliteConnection connection, string representationGuid)
     {
         var tags = new List<TagId>();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT mt.tag_guid FROM model_tag mt JOIN tag t ON mt.tag_guid = t.guid WHERE mt.model_guid = @modelGuid ORDER BY t.rowid";
-        cmd.Parameters.AddWithValue("@modelGuid", modelGuid);
+        cmd.CommandText = "SELECT mt.tag_guid FROM representation_tag mt JOIN tag t ON mt.tag_guid = t.guid WHERE mt.representation_guid = @representationGuid ORDER BY t.rowid";
+        cmd.Parameters.AddWithValue("@representationGuid", representationGuid);
         using var reader = cmd.ExecuteReader();
         while (reader.Read())
         {
@@ -14376,8 +14376,8 @@ public static class KitSqlite
         foreach (var connector in type.Connectors ?? new List<Connector>())
             SaveConnector(connection, connector, type.Guid);
 
-        foreach (var model in type.Models ?? new List<Model>())
-            SaveModel(connection, model, type.Guid);
+        foreach (var representation in type.Representations ?? new List<Representation>())
+            SaveRepresentation(connection, representation, type.Guid);
 
         for (int i = 0; i < (type.Concepts?.Count ?? 0); i++)
         {
@@ -14441,27 +14441,27 @@ public static class KitSqlite
         cmd.ExecuteNonQuery();
     }
 
-    private static void SaveModel(SqliteConnection connection, Model model, string typeGuid)
+    private static void SaveRepresentation(SqliteConnection connection, Representation representation, string typeGuid)
     {
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT INTO model (guid, file_guid, name, description, type_guid) VALUES (@guid, @fileGuid, @name, @description, @typeGuid)";
-        cmd.Parameters.AddWithValue("@guid", model.Guid);
-        cmd.Parameters.AddWithValue("@fileGuid", model.File?.Guid ?? "");
-        cmd.Parameters.AddWithValue("@name", (object?)model.Name ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@description", (object?)model.Description ?? DBNull.Value);
+        cmd.CommandText = "INSERT INTO representation (guid, file_guid, name, description, type_guid) VALUES (@guid, @fileGuid, @name, @description, @typeGuid)";
+        cmd.Parameters.AddWithValue("@guid", representation.Guid);
+        cmd.Parameters.AddWithValue("@fileGuid", representation.File?.Guid ?? "");
+        cmd.Parameters.AddWithValue("@name", (object?)representation.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@description", (object?)representation.Description ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@typeGuid", typeGuid);
         cmd.ExecuteNonQuery();
 
-        foreach (var tag in model.Tags ?? new List<TagId>())
+        foreach (var tag in representation.Tags ?? new List<TagId>())
         {
             using var tagCmd = connection.CreateCommand();
-            tagCmd.CommandText = "INSERT INTO model_tag (model_guid, tag_guid) VALUES (@modelGuid, @tagGuid)";
-            tagCmd.Parameters.AddWithValue("@modelGuid", model.Guid);
+            tagCmd.CommandText = "INSERT INTO representation_tag (representation_guid, tag_guid) VALUES (@representationGuid, @tagGuid)";
+            tagCmd.Parameters.AddWithValue("@representationGuid", representation.Guid);
             tagCmd.Parameters.AddWithValue("@tagGuid", tag.Guid);
             tagCmd.ExecuteNonQuery();
         }
 
-        SaveAttributes(connection, model.Attributes, "model_guid", model.Guid);
+        SaveAttributes(connection, representation.Attributes, "representation_guid", representation.Guid);
     }
 
     private static void SaveDesign(SqliteConnection connection, Design design, string kitGuid)
@@ -15377,8 +15377,8 @@ public static class SemioDiff
         var connectorsDiff = GetConnectorsDiff(before.Connectors ?? new List<Connector>(), after.Connectors ?? new List<Connector>());
         if (connectorsDiff != null) { diff.Connectors = connectorsDiff; hasChanges = true; }
 
-        var modelsDiff = GetModelsDiff(before.Models ?? new List<Model>(), after.Models ?? new List<Model>());
-        if (modelsDiff != null) { diff.Models = modelsDiff; hasChanges = true; }
+        var representationsDiff = GetRepresentationsDiff(before.Representations ?? new List<Representation>(), after.Representations ?? new List<Representation>());
+        if (representationsDiff != null) { diff.Representations = representationsDiff; hasChanges = true; }
 
         var attributesDiff = GetAttributesDiff(before.Attributes ?? new List<Attribute>(), after.Attributes ?? new List<Attribute>());
         if (attributesDiff != null) { diff.Attributes = attributesDiff; hasChanges = true; }
@@ -15458,30 +15458,30 @@ public static class SemioDiff
         };
     }
 
-    private static ModelsDiff? GetModelsDiff(List<Model> before, List<Model> after)
+    private static RepresentationsDiff? GetRepresentationsDiff(List<Representation> before, List<Representation> after)
     {
-        var removed = before.Where(b => !after.Any(a => a.Guid == b.Guid)).Select(m => new ModelId { Guid = m.Guid }).ToList();
+        var removed = before.Where(b => !after.Any(a => a.Guid == b.Guid)).Select(m => new RepresentationId { Guid = m.Guid }).ToList();
         var added = after.Where(a => !before.Any(b => b.Guid == a.Guid)).ToList();
-        var updated = new List<ModelDiffUpdate>();
+        var updated = new List<RepresentationDiffUpdate>();
 
-        foreach (var afterModel in after)
+        foreach (var afterRepresentation in after)
         {
-            var beforeModel = before.FirstOrDefault(b => b.Guid == afterModel.Guid);
-            if (beforeModel != null)
+            var beforeRepresentation = before.FirstOrDefault(b => b.Guid == afterRepresentation.Guid);
+            if (beforeRepresentation != null)
             {
-                var modelDiff = GetModelDiff(beforeModel, afterModel);
-                if (modelDiff != null)
-                    updated.Add(new ModelDiffUpdate { Model = new ModelId { Guid = afterModel.Guid }, Diff = modelDiff });
+                var representationDiff = GetRepresentationDiff(beforeRepresentation, afterRepresentation);
+                if (representationDiff != null)
+                    updated.Add(new RepresentationDiffUpdate { Representation = new RepresentationId { Guid = afterRepresentation.Guid }, Diff = representationDiff });
             }
         }
 
         if (removed.Count == 0 && added.Count == 0 && updated.Count == 0) return null;
-        return new ModelsDiff { Removed = removed, Added = added, Updated = updated };
+        return new RepresentationsDiff { Removed = removed, Added = added, Updated = updated };
     }
 
-    private static ModelDiff? GetModelDiff(Model before, Model after)
+    private static RepresentationDiff? GetRepresentationDiff(Representation before, Representation after)
     {
-        var diff = new ModelDiff();
+        var diff = new RepresentationDiff();
         bool hasChanges = false;
 
         if (before.Name != after.Name) { diff.Name = after.Name; hasChanges = true; }
@@ -15990,7 +15990,7 @@ public static class SemioDiff
                     if (update.Diff.ShouldSerializeAuthors()) inverseDiff.Authors = originalType.Authors?.Select(a => new AuthorId { Guid = a.Guid }).ToList();
                     if (update.Diff.ShouldSerializeConcepts()) inverseDiff.Concepts = originalType.Concepts?.Select(c => new ConceptId { Guid = c.Guid }).ToList();
                     if (update.Diff.Connectors != null) inverseDiff.Connectors = InverseConnectorsDiff(originalType.Connectors ?? new List<Connector>(), update.Diff.Connectors);
-                    if (update.Diff.Models != null) inverseDiff.Models = InverseModelsDiff(originalType.Models ?? new List<Model>(), update.Diff.Models);
+                    if (update.Diff.Representations != null) inverseDiff.Representations = InverseRepresentationsDiff(originalType.Representations ?? new List<Representation>(), update.Diff.Representations);
                     if (update.Diff.Attributes != null) inverseDiff.Attributes = InverseAttributesDiff(originalType.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
                     inverse.Updated.Add(new TypeDiffUpdate { Type = update.Type, Diff = inverseDiff });
                 }
@@ -16041,29 +16041,29 @@ public static class SemioDiff
         return inverse;
     }
 
-    private static ModelsDiff InverseModelsDiff(List<Model> original, ModelsDiff appliedDiff)
+    private static RepresentationsDiff InverseRepresentationsDiff(List<Representation> original, RepresentationsDiff appliedDiff)
     {
-        var inverse = new ModelsDiff
+        var inverse = new RepresentationsDiff
         {
-            Removed = appliedDiff.Added?.Select(m => new ModelId { Guid = m.Guid }).ToList() ?? new List<ModelId>(),
-            Added = appliedDiff.Removed?.Select(id => original.FirstOrDefault(m => m.Guid == id.Guid)).Where(m => m != null).Cast<Model>().ToList() ?? new List<Model>(),
-            Updated = new List<ModelDiffUpdate>()
+            Removed = appliedDiff.Added?.Select(m => new RepresentationId { Guid = m.Guid }).ToList() ?? new List<RepresentationId>(),
+            Added = appliedDiff.Removed?.Select(id => original.FirstOrDefault(m => m.Guid == id.Guid)).Where(m => m != null).Cast<Representation>().ToList() ?? new List<Representation>(),
+            Updated = new List<RepresentationDiffUpdate>()
         };
 
         if (appliedDiff.Updated != null)
         {
             foreach (var update in appliedDiff.Updated)
             {
-                var originalModel = original.FirstOrDefault(m => m.Guid == update.Model.Guid);
-                if (originalModel != null && update.Diff != null)
+                var originalRepresentation = original.FirstOrDefault(m => m.Guid == update.Representation.Guid);
+                if (originalRepresentation != null && update.Diff != null)
                 {
-                    var inverseDiff = new ModelDiff();
-                    if (update.Diff.Name != null) inverseDiff.Name = originalModel.Name;
-                    if (update.Diff.ShouldSerializeTags()) inverseDiff.Tags = originalModel.Tags;
-                    if (update.Diff.ShouldSerializeFile()) inverseDiff.File = originalModel.File;
-                    if (update.Diff.Description != null) inverseDiff.Description = originalModel.Description;
-                    if (update.Diff.Attributes != null) inverseDiff.Attributes = InverseAttributesDiff(originalModel.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
-                    inverse.Updated.Add(new ModelDiffUpdate { Model = update.Model, Diff = inverseDiff });
+                    var inverseDiff = new RepresentationDiff();
+                    if (update.Diff.Name != null) inverseDiff.Name = originalRepresentation.Name;
+                    if (update.Diff.ShouldSerializeTags()) inverseDiff.Tags = originalRepresentation.Tags;
+                    if (update.Diff.ShouldSerializeFile()) inverseDiff.File = originalRepresentation.File;
+                    if (update.Diff.Description != null) inverseDiff.Description = originalRepresentation.Description;
+                    if (update.Diff.Attributes != null) inverseDiff.Attributes = InverseAttributesDiff(originalRepresentation.Attributes ?? new List<Attribute>(), update.Diff.Attributes);
+                    inverse.Updated.Add(new RepresentationDiffUpdate { Representation = update.Representation, Diff = inverseDiff });
                 }
             }
         }
@@ -16987,10 +16987,10 @@ public static class SemioDiff
                         type.Connectors ??= new List<Connector>();
                         ApplyConnectorsDiff(type.Connectors, update.Diff.Connectors);
                     }
-                    if (update.Diff.Models != null)
+                    if (update.Diff.Representations != null)
                     {
-                        type.Models ??= new List<Model>();
-                        ApplyModelsDiff(type.Models, update.Diff.Models);
+                        type.Representations ??= new List<Representation>();
+                        ApplyRepresentationsDiff(type.Representations, update.Diff.Representations);
                     }
                     if (update.Diff.Attributes != null)
                     {
@@ -17047,33 +17047,33 @@ public static class SemioDiff
             connectors.AddRange(diff.Added);
     }
 
-    private static void ApplyModelsDiff(List<Model> models, ModelsDiff diff)
+    private static void ApplyRepresentationsDiff(List<Representation> representations, RepresentationsDiff diff)
     {
         if (diff.Removed != null)
-            models.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
+            representations.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
 
         if (diff.Updated != null)
         {
             foreach (var update in diff.Updated)
             {
-                var model = models.FirstOrDefault(m => m.Guid == update.Model.Guid);
-                if (model != null && update.Diff != null)
+                var representation = representations.FirstOrDefault(m => m.Guid == update.Representation.Guid);
+                if (representation != null && update.Diff != null)
                 {
-                    if (update.Diff.ShouldSerializeName()) model.Name = update.Diff.Name;
-                    if (update.Diff.ShouldSerializeDescription()) model.Description = update.Diff.Description;
-                    if (update.Diff.ShouldSerializeFile()) model.File = update.Diff.File;
-                    if (update.Diff.ShouldSerializeTags()) model.Tags = update.Diff.Tags;
+                    if (update.Diff.ShouldSerializeName()) representation.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) representation.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeFile()) representation.File = update.Diff.File;
+                    if (update.Diff.ShouldSerializeTags()) representation.Tags = update.Diff.Tags;
                     if (update.Diff.Attributes != null)
                     {
-                        model.Attributes ??= new List<Attribute>();
-                        ApplyAttributesDiff(model.Attributes, update.Diff.Attributes);
+                        representation.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(representation.Attributes, update.Diff.Attributes);
                     }
                 }
             }
         }
 
         if (diff.Added != null)
-            models.AddRange(diff.Added);
+            representations.AddRange(diff.Added);
     }
 
     private static void ApplyDesignsDiff(List<Design> designs, DesignsDiff diff)
@@ -17283,21 +17283,21 @@ public static class SemioDiff
             return true;
         }
 
-        bool AreModelsEqual(List<Model>? arrA, List<Model>? arrB)
+        bool AreRepresentationsEqual(List<Representation>? arrA, List<Representation>? arrB)
         {
             var listA = NormalizeArray(arrA);
             var listB = NormalizeArray(arrB);
             if (listA.Count != listB.Count) return false;
-            foreach (var modelA in listA)
+            foreach (var representationA in listA)
             {
-                var modelB = listB.FirstOrDefault(x => x.Guid == modelA.Guid);
-                if (modelB == null) return false;
-                if (NormalizeValue(modelA.Name) != NormalizeValue(modelB.Name)) return false;
-                if (modelA.File?.Guid != modelB.File?.Guid) return false;
-                var tagsA = NormalizeArray(modelA.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
-                var tagsB = NormalizeArray(modelB.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
+                var representationB = listB.FirstOrDefault(x => x.Guid == representationA.Guid);
+                if (representationB == null) return false;
+                if (NormalizeValue(representationA.Name) != NormalizeValue(representationB.Name)) return false;
+                if (representationA.File?.Guid != representationB.File?.Guid) return false;
+                var tagsA = NormalizeArray(representationA.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
+                var tagsB = NormalizeArray(representationB.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
                 if (!tagsA.SequenceEqual(tagsB)) return false;
-                if (!AreAttributesEqual(modelA.Attributes, modelB.Attributes)) return false;
+                if (!AreAttributesEqual(representationA.Attributes, representationB.Attributes)) return false;
             }
             return true;
         }
@@ -17334,7 +17334,7 @@ public static class SemioDiff
                 var authorsB = NormalizeArray(typeB.Authors).Select(a => a.Guid).OrderBy(g => g).ToList();
                 if (!authorsA.SequenceEqual(authorsB)) return false;
                 if (!ArePropsEqual(typeA.Props, typeB.Props)) return false;
-                if (!AreModelsEqual(typeA.Models, typeB.Models)) return false;
+                if (!AreRepresentationsEqual(typeA.Representations, typeB.Representations)) return false;
                 if (!AreConnectorsEqual(typeA.Connectors, typeB.Connectors)) return false;
                 if (!AreAttributesEqual(typeA.Attributes, typeB.Attributes)) return false;
             }
@@ -17619,7 +17619,7 @@ public static class SemioDiff
             ?? (obj["design"] as JObject)?["guid"]
             ?? (obj["piece"] as JObject)?["guid"]
             ?? (obj["connection"] as JObject)?["guid"]
-            ?? (obj["model"] as JObject)?["guid"]
+            ?? (obj["representation"] as JObject)?["guid"]
             ?? (obj["port"] as JObject)?["guid"]
             ?? (obj["connector"] as JObject)?["guid"]
             ?? (obj["prop"] as JObject)?["guid"]

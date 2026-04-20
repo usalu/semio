@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Rhino 8 plugin hosting a WebView2 panel for importing semio kits and models.
+// Rhino 8 plugin hosting a WebView2 panel for importing semio kits and representations.
 
 #endregion 📱Header
 
@@ -264,7 +264,7 @@ public class DocumentBinding : IBridgeBinding
             var doc = RhinoDoc.ActiveDoc;
             return Task.FromResult<object?>(new
             {
-                system = doc?.ModelUnitSystem.ToString() ?? "None"
+                system = doc?.RepresentationUnitSystem.ToString() ?? "None"
             });
         },
         ["getLayers"] = _ =>
@@ -291,7 +291,7 @@ public class DocumentBinding : IBridgeBinding
 
 /// <summary>
 /// 🆕Creates nested layer hierarchies for semio imports.
-/// Layer path: semio::KITNAME::Types::TYPENAME::Models::MODELTAGS
+/// Layer path: semio::KITNAME::Types::TYPENAME::Representations::REPRESENTATIONTAGS
 /// </summary>
 public static class LayerService
 {
@@ -347,36 +347,36 @@ public static class LayerService
     }
 
     /// <summary>
-    /// Builds the semio layer path for a model import.
+    /// Builds the semio layer path for a representation import.
     /// </summary>
-    public static string BuildModelLayerPath(string kitName, string typeName, IEnumerable<string> tags)
+    public static string BuildRepresentationLayerPath(string kitName, string typeName, IEnumerable<string> tags)
     {
         var tagString = string.Join("-", tags.Where(t => !string.IsNullOrEmpty(t)));
         if (string.IsNullOrEmpty(tagString))
             tagString = "default";
-        return $"semio::{kitName}::Types::{typeName}::Models::{tagString}";
+        return $"semio::{kitName}::Types::{typeName}::Representations::{tagString}";
     }
 }
 
 #endregion 🎢LayerService
 
 #region 🎹ImportBinding
-// Bridge binding for importing kits and models into the active Rhino document.
+// Bridge binding for importing kits and representations into the active Rhino document.
 
 /// <summary>
-/// 📨DTO for an import model request from the React UI.
+/// 📨DTO for an import representation request from the React UI.
 /// </summary>
-public class ImportModelRequest
+public class ImportRepresentationRequest
 {
     [JsonProperty("kitName")] public string KitName { get; set; } = "";
     [JsonProperty("typeName")] public string TypeName { get; set; } = "";
-    [JsonProperty("modelGuid")] public string ModelGuid { get; set; } = "";
+    [JsonProperty("representationGuid")] public string RepresentationGuid { get; set; } = "";
     [JsonProperty("fileUrl")] public string FileUrl { get; set; } = "";
     [JsonProperty("tags")] public List<string> Tags { get; set; } = new();
 }
 
 /// <summary>
-/// 🔧Provides import methods: importModel, importKit (placeholder for file dialog trigger).
+/// 🔧Provides import methods: importRepresentation, importKit (placeholder for file dialog trigger).
 /// </summary>
 public class ImportBinding : IBridgeBinding
 {
@@ -384,21 +384,21 @@ public class ImportBinding : IBridgeBinding
 
     public IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods => new Dictionary<string, Func<JToken?, Task<object?>>>
     {
-        ["importModel"] = async parameters =>
+        ["importRepresentation"] = async parameters =>
         {
-            var request = parameters?.ToObject<ImportModelRequest>()
-                ?? throw new ArgumentException("Invalid import model request.");
+            var request = parameters?.ToObject<ImportRepresentationRequest>()
+                ?? throw new ArgumentException("Invalid import representation request.");
 
             var doc = RhinoDoc.ActiveDoc
                 ?? throw new InvalidOperationException("No active Rhino document.");
 
-            var layerPath = LayerService.BuildModelLayerPath(
+            var layerPath = LayerService.BuildRepresentationLayerPath(
                 request.KitName, request.TypeName, request.Tags);
             var layerIndex = LayerService.EnsureLayer(doc, layerPath);
 
             if (!string.IsNullOrEmpty(request.FileUrl))
             {
-                var tempPath = Path.Combine(Path.GetTempPath(), $"semio_{request.ModelGuid}.3dm");
+                var tempPath = Path.Combine(Path.GetTempPath(), $"semio_{request.RepresentationGuid}.3dm");
 
                 try
                 {

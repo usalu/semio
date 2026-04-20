@@ -28,11 +28,11 @@
   "tags": [
     {
       "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6",
-      "name": "model/gltf-binary"
+      "name": "representation/gltf-binary"
     },
     {
       "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab",
-      "name": "model/vnd.3dm"
+      "name": "representation/vnd.3dm"
     },
     {
       "guid": "0ad9e8a0-03d1-4a8b-b32d-a402daab76e6",
@@ -48,7 +48,7 @@
     },
     {
       "guid": "7ac3ae3a-6a4d-4824-8c40-d315755fbb66",
-      "name": "model/vnd.speckle+json"
+      "name": "representation/vnd.speckle+json"
     },
     {
       "guid": "7181512a-ee78-493d-963f-d224ba8b2b91",
@@ -1338,14 +1338,14 @@
     {
       "guid": "580a4d9d-9289-4a5d-a356-810f63d7c7f0",
       "name": "e5267da44d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5267da44d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e5267da44d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "4bc08213-a92c-4765-901b-129ffdb1a773",
       "name": "b394acfd5c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b394acfd5c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b394acfd5c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1379,7 +1379,7 @@
     {
       "guid": "680517c0-8aa5-400a-b468-5b9819af0633",
       "name": "e5d9d8631c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e5d9d8631c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e5d9d8631c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1395,7 +1395,7 @@
     {
       "guid": "60ab88c2-f108-4b9c-ab31-dc94980ad0e8",
       "name": "2069b62658",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2069b62658",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2069b62658",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1429,7 +1429,7 @@
     {
       "guid": "219bae4a-c46f-429e-84fe-4c9578d87809",
       "name": "833a270493",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/833a270493",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/833a270493",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1445,7 +1445,7 @@
     {
       "guid": "0128e985-92ca-400e-a542-2ffeee759d1f",
       "name": "c7c924a1d6",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c7c924a1d6",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c7c924a1d6",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1488,14 +1488,14 @@
     {
       "guid": "d610cb86-4b57-45b4-8ed1-9b795654a2cd",
       "name": "82fd28f19e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/82fd28f19e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/82fd28f19e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "358e52e6-ab47-401a-986a-326f5d283181",
       "name": "90435c0046",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/90435c0046",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/90435c0046",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1529,7 +1529,7 @@
     {
       "guid": "9eaca635-e131-4680-a5ae-54bbd8186a3b",
       "name": "ae4ed21120",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ae4ed21120",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ae4ed21120",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1545,7 +1545,7 @@
     {
       "guid": "beb251f4-fa46-4803-a2b2-1501bc640d5e",
       "name": "9e40d26d9a",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/9e40d26d9a",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/9e40d26d9a",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1588,14 +1588,14 @@
     {
       "guid": "a6dced24-c3bd-4e8a-bb7e-be254be5e233",
       "name": "6f52c1e6b1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/6f52c1e6b1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/6f52c1e6b1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "0390441f-8f91-4b31-8047-03255a80ba6d",
       "name": "45ab357369",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/45ab357369",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/45ab357369",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1638,14 +1638,14 @@
     {
       "guid": "696cca22-22c5-4d32-8d34-cb84eae840ff",
       "name": "e6c366306e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/e6c366306e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/e6c366306e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "ba4f4226-4704-4f35-98b3-dd7be00d1ef8",
       "name": "f16baa9eba",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f16baa9eba",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f16baa9eba",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1688,14 +1688,14 @@
     {
       "guid": "67a1dee1-2c0d-4fd7-b351-819304427c75",
       "name": "9442aab847",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/9442aab847",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/9442aab847",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "9d426011-150a-4068-aeb8-e26c651b1ea1",
       "name": "29526c7d12",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/29526c7d12",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/29526c7d12",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1738,14 +1738,14 @@
     {
       "guid": "a92ebdcd-feda-4770-9d30-b5514e8068a4",
       "name": "b3a9105a14",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b3a9105a14",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b3a9105a14",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "2e0fc953-d022-49dc-96a9-60c8db12e1cd",
       "name": "ff37b776dd",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ff37b776dd",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ff37b776dd",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1788,14 +1788,14 @@
     {
       "guid": "047fa3a3-c1b6-4441-8a21-72927ee298be",
       "name": "b7243eed93",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b7243eed93",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b7243eed93",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "b5859cf6-06e1-4de7-bac2-8aaf106c533e",
       "name": "5004160f7d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/5004160f7d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/5004160f7d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1838,14 +1838,14 @@
     {
       "guid": "65a40426-58f8-4e60-88ad-67169551fbdb",
       "name": "b8c26ca1c9",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b8c26ca1c9",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b8c26ca1c9",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "b3811fb5-ff47-4255-9b04-ee3d28757506",
       "name": "a6e1f7d736",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/a6e1f7d736",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/a6e1f7d736",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1888,14 +1888,14 @@
     {
       "guid": "d72ab2c5-15fb-4a3a-ba78-c74f6a38ccee",
       "name": "0da1e26dff",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/0da1e26dff",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/0da1e26dff",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "9d68a983-b4a7-4397-b5a8-03a437bdd190",
       "name": "a3b1c730a1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/a3b1c730a1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/a3b1c730a1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -1938,14 +1938,14 @@
     {
       "guid": "a881a711-2ccd-413d-a16b-3da868deb583",
       "name": "c696cc23a3",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c696cc23a3",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c696cc23a3",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "6a382e0e-0cf2-4b83-9afa-437b46e04ba3",
       "name": "532cc5697c",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/532cc5697c",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/532cc5697c",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2276,14 +2276,14 @@
     {
       "guid": "22a8bb79-f315-47a4-aab1-4d1d7ea5caec",
       "name": "f8a0750f34",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f8a0750f34",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f8a0750f34",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "466c1466-5643-4977-94ec-c83e42d1cbaf",
       "name": "08abe6efbe",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/08abe6efbe",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/08abe6efbe",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2326,14 +2326,14 @@
     {
       "guid": "68ef5788-2c2b-4abd-a2f4-40176d897f51",
       "name": "d7c20e7ea4",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/d7c20e7ea4",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/d7c20e7ea4",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "363f396e-20b8-42bc-b378-6738d182a23d",
       "name": "2a87d1fb6f",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a87d1fb6f",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2a87d1fb6f",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2376,14 +2376,14 @@
     {
       "guid": "547d7752-6c37-41ca-9051-e7cab9927518",
       "name": "58af8da8c8",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/58af8da8c8",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/58af8da8c8",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "25117331-f15e-4072-a6f7-f0036e64ff91",
       "name": "d6ddf1d05d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/d6ddf1d05d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/d6ddf1d05d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2426,14 +2426,14 @@
     {
       "guid": "f65c1b96-6a45-49ea-92cb-4543c490c9f4",
       "name": "80ad44ffe9",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/80ad44ffe9",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/80ad44ffe9",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "603c03a2-de2f-48c9-8d02-f8cafc1772b2",
       "name": "0c53ae86dc",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/0c53ae86dc",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/0c53ae86dc",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2476,14 +2476,14 @@
     {
       "guid": "df9a83b1-b64e-4512-a7f9-8ebda035f602",
       "name": "22564f1ee2",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/22564f1ee2",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/22564f1ee2",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "060fe9d3-813d-48a0-b34c-49b19207bcc7",
       "name": "19c41d4361",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/19c41d4361",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/19c41d4361",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2526,14 +2526,14 @@
     {
       "guid": "ff6cef28-b283-42ee-be35-99722201d7b4",
       "name": "c35e56f23a",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c35e56f23a",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c35e56f23a",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "74717c18-be6e-4dc1-9195-face2675a2a8",
       "name": "fa19ddafc5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/fa19ddafc5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/fa19ddafc5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2576,14 +2576,14 @@
     {
       "guid": "c091698f-856c-42af-bdeb-3006d5b94af7",
       "name": "c5306eb015",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5306eb015",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c5306eb015",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "19f618b6-303d-488c-ab32-11585a5ded77",
       "name": "bfdbce0be1",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/bfdbce0be1",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/bfdbce0be1",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2626,14 +2626,14 @@
     {
       "guid": "c8787b7f-9d23-423d-b706-cfbabff4a9c0",
       "name": "ada7ff222e",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ada7ff222e",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ada7ff222e",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "f20c16df-03ab-4664-a9fb-bff3d8ad6787",
       "name": "ba36f367e7",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ba36f367e7",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ba36f367e7",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -2964,14 +2964,14 @@
     {
       "guid": "f4d153b3-0103-42c3-a97d-114a0e42b02f",
       "name": "f9222724e5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/f9222724e5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/f9222724e5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "63c16e3d-4b4a-432e-843d-e317c8fee653",
       "name": "b27c179b7d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b27c179b7d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b27c179b7d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3014,14 +3014,14 @@
     {
       "guid": "dbe8f319-b629-4b00-9669-af09dabae35e",
       "name": "89d6e55762",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/89d6e55762",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/89d6e55762",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "45c18ed8-3bcc-43b5-93b6-ba06141b9aec",
       "name": "c5850e2821",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/c5850e2821",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/c5850e2821",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3064,14 +3064,14 @@
     {
       "guid": "c7009b50-f020-4b83-9ccb-bb3b67bb8c01",
       "name": "53dc156694",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/53dc156694",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/53dc156694",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "424b8b84-f474-40d2-9896-267fa76e5b22",
       "name": "345fa2173d",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/345fa2173d",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/345fa2173d",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3114,14 +3114,14 @@
     {
       "guid": "69e6522b-f41d-4cde-84df-1540d503e357",
       "name": "73566dc911",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/73566dc911",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/73566dc911",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "d768cb0d-4df9-4b25-bcdd-f734a65f8874",
       "name": "8965b08c83",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/8965b08c83",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/8965b08c83",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3164,14 +3164,14 @@
     {
       "guid": "83efb9fd-2a00-4e2c-a41e-9c0558bd0a41",
       "name": "2a6977ed68",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/2a6977ed68",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/2a6977ed68",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "ba3e5e65-dc46-4a1d-be65-2dff7cb68617",
       "name": "1152f570e6",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/1152f570e6",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/1152f570e6",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3214,14 +3214,14 @@
     {
       "guid": "235698db-ac79-4bc4-914d-a0e0947f859d",
       "name": "b862062ab5",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/b862062ab5",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/b862062ab5",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "0e456bc2-6f1d-4785-89bc-d3e27a49a117",
       "name": "152ecb7f14",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/152ecb7f14",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/152ecb7f14",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3264,14 +3264,14 @@
     {
       "guid": "6ba2d1ea-7db9-48eb-bcc0-663059b34c81",
       "name": "ec423cca22",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/ec423cca22",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/ec423cca22",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "0784a6d6-1fab-4396-b416-8ce69089bba2",
       "name": "4088e8e156",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/4088e8e156",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/4088e8e156",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
@@ -3314,14 +3314,14 @@
     {
       "guid": "52485930-198d-4628-b4d2-a2632e04bf7b",
       "name": "6e372d67ee",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/6e372d67ee",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/6e372d67ee",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },
     {
       "guid": "f4f60b8a-44c1-4dfc-8cc0-fab3e256fe35",
       "name": "025c85ea51",
-      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/models/025c85ea51",
+      "remote": "https://app.speckle.systems/projects/e7de1a2f8f/representations/025c85ea51",
       "createdAt": "2025-12-01T17:27:45.705Z",
       "updatedAt": "2025-12-01T17:27:45.705Z"
     },

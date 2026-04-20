@@ -650,7 +650,7 @@ const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
     updatedAt: k.updatedAt,
     icon: k.icon,
     image: k.image,
-    models: [],
+    representations: [],
     connectors: [],
   }) as unknown as SemioKind;
 
@@ -2433,12 +2433,12 @@ export const MoveVectorInput: React.FC<MoveVectorInputProps> = ({ id, value, min
 // Specs: Minimal 3D scene rendering a design from a kit. Uses React Three Fiber Canvas
 // with orthographic camera, grid, gizmo, and orbit controls. Pieces use kit GLTF or unit boxes;
 // selection hull unions mesh AABBs from registered scene roots (not planes). frameloop="demand".
-// Summary: Lightweight 3D scene viewer with model-accurate selection bounds.
+// Summary: Lightweight 3D scene viewer with representation-accurate selection bounds.
 
 const SCENE_BOX_SIZE = 1;
 
 // Specs: Small world-space inflate on the union of mesh AABBs so the highlight stroke does not coincide exactly with geometry facets.
-// Summary: Padding after model-derived scene selection hull.
+// Summary: Padding after representation-derived scene selection hull.
 
 const SCENE_SELECTION_BOUNDS_EXPAND = 0.04;
 
@@ -2460,8 +2460,8 @@ const THREE_TO_SEMIO_BASIS = SEMIO_TO_THREE_BASIS.clone().invert();
 interface ScenePieceAsset {
   piece: Piece;
   status: DiagramEntityStatus;
-  modelName?: string;
-  modelSource?: string;
+  representationName?: string;
+  representationSource?: string;
 }
 
 interface SceneConnectionAsset {
@@ -2482,23 +2482,23 @@ interface SceneSnapshot {
 }
 
 // Specs: Match sketchpad {@link getReadableKitFileUrl} — kit JSON often carries `remote` (http(s)) or `blob` (data:/blob:) without a separate `url` field.
-// Summary: Resolves a browser-loadable model URL from a kit {@link SemioFile}.
+// Summary: Resolves a browser-loadable representation URL from a kit {@link SemioFile}.
 
-const isBrowserReadableModelUrl = (url: string): boolean => /^(blob:|data:|https?:)/i.test(url.trim());
+const isBrowserReadableRepresentationUrl = (url: string): boolean => /^(blob:|data:|https?:)/i.test(url.trim());
 
 const getSceneFileSource = (file?: SemioFile): string | undefined => {
   if (!file) return undefined;
-  if (typeof file.blob === "string" && file.blob.length > 0 && isBrowserReadableModelUrl(file.blob)) return file.blob.trim();
+  if (typeof file.blob === "string" && file.blob.length > 0 && isBrowserReadableRepresentationUrl(file.blob)) return file.blob.trim();
   const legacyUrl = typeof (file as SemioFile & { url?: string }).url === "string" ? (file as SemioFile & { url?: string }).url!.trim() : "";
-  if (legacyUrl.length > 0 && isBrowserReadableModelUrl(legacyUrl)) return legacyUrl;
-  if (typeof file.remote === "string" && file.remote.length > 0 && isBrowserReadableModelUrl(file.remote)) return file.remote.trim();
+  if (legacyUrl.length > 0 && isBrowserReadableRepresentationUrl(legacyUrl)) return legacyUrl;
+  if (typeof file.remote === "string" && file.remote.length > 0 && isBrowserReadableRepresentationUrl(file.remote)) return file.remote.trim();
   return undefined;
 };
 
-const isSceneGltfSource = (source?: string, modelName?: string): boolean => {
+const isSceneGltfSource = (source?: string, representationName?: string): boolean => {
   if (!source) return false;
-  if (source.startsWith("data:model/gltf")) return true;
-  const loweredName = modelName?.toLowerCase() ?? "";
+  if (source.startsWith("data:representation/gltf")) return true;
+  const loweredName = representationName?.toLowerCase() ?? "";
   const loweredSource = source.split("?")[0].toLowerCase();
   return loweredName.endsWith(".glb") || loweredName.endsWith(".gltf") || loweredSource.endsWith(".glb") || loweredSource.endsWith(".gltf");
 };
@@ -2523,13 +2523,13 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
       kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
     }
     let file: SemioFile | undefined;
-    let selectedModel = kind?.models?.length ? Type.pickBestModel(kind.models ?? [], []) : undefined;
-    if (selectedModel?.file?.guid) file = filesByGuid.get(selectedModel.file.guid);
-    if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.models?.length) {
-      for (const m of kind.models) {
+    let selectedRepresentation = kind?.representations?.length ? Type.pickBestRepresentation(kind.representations ?? [], []) : undefined;
+    if (selectedRepresentation?.file?.guid) file = filesByGuid.get(selectedRepresentation.file.guid);
+    if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.representations?.length) {
+      for (const m of kind.representations) {
         const f = m.file?.guid ? filesByGuid.get(m.file.guid) : undefined;
         if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
-          selectedModel = m;
+          selectedRepresentation = m;
           file = f;
           break;
         }
@@ -2538,8 +2538,8 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
     return {
       piece,
       status,
-      modelName: file?.name,
-      modelSource: getSceneFileSource(file),
+      representationName: file?.name,
+      representationSource: getSceneFileSource(file),
     };
   });
   return result;
@@ -2630,19 +2630,19 @@ const computeSceneSelectionUnionBox = (rootsByGuid: Map<string, THREE.Object3D>,
 // #region 🎯SceneSelectionBounds
 
 // Specs: Registry maps piece/connection guids to Object3D roots; hull updates under demand frameloop via invalidate + useFrame.
-// Summary: Provider and model-driven selection overlay mesh.
+// Summary: Provider and representation-driven selection overlay mesh.
 
-type SceneModelBoundsRegistryValue = {
+type SceneRepresentationBoundsRegistryValue = {
   registerBoundsRoot: (guid: string, root: THREE.Object3D) => void;
   unregisterBoundsRoot: (guid: string) => void;
   rootsRef: React.MutableRefObject<Map<string, THREE.Object3D>>;
 };
 
-const SceneModelBoundsRegistryContext = React.createContext<SceneModelBoundsRegistryValue | null>(null);
+const SceneRepresentationBoundsRegistryContext = React.createContext<SceneRepresentationBoundsRegistryValue | null>(null);
 
-const SceneModelBoundsRegistryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const SceneRepresentationBoundsRegistryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const rootsRef = React.useRef(new Map<string, THREE.Object3D>());
-  const value = React.useMemo<SceneModelBoundsRegistryValue>(
+  const value = React.useMemo<SceneRepresentationBoundsRegistryValue>(
     () => ({
       registerBoundsRoot: (guid: string, root: THREE.Object3D) => {
         rootsRef.current.set(guid, root);
@@ -2654,14 +2654,14 @@ const SceneModelBoundsRegistryProvider: React.FC<{ children: React.ReactNode }> 
     }),
     [],
   );
-  return <SceneModelBoundsRegistryContext.Provider value={value}>{children}</SceneModelBoundsRegistryContext.Provider>;
+  return <SceneRepresentationBoundsRegistryContext.Provider value={value}>{children}</SceneRepresentationBoundsRegistryContext.Provider>;
 };
 
-const SceneSelectionBoundsFromModels: React.FC<{
+const SceneSelectionBoundsFromRepresentations: React.FC<{
   selectedPieceGuids: Set<string>;
   selectedConnectionGuids: Set<string>;
 }> = ({ selectedPieceGuids, selectedConnectionGuids }) => {
-  const registry = React.useContext(SceneModelBoundsRegistryContext);
+  const registry = React.useContext(SceneRepresentationBoundsRegistryContext);
   const { invalidate } = useThree();
   const groupRef = React.useRef<THREE.Group>(null);
   const meshRef = React.useRef<THREE.Mesh>(null);
@@ -2717,12 +2717,12 @@ const SceneSelectionBoundsFromModels: React.FC<{
 
 // #endregion 🎯SceneSelectionBounds
 
-// #region 🔗SceneModelMaterials
+// #region 🔗SceneRepresentationMaterials
 // Specs: Imported scene assets in semio/ui MUST ignore embedded mesh, line, and point colors.
 // The runtime replaces them with homogeneous scene materials so status and interaction colors stay consistent.
 // Summary: Shared helpers that normalize imported scene materials and recolor them consistently.
 
-interface SceneModelColorState {
+interface SceneRepresentationColorState {
   meshColor: string;
   lineColor: string;
   emissiveColor?: string;
@@ -2751,7 +2751,7 @@ const createSceneMeshOutline = (geometry: THREE.BufferGeometry, color: string): 
   return outline;
 };
 
-const cloneSceneModelWithHomogeneousMaterials = (scene: THREE.Object3D, meshColor: string, lineColor: string): THREE.Object3D => {
+const cloneSceneRepresentationWithHomogeneousMaterials = (scene: THREE.Object3D, meshColor: string, lineColor: string): THREE.Object3D => {
   const cloned = cloneSkeleton(scene);
   cloned.traverse((object) => {
     if (object instanceof THREE.Mesh) {
@@ -2778,7 +2778,7 @@ const cloneSceneModelWithHomogeneousMaterials = (scene: THREE.Object3D, meshColo
   return cloned;
 };
 
-const applySceneModelColorState = (scene: THREE.Object3D, state: SceneModelColorState): void => {
+const applySceneRepresentationColorState = (scene: THREE.Object3D, state: SceneRepresentationColorState): void => {
   scene.traverse((object) => {
     if (object instanceof THREE.Mesh) {
       const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -2803,7 +2803,7 @@ const applySceneModelColorState = (scene: THREE.Object3D, state: SceneModelColor
   });
 };
 
-const getSceneModelColorState = (status: DiagramEntityStatus, isSelected: boolean, isHovered: boolean): SceneModelColorState => {
+const getSceneRepresentationColorState = (status: DiagramEntityStatus, isSelected: boolean, isHovered: boolean): SceneRepresentationColorState => {
   const isDiffed = status !== "default";
   const isRemoved = status === "removed";
   const neutralColor = resolveSceneColor("var(--muted-foreground)", "#888888");
@@ -2820,27 +2820,27 @@ const getSceneModelColorState = (status: DiagramEntityStatus, isSelected: boolea
   };
 };
 
-// #endregion 🔗SceneModelMaterials
+// #endregion 🔗SceneRepresentationMaterials
 
-interface ScenePieceModelProps {
-  modelSource: string;
+interface ScenePieceRepresentationProps {
+  representationSource: string;
   status: DiagramEntityStatus;
   isSelected: boolean;
   isHovered: boolean;
 }
 
-const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, isSelected, isHovered }) => {
+const ScenePieceRepresentation: React.FC<ScenePieceRepresentationProps> = ({ representationSource, status, isSelected, isHovered }) => {
   // Disable Draco and meshopt to avoid WebAssembly CSP violations in MCP App iframes.
   // 🔷drei defaults meshopt to true which calls WebAssembly.instantiate() violating script-src wasm-eval.
-  const gltf = useGLTF(modelSource, false, false);
+  const gltf = useGLTF(representationSource, false, false);
   const { invalidate } = useThree();
   const bounds = useBounds();
   const clone = React.useMemo(() => {
-    return cloneSceneModelWithHomogeneousMaterials(gltf.scene, "#888888", "#888888");
+    return cloneSceneRepresentationWithHomogeneousMaterials(gltf.scene, "#888888", "#888888");
   }, [gltf.scene]);
 
   React.useEffect(() => {
-    applySceneModelColorState(clone, getSceneModelColorState(status, isSelected, isHovered));
+    applySceneRepresentationColorState(clone, getSceneRepresentationColorState(status, isSelected, isHovered));
     invalidate();
   }, [clone, invalidate, status, isHovered, isSelected]);
 
@@ -2856,8 +2856,8 @@ const ScenePieceModel: React.FC<ScenePieceModelProps> = ({ modelSource, status, 
 interface ScenePieceProps {
   piece: Piece;
   status: DiagramEntityStatus;
-  modelName?: string;
-  modelSource?: string;
+  representationName?: string;
+  representationSource?: string;
   isSelected: boolean;
   isHovered: boolean;
   onPointerEnter?: () => void;
@@ -2866,7 +2866,7 @@ interface ScenePieceProps {
   onDoubleClick?: () => void;
 }
 
-const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, modelSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick, onDoubleClick }) => {
+const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, representationName, representationSource, isSelected, isHovered, onPointerEnter, onPointerLeave, onClick, onDoubleClick }) => {
   const defaultColor = React.useMemo(() => resolveSceneColor(getEntityStatusColor(status), "#888888"), [status]);
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
@@ -2881,7 +2881,7 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
     return base;
   }, [piece.plane, piece.center, piece.scale]);
 
-  const boundsRegistry = React.useContext(SceneModelBoundsRegistryContext);
+  const boundsRegistry = React.useContext(SceneRepresentationBoundsRegistryContext);
   const pieceBoundsRootRef = React.useRef<THREE.Group>(null);
 
   const meshColor = isSelected ? activeColor : isHovered ? hoverColor : defaultColor;
@@ -2890,14 +2890,14 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   if (!matrix) return null;
 
-  const canRenderModel = isSceneGltfSource(modelSource, modelName);
+  const canRenderRepresentation = isSceneGltfSource(representationSource, representationName);
 
   React.useLayoutEffect(() => {
     if (!boundsRegistry || !piece.guid) return;
     const n = pieceBoundsRootRef.current;
     if (n) boundsRegistry.registerBoundsRoot(piece.guid, n);
     return () => boundsRegistry.unregisterBoundsRoot(piece.guid);
-  }, [boundsRegistry, piece.guid, matrix, canRenderModel, modelSource]);
+  }, [boundsRegistry, piece.guid, matrix, canRenderRepresentation, representationSource]);
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
@@ -2929,10 +2929,10 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, modelName, model
 
   return (
     <group ref={pieceBoundsRootRef} matrix={matrix} matrixAutoUpdate={false}>
-      {canRenderModel && modelSource ? (
+      {canRenderRepresentation && representationSource ? (
         <group onClick={handleClick} onDoubleClick={handleDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
           <React.Suspense fallback={null}>
-            <ScenePieceModel modelSource={modelSource} status={status} isSelected={isSelected} isHovered={isHovered} />
+            <ScenePieceRepresentation representationSource={representationSource} status={status} isSelected={isSelected} isHovered={isHovered} />
           </React.Suspense>
         </group>
       ) : (
@@ -2963,7 +2963,7 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const activeColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, true, false), "#3b82f6"), [status]);
   const hoverColor = React.useMemo(() => resolveSceneColor(getInteractiveEntityColor(status, false, true), "#60a5fa"), [status]);
 
-  const boundsRegistry = React.useContext(SceneModelBoundsRegistryContext);
+  const boundsRegistry = React.useContext(SceneRepresentationBoundsRegistryContext);
   const connectionMeshRef = React.useRef<THREE.Mesh>(null);
 
   const start = React.useMemo(() => (sourcePiece.plane && sourcePiece.center ? toSceneVector(sourcePiece.plane.origin) : null), [sourcePiece.plane, sourcePiece.center]);
@@ -3373,7 +3373,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   return (
     <div className={`h-full w-full ${className}`} aria-label={title}>
       <ThreeCanvas onPointerMissed={clearSelection} orthographic frameloop="demand" camera={{ zoom: 50, position: [10, 10, 10], near: -10000, far: 10000 }} style={{ width: "100%", height: "100%" }}>
-        <SceneModelBoundsRegistryProvider>
+        <SceneRepresentationBoundsRegistryProvider>
           <SceneInnerContent
             showGrid={showGrid}
             showGizmo={showGizmo}
@@ -3384,7 +3384,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onAxisClick={onProjectionChange ? handleAxisClick : undefined}
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
-            <SceneSelectionBoundsFromModels selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} />
+            <SceneSelectionBoundsFromRepresentations selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} />
             {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
               <SceneConnection
                 key={connection.guid}
@@ -3406,13 +3406,13 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
                 onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionGuid ?? null) === connection.guid ? null : (resolvedHover.connectionGuid ?? null)) : undefined}
               />
             ))}
-            {pieceAssets.map(({ piece, status, modelName, modelSource }) => (
+            {pieceAssets.map(({ piece, status, representationName, representationSource }) => (
               <ScenePiece
                 key={piece.guid}
                 piece={piece}
                 status={status}
-                modelName={modelName}
-                modelSource={modelSource}
+                representationName={representationName}
+                representationSource={representationSource}
                 isSelected={selectedPieceGuids.has(piece.guid)}
                 isHovered={hoveredPieceGuid === piece.guid}
                 onClick={
@@ -3428,7 +3428,7 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
               />
             ))}
           </SceneInnerContent>
-        </SceneModelBoundsRegistryProvider>
+        </SceneRepresentationBoundsRegistryProvider>
       </ThreeCanvas>
     </div>
   );
@@ -3436,22 +3436,22 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
 
 // #endregion 📍Scene
 
-// #region 🖋️Model
+// #region 🖋️Representation
 
-// Specs: Model is a direct alias of SemioScene with a different default title.
-// Summary: 3D model viewer alias of SemioScene.
+// Specs: Representation is a direct alias of SemioScene with a different default title.
+// Summary: 3D representation viewer alias of SemioScene.
 
-export type SemioModelProps = SemioSceneProps;
+export type SemioRepresentationProps = SemioSceneProps;
 
-export const SemioModel: React.FC<SemioModelProps> = (props) => <SemioScene {...props} title={props.title ?? "Design Model"} />;
+export const SemioRepresentation: React.FC<SemioRepresentationProps> = (props) => <SemioScene {...props} title={props.title ?? "Design Representation"} />;
 
-// #endregion 🖋️Model
+// #endregion 🖋️Representation
 
 // #region 🧱Type
 // Specs: Type is a single-kind 3D surface that mirrors the design scene interaction pattern for
-// one kind. It renders the best available model from the kit at the origin and overlays the kind
+// one kind. It renders the best available representation from the kit at the origin and overlays the kind
 // connectors as selectable/hoverable 3D arrows.
-// Summary: Single-kind 3D scene with model preview and interactive connectors.
+// Summary: Single-kind 3D scene with representation preview and interactive connectors.
 
 export interface TypeSelection {
   connectorGuids?: string[];
@@ -3475,7 +3475,7 @@ export interface SemioTypeProps {
   connectorHoverEnabled?: boolean;
   onHoverChange?: (hover: TypeHover) => void;
   onConnectorClick?: (connector: Connector) => void;
-  showModel?: boolean;
+  showRepresentation?: boolean;
   showConnectors?: boolean;
   showGrid?: boolean;
   showGizmo?: boolean;
@@ -3486,9 +3486,9 @@ export interface SemioTypeProps {
   title?: string;
 }
 
-interface TypeModelAsset {
-  modelName?: string;
-  modelSource?: string;
+interface TypeRepresentationAsset {
+  representationName?: string;
+  representationSource?: string;
 }
 
 const TYPE_CONNECTOR_ARROW_LENGTH = 0.45;
@@ -3504,29 +3504,29 @@ const normalizeTypeHover = (hover?: TypeHover): TypeHover => ({
   connectorGuid: hover?.connectorGuid ?? null,
 });
 
-const buildTypeModelAsset = (kind: SemioKind, kit?: Kit): TypeModelAsset => {
-  const models = kind.models ?? [];
-  if (models.length === 0) return {};
+const buildTypeRepresentationAsset = (kind: SemioKind, kit?: Kit): TypeRepresentationAsset => {
+  const representations = kind.representations ?? [];
+  if (representations.length === 0) return {};
 
   const filesByGuid = new Map((kit?.files ?? []).map((file) => [file.guid, file] as const));
 
-  let selectedModel = Type.pickBestModel(models, []);
-  let file = selectedModel?.file?.guid ? filesByGuid.get(selectedModel.file.guid) : undefined;
+  let selectedRepresentation = Type.pickBestRepresentation(representations, []);
+  let file = selectedRepresentation?.file?.guid ? filesByGuid.get(selectedRepresentation.file.guid) : undefined;
   if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
-    for (const candidateModel of models) {
-      const candidateFile = candidateModel.file?.guid ? filesByGuid.get(candidateModel.file.guid) : undefined;
+    for (const candidateRepresentation of representations) {
+      const candidateFile = candidateRepresentation.file?.guid ? filesByGuid.get(candidateRepresentation.file.guid) : undefined;
       if (candidateFile && isSceneGltfSource(getSceneFileSource(candidateFile), candidateFile.name)) {
-        selectedModel = candidateModel;
+        selectedRepresentation = candidateRepresentation;
         file = candidateFile;
         break;
       }
     }
   }
 
-  if (!selectedModel) return {};
+  if (!selectedRepresentation) return {};
   return {
-    modelName: file?.name,
-    modelSource: getSceneFileSource(file),
+    representationName: file?.name,
+    representationSource: getSceneFileSource(file),
   };
 };
 
@@ -3637,7 +3637,7 @@ const TypeConnectorVisual: React.FC<TypeConnectorVisualProps> = ({ connector, is
   );
 };
 
-const TypeFallbackModel: React.FC = () => {
+const TypeFallbackRepresentation: React.FC = () => {
   const color = React.useMemo(() => resolveSceneColor("var(--muted-foreground)", "#888888"), []);
   return (
     <mesh>
@@ -3662,7 +3662,7 @@ export const SemioType: React.FC<SemioTypeProps> = ({
   connectorHoverEnabled = true,
   onHoverChange,
   onConnectorClick,
-  showModel = true,
+  showRepresentation = true,
   showConnectors = true,
   showGrid = true,
   showGizmo = true,
@@ -3678,8 +3678,8 @@ export const SemioType: React.FC<SemioTypeProps> = ({
   const hoveredConnectorGuid = hoverEnabled && connectorHoverEnabled ? (resolvedHover.connectorGuid ?? null) : null;
   const effectiveConnectorSelectionEnabled = selectionEnabled && connectorSelectionEnabled;
   const effectiveConnectorHoverEnabled = hoverEnabled && connectorHoverEnabled && (effectiveConnectorSelectionEnabled || !!onConnectorClick);
-  const modelAsset = React.useMemo(() => buildTypeModelAsset(kind, kit), [kind, kit]);
-  const canRenderModel = React.useMemo(() => isSceneGltfSource(modelAsset.modelSource, modelAsset.modelName), [modelAsset.modelName, modelAsset.modelSource]);
+  const representationAsset = React.useMemo(() => buildTypeRepresentationAsset(kind, kit), [kind, kit]);
+  const canRenderRepresentation = React.useMemo(() => isSceneGltfSource(representationAsset.representationSource, representationAsset.representationName), [representationAsset.representationName, representationAsset.representationSource]);
 
   const clearSelection = React.useCallback(() => {
     if (!selectionEnabled) return;
@@ -3737,13 +3737,13 @@ export const SemioType: React.FC<SemioTypeProps> = ({
           onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
         >
           {!camera && <TypeSceneAutoFit kind={kind} />}
-          {showModel &&
-            (canRenderModel && modelAsset.modelSource ? (
+          {showRepresentation &&
+            (canRenderRepresentation && representationAsset.representationSource ? (
               <React.Suspense fallback={null}>
-                <ScenePieceModel modelSource={modelAsset.modelSource} status="default" isSelected={false} isHovered={false} />
+                <ScenePieceRepresentation representationSource={representationAsset.representationSource} status="default" isSelected={false} isHovered={false} />
               </React.Suspense>
             ) : (
-              <TypeFallbackModel />
+              <TypeFallbackRepresentation />
             ))}
           {showConnectors &&
             (kind.connectors ?? []).map((connector) => (
@@ -3952,13 +3952,13 @@ export const SemioDesign: React.FC<SemioDesignProps> = ({
 // #endregion 📌Design
 
 // #region 🗿McpApp
-// Specs: MCP App design viewer component using the official @modelcontextprotocol/ext-apps/react
+// Specs: MCP App design viewer component using the official @representationcontextprotocol/ext-apps/react
 // protocol. Communicates with the MCP host via useApp hook. Receives pre-computed diagram data
 // (points and lines) from tool results as JSON text content. Renders pure SVG diagram.
 // Summary: MCP App React component for rendering semio diagrams inside MCP host iframes.
 
-import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
-import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
+import type { App as McpApp } from "@representationcontextprotocol/ext-apps";
+import { useApp, useDocumentTheme } from "@representationcontextprotocol/ext-apps/react";
 
 // #region 🔗McpApp Types
 
@@ -4377,16 +4377,16 @@ export const parseDiagramPayloadFromToolResult = (result: unknown): McpDiagramPa
 
 /**
  * MCP App design viewer that renders a semio diagram using the official MCP Apps protocol.
- * Uses useApp from @modelcontextprotocol/ext-apps/react for host communication.
+ * Uses useApp from @representationcontextprotocol/ext-apps/react for host communication.
  * Receives pre-computed diagram data (points and lines) from tool results.
  *
  * Specs:
  * - Connects to MCP host via useApp hook with PostMessageTransport.
  * - Receives pre-computed diagram points/lines from tool results via ontoolresult callback.
- * - Maps each merged {@link McpDiagramPayload} through {@link mcpMapPayloadToDesignViewerViewModel} → {@link SemioDesign} (split), {@link SemioScene}, {@link SemioDiagram}, or {@link SemioKit} fallback; no parallel ad-hoc surface/flatten rules in the component.
+ * - Maps each merged {@link McpDiagramPayload} through {@link mcpMapPayloadToDesignViewerViewRepresentation} → {@link SemioDesign} (split), {@link SemioScene}, {@link SemioDiagram}, or {@link SemioKit} fallback; no parallel ad-hoc surface/flatten rules in the component.
  * - Applies {@link Kit.runFlattenDesign} + {@link Design.applyDiff} inside the mapper for design/scene so pieces gain plane/center when the kit supplies geometry (see {@link mcpFlattenDesignForSemioSurface}).
  * - Refetches `show_design` via {@link McpApp.callServerTool} on a staggered schedule — hosts often pass a truncated `structuredContent` blob (one piece / one diagram node) while the engine has the full design in-session.
- * - Sends selection changes back to host via updateModelContext.
+ * - Sends selection changes back to host via updateRepresentationContext.
  **/
 /**
  * 🔗Resolves which {@link SemioDesign} / {@link SemioScene} / {@link SemioDiagram} shell to mount.
@@ -4410,7 +4410,7 @@ export function mcpEffectiveSurface(p: McpDiagramPayload | null | undefined): "d
  * 👁️Maps a normalized {@link McpDiagramPayload} to props for semio/ui shells ({@link SemioDesign}, {@link SemioScene}, {@link SemioDiagram}, {@link SemioKit} fallback).
  * Single place for flatten + diagram fallback so {@link McpDesignViewer} stays a thin host bridge.
  */
-export function mcpMapPayloadToDesignViewerViewModel(p: McpDiagramPayload): {
+export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPayload): {
   surface: "design" | "scene" | "diagram";
   design: Design | undefined;
   designFlat: Design | undefined;
@@ -4632,7 +4632,7 @@ export const McpDesignViewer: React.FC = () => {
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
-      appRef.current.updateModelContext({
+      appRef.current.updateRepresentationContext({
         content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }],
       });
     }
@@ -4640,7 +4640,7 @@ export const McpDesignViewer: React.FC = () => {
 
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
-    appRef.current.updateModelContext({
+    appRef.current.updateRepresentationContext({
       content: [
         {
           type: "text" as const,
@@ -4657,7 +4657,7 @@ export const McpDesignViewer: React.FC = () => {
     });
   }, []);
 
-  const viewerViewModel = React.useMemo(() => (payload ? mcpMapPayloadToDesignViewerViewModel(payload) : null), [payload]);
+  const viewerViewRepresentation = React.useMemo(() => (payload ? mcpMapPayloadToDesignViewerViewRepresentation(payload) : null), [payload]);
 
   if (error) {
     return (
@@ -4709,7 +4709,7 @@ export const McpDesignViewer: React.FC = () => {
   };
 
   const mode = payload.mode ?? "show-diagram";
-  const vm = viewerViewModel!;
+  const vm = viewerViewRepresentation!;
 
   if (vm.surface === "design") {
     if (!vm.design) {
@@ -4924,7 +4924,7 @@ export const McpKitViewer: React.FC = () => {
 
   const sendKitSelectionUpdate = React.useCallback((next: KitSelection) => {
     if (!appRef.current) return;
-    appRef.current.updateModelContext({
+    appRef.current.updateRepresentationContext({
       content: [
         {
           type: "text" as const,
@@ -5280,7 +5280,7 @@ export const McpDiagramViewer: React.FC = () => {
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (!appRef.current) return;
-    appRef.current.updateModelContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }] });
+    appRef.current.updateRepresentationContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }] });
   }, []);
 
   const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)" };
@@ -5693,9 +5693,9 @@ if ((import.meta as any).vitest) {
     });
   });
 
-  describe("mcpMapPayloadToDesignViewerViewModel", () => {
+  describe("mcpMapPayloadToDesignViewerViewRepresentation", () => {
     it("maps split design+kit to SemioDesign surface even when surface field is diagram", () => {
-      const vm = mcpMapPayloadToDesignViewerViewModel({
+      const vm = mcpMapPayloadToDesignViewerViewRepresentation({
         mode: "show-design",
         surface: "diagram",
         points: [],
@@ -5709,7 +5709,7 @@ if ((import.meta as any).vitest) {
     });
 
     it("falls back to points/lines when design pieces have no centers", () => {
-      const vm = mcpMapPayloadToDesignViewerViewModel({
+      const vm = mcpMapPayloadToDesignViewerViewRepresentation({
         mode: "show-diagram",
         points: [
           { guid: "p1", id: "p1", u: 0, v: 0, status: "default" },
@@ -5724,7 +5724,7 @@ if ((import.meta as any).vitest) {
     });
 
     it("uses design when pieces have centers even without points/lines", () => {
-      const vm = mcpMapPayloadToDesignViewerViewModel({
+      const vm = mcpMapPayloadToDesignViewerViewRepresentation({
         mode: "show-diagram",
         points: [],
         lines: [],
@@ -6085,136 +6085,136 @@ if ((import.meta as any).vitest) {
   });
 
   describe("buildScenePieceAssets", () => {
-    it("selects the untagged default model when no tags are requested", () => {
+    it("selects the untagged default representation when no tags are requested", () => {
       const kit = {
         types: [
           {
             guid: "kind-1",
-            models: [
-              { guid: "model-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
-              { guid: "model-default", file: { guid: "file-default" } },
+            representations: [
+              { guid: "representation-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
+              { guid: "representation-default", file: { guid: "file-default" } },
             ],
           },
         ],
         files: [
-          { guid: "file-tagged", name: "tagged.glb", blob: "data:model/gltf-binary;base64,AAA" },
-          { guid: "file-default", name: "default.glb", blob: "data:model/gltf-binary;base64,BBB" },
+          { guid: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+          { guid: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
         ],
       } as unknown as Kit;
 
       const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
 
-      expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,BBB");
-      expect(assets[0]?.modelName).toBe("default.glb");
+      expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,BBB");
+      expect(assets[0]?.representationName).toBe("default.glb");
       expect(assets[0]?.status).toBe("default");
     });
 
-    it("falls back to the first model when the kind has no untagged default model", () => {
+    it("falls back to the first representation when the kind has no untagged default representation", () => {
       const kit = {
         types: [
           {
             guid: "kind-1",
-            models: [
-              { guid: "model-first", file: { guid: "file-first" }, tags: [{ guid: "tag-1" }] },
-              { guid: "model-second", file: { guid: "file-second" }, tags: [{ guid: "tag-2" }] },
+            representations: [
+              { guid: "representation-first", file: { guid: "file-first" }, tags: [{ guid: "tag-1" }] },
+              { guid: "representation-second", file: { guid: "file-second" }, tags: [{ guid: "tag-2" }] },
             ],
           },
         ],
         files: [
-          { guid: "file-first", name: "first.glb", blob: "data:model/gltf-binary;base64,AAA" },
-          { guid: "file-second", name: "second.glb", blob: "data:model/gltf-binary;base64,BBB" },
+          { guid: "file-first", name: "first.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+          { guid: "file-second", name: "second.glb", blob: "data:representation/gltf-binary;base64,BBB" },
         ],
       } as unknown as Kit;
 
       const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "modified" }]);
 
-      expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,AAA");
-      expect(assets[0]?.modelName).toBe("first.glb");
+      expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,AAA");
+      expect(assets[0]?.representationName).toBe("first.glb");
       expect(assets[0]?.status).toBe("modified");
     });
 
     it("keeps pieces in the scene and falls back to placeholder geometry when no file source can be resolved", () => {
       const kit = {
-        types: [{ guid: "kind-1", models: [{ guid: "model-1", file: { guid: "file-1" } }] }],
+        types: [{ guid: "kind-1", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
         files: [{ guid: "file-1", name: "missing.glb" }],
       } as unknown as Kit;
 
       const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "added" }]);
 
       expect(assets).toHaveLength(1);
-      expect(assets[0]?.modelSource).toBeUndefined();
+      expect(assets[0]?.representationSource).toBeUndefined();
       expect(assets[0]?.piece.guid).toBe("piece-1");
       expect(assets[0]?.status).toBe("added");
     });
 
-    it("uses kit file.remote as the model URL when blob is absent (sketchpad-shaped kits)", () => {
+    it("uses kit file.remote as the representation URL when blob is absent (sketchpad-shaped kits)", () => {
       const kit = {
-        types: [{ guid: "kind-1", models: [{ guid: "model-1", file: { guid: "file-1" } }] }],
+        types: [{ guid: "kind-1", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
         files: [{ guid: "file-1", name: "remote-mesh.glb", remote: "https://example.com/assets/remote-mesh.glb" }],
       } as unknown as Kit;
 
       const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
 
-      expect(assets[0]?.modelSource).toBe("https://example.com/assets/remote-mesh.glb");
-      expect(assets[0]?.modelName).toBe("remote-mesh.glb");
+      expect(assets[0]?.representationSource).toBe("https://example.com/assets/remote-mesh.glb");
+      expect(assets[0]?.representationName).toBe("remote-mesh.glb");
     });
 
     it("resolves the kind by type name when the piece omits type guid", () => {
       const kit = {
-        types: [{ guid: "kind-1", name: "Capsule", models: [{ guid: "model-1", file: { guid: "file-1" } }] }],
-        files: [{ guid: "file-1", name: "cap.glb", blob: "data:model/gltf-binary;base64,QUFB" }],
+        types: [{ guid: "kind-1", name: "Capsule", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
+        files: [{ guid: "file-1", name: "cap.glb", blob: "data:representation/gltf-binary;base64,QUFB" }],
       } as unknown as Kit;
 
       const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" }, plane: testPlane, center: testCenter } as any as Piece, status: "default" }]);
 
-      expect(assets[0]?.modelSource).toBe("data:model/gltf-binary;base64,QUFB");
+      expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,QUFB");
     });
   });
 
-  describe("buildTypeModelAsset", () => {
-    it("selects the untagged default model for a kind when the kit provides matching files", () => {
-      const asset = buildTypeModelAsset(
+  describe("buildTypeRepresentationAsset", () => {
+    it("selects the untagged default representation for a kind when the kit provides matching files", () => {
+      const asset = buildTypeRepresentationAsset(
         {
           guid: "kind-1",
-          models: [
-            { guid: "model-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
-            { guid: "model-default", file: { guid: "file-default" } },
+          representations: [
+            { guid: "representation-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
+            { guid: "representation-default", file: { guid: "file-default" } },
           ],
         } as unknown as SemioKind,
         {
           files: [
-            { guid: "file-tagged", name: "tagged.glb", blob: "data:model/gltf-binary;base64,AAA" },
-            { guid: "file-default", name: "default.glb", blob: "data:model/gltf-binary;base64,BBB" },
+            { guid: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+            { guid: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
           ],
         } as unknown as Kit,
       );
 
       expect(asset).toEqual({
-        modelName: "default.glb",
-        modelSource: "data:model/gltf-binary;base64,BBB",
+        representationName: "default.glb",
+        representationSource: "data:representation/gltf-binary;base64,BBB",
       });
     });
 
     it("prefers a gltf file when the default selection points at a non-gltf source", () => {
-      const asset = buildTypeModelAsset(
+      const asset = buildTypeRepresentationAsset(
         {
           guid: "kind-1",
-          models: [
-            { guid: "model-default", file: { guid: "file-default" } },
-            { guid: "model-gltf", file: { guid: "file-gltf" }, tags: [{ guid: "tag-1" }] },
+          representations: [
+            { guid: "representation-default", file: { guid: "file-default" } },
+            { guid: "representation-gltf", file: { guid: "file-gltf" }, tags: [{ guid: "tag-1" }] },
           ],
         } as unknown as SemioKind,
         {
           files: [
-            { guid: "file-default", name: "default.obj", blob: "data:model/obj;base64,AAA" },
-            { guid: "file-gltf", name: "fallback.glb", blob: "data:model/gltf-binary;base64,BBB" },
+            { guid: "file-default", name: "default.obj", blob: "data:representation/obj;base64,AAA" },
+            { guid: "file-gltf", name: "fallback.glb", blob: "data:representation/gltf-binary;base64,BBB" },
           ],
         } as unknown as Kit,
       );
 
       expect(asset).toEqual({
-        modelName: "fallback.glb",
-        modelSource: "data:model/gltf-binary;base64,BBB",
+        representationName: "fallback.glb",
+        representationSource: "data:representation/gltf-binary;base64,BBB",
       });
     });
   });
@@ -6266,7 +6266,7 @@ if ((import.meta as any).vitest) {
     });
   });
 
-  describe("scene model material normalization", () => {
+  describe("scene representation material normalization", () => {
     it("overwrites imported mesh, line, and point materials with homogeneous scene materials and adds mesh outlines", () => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" }));
       const line = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]), new THREE.LineBasicMaterial({ color: "#00ff00" }));
@@ -6274,7 +6274,7 @@ if ((import.meta as any).vitest) {
       const source = new THREE.Group();
       source.add(mesh, line, points);
 
-      const clone = cloneSceneModelWithHomogeneousMaterials(source, "#112233", "#445566");
+      const clone = cloneSceneRepresentationWithHomogeneousMaterials(source, "#112233", "#445566");
 
       const clonedMesh = clone.children[0] as THREE.Mesh;
       const clonedLine = clone.children[1] as THREE.LineSegments;
@@ -6299,9 +6299,9 @@ if ((import.meta as any).vitest) {
         new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: "#ff0000" })),
         new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)]), new THREE.LineBasicMaterial({ color: "#00ff00" })),
       );
-      const clone = cloneSceneModelWithHomogeneousMaterials(source, "#111111", "#222222");
+      const clone = cloneSceneRepresentationWithHomogeneousMaterials(source, "#111111", "#222222");
 
-      applySceneModelColorState(clone, {
+      applySceneRepresentationColorState(clone, {
         meshColor: "#334455",
         lineColor: "#556677",
         emissiveColor: "#778899",
@@ -6355,8 +6355,8 @@ if ((import.meta as any).vitest) {
       });
 
       try {
-        const selectedState = getSceneModelColorState("default", true, false);
-        const removedState = getSceneModelColorState("removed", false, false);
+        const selectedState = getSceneRepresentationColorState("default", true, false);
+        const removedState = getSceneRepresentationColorState("removed", false, false);
 
         expect(selectedState.meshColor).toBe("#123456");
         expect(selectedState.lineColor).toBe("#123456");

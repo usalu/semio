@@ -431,6 +431,968 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "89e95ab1eff1d5fe6acbbc36b58d8eda928f8550",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:04:36Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:04:35.413Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\react\\index.tsx"
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "call_yso5q3JHLXLibzOsFZIActoV__vscode-1776699985025",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "89e95ab1eff1d5fe6acbbc36b58d8eda928f8550",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:04:36Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:04:35.675Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\react\\index.tsx",
+            "startLine": 1,
+            "endLine": 120
+          },
+          "tool_response": "",
+          "tool_use_id": "call_gaZZjXIKazJCtmZhpq0kNfDv__vscode-1776699985026",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "89e95ab1eff1d5fe6acbbc36b58d8eda928f8550",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:04:38Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:04:35.413Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\react\\index.tsx"
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "call_yso5q3JHLXLibzOsFZIActoV__vscode-1776699985025",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "89e95ab1eff1d5fe6acbbc36b58d8eda928f8550",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:04:38Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:04:35.675Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\react\\index.tsx",
+            "startLine": 1,
+            "endLine": 120
+          },
+          "tool_response": "",
+          "tool_use_id": "call_gaZZjXIKazJCtmZhpq0kNfDv__vscode-1776699985026",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-20T21:06:18Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:17.718Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Register the new semio/react workspace package, add its package configs, and remove the embedded React hook layer from semio/js now that it lives in the standalone bundle",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\package.json\n@@\n     \"semio/engine\",\n     \"semio/js\",\n+    \"semio/react\",\n     \"semio/sites/docs\",\n     \"semio/sites/play\",\n*** Add File: c:\\git\\semio\\semio\\react\\package.json\n+{\n+  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n+  \"projectType\": \"library\",\n+  \"name\": \"@semio/react\",\n+  \"version\": \"0.1.0\",\n+  \"type\": \"module\",\n+  \"description\": \"semio · react\",\n+  \"exports\": {\n+    \".\": \"./index.tsx\"\n+  },\n+  \"scripts\": {\n+    \"build\": \"tsc --noEmit\",\n+    \"test\": \"cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\"\n+  },\n+  \"dependencies\": {\n+    \"@semio/js\": \"*\",\n+    \"@semio/sketchpad\": \"*\",\n+    \"react\": \"^19.2.3\",\n+    \"react-dom\": \"^19.2.3\"\n+  },\n+  \"devDependencies\": {\n+    \"@semio/assets\": \"^1.0.0\",\n+    \"@types/node\": \"^25.0.8\",\n+    \"@types/react\": \"^19.2.8\",\n+    \"@types/react-dom\": \"^19.2.3\",\n+    \"cross-env\": \"^10.1.0\",\n+    \"typescript\": \"^5.9.3\",\n+    \"vitest\": \"^4.0.17\"\n+  },\n+  \"author\": {\n+    \"name\": \"Ueli Saluz\",\n+    \"email\": \"ueli@semio-tech.com\",\n+    \"url\": \"https://github.com/usalu\"\n+  },\n+  \"license\": \"LGPL-3.0-or-later\",\n+  \"repository\": {\n+    \"type\": \"git\",\n+    \"url\": \"https://github.com/usalu/semio.git\",\n+    \"directory\": \"semio/react\"\n+  },\n+  \"bundleKind\": \"library\"\n+}\n*** Add File: c:\\git\\semio\\semio\\react\\tsconfig.json\n+{\n+  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n+  \"compilerOptions\": {\n+    \"target\": \"ESNext\",\n+    \"module\": \"ESNext\",\n+    \"lib\": [\n+      \"DOM\",\n+      \"ESNext\"\n+    ],\n+    \"moduleResolution\": \"bundler\",\n+    \"jsx\": \"react-jsx\",\n+    \"strict\": true,\n+    \"esModuleInterop\": true,\n+    \"isolatedModules\": true,\n+    \"resolveJsonModule\": true,\n+    \"skipLibCheck\": true,\n+    \"allowJs\": false,\n+    \"incremental\": false,\n+    \"noEmit\": true,\n+    \"types\": [\n+      \"react\",\n+      \"react-dom\",\n+      \"vitest/importMeta\"\n+    ],\n+    \"baseUrl\": \".\",\n+    \"paths\": {\n+      \"@semio/react\": [\n+        \"./index.tsx\"\n+      ],\n+      \"@semio/react/*\": [\n+        \"./*\"\n+      ],\n+      \"@semio/js\": [\n+        \"../js\"\n+      ],\n+      \"@semio/js/*\": [\n+        \"../js/*\"\n+      ],\n+      \"@semio/sketchpad\": [\n+        \"../sketchpad\"\n+      ],\n+      \"@semio/sketchpad/*\": [\n+        \"../sketchpad/*\"\n+      ],\n+      \"@semio/assets\": [\n+        \"../assets\"\n+      ],\n+      \"@semio/assets/*\": [\n+        \"../assets/*\"\n+      ]\n+    }\n+  },\n+  \"exclude\": [\n+    \"node_modules\"\n+  ]\n+}\n*** Update File: c:\\git\\semio\\semio\\js\\package.json\n@@\n   \"dependencies\": {\n     \"@gltf-transform/core\": \"^4.3.0\",\n     \"clsx\": \"^2.1.1\",\n     \"jszip\": \"^3.10.1\",\n     \"sql.js\": \"^1.13.0\",\n     \"uuid\": \"^13.0.0\",\n     \"zod\": \"^4.3.5\"\n   },\n-  \"peerDependencies\": {\n-    \"react\": \"\u003e=18.0.0\"\n-  },\n-  \"peerDependenciesMeta\": {\n-    \"react\": {\n-      \"optional\": true\n-    }\n-  },\n   \"devDependencies\": {\n     \"cross-env\": \"^10.1.0\",\n     \"@semio/assets\": \"^1.0.0\",\n*** Update File: c:\\git\\semio\\semio\\js\\index.ts\n@@\n // #endregion 📂File Tree Utilities\n-\n-// #region ⚛️React\n-// React hooks for reactive kit data access backed by a KitStore.\n-// All hooks are read-only selectors; mutations go through KitStore.apply/transact.\n-// \u003cKitProvider store?\u003e wraps a KitStore (local/dev/remote).\n-// \u003cPieceProvider guid designGuid\u003e scopes piece hooks to a specific piece.\n-\n-// #region ⚛️LazyReact\n-// Lazily imported React — available only when react is installed.\n-let _React: typeof import(\"react\") | undefined;\n-try {\n-  _React = await import(\"react\");\n-} catch {\n-  // React not available — hooks will throw at runtime if used without React.\n-}\n-\n-function requireReact(): typeof import(\"react\") {\n-  if (!_React) throw new Error(\"React is required for semio React hooks. Install react as a dependency.\");\n-  return _React;\n-}\n-// #endregion ⚛️LazyReact\n-\n-// #region ⚛️KitContext\n-/** 🏗️ Internal context value carrying the kit store and current snapshot. */\n-type KitContextValue = {\n-  store: KitStore;\n-  kit: KitImpl;\n-};\n-\n-let _KitContext: import(\"react\").Context\u003cKitContextValue | null\u003e | undefined;\n-function getKitContext(): import(\"react\").Context\u003cKitContextValue | null\u003e {\n-  if (!_KitContext) {\n-    const React = requireReact();\n-    _KitContext = React.createContext\u003cKitContextValue | null\u003e(null);\n-  }\n-  return _KitContext;\n-}\n-\n-function useKitContext(): KitContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getKitContext());\n-  if (!ctx) throw new Error(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-  return ctx;\n-}\n-\n-/** 🏪 Returns the raw KitStore from the nearest KitProvider. */\n-export function useKitStore(): KitStore {\n-  return useKitContext().store;\n-}\n-\n-/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */\n-export function useKit(): KitImpl {\n-  return useKitContext().kit;\n-}\n-// #endregion ⚛️KitContext\n-\n-// #region ⚛️KitProvider\n-/** 🏗️ Provides a reactive KitStore to the component tree.\n- *\n- * Accepts a `store` prop (pre-built KitStore).\n- * Children re-render only when the store emits a change.\n- */\n-export type KitProviderProps = {\n-  /** Pre-built store — use this when the caller manages the store lifecycle. */\n-  store?: KitStore;\n-  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */\n-  initialKit?: KitLike;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const KitProvider = (props: KitProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { store: externalStore, initialKit, children } = props;\n-\n-  const internalStoreRef = React.useRef\u003cKitStore | null\u003e(null);\n-\n-  if (!externalStore \u0026\u0026 !internalStoreRef.current) {\n-    const kit = initialKit\n-      ? asKitInstance(initialKit)\n-      : asKitInstance({\n-          guid: guid(),\n-          name: \"Untitled\",\n-          createdAt: new Date().toISOString(),\n-          updatedAt: new Date().toISOString(),\n-        } as KitData);\n-    internalStoreRef.current = new InMemoryKitStore(kit);\n-  }\n-\n-  const store = externalStore ?? internalStoreRef.current!;\n-\n-  const subscribe = React.useCallback((onStoreChange: () =\u003e void) =\u003e store.subscribe(onStoreChange), [store]);\n-  const getSnapshot = React.useCallback(() =\u003e store.getSnapshot(), [store]);\n-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);\n-\n-  const value = React.useMemo\u003cKitContextValue\u003e(() =\u003e ({ store, kit: snapshot.kit }), [store, snapshot]);\n-\n-  return React.createElement(getKitContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️KitProvider\n-\n-// #region ⚛️PieceContext\n-/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */\n-type PieceContextValue = {\n-  pieceGuid: string;\n-  designGuid: string;\n-};\n-\n-let _PieceContext: import(\"react\").Context\u003cPieceContextValue | null\u003e | undefined;\n-function getPieceContext(): import(\"react\").Context\u003cPieceContextValue | null\u003e {\n-  if (!_PieceContext) {\n-    const React = requireReact();\n-    _PieceContext = React.createContext\u003cPieceContextValue | null\u003e(null);\n-  }\n-  return _PieceContext;\n-}\n-\n-function usePieceContext(): PieceContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  if (!ctx) throw new Error(\"usePiece*() hooks must be used inside \u003cPieceProvider\u003e or pass guid+designGuid arguments.\");\n-  return ctx;\n-}\n-\n-/** 🧩 Scopes piece hooks to a specific piece within a design.\n- *\n- * Pieces live inside designs, so both guids are required for resolution.\n- */\n-export type PieceProviderProps = {\n-  guid: string;\n-  designGuid: string;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const PieceProvider = (props: PieceProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { guid: pieceGuid, designGuid, children } = props;\n-\n-  const value = React.useMemo\u003cPieceContextValue\u003e(() =\u003e ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);\n-\n-  return React.createElement(getPieceContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️PieceContext\n-\n-// #region ⚛️PieceHookHelpers\n-/** 🔍 Resolves guid + designGuid from either context or explicit args. */\n-function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  const resolved = pieceGuid \u0026\u0026 designGuid ? { pieceGuid, designGuid } : ctx;\n-  if (!resolved) throw new Error(\"Piece guid and designGuid required — use \u003cPieceProvider\u003e or pass both arguments.\");\n-  return resolved;\n-}\n-\n-/** 🔧 Internal: find a piece in a design within the kit. */\n-function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {\n-  const design = kit.findDesign(designGuid);\n-  if (!design) return undefined;\n-  return design.findPiece(pieceGuid);\n-}\n-\n-/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */\n-function usePieceSelector\u003cT\u003e(selector: (piece: Piece, kit: KitImpl, designGuid: string) =\u003e T, pieceGuid?: string, designGuid?: string): T | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);\n-    if (!piece) return undefined;\n-    return selector(piece, kit, ids.designGuid);\n-  }, [kit, ids.pieceGuid, ids.designGuid, selector]);\n-}\n-// #endregion ⚛️PieceHookHelpers\n-\n-// #region ⚛️PieceHooks\n-\n-/** 📛 Returns the name of the piece (or undefined if not found). */\n-export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.name, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📝 Returns the description of the piece. */\n-export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.description, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🧱 Returns the type id (guid) of the piece. */\n-export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireTypeId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📐 Returns the design id (guid) when this piece references a sub-design. */\n-export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireDesignAsPieceId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🔵 Returns the blueprint id — either type or design reference. */\n-export type BlueprintId = { kind: \"type\"; guid: string } | { kind: \"design\"; guid: string };\n-\n-export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece): BlueprintId | undefined =\u003e {\n-    const designRefId = p.wireDesignAsPieceId();\n-    if (designRefId) return { kind: \"design\", guid: designRefId.guid };\n-    const typeId = p.wireTypeId();\n-    if (typeId) return { kind: \"type\", guid: typeId.guid };\n-    return undefined;\n-  }, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the 3D placement plane of the piece. */\n-export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.plane, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the 2D center coordinate of the piece. */\n-export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.center, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */\n-export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatPlane(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */\n-export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatCenter(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 👆 Returns the parent piece id in the design tree. */\n-export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: parent.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection id linking this piece to its parent. */\n-export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: conn.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 👶 Returns the ids of all child pieces in the design tree. */\n-export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);\n-      return children.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection ids for all child connections of this piece. */\n-export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const design = kit.requireDesign(ids.designGuid);\n-      const metadata = kit.piecesMetadataFor(ids.designGuid);\n-      if (!metadata.ok) return [];\n-      const connections = design._connections ?? [];\n-      const childConns = connections.filter((c) =\u003e {\n-        try {\n-          const connectedPieceGuid = c.connected.wirePieceId().guid;\n-          const connectingPieceGuid = c.connecting.wirePieceId().guid;\n-          if (connectedPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectingPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          if (connectingPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectedPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          return false;\n-        } catch {\n-          return false;\n-        }\n-      });\n-      return childConns.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */\n-export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return types.map((t) =\u003e ({ guid: t.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-// #endregion ⚛️PieceHooks\n-\n-// #endregion ⚛️React\n \n // #region 🔬Runtime Test Flags\n@@\n-  // #endregion 🔄Transaction Undo/Redo Tests\n-\n-  // #region ⚛️React Hooks Tests\n-  describe(\"React Hooks\", () =\u003e {\n-    let testKit: KitImpl;\n-    let testStore: InMemoryKitStore;\n-    let testDesignGuid: string;\n-    let testPieceGuid: string;\n-\n-    beforeAll(() =\u003e {\n-      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);\n-      testStore = new InMemoryKitStore(testKit);\n-      const design = testKit.designs![0];\n-      testDesignGuid = design.guid;\n-      const piece = design.pieces![0];\n-      testPieceGuid = piece.guid;\n-    });\n-\n-    const renderHookResult = \u003cT,\u003e(hookFn: () =\u003e T): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(TestComponent, null),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    const renderPieceHookResult = \u003cT,\u003e(hookFn: () =\u003e T, pieceGuid: string, designGuid: string): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(\n-          PieceProvider,\n-          { guid: pieceGuid, designGuid } as any,\n-          createElement(TestComponent, null),\n-        ),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    it(\"useKit returns a KitImpl instance\", () =\u003e {\n-      const kit = renderHookResult(() =\u003e useKit());\n-      expect(kit).toBeDefined();\n-      expect(kit.guid).toBe(testKit.guid);\n-    });\n-\n-    it(\"useKitStore returns the store\", () =\u003e {\n-      const store = renderHookResult(() =\u003e useKitStore());\n-      expect(store).toBe(testStore);\n-    });\n-\n-    it(\"usePieceName returns piece name via PieceProvider\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderPieceHookResult(\n-        () =\u003e usePieceName(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceName returns piece name via explicit args\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderHookResult(() =\u003e usePieceName(testPieceGuid, testDesignGuid));\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceDescription returns piece description\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const desc = renderPieceHookResult(\n-        () =\u003e usePieceDescription(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(desc).toBe(piece.description);\n-    });\n-\n-    it(\"usePieceTypeId returns the type reference guid\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const typeId = renderPieceHookResult(\n-        () =\u003e usePieceTypeId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const expectedTypeId = piece.wireTypeId();\n-      if (expectedTypeId) {\n-        expect(typeId).toBeDefined();\n-        expect(typeId!.guid).toBe(expectedTypeId.guid);\n-      } else {\n-        expect(typeId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceDesignId returns the design reference\", () =\u003e {\n-      const designId = renderPieceHookResult(\n-        () =\u003e usePieceDesignId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const expectedDesignId = piece.wireDesignAsPieceId();\n-      if (expectedDesignId) {\n-        expect(designId).toBeDefined();\n-        expect(designId!.guid).toBe(expectedDesignId.guid);\n-      } else {\n-        expect(designId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceBlueprintId returns either type or design\", () =\u003e {\n-      const blueprint = renderPieceHookResult(\n-        () =\u003e usePieceBlueprintId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const designRef = piece.wireDesignAsPieceId();\n-      if (designRef) {\n-        expect(blueprint).toEqual({ kind: \"design\", guid: designRef.guid });\n-      } else {\n-        const typeRef = piece.wireTypeId();\n-        if (typeRef) {\n-          expect(blueprint).toEqual({ kind: \"type\", guid: typeRef.guid });\n-        } else {\n-          expect(blueprint).toBeUndefined();\n-        }\n-      }\n-    });\n-\n-    it(\"usePiecePlane returns the placement plane\", () =\u003e {\n-      const plane = renderPieceHookResult(\n-        () =\u003e usePiecePlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(plane).toEqual(piece.plane);\n-    });\n-\n-    it(\"usePieceCenter returns the center coordinate\", () =\u003e {\n-      const center = renderPieceHookResult(\n-        () =\u003e usePieceCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(center).toEqual(piece.center);\n-    });\n-\n-    it(\"usePieceFlatPlane returns flattened plane\", () =\u003e {\n-      const flatPlane = renderPieceHookResult(\n-        () =\u003e usePieceFlatPlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatPlane).toEqual(piece.flatPlane());\n-    });\n-\n-    it(\"usePieceFlatCenter returns flattened center\", () =\u003e {\n-      const flatCenter = renderPieceHookResult(\n-        () =\u003e usePieceFlatCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatCenter).toEqual(piece.flatCenter());\n-    });\n-\n-    it(\"useParentPieceId returns parent piece id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      let parentGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          parentGuid = meta.parentPieceId;\n-          break;\n-        }\n-      }\n-      if (childGuid \u0026\u0026 parentGuid) {\n-        const parentId = renderPieceHookResult(\n-          () =\u003e useParentPieceId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(parentId).toBeDefined();\n-        expect(parentId!.guid).toBe(parentGuid);\n-      }\n-    });\n-\n-    it(\"useParentConnectionId returns parent connection id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          break;\n-        }\n-      }\n-      if (childGuid) {\n-        const connId = renderPieceHookResult(\n-          () =\u003e useParentConnectionId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(connId).toBeDefined();\n-        expect(typeof connId!.guid).toBe(\"string\");\n-      }\n-    });\n-\n-    it(\"useChildPiecesIds returns child piece ids\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const children = renderPieceHookResult(\n-        () =\u003e useChildPiecesIds(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(children)).toBe(true);\n-    });\n-\n-    it(\"useAlternativeTypeIds returns replaceable types\", () =\u003e {\n-      const altTypes = renderPieceHookResult(\n-        () =\u003e useAlternativeTypeIds(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(altTypes)).toBe(true);\n-    });\n-\n-    it(\"usePieceName returns undefined for nonexistent piece\", () =\u003e {\n-      const name = renderHookResult(() =\u003e usePieceName(\"nonexistent-guid\", testDesignGuid));\n-      expect(name).toBeUndefined();\n-    });\n-\n-    it(\"useParentPieceId returns undefined for root piece\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const parentId = renderPieceHookResult(\n-        () =\u003e useParentPieceId(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(parentId).toBeUndefined();\n-    });\n-\n-    it(\"throws when hooks are used outside KitProvider\", () =\u003e {\n-      expect(() =\u003e {\n-        const TestComponent = () =\u003e {\n-          useKit();\n-          return createElement(\"span\", null, \"fail\");\n-        };\n-        renderToStaticMarkup(createElement(TestComponent, null));\n-      }).toThrow(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-    });\n-\n-    it(\"throws when piece hooks are used without PieceProvider or args\", () =\u003e {\n-      expect(() =\u003e {\n-        renderHookResult(() =\u003e usePieceName());\n-      }).toThrow();\n-    });\n-  });\n-  // #endregion ⚛️React Hooks Tests\n+  // #endregion 🔄Transaction Undo/Redo Tests\n } // end vitest guard\n*** End Patch"
+          },
+          "tool_use_id": "call_BEPNasFycOl5T6pA8cN11IdX__vscode-1776699985028",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.starting",
+        "second": "2026-04-20T21:06:19Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:17.718Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Register the new semio/react workspace package, add its package configs, and remove the embedded React hook layer from semio/js now that it lives in the standalone bundle",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\package.json\n@@\n     \"semio/engine\",\n     \"semio/js\",\n+    \"semio/react\",\n     \"semio/sites/docs\",\n     \"semio/sites/play\",\n*** Add File: c:\\git\\semio\\semio\\react\\package.json\n+{\n+  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n+  \"projectType\": \"library\",\n+  \"name\": \"@semio/react\",\n+  \"version\": \"0.1.0\",\n+  \"type\": \"module\",\n+  \"description\": \"semio · react\",\n+  \"exports\": {\n+    \".\": \"./index.tsx\"\n+  },\n+  \"scripts\": {\n+    \"build\": \"tsc --noEmit\",\n+    \"test\": \"cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\"\n+  },\n+  \"dependencies\": {\n+    \"@semio/js\": \"*\",\n+    \"@semio/sketchpad\": \"*\",\n+    \"react\": \"^19.2.3\",\n+    \"react-dom\": \"^19.2.3\"\n+  },\n+  \"devDependencies\": {\n+    \"@semio/assets\": \"^1.0.0\",\n+    \"@types/node\": \"^25.0.8\",\n+    \"@types/react\": \"^19.2.8\",\n+    \"@types/react-dom\": \"^19.2.3\",\n+    \"cross-env\": \"^10.1.0\",\n+    \"typescript\": \"^5.9.3\",\n+    \"vitest\": \"^4.0.17\"\n+  },\n+  \"author\": {\n+    \"name\": \"Ueli Saluz\",\n+    \"email\": \"ueli@semio-tech.com\",\n+    \"url\": \"https://github.com/usalu\"\n+  },\n+  \"license\": \"LGPL-3.0-or-later\",\n+  \"repository\": {\n+    \"type\": \"git\",\n+    \"url\": \"https://github.com/usalu/semio.git\",\n+    \"directory\": \"semio/react\"\n+  },\n+  \"bundleKind\": \"library\"\n+}\n*** Add File: c:\\git\\semio\\semio\\react\\tsconfig.json\n+{\n+  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n+  \"compilerOptions\": {\n+    \"target\": \"ESNext\",\n+    \"module\": \"ESNext\",\n+    \"lib\": [\n+      \"DOM\",\n+      \"ESNext\"\n+    ],\n+    \"moduleResolution\": \"bundler\",\n+    \"jsx\": \"react-jsx\",\n+    \"strict\": true,\n+    \"esModuleInterop\": true,\n+    \"isolatedModules\": true,\n+    \"resolveJsonModule\": true,\n+    \"skipLibCheck\": true,\n+    \"allowJs\": false,\n+    \"incremental\": false,\n+    \"noEmit\": true,\n+    \"types\": [\n+      \"react\",\n+      \"react-dom\",\n+      \"vitest/importMeta\"\n+    ],\n+    \"baseUrl\": \".\",\n+    \"paths\": {\n+      \"@semio/react\": [\n+        \"./index.tsx\"\n+      ],\n+      \"@semio/react/*\": [\n+        \"./*\"\n+      ],\n+      \"@semio/js\": [\n+        \"../js\"\n+      ],\n+      \"@semio/js/*\": [\n+        \"../js/*\"\n+      ],\n+      \"@semio/sketchpad\": [\n+        \"../sketchpad\"\n+      ],\n+      \"@semio/sketchpad/*\": [\n+        \"../sketchpad/*\"\n+      ],\n+      \"@semio/assets\": [\n+        \"../assets\"\n+      ],\n+      \"@semio/assets/*\": [\n+        \"../assets/*\"\n+      ]\n+    }\n+  },\n+  \"exclude\": [\n+    \"node_modules\"\n+  ]\n+}\n*** Update File: c:\\git\\semio\\semio\\js\\package.json\n@@\n   \"dependencies\": {\n     \"@gltf-transform/core\": \"^4.3.0\",\n     \"clsx\": \"^2.1.1\",\n     \"jszip\": \"^3.10.1\",\n     \"sql.js\": \"^1.13.0\",\n     \"uuid\": \"^13.0.0\",\n     \"zod\": \"^4.3.5\"\n   },\n-  \"peerDependencies\": {\n-    \"react\": \"\u003e=18.0.0\"\n-  },\n-  \"peerDependenciesMeta\": {\n-    \"react\": {\n-      \"optional\": true\n-    }\n-  },\n   \"devDependencies\": {\n     \"cross-env\": \"^10.1.0\",\n     \"@semio/assets\": \"^1.0.0\",\n*** Update File: c:\\git\\semio\\semio\\js\\index.ts\n@@\n // #endregion 📂File Tree Utilities\n-\n-// #region ⚛️React\n-// React hooks for reactive kit data access backed by a KitStore.\n-// All hooks are read-only selectors; mutations go through KitStore.apply/transact.\n-// \u003cKitProvider store?\u003e wraps a KitStore (local/dev/remote).\n-// \u003cPieceProvider guid designGuid\u003e scopes piece hooks to a specific piece.\n-\n-// #region ⚛️LazyReact\n-// Lazily imported React — available only when react is installed.\n-let _React: typeof import(\"react\") | undefined;\n-try {\n-  _React = await import(\"react\");\n-} catch {\n-  // React not available — hooks will throw at runtime if used without React.\n-}\n-\n-function requireReact(): typeof import(\"react\") {\n-  if (!_React) throw new Error(\"React is required for semio React hooks. Install react as a dependency.\");\n-  return _React;\n-}\n-// #endregion ⚛️LazyReact\n-\n-// #region ⚛️KitContext\n-/** 🏗️ Internal context value carrying the kit store and current snapshot. */\n-type KitContextValue = {\n-  store: KitStore;\n-  kit: KitImpl;\n-};\n-\n-let _KitContext: import(\"react\").Context\u003cKitContextValue | null\u003e | undefined;\n-function getKitContext(): import(\"react\").Context\u003cKitContextValue | null\u003e {\n-  if (!_KitContext) {\n-    const React = requireReact();\n-    _KitContext = React.createContext\u003cKitContextValue | null\u003e(null);\n-  }\n-  return _KitContext;\n-}\n-\n-function useKitContext(): KitContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getKitContext());\n-  if (!ctx) throw new Error(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-  return ctx;\n-}\n-\n-/** 🏪 Returns the raw KitStore from the nearest KitProvider. */\n-export function useKitStore(): KitStore {\n-  return useKitContext().store;\n-}\n-\n-/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */\n-export function useKit(): KitImpl {\n-  return useKitContext().kit;\n-}\n-// #endregion ⚛️KitContext\n-\n-// #region ⚛️KitProvider\n-/** 🏗️ Provides a reactive KitStore to the component tree.\n- *\n- * Accepts a `store` prop (pre-built KitStore).\n- * Children re-render only when the store emits a change.\n- */\n-export type KitProviderProps = {\n-  /** Pre-built store — use this when the caller manages the store lifecycle. */\n-  store?: KitStore;\n-  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */\n-  initialKit?: KitLike;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const KitProvider = (props: KitProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { store: externalStore, initialKit, children } = props;\n-\n-  const internalStoreRef = React.useRef\u003cKitStore | null\u003e(null);\n-\n-  if (!externalStore \u0026\u0026 !internalStoreRef.current) {\n-    const kit = initialKit\n-      ? asKitInstance(initialKit)\n-      : asKitInstance({\n-          guid: guid(),\n-          name: \"Untitled\",\n-          createdAt: new Date().toISOString(),\n-          updatedAt: new Date().toISOString(),\n-        } as KitData);\n-    internalStoreRef.current = new InMemoryKitStore(kit);\n-  }\n-\n-  const store = externalStore ?? internalStoreRef.current!;\n-\n-  const subscribe = React.useCallback((onStoreChange: () =\u003e void) =\u003e store.subscribe(onStoreChange), [store]);\n-  const getSnapshot = React.useCallback(() =\u003e store.getSnapshot(), [store]);\n-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);\n-\n-  const value = React.useMemo\u003cKitContextValue\u003e(() =\u003e ({ store, kit: snapshot.kit }), [store, snapshot]);\n-\n-  return React.createElement(getKitContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️KitProvider\n-\n-// #region ⚛️PieceContext\n-/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */\n-type PieceContextValue = {\n-  pieceGuid: string;\n-  designGuid: string;\n-};\n-\n-let _PieceContext: import(\"react\").Context\u003cPieceContextValue | null\u003e | undefined;\n-function getPieceContext(): import(\"react\").Context\u003cPieceContextValue | null\u003e {\n-  if (!_PieceContext) {\n-    const React = requireReact();\n-    _PieceContext = React.createContext\u003cPieceContextValue | null\u003e(null);\n-  }\n-  return _PieceContext;\n-}\n-\n-function usePieceContext(): PieceContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  if (!ctx) throw new Error(\"usePiece*() hooks must be used inside \u003cPieceProvider\u003e or pass guid+designGuid arguments.\");\n-  return ctx;\n-}\n-\n-/** 🧩 Scopes piece hooks to a specific piece within a design.\n- *\n- * Pieces live inside designs, so both guids are required for resolution.\n- */\n-export type PieceProviderProps = {\n-  guid: string;\n-  designGuid: string;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const PieceProvider = (props: PieceProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { guid: pieceGuid, designGuid, children } = props;\n-\n-  const value = React.useMemo\u003cPieceContextValue\u003e(() =\u003e ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);\n-\n-  return React.createElement(getPieceContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️PieceContext\n-\n-// #region ⚛️PieceHookHelpers\n-/** 🔍 Resolves guid + designGuid from either context or explicit args. */\n-function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  const resolved = pieceGuid \u0026\u0026 designGuid ? { pieceGuid, designGuid } : ctx;\n-  if (!resolved) throw new Error(\"Piece guid and designGuid required — use \u003cPieceProvider\u003e or pass both arguments.\");\n-  return resolved;\n-}\n-\n-/** 🔧 Internal: find a piece in a design within the kit. */\n-function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {\n-  const design = kit.findDesign(designGuid);\n-  if (!design) return undefined;\n-  return design.findPiece(pieceGuid);\n-}\n-\n-/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */\n-function usePieceSelector\u003cT\u003e(selector: (piece: Piece, kit: KitImpl, designGuid: string) =\u003e T, pieceGuid?: string, designGuid?: string): T | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);\n-    if (!piece) return undefined;\n-    return selector(piece, kit, ids.designGuid);\n-  }, [kit, ids.pieceGuid, ids.designGuid, selector]);\n-}\n-// #endregion ⚛️PieceHookHelpers\n-\n-// #region ⚛️PieceHooks\n-\n-/** 📛 Returns the name of the piece (or undefined if not found). */\n-export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.name, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📝 Returns the description of the piece. */\n-export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.description, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🧱 Returns the type id (guid) of the piece. */\n-export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireTypeId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📐 Returns the design id (guid) when this piece references a sub-design. */\n-export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireDesignAsPieceId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🔵 Returns the blueprint id — either type or design reference. */\n-export type BlueprintId = { kind: \"type\"; guid: string } | { kind: \"design\"; guid: string };\n-\n-export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece): BlueprintId | undefined =\u003e {\n-    const designRefId = p.wireDesignAsPieceId();\n-    if (designRefId) return { kind: \"design\", guid: designRefId.guid };\n-    const typeId = p.wireTypeId();\n-    if (typeId) return { kind: \"type\", guid: typeId.guid };\n-    return undefined;\n-  }, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the 3D placement plane of the piece. */\n-export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.plane, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the 2D center coordinate of the piece. */\n-export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.center, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */\n-export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatPlane(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */\n-export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatCenter(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 👆 Returns the parent piece id in the design tree. */\n-export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: parent.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection id linking this piece to its parent. */\n-export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: conn.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 👶 Returns the ids of all child pieces in the design tree. */\n-export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);\n-      return children.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection ids for all child connections of this piece. */\n-export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const design = kit.requireDesign(ids.designGuid);\n-      const metadata = kit.piecesMetadataFor(ids.designGuid);\n-      if (!metadata.ok) return [];\n-      const connections = design._connections ?? [];\n-      const childConns = connections.filter((c) =\u003e {\n-        try {\n-          const connectedPieceGuid = c.connected.wirePieceId().guid;\n-          const connectingPieceGuid = c.connecting.wirePieceId().guid;\n-          if (connectedPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectingPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          if (connectingPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectedPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          return false;\n-        } catch {\n-          return false;\n-        }\n-      });\n-      return childConns.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */\n-export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return types.map((t) =\u003e ({ guid: t.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-// #endregion ⚛️PieceHooks\n-\n-// #endregion ⚛️React\n \n // #region 🔬Runtime Test Flags\n@@\n-  // #endregion 🔄Transaction Undo/Redo Tests\n-\n-  // #region ⚛️React Hooks Tests\n-  describe(\"React Hooks\", () =\u003e {\n-    let testKit: KitImpl;\n-    let testStore: InMemoryKitStore;\n-    let testDesignGuid: string;\n-    let testPieceGuid: string;\n-\n-    beforeAll(() =\u003e {\n-      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);\n-      testStore = new InMemoryKitStore(testKit);\n-      const design = testKit.designs![0];\n-      testDesignGuid = design.guid;\n-      const piece = design.pieces![0];\n-      testPieceGuid = piece.guid;\n-    });\n-\n-    const renderHookResult = \u003cT,\u003e(hookFn: () =\u003e T): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(TestComponent, null),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    const renderPieceHookResult = \u003cT,\u003e(hookFn: () =\u003e T, pieceGuid: string, designGuid: string): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(\n-          PieceProvider,\n-          { guid: pieceGuid, designGuid } as any,\n-          createElement(TestComponent, null),\n-        ),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    it(\"useKit returns a KitImpl instance\", () =\u003e {\n-      const kit = renderHookResult(() =\u003e useKit());\n-      expect(kit).toBeDefined();\n-      expect(kit.guid).toBe(testKit.guid);\n-    });\n-\n-    it(\"useKitStore returns the store\", () =\u003e {\n-      const store = renderHookResult(() =\u003e useKitStore());\n-      expect(store).toBe(testStore);\n-    });\n-\n-    it(\"usePieceName returns piece name via PieceProvider\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderPieceHookResult(\n-        () =\u003e usePieceName(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceName returns piece name via explicit args\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderHookResult(() =\u003e usePieceName(testPieceGuid, testDesignGuid));\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceDescription returns piece description\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const desc = renderPieceHookResult(\n-        () =\u003e usePieceDescription(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(desc).toBe(piece.description);\n-    });\n-\n-    it(\"usePieceTypeId returns the type reference guid\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const typeId = renderPieceHookResult(\n-        () =\u003e usePieceTypeId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const expectedTypeId = piece.wireTypeId();\n-      if (expectedTypeId) {\n-        expect(typeId).toBeDefined();\n-        expect(typeId!.guid).toBe(expectedTypeId.guid);\n-      } else {\n-        expect(typeId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceDesignId returns the design reference\", () =\u003e {\n-      const designId = renderPieceHookResult(\n-        () =\u003e usePieceDesignId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const expectedDesignId = piece.wireDesignAsPieceId();\n-      if (expectedDesignId) {\n-        expect(designId).toBeDefined();\n-        expect(designId!.guid).toBe(expectedDesignId.guid);\n-      } else {\n-        expect(designId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceBlueprintId returns either type or design\", () =\u003e {\n-      const blueprint = renderPieceHookResult(\n-        () =\u003e usePieceBlueprintId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const designRef = piece.wireDesignAsPieceId();\n-      if (designRef) {\n-        expect(blueprint).toEqual({ kind: \"design\", guid: designRef.guid });\n-      } else {\n-        const typeRef = piece.wireTypeId();\n-        if (typeRef) {\n-          expect(blueprint).toEqual({ kind: \"type\", guid: typeRef.guid });\n-        } else {\n-          expect(blueprint).toBeUndefined();\n-        }\n-      }\n-    });\n-\n-    it(\"usePiecePlane returns the placement plane\", () =\u003e {\n-      const plane = renderPieceHookResult(\n-        () =\u003e usePiecePlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(plane).toEqual(piece.plane);\n-    });\n-\n-    it(\"usePieceCenter returns the center coordinate\", () =\u003e {\n-      const center = renderPieceHookResult(\n-        () =\u003e usePieceCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(center).toEqual(piece.center);\n-    });\n-\n-    it(\"usePieceFlatPlane returns flattened plane\", () =\u003e {\n-      const flatPlane = renderPieceHookResult(\n-        () =\u003e usePieceFlatPlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatPlane).toEqual(piece.flatPlane());\n-    });\n-\n-    it(\"usePieceFlatCenter returns flattened center\", () =\u003e {\n-      const flatCenter = renderPieceHookResult(\n-        () =\u003e usePieceFlatCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatCenter).toEqual(piece.flatCenter());\n-    });\n-\n-    it(\"useParentPieceId returns parent piece id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      let parentGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          parentGuid = meta.parentPieceId;\n-          break;\n-        }\n-      }\n-      if (childGuid \u0026\u0026 parentGuid) {\n-        const parentId = renderPieceHookResult(\n-          () =\u003e useParentPieceId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(parentId).toBeDefined();\n-        expect(parentId!.guid).toBe(parentGuid);\n-      }\n-    });\n-\n-    it(\"useParentConnectionId returns parent connection id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          break;\n-        }\n-      }\n-      if (childGuid) {\n-        const connId = renderPieceHookResult(\n-          () =\u003e useParentConnectionId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(connId).toBeDefined();\n-        expect(typeof connId!.guid).toBe(\"string\");\n-      }\n-    });\n-\n-    it(\"useChildPiecesIds returns child piece ids\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const children = renderPieceHookResult(\n-        () =\u003e useChildPiecesIds(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(children)).toBe(true);\n-    });\n-\n-    it(\"useAlternativeTypeIds returns replaceable types\", () =\u003e {\n-      const altTypes = renderPieceHookResult(\n-        () =\u003e useAlternativeTypeIds(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(altTypes)).toBe(true);\n-    });\n-\n-    it(\"usePieceName returns undefined for nonexistent piece\", () =\u003e {\n-      const name = renderHookResult(() =\u003e usePieceName(\"nonexistent-guid\", testDesignGuid));\n-      expect(name).toBeUndefined();\n-    });\n-\n-    it(\"useParentPieceId returns undefined for root piece\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const parentId = renderPieceHookResult(\n-        () =\u003e useParentPieceId(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(parentId).toBeUndefined();\n-    });\n-\n-    it(\"throws when hooks are used outside KitProvider\", () =\u003e {\n-      expect(() =\u003e {\n-        const TestComponent = () =\u003e {\n-          useKit();\n-          return createElement(\"span\", null, \"fail\");\n-        };\n-        renderToStaticMarkup(createElement(TestComponent, null));\n-      }).toThrow(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-    });\n-\n-    it(\"throws when piece hooks are used without PieceProvider or args\", () =\u003e {\n-      expect(() =\u003e {\n-        renderHookResult(() =\u003e usePieceName());\n-      }).toThrow();\n-    });\n-  });\n-  // #endregion ⚛️React Hooks Tests\n+  // #endregion 🔄Transaction Undo/Redo Tests\n } // end vitest guard\n*** End Patch"
+          },
+          "tool_use_id": "call_BEPNasFycOl5T6pA8cN11IdX__vscode-1776699985028",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-20T21:06:24Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:23.338Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Register the new semio/react workspace package, add its package configs, and remove the embedded React hook layer from semio/js now that it lives in the standalone bundle",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\package.json\n@@\n     \"semio/engine\",\n     \"semio/js\",\n+    \"semio/react\",\n     \"semio/sites/docs\",\n     \"semio/sites/play\",\n*** Add File: c:\\git\\semio\\semio\\react\\package.json\n+{\n+  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n+  \"projectType\": \"library\",\n+  \"name\": \"@semio/react\",\n+  \"version\": \"0.1.0\",\n+  \"type\": \"module\",\n+  \"description\": \"semio · react\",\n+  \"exports\": {\n+    \".\": \"./index.tsx\"\n+  },\n+  \"scripts\": {\n+    \"build\": \"tsc --noEmit\",\n+    \"test\": \"cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\"\n+  },\n+  \"dependencies\": {\n+    \"@semio/js\": \"*\",\n+    \"@semio/sketchpad\": \"*\",\n+    \"react\": \"^19.2.3\",\n+    \"react-dom\": \"^19.2.3\"\n+  },\n+  \"devDependencies\": {\n+    \"@semio/assets\": \"^1.0.0\",\n+    \"@types/node\": \"^25.0.8\",\n+    \"@types/react\": \"^19.2.8\",\n+    \"@types/react-dom\": \"^19.2.3\",\n+    \"cross-env\": \"^10.1.0\",\n+    \"typescript\": \"^5.9.3\",\n+    \"vitest\": \"^4.0.17\"\n+  },\n+  \"author\": {\n+    \"name\": \"Ueli Saluz\",\n+    \"email\": \"ueli@semio-tech.com\",\n+    \"url\": \"https://github.com/usalu\"\n+  },\n+  \"license\": \"LGPL-3.0-or-later\",\n+  \"repository\": {\n+    \"type\": \"git\",\n+    \"url\": \"https://github.com/usalu/semio.git\",\n+    \"directory\": \"semio/react\"\n+  },\n+  \"bundleKind\": \"library\"\n+}\n*** Add File: c:\\git\\semio\\semio\\react\\tsconfig.json\n+{\n+  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n+  \"compilerOptions\": {\n+    \"target\": \"ESNext\",\n+    \"module\": \"ESNext\",\n+    \"lib\": [\n+      \"DOM\",\n+      \"ESNext\"\n+    ],\n+    \"moduleResolution\": \"bundler\",\n+    \"jsx\": \"react-jsx\",\n+    \"strict\": true,\n+    \"esModuleInterop\": true,\n+    \"isolatedModules\": true,\n+    \"resolveJsonModule\": true,\n+    \"skipLibCheck\": true,\n+    \"allowJs\": false,\n+    \"incremental\": false,\n+    \"noEmit\": true,\n+    \"types\": [\n+      \"react\",\n+      \"react-dom\",\n+      \"vitest/importMeta\"\n+    ],\n+    \"baseUrl\": \".\",\n+    \"paths\": {\n+      \"@semio/react\": [\n+        \"./index.tsx\"\n+      ],\n+      \"@semio/react/*\": [\n+        \"./*\"\n+      ],\n+      \"@semio/js\": [\n+        \"../js\"\n+      ],\n+      \"@semio/js/*\": [\n+        \"../js/*\"\n+      ],\n+      \"@semio/sketchpad\": [\n+        \"../sketchpad\"\n+      ],\n+      \"@semio/sketchpad/*\": [\n+        \"../sketchpad/*\"\n+      ],\n+      \"@semio/assets\": [\n+        \"../assets\"\n+      ],\n+      \"@semio/assets/*\": [\n+        \"../assets/*\"\n+      ]\n+    }\n+  },\n+  \"exclude\": [\n+    \"node_modules\"\n+  ]\n+}\n*** Update File: c:\\git\\semio\\semio\\js\\package.json\n@@\n   \"dependencies\": {\n     \"@gltf-transform/core\": \"^4.3.0\",\n     \"clsx\": \"^2.1.1\",\n     \"jszip\": \"^3.10.1\",\n     \"sql.js\": \"^1.13.0\",\n     \"uuid\": \"^13.0.0\",\n     \"zod\": \"^4.3.5\"\n   },\n-  \"peerDependencies\": {\n-    \"react\": \"\u003e=18.0.0\"\n-  },\n-  \"peerDependenciesMeta\": {\n-    \"react\": {\n-      \"optional\": true\n-    }\n-  },\n   \"devDependencies\": {\n     \"cross-env\": \"^10.1.0\",\n     \"@semio/assets\": \"^1.0.0\",\n*** Update File: c:\\git\\semio\\semio\\js\\index.ts\n@@\n // #endregion 📂File Tree Utilities\n-\n-// #region ⚛️React\n-// React hooks for reactive kit data access backed by a KitStore.\n-// All hooks are read-only selectors; mutations go through KitStore.apply/transact.\n-// \u003cKitProvider store?\u003e wraps a KitStore (local/dev/remote).\n-// \u003cPieceProvider guid designGuid\u003e scopes piece hooks to a specific piece.\n-\n-// #region ⚛️LazyReact\n-// Lazily imported React — available only when react is installed.\n-let _React: typeof import(\"react\") | undefined;\n-try {\n-  _React = await import(\"react\");\n-} catch {\n-  // React not available — hooks will throw at runtime if used without React.\n-}\n-\n-function requireReact(): typeof import(\"react\") {\n-  if (!_React) throw new Error(\"React is required for semio React hooks. Install react as a dependency.\");\n-  return _React;\n-}\n-// #endregion ⚛️LazyReact\n-\n-// #region ⚛️KitContext\n-/** 🏗️ Internal context value carrying the kit store and current snapshot. */\n-type KitContextValue = {\n-  store: KitStore;\n-  kit: KitImpl;\n-};\n-\n-let _KitContext: import(\"react\").Context\u003cKitContextValue | null\u003e | undefined;\n-function getKitContext(): import(\"react\").Context\u003cKitContextValue | null\u003e {\n-  if (!_KitContext) {\n-    const React = requireReact();\n-    _KitContext = React.createContext\u003cKitContextValue | null\u003e(null);\n-  }\n-  return _KitContext;\n-}\n-\n-function useKitContext(): KitContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getKitContext());\n-  if (!ctx) throw new Error(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-  return ctx;\n-}\n-\n-/** 🏪 Returns the raw KitStore from the nearest KitProvider. */\n-export function useKitStore(): KitStore {\n-  return useKitContext().store;\n-}\n-\n-/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */\n-export function useKit(): KitImpl {\n-  return useKitContext().kit;\n-}\n-// #endregion ⚛️KitContext\n-\n-// #region ⚛️KitProvider\n-/** 🏗️ Provides a reactive KitStore to the component tree.\n- *\n- * Accepts a `store` prop (pre-built KitStore).\n- * Children re-render only when the store emits a change.\n- */\n-export type KitProviderProps = {\n-  /** Pre-built store — use this when the caller manages the store lifecycle. */\n-  store?: KitStore;\n-  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */\n-  initialKit?: KitLike;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const KitProvider = (props: KitProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { store: externalStore, initialKit, children } = props;\n-\n-  const internalStoreRef = React.useRef\u003cKitStore | null\u003e(null);\n-\n-  if (!externalStore \u0026\u0026 !internalStoreRef.current) {\n-    const kit = initialKit\n-      ? asKitInstance(initialKit)\n-      : asKitInstance({\n-          guid: guid(),\n-          name: \"Untitled\",\n-          createdAt: new Date().toISOString(),\n-          updatedAt: new Date().toISOString(),\n-        } as KitData);\n-    internalStoreRef.current = new InMemoryKitStore(kit);\n-  }\n-\n-  const store = externalStore ?? internalStoreRef.current!;\n-\n-  const subscribe = React.useCallback((onStoreChange: () =\u003e void) =\u003e store.subscribe(onStoreChange), [store]);\n-  const getSnapshot = React.useCallback(() =\u003e store.getSnapshot(), [store]);\n-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);\n-\n-  const value = React.useMemo\u003cKitContextValue\u003e(() =\u003e ({ store, kit: snapshot.kit }), [store, snapshot]);\n-\n-  return React.createElement(getKitContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️KitProvider\n-\n-// #region ⚛️PieceContext\n-/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */\n-type PieceContextValue = {\n-  pieceGuid: string;\n-  designGuid: string;\n-};\n-\n-let _PieceContext: import(\"react\").Context\u003cPieceContextValue | null\u003e | undefined;\n-function getPieceContext(): import(\"react\").Context\u003cPieceContextValue | null\u003e {\n-  if (!_PieceContext) {\n-    const React = requireReact();\n-    _PieceContext = React.createContext\u003cPieceContextValue | null\u003e(null);\n-  }\n-  return _PieceContext;\n-}\n-\n-function usePieceContext(): PieceContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  if (!ctx) throw new Error(\"usePiece*() hooks must be used inside \u003cPieceProvider\u003e or pass guid+designGuid arguments.\");\n-  return ctx;\n-}\n-\n-/** 🧩 Scopes piece hooks to a specific piece within a design.\n- *\n- * Pieces live inside designs, so both guids are required for resolution.\n- */\n-export type PieceProviderProps = {\n-  guid: string;\n-  designGuid: string;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const PieceProvider = (props: PieceProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { guid: pieceGuid, designGuid, children } = props;\n-\n-  const value = React.useMemo\u003cPieceContextValue\u003e(() =\u003e ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);\n-\n-  return React.createElement(getPieceContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️PieceContext\n-\n-// #region ⚛️PieceHookHelpers\n-/** 🔍 Resolves guid + designGuid from either context or explicit args. */\n-function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  const resolved = pieceGuid \u0026\u0026 designGuid ? { pieceGuid, designGuid } : ctx;\n-  if (!resolved) throw new Error(\"Piece guid and designGuid required — use \u003cPieceProvider\u003e or pass both arguments.\");\n-  return resolved;\n-}\n-\n-/** 🔧 Internal: find a piece in a design within the kit. */\n-function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {\n-  const design = kit.findDesign(designGuid);\n-  if (!design) return undefined;\n-  return design.findPiece(pieceGuid);\n-}\n-\n-/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */\n-function usePieceSelector\u003cT\u003e(selector: (piece: Piece, kit: KitImpl, designGuid: string) =\u003e T, pieceGuid?: string, designGuid?: string): T | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);\n-    if (!piece) return undefined;\n-    return selector(piece, kit, ids.designGuid);\n-  }, [kit, ids.pieceGuid, ids.designGuid, selector]);\n-}\n-// #endregion ⚛️PieceHookHelpers\n-\n-// #region ⚛️PieceHooks\n-\n-/** 📛 Returns the name of the piece (or undefined if not found). */\n-export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.name, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📝 Returns the description of the piece. */\n-export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.description, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🧱 Returns the type id (guid) of the piece. */\n-export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireTypeId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📐 Returns the design id (guid) when this piece references a sub-design. */\n-export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireDesignAsPieceId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🔵 Returns the blueprint id — either type or design reference. */\n-export type BlueprintId = { kind: \"type\"; guid: string } | { kind: \"design\"; guid: string };\n-\n-export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece): BlueprintId | undefined =\u003e {\n-    const designRefId = p.wireDesignAsPieceId();\n-    if (designRefId) return { kind: \"design\", guid: designRefId.guid };\n-    const typeId = p.wireTypeId();\n-    if (typeId) return { kind: \"type\", guid: typeId.guid };\n-    return undefined;\n-  }, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the 3D placement plane of the piece. */\n-export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.plane, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the 2D center coordinate of the piece. */\n-export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.center, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */\n-export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatPlane(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */\n-export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatCenter(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 👆 Returns the parent piece id in the design tree. */\n-export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: parent.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection id linking this piece to its parent. */\n-export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: conn.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 👶 Returns the ids of all child pieces in the design tree. */\n-export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);\n-      return children.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection ids for all child connections of this piece. */\n-export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const design = kit.requireDesign(ids.designGuid);\n-      const metadata = kit.piecesMetadataFor(ids.designGuid);\n-      if (!metadata.ok) return [];\n-      const connections = design._connections ?? [];\n-      const childConns = connections.filter((c) =\u003e {\n-        try {\n-          const connectedPieceGuid = c.connected.wirePieceId().guid;\n-          const connectingPieceGuid = c.connecting.wirePieceId().guid;\n-          if (connectedPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectingPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          if (connectingPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectedPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          return false;\n-        } catch {\n-          return false;\n-        }\n-      });\n-      return childConns.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */\n-export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return types.map((t) =\u003e ({ guid: t.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-// #endregion ⚛️PieceHooks\n-\n-// #endregion ⚛️React\n \n // #region 🔬Runtime Test Flags\n@@\n-  // #endregion 🔄Transaction Undo/Redo Tests\n-\n-  // #region ⚛️React Hooks Tests\n-  describe(\"React Hooks\", () =\u003e {\n-    let testKit: KitImpl;\n-    let testStore: InMemoryKitStore;\n-    let testDesignGuid: string;\n-    let testPieceGuid: string;\n-\n-    beforeAll(() =\u003e {\n-      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);\n-      testStore = new InMemoryKitStore(testKit);\n-      const design = testKit.designs![0];\n-      testDesignGuid = design.guid;\n-      const piece = design.pieces![0];\n-      testPieceGuid = piece.guid;\n-    });\n-\n-    const renderHookResult = \u003cT,\u003e(hookFn: () =\u003e T): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(TestComponent, null),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    const renderPieceHookResult = \u003cT,\u003e(hookFn: () =\u003e T, pieceGuid: string, designGuid: string): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(\n-          PieceProvider,\n-          { guid: pieceGuid, designGuid } as any,\n-          createElement(TestComponent, null),\n-        ),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    it(\"useKit returns a KitImpl instance\", () =\u003e {\n-      const kit = renderHookResult(() =\u003e useKit());\n-      expect(kit).toBeDefined();\n-      expect(kit.guid).toBe(testKit.guid);\n-    });\n-\n-    it(\"useKitStore returns the store\", () =\u003e {\n-      const store = renderHookResult(() =\u003e useKitStore());\n-      expect(store).toBe(testStore);\n-    });\n-\n-    it(\"usePieceName returns piece name via PieceProvider\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderPieceHookResult(\n-        () =\u003e usePieceName(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceName returns piece name via explicit args\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderHookResult(() =\u003e usePieceName(testPieceGuid, testDesignGuid));\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceDescription returns piece description\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const desc = renderPieceHookResult(\n-        () =\u003e usePieceDescription(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(desc).toBe(piece.description);\n-    });\n-\n-    it(\"usePieceTypeId returns the type reference guid\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const typeId = renderPieceHookResult(\n-        () =\u003e usePieceTypeId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const expectedTypeId = piece.wireTypeId();\n-      if (expectedTypeId) {\n-        expect(typeId).toBeDefined();\n-        expect(typeId!.guid).toBe(expectedTypeId.guid);\n-      } else {\n-        expect(typeId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceDesignId returns the design reference\", () =\u003e {\n-      const designId = renderPieceHookResult(\n-        () =\u003e usePieceDesignId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const expectedDesignId = piece.wireDesignAsPieceId();\n-      if (expectedDesignId) {\n-        expect(designId).toBeDefined();\n-        expect(designId!.guid).toBe(expectedDesignId.guid);\n-      } else {\n-        expect(designId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceBlueprintId returns either type or design\", () =\u003e {\n-      const blueprint = renderPieceHookResult(\n-        () =\u003e usePieceBlueprintId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const designRef = piece.wireDesignAsPieceId();\n-      if (designRef) {\n-        expect(blueprint).toEqual({ kind: \"design\", guid: designRef.guid });\n-      } else {\n-        const typeRef = piece.wireTypeId();\n-        if (typeRef) {\n-          expect(blueprint).toEqual({ kind: \"type\", guid: typeRef.guid });\n-        } else {\n-          expect(blueprint).toBeUndefined();\n-        }\n-      }\n-    });\n-\n-    it(\"usePiecePlane returns the placement plane\", () =\u003e {\n-      const plane = renderPieceHookResult(\n-        () =\u003e usePiecePlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(plane).toEqual(piece.plane);\n-    });\n-\n-    it(\"usePieceCenter returns the center coordinate\", () =\u003e {\n-      const center = renderPieceHookResult(\n-        () =\u003e usePieceCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(center).toEqual(piece.center);\n-    });\n-\n-    it(\"usePieceFlatPlane returns flattened plane\", () =\u003e {\n-      const flatPlane = renderPieceHookResult(\n-        () =\u003e usePieceFlatPlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatPlane).toEqual(piece.flatPlane());\n-    });\n-\n-    it(\"usePieceFlatCenter returns flattened center\", () =\u003e {\n-      const flatCenter = renderPieceHookResult(\n-        () =\u003e usePieceFlatCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatCenter).toEqual(piece.flatCenter());\n-    });\n-\n-    it(\"useParentPieceId returns parent piece id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      let parentGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          parentGuid = meta.parentPieceId;\n-          break;\n-        }\n-      }\n-      if (childGuid \u0026\u0026 parentGuid) {\n-        const parentId = renderPieceHookResult(\n-          () =\u003e useParentPieceId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(parentId).toBeDefined();\n-        expect(parentId!.guid).toBe(parentGuid);\n-      }\n-    });\n-\n-    it(\"useParentConnectionId returns parent connection id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          break;\n-        }\n-      }\n-      if (childGuid) {\n-        const connId = renderPieceHookResult(\n-          () =\u003e useParentConnectionId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(connId).toBeDefined();\n-        expect(typeof connId!.guid).toBe(\"string\");\n-      }\n-    });\n-\n-    it(\"useChildPiecesIds returns child piece ids\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const children = renderPieceHookResult(\n-        () =\u003e useChildPiecesIds(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(children)).toBe(true);\n-    });\n-\n-    it(\"useAlternativeTypeIds returns replaceable types\", () =\u003e {\n-      const altTypes = renderPieceHookResult(\n-        () =\u003e useAlternativeTypeIds(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(altTypes)).toBe(true);\n-    });\n-\n-    it(\"usePieceName returns undefined for nonexistent piece\", () =\u003e {\n-      const name = renderHookResult(() =\u003e usePieceName(\"nonexistent-guid\", testDesignGuid));\n-      expect(name).toBeUndefined();\n-    });\n-\n-    it(\"useParentPieceId returns undefined for root piece\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const parentId = renderPieceHookResult(\n-        () =\u003e useParentPieceId(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(parentId).toBeUndefined();\n-    });\n-\n-    it(\"throws when hooks are used outside KitProvider\", () =\u003e {\n-      expect(() =\u003e {\n-        const TestComponent = () =\u003e {\n-          useKit();\n-          return createElement(\"span\", null, \"fail\");\n-        };\n-        renderToStaticMarkup(createElement(TestComponent, null));\n-      }).toThrow(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-    });\n-\n-    it(\"throws when piece hooks are used without PieceProvider or args\", () =\u003e {\n-      expect(() =\u003e {\n-        renderHookResult(() =\u003e usePieceName());\n-      }).toThrow();\n-    });\n-  });\n-  // #endregion ⚛️React Hooks Tests\n+  // #endregion 🔄Transaction Undo/Redo Tests\n } // end vitest guard\n*** End Patch"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_BEPNasFycOl5T6pA8cN11IdX__vscode-1776699985028",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.ended",
+        "second": "2026-04-20T21:06:27Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:23.338Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "apply_patch",
+          "tool_input": {
+            "explanation": "Register the new semio/react workspace package, add its package configs, and remove the embedded React hook layer from semio/js now that it lives in the standalone bundle",
+            "input": "*** Begin Patch\n*** Update File: c:\\git\\semio\\package.json\n@@\n     \"semio/engine\",\n     \"semio/js\",\n+    \"semio/react\",\n     \"semio/sites/docs\",\n     \"semio/sites/play\",\n*** Add File: c:\\git\\semio\\semio\\react\\package.json\n+{\n+  \"$schema\": \"../../node_modules/nx/schemas/project-schema.json\",\n+  \"projectType\": \"library\",\n+  \"name\": \"@semio/react\",\n+  \"version\": \"0.1.0\",\n+  \"type\": \"module\",\n+  \"description\": \"semio · react\",\n+  \"exports\": {\n+    \".\": \"./index.tsx\"\n+  },\n+  \"scripts\": {\n+    \"build\": \"tsc --noEmit\",\n+    \"test\": \"cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\"\n+  },\n+  \"dependencies\": {\n+    \"@semio/js\": \"*\",\n+    \"@semio/sketchpad\": \"*\",\n+    \"react\": \"^19.2.3\",\n+    \"react-dom\": \"^19.2.3\"\n+  },\n+  \"devDependencies\": {\n+    \"@semio/assets\": \"^1.0.0\",\n+    \"@types/node\": \"^25.0.8\",\n+    \"@types/react\": \"^19.2.8\",\n+    \"@types/react-dom\": \"^19.2.3\",\n+    \"cross-env\": \"^10.1.0\",\n+    \"typescript\": \"^5.9.3\",\n+    \"vitest\": \"^4.0.17\"\n+  },\n+  \"author\": {\n+    \"name\": \"Ueli Saluz\",\n+    \"email\": \"ueli@semio-tech.com\",\n+    \"url\": \"https://github.com/usalu\"\n+  },\n+  \"license\": \"LGPL-3.0-or-later\",\n+  \"repository\": {\n+    \"type\": \"git\",\n+    \"url\": \"https://github.com/usalu/semio.git\",\n+    \"directory\": \"semio/react\"\n+  },\n+  \"bundleKind\": \"library\"\n+}\n*** Add File: c:\\git\\semio\\semio\\react\\tsconfig.json\n+{\n+  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n+  \"compilerOptions\": {\n+    \"target\": \"ESNext\",\n+    \"module\": \"ESNext\",\n+    \"lib\": [\n+      \"DOM\",\n+      \"ESNext\"\n+    ],\n+    \"moduleResolution\": \"bundler\",\n+    \"jsx\": \"react-jsx\",\n+    \"strict\": true,\n+    \"esModuleInterop\": true,\n+    \"isolatedModules\": true,\n+    \"resolveJsonModule\": true,\n+    \"skipLibCheck\": true,\n+    \"allowJs\": false,\n+    \"incremental\": false,\n+    \"noEmit\": true,\n+    \"types\": [\n+      \"react\",\n+      \"react-dom\",\n+      \"vitest/importMeta\"\n+    ],\n+    \"baseUrl\": \".\",\n+    \"paths\": {\n+      \"@semio/react\": [\n+        \"./index.tsx\"\n+      ],\n+      \"@semio/react/*\": [\n+        \"./*\"\n+      ],\n+      \"@semio/js\": [\n+        \"../js\"\n+      ],\n+      \"@semio/js/*\": [\n+        \"../js/*\"\n+      ],\n+      \"@semio/sketchpad\": [\n+        \"../sketchpad\"\n+      ],\n+      \"@semio/sketchpad/*\": [\n+        \"../sketchpad/*\"\n+      ],\n+      \"@semio/assets\": [\n+        \"../assets\"\n+      ],\n+      \"@semio/assets/*\": [\n+        \"../assets/*\"\n+      ]\n+    }\n+  },\n+  \"exclude\": [\n+    \"node_modules\"\n+  ]\n+}\n*** Update File: c:\\git\\semio\\semio\\js\\package.json\n@@\n   \"dependencies\": {\n     \"@gltf-transform/core\": \"^4.3.0\",\n     \"clsx\": \"^2.1.1\",\n     \"jszip\": \"^3.10.1\",\n     \"sql.js\": \"^1.13.0\",\n     \"uuid\": \"^13.0.0\",\n     \"zod\": \"^4.3.5\"\n   },\n-  \"peerDependencies\": {\n-    \"react\": \"\u003e=18.0.0\"\n-  },\n-  \"peerDependenciesMeta\": {\n-    \"react\": {\n-      \"optional\": true\n-    }\n-  },\n   \"devDependencies\": {\n     \"cross-env\": \"^10.1.0\",\n     \"@semio/assets\": \"^1.0.0\",\n*** Update File: c:\\git\\semio\\semio\\js\\index.ts\n@@\n // #endregion 📂File Tree Utilities\n-\n-// #region ⚛️React\n-// React hooks for reactive kit data access backed by a KitStore.\n-// All hooks are read-only selectors; mutations go through KitStore.apply/transact.\n-// \u003cKitProvider store?\u003e wraps a KitStore (local/dev/remote).\n-// \u003cPieceProvider guid designGuid\u003e scopes piece hooks to a specific piece.\n-\n-// #region ⚛️LazyReact\n-// Lazily imported React — available only when react is installed.\n-let _React: typeof import(\"react\") | undefined;\n-try {\n-  _React = await import(\"react\");\n-} catch {\n-  // React not available — hooks will throw at runtime if used without React.\n-}\n-\n-function requireReact(): typeof import(\"react\") {\n-  if (!_React) throw new Error(\"React is required for semio React hooks. Install react as a dependency.\");\n-  return _React;\n-}\n-// #endregion ⚛️LazyReact\n-\n-// #region ⚛️KitContext\n-/** 🏗️ Internal context value carrying the kit store and current snapshot. */\n-type KitContextValue = {\n-  store: KitStore;\n-  kit: KitImpl;\n-};\n-\n-let _KitContext: import(\"react\").Context\u003cKitContextValue | null\u003e | undefined;\n-function getKitContext(): import(\"react\").Context\u003cKitContextValue | null\u003e {\n-  if (!_KitContext) {\n-    const React = requireReact();\n-    _KitContext = React.createContext\u003cKitContextValue | null\u003e(null);\n-  }\n-  return _KitContext;\n-}\n-\n-function useKitContext(): KitContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getKitContext());\n-  if (!ctx) throw new Error(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-  return ctx;\n-}\n-\n-/** 🏪 Returns the raw KitStore from the nearest KitProvider. */\n-export function useKitStore(): KitStore {\n-  return useKitContext().store;\n-}\n-\n-/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */\n-export function useKit(): KitImpl {\n-  return useKitContext().kit;\n-}\n-// #endregion ⚛️KitContext\n-\n-// #region ⚛️KitProvider\n-/** 🏗️ Provides a reactive KitStore to the component tree.\n- *\n- * Accepts a `store` prop (pre-built KitStore).\n- * Children re-render only when the store emits a change.\n- */\n-export type KitProviderProps = {\n-  /** Pre-built store — use this when the caller manages the store lifecycle. */\n-  store?: KitStore;\n-  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */\n-  initialKit?: KitLike;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const KitProvider = (props: KitProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { store: externalStore, initialKit, children } = props;\n-\n-  const internalStoreRef = React.useRef\u003cKitStore | null\u003e(null);\n-\n-  if (!externalStore \u0026\u0026 !internalStoreRef.current) {\n-    const kit = initialKit\n-      ? asKitInstance(initialKit)\n-      : asKitInstance({\n-          guid: guid(),\n-          name: \"Untitled\",\n-          createdAt: new Date().toISOString(),\n-          updatedAt: new Date().toISOString(),\n-        } as KitData);\n-    internalStoreRef.current = new InMemoryKitStore(kit);\n-  }\n-\n-  const store = externalStore ?? internalStoreRef.current!;\n-\n-  const subscribe = React.useCallback((onStoreChange: () =\u003e void) =\u003e store.subscribe(onStoreChange), [store]);\n-  const getSnapshot = React.useCallback(() =\u003e store.getSnapshot(), [store]);\n-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);\n-\n-  const value = React.useMemo\u003cKitContextValue\u003e(() =\u003e ({ store, kit: snapshot.kit }), [store, snapshot]);\n-\n-  return React.createElement(getKitContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️KitProvider\n-\n-// #region ⚛️PieceContext\n-/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */\n-type PieceContextValue = {\n-  pieceGuid: string;\n-  designGuid: string;\n-};\n-\n-let _PieceContext: import(\"react\").Context\u003cPieceContextValue | null\u003e | undefined;\n-function getPieceContext(): import(\"react\").Context\u003cPieceContextValue | null\u003e {\n-  if (!_PieceContext) {\n-    const React = requireReact();\n-    _PieceContext = React.createContext\u003cPieceContextValue | null\u003e(null);\n-  }\n-  return _PieceContext;\n-}\n-\n-function usePieceContext(): PieceContextValue {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  if (!ctx) throw new Error(\"usePiece*() hooks must be used inside \u003cPieceProvider\u003e or pass guid+designGuid arguments.\");\n-  return ctx;\n-}\n-\n-/** 🧩 Scopes piece hooks to a specific piece within a design.\n- *\n- * Pieces live inside designs, so both guids are required for resolution.\n- */\n-export type PieceProviderProps = {\n-  guid: string;\n-  designGuid: string;\n-  children: import(\"react\").ReactNode;\n-};\n-\n-export const PieceProvider = (props: PieceProviderProps): import(\"react\").ReactElement | null =\u003e {\n-  const React = requireReact();\n-  const { guid: pieceGuid, designGuid, children } = props;\n-\n-  const value = React.useMemo\u003cPieceContextValue\u003e(() =\u003e ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);\n-\n-  return React.createElement(getPieceContext().Provider, { value }, children);\n-};\n-// #endregion ⚛️PieceContext\n-\n-// #region ⚛️PieceHookHelpers\n-/** 🔍 Resolves guid + designGuid from either context or explicit args. */\n-function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {\n-  const React = requireReact();\n-  const ctx = React.useContext(getPieceContext());\n-  const resolved = pieceGuid \u0026\u0026 designGuid ? { pieceGuid, designGuid } : ctx;\n-  if (!resolved) throw new Error(\"Piece guid and designGuid required — use \u003cPieceProvider\u003e or pass both arguments.\");\n-  return resolved;\n-}\n-\n-/** 🔧 Internal: find a piece in a design within the kit. */\n-function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {\n-  const design = kit.findDesign(designGuid);\n-  if (!design) return undefined;\n-  return design.findPiece(pieceGuid);\n-}\n-\n-/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */\n-function usePieceSelector\u003cT\u003e(selector: (piece: Piece, kit: KitImpl, designGuid: string) =\u003e T, pieceGuid?: string, designGuid?: string): T | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);\n-    if (!piece) return undefined;\n-    return selector(piece, kit, ids.designGuid);\n-  }, [kit, ids.pieceGuid, ids.designGuid, selector]);\n-}\n-// #endregion ⚛️PieceHookHelpers\n-\n-// #region ⚛️PieceHooks\n-\n-/** 📛 Returns the name of the piece (or undefined if not found). */\n-export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.name, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📝 Returns the description of the piece. */\n-export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.description, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🧱 Returns the type id (guid) of the piece. */\n-export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireTypeId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📐 Returns the design id (guid) when this piece references a sub-design. */\n-export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.wireDesignAsPieceId(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 🔵 Returns the blueprint id — either type or design reference. */\n-export type BlueprintId = { kind: \"type\"; guid: string } | { kind: \"design\"; guid: string };\n-\n-export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece): BlueprintId | undefined =\u003e {\n-    const designRefId = p.wireDesignAsPieceId();\n-    if (designRefId) return { kind: \"design\", guid: designRefId.guid };\n-    const typeId = p.wireTypeId();\n-    if (typeId) return { kind: \"type\", guid: typeId.guid };\n-    return undefined;\n-  }, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the 3D placement plane of the piece. */\n-export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.plane, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the 2D center coordinate of the piece. */\n-export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.center, []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */\n-export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatPlane(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */\n-export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {\n-  const React = requireReact();\n-  const sel = React.useCallback((p: Piece) =\u003e p.flatCenter(), []);\n-  return usePieceSelector(sel, pieceGuid, designGuid);\n-}\n-\n-/** 👆 Returns the parent piece id in the design tree. */\n-export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: parent.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection id linking this piece to its parent. */\n-export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return { guid: conn.guid };\n-    } catch {\n-      return undefined;\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 👶 Returns the ids of all child pieces in the design tree. */\n-export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);\n-      return children.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔗 Returns the connection ids for all child connections of this piece. */\n-export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const design = kit.requireDesign(ids.designGuid);\n-      const metadata = kit.piecesMetadataFor(ids.designGuid);\n-      if (!metadata.ok) return [];\n-      const connections = design._connections ?? [];\n-      const childConns = connections.filter((c) =\u003e {\n-        try {\n-          const connectedPieceGuid = c.connected.wirePieceId().guid;\n-          const connectingPieceGuid = c.connecting.wirePieceId().guid;\n-          if (connectedPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectingPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          if (connectingPieceGuid === ids.pieceGuid) {\n-            const childMeta = metadata.diff.get(connectedPieceGuid);\n-            return childMeta?.parentPieceId === ids.pieceGuid;\n-          }\n-          return false;\n-        } catch {\n-          return false;\n-        }\n-      });\n-      return childConns.map((c) =\u003e ({ guid: c.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */\n-export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {\n-  const React = requireReact();\n-  const { kit } = useKitContext();\n-  const ids = useResolvedPieceIds(pieceGuid, designGuid);\n-  return React.useMemo(() =\u003e {\n-    try {\n-      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);\n-      return types.map((t) =\u003e ({ guid: t.guid }));\n-    } catch {\n-      return [];\n-    }\n-  }, [kit, ids.pieceGuid, ids.designGuid]);\n-}\n-\n-// #endregion ⚛️PieceHooks\n-\n-// #endregion ⚛️React\n \n // #region 🔬Runtime Test Flags\n@@\n-  // #endregion 🔄Transaction Undo/Redo Tests\n-\n-  // #region ⚛️React Hooks Tests\n-  describe(\"React Hooks\", () =\u003e {\n-    let testKit: KitImpl;\n-    let testStore: InMemoryKitStore;\n-    let testDesignGuid: string;\n-    let testPieceGuid: string;\n-\n-    beforeAll(() =\u003e {\n-      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);\n-      testStore = new InMemoryKitStore(testKit);\n-      const design = testKit.designs![0];\n-      testDesignGuid = design.guid;\n-      const piece = design.pieces![0];\n-      testPieceGuid = piece.guid;\n-    });\n-\n-    const renderHookResult = \u003cT,\u003e(hookFn: () =\u003e T): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(TestComponent, null),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    const renderPieceHookResult = \u003cT,\u003e(hookFn: () =\u003e T, pieceGuid: string, designGuid: string): T =\u003e {\n-      let result: T | undefined;\n-      const TestComponent = () =\u003e {\n-        result = hookFn();\n-        return createElement(\"span\", null, JSON.stringify(result));\n-      };\n-      const tree = createElement(\n-        KitProvider,\n-        { store: testStore } as any,\n-        createElement(\n-          PieceProvider,\n-          { guid: pieceGuid, designGuid } as any,\n-          createElement(TestComponent, null),\n-        ),\n-      );\n-      renderToStaticMarkup(tree);\n-      return result as T;\n-    };\n-\n-    it(\"useKit returns a KitImpl instance\", () =\u003e {\n-      const kit = renderHookResult(() =\u003e useKit());\n-      expect(kit).toBeDefined();\n-      expect(kit.guid).toBe(testKit.guid);\n-    });\n-\n-    it(\"useKitStore returns the store\", () =\u003e {\n-      const store = renderHookResult(() =\u003e useKitStore());\n-      expect(store).toBe(testStore);\n-    });\n-\n-    it(\"usePieceName returns piece name via PieceProvider\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderPieceHookResult(\n-        () =\u003e usePieceName(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceName returns piece name via explicit args\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const name = renderHookResult(() =\u003e usePieceName(testPieceGuid, testDesignGuid));\n-      expect(name).toBe(piece.name);\n-    });\n-\n-    it(\"usePieceDescription returns piece description\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const desc = renderPieceHookResult(\n-        () =\u003e usePieceDescription(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(desc).toBe(piece.description);\n-    });\n-\n-    it(\"usePieceTypeId returns the type reference guid\", () =\u003e {\n-      const piece = testKit.designs![0].pieces![0];\n-      const typeId = renderPieceHookResult(\n-        () =\u003e usePieceTypeId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const expectedTypeId = piece.wireTypeId();\n-      if (expectedTypeId) {\n-        expect(typeId).toBeDefined();\n-        expect(typeId!.guid).toBe(expectedTypeId.guid);\n-      } else {\n-        expect(typeId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceDesignId returns the design reference\", () =\u003e {\n-      const designId = renderPieceHookResult(\n-        () =\u003e usePieceDesignId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const expectedDesignId = piece.wireDesignAsPieceId();\n-      if (expectedDesignId) {\n-        expect(designId).toBeDefined();\n-        expect(designId!.guid).toBe(expectedDesignId.guid);\n-      } else {\n-        expect(designId).toBeUndefined();\n-      }\n-    });\n-\n-    it(\"usePieceBlueprintId returns either type or design\", () =\u003e {\n-      const blueprint = renderPieceHookResult(\n-        () =\u003e usePieceBlueprintId(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      const designRef = piece.wireDesignAsPieceId();\n-      if (designRef) {\n-        expect(blueprint).toEqual({ kind: \"design\", guid: designRef.guid });\n-      } else {\n-        const typeRef = piece.wireTypeId();\n-        if (typeRef) {\n-          expect(blueprint).toEqual({ kind: \"type\", guid: typeRef.guid });\n-        } else {\n-          expect(blueprint).toBeUndefined();\n-        }\n-      }\n-    });\n-\n-    it(\"usePiecePlane returns the placement plane\", () =\u003e {\n-      const plane = renderPieceHookResult(\n-        () =\u003e usePiecePlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(plane).toEqual(piece.plane);\n-    });\n-\n-    it(\"usePieceCenter returns the center coordinate\", () =\u003e {\n-      const center = renderPieceHookResult(\n-        () =\u003e usePieceCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(center).toEqual(piece.center);\n-    });\n-\n-    it(\"usePieceFlatPlane returns flattened plane\", () =\u003e {\n-      const flatPlane = renderPieceHookResult(\n-        () =\u003e usePieceFlatPlane(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatPlane).toEqual(piece.flatPlane());\n-    });\n-\n-    it(\"usePieceFlatCenter returns flattened center\", () =\u003e {\n-      const flatCenter = renderPieceHookResult(\n-        () =\u003e usePieceFlatCenter(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      const piece = testKit.designs![0].pieces![0];\n-      expect(flatCenter).toEqual(piece.flatCenter());\n-    });\n-\n-    it(\"useParentPieceId returns parent piece id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      let parentGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          parentGuid = meta.parentPieceId;\n-          break;\n-        }\n-      }\n-      if (childGuid \u0026\u0026 parentGuid) {\n-        const parentId = renderPieceHookResult(\n-          () =\u003e useParentPieceId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(parentId).toBeDefined();\n-        expect(parentId!.guid).toBe(parentGuid);\n-      }\n-    });\n-\n-    it(\"useParentConnectionId returns parent connection id\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      let childGuid: string | undefined;\n-      for (const [pg, meta] of metadata.diff!) {\n-        if (meta.parentPieceId) {\n-          childGuid = pg;\n-          break;\n-        }\n-      }\n-      if (childGuid) {\n-        const connId = renderPieceHookResult(\n-          () =\u003e useParentConnectionId(),\n-          childGuid,\n-          testDesignGuid,\n-        );\n-        expect(connId).toBeDefined();\n-        expect(typeof connId!.guid).toBe(\"string\");\n-      }\n-    });\n-\n-    it(\"useChildPiecesIds returns child piece ids\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const children = renderPieceHookResult(\n-        () =\u003e useChildPiecesIds(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(children)).toBe(true);\n-    });\n-\n-    it(\"useAlternativeTypeIds returns replaceable types\", () =\u003e {\n-      const altTypes = renderPieceHookResult(\n-        () =\u003e useAlternativeTypeIds(),\n-        testPieceGuid,\n-        testDesignGuid,\n-      );\n-      expect(Array.isArray(altTypes)).toBe(true);\n-    });\n-\n-    it(\"usePieceName returns undefined for nonexistent piece\", () =\u003e {\n-      const name = renderHookResult(() =\u003e usePieceName(\"nonexistent-guid\", testDesignGuid));\n-      expect(name).toBeUndefined();\n-    });\n-\n-    it(\"useParentPieceId returns undefined for root piece\", () =\u003e {\n-      const metadata = testKit.piecesMetadataFor(testDesignGuid);\n-      expect(metadata.ok).toBe(true);\n-      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;\n-      const parentId = renderPieceHookResult(\n-        () =\u003e useParentPieceId(),\n-        rootGuid,\n-        testDesignGuid,\n-      );\n-      expect(parentId).toBeUndefined();\n-    });\n-\n-    it(\"throws when hooks are used outside KitProvider\", () =\u003e {\n-      expect(() =\u003e {\n-        const TestComponent = () =\u003e {\n-          useKit();\n-          return createElement(\"span\", null, \"fail\");\n-        };\n-        renderToStaticMarkup(createElement(TestComponent, null));\n-      }).toThrow(\"useKit*() hooks must be used inside \u003cKitProvider\u003e.\");\n-    });\n-\n-    it(\"throws when piece hooks are used without PieceProvider or args\", () =\u003e {\n-      expect(() =\u003e {\n-        renderHookResult(() =\u003e usePieceName());\n-      }).toThrow();\n-    });\n-  });\n-  // #endregion ⚛️React Hooks Tests\n+  // #endregion 🔄Transaction Undo/Redo Tests\n } // end vitest guard\n*** End Patch"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_BEPNasFycOl5T6pA8cN11IdX__vscode-1776699985028",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:37Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:36.187Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\js\\index.ts",
+              "c:\\git\\semio\\semio\\react\\index.tsx",
+              "c:\\git\\semio\\semio\\react\\package.json",
+              "c:\\git\\semio\\semio\\react\\tsconfig.json"
+            ]
+          },
+          "tool_use_id": "call_fP3d58oeoXXzdoFbn34hpZtk__vscode-1776699985029",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:37Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:36.203Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 25330,
+            "endLine": 25345
+          },
+          "tool_use_id": "call_bKaVIDtOoObFNbtAWQhLoFpN__vscode-1776699985031",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:39Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:36.187Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\js\\index.ts",
+              "c:\\git\\semio\\semio\\react\\index.tsx",
+              "c:\\git\\semio\\semio\\react\\package.json",
+              "c:\\git\\semio\\semio\\react\\tsconfig.json"
+            ]
+          },
+          "tool_use_id": "call_fP3d58oeoXXzdoFbn34hpZtk__vscode-1776699985029",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:39Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:36.199Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20090,
+            "endLine": 20120
+          },
+          "tool_use_id": "call_48LeDBdrPjZzYt6MYeTfsOx6__vscode-1776699985030",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:41Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:40.130Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\js\\index.ts",
+              "c:\\git\\semio\\semio\\react\\index.tsx",
+              "c:\\git\\semio\\semio\\react\\package.json",
+              "c:\\git\\semio\\semio\\react\\tsconfig.json"
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "call_fP3d58oeoXXzdoFbn34hpZtk__vscode-1776699985029",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:42Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:41.555Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20090,
+            "endLine": 20120
+          },
+          "tool_response": "",
+          "tool_use_id": "call_48LeDBdrPjZzYt6MYeTfsOx6__vscode-1776699985030",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:42Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:41.637Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 25330,
+            "endLine": 25345
+          },
+          "tool_response": "",
+          "tool_use_id": "call_bKaVIDtOoObFNbtAWQhLoFpN__vscode-1776699985031",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:43Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:40.130Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "get_errors",
+          "tool_input": {
+            "filePaths": [
+              "c:\\git\\semio\\semio\\js\\index.ts",
+              "c:\\git\\semio\\semio\\react\\index.tsx",
+              "c:\\git\\semio\\semio\\react\\package.json",
+              "c:\\git\\semio\\semio\\react\\tsconfig.json"
+            ]
+          },
+          "tool_response": "",
+          "tool_use_id": "call_fP3d58oeoXXzdoFbn34hpZtk__vscode-1776699985029",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:44Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:41.555Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20090,
+            "endLine": 20120
+          },
+          "tool_response": "",
+          "tool_use_id": "call_48LeDBdrPjZzYt6MYeTfsOx6__vscode-1776699985030",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:44Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:41.637Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 25330,
+            "endLine": 25345
+          },
+          "tool_response": "",
+          "tool_use_id": "call_bKaVIDtOoObFNbtAWQhLoFpN__vscode-1776699985031",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:49Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:48.669Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20100,
+            "endLine": 20160
+          },
+          "tool_use_id": "call_twumnUmF9bXAf2Atl4X1dnFl__vscode-1776699985032",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:06:51Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:48.669Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20100,
+            "endLine": 20160
+          },
+          "tool_use_id": "call_twumnUmF9bXAf2Atl4X1dnFl__vscode-1776699985032",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:54Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:53.796Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 24890,
+            "endLine": 24935
+          },
+          "tool_response": "",
+          "tool_use_id": "call_XelHkyjwKdnnXFQzgBpOOJ8X__vscode-1776699985034",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:06:56Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:06:53.858Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "read_file",
+          "tool_input": {
+            "filePath": "c:\\git\\semio\\semio\\js\\index.ts",
+            "startLine": 20100,
+            "endLine": 20160
+          },
+          "tool_response": "",
+          "tool_use_id": "call_twumnUmF9bXAf2Atl4X1dnFl__vscode-1776699985032",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:07:00Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:07:00.322Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "React Hooks"
+          },
+          "tool_use_id": "call_otAGBiTKRnuti9V49UjvKlfn__vscode-1776699985035",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:07:02Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:07:00.322Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "React Hooks"
+          },
+          "tool_use_id": "call_otAGBiTKRnuti9V49UjvKlfn__vscode-1776699985035",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:07:03Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:07:03.111Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "React Hooks"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_otAGBiTKRnuti9V49UjvKlfn__vscode-1776699985035",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:07:06Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:07:03.111Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "React Hooks"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_otAGBiTKRnuti9V49UjvKlfn__vscode-1776699985035",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:10:41Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:37.865Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "if (shouldRunEmbeddedJsTests)"
+          },
+          "tool_use_id": "call_JJOON307GwMeQ5LsD36G2Ucw__vscode-1776699985036",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:10:45Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:37.865Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "if (shouldRunEmbeddedJsTests)"
+          },
+          "tool_use_id": "call_JJOON307GwMeQ5LsD36G2Ucw__vscode-1776699985036",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:10:47Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:46.923Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "if (shouldRunEmbeddedJsTests)"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_JJOON307GwMeQ5LsD36G2Ucw__vscode-1776699985036",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:10:49Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:46.923Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "if (shouldRunEmbeddedJsTests)"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_JJOON307GwMeQ5LsD36G2Ucw__vscode-1776699985036",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:10:54Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:53.696Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "const { beforeAll, describe, expect, it, vi }"
+          },
+          "tool_use_id": "call_AHstKRnQwZIfWvQ9pEhP6MV0__vscode-1776699985037",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.starting",
+        "second": "2026-04-20T21:10:55Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:53.696Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "const { beforeAll, describe, expect, it, vi }"
+          },
+          "tool_use_id": "call_AHstKRnQwZIfWvQ9pEhP6MV0__vscode-1776699985037",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "5cfe22bc9000e6057b0d604c1af6ef515a6e4d8c",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.file.read.ended",
+        "second": "2026-04-20T21:10:57Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-20T21:10:56.972Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "grep_search",
+          "tool_input": {
+            "maxResults": 20,
+            "includePattern": "**/semio/js/index.ts",
+            "isRegexp": false,
+            "query": "const { beforeAll, describe, expect, it, vi }"
+          },
+          "tool_response": "",
+          "tool_use_id": "call_AHstKRnQwZIfWvQ9pEhP6MV0__vscode-1776699985037",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
     }
   ]
 }

@@ -483,7 +483,7 @@ input FamilyPatchInput {
   attributes: [AttributeInput!]
 }
 
-type Model {
+type Representation {
   hash: Hash!
   id: ID!
   type: Type!
@@ -494,7 +494,7 @@ type Model {
   attributes: [Attribute!]!
 }
 
-input ModelInput {
+input RepresentationInput {
   id: ID!
   name: String
   tagIds: [ID!]
@@ -544,7 +544,7 @@ type Type {
   children: [Type!]!
   isAbstract: Boolean
   folder: Folder
-  models: [Model!]!
+  representations: [Representation!]!
   connectors: [Connector!]!
   props: [Prop!]!
   stock: Int
@@ -568,7 +568,7 @@ input TypeInput {
   parentId: ID
   isAbstract: Boolean
   folderId: ID
-  models: [ModelInput!]
+  representations: [RepresentationInput!]
   connectors: [ConnectorInput!]
   props: [PropInput!]
   stock: Int
@@ -590,7 +590,7 @@ input TypePatchInput {
   parentId: ID
   isAbstract: Boolean
   folderId: ID
-  models: [ModelInput!]
+  representations: [RepresentationInput!]
   connectors: [ConnectorInput!]
   props: [PropInput!]
   stock: Int
@@ -1038,7 +1038,7 @@ type KitSessionSelection {
   pieces: [Piece!]!
   connections: [Connection!]!
   connectors: [SessionConnectorSelection!]!
-  models: [Model!]!
+  representations: [Representation!]!
   designs: [Design!]!
   types: [Type!]!
   replacementTypeCandidates: [Type!]!
@@ -1051,7 +1051,7 @@ input SessionSelectionInput {
   pieceIds: [ID!]
   connectionIds: [ID!]
   connectorSelections: [SessionConnectorSelectionInput!]
-  modelIds: [ID!]
+  representationIds: [ID!]
   designIds: [ID!]
   typeIds: [ID!]
 }

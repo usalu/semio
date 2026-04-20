@@ -5047,8 +5047,8 @@ func titleCaseToken(s string) string {
 	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
 }
 
-// 🔤ToolRename rewrites every UPPER/Title/lower variant of oldToken to newToken across non-gitignored file contents and filenames.
-func ToolRename(oldToken, newToken string) ToolResult {
+// 🔤ToolRename rewrites every UPPER/Title/lower variant of oldToken to newToken across non-gitignored file contents and filenames. When scope is non-empty the walk is restricted to rootDir/scope.
+func ToolRename(oldToken, newToken, scope string) ToolResult {
 	output := NewOutput()
 	if oldToken == "" || newToken == "" {
 		return toolErrorMsg("Old and new token must be non-empty")
@@ -5056,9 +5056,18 @@ func ToolRename(oldToken, newToken string) ToolResult {
 	if strings.EqualFold(oldToken, newToken) {
 		return toolErrorMsg("Old and new token are identical")
 	}
+	walkRoot := rootDir
+	scope = strings.Trim(filepath.ToSlash(scope), "/")
+	if scope != "" {
+		walkRoot = filepath.Join(rootDir, filepath.FromSlash(scope))
+		info, statErr := os.Stat(walkRoot)
+		if statErr != nil || !info.IsDir() {
+			return toolErrorMsg(fmt.Sprintf("Scope is not a directory: %s", scope))
+		}
+	}
 	var files []string
 	var dirs []string
-	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(walkRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -5177,16 +5186,20 @@ func ToolRename(oldToken, newToken string) ToolResult {
 // 🔤renameCommand returns a cobra command that renames a token across the repo in all case variants.
 func renameCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
-		Use:   "rename <old> <new>",
+		Use:   "rename <old> <new> [scope]",
 		Short: "Rename a token across non-gitignored files (all case variants)",
-		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names). Example: repo rename model representation.",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names) under the optional scope directory (default: repo root). Example: repo rename model representation semio.",
+		Args:  cobra.RangeArgs(2, 3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_, err := factory(*config)
 			if err != nil {
 				return err
 			}
-			result := ToolRename(args[0], args[1])
+			scope := ""
+			if len(args) == 3 {
+				scope = args[2]
+			}
+			result := ToolRename(args[0], args[1], scope)
 			if result.Error != "" {
 				return fmt.Errorf("%s", result.Error)
 			}

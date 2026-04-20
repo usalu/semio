@@ -1,7 +1,8 @@
 {
   "title": "Consolidate Rust Async Backbone",
-  "status": "open",
+  "status": "closed",
   "description": "Consolidate semio/rs/kit_backbone_async.rs into semio/rs/lib.rs, refactor the async backbone into a properly integrated object-oriented API, extend existing tests only, and verify the Rust package passes.",
+  "summary": "Consolidated the Rust async kit backbone into semio/rs/lib.rs by ensuring the native-only inline module owns the public backbone API, keeping the authority runtime as KitBackboneAuthority, removing the standalone kit_backbone_async.rs source, and verifying the existing async backbone tests through the full Rust test suite. Updated the remote backbone test path to the current kind-based wire discriminator. Verification: cargo fmt and cargo test from semio/rs passed with 83 passed, 1 ignored.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1367"
   },

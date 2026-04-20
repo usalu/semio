@@ -216,7 +216,7 @@
   "createdAt": "2025-11-23T01:10:21.247Z",
   "name": "Tambour",
   "updatedAt": "2025-11-23T01:10:21.247Z",
-  "models": [
+  "representations": [
     {
       "guid": "61bce02b-6f95-439c-b23f-9503456a4171",
       "file": {

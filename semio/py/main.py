@@ -119,11 +119,11 @@ DEBUG_LOG_FILE = str(pathlib.Path(LOG_FOLDER) / "debug.log")
 TOLERANCE = 1e-5
 SIGNIFICANT_DIGITS = 5
 MIMES = {
-    ".stl": "model/stl",
-    ".obj": "model/obj",
-    ".glb": "model/gltf-binary",
-    ".gltf": "model/gltf+json",
-    ".3dm": "model/vnd.3dm",
+    ".stl": "representation/stl",
+    ".obj": "representation/obj",
+    ".glb": "representation/gltf-binary",
+    ".gltf": "representation/gltf+json",
+    ".3dm": "representation/vnd.3dm",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -346,18 +346,18 @@ class NoTypeOrDesignAssigned(NoParentAssigned):
         return "👪 The entity has no parent type or design assigned."
 
 
-class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
-    """🔌No Model Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition."""
+class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
+    """🔌No Representation Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition."""
 
     def __str__(self):
-        return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
+        return "👪 The entity has no parent representation, connector, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
 
 
-class Semio(pydantic.BaseModel):
+class Semio(pydantic.BaseRepresentation):
     """ℹ Metadata about the database."""
 
     release: str = pydantic.Field(default=RELEASE)
@@ -371,48 +371,48 @@ class Semio(pydantic.BaseModel):
 # #endregion ⚠️Exceptions
 
 
-# #region 🎲Modeling
+# #region 🎲Representationing
 
 # #region 🐻Primitives
-# Abstract base classes for models, fields, ids, inputs, outputs and entities.
+# Abstract base classes for representations, fields, ids, inputs, outputs and entities.
 
 
-class SModel(pydantic.BaseModel, abc.ABC):
-    """⚪ The base for models."""
+class SRepresentation(pydantic.BaseRepresentation, abc.ABC):
+    """⚪ The base for representations."""
 
-    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+    representation_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     @classmethod
-    def parse(cls, input: str | dict | typing.Any | None) -> "SModel":
+    def parse(cls, input: str | dict | typing.Any | None) -> "SRepresentation":
         """⚒ Parse the entity from an input."""
         if input is None:
             return cls()
         if isinstance(input, str):
-            return cls.model_validate_json(input)
-        return cls.model_validate(input)
+            return cls.representation_validate_json(input)
+        return cls.representation_validate(input)
 
     def dump(self) -> "Output":
         """📦Dump the entity to a dictionary."""
-        return self.model_dump()
+        return self.representation_dump()
 
 
-BaseModel = SModel
+BaseRepresentation = SRepresentation
 
 
-class Field(SModel, abc.ABC):
-    """🎫 The base for a field of a model."""
+class Field(SRepresentation, abc.ABC):
+    """🎫 The base for a field of a representation."""
 
 
 class RealField(Field, abc.ABC):
-    """🧑 The base for a real field of a model. No lie."""
+    """🧑 The base for a real field of a representation. No lie."""
 
 
 class MaskedField(Field, abc.ABC):
-    """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
+    """🎭 The base for a mask of a field of a representation. WYSIWYG but don't expect it to be there."""
 
 
-class Base(SModel, abc.ABC):
-    """👥 The base for models."""
+class Base(SRepresentation, abc.ABC):
+    """👥 The base for representations."""
 
 
 class Id(Base, abc.ABC):
@@ -439,7 +439,7 @@ class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
-class Entity(SModel, abc.ABC):
+class Entity(SRepresentation, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
 
     PLURAL: typing.ClassVar[str]
@@ -449,7 +449,7 @@ class Entity(SModel, abc.ABC):
         """👪 The parent entity of the entity."""
         return None
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     @abc.abstractmethod
     def idMembers(self) -> RecursiveAnyList:
         """🪪 The members that form the id of the entity within its parent."""
@@ -482,7 +482,7 @@ class Entity(SModel, abc.ABC):
         return self
 
 
-class Table(SModel, abc.ABC):
+class Table(SRepresentation, abc.ABC):
     """▦ The base for tables. All resources that are stored in the database."""
 
 
@@ -505,11 +505,11 @@ class Node(graphene_pydantic.PydanticObjectType):
         abstract = True
 
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
+    def __init_subclass_with_meta__(cls, representation=None, **options):
         if "name" not in options:
-            options["name"] = model.__name__
+            options["name"] = representation.__name__
 
-        super().__init_subclass_with_meta__(model=model, **options)
+        super().__init_subclass_with_meta__(representation=representation, **options)
 
 
 class InputNode(graphene_pydantic.PydanticInputObjectType):
@@ -546,16 +546,16 @@ class TableNode(graphene_pydantic.PydanticObjectType):
         abstract = True
 
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
-        excludedFields = tuple(k for k, v in model.model_fields.items() if v.exclude or v.default_factory is not None)
+    def __init_subclass_with_meta__(cls, representation=None, **options):
+        excludedFields = tuple(k for k, v in representation.representation_fields.items() if v.exclude or v.default_factory is not None)
         if "exclude_fields" in options:
             options["exclude_fields"] += excludedFields
         else:
             options["exclude_fields"] = excludedFields
         if "name" not in options:
-            options["name"] = model.__name__
+            options["name"] = representation.__name__
 
-        super().__init_subclass_with_meta__(model=model, **options)
+        super().__init_subclass_with_meta__(representation=representation, **options)
 
 
 class TableEntityNode(TableNode):
@@ -567,7 +567,7 @@ class TableEntityNode(TableNode):
         abstract = True
 
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, **options):
+    def __init_subclass_with_meta__(cls, representation=None, **options):
         if "interfaces" not in options:
             options["interfaces"] = (RelayNode,)
 
@@ -576,12 +576,12 @@ class TableEntityNode(TableNode):
 
         setattr(cls, "resolve_id", resolve_id)
 
-        super().__init_subclass_with_meta__(model=model, **options)
+        super().__init_subclass_with_meta__(representation=representation, **options)
 
 
 # #endregion 🎬Graphql
 
-# #endregion 🎲Modeling
+# #endregion 🎲Representationing
 
 
 # #region 🖥️Weak Entities
@@ -590,7 +590,7 @@ class TableEntityNode(TableNode):
 # Coordinate primitive for three-dimensional values.
 
 
-class Coord(SModel):
+class Coord(SRepresentation):
     """🔵Three-dimensional coordinate with x, y and z values."""
 
     u: float = pydantic.Field()
@@ -631,14 +631,14 @@ class CoordNode(Node):
     """🟣GraphQL node exposing coord data."""
 
     class Meta:
-        model = Coord
+        representation = Coord
 
 
 class CoordInputNode(InputNode):
     """🟤GraphQL input node for coord mutations."""
 
     class Meta:
-        model = CoordInput
+        representation = CoordInput
 
 
 # #endregion 📺Coord
@@ -648,7 +648,7 @@ class CoordInputNode(InputNode):
 # Point primitive representing a position in 3D space.
 
 
-class Point(SModel):
+class Point(SRepresentation):
     """⚫Point in 3D space with x, y and z coordinates."""
 
     x: float = pydantic.Field()
@@ -690,14 +690,14 @@ class PointNode(Node):
     """💙GraphQL node exposing point data."""
 
     class Meta:
-        model = Point
+        representation = Point
 
 
 class PointInputNode(InputNode):
     """💚GraphQL input node for point mutations."""
 
     class Meta:
-        model = PointInput
+        representation = PointInput
 
 
 # #endregion ✖️Point
@@ -707,7 +707,7 @@ class PointInputNode(InputNode):
 # Vector primitive representing a direction in 3D space.
 
 
-class Vector(SModel):
+class Vector(SRepresentation):
     """💛Direction vector in 3D space with x, y and z components."""
 
     x: float = pydantic.Field()
@@ -749,14 +749,14 @@ class VectorNode(Node):
     """🤎GraphQL node exposing vector data."""
 
     class Meta:
-        model = Vector
+        representation = Vector
 
 
 class VectorInputNode(InputNode):
     """💗GraphQL input node for vector mutations."""
 
     class Meta:
-        model = VectorInput
+        representation = VectorInput
 
 
 # #endregion ↗️Vector
@@ -851,15 +851,15 @@ class Plane(Table):
         self.yAxisY = yAxis.y
         self.yAxisZ = yAxis.z
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(cls, input: str | dict | PlaneInput | typing.Any | None) -> "Plane":
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        origin = Point.model_validate(obj["origin"])
-        xAxis = Vector.model_validate(obj["xAxis"])
-        yAxis = Vector.model_validate(obj["yAxis"])
+        origin = Point.representation_validate(obj["origin"])
+        xAxis = Vector.representation_validate(obj["xAxis"])
+        yAxis = Vector.representation_validate(obj["yAxis"])
         entity = Plane()
         entity.origin = origin
         entity.xAxis = xAxis
@@ -868,7 +868,7 @@ class Plane(Table):
         return entity
 
     def dump(self) -> PlaneOutput:
-        entity = {**PlaneOriginField.model_validate(self).model_dump()}
+        entity = {**PlaneOriginField.representation_validate(self).representation_dump()}
         entity["xAxis"] = self.xAxis
         entity["yAxis"] = self.yAxis
         return PlaneOutput(**entity)
@@ -878,7 +878,7 @@ class PlaneInputNode(InputNode):
     """🔖GraphQL input node for plane mutations."""
 
     class Meta:
-        model = PlaneInput
+        representation = PlaneInput
 
 
 # #endregion ◻️Plane
@@ -952,7 +952,7 @@ class Attribute(
     def parent_entity(
         self,
     ) -> typing.Union[
-        "Model",
+        "Representation",
         "Connector",
         "Type",
         "Piece",
@@ -967,8 +967,8 @@ class Attribute(
         "Folder",
         None,
     ]:
-        if self.model is not None:
-            return self.model
+        if self.representation is not None:
+            return self.representation
         if self.connector is not None:
             return self.connector
         if self.type is not None:
@@ -993,7 +993,7 @@ class Attribute(
             return self.benchmark
         if self.folder is not None:
             return self.folder
-        raise NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
+        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.name
@@ -1014,7 +1014,7 @@ class AttributeInputNode(InputNode):
     """🟪GraphQL input node for attribute mutations."""
 
     class Meta:
-        model = AttributeInput
+        representation = AttributeInput
 
 
 # #endregion 💎Attribute
@@ -1095,14 +1095,14 @@ class LocationNode(Node):
     """🔖GraphQL node exposing location data."""
 
     class Meta:
-        model = LocationOutput
+        representation = LocationOutput
 
 
 class LocationInputNode(InputNode):
     """🔖GraphQL input node for location mutations."""
 
     class Meta:
-        model = LocationInput
+        representation = LocationInput
 
 
 # #endregion 📍Location
@@ -1178,7 +1178,7 @@ class AuthorInputNode(InputNode):
     """🔖GraphQL input node for author mutations."""
 
     class Meta:
-        model = AuthorInput
+        representation = AuthorInput
 
 
 # #endregion ✍️Author
@@ -1386,7 +1386,7 @@ class FileInputNode(InputNode):
     """🔖GraphQL input node for file mutations."""
 
     class Meta:
-        model = FileInput
+        representation = FileInput
 
 
 # #endregion 📄File
@@ -1533,8 +1533,8 @@ class Folder(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = FolderProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        props = FolderProps.representation_validate(obj)
+        entity = cls(**props.representation_dump())
         try:
             entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
         except KeyError:
@@ -1542,13 +1542,13 @@ class Folder(
         return entity
 
     def dump(self) -> "FolderOutput":
-        entity = {**FolderProps.model_validate(self).model_dump()}
+        entity = {**FolderProps.representation_validate(self).representation_dump()}
         entity["attributes"] = [q.dump() for q in self.attributes]
         return FolderOutput(**entity)
 
     def empty(self) -> "Folder":
         props = FolderProps()
-        for key, value in props.model_dump().items():
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         self.attributes = []
         return self
@@ -1556,8 +1556,8 @@ class Folder(
     def update(self, other: "Folder", empty: bool = False) -> "Folder":
         if empty:
             self.empty()
-        props = FolderProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = FolderProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
@@ -1566,7 +1566,7 @@ class FolderInputNode(InputNode):
     """🔖GraphQL input node for folder mutations."""
 
     class Meta:
-        model = FolderInput
+        representation = FolderInput
 
 
 # #endregion 📁Folder
@@ -2110,7 +2110,7 @@ class PortInputNode(InputNode):
     """🔖GraphQL input node for port mutations."""
 
     class Meta:
-        model = PortInput
+        representation = PortInput
 
 
 # #endregion ⚓Port
@@ -2209,7 +2209,7 @@ class Prop(
             return self.type
         if self.design is not None:
             return self.design
-        raise NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
+        raise NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned()
 
     def idMembers(self) -> RecursiveAnyList:
         return self.key
@@ -2219,8 +2219,8 @@ class Prop(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = PropProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        props = PropProps.representation_validate(obj)
+        entity = cls(**props.representation_dump())
         try:
             entity.attributes = [typing.cast(Attribute, Attribute.parse(attribute)) for attribute in obj["attributes"]]
         except KeyError:
@@ -2228,7 +2228,7 @@ class Prop(
         return entity
 
     def dump(self) -> "PropOutput":
-        entity = {**PropProps.model_validate(self).model_dump()}
+        entity = {**PropProps.representation_validate(self).representation_dump()}
         entity["attributes"] = [q.dump() for q in self.attributes]
         return PropOutput(**entity)
 
@@ -2237,7 +2237,7 @@ class PropInputNode(InputNode):
     """🔖GraphQL input node for prop mutations."""
 
     class Meta:
-        model = PropInput
+        representation = PropInput
 
 
 # #endregion 📊Prop
@@ -2351,125 +2351,125 @@ class Concept(
 # #endregion 💡Concept
 
 
-# #region 🗿Model
-# Model entity for 3D geometry representations linked to files.
+# #region 🗿Representation
+# Representation entity for 3D geometry representations linked to files.
 
 
-class ModelNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a model."""
+class RepresentationNameField(RealField, abc.ABC):
+    """🔖Field mixin for the name of a representation."""
 
     name: typing.Optional[str] = pydantic.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 
-class ModelUrlField(RealField, abc.ABC):
-    """🔖Field mixin for the url of a model."""
+class RepresentationUrlField(RealField, abc.ABC):
+    """🔖Field mixin for the url of a representation."""
 
     url: str = pydantic.Field(max_length=URL_LENGTH_LIMIT)
 
 
-class ModelFileField(RealField, abc.ABC):
-    """🔖Field mixin for the file of a model."""
+class RepresentationFileField(RealField, abc.ABC):
+    """🔖Field mixin for the file of a representation."""
 
     file: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
-class ModelDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a model."""
+class RepresentationDescriptionField(RealField, abc.ABC):
+    """🔖Field mixin for the description of a representation."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
-class ModelTagsField(MaskedField, abc.ABC):
-    """🔖Field mixin for the tags of a model."""
+class RepresentationTagsField(MaskedField, abc.ABC):
+    """🔖Field mixin for the tags of a representation."""
 
     tags: list[str] = pydantic.Field(default_factory=list)
 
 
-class ModelId(ModelTagsField, Id):
-    """🔖Identity fields for uniquely identifying a model."""
+class RepresentationId(RepresentationTagsField, Id):
+    """🔖Identity fields for uniquely identifying a representation."""
 
     pass
 
 
-class ModelProps(
-    ModelTagsField,
-    ModelDescriptionField,
-    ModelNameField,
-    ModelFileField,
-    ModelUrlField,
+class RepresentationProps(
+    RepresentationTagsField,
+    RepresentationDescriptionField,
+    RepresentationNameField,
+    RepresentationFileField,
+    RepresentationUrlField,
     Props,
 ):
-    """Property fields for a model."""
+    """Property fields for a representation."""
 
     pass
 
 
-class ModelInput(
-    ModelTagsField,
-    ModelDescriptionField,
-    ModelNameField,
-    ModelFileField,
-    ModelUrlField,
+class RepresentationInput(
+    RepresentationTagsField,
+    RepresentationDescriptionField,
+    RepresentationNameField,
+    RepresentationFileField,
+    RepresentationUrlField,
     Input,
 ):
-    """Input fields for creating or updating a model."""
+    """Input fields for creating or updating a representation."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
-class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
-    """🔖Context fields for understanding a model by an LLM."""
+class RepresentationContext(RepresentationTagsField, RepresentationDescriptionField, RepresentationNameField, Context):
+    """🔖Context fields for understanding a representation by an LLM."""
 
     attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 
-class ModelOutput(
-    ModelTagsField,
-    ModelDescriptionField,
-    ModelNameField,
-    ModelFileField,
-    ModelUrlField,
+class RepresentationOutput(
+    RepresentationTagsField,
+    RepresentationDescriptionField,
+    RepresentationNameField,
+    RepresentationFileField,
+    RepresentationUrlField,
     Output,
 ):
-    """Output fields returned when fetching a model."""
+    """Output fields returned when fetching a representation."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
-class Model(
-    ModelDescriptionField,
-    ModelNameField,
-    ModelFileField,
-    ModelUrlField,
+class Representation(
+    RepresentationDescriptionField,
+    RepresentationNameField,
+    RepresentationFileField,
+    RepresentationUrlField,
     TableEntity,
 ):
-    """Model entity for 3D geometry with name, URL and file reference."""
+    """Representation entity for 3D geometry with name, URL and file reference."""
 
-    PLURAL = "models"
+    PLURAL = "representations"
     tags_: list[Tag] = pydantic.Field(default_factory=list)
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
     @property
-    def tags(self: "Model") -> list[str]:
+    def tags(self: "Representation") -> list[str]:
         return [tag.name for tag in sorted(self.tags_, key=lambda x: x.order)]
 
     @tags.setter
-    def tags(self: "Model", tags: list[str]):
+    def tags(self: "Representation", tags: list[str]):
         self.tags_ = [Tag(name=tag, order=i) for i, tag in enumerate(tags)]
 
-    def parent_entity(self: "Model") -> "Type":
+    def parent_entity(self: "Representation") -> "Type":
         if self.type is None:
             raise NoTypeAssigned()
         return self.type
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
-    def parse(cls, input: str | dict | ModelInput | typing.Any | None) -> "Model":
+    def parse(cls, input: str | dict | RepresentationInput | typing.Any | None) -> "Representation":
         if input is None:
             return cls(url="", file="")
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = ModelProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        props = RepresentationProps.representation_validate(obj)
+        entity = cls(**props.representation_dump())
         try:
             entity.tags = obj["tags"]
         except KeyError:
@@ -2480,32 +2480,32 @@ class Model(
             pass
         return entity
 
-    def dump(self) -> "ModelOutput":
-        entity = {**ModelProps.model_validate(self).model_dump()}
+    def dump(self) -> "RepresentationOutput":
+        entity = {**RepresentationProps.representation_validate(self).representation_dump()}
 
         entity["attributes"] = [q.dump() for q in self.attributes]
-        return ModelOutput(**entity)
+        return RepresentationOutput(**entity)
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return [self.tags]
 
 
-class NoModelAssigned(NoParentAssigned):
-    """🔖No Model Assigned definition."""
+class NoRepresentationAssigned(NoParentAssigned):
+    """🔖No Representation Assigned definition."""
 
     def __str__(self):
-        return " The entity has no parent model assigned."
+        return " The entity has no parent representation assigned."
 
 
-class ModelInputNode(InputNode):
-    """🔖GraphQL input node for model mutations."""
+class RepresentationInputNode(InputNode):
+    """🔖GraphQL input node for representation mutations."""
 
     class Meta:
-        model = ModelInput
+        representation = RepresentationInput
 
 
-# #endregion 🗿Model
+# #endregion 🗿Representation
 
 
 # #region 🔌Connector
@@ -2714,7 +2714,7 @@ class Connector(
             raise NoTypeAssigned()
         return self.type
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(cls, input: str | dict | ConnectorInput | typing.Any | None) -> "Connector":
         if input is None:
@@ -2746,14 +2746,14 @@ class Connector(
         return entity
 
     def dump(self) -> "ConnectorOutput":
-        entity = {**ConnectorProps.model_validate(self).model_dump()}
+        entity = {**ConnectorProps.representation_validate(self).representation_dump()}
         entity["point"] = self.point.dump()
         entity["direction"] = self.direction.dump()
         entity["compatiblePorts"] = self.compatiblePorts
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ConnectorOutput(**entity)
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
@@ -2774,14 +2774,14 @@ class ConnectorInputNode(InputNode):
     """🔖GraphQL input node for connector mutations."""
 
     class Meta:
-        model = ConnectorInput
+        representation = ConnectorInput
 
 
 class ConnectorIdInputNode(InputNode):
     """🔖GraphQL input node for connector id mutations."""
 
     class Meta:
-        model = ConnectorId
+        representation = ConnectorId
 
 
 # #endregion 🔌Connector
@@ -2936,7 +2936,7 @@ class TypeInput(
     is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
     folder: typing.Optional[str] = pydantic.Field(default=None)
     location: typing.Optional[LocationInput] = pydantic.Field(default=None)
-    models: list[ModelInput] = pydantic.Field(default_factory=list)
+    representations: list[RepresentationInput] = pydantic.Field(default_factory=list)
     connectors: list[ConnectorInput] = pydantic.Field(default_factory=list)
     props: list[PropInput] = pydantic.Field(default_factory=list)
     authors: list[str] = pydantic.Field(default_factory=list)
@@ -2963,7 +2963,7 @@ class TypeOutput(
     is_abstract: typing.Optional[bool] = pydantic.Field(default=None)
     folder: typing.Optional[str] = pydantic.Field(default=None)
     location: typing.Optional[LocationOutput] = pydantic.Field(default=None)
-    models: list[ModelOutput] = pydantic.Field(default_factory=list)
+    representations: list[RepresentationOutput] = pydantic.Field(default_factory=list)
     connectors: list[ConnectorOutput] = pydantic.Field(default_factory=list)
     props: list[PropOutput] = pydantic.Field(default_factory=list)
     authors: list[str] = pydantic.Field(default_factory=list)
@@ -3011,7 +3011,7 @@ class Type(
 
     PLURAL = "types"
 
-    models: list[Model] = pydantic.Field(default_factory=list)
+    representations: list[Representation] = pydantic.Field(default_factory=list)
 
     connectors: list[Connector] = pydantic.Field(default_factory=list)
 
@@ -3068,7 +3068,7 @@ class Type(
             raise NoKitAssigned()
         return self.kit
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(cls, input: str | dict | TypeInput | typing.Any | None) -> "Type":
         if input is None:
@@ -3099,8 +3099,8 @@ class Type(
         except KeyError, AttributeError:
             pass
         try:
-            models = [Model.parse(r) for r in obj["models"]]
-            entity.models = models
+            representations = [Representation.parse(r) for r in obj["representations"]]
+            entity.representations = representations
         except KeyError, AttributeError, Exception:
             pass
         try:
@@ -3131,8 +3131,8 @@ class Type(
         return entity
 
     def dump(self) -> "TypeOutput":
-        entity = {**TypeProps.model_validate(self).model_dump()}
-        entity["models"] = [r.dump() for r in self.models]
+        entity = {**TypeProps.representation_validate(self).representation_dump()}
+        entity["representations"] = [r.dump() for r in self.representations]
         entity["connectors"] = [p.dump() for p in self.connectors]
         entity["props"] = [p.dump() for p in self.props]
         entity["attributes"] = [q.dump() for q in self.attributes]
@@ -3143,7 +3143,7 @@ class Type(
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
         props = TypeProps()
-        for key, value in props.model_dump().items():
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         self.types = []
         return self
@@ -3152,12 +3152,12 @@ class Type(
     def update(self, other: "Type", empty: bool = False) -> "Type":
         if empty:
             self.empty()
-        props = TypeProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = TypeProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
@@ -3194,14 +3194,14 @@ class TypeInputNode(InputNode):
     """🔖GraphQL input node for type mutations."""
 
     class Meta:
-        model = TypeInput
+        representation = TypeInput
 
 
 class TypeIdInputNode(InputNode):
     """🔖GraphQL input node for type id mutations."""
 
     class Meta:
-        model = TypeId
+        representation = TypeId
 
 
 # #endregion 🧱Type
@@ -3465,7 +3465,7 @@ class Piece(
             raise NoParentAssigned()
         return self.design
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(
         cls: "Piece",
@@ -3513,7 +3513,7 @@ class Piece(
         return entity
 
     def dump(self) -> "PieceOutput":
-        entity = {**PieceProps.model_validate(self).model_dump()}
+        entity = {**PieceProps.representation_validate(self).representation_dump()}
         entity["plane"] = self.plane.dump() if self.plane is not None else None
         entity["center"] = self.center.dump() if self.center is not None else None
         entity["attributes"] = [q.dump() for q in self.attributes]
@@ -3522,7 +3522,7 @@ class Piece(
     # TODO: Automatic emptying.
     def empty(self) -> "Piece":
         props = PieceProps()
-        for key, value in props.model_dump().items():
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
@@ -3530,12 +3530,12 @@ class Piece(
     def update(self, other: "Piece", empty: bool = False) -> "Piece":
         if empty:
             self.empty()
-        props = PieceProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = PieceProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
@@ -3544,7 +3544,7 @@ class PieceInputNode(InputNode):
     """🔖GraphQL input node for piece mutations."""
 
     class Meta:
-        model = PieceInput
+        representation = PieceInput
         exclude_fields = ("type", "designPiece")
 
     type = TypeIdInputNode()
@@ -3555,7 +3555,7 @@ class PieceIdInputNode(InputNode):
     """🔖GraphQL input node for piece id mutations."""
 
     class Meta:
-        model = PieceId
+        representation = PieceId
 
 
 # #endregion 🧩Piece
@@ -3621,14 +3621,14 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity)
 # Side primitive for identifying a specific connector on a specific piece.
 
 
-class Side(BaseModel):
+class Side(BaseRepresentation):
     """🔖Side primitive identifying a specific connector on a specific piece."""
 
     piece: PieceId = pydantic.Field()
     designPiece: typing.Optional[PieceId] = pydantic.Field(default=None)
     connector: typing.Optional[ConnectorId] = pydantic.Field(default=None)
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(cls: "Side", input: str | dict | typing.Any | None) -> "Side":
         if input is None:
@@ -3676,7 +3676,7 @@ class SideNode(Node):
     """🔖GraphQL node exposing side data."""
 
     class Meta:
-        model = Side
+        representation = Side
 
     exclude_fields = ("piece", "connector")
 
@@ -3698,7 +3698,7 @@ class SideInputNode(InputNode):
     """🔖GraphQL input node for side mutations."""
 
     class Meta:
-        model = SideInput
+        representation = SideInput
 
     exclude_fields = ("piece", "connector")
 
@@ -3922,7 +3922,7 @@ class Connection(
             raise NoDesignAssigned()
         return self.design
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(
         cls: "Connection",
@@ -4027,7 +4027,7 @@ class Connection(
         return entity
 
     def dump(self) -> "ConnectionOutput":
-        entity = {**ConnectionProps.model_validate(self).model_dump()}
+        entity = {**ConnectionProps.representation_validate(self).representation_dump()}
         entity["connected"] = self.connected.dump()
         entity["connecting"] = self.connecting.dump()
         entity["attributes"] = [q.dump() for q in self.attributes]
@@ -4035,7 +4035,7 @@ class Connection(
 
     # TODO: Automatic emptying.
     def empty(self) -> "Connection":
-        for key, value in ConnectionProps.model_dump().items():
+        for key, value in ConnectionProps.representation_dump().items():
             setattr(self, key, value)
         return self
 
@@ -4043,12 +4043,12 @@ class Connection(
     def update(self, other: "Connection", empty: bool = False) -> "Connection":
         if empty:
             self.empty()
-        props = ConnectionProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = ConnectionProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return [
             self.connected.piece.id_,
@@ -4062,7 +4062,7 @@ class ConnectionInputNode(InputNode):
     """🔖GraphQL input node for connection mutations."""
 
     class Meta:
-        model = ConnectionInput
+        representation = ConnectionInput
 
 
 # #endregion 🔗Connection
@@ -4457,7 +4457,7 @@ class Design(
             raise NoKitAssigned()
         return self.kit
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(
         cls: "Design",
@@ -4468,8 +4468,8 @@ class Design(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
-        props = DesignProps.model_validate(obj)
-        entity = cls(**props.model_dump())
+        props = DesignProps.representation_validate(obj)
+        entity = cls(**props.representation_dump())
         try:
             entity.location = props.location
         except KeyError, AttributeError, Exception:
@@ -4514,7 +4514,7 @@ class Design(
         return entity
 
     def dump(self) -> "DesignOutput":
-        entity = {**DesignProps.model_validate(self).model_dump()}
+        entity = {**DesignProps.representation_validate(self).representation_dump()}
         entity["pieces"] = [p.dump() for p in self.pieces]
         entity["connections"] = [c.dump() for c in self.connections]
         entity["props"] = [p.dump() for p in self.props]
@@ -4526,7 +4526,7 @@ class Design(
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
         props = DesignProps()
-        for key, value in props.model_dump().items():
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         self.designs = []
         return self
@@ -4535,12 +4535,12 @@ class Design(
     def update(self, other: "Design", empty: bool = False) -> "Design":
         if empty:
             self.empty()
-        props = DesignProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = DesignProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
@@ -4556,14 +4556,14 @@ class DesignInputNode(InputNode):
     """🔖GraphQL input node for design mutations."""
 
     class Meta:
-        model = DesignInput
+        representation = DesignInput
 
 
 class DesignIdInputNode(InputNode):
     """🔖GraphQL input node for design id mutations."""
 
     class Meta:
-        model = DesignId
+        representation = DesignId
 
 
 # #endregion 📐Design
@@ -4830,7 +4830,7 @@ class Kit(
     def folders(self: "Kit", folders: list[Folder]):
         self.folders_ = folders
 
-    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlmodel/issues/293)
+    # TODO: Automatic nested parsing (https://github.com/fastapi/sqlrepresentation/issues/293)
     @classmethod
     def parse(cls: "Kit", input: str | dict | KitInput | typing.Any | None) -> "Kit":
         if input is None:
@@ -4873,7 +4873,7 @@ class Kit(
         return entity
 
     def dump(self) -> "KitOutput":
-        entity = {**KitProps.model_validate(self).model_dump()}
+        entity = {**KitProps.representation_validate(self).representation_dump()}
         entity["types"] = [t.dump() for t in (self.types or [])]
         entity["designs"] = [d.dump() for d in (self.designs or [])]
         entity["files"] = [f.dump() for f in (self.files_ or [])]
@@ -4884,8 +4884,8 @@ class Kit(
 
     # TODO: Automatic emptying.
     def empty(self) -> "Kit":
-        props = KitProps.model_construct()
-        for key, value in props.model_dump().items():
+        props = KitProps.representation_construct()
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         self.types = []
         return self
@@ -4894,12 +4894,12 @@ class Kit(
     def update(self, other: "Kit", empty: bool = False) -> "Kit":
         if empty:
             self.empty()
-        props = KitProps.model_validate(other)
-        for key, value in props.model_dump().items():
+        props = KitProps.representation_validate(other)
+        for key, value in props.representation_dump().items():
             setattr(self, key, value)
         return self
 
-    # TODO: Automatic derive from Id model.
+    # TODO: Automatic derive from Id representation.
     def idMembers(self) -> RecursiveAnyList:
         return self.uri
 
@@ -5189,30 +5189,30 @@ class Kit(
     # Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
     @staticmethod
-    def _select_best_model_filter(models: list, resolved_tag_guids: list[str]):
-        """🧹Selects the best model based on tag matching using Jaccard similarity."""
-        if not models:
+    def _select_best_representation_filter(representations: list, resolved_tag_guids: list[str]):
+        """🧹Selects the best representation based on tag matching using Jaccard similarity."""
+        if not representations:
             return None
         if not resolved_tag_guids:
-            for m in models:
+            for m in representations:
                 if not getattr(m, "tags", None):
                     return m
-            return models[0]
+            return representations[0]
         filtered = []
-        for m in models:
-            model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
-            if all(g in model_tag_guids for g in resolved_tag_guids):
+        for m in representations:
+            representation_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
+            if all(g in representation_tag_guids for g in resolved_tag_guids):
                 filtered.append(m)
         if not filtered:
             return None
 
         def jaccard(m):
-            model_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
+            representation_tag_guids = {t.guid for t in (getattr(m, "tags", None) or [])}
             sel = set(resolved_tag_guids)
-            union = model_tag_guids | sel
+            union = representation_tag_guids | sel
             if not union:
                 return 0.0
-            return len(model_tag_guids & sel) / len(union)
+            return len(representation_tag_guids & sel) / len(union)
 
         return max(filtered, key=jaccard)
 
@@ -5235,10 +5235,10 @@ class Kit(
         Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
         """
         design_guid = filter_spec.get("design_guid")
-        model_tags = filter_spec.get("model_tags")
+        representation_tags = filter_spec.get("representation_tags")
 
         if design_guid:
-            base = self._filter_kit_by_design(design_guid, model_tags)
+            base = self._filter_kit_by_design(design_guid, representation_tags)
         else:
             base = self
 
@@ -5285,7 +5285,7 @@ class Kit(
     def _filter_kit_by_design(self: "Kit", design_guid: str, tags: typing.Optional[list[str]] = None) -> "Kit":
         """🔖Filters a kit to only include entities related to a specific design.
         Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
-        files not used by selected models, tags/concepts only if referenced, and selects one model per type based on tags.
+        files not used by selected representations, tags/concepts only if referenced, and selects one representation per type based on tags.
         """
         design = self.find_design_by_guid(design_guid)
         pieces = design.pieces or []
@@ -5338,7 +5338,7 @@ class Kit(
                 if hasattr(prop, "quality") and prop.quality and hasattr(prop.quality, "guid"):
                     used_quality_guids.add(prop.quality.guid)
 
-        selected_models: dict[str, typing.Any] = {}
+        selected_representations: dict[str, typing.Any] = {}
         for type_guid in used_type_guids:
             t = type_by_guid.get(type_guid)
             if not t:
@@ -5357,11 +5357,11 @@ class Kit(
                 if hasattr(concept_id, "guid"):
                     used_concept_guids.add(concept_id.guid)
 
-            models = getattr(t, "models", None) or []
-            if models:
-                best = Kit._select_best_model_filter(models, resolved_tag_guids)
+            representations = getattr(t, "representations", None) or []
+            if representations:
+                best = Kit._select_best_representation_filter(representations, resolved_tag_guids)
                 if best:
-                    selected_models[type_guid] = best
+                    selected_representations[type_guid] = best
                     if hasattr(best, "file") and best.file and hasattr(best.file, "guid"):
                         used_file_guids.add(best.file.guid)
                     for tag_id in getattr(best, "tags", None) or []:
@@ -5396,10 +5396,10 @@ class Kit(
             if t.guid not in used_type_guids:
                 continue
             t_copy = copy.copy(t)
-            if t.guid in selected_models:
-                t_copy.models = [selected_models[t.guid]]
+            if t.guid in selected_representations:
+                t_copy.representations = [selected_representations[t.guid]]
             else:
-                t_copy.models = []
+                t_copy.representations = []
             result.types.append(t_copy)
 
         result.designs = [d for d in (self.designs or []) if d.guid in used_design_guids]
@@ -5451,7 +5451,7 @@ class Kit(
             if self._conflicted:
                 raise ValueError("Kit is conflicted; call clear_conflict() before aborting a transaction.")
             for i in range(len(tx.steps) - 1, -1, -1):
-                _apply_kit_graph_diff_to_model(self, tx.steps[i].backward)
+                _apply_kit_graph_diff_to_representation(self, tx.steps[i].backward)
             del self._open_transactions[transaction_id]
             self._conflicted = False
             self._conflict_errors.clear()
@@ -5492,7 +5492,7 @@ class Kit(
             if self._conflicted:
                 raise ValueError("Kit is conflicted.")
             ch = tx.steps.pop()
-            _apply_kit_graph_diff_to_model(self, ch.backward)
+            _apply_kit_graph_diff_to_representation(self, ch.backward)
             tx.redo.append(ch)
 
     def redo_within_transaction(self: "Kit", transaction_id: str) -> None:
@@ -5503,7 +5503,7 @@ class Kit(
             if self._conflicted:
                 raise ValueError("Kit is conflicted.")
             ch = tx.redo.pop()
-            _apply_kit_graph_diff_to_model(self, ch.forward)
+            _apply_kit_graph_diff_to_representation(self, ch.forward)
             tx.steps.append(ch)
 
     def undo_history(self: "Kit") -> None:
@@ -5513,7 +5513,7 @@ class Kit(
             if not self._history_past:
                 return
             ch = self._history_past.pop()
-            _apply_kit_graph_diff_to_model(self, ch.backward)
+            _apply_kit_graph_diff_to_representation(self, ch.backward)
             self._history_future.append(ch)
 
     def redo_history(self: "Kit") -> None:
@@ -5523,7 +5523,7 @@ class Kit(
             if not self._history_future:
                 return
             ch = self._history_future.pop()
-            _apply_kit_graph_diff_to_model(self, ch.forward)
+            _apply_kit_graph_diff_to_representation(self, ch.forward)
             self._history_past.append(ch)
 
     def transact_finalized(self: "Kit", fn: typing.Callable[[str], typing.Any]) -> typing.Any:
@@ -5675,8 +5675,8 @@ PortMeta = typing.TypedDict(
 )
 """PortMeta is Port without attributes."""
 
-ModelMeta = typing.TypedDict(
-    "ModelMeta",
+RepresentationMeta = typing.TypedDict(
+    "RepresentationMeta",
     {
         "guid": str,
         "file": typing.NotRequired[dict],
@@ -5684,7 +5684,7 @@ ModelMeta = typing.TypedDict(
         "description": typing.NotRequired[str],
     },
 )
-"""ModelMeta is Model without tags and attributes."""
+"""RepresentationMeta is Representation without tags and attributes."""
 
 ConnectorMeta = typing.TypedDict(
     "ConnectorMeta",
@@ -5850,7 +5850,7 @@ TypeShallow = typing.TypedDict(
         "concepts": typing.NotRequired[list[ConceptMeta]],
         "authors": typing.NotRequired[list[AuthorMeta]],
         "props": typing.NotRequired[list[PropMeta]],
-        "models": typing.NotRequired[list[ModelMeta]],
+        "representations": typing.NotRequired[list[RepresentationMeta]],
         "connectors": typing.NotRequired[list[ConnectorMeta]],
         "attributes": typing.NotRequired[list[AttributeMeta]],
     },
@@ -5975,7 +5975,7 @@ _QUALITY_META_KEYS = [
     "uri",
 ]
 _PORT_META_KEYS = ["guid", "name", "description", "icon"]
-_MODEL_META_KEYS = ["guid", "file", "name", "description"]
+_REPRESENTATION_META_KEYS = ["guid", "file", "name", "description"]
 _CONNECTOR_META_KEYS = [
     "guid",
     "point",
@@ -6114,9 +6114,9 @@ def portToMeta(d: dict) -> PortMeta:
     return _extract_scalar_fields(d, _PORT_META_KEYS)
 
 
-def modelToMeta(d: dict) -> ModelMeta:
-    """🔖Convert a model dict to ModelMeta (without tags and attributes)."""
-    return _extract_scalar_fields(d, _MODEL_META_KEYS)
+def representationToMeta(d: dict) -> RepresentationMeta:
+    """🔖Convert a representation dict to RepresentationMeta (without tags and attributes)."""
+    return _extract_scalar_fields(d, _REPRESENTATION_META_KEYS)
 
 
 def connectorToMeta(d: dict) -> ConnectorMeta:
@@ -6178,9 +6178,9 @@ def typeToShallow(d: dict) -> TypeShallow:
     props = _convert_list(d.get("props"), propToMeta)
     if props is not None:
         result["props"] = props
-    models = _convert_list(d.get("models"), modelToMeta)
-    if models is not None:
-        result["models"] = models
+    representations = _convert_list(d.get("representations"), representationToMeta)
+    if representations is not None:
+        result["representations"] = representations
     connectors = _convert_list(d.get("connectors"), connectorToMeta)
     if connectors is not None:
         result["connectors"] = connectors
@@ -6689,10 +6689,10 @@ def hash_concept(c: dict) -> str:
     return w.digest()
 
 
-def hash_model(m: dict) -> str:
-    """🔖Computes SHA-256 hash of a Model entity."""
+def hash_representation(m: dict) -> str:
+    """🔖Computes SHA-256 hash of a Representation entity."""
     w = HashWriter()
-    w.writeString("Model")
+    w.writeString("Representation")
     attrs = m.get("attributes")
     if attrs and len(attrs) > 0:
         w.writeString("attributes")
@@ -6789,10 +6789,10 @@ def hash_type(t: dict) -> str:
     if t.get("location") is not None:
         w.writeString("location")
         w.writeString(_ref_guid(t["location"]))
-    models = t.get("models")
-    if models and len(models) > 0:
-        w.writeString("models")
-        w.writeHashList([hash_model(m) for m in models])
+    representations = t.get("representations")
+    if representations and len(representations) > 0:
+        w.writeString("representations")
+        w.writeHashList([hash_representation(m) for m in representations])
     w.writeString("name")
     w.writeString(t["name"])
     if t.get("parent") is not None:
@@ -7507,9 +7507,9 @@ def hash_concepts_diff(d: dict) -> str:
     )
 
 
-def hash_model_diff(d: dict) -> str:
+def hash_representation_diff(d: dict) -> str:
     w = HashWriter()
-    w.writeString("ModelDiff")
+    w.writeString("RepresentationDiff")
     _write_diff_hash(w, "attributes", d, hash_attributes_diff)
     _write_diff_string(w, "description", d)
     _write_diff_id(w, "file", d)
@@ -7518,8 +7518,8 @@ def hash_model_diff(d: dict) -> str:
     return w.digest()
 
 
-def hash_models_diff(d: dict) -> str:
-    return _hash_collection_diff_generic("ModelsDiff", "ModelDiffUpdate", "model", hash_model, hash_model_diff, d)
+def hash_representations_diff(d: dict) -> str:
+    return _hash_collection_diff_generic("RepresentationsDiff", "RepresentationDiffUpdate", "representation", hash_representation, hash_representation_diff, d)
 
 
 def hash_connector_diff(d: dict) -> str:
@@ -7561,7 +7561,7 @@ def hash_type_diff(d: dict) -> str:
     _write_diff_string(w, "image", d)
     _write_diff_bool(w, "isAbstract", d)
     _write_diff_id(w, "location", d)
-    _write_diff_hash(w, "models", d, hash_models_diff)
+    _write_diff_hash(w, "representations", d, hash_representations_diff)
     _write_diff_string(w, "name", d)
     _write_diff_id(w, "parent", d)
     _write_diff_hash(w, "props", d, hash_props_diff)
@@ -8482,35 +8482,35 @@ def areConnectorsEqualDict(a: list | None, b: list | None, strict: bool = False)
     return True
 
 
-def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two model dictionaries are equal."""
+def areRepresentationsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
+    """🔖Check whether two representation dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
         return False
-    for modelA in arrA:
-        modelB = next((x for x in arrB if x.get("guid") == modelA.get("guid")), None)
-        if modelB is None:
+    for representationA in arrA:
+        representationB = next((x for x in arrB if x.get("guid") == representationA.get("guid")), None)
+        if representationB is None:
             return False
-        if _normalizeValue(modelA.get("name")) != _normalizeValue(modelB.get("name")):
+        if _normalizeValue(representationA.get("name")) != _normalizeValue(representationB.get("name")):
             return False
 
-        fileA = modelA.get("file")
-        fileB = modelB.get("file")
+        fileA = representationA.get("file")
+        fileB = representationB.get("file")
         fileGuidA = fileA.get("guid") if isinstance(fileA, dict) else fileA
         fileGuidB = fileB.get("guid") if isinstance(fileB, dict) else fileB
         if fileGuidA != fileGuidB:
             return False
-        tagsA = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(modelA.get("tags"))]
-        tagsB = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(modelB.get("tags"))]
+        tagsA = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(representationA.get("tags"))]
+        tagsB = [t.get("guid") if isinstance(t, dict) else t for t in _normalizeArray(representationB.get("tags"))]
         if len(tagsA) != len(tagsB) or set(tagsA) != set(tagsB):
             return False
-        if not areAttributesEqualDict(modelA.get("attributes"), modelB.get("attributes"), strict):
+        if not areAttributesEqualDict(representationA.get("attributes"), representationB.get("attributes"), strict):
             return False
         if strict:
-            if modelA.get("createdAt") != modelB.get("createdAt"):
+            if representationA.get("createdAt") != representationB.get("createdAt"):
                 return False
-            if modelA.get("updatedAt") != modelB.get("updatedAt"):
+            if representationA.get("updatedAt") != representationB.get("updatedAt"):
                 return False
     return True
 
@@ -8576,7 +8576,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             return False
         if not arePropsEqualDict(typeA.get("props"), typeB.get("props"), strict):
             return False
-        if not areModelsEqualDict(typeA.get("models"), typeB.get("models"), strict):
+        if not areRepresentationsEqualDict(typeA.get("representations"), typeB.get("representations"), strict):
             return False
         if not areConnectorsEqualDict(typeA.get("connectors"), typeB.get("connectors"), strict):
             return False
@@ -9140,9 +9140,9 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
     )
     if connectorsDiff:
         diff["connectors"] = connectorsDiff
-    modelsDiff = _getCollectionDiff(before.get("models", []), after.get("models", []), _getModelDiff, "model")
-    if modelsDiff:
-        diff["models"] = modelsDiff
+    representationsDiff = _getCollectionDiff(before.get("representations", []), after.get("representations", []), _getRepresentationDiff, "representation")
+    if representationsDiff:
+        diff["representations"] = representationsDiff
     attributesDiff = _getAttributesDiff(before.get("attributes", []), after.get("attributes", []))
     if attributesDiff:
         diff["attributes"] = attributesDiff
@@ -9180,10 +9180,10 @@ def _applyTypeDiff(target: dict, diff: dict) -> None:
             _applyConnectorDiff,
             "connector",
         )
-    if diff.get("models"):
-        if "models" not in target:
-            target["models"] = []
-        _applyCollectionDiff(target["models"], diff["models"], _applyModelDiff, "model")
+    if diff.get("representations"):
+        if "representations" not in target:
+            target["representations"] = []
+        _applyCollectionDiff(target["representations"], diff["representations"], _applyRepresentationDiff, "representation")
     if diff.get("attributes") or target.get("attributes"):
         if "attributes" not in target:
             target["attributes"] = []
@@ -9264,8 +9264,8 @@ def _applyConnectorDiff(target: dict, diff: dict) -> None:
         _applyAttributesDiff(target["attributes"], diff.get("attributes"))
 
 
-def _getModelDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two model dicts."""
+def _getRepresentationDiff(before: dict, after: dict) -> dict:
+    """🔖Get diff between two representation dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -9293,8 +9293,8 @@ def _getModelDiff(before: dict, after: dict) -> dict:
     return diff
 
 
-def _applyModelDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a model dict in-place."""
+def _applyRepresentationDiff(target: dict, diff: dict) -> None:
+    """🔖Apply diff to a representation dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
             target[key] = diff[key]
@@ -10365,12 +10365,12 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
             _inverseConnectorDiff,
             "connector",
         )
-    if appliedDiff.get("models"):
-        inverse["models"] = _inverseCollectionDiff(
-            original.get("models", []),
-            appliedDiff["models"],
-            _inverseModelDiff,
-            "model",
+    if appliedDiff.get("representations"):
+        inverse["representations"] = _inverseCollectionDiff(
+            original.get("representations", []),
+            appliedDiff["representations"],
+            _inverseRepresentationDiff,
+            "representation",
         )
     if appliedDiff.get("attributes"):
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
@@ -10404,8 +10404,8 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
     return inverse
 
 
-def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a model diff."""
+def _inverseRepresentationDiff(original: dict, appliedDiff: dict) -> dict:
+    """🔖Compute inverse of a representation diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -10436,8 +10436,8 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
     return inverse
 
 
-def _inverseModelDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a model diff."""
+def _inverseRepresentationDiff(original: dict, appliedDiff: dict) -> dict:
+    """🔖Compute inverse of a representation diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -10698,16 +10698,16 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
 
 def _kit_graph_plain_dict(kit: Kit) -> dict:
     """JSON-shaped kit dict aligned with validate/apply kit diff helpers."""
-    return kit.model_dump(mode="json")
+    return kit.representation_dump(mode="json")
 
 
 def _assign_validated_kit_to(target: Kit, data: dict) -> None:
-    parsed = Kit.model_validate(data)
-    for fname in Kit.model_fields:
+    parsed = Kit.representation_validate(data)
+    for fname in Kit.representation_fields:
         setattr(target, fname, getattr(parsed, fname))
 
 
-def _apply_kit_graph_diff_to_model(kit: Kit, diff: dict) -> None:
+def _apply_kit_graph_diff_to_representation(kit: Kit, diff: dict) -> None:
     d = copy.deepcopy(_kit_graph_plain_dict(kit))
     applyKitDiffDict(d, diff)
     _assign_validated_kit_to(kit, d)
@@ -10865,8 +10865,8 @@ class ConceptChange(Change):
 
 
 @dataclasses.dataclass
-class ModelChange(Change):
-    """🔖ModelChange holds the data fields for a ModelChange record."""
+class RepresentationChange(Change):
+    """🔖RepresentationChange holds the data fields for a RepresentationChange record."""
 
     pass
 
@@ -11607,28 +11607,28 @@ class AttributeNode(TableEntityNode):
     """🔖GraphQL node exposing attribute data."""
 
     class Meta:
-        model = Attribute
+        representation = Attribute
 
 
 class PlaneNode(TableNode):
     """🔖GraphQL node exposing plane data."""
 
     class Meta:
-        model = Plane
+        representation = Plane
 
 
 class AuthorNode(TableEntityNode):
     """🔖GraphQL node exposing author data."""
 
     class Meta:
-        model = Author
+        representation = Author
 
 
-class ModelNode(TableEntityNode):
-    """🔖GraphQL node exposing model data."""
+class RepresentationNode(TableEntityNode):
+    """🔖GraphQL node exposing representation data."""
 
     class Meta:
-        model = Model
+        representation = Representation
         excludedFields = ("tags_",)
 
 
@@ -11636,7 +11636,7 @@ class ConnectorNode(TableEntityNode):
     """🔖GraphQL node exposing connector data."""
 
     class Meta:
-        model = Connector
+        representation = Connector
         exclude_fields = ("connecteds", "connectings")
 
     localId = graphene.String()
@@ -11649,14 +11649,14 @@ class TypeNode(TableEntityNode):
     """🔖GraphQL node exposing type data."""
 
     class Meta:
-        model = Type
+        representation = Type
 
 
 class PieceNode(TableEntityNode):
     """🔖GraphQL node exposing piece data."""
 
     class Meta:
-        model = Piece
+        representation = Piece
         exclude_fields = ("connecteds", "connectings")
 
     localId = graphene.String()
@@ -11669,7 +11669,7 @@ class ConnectionNode(TableEntityNode):
     """🔖GraphQL node exposing connection data."""
 
     class Meta:
-        model = Connection
+        representation = Connection
         exclude_fields = (
             "connectedPiece",
             "connectedConnector",
@@ -11691,7 +11691,7 @@ class DesignNode(TableEntityNode):
     """🔖GraphQL node exposing design data."""
 
     class Meta:
-        model = Design
+        representation = Design
 
 
 class KitNotFound(NotFound):
@@ -11783,14 +11783,14 @@ class KitInputNode(InputNode):
     """🔖GraphQL input node for kit mutations."""
 
     class Meta:
-        model = KitInput
+        representation = KitInput
 
 
 class KitNode(TableEntityNode):
     """🔖GraphQL node exposing kit data."""
 
     class Meta:
-        model = Kit
+        representation = Kit
 
 
 # #endregion 🧭Moved Graphene Nodes
@@ -12058,25 +12058,25 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
     return problems
 
 
-def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all model names within a type are unique."""
+def validateRepresentationNameUniqueness(kit: Kit) -> list[Problem]:
+    """🔖Validate that all representation names within a type are unique."""
     problems: list[Problem] = []
     for t in kit.types or []:
-        names: dict[str, list[Model]] = {}
-        for model in t.models or []:
-            if model.name and model.name not in names:
-                names[model.name] = []
-            if model.name:
-                names[model.name].append(model)
+        names: dict[str, list[Representation]] = {}
+        for representation in t.representations or []:
+            if representation.name and representation.name not in names:
+                names[representation.name] = []
+            if representation.name:
+                names[representation.name].append(representation)
         for name, group in names.items():
             if len(group) > 1:
-                for model in group[1:]:
+                for representation in group[1:]:
                     problems.append(
                         Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" in type.',
-                            entityKind="Model",
-                            entityGuid=model.guid,
+                            constraintId="representation-name-unique",
+                            message=f'Duplicate representation name "{name}" in type.',
+                            entityKind="Representation",
+                            entityGuid=representation.guid,
                         )
                     )
     return problems
@@ -12186,7 +12186,7 @@ def validateKit(kit: Kit) -> ValidationResult:
     problems.extend(validateDesignNameUniqueness(kit))
     problems.extend(validatePieceNameUniqueness(kit))
     problems.extend(validatePortNameUniqueness(kit))
-    problems.extend(validateModelNameUniqueness(kit))
+    problems.extend(validateRepresentationNameUniqueness(kit))
     problems.extend(validateQualityNameUniqueness(kit))
     problems.extend(validateFolderNameUniqueness(kit))
     problems.extend(validateLayerPathUniqueness(kit))
@@ -12240,8 +12240,8 @@ def validateKitDict(kit: dict) -> ValidationResult:
         checkGuid("Type", t.get("guid", ""), t)
         for connector in t.get("connectors", []):
             checkGuid("Connector", connector.get("guid", ""), connector)
-        for model in t.get("models", []):
-            checkGuid("Model", model.get("guid", ""), model)
+        for representation in t.get("representations", []):
+            checkGuid("Representation", representation.get("guid", ""), representation)
     for d in kit.get("designs", []):
         checkGuid("Design", d.get("guid", ""), d)
         for p in d.get("pieces", []):
@@ -12428,27 +12428,27 @@ def validateKitDict(kit: dict) -> ValidationResult:
         typeName = t.get("name", "")
         typeGuid = t.get("guid", "")
         names = {}
-        for model in t.get("models", []):
-            name = model.get("name", "")
+        for representation in t.get("representations", []):
+            name = representation.get("name", "")
             if name and name not in names:
                 names[name] = []
             if name:
-                names[name].append(model)
+                names[name].append(representation)
         for name, group in names.items():
             if len(group) > 1:
-                for model in group[1:]:
+                for representation in group[1:]:
                     fix = _makeFix(
-                        f'Rename model "{name}"',
+                        f'Rename representation "{name}"',
                         {
                             "types": {
                                 "updated": [
                                     {
                                         "type": {"guid": typeGuid},
                                         "diff": {
-                                            "models": {
+                                            "representations": {
                                                 "updated": [
                                                     {
-                                                        "model": {"guid": model.get("guid", "")},
+                                                        "representation": {"guid": representation.get("guid", "")},
                                                         "diff": {"name": f"{name} 2"},
                                                     }
                                                 ]
@@ -12461,10 +12461,10 @@ def validateKitDict(kit: dict) -> ValidationResult:
                     )
                     problems.append(
                         Problem(
-                            constraintId="model-name-unique",
-                            message=f'Duplicate model name "{name}" inside type "{typeName}".',
-                            entityKind="Model",
-                            entityGuid=model.get("guid", ""),
+                            constraintId="representation-name-unique",
+                            message=f'Duplicate representation name "{name}" inside type "{typeName}".',
+                            entityKind="Representation",
+                            entityGuid=representation.get("guid", ""),
                             fixes=[fix],
                         )
                     )
@@ -13356,7 +13356,7 @@ class KitData:
     def filter_kit(self, filter_spec: dict) -> "KitData":
         """🔖General-purpose kit filter with glob support."""
         design_guid = filter_spec.get("design_guid")
-        tags = filter_spec.get("model_tags")
+        tags = filter_spec.get("representation_tags")
 
         if design_guid:
             base = self._filter_kit_by_design(design_guid, tags)
@@ -13462,7 +13462,7 @@ class KitData:
         used_quality_guids: set[str] = set()
         used_author_guids: set[str] = set()
         used_folder_names: set[str] = set()
-        selected_models: dict[str, dict] = {}
+        selected_representations: dict[str, dict] = {}
 
         def collect_quality_from_props(props: typing.Optional[list[dict]]) -> None:
             for prop in props or []:
@@ -13470,20 +13470,20 @@ class KitData:
                 if quality_guid:
                     used_quality_guids.add(quality_guid)
 
-        def select_best_model(models: list[dict]) -> typing.Optional[dict]:
-            if not models:
+        def select_best_representation(representations: list[dict]) -> typing.Optional[dict]:
+            if not representations:
                 return None
             if not resolved_tag_guids:
-                return next((model for model in models if not model.get("tags")), models[0])
-            filtered = [model for model in models if all(selected in {tag.get("guid") for tag in model.get("tags", [])} for selected in resolved_tag_guids)]
+                return next((representation for representation in representations if not representation.get("tags")), representations[0])
+            filtered = [representation for representation in representations if all(selected in {tag.get("guid") for tag in representation.get("tags", [])} for selected in resolved_tag_guids)]
             if not filtered:
                 return None
 
-            def score(model: dict) -> float:
-                model_tags = {tag.get("guid") for tag in model.get("tags", [])}
+            def score(representation: dict) -> float:
+                representation_tags = {tag.get("guid") for tag in representation.get("tags", [])}
                 selected = set(resolved_tag_guids)
-                union = model_tags | selected
-                return 0.0 if not union else len(model_tags & selected) / len(union)
+                union = representation_tags | selected
+                return 0.0 if not union else len(representation_tags & selected) / len(union)
 
             return max(filtered, key=score)
 
@@ -13505,13 +13505,13 @@ class KitData:
             for concept in type_item.get("concepts", []):
                 if concept.get("guid"):
                     used_concept_guids.add(concept["guid"])
-            selected_model = select_best_model(type_item.get("models", []))
-            if selected_model:
-                selected_models[type_guid] = selected_model
-                file_guid = selected_model.get("file", {}).get("guid")
+            selected_representation = select_best_representation(type_item.get("representations", []))
+            if selected_representation:
+                selected_representations[type_guid] = selected_representation
+                file_guid = selected_representation.get("file", {}).get("guid")
                 if file_guid:
                     used_file_guids.add(file_guid)
-                for tag in selected_model.get("tags", []):
+                for tag in selected_representation.get("tags", []):
                     if tag.get("guid"):
                         used_tag_guids.add(tag["guid"])
 
@@ -13554,8 +13554,8 @@ class KitData:
             if type_item.get("guid") not in used_type_guids:
                 continue
             filtered_type = dict(type_item)
-            selected_model = selected_models.get(type_item["guid"])
-            filtered_type["models"] = [selected_model] if selected_model else []
+            selected_representation = selected_representations.get(type_item["guid"])
+            filtered_type["representations"] = [selected_representation] if selected_representation else []
             filtered["types"].append(filtered_type)
         filtered["designs"] = [candidate for candidate in kit.get("designs", []) if candidate.get("guid") in used_design_guids]
         filtered["ports"] = [port for port in kit.get("ports", []) if port.get("guid") in used_port_guids]
@@ -13590,8 +13590,8 @@ def _parse_connector_from_sqlite(row: dict) -> dict:
     }
 
 
-def _parse_model_from_sqlite(row: dict) -> dict:
-    """🔖_parse_model_from_sqlite performs the _parse_model_from_sqlite operation."""
+def _parse_representation_from_sqlite(row: dict) -> dict:
+    """🔖_parse_representation_from_sqlite performs the _parse_representation_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
         "name": row.get("name"),
@@ -13600,7 +13600,7 @@ def _parse_model_from_sqlite(row: dict) -> dict:
     }
 
 
-def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict]) -> dict:
+def _parse_type_from_sqlite(row: dict, connectors: list[dict], representations: list[dict]) -> dict:
     """🔖_parse_type_from_sqlite performs the _parse_type_from_sqlite operation."""
     return {
         "guid": row.get("guid"),
@@ -13616,7 +13616,7 @@ def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict
         "icon": row.get("icon"),
         "image": row.get("image"),
         "connectors": connectors,
-        "models": models,
+        "representations": representations,
     }
 
 
@@ -13816,7 +13816,7 @@ def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) ->
         return parsed
     merged = copy.deepcopy(payload_entity)
     for key, value in parsed.items():
-        if key in {"connectors", "models", "pieces", "connections"} or value is not None or key not in merged:
+        if key in {"connectors", "representations", "pieces", "connections"} or value is not None or key not in merged:
             merged[key] = value
     return merged
 
@@ -13855,27 +13855,27 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
             connector["port"] = {"guid": connector["port"]} if connector.get("port") else None
             connectors_by_type.setdefault(row["type_guid"], []).append(connector)
 
-        models_by_type: dict[str, list[dict]] = {}
-        model_tags_by_model: dict[str, list[dict]] = {}
+        representations_by_type: dict[str, list[dict]] = {}
+        representation_tags_by_representation: dict[str, list[dict]] = {}
         try:
-            for row in cursor.execute("SELECT * FROM model_tag ORDER BY model_guid").fetchall():
+            for row in cursor.execute("SELECT * FROM representation_tag ORDER BY representation_guid").fetchall():
                 r = dict(row)
-                model_tags_by_model.setdefault(r["model_guid"], []).append({"guid": r["tag_guid"]})
+                representation_tags_by_representation.setdefault(r["representation_guid"], []).append({"guid": r["tag_guid"]})
         except sqlite3.OperationalError:
             pass
 
-        for row in cursor.execute("SELECT * FROM model ORDER BY guid").fetchall():
-            model = _parse_model_from_sqlite(dict(row))
-            model["file"] = {"guid": model["file"]} if model.get("file") else None
-            model["tags"] = model_tags_by_model.get(row["guid"], [])
-            models_by_type.setdefault(row["type_guid"], []).append(model)
+        for row in cursor.execute("SELECT * FROM representation ORDER BY guid").fetchall():
+            representation = _parse_representation_from_sqlite(dict(row))
+            representation["file"] = {"guid": representation["file"]} if representation.get("file") else None
+            representation["tags"] = representation_tags_by_representation.get(row["guid"], [])
+            representations_by_type.setdefault(row["type_guid"], []).append(representation)
 
         types: list[dict] = []
         for row in cursor.execute("SELECT * FROM type ORDER BY row_id, name, guid").fetchall():
             type_dict = _parse_type_from_sqlite(
                 dict(row),
                 connectors_by_type.get(row["guid"], []),
-                models_by_type.get(row["guid"], []),
+                representations_by_type.get(row["guid"], []),
             )
             if type_dict.get("parent"):
                 type_dict["parent"] = {"guid": type_dict["parent"]}
@@ -14239,7 +14239,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """)
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS model (
+        CREATE TABLE IF NOT EXISTS representation (
             guid VARCHAR(36) PRIMARY KEY,
             file_guid VARCHAR(36) NOT NULL,
             name VARCHAR(256),
@@ -14352,10 +14352,10 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """)
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS model_tag (
-            model_guid VARCHAR(36) NOT NULL,
+        CREATE TABLE IF NOT EXISTS representation_tag (
+            representation_guid VARCHAR(36) NOT NULL,
             tag_guid VARCHAR(36) NOT NULL,
-            PRIMARY KEY (model_guid, tag_guid)
+            PRIMARY KEY (representation_guid, tag_guid)
         )
     """)
 
@@ -14441,10 +14441,10 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
                 ),
             )
 
-        for m in t.get("models", []):
+        for m in t.get("representations", []):
             cursor.execute(
                 """
-                INSERT INTO model (guid, file_guid, name, description, type_guid)
+                INSERT INTO representation (guid, file_guid, name, description, type_guid)
                 VALUES (?, ?, ?, ?, ?)
             """,
                 (
@@ -14617,14 +14617,14 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
         )
 
     for t in data.get("types", []):
-        for m in t.get("models", []):
-            model_guid = m.get("guid")
+        for m in t.get("representations", []):
+            representation_guid = m.get("guid")
             for tag in m.get("tags", []):
                 tag_guid = _getGuidFromRef(tag) if isinstance(tag, dict) else tag
-                if model_guid and tag_guid:
+                if representation_guid and tag_guid:
                     cursor.execute(
-                        "INSERT OR IGNORE INTO model_tag (model_guid, tag_guid) VALUES (?, ?)",
-                        (model_guid, tag_guid),
+                        "INSERT OR IGNORE INTO representation_tag (representation_guid, tag_guid) VALUES (?, ?)",
+                        (representation_guid, tag_guid),
                     )
 
     cursor.execute(
@@ -14761,14 +14761,14 @@ class RemoteKit(SyncKit):
 # #endregion 🧿Kit Import/Export
 
 
-# #region 🔩Kit Model Export
-# 3D model export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
+# #region 🔩Kit Representation Export
+# 3D representation export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
 
-EXPORT_MODEL_FORMATS: dict[str, str] = {
-    ".glb": "model/gltf-binary",
-    ".gltf": "model/gltf+json",
-    ".obj": "model/obj",
-    ".stl": "model/stl",
+EXPORT_REPRESENTATION_FORMATS: dict[str, str] = {
+    ".glb": "representation/gltf-binary",
+    ".gltf": "representation/gltf+json",
+    ".obj": "representation/obj",
+    ".stl": "representation/stl",
     ".ply": "application/x-ply",
     ".off": "application/x-off",
     ".ifc": "application/x-ifc",
@@ -14833,19 +14833,19 @@ def _type_key_from_type(t: "Type") -> str:
     return f"{t.name}:{t.variant}"
 
 
-def _find_matching_model(kit: "Kit", type_obj: "Type", tags: list[str]) -> typing.Optional["Model"]:
-    """📨Find the best matching model for a type given requested tags."""
-    if not type_obj.models or len(type_obj.models) == 0:
+def _find_matching_representation(kit: "Kit", type_obj: "Type", tags: list[str]) -> typing.Optional["Representation"]:
+    """📨Find the best matching representation for a type given requested tags."""
+    if not type_obj.representations or len(type_obj.representations) == 0:
         return None
     if not tags or len(tags) == 0:
-        default_model = next((model for model in type_obj.models if len(model.tags or []) == 0), None)
-        return default_model if default_model is not None else type_obj.models[0]
+        default_representation = next((representation for representation in type_obj.representations if len(representation.tags or []) == 0), None)
+        return default_representation if default_representation is not None else type_obj.representations[0]
     tags_set = set(tags)
-    for model in type_obj.models:
-        model_tag_names = model.tags
-        if model_tag_names and all(t in tags_set for t in model_tag_names):
-            return model
-    return type_obj.models[0]
+    for representation in type_obj.representations:
+        representation_tag_names = representation.tags
+        if representation_tag_names and all(t in tags_set for t in representation_tag_names):
+            return representation
+    return type_obj.representations[0]
 
 
 def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typing.Any | None":
@@ -14991,16 +14991,16 @@ def _load_glb_mesh_from_bytes(raw: bytes, mesh_name: str | None = None) -> "typi
 
 
 def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.Any | None":
-    """🎯Load the 3D mesh for a type from its best-matching model blob."""
+    """🎯Load the 3D mesh for a type from its best-matching representation blob."""
     import base64 as _base64
 
     import trimesh as _trimesh
 
-    model = _find_matching_model(kit, type_obj, tags)
-    if model is None:
+    representation = _find_matching_representation(kit, type_obj, tags)
+    if representation is None:
         return None
     files_list = kit.files_ or []
-    file_id = model.file.guid if hasattr(model.file, "guid") else model.file
+    file_id = representation.file.guid if hasattr(representation.file, "guid") else representation.file
     file_obj = next((f for f in files_list if f.name == file_id or f.guid == file_id), None)
     if file_obj is None or not file_obj.blob:
         return None
@@ -15033,14 +15033,14 @@ def _load_type_mesh(kit: "Kit", type_obj: "Type", tags: list[str]) -> "typing.An
     return None
 
 
-def export_design_model(
+def export_design_representation(
     kit: "Kit",
     design_id: str,
     format: str = ".glb",
     tags: list[str] | None = None,
     options: dict | None = None,
 ) -> bytes:
-    """Export the 3D model of a design to a specified format.
+    """Export the 3D representation of a design to a specified format.
     Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
     """
     import trimesh as _trimesh
@@ -15049,8 +15049,8 @@ def export_design_model(
         tags = []
     if options is None:
         options = {}
-    if format not in EXPORT_MODEL_FORMATS:
-        raise ValueError(f"Unsupported export format '{format}'. Supported: {list(EXPORT_MODEL_FORMATS.keys())}")
+    if format not in EXPORT_REPRESENTATION_FORMATS:
+        raise ValueError(f"Unsupported export format '{format}'. Supported: {list(EXPORT_REPRESENTATION_FORMATS.keys())}")
 
     if isinstance(kit, dict):
         designs = kit.get("designs", []) or []
@@ -15206,17 +15206,17 @@ def export_design_model(
         if format == ".ifc":
             return _export_ifc_from_dict(kit, design_id, piece_planes, parent_of, children_of, roots, tags)
 
-        def _select_model_dict(type_obj: dict) -> dict | None:
-            models = type_obj.get("models", []) or []
-            if len(models) == 0:
+        def _select_representation_dict(type_obj: dict) -> dict | None:
+            representations = type_obj.get("representations", []) or []
+            if len(representations) == 0:
                 return None
             tag_lookup = {tag.get("guid"): tag for tag in (kit.get("tags", []) or []) if tag.get("guid")}
             if len(tags) == 0:
-                default_model = next(
-                    (model for model in models if len(model.get("tags", []) or []) == 0),
+                default_representation = next(
+                    (representation for representation in representations if len(representation.get("tags", []) or []) == 0),
                     None,
                 )
-                return default_model if default_model is not None else models[0]
+                return default_representation if default_representation is not None else representations[0]
             selected_tag_guids: set[str] = set()
             for tag_value in tags:
                 if tag_value in tag_lookup:
@@ -15225,19 +15225,19 @@ def export_design_model(
                 for tag in tag_lookup.values():
                     if tag.get("name") == tag_value:
                         selected_tag_guids.add(tag.get("guid"))
-            best_model = None
+            best_representation = None
             best_score = -1.0
-            for model in models:
-                model_tag_guids = {tag.get("guid") for tag in (model.get("tags", []) or []) if tag.get("guid")}
-                if not selected_tag_guids.issubset(model_tag_guids):
+            for representation in representations:
+                representation_tag_guids = {tag.get("guid") for tag in (representation.get("tags", []) or []) if tag.get("guid")}
+                if not selected_tag_guids.issubset(representation_tag_guids):
                     continue
-                union = len(model_tag_guids.union(selected_tag_guids))
-                intersection = len(model_tag_guids.intersection(selected_tag_guids))
+                union = len(representation_tag_guids.union(selected_tag_guids))
+                intersection = len(representation_tag_guids.intersection(selected_tag_guids))
                 score = float(intersection) / float(union) if union > 0 else 0.0
                 if score > best_score:
                     best_score = score
-                    best_model = model
-            return best_model if best_model is not None else models[0]
+                    best_representation = representation
+            return best_representation if best_representation is not None else representations[0]
 
         scene = _trimesh.Scene()
         type_meshes: dict[str, str] = {}
@@ -15249,8 +15249,8 @@ def export_design_model(
             type_obj = types_by_guid.get(type_guid)
             if type_obj is None:
                 continue
-            selected_model = _select_model_dict(type_obj)
-            selected_file = files_by_guid.get(selected_model.get("file", {}).get("guid")) if selected_model is not None else None
+            selected_representation = _select_representation_dict(type_obj)
+            selected_file = files_by_guid.get(selected_representation.get("file", {}).get("guid")) if selected_representation is not None else None
             mesh = None
             if selected_file is not None and selected_file.get("blob"):
                 try:
@@ -15435,9 +15435,9 @@ def export_design_model(
         if mesh is None:
             continue
         geometry_name = None
-        model = _find_matching_model(kit, type_obj, tags)
-        if model is not None:
-            geometry_name = model.file if isinstance(model.file, str) else None
+        representation = _find_matching_representation(kit, type_obj, tags)
+        if representation is not None:
+            geometry_name = representation.file if isinstance(representation.file, str) else None
         if not geometry_name:
             geometry_name = tk
         type_meshes[tk] = geometry_name
@@ -15706,14 +15706,14 @@ def _export_ifc_from_dict(
     kit_name = kit.get("name", "semio Kit")
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
     _ifc_api.run("unit.assign_unit", ifc)
-    model_context = _ifc_api.run("context.add_context", ifc, context_type="Model")
+    representation_context = _ifc_api.run("context.add_context", ifc, context_type="Representation")
     body_context = _ifc_api.run(
         "context.add_context",
         ifc,
-        context_type="Model",
+        context_type="Representation",
         context_identifier="Body",
-        target_view="MODEL_VIEW",
-        parent=model_context,
+        target_view="REPRESENTATION_VIEW",
+        parent=representation_context,
     )
     site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
     _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
@@ -15863,10 +15863,10 @@ def _export_ifc_from_dict(
             meta_pset = _ifc_api.run("pset.add_pset", ifc, product=ifc_type, name="SemioTypeMetadata")
             _ifc_api.run("pset.edit_pset", ifc, pset=meta_pset, properties=type_meta)
 
-        # Geometry: find best model, extract GLB mesh
-        models = type_obj.get("models", []) or []
-        selected_model = None
-        if models:
+        # Geometry: find best representation, extract GLB mesh
+        representations = type_obj.get("representations", []) or []
+        selected_representation = None
+        if representations:
             selected_tag_guids: set[str] = set()
             for tag_value in tags:
                 if tag_value in tag_lookup:
@@ -15876,18 +15876,18 @@ def _export_ifc_from_dict(
                         if tag.get("name") == tag_value:
                             selected_tag_guids.add(tag.get("guid"))
             if not selected_tag_guids:
-                selected_model = next((m for m in models if len(m.get("tags", []) or []) == 0), None) or models[0]
+                selected_representation = next((m for m in representations if len(m.get("tags", []) or []) == 0), None) or representations[0]
             else:
-                for m in models:
-                    model_tag_guids = {t.get("guid") if isinstance(t, dict) else t for t in (m.get("tags", []) or [])}
-                    if selected_tag_guids.issubset(model_tag_guids):
-                        selected_model = m
+                for m in representations:
+                    representation_tag_guids = {t.get("guid") if isinstance(t, dict) else t for t in (m.get("tags", []) or [])}
+                    if selected_tag_guids.issubset(representation_tag_guids):
+                        selected_representation = m
                         break
-                if selected_model is None:
-                    selected_model = models[0]
+                if selected_representation is None:
+                    selected_representation = representations[0]
 
-        if selected_model is not None:
-            file_ref = selected_model.get("file", {})
+        if selected_representation is not None:
+            file_ref = selected_representation.get("file", {})
             file_guid = file_ref.get("guid") if isinstance(file_ref, dict) else file_ref
             file_obj = files_by_guid.get(file_guid)
             if file_obj is not None and file_obj.get("blob"):
@@ -16175,14 +16175,14 @@ def _export_ifc_from_entities(
     kit_name = kit.name if hasattr(kit, "name") and kit.name else "semio Kit"
     project = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcProject", name=kit_name)
     _ifc_api.run("unit.assign_unit", ifc)
-    model_context = _ifc_api.run("context.add_context", ifc, context_type="Model")
+    representation_context = _ifc_api.run("context.add_context", ifc, context_type="Representation")
     body_context = _ifc_api.run(
         "context.add_context",
         ifc,
-        context_type="Model",
+        context_type="Representation",
         context_identifier="Body",
-        target_view="MODEL_VIEW",
-        parent=model_context,
+        target_view="REPRESENTATION_VIEW",
+        parent=representation_context,
     )
     site = _ifc_api.run("root.create_entity", ifc, ifc_class="IfcSite", name="Site")
     _ifc_api.run("aggregate.assign_object", ifc, relating_object=project, products=[site])
@@ -16298,10 +16298,10 @@ def _export_ifc_from_entities(
         )
 
         # Type-level geometry
-        model = _find_matching_model(kit, type_obj, tags)
-        if model is not None:
+        representation = _find_matching_representation(kit, type_obj, tags)
+        if representation is not None:
             files_list = kit.files_ or []
-            file_id = model.file.guid if hasattr(model.file, "guid") else model.file
+            file_id = representation.file.guid if hasattr(representation.file, "guid") else representation.file
             file_obj = next((f for f in files_list if f.name == file_id or f.guid == file_id), None)
             if file_obj is not None and file_obj.blob:
                 blob = file_obj.blob
@@ -16460,11 +16460,11 @@ def _export_ifc_from_entities(
 
 # #endregion 📻IFC Export
 
-# #endregion 🔩Kit Model Export
+# #endregion 🔩Kit Representation Export
 
 
 # #region ❄️Geometric Insights
-# Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+# Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
 
 @dataclasses.dataclass
@@ -16510,25 +16510,25 @@ class GeometricInsights:
     concavity_index: float | None = None
 
 
-def get_geometric_insights_for_model(model: str | bytes) -> GeometricInsights:
-    """🔖Compute key performance indicators for the geometry of a GLB/GLTF model."""
+def get_geometric_insights_for_representation(representation: str | bytes) -> GeometricInsights:
+    """🔖Compute key performance indicators for the geometry of a GLB/GLTF representation."""
     import trimesh as _trimesh
 
-    if isinstance(model, bytes):
+    if isinstance(representation, bytes):
         file_type = "glb"
-        if len(model) >= 4 and model[:4] == b"glTF":
+        if len(representation) >= 4 and representation[:4] == b"glTF":
             file_type = "glb"
-        elif len(model) > 0 and model.lstrip().startswith(b"{"):
+        elif len(representation) > 0 and representation.lstrip().startswith(b"{"):
             file_type = "gltf"
-        stream = _trimesh.util.wrap_as_stream(model)
+        stream = _trimesh.util.wrap_as_stream(representation)
         loaded = _trimesh.load(stream, file_type=file_type)
     else:
-        path = pathlib.Path(model)
+        path = pathlib.Path(representation)
         if not path.exists():
-            raise FileNotFoundError(f"Model file not found: {model}")
+            raise FileNotFoundError(f"Representation file not found: {representation}")
         ext = path.suffix.lower()
         if ext not in (".glb", ".gltf"):
-            raise ValueError(f"Model MUST be .glb or .gltf, got {ext}")
+            raise ValueError(f"Representation MUST be .glb or .gltf, got {ext}")
         file_type = "glb" if ext == ".glb" else "gltf"
         loaded = _trimesh.load(str(path), file_type=file_type)
 
@@ -16850,8 +16850,8 @@ def computeChildPlane(
 
 TEST_TOLERANCE = 0.001
 TEST_ASSETS_DIR = "../assets/semio"
-REPORTS_EXPORT_DIR = pathlib.Path(__file__).resolve().parents[2] / "reports" / "export-design-model"
-REPORTS_MODEL_KPI_DIR = pathlib.Path(__file__).resolve().parents[2] / "reports" / "model-kpi"
+REPORTS_EXPORT_DIR = pathlib.Path(__file__).resolve().parents[2] / "reports" / "export-design-representation"
+REPORTS_REPRESENTATION_KPI_DIR = pathlib.Path(__file__).resolve().parents[2] / "reports" / "representation-kpi"
 
 
 def _test_load_json(filename: str) -> dict:
@@ -16874,7 +16874,7 @@ def _test_load_kit(filename: str) -> dict:
         "folders",
         "authors",
         "concepts",
-        "models",
+        "representations",
         "connectors",
         "pieces",
         "connections",
@@ -16896,8 +16896,8 @@ def _test_load_kit(filename: str) -> dict:
                     item["folder"] = item["folder"]["guid"]
     if "types" in data:
         for t in data["types"]:
-            if "models" in t:
-                for m in t["models"]:
+            if "representations" in t:
+                for m in t["representations"]:
                     if "file" in m and isinstance(m["file"], dict) and "guid" in m["file"]:
                         m["file"] = m["file"]["guid"]
                     if "file" not in m or m["file"] is None:
@@ -16925,10 +16925,10 @@ def _test_build_workflow_kit() -> dict:
                 "guid": "22222222-2222-2222-2222-222222222222",
                 "name": "Workflow Type",
                 "connectors": [],
-                "models": [
+                "representations": [
                     {
                         "guid": "33333333-3333-3333-3333-333333333333",
-                        "name": "Workflow Model",
+                        "name": "Workflow Representation",
                         "file": {"guid": "44444444-4444-4444-4444-444444444444"},
                     }
                 ],
@@ -17113,15 +17113,15 @@ def _test_flatten(design_name, parent_name=None):
         assert _test_centers_equal(piece.get("center"), expected_piece.get("center"))
 
 
-def _test_contains_all_tags(model: dict[str, typing.Any], selected_tag_guids: list[str]) -> bool:
-    model_tag_guids = [t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])]
-    return all(guid in model_tag_guids for guid in selected_tag_guids)
+def _test_contains_all_tags(representation: dict[str, typing.Any], selected_tag_guids: list[str]) -> bool:
+    representation_tag_guids = [t.get("guid") if isinstance(t, dict) else t for t in representation.get("tags", [])]
+    return all(guid in representation_tag_guids for guid in selected_tag_guids)
 
 
-def _test_jaccard_tag_guids(model_tag_guids: list[str], selected_tag_guids: list[str]) -> float:
-    if len(model_tag_guids) == 0 and len(selected_tag_guids) == 0:
+def _test_jaccard_tag_guids(representation_tag_guids: list[str], selected_tag_guids: list[str]) -> float:
+    if len(representation_tag_guids) == 0 and len(selected_tag_guids) == 0:
         return 1.0
-    set_a = set(model_tag_guids)
+    set_a = set(representation_tag_guids)
     set_b = set(selected_tag_guids)
     union = set_a | set_b
     if len(union) == 0:
@@ -17129,25 +17129,25 @@ def _test_jaccard_tag_guids(model_tag_guids: list[str], selected_tag_guids: list
     return len(set_a & set_b) / len(union)
 
 
-def _test_select_best_model_like_semio_ts(models: list[dict[str, typing.Any]], selected_tag_guids: list[str]) -> dict[str, typing.Any] | None:
-    if len(models) == 0:
+def _test_select_best_representation_like_semio_ts(representations: list[dict[str, typing.Any]], selected_tag_guids: list[str]) -> dict[str, typing.Any] | None:
+    if len(representations) == 0:
         return None
     if len(selected_tag_guids) == 0:
-        default_model = next((model for model in models if len(model.get("tags", [])) == 0), None)
-        return default_model if default_model is not None else models[0]
-    filtered_models = [model for model in models if _test_contains_all_tags(model, selected_tag_guids)]
-    if len(filtered_models) == 0:
+        default_representation = next((representation for representation in representations if len(representation.get("tags", [])) == 0), None)
+        return default_representation if default_representation is not None else representations[0]
+    filtered_representations = [representation for representation in representations if _test_contains_all_tags(representation, selected_tag_guids)]
+    if len(filtered_representations) == 0:
         return None
     indexed_scores = [
         _test_jaccard_tag_guids(
-            [t.get("guid") if isinstance(t, dict) else t for t in model.get("tags", [])],
+            [t.get("guid") if isinstance(t, dict) else t for t in representation.get("tags", [])],
             selected_tag_guids,
         )
-        for model in filtered_models
+        for representation in filtered_representations
     ]
     max_score = max(indexed_scores)
     max_score_index = indexed_scores.index(max_score)
-    return filtered_models[max_score_index]
+    return filtered_representations[max_score_index]
 
 
 def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: list[tuple[int, int, int]]) -> str:
@@ -17224,7 +17224,7 @@ def _test_create_glb_blob(vertices: list[tuple[float, float, float]], faces: lis
             binary_chunk,
         ]
     )
-    return "data:model/gltf-binary;base64," + base64.b64encode(glb).decode("ascii")
+    return "data:representation/gltf-binary;base64," + base64.b64encode(glb).decode("ascii")
 
 
 class TestRoundtrip:
@@ -17755,19 +17755,19 @@ class TestValidation:
             assert not emoji_constraint_ids
 
 
-class TestDesignModel:
-    def test_model_selection_from_shared_semio_assets(self):
-        payload = _test_load_json("model.selection.semio.json")
+class TestDesignRepresentation:
+    def test_representation_selection_from_shared_semio_assets(self):
+        payload = _test_load_json("representation.selection.semio.json")
         for case in payload.get("cases", []):
-            models = [
+            representations = [
                 {
-                    "guid": model["guid"],
-                    "file": {"guid": model["fileGuid"]},
-                    "tags": [{"guid": guid} for guid in model.get("tagGuids", [])],
+                    "guid": representation["guid"],
+                    "file": {"guid": representation["fileGuid"]},
+                    "tags": [{"guid": guid} for guid in representation.get("tagGuids", [])],
                 }
-                for model in case.get("models", [])
+                for representation in case.get("representations", [])
             ]
-            selected = _test_select_best_model_like_semio_ts(models, case.get("selectedTagGuids", []))
+            selected = _test_select_best_representation_like_semio_ts(representations, case.get("selectedTagGuids", []))
             selected_guid = selected.get("guid") if selected else None
             assert selected_guid == case.get("expectedGuid"), f"Case {case.get('name')} failed"
 
@@ -17801,7 +17801,7 @@ class TestKitFilterDesign:
                     None,
                 )
                 assert filtered_type is not None
-                assert len(filtered_type.get("models", [])) == len(expected_type.get("models", []))
+                assert len(filtered_type.get("representations", [])) == len(expected_type.get("representations", []))
 
             for piece in filtered_design.get("pieces", []):
                 piece_kind_guid = piece.get("type", {}).get("guid")
@@ -17809,9 +17809,9 @@ class TestKitFilterDesign:
                     assert any(t.get("guid") == piece_kind_guid for t in filtered.get("types", []))
 
             for kind in filtered.get("types", []):
-                assert len(kind.get("models", [])) <= 1
-                for model in kind.get("models", []):
-                    assert any(file.get("guid") == model.get("file", {}).get("guid") for file in filtered.get("files", []))
+                assert len(kind.get("representations", [])) <= 1
+                for representation in kind.get("representations", []):
+                    assert any(file.get("guid") == representation.get("file", {}).get("guid") for file in filtered.get("files", []))
                 for connector in kind.get("connectors", []):
                     connector_guid = connector.get("port", {}).get("guid")
                     if connector_guid:
@@ -17998,15 +17998,15 @@ class TestDesignQualitySum:
         assert abs(result - case["expected"]) < case.get("tolerance", TEST_TOLERANCE)
 
 
-class TestExportDesignModel:
-    _export_cases = _test_load_json("export-design-model.cases.semio.json")["cases"]
+class TestExportDesignRepresentation:
+    _export_cases = _test_load_json("export-design-representation.cases.semio.json")["cases"]
     _export_case = _export_cases[0]
     _export_kit_file = _export_case["kit"]
     _export_design_name = _export_case["designName"]
 
     def test_export_glb_returns_valid_glb(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".glb")
+        result = export_design_representation(kit_dict, self._export_design_name, ".glb")
         assert isinstance(result, bytes)
         assert len(result) > 0
         assert result[:4] == b"glTF"
@@ -18015,7 +18015,7 @@ class TestExportDesignModel:
 
     def test_export_gltf_returns_valid_json(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".gltf")
+        result = export_design_representation(kit_dict, self._export_design_name, ".gltf")
         assert isinstance(result, bytes)
         assert len(result) > 0
         parsed = json.loads(result.decode("utf-8"))
@@ -18025,11 +18025,11 @@ class TestExportDesignModel:
     def test_export_invalid_format_raises(self):
         kit_dict = _test_load_json(self._export_kit_file)
         with pytest.raises(ValueError, match="Unsupported export format"):
-            export_design_model(kit_dict, self._export_design_name, ".invalid")
+            export_design_representation(kit_dict, self._export_design_name, ".invalid")
 
     def test_export_scene_graph_report(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".gltf")
+        result = export_design_representation(kit_dict, self._export_design_name, ".gltf")
         parsed = json.loads(result.decode("utf-8"))
         assert "nodes" in parsed
         assert "scenes" in parsed
@@ -18038,7 +18038,7 @@ class TestExportDesignModel:
 
     def test_export_ifc_returns_valid_ifc(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         assert isinstance(result, bytes)
         assert len(result) > 0
         ifc_text = result.decode("utf-8")
@@ -18051,14 +18051,14 @@ class TestExportDesignModel:
 
     def test_export_ifc_contains_types_and_occurrences(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCBUILDINGELEMENTPROXYTYPE" in ifc_text
         assert "IFCBUILDINGELEMENTPROXY(" in ifc_text
 
     def test_export_ifc_contains_mesh_geometry(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCSHAPEREPRESENTATION" in ifc_text
 
@@ -18076,9 +18076,9 @@ class TestExportDesignModel:
                     "variant": "",
                     "attributes": [],
                     "connectors": [],
-                    "models": [
+                    "representations": [
                         {
-                            "guid": "axis-test-model",
+                            "guid": "axis-test-representation",
                             "file": {"guid": "axis-test-file"},
                             "tags": [],
                         }
@@ -18113,7 +18113,7 @@ class TestExportDesignModel:
             "authors": [],
         }
 
-        result = export_design_model(kit_dict, "Axis Test Design", ".ifc")
+        result = export_design_representation(kit_dict, "Axis Test Design", ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         point_lists = ifc.by_type("IfcCartesianPointList3D")
 
@@ -18125,7 +18125,7 @@ class TestExportDesignModel:
 
     def test_export_ifc_contains_ports_and_connections(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         ifc_text = result.decode("utf-8")
         assert "IFCDISTRIBUTIONPORT" in ifc_text
         assert "IFCRELCONNECTSPORTS" in ifc_text
@@ -18135,7 +18135,7 @@ class TestExportDesignModel:
         import ifcopenshell
 
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         projects = ifc.by_type("IfcProject")
         assert len(projects) == 1
@@ -18164,7 +18164,7 @@ class TestExportDesignModel:
         import ifcopenshell
 
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         ifc = ifcopenshell.file.from_string(result.decode("utf-8"))
         # IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey
         project = ifc.by_type("IfcProject")[0]
@@ -18187,31 +18187,31 @@ class TestExportDesignModel:
             contained = [rel.RelatedElements for rel in storey.ContainsElements] if storey.ContainsElements else []
             elements = [e for group in contained for e in group]
             assert len(elements) > 0, f"Storey {storey.Name} has no contained elements"
-        # Verify types have representations (model geometry)
+        # Verify types have representations (representation geometry)
         type_products = ifc.by_type("IfcBuildingElementProxyType")
         types_with_rep = [t for t in type_products if t.RepresentationMaps]
         assert len(types_with_rep) > 0
 
     def test_export_ifc_report(self):
         kit_dict = _test_load_json(self._export_kit_file)
-        result = export_design_model(kit_dict, self._export_design_name, ".ifc")
+        result = export_design_representation(kit_dict, self._export_design_name, ".ifc")
         REPORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
         (REPORTS_EXPORT_DIR / "py.ifc").write_bytes(result)
 
 
-class TestGetGeometricInsightsForModel:
-    """🔖Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf."""
+class TestGetGeometricInsightsForRepresentation:
+    """🔖Representation/KPI tests for get_geometric_insights_for_representation using nakagin-capsule-tower.gltf."""
 
     def test_nakagin_capsule_tower_gltf_returns_insights(self):
-        model_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin-capsule-tower.gltf")
-        if not os.path.exists(model_path):
+        representation_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin-capsule-tower.gltf")
+        if not os.path.exists(representation_path):
             pytest.skip("nakagin-capsule-tower.gltf not found")
-        insights = get_geometric_insights_for_model(model_path)
-        REPORTS_MODEL_KPI_DIR.mkdir(parents=True, exist_ok=True)
+        insights = get_geometric_insights_for_representation(representation_path)
+        REPORTS_REPRESENTATION_KPI_DIR.mkdir(parents=True, exist_ok=True)
         data = geometric_insights_to_report_dict(insights)
-        (REPORTS_MODEL_KPI_DIR / "py.json").write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
+        (REPORTS_REPRESENTATION_KPI_DIR / "py.json").write_text(json.dumps(data, indent=2, sort_keys=True), encoding="utf-8")
 
-        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin.kpi.model.semio.json")
+        canonical_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin.kpi.representation.semio.json")
         with open(canonical_path, "r", encoding="utf-8") as f:
             canonical = json.load(f)
         for key, expected in canonical.items():
@@ -18231,12 +18231,12 @@ class TestGetGeometricInsightsForModel:
         assert insights.euler_characteristic is not None
 
     def test_nakagin_capsule_tower_from_bytes_gltf(self):
-        model_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin-capsule-tower.gltf")
-        if not os.path.exists(model_path):
+        representation_path = os.path.join(os.path.dirname(__file__), TEST_ASSETS_DIR, "nakagin-capsule-tower.gltf")
+        if not os.path.exists(representation_path):
             pytest.skip("nakagin-capsule-tower.gltf not found")
-        with open(model_path, "rb") as f:
+        with open(representation_path, "rb") as f:
             data = f.read()
-        insights = get_geometric_insights_for_model(data)
+        insights = get_geometric_insights_for_representation(data)
         assert isinstance(insights, GeometricInsights)
         assert insights.face_count is not None and insights.face_count > 0
 
@@ -18253,7 +18253,7 @@ class TestTypeMeta:
         assert meta["guid"] == data["guid"]
         assert meta["name"] == "Tambour"
         assert "connectors" not in meta
-        assert "models" not in meta
+        assert "representations" not in meta
         assert "props" not in meta
         assert "attributes" not in meta
 
@@ -18345,7 +18345,7 @@ class TestKitShallow:
         assert "guid" in first_type
         assert "name" in first_type
         assert "connectors" not in first_type
-        assert "models" not in first_type
+        assert "representations" not in first_type
 
 
 class TestKitToMetaShallow:
@@ -18374,7 +18374,7 @@ class TestKitToMetaShallow:
 
         for t in computed_shallow.get("types", []):
             assert "connectors" not in t, "TypeMeta in shallow kit must not have connectors"
-            assert "models" not in t, "TypeMeta in shallow kit must not have models"
+            assert "representations" not in t, "TypeMeta in shallow kit must not have representations"
 
         expected_type_meta = _test_load_json("tambour.meta.type.semio.json")
         computed_type_meta = typeToMeta(next(t for t in kit_dict["types"] if t["guid"] == expected_type_meta["guid"]))
@@ -18557,12 +18557,12 @@ class TestMaxChildren:
 
     def test_port_max_children_serialization(self):
         port = PortProps(name="TestPort", maxChildren=5)
-        data = port.model_dump(mode="json")
+        data = port.representation_dump(mode="json")
         assert data["maxChildren"] == 5
 
     def test_port_max_children_roundtrip(self):
         port = PortInput(name="TestPort", maxChildren=3)
-        data = port.model_dump(mode="json")
+        data = port.representation_dump(mode="json")
         restored = PortInput(**data)
         assert restored.maxChildren == 3
 
@@ -18593,7 +18593,7 @@ class TestMaxChildren:
             direction=VectorInput(x=0, y=0, z=1),
             maxChildren=10,
         )
-        data = connector.model_dump(mode="json")
+        data = connector.representation_dump(mode="json")
         assert data["maxChildren"] == 10
 
     def test_connector_max_children_roundtrip(self):
@@ -18604,7 +18604,7 @@ class TestMaxChildren:
             direction=VectorInput(x=0, y=0, z=1),
             maxChildren=7,
         )
-        data = connector.model_dump(mode="json")
+        data = connector.representation_dump(mode="json")
         restored = ConnectorInput(**data)
         assert restored.maxChildren == 7
 

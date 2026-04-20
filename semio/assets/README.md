@@ -1,6 +1,6 @@
 # Summary
 
-Shared assets including badges, fonts, icons, logo, models, and kit fixtures.
+Shared assets including badges, fonts, icons, logo, representations, and kit fixtures.
 
 # Docs
 

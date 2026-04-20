@@ -152,7 +152,7 @@
         "/api/app/files/{file_guid}": {
             "get": {
                 "summary": "App File",
-                "description": "Serve a kit file blob by guid. Used by MCP app iframes to load 3D models.",
+                "description": "Serve a kit file blob by guid. Used by MCP app iframes to load 3D representations.",
                 "operationId": "app_file_app_files__file_guid__get",
                 "parameters": [
                     {
@@ -2544,7 +2544,7 @@
                 "title": "LogoutRequest",
                 "description": "\ud83d\udfebLogout request body.\n    "
             },
-            "ModelInput": {
+            "RepresentationInput": {
                 "properties": {
                     "url": {
                         "type": "string",
@@ -2594,10 +2594,10 @@
                     "url",
                     "file"
                 ],
-                "title": "ModelInput",
-                "description": "Input fields for creating or updating a model."
+                "title": "RepresentationInput",
+                "description": "Input fields for creating or updating a representation."
             },
-            "Model": {
+            "Representation": {
                 "properties": {
                     "url": {
                         "type": "string",
@@ -2647,8 +2647,8 @@
                     "url",
                     "file"
                 ],
-                "title": "Model",
-                "description": "Output fields returned when fetching a model."
+                "title": "Representation",
+                "description": "Output fields returned when fetching a representation."
             },
             "NativeAlgorithmExecuteBody": {
                 "properties": {
@@ -3619,12 +3619,12 @@
                             }
                         ]
                     },
-                    "models": {
+                    "representations": {
                         "items": {
-                            "$ref": "#/components/schemas/ModelInput"
+                            "$ref": "#/components/schemas/RepresentationInput"
                         },
                         "type": "array",
-                        "title": "Models"
+                        "title": "Representations"
                     },
                     "connectors": {
                         "items": {
@@ -3763,12 +3763,12 @@
                             }
                         ]
                     },
-                    "models": {
+                    "representations": {
                         "items": {
-                            "$ref": "#/components/schemas/Model"
+                            "$ref": "#/components/schemas/Representation"
                         },
                         "type": "array",
-                        "title": "Models"
+                        "title": "Representations"
                     },
                     "connectors": {
                         "items": {

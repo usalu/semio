@@ -208,7 +208,7 @@ mod guid_ref {
     dto_id_struct!("📊 Prop id (DTO / JSON reference).", PropId);
     dto_id_struct!("🏷️ Tag id (DTO / JSON reference).", TagId);
     dto_id_struct!("💡 Concept id (DTO / JSON reference).", ConceptId);
-    dto_id_struct!("🗿 Model id (DTO / JSON reference).", ModelId);
+    dto_id_struct!("🗿 Representation id (DTO / JSON reference).", RepresentationId);
     dto_id_struct!("📈 Stat id (DTO / JSON reference).", StatId);
     dto_id_struct!("🔗 Connection id (DTO / JSON reference).", ConnectionId);
     dto_id_struct!("👥 Group id (DTO / JSON reference).", GroupId);
@@ -217,7 +217,7 @@ mod guid_ref {
 
 pub use guid_ref::{
     AttributeId, AuthorId, BenchmarkId, ConceptId, ConnectionId, ConnectorId, DesignId, FileId,
-    FolderId, GroupId, GuidRef, LayerId, LocationId, ModelId, PieceId, PortId, PropId, QualityId,
+    FolderId, GroupId, GuidRef, LayerId, LocationId, RepresentationId, PieceId, PortId, PropId, QualityId,
     StatId, TagId, TypeId,
 };
 
@@ -293,15 +293,15 @@ mod has_guid_trait {
             &self.as_ref().guid
         }
     }
-    /// <summary>🗿HasGuid implementation for Model.</summary>
+    /// <summary>🗿HasGuid implementation for Representation.</summary>
     /// <remarks>
     /// </remarks>
-    impl HasGuid for Model {
+    impl HasGuid for Representation {
         fn guid(&self) -> &str {
             &self.guid
         }
     }
-    impl HasGuid for ModelDto {
+    impl HasGuid for RepresentationDto {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -480,10 +480,10 @@ mod has_guid_trait {
             &self.guid
         }
     }
-    /// <summary>🗿HasGuid implementation for ModelDiff.</summary>
+    /// <summary>🗿HasGuid implementation for RepresentationDiff.</summary>
     /// <remarks>
     /// </remarks>
-    impl DiffHasGuid for ModelDiff {
+    impl DiffHasGuid for RepresentationDiff {
         fn guid(&self) -> &str {
             &self.guid
         }
@@ -611,7 +611,7 @@ mod has_guid_trait {
 } // 🐍Entity IDs
 pub use has_guid_trait::*;
 
-mod model_types_attribute {
+mod representation_types_attribute {
 
     use super::*;
 
@@ -657,9 +657,9 @@ mod model_types_attribute {
         }
     }
 } // 💎Attribute
-pub use model_types_attribute::*;
+pub use representation_types_attribute::*;
 
-mod model_types_coord {
+mod representation_types_coord {
 
     use super::*;
 
@@ -717,9 +717,9 @@ mod model_types_coord {
         }
     }
 } // 📺Coord
-pub use model_types_coord::*;
+pub use representation_types_coord::*;
 
-mod model_types_vector {
+mod representation_types_vector {
 
     use super::*;
 
@@ -789,9 +789,9 @@ mod model_types_vector {
         }
     }
 } // ↗️Vector
-pub use model_types_vector::*;
+pub use representation_types_vector::*;
 
-mod model_types_plane {
+mod representation_types_plane {
 
     use super::*;
 
@@ -936,9 +936,9 @@ mod model_types_plane {
         }
     }
 } // ◻️Plane
-pub use model_types_plane::*;
+pub use representation_types_plane::*;
 
-mod model_types_camera {
+mod representation_types_camera {
 
     use super::*;
 
@@ -969,7 +969,7 @@ mod model_types_camera {
         }
     }
 } // 🎥Camera
-pub use model_types_camera::*;
+pub use representation_types_camera::*;
 
 mod location {
 
@@ -1743,13 +1743,13 @@ mod concept {
 } // 💡Concept
 pub use concept::*;
 
-mod model_entity {
+mod representation_entity {
 
     use super::*;
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-    /// DTO for `Model` / `ModelInput` in `schema.graphql`.
-    pub struct ModelDto {
+    /// DTO for `Representation` / `RepresentationInput` in `schema.graphql`.
+    pub struct RepresentationDto {
         pub guid: Guid,
         pub file: FileId,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1763,12 +1763,12 @@ mod model_entity {
     }
 
     #[derive(Debug, Clone, PartialEq)]
-    /// <summary>🗿Model represents a 3D model reference linking a file with tags and description.</summary>
+    /// <summary>🗿Representation represents a 3D representation reference linking a file with tags and description.</summary>
     /// <remarks>
     /// </remarks>
     /// <remarks>
     /// </remarks>
-    pub struct Model {
+    pub struct Representation {
         pub guid: Guid,
         pub file: FileId,
         pub name: Option<String>,
@@ -1777,8 +1777,8 @@ mod model_entity {
         pub attributes: Option<Vec<Attribute>>,
     }
 
-    impl From<&ModelDto> for Model {
-        fn from(d: &ModelDto) -> Self {
+    impl From<&RepresentationDto> for Representation {
+        fn from(d: &RepresentationDto) -> Self {
             Self {
                 guid: d.guid.clone(),
                 file: d.file.clone(),
@@ -1793,8 +1793,8 @@ mod model_entity {
         }
     }
 
-    impl From<&Model> for ModelDto {
-        fn from(m: &Model) -> Self {
+    impl From<&Representation> for RepresentationDto {
+        fn from(m: &Representation) -> Self {
             Self {
                 guid: m.guid.clone(),
                 file: m.file.clone(),
@@ -1808,8 +1808,8 @@ mod model_entity {
             }
         }
     }
-} // 🗿Model
-pub use model_entity::*;
+} // 🗿Representation
+pub use representation_entity::*;
 
 mod connector {
 
@@ -1922,7 +1922,7 @@ mod connector {
 } // 🔌Connector
 pub use connector::*;
 
-mod model_types_type {
+mod representation_types_type {
 
     use super::*;
 
@@ -1960,7 +1960,7 @@ mod model_types_type {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub props: Option<Vec<PropDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub models: Option<Vec<ModelDto>>,
+        pub representations: Option<Vec<RepresentationDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub connectors: Option<Vec<ConnectorDto>>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1992,7 +1992,7 @@ mod model_types_type {
         pub concepts: Option<Vec<ConceptId>>,
         pub authors: Option<Vec<AuthorId>>,
         pub props: Option<Vec<Prop>>,
-        pub models: Option<Vec<Model>>,
+        pub representations: Option<Vec<Representation>>,
         pub connectors: Option<Vec<Arc<Connector>>>,
         pub attributes: Option<Vec<Attribute>>,
         pub created_at: Option<String>,
@@ -2035,10 +2035,10 @@ mod model_types_type {
                     .props
                     .as_ref()
                     .map(|v| v.iter().map(PropDto::from).collect()),
-                models: self
-                    .models
+                representations: self
+                    .representations
                     .as_ref()
-                    .map(|v| v.iter().map(ModelDto::from).collect()),
+                    .map(|v| v.iter().map(RepresentationDto::from).collect()),
                 connectors: self
                     .connectors
                     .as_ref()
@@ -2059,7 +2059,7 @@ mod model_types_type {
         }
     }
 } // 🧱Type
-pub use model_types_type::*;
+pub use representation_types_type::*;
 
 mod layer {
 
@@ -2173,7 +2173,7 @@ mod piece {
         pub attributes: Option<Vec<AttributeDto>>,
     }
 
-    /// In-memory piece: strong refs to [`Type`] and [`super::model_types_design::Design`] via pointers.
+    /// In-memory piece: strong refs to [`Type`] and [`super::representation_types_design::Design`] via pointers.
     #[derive(Debug, Clone)]
     pub struct Piece {
         pub guid: Guid,
@@ -2560,7 +2560,7 @@ mod stat {
 } // 📈Stat
 pub use stat::*;
 
-mod model_types_design {
+mod representation_types_design {
 
     use super::*;
     use std::cell::{Cell, RefCell};
@@ -2845,9 +2845,9 @@ mod model_types_design {
         }
     }
 } // 📐Design
-pub use model_types_design::*;
+pub use representation_types_design::*;
 
-mod model_types_kit {
+mod representation_types_kit {
 
     use super::*;
 
@@ -3010,10 +3010,10 @@ mod model_types_kit {
                     .props
                     .as_ref()
                     .map(|v| v.iter().map(Prop::from).collect()),
-                models: tw
-                    .models
+                representations: tw
+                    .representations
                     .as_ref()
-                    .map(|v| v.iter().map(Model::from).collect()),
+                    .map(|v| v.iter().map(Representation::from).collect()),
                 connectors,
                 attributes: tw
                     .attributes
@@ -3104,10 +3104,10 @@ mod model_types_kit {
                     .props
                     .as_ref()
                     .map(|v| v.iter().map(Prop::from).collect()),
-                models: tw
-                    .models
+                representations: tw
+                    .representations
                     .as_ref()
-                    .map(|v| v.iter().map(Model::from).collect()),
+                    .map(|v| v.iter().map(Representation::from).collect()),
                 connectors,
                 attributes: tw
                     .attributes
@@ -3582,20 +3582,20 @@ mod model_types_kit {
         }
     }
 } // ⏱️Kit
-pub use model_types_kit::*;
+pub use representation_types_kit::*;
 
 mod serialization {
 
-    /// <summary>�supported 3D model file extensions and helpers.</summary>
+    /// <summary>�supported 3D representation file extensions and helpers.</summary>
     use super::*;
 
-    /// <summary>🗿the list of supported 3D model file extensions.</summary>
-    pub const SUPPORTED_MODEL_EXTENSIONS: &[&str] = &[
+    /// <summary>🗿the list of supported 3D representation file extensions.</summary>
+    pub const SUPPORTED_REPRESENTATION_EXTENSIONS: &[&str] = &[
         "gltf", "glb", "fbx", "obj", "dae", "3ds", "stl", "ply", "usdz", "vrm", "ifc", "3mf",
     ];
 
-    pub fn is_supported_model_extension(ext: &str) -> bool {
-        SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
+    pub fn is_supported_representation_extension(ext: &str) -> bool {
+        SUPPORTED_REPRESENTATION_EXTENSIONS.contains(&ext.to_lowercase().as_str())
     }
 } // ⏰Serialization
 pub use serialization::*;
@@ -3891,10 +3891,10 @@ mod diff_types {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
-    /// <summary>🗿ModelDiff represents a partial update to model's fields.</summary>
+    /// <summary>🗿RepresentationDiff represents a partial update to representation's fields.</summary>
     /// <remarks>
     /// </remarks>
-    pub struct ModelDiff {
+    pub struct RepresentationDiff {
         pub guid: Guid,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub file: Option<FileId>,
@@ -4011,7 +4011,7 @@ mod diff_types {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub props: Option<CollectionDiff<PropDto, PropDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub models: Option<CollectionDiff<ModelDto, ModelDiff>>,
+        pub representations: Option<CollectionDiff<RepresentationDto, RepresentationDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub connectors: Option<CollectionDiff<ConnectorDto, ConnectorDiff>>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -4750,10 +4750,10 @@ mod diff_types {
     pub type TagChange = Change<Tag, TagDiff>;
     /// <summary>💡ConceptChange represents tracks concept modifications in a kit change.</summary>
     pub type ConceptChange = Change<Concept, ConceptDiff>;
-    /// <summary>🗿ModelChange represents tracks model modifications in a kit change.</summary>
+    /// <summary>🗿RepresentationChange represents tracks representation modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
-    pub type ModelChange = Change<Model, ModelDiff>;
+    pub type RepresentationChange = Change<Representation, RepresentationDiff>;
     /// <summary>🔌ConnectorChange represents tracks connector modifications in a kit change.</summary>
     /// <remarks>
     /// </remarks>
@@ -4957,8 +4957,8 @@ mod meta_and_shallow_types {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-        /// 🗿ModelMeta represents scalar-only view of model excluding nested arrays.
-        pub struct ModelMeta {
+        /// 🗿RepresentationMeta represents scalar-only view of representation excluding nested arrays.
+        pub struct RepresentationMeta {
             pub guid: Guid,
             pub file: FileId,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -5141,7 +5141,7 @@ mod meta_and_shallow_types {
             #[serde(skip_serializing_if = "Option::is_none")]
             pub props: Option<Vec<PropMeta>>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            pub models: Option<Vec<ModelMeta>>,
+            pub representations: Option<Vec<RepresentationMeta>>,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub connectors: Option<Vec<ConnectorMeta>>,
             #[serde(skip_serializing_if = "Option::is_none")]
@@ -5402,9 +5402,9 @@ mod meta_and_shallow_types {
             }
         }
 
-        impl Model {
-            pub fn to_meta(&self) -> ModelMeta {
-                ModelMeta {
+        impl Representation {
+            pub fn to_meta(&self) -> RepresentationMeta {
+                RepresentationMeta {
                     guid: self.guid.clone(),
                     file: self.file.clone(),
                     name: self.name.clone(),
@@ -5559,8 +5559,8 @@ mod meta_and_shallow_types {
                         .props
                         .as_ref()
                         .map(|v| v.iter().map(|p| p.to_meta()).collect()),
-                    models: self
-                        .models
+                    representations: self
+                        .representations
                         .as_ref()
                         .map(|v| v.iter().map(|m| m.to_meta()).collect()),
                     connectors: self
@@ -6036,9 +6036,9 @@ mod apply_diff {
             );
         }
     }
-    impl Model {
-        /// 🔖Applies a model diff.
-        pub fn apply_diff(&mut self, diff: &ModelDiff) {
+    impl Representation {
+        /// 🔖Applies a representation diff.
+        pub fn apply_diff(&mut self, diff: &RepresentationDiff) {
             if let Some(value) = &diff.file {
                 self.file = value.clone();
             }
@@ -6116,8 +6116,8 @@ mod apply_diff {
             apply_collection_diff(&mut self.props, &diff.props, Prop::apply_diff, |p| {
                 Prop::from(p)
             });
-            apply_collection_diff(&mut self.models, &diff.models, Model::apply_diff, |m| {
-                Model::from(m)
+            apply_collection_diff(&mut self.representations, &diff.representations, Representation::apply_diff, |m| {
+                Representation::from(m)
             });
 
             if let Some(cd) = &diff.connectors {
@@ -6953,7 +6953,7 @@ mod filter {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub design_guid: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        pub model_tags: Option<Vec<String>>,
+        pub representation_tags: Option<Vec<String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub designs: Option<GlobFilter>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -7017,37 +7017,37 @@ mod filter {
         true
     }
 
-    pub fn select_best_model_for_filter(
-        models: &[Model],
+    pub fn select_best_representation_for_filter(
+        representations: &[Representation],
         selected_tag_guids: &[String],
-    ) -> Option<Model> {
-        if models.is_empty() {
+    ) -> Option<Representation> {
+        if representations.is_empty() {
             return None;
         }
         if selected_tag_guids.is_empty() {
-            if let Some(model) = models.iter().find(|model| {
-                model
+            if let Some(representation) = representations.iter().find(|representation| {
+                representation
                     .tags
                     .as_ref()
                     .map(|tags| tags.is_empty())
                     .unwrap_or(true)
             }) {
-                return Some(model.clone());
+                return Some(representation.clone());
             }
-            return Some(models[0].clone());
+            return Some(representations[0].clone());
         }
 
-        let filtered: Vec<Model> = models
+        let filtered: Vec<Representation> = representations
             .iter()
-            .filter(|model| {
-                let model_tag_guids: HashSet<String> = model
+            .filter(|representation| {
+                let representation_tag_guids: HashSet<String> = representation
                     .tags
                     .as_ref()
                     .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
                     .unwrap_or_default();
                 selected_tag_guids
                     .iter()
-                    .all(|selected| model_tag_guids.contains(selected))
+                    .all(|selected| representation_tag_guids.contains(selected))
             })
             .cloned()
             .collect();
@@ -7055,17 +7055,17 @@ mod filter {
             return None;
         }
 
-        let mut best_model = filtered[0].clone();
+        let mut best_representation = filtered[0].clone();
         let mut best_score = -1.0_f64;
-        for model in filtered {
-            let model_tag_guids: HashSet<String> = model
+        for representation in filtered {
+            let representation_tag_guids: HashSet<String> = representation
                 .tags
                 .as_ref()
                 .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
                 .unwrap_or_default();
             let selected: HashSet<String> = selected_tag_guids.iter().cloned().collect();
-            let intersection = model_tag_guids.intersection(&selected).count();
-            let union = model_tag_guids.union(&selected).count();
+            let intersection = representation_tag_guids.intersection(&selected).count();
+            let union = representation_tag_guids.union(&selected).count();
             let score = if union == 0 {
                 0.0
             } else {
@@ -7073,18 +7073,18 @@ mod filter {
             };
             if score > best_score {
                 best_score = score;
-                best_model = model;
+                best_representation = representation;
             }
         }
-        Some(best_model)
+        Some(best_representation)
     }
 
     /// 🎨Internal design-based transitive kit filtering.
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
-    /// files not used by selected models, and keeps at most one model per type according to the optional tags.
+    /// files not used by selected representations, and keeps at most one representation per type according to the optional tags.
     impl Kit {
         /// 🎨Filters the kit to a design-scoped subset. Removes types not used by pieces,
-        /// ports not used by connectors of used types, files not used by selected models.
+        /// ports not used by connectors of used types, files not used by selected representations.
         pub fn filter_by_design(&self, design_guid: &str, tags: Option<&[String]>) -> Kit {
             filter_kit_by_design_impl(self, design_guid, tags)
         }
@@ -7093,7 +7093,7 @@ mod filter {
         /// filtering with glob-based name filtering.
         pub fn filter(&self, filter: &KitFilter) -> Kit {
             let base = if let Some(design_guid) = &filter.design_guid {
-                filter_kit_by_design_impl(self, design_guid, filter.model_tags.as_deref())
+                filter_kit_by_design_impl(self, design_guid, filter.representation_tags.as_deref())
             } else {
                 self.clone()
             };
@@ -7323,7 +7323,7 @@ mod filter {
         let mut used_quality_guids: HashSet<String> = HashSet::new();
         let mut used_author_guids: HashSet<String> = HashSet::new();
         let mut used_folder_names: HashSet<String> = HashSet::new();
-        let mut selected_models: HashMap<String, Model> = HashMap::new();
+        let mut selected_representations: HashMap<String, Representation> = HashMap::new();
 
         let mut collect_quality_from_props = |props: &[Prop]| {
             for prop in props {
@@ -7351,15 +7351,15 @@ mod filter {
             for concept in type_item.concepts.as_deref().unwrap_or(&[]) {
                 used_concept_guids.insert(concept.guid.clone());
             }
-            if let Some(best_model) = select_best_model_for_filter(
-                type_item.models.as_deref().unwrap_or(&[]),
+            if let Some(best_representation) = select_best_representation_for_filter(
+                type_item.representations.as_deref().unwrap_or(&[]),
                 &resolved_tag_guids,
             ) {
-                used_file_guids.insert(best_model.file.guid.clone());
-                for tag in best_model.tags.as_deref().unwrap_or(&[]) {
+                used_file_guids.insert(best_representation.file.guid.clone());
+                for tag in best_representation.tags.as_deref().unwrap_or(&[]) {
                     used_tag_guids.insert(tag.guid.clone());
                 }
-                selected_models.insert(type_guid.clone(), best_model);
+                selected_representations.insert(type_guid.clone(), best_representation);
             }
         }
 
@@ -7398,8 +7398,8 @@ mod filter {
             .filter(|type_item| used_type_guids.contains(&type_item.guid))
             .map(|type_item| {
                 let mut t = type_item.as_ref().clone();
-                t.models = Some(
-                    selected_models
+                t.representations = Some(
+                    selected_representations
                         .get(&type_item.guid)
                         .cloned()
                         .into_iter()
@@ -8480,15 +8480,15 @@ mod copy_paste_design {
 } // 📋CopyPasteDesign
 pub use copy_paste_design::*;
 
-mod kit_model_export {
-    // 🏤Kit Model Export
-    // Kit Model Export MUST provide GLB/glTF export of a design's assembled 3D model.
+mod kit_representation_export {
+    // 🏤Kit Representation Export
+    // Kit Representation Export MUST provide GLB/glTF export of a design's assembled 3D representation.
 
-    /// <summary>📺Supported 3D model export formats (extension, description).</summary>
+    /// <summary>📺Supported 3D representation export formats (extension, description).</summary>
     use super::*;
     use std::sync::Arc;
 
-    pub const EXPORT_MODEL_FORMATS: &[(&str, &str)] = &[
+    pub const EXPORT_REPRESENTATION_FORMATS: &[(&str, &str)] = &[
         ("glb", "GLB Binary (glTF 2.0)"),
         ("gltf", "glTF JSON (glTF 2.0)"),
     ];
@@ -8733,35 +8733,35 @@ mod kit_model_export {
         }));
     }
 
-    /// 🔖<summary>🔖Selects the best model for a type given desired tag guids.</summary>
-    pub fn select_model_for_type<'a>(t: &'a Type, tags: &[String]) -> Option<&'a Model> {
-        let models = t.models.as_ref()?;
-        if models.is_empty() {
+    /// 🔖<summary>🔖Selects the best representation for a type given desired tag guids.</summary>
+    pub fn select_representation_for_type<'a>(t: &'a Type, tags: &[String]) -> Option<&'a Representation> {
+        let representations = t.representations.as_ref()?;
+        if representations.is_empty() {
             return None;
         }
         if tags.is_empty() {
-            if let Some(m) = models
+            if let Some(m) = representations
                 .iter()
                 .find(|m| m.tags.as_ref().map(|t| t.is_empty()).unwrap_or(true))
             {
                 return Some(m);
             }
-            return models.first();
+            return representations.first();
         }
         let tag_guid_set: HashSet<&str> = tags.iter().map(|s| s.as_str()).collect();
-        let mut best: Option<&Model> = None;
+        let mut best: Option<&Representation> = None;
         let mut best_score = -1.0f64;
-        for model in models {
-            let model_tag_guids: HashSet<&str> = model
+        for representation in representations {
+            let representation_tag_guids: HashSet<&str> = representation
                 .tags
                 .as_ref()
                 .map(|tags| tags.iter().map(|t| t.guid.as_str()).collect())
                 .unwrap_or_default();
-            if !tag_guid_set.iter().all(|t| model_tag_guids.contains(t)) {
+            if !tag_guid_set.iter().all(|t| representation_tag_guids.contains(t)) {
                 continue;
             }
-            let intersection = model_tag_guids.intersection(&tag_guid_set).count();
-            let union = model_tag_guids.union(&tag_guid_set).count();
+            let intersection = representation_tag_guids.intersection(&tag_guid_set).count();
+            let union = representation_tag_guids.union(&tag_guid_set).count();
             let score = if union > 0 {
                 intersection as f64 / union as f64
             } else {
@@ -8769,13 +8769,13 @@ mod kit_model_export {
             };
             if score > best_score {
                 best_score = score;
-                best = Some(model);
+                best = Some(representation);
             }
         }
         if best.is_some() {
             return best;
         }
-        models.first()
+        representations.first()
     }
 
     /// <summary>🔖Merges a source GLB's mesh data into the combined GLB builder.</summary>
@@ -8857,12 +8857,12 @@ mod kit_model_export {
         false
     }
 
-    /// <summary>🔖Exports the 3D model of a design to GLB or glTF format.</summary>
+    /// <summary>🔖Exports the 3D representation of a design to GLB or glTF format.</summary>
     /// <remarks>
     /// merging per-type GLB meshes (or box placeholders) into a single GLB/glTF output.
     /// </remarks>
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn export_design_model(
+    pub fn export_design_representation(
         kit: &Kit,
         design_guid: &str,
         format: &str,
@@ -8938,8 +8938,8 @@ mod kit_model_export {
             let mut added = false;
 
             if let Some(t) = types_map.get(type_guid.as_str()) {
-                if let Some(model) = select_model_for_type(t, tags) {
-                    if let Some(file) = files_map.get(model.file.guid.as_str()) {
+                if let Some(representation) = select_representation_for_type(t, tags) {
+                    if let Some(file) = files_map.get(representation.file.guid.as_str()) {
                         if let Some(blob) = &file.blob {
                             if let Some(data) = decode_data_uri_blob(blob) {
                                 let is_glb = file.name.ends_with(".glb")
@@ -9055,14 +9055,14 @@ mod kit_model_export {
         }
         // 📢Output
     }
-} // 🔮Kit Model Export
-pub use kit_model_export::*;
+} // 🔮Kit Representation Export
+pub use kit_representation_export::*;
 
 mod geometric_insights {
     // 🥽Geometric Insights
-    // Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+    // Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
-    /// Geometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+    /// Geometric KPIs for a GLB/GLTF representation in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
     use super::*;
 
     #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -9192,18 +9192,18 @@ mod geometric_insights {
         Some((positions, indices, pos_min, pos_max))
     }
 
-    /// Computes key performance indicators for the geometry of a GLB/GLTF model.
+    /// Computes key performance indicators for the geometry of a GLB/GLTF representation.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn get_geometric_insights_for_model(model: &[u8]) -> Result<GeometricInsights> {
-        let (json, bin) = if model.len() >= 4
-            && u32::from_le_bytes([model[0], model[1], model[2], model[3]]) == 0x46546C67
+    pub fn get_geometric_insights_for_representation(representation: &[u8]) -> Result<GeometricInsights> {
+        let (json, bin) = if representation.len() >= 4
+            && u32::from_le_bytes([representation[0], representation[1], representation[2], representation[3]]) == 0x46546C67
         {
-            parse_glb(model).ok_or_else(|| SemioError::InvalidOperation {
+            parse_glb(representation).ok_or_else(|| SemioError::InvalidOperation {
                 message: "Invalid GLB".to_string(),
             })?
         } else {
             let json: serde_json::Value =
-                serde_json::from_slice(model).map_err(|e| SemioError::InvalidOperation {
+                serde_json::from_slice(representation).map_err(|e| SemioError::InvalidOperation {
                     message: format!("Invalid glTF JSON: {}", e),
                 })?;
             let mut bin_data = Vec::new();
@@ -9231,7 +9231,7 @@ mod geometric_insights {
 
         let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin)
             .ok_or_else(|| SemioError::InvalidOperation {
-                message: "No mesh data in model".to_string(),
+                message: "No mesh data in representation".to_string(),
             })?;
 
         let n = positions.len();
@@ -9334,9 +9334,9 @@ mod geometric_insights {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn get_geometric_insights_for_model_path(path: &str) -> Result<GeometricInsights> {
+    pub fn get_geometric_insights_for_representation_path(path: &str) -> Result<GeometricInsights> {
         let data = std::fs::read(path).map_err(|e| SemioError::InvalidOperation {
-            message: format!("Failed to read model file: {}", e),
+            message: format!("Failed to read representation file: {}", e),
         })?;
         if path.to_lowercase().ends_with(".gltf") {
             let json: serde_json::Value =
@@ -9373,7 +9373,7 @@ mod geometric_insights {
             }
             let (positions, indices, _pos_min, _pos_max) = read_gltf_mesh_data(&json, &bin_data)
                 .ok_or_else(|| SemioError::InvalidOperation {
-                    message: "No mesh data in model".to_string(),
+                    message: "No mesh data in representation".to_string(),
                 })?;
             let n = positions.len();
             let mut sx_min = f64::MAX;
@@ -9473,7 +9473,7 @@ mod geometric_insights {
                 euler_characteristic: euler,
             });
         }
-        get_geometric_insights_for_model(&data)
+        get_geometric_insights_for_representation(&data)
     }
 } // 🏥Geometric Insights
 pub use geometric_insights::*;
@@ -9532,7 +9532,7 @@ mod validation_types {
             check_piece_name_uniqueness(self, &mut problems);
             check_connection_name_uniqueness(self, &mut problems);
             check_connector_name_uniqueness(self, &mut problems);
-            check_model_name_uniqueness(self, &mut problems);
+            check_representation_name_uniqueness(self, &mut problems);
             check_layer_path_uniqueness(self, &mut problems);
             check_quality_name_uniqueness(self, &mut problems);
             check_port_name_uniqueness(self, &mut problems);
@@ -9558,9 +9558,9 @@ mod validation_types {
                         check_guid(&c.guid, "Connector", &mut guids, problems);
                     }
                 }
-                if let Some(ref models) = t.models {
-                    for m in models {
-                        check_guid(&m.guid, "Model", &mut guids, problems);
+                if let Some(ref representations) = t.representations {
+                    for m in representations {
+                        check_guid(&m.guid, "Representation", &mut guids, problems);
                     }
                 }
             }
@@ -9798,17 +9798,17 @@ mod validation_types {
             }
         }
     }
-    /// 🔖<summary>🔖check_model_name_uniqueness holds the data fields for a check_model_name_uniqueness record.</summary>
+    /// 🔖<summary>🔖check_representation_name_uniqueness holds the data fields for a check_representation_name_uniqueness record.</summary>
     /// <remarks>
     /// </remarks>
-    pub fn check_model_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
+    pub fn check_representation_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>) {
         let Some(ref types) = kit.types else { return };
         for typ in types {
-            let Some(ref models) = typ.models else {
+            let Some(ref representations) = typ.representations else {
                 continue;
             };
-            let mut names: HashMap<&str, Vec<&Model>> = HashMap::new();
-            for m in models {
+            let mut names: HashMap<&str, Vec<&Representation>> = HashMap::new();
+            for m in representations {
                 if let Some(ref name) = m.name {
                     names.entry(name.as_str()).or_default().push(m);
                 }
@@ -9817,12 +9817,12 @@ mod validation_types {
                 if dups.len() > 1 {
                     for dup in dups.iter().skip(1) {
                         problems.push(ValidationProblem {
-                            constraint_id: "model-name-unique".to_string(),
+                            constraint_id: "representation-name-unique".to_string(),
                             message: format!(
-                                "Duplicate model name \"{}\" inside type \"{}\".",
+                                "Duplicate representation name \"{}\" inside type \"{}\".",
                                 name, typ.name
                             ),
-                            entity_kind: Some("Model".to_string()),
+                            entity_kind: Some("Representation".to_string()),
                             entity_guid: Some(dup.guid.clone()),
                             fixes: vec![],
                         });
@@ -10065,12 +10065,12 @@ mod validation_types {
                         .collect();
                     check_siblings("Connector", &s, problems);
                 }
-                if let Some(ref models) = t.models {
-                    let s: Vec<_> = models
+                if let Some(ref representations) = t.representations {
+                    let s: Vec<_> = representations
                         .iter()
                         .map(|m| (m.guid.clone(), m.description.clone()))
                         .collect();
-                    check_siblings("Model", &s, problems);
+                    check_siblings("Representation", &s, problems);
                 }
             }
         }
@@ -10241,10 +10241,10 @@ mod sqlite_import_export {
                         }
                     }
 
-                    if let Some(ref models) = t.models {
-                        for m in models {
+                    if let Some(ref representations) = t.representations {
+                        for m in representations {
                             conn.execute(
-                            "INSERT INTO model (guid, file_guid, name, description, type_guid) VALUES (?1, ?2, ?3, ?4, ?5)",
+                            "INSERT INTO representation (guid, file_guid, name, description, type_guid) VALUES (?1, ?2, ?3, ?4, ?5)",
                             params![m.guid, m.file.guid, m.name, m.description, t.guid],
                         ).map_err(|e| SemioError::Database { message: e.to_string() })?;
                         }
@@ -10608,7 +10608,7 @@ mod sqlite_import_export {
             ) in type_data
             {
                 let connectors = load_connector_wires(conn, &type_guid)?;
-                let models = load_models(conn, &type_guid)?;
+                let representations = load_representations(conn, &type_guid)?;
 
                 wires.push(TypeDto {
                     guid: type_guid,
@@ -10627,10 +10627,10 @@ mod sqlite_import_export {
                     concepts: None,
                     authors: None,
                     props: None,
-                    models: if models.is_empty() {
+                    representations: if representations.is_empty() {
                         None
                     } else {
-                        Some(models.iter().map(ModelDto::from).collect())
+                        Some(representations.iter().map(RepresentationDto::from).collect())
                     },
                     connectors: if connectors.is_empty() {
                         None
@@ -10683,17 +10683,17 @@ mod sqlite_import_export {
                 })
         }
 
-        pub fn load_models(conn: &rusqlite::Connection, type_guid: &str) -> Result<Vec<Model>> {
+        pub fn load_representations(conn: &rusqlite::Connection, type_guid: &str) -> Result<Vec<Representation>> {
             let mut stmt = conn
                 .prepare(
-                    "SELECT guid, file_guid, name, description FROM model WHERE type_guid = ?1",
+                    "SELECT guid, file_guid, name, description FROM representation WHERE type_guid = ?1",
                 )
                 .map_err(|e| SemioError::Database {
                     message: e.to_string(),
                 })?;
             let rows = stmt
                 .query_map([type_guid], |row| {
-                    Ok(Model {
+                    Ok(Representation {
                         guid: row.get(0)?,
                         file: FileId { guid: row.get(1)? },
                         name: row.get(2)?,
@@ -10997,11 +10997,11 @@ mod zip_import_export {
     pub fn mime_from_filename(filename: &str) -> &'static str {
         let ext = filename.rsplit('.').next().unwrap_or("").to_lowercase();
         match ext.as_str() {
-            "stl" => "model/stl",
-            "obj" => "model/obj",
-            "glb" => "model/gltf-binary",
-            "gltf" => "model/gltf+json",
-            "3dm" => "model/vnd.3dm",
+            "stl" => "representation/stl",
+            "obj" => "representation/obj",
+            "glb" => "representation/gltf-binary",
+            "gltf" => "representation/gltf+json",
+            "3dm" => "representation/vnd.3dm",
             "png" => "image/png",
             "jpg" | "jpeg" => "image/jpeg",
             "svg" => "image/svg+xml",
@@ -11758,9 +11758,9 @@ mod wasm_bindings {
             SemioUtil::round(value)
         }
 
-        #[wasm_bindgen(js_name = "isSupportedModelExtension")]
-        pub fn wasm_is_supported_model_extension(ext: &str) -> bool {
-            is_supported_model_extension(ext)
+        #[wasm_bindgen(js_name = "isSupportedRepresentationExtension")]
+        pub fn wasm_is_supported_representation_extension(ext: &str) -> bool {
+            is_supported_representation_extension(ext)
         }
 
         #[wasm_bindgen(js_name = "generateUniqueName")]
@@ -12306,9 +12306,9 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_model(m: &Model) -> String {
+        pub fn hash_representation(m: &Representation) -> String {
             let mut w = HashWriter::new();
-            w.write_string("Model");
+            w.write_string("Representation");
             if let Some(v) = &m.attributes {
                 if !v.is_empty() {
                     w.write_string("attributes");
@@ -12338,8 +12338,8 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_model_dto(m: &ModelDto) -> String {
-            hash_model(&Model::from(m))
+        pub fn hash_representation_dto(m: &RepresentationDto) -> String {
+            hash_representation(&Representation::from(m))
         }
 
         pub fn hash_connector(c: &Connector) -> String {
@@ -12608,10 +12608,10 @@ mod hash {
                 w.write_string("location");
                 w.write_string(&lid.guid);
             }
-            if let Some(v) = &t.models {
+            if let Some(v) = &t.representations {
                 if !v.is_empty() {
-                    w.write_string("models");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_model_dto(x)).collect();
+                    w.write_string("representations");
+                    let hashes: Vec<String> = v.iter().map(|x| hash_representation_dto(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -12834,10 +12834,10 @@ mod hash {
                 w.write_string("location");
                 w.write_string(&lid.guid);
             }
-            if let Some(v) = &t.models {
+            if let Some(v) = &t.representations {
                 if !v.is_empty() {
-                    w.write_string("models");
-                    let hashes: Vec<String> = v.iter().map(|x| hash_model(x)).collect();
+                    w.write_string("representations");
+                    let hashes: Vec<String> = v.iter().map(|x| hash_representation(x)).collect();
                     w.write_hash_list(&hashes);
                 }
             }
@@ -13932,9 +13932,9 @@ mod hash {
             w.digest()
         }
 
-        pub fn hash_model_diff(d: &ModelDiff) -> String {
+        pub fn hash_representation_diff(d: &RepresentationDiff) -> String {
             let mut w = HashWriter::new();
-            w.write_string("ModelDiff");
+            w.write_string("RepresentationDiff");
             if let Some(ref coll) = d.attributes {
                 w.write_string("attributes");
                 w.write_hash(&hash_collection_diff(
@@ -14186,14 +14186,14 @@ mod hash {
                 }
                 None => {}
             }
-            if let Some(ref coll) = d.models {
-                w.write_string("models");
+            if let Some(ref coll) = d.representations {
+                w.write_string("representations");
                 w.write_hash(&hash_collection_diff(
-                    "ModelsDiff",
-                    "ModelDiffUpdate",
-                    "model",
-                    &|m: &ModelDto| hash_model_dto(m),
-                    &|d: &ModelDiff| hash_model_diff(d),
+                    "RepresentationsDiff",
+                    "RepresentationDiffUpdate",
+                    "representation",
+                    &|m: &RepresentationDto| hash_representation_dto(m),
+                    &|d: &RepresentationDiff| hash_representation_diff(d),
                     coll,
                 ));
             }
@@ -16164,19 +16164,19 @@ pub struct TagShallowDto(pub ShallowRecord);
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TagFullDto(pub FullRecord);
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct ModelIdDto(pub IdDto);
+pub struct RepresentationIdDto(pub IdDto);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ModelInputDto(pub InputDto);
+pub struct RepresentationInputDto(pub InputDto);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ModelMetadataDto(pub MetadataRecord);
+pub struct RepresentationMetadataDto(pub MetadataRecord);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ModelShallowDto(pub ShallowRecord);
+pub struct RepresentationShallowDto(pub ShallowRecord);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct ModelFullDto(pub FullRecord);
+pub struct RepresentationFullDto(pub FullRecord);
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PortIdDto(pub IdDto);
 
@@ -16857,7 +16857,7 @@ impl Store for Design {
     }
 }
 
-impl Store for Model {
+impl Store for Representation {
     fn get_name(&self) -> &str {
         self.name.as_deref().unwrap_or(self.guid.as_str())
     }
@@ -16867,19 +16867,19 @@ impl Store for Model {
     }
 
     fn to_input_dto(&self) -> InputDto {
-        json_input_from(&ModelDto::from(self))
+        json_input_from(&RepresentationDto::from(self))
     }
 
     fn to_metadata_dto(&self) -> MetadataRecord {
-        store_metadata_from_serializable(&ModelDto::from(self))
+        store_metadata_from_serializable(&RepresentationDto::from(self))
     }
 
     fn to_shallow_dto(&self) -> ShallowRecord {
-        store_shallow_from_serializable(&ModelDto::from(self))
+        store_shallow_from_serializable(&RepresentationDto::from(self))
     }
 
     fn to_full_dto(&self) -> FullRecord {
-        store_full_from_serializable(&ModelDto::from(self))
+        store_full_from_serializable(&RepresentationDto::from(self))
     }
 }
 
@@ -16922,7 +16922,7 @@ pub type QualityStore = Quality;
 pub type BenchmarkStore = Benchmark;
 pub type StatStore = Stat;
 pub type TagStore = Tag;
-pub type ModelStore = Model;
+pub type RepresentationStore = Representation;
 pub type PortStore = Port;
 pub type ConnectorStore = Connector;
 pub type PropStore = Prop;
@@ -16948,7 +16948,7 @@ pub enum AnyStore {
     Folder(Folder),
     Author(Author),
     Attribute(Attribute),
-    Model(Model),
+    Representation(Representation),
     Connector(Connector),
     Prop(Prop),
     Layer(Layer),
@@ -16974,7 +16974,7 @@ impl HasGuid for AnyStore {
             AnyStore::Folder(e) => e.guid(),
             AnyStore::Author(e) => e.guid(),
             AnyStore::Attribute(e) => e.guid(),
-            AnyStore::Model(e) => e.guid(),
+            AnyStore::Representation(e) => e.guid(),
             AnyStore::Connector(e) => e.guid(),
             AnyStore::Prop(e) => e.guid(),
             AnyStore::Layer(e) => e.guid(),
@@ -17419,9 +17419,9 @@ impl Connector {
     }
 }
 
-impl Model {
-    pub(crate) fn diff_from(&self, after: &Model) -> ModelDiff {
-        let mut diff = ModelDiff {
+impl Representation {
+    pub(crate) fn diff_from(&self, after: &Representation) -> RepresentationDiff {
+        let mut diff = RepresentationDiff {
             guid: self.guid.clone(),
             ..Default::default()
         };
@@ -17486,8 +17486,8 @@ impl Type {
     }
 
     #[inline]
-    pub fn model_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Model> {
-        self.models.as_ref()?.iter().find(|m| m.guid == guid)
+    pub fn representation_by_guid<'a>(&'a self, guid: &str) -> Option<&'a Representation> {
+        self.representations.as_ref()?.iter().find(|m| m.guid == guid)
     }
 
     pub(crate) fn diff_from(&self, after: &Type) -> TypeDiff {
@@ -17578,24 +17578,24 @@ impl Type {
             b_dom.diff_from(a_dom)
         });
         let bm = self
-            .models
+            .representations
             .as_ref()
-            .map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
+            .map(|v| v.iter().map(RepresentationDto::from).collect::<Vec<_>>());
         let am = after
-            .models
+            .representations
             .as_ref()
-            .map(|v| v.iter().map(ModelDto::from).collect::<Vec<_>>());
-        diff.models = CollectionDiff::from_optional_vecs(&bm, &am, "model", |b, a| {
+            .map(|v| v.iter().map(RepresentationDto::from).collect::<Vec<_>>());
+        diff.representations = CollectionDiff::from_optional_vecs(&bm, &am, "representation", |b, a| {
             let b_dom = self
-                .models
+                .representations
                 .as_ref()
                 .and_then(|v| v.iter().find(|x| x.guid == b.guid))
-                .expect("model before");
+                .expect("representation before");
             let a_dom = after
-                .models
+                .representations
                 .as_ref()
                 .and_then(|v| v.iter().find(|x| x.guid == a.guid))
-                .expect("model after");
+                .expect("representation after");
             b_dom.diff_from(a_dom)
         });
         let bw = self
@@ -20683,8 +20683,8 @@ pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent>
                 if d.is_abstract.is_some() {
                     fields.push("isAbstract".to_string());
                 }
-                if d.models.is_some() {
-                    fields.push("models".to_string());
+                if d.representations.is_some() {
+                    fields.push("representations".to_string());
                 }
                 if d.connectors.is_some() {
                     fields.push("connectors".to_string());
@@ -22011,22 +22011,22 @@ mod tests {
         }
 
         #[derive(Debug, Deserialize)]
-        pub struct ModelSelectionAsset {
-            cases: Vec<ModelSelectionCase>,
+        pub struct RepresentationSelectionAsset {
+            cases: Vec<RepresentationSelectionCase>,
         }
 
         #[derive(Debug, Deserialize)]
-        pub struct ModelSelectionCase {
+        pub struct RepresentationSelectionCase {
             name: String,
             #[serde(rename = "selectedTagGuids")]
             selected_tag_guids: Vec<String>,
             #[serde(rename = "expectedGuid")]
             expected_guid: Option<String>,
-            models: Vec<ModelSelectionModel>,
+            representations: Vec<RepresentationSelectionRepresentation>,
         }
 
         #[derive(Debug, Deserialize)]
-        pub struct ModelSelectionModel {
+        pub struct RepresentationSelectionRepresentation {
             guid: String,
             #[serde(rename = "fileGuid")]
             file_guid: String,
@@ -22034,24 +22034,24 @@ mod tests {
             tag_guids: Vec<String>,
         }
 
-        pub fn contains_all_tags(model: &Model, selected_tag_guids: &[String]) -> bool {
-            let model_tag_guids: Vec<String> = model
+        pub fn contains_all_tags(representation: &Representation, selected_tag_guids: &[String]) -> bool {
+            let representation_tag_guids: Vec<String> = representation
                 .tags
                 .as_ref()
                 .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
                 .unwrap_or_default();
             selected_tag_guids.iter().all(|selected| {
-                model_tag_guids
+                representation_tag_guids
                     .iter()
-                    .any(|model_tag| model_tag == selected)
+                    .any(|representation_tag| representation_tag == selected)
             })
         }
 
-        pub fn jaccard_tag_guids(model_tag_guids: &[String], selected_tag_guids: &[String]) -> f64 {
-            if model_tag_guids.is_empty() && selected_tag_guids.is_empty() {
+        pub fn jaccard_tag_guids(representation_tag_guids: &[String], selected_tag_guids: &[String]) -> f64 {
+            if representation_tag_guids.is_empty() && selected_tag_guids.is_empty() {
                 return 1.0;
             }
-            let set_a: std::collections::HashSet<&String> = model_tag_guids.iter().collect();
+            let set_a: std::collections::HashSet<&String> = representation_tag_guids.iter().collect();
             let set_b: std::collections::HashSet<&String> = selected_tag_guids.iter().collect();
             let intersection = set_a.intersection(&set_b).count();
             let union = set_a.union(&set_b).count();
@@ -22062,29 +22062,29 @@ mod tests {
             }
         }
 
-        pub fn select_best_model_like_semio_ts(
-            models: &[Model],
+        pub fn select_best_representation_like_semio_ts(
+            representations: &[Representation],
             selected_tag_guids: &[String],
-        ) -> Option<Model> {
-            if models.is_empty() {
+        ) -> Option<Representation> {
+            if representations.is_empty() {
                 return None;
             }
             if selected_tag_guids.is_empty() {
-                if let Some(default_model) = models.iter().find(|model| {
-                    model
+                if let Some(default_representation) = representations.iter().find(|representation| {
+                    representation
                         .tags
                         .as_ref()
                         .map(|tags| tags.is_empty())
                         .unwrap_or(true)
                 }) {
-                    return Some(default_model.clone());
+                    return Some(default_representation.clone());
                 }
-                return Some(models[0].clone());
+                return Some(representations[0].clone());
             }
 
-            let filtered: Vec<Model> = models
+            let filtered: Vec<Representation> = representations
                 .iter()
-                .filter(|model| contains_all_tags(model, selected_tag_guids))
+                .filter(|representation| contains_all_tags(representation, selected_tag_guids))
                 .cloned()
                 .collect();
             if filtered.is_empty() {
@@ -22101,8 +22101,8 @@ mod tests {
                 jaccard_tag_guids(&guids, selected_tag_guids)
             };
 
-            for (i, model) in filtered.iter().enumerate().skip(1) {
-                let guids: Vec<String> = model
+            for (i, representation) in filtered.iter().enumerate().skip(1) {
+                let guids: Vec<String> = representation
                     .tags
                     .as_ref()
                     .map(|tags| tags.iter().map(|tag| tag.guid.clone()).collect())
@@ -22177,36 +22177,36 @@ mod tests {
         } // 🥊Roundtrip Tests
         pub use roundtrip_tests::*;
 
-        mod design_model_tests {
-            // 🗽DesignModel Tests
-            // DesignModel Tests MUST provide model-selection regression checks.
+        mod design_representation_tests {
+            // 🗽DesignRepresentation Tests
+            // DesignRepresentation Tests MUST provide representation-selection regression checks.
 
             use super::*;
 
-            mod design_model {
+            mod design_representation {
                 use super::*;
 
                 #[test]
-                pub fn model_selection_from_shared_semio_assets() {
-                    let path = Path::new(ASSETS_DIR).join("model.selection.semio.json");
+                pub fn representation_selection_from_shared_semio_assets() {
+                    let path = Path::new(ASSETS_DIR).join("representation.selection.semio.json");
                     let data = fs::read_to_string(&path)
-                        .expect("Failed to read model.selection.semio.json");
-                    let payload: ModelSelectionAsset = serde_json::from_str(&data)
-                        .expect("Failed to deserialize model.selection.semio.json");
+                        .expect("Failed to read representation.selection.semio.json");
+                    let payload: RepresentationSelectionAsset = serde_json::from_str(&data)
+                        .expect("Failed to deserialize representation.selection.semio.json");
 
                     for case in payload.cases {
-                        let models: Vec<Model> = case
-                            .models
+                        let representations: Vec<Representation> = case
+                            .representations
                             .iter()
-                            .map(|model| Model {
-                                guid: model.guid.clone(),
+                            .map(|representation| Representation {
+                                guid: representation.guid.clone(),
                                 file: FileId {
-                                    guid: model.file_guid.clone(),
+                                    guid: representation.file_guid.clone(),
                                 },
                                 name: None,
                                 description: None,
                                 tags: Some(
-                                    model
+                                    representation
                                         .tag_guids
                                         .iter()
                                         .map(|guid| TagId { guid: guid.clone() })
@@ -22217,8 +22217,8 @@ mod tests {
                             .collect();
 
                         let selected =
-                            select_best_model_like_semio_ts(&models, &case.selected_tag_guids);
-                        let selected_guid = selected.map(|model| model.guid);
+                            select_best_representation_like_semio_ts(&representations, &case.selected_tag_guids);
+                        let selected_guid = selected.map(|representation| representation.guid);
                         assert_eq!(
                             selected_guid, case.expected_guid,
                             "Case {} failed",
@@ -22227,8 +22227,8 @@ mod tests {
                     }
                 }
             }
-        } // 🤾DesignModel Tests
-        pub use design_model_tests::*;
+        } // 🤾DesignRepresentation Tests
+        pub use design_representation_tests::*;
 
         mod kit_filter_tests {
             // 🎸KitFilter Tests
@@ -22315,8 +22315,8 @@ mod tests {
                             })
                             .expect("Expected filtered type missing");
                         assert_eq!(
-                            filtered_type.models.as_ref().map(|v| v.len()).unwrap_or(0),
-                            expected_type.models.as_ref().map(|v| v.len()).unwrap_or(0)
+                            filtered_type.representations.as_ref().map(|v| v.len()).unwrap_or(0),
+                            expected_type.representations.as_ref().map(|v| v.len()).unwrap_or(0)
                         );
                     }
 
@@ -22338,19 +22338,19 @@ mod tests {
                     }
 
                     for filtered_type in filtered.types.as_ref().unwrap_or(&empty_types) {
-                        assert!(filtered_type.models.as_ref().map(|v| v.len()).unwrap_or(0) <= 1);
-                        let empty_models = Vec::new();
-                        for model in filtered_type.models.as_ref().unwrap_or(&empty_models) {
+                        assert!(filtered_type.representations.as_ref().map(|v| v.len()).unwrap_or(0) <= 1);
+                        let empty_representations = Vec::new();
+                        for representation in filtered_type.representations.as_ref().unwrap_or(&empty_representations) {
                             assert!(
                                 filtered
                                     .files
                                     .as_ref()
                                     .map(|files| files
                                         .iter()
-                                        .any(|file| file.guid == model.file.guid))
+                                        .any(|file| file.guid == representation.file.guid))
                                     .unwrap_or(false),
                                 "Missing file {} for filtered type {}",
-                                model.file.guid,
+                                representation.file.guid,
                                 filtered_type.guid
                             );
                         }
@@ -22567,13 +22567,13 @@ mod tests {
         } // 🗼KitFilter Tests
         pub use kit_filter_tests::*;
 
-        mod model_kpi_tests {
-            // 🌍Model/KPI Tests
-            // Model/KPI tests for get_geometric_insights_for_model using nakagin-capsule-tower.gltf.
+        mod representation_kpi_tests {
+            // 🌍Representation/KPI Tests
+            // Representation/KPI tests for get_geometric_insights_for_representation using nakagin-capsule-tower.gltf.
 
             use super::*;
 
-            mod model_kpi {
+            mod representation_kpi {
                 use super::*;
 
                 #[test]
@@ -22584,9 +22584,9 @@ mod tests {
                         return;
                     }
                     let data = std::fs::read(path).expect("read gltf file");
-                    let insights = get_geometric_insights_for_model(&data)
-                        .expect("get_geometric_insights_for_model");
-                    // Save per-language report mirroring ExportDesignModel behavior.
+                    let insights = get_geometric_insights_for_representation(&data)
+                        .expect("get_geometric_insights_for_representation");
+                    // Save per-language report mirroring ExportDesignRepresentation behavior.
                     use serde_json::json;
                     use std::fs;
                     use std::path::PathBuf;
@@ -22594,7 +22594,7 @@ mod tests {
                     let mut reports_dir = PathBuf::from("..");
                     reports_dir.push("..");
                     reports_dir.push("reports");
-                    reports_dir.push("model-kpi");
+                    reports_dir.push("representation-kpi");
                     fs::create_dir_all(&reports_dir).expect("Failed to create reports directory");
 
                     let round6 = |x: f64| (x * 1e6).round() / 1e6;
@@ -22626,11 +22626,11 @@ mod tests {
                         .expect("Failed to write report");
 
                     let canonical_path =
-                        std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.model.semio.json");
+                        std::path::Path::new(ASSETS_DIR).join("nakagin.kpi.representation.semio.json");
                     let canonical_bytes =
-                        fs::read(&canonical_path).expect("read canonical model-kpi asset");
+                        fs::read(&canonical_path).expect("read canonical representation-kpi asset");
                     let canonical: serde_json::Value = serde_json::from_slice(&canonical_bytes)
-                        .expect("parse canonical model-kpi asset");
+                        .expect("parse canonical representation-kpi asset");
                     let skip: std::collections::HashSet<&str> =
                         ["centroid", "total_surface_area"].into_iter().collect();
                     let canon_obj = canonical.as_object().expect("canonical is object");
@@ -22649,8 +22649,8 @@ mod tests {
                     }
                 }
             }
-        } // 🏘️Model/KPI Tests
-        pub use model_kpi_tests::*;
+        } // 🏘️Representation/KPI Tests
+        pub use representation_kpi_tests::*;
 
         mod flatten_tests {
             // 🔐Flatten Tests
@@ -23255,8 +23255,8 @@ mod tests {
                         serde_json::from_str(&diff_data).expect("Failed to parse expected diff");
 
                     // Compute diff
-                    let computed_report = kit.delete_pieces_and_connections_in_design(
-                        design,
+                    let computed_report = design.delete_pieces_and_connections_report(
+                        &kit,
                         &piece_guids,
                         &connection_guids,
                     );
@@ -24594,12 +24594,12 @@ mod tests {
         } // 🥋Design Quality Sum Tests
         pub use design_quality_sum_tests::*;
 
-        mod export_design_model_tests {
-            // 🏄Export Design Model Tests
+        mod export_design_representation_tests {
+            // 🏄Export Design Representation Tests
 
             use super::*;
 
-            mod export_design_model {
+            mod export_design_representation {
                 use super::*;
 
                 #[test]
@@ -24612,14 +24612,14 @@ mod tests {
                         .iter()
                         .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
                         .expect("Design not found");
-                    let result = export_design_model(
+                    let result = export_design_representation(
                         &kit,
                         &design.guid,
                         ".glb",
                         &[],
                         &std::collections::HashMap::new(),
                     )
-                    .expect("export_design_model failed");
+                    .expect("export_design_representation failed");
                     assert!(!result.is_empty(), "GLB result should not be empty");
                     assert_eq!(&result[0..4], b"glTF", "GLB magic mismatch");
                     let version = u32::from_le_bytes(result[4..8].try_into().unwrap());
@@ -24642,14 +24642,14 @@ mod tests {
                         .iter()
                         .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
                         .expect("Design not found");
-                    let result = export_design_model(
+                    let result = export_design_representation(
                         &kit,
                         &design.guid,
                         ".gltf",
                         &[],
                         &std::collections::HashMap::new(),
                     )
-                    .expect("export_design_model failed");
+                    .expect("export_design_representation failed");
                     assert!(!result.is_empty(), "glTF result should not be empty");
                     let json_str =
                         std::str::from_utf8(&result).expect("glTF should be valid UTF-8");
@@ -24668,7 +24668,7 @@ mod tests {
                         .iter()
                         .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
                         .expect("Design not found");
-                    let result = export_design_model(
+                    let result = export_design_representation(
                         &kit,
                         &design.guid,
                         ".xyz",
@@ -24688,26 +24688,26 @@ mod tests {
                         .iter()
                         .find(|d| d.name == "Nakagin Capsule Tower" && d.parent.is_none())
                         .expect("Design not found");
-                    let result = export_design_model(
+                    let result = export_design_representation(
                         &kit,
                         &design.guid,
                         ".gltf",
                         &[],
                         &std::collections::HashMap::new(),
                     )
-                    .expect("export_design_model failed");
+                    .expect("export_design_representation failed");
                     let _: serde_json::Value =
                         serde_json::from_slice(&result).expect("glTF should be valid JSON");
                     let reports_dir = Path::new("..")
                         .join("..")
                         .join("reports")
-                        .join("export-design-model");
+                        .join("export-design-representation");
                     fs::create_dir_all(&reports_dir).expect("Failed to create reports directory");
                     fs::write(reports_dir.join("rs.gltf"), result).expect("Failed to write report");
                 }
             }
-        } // ⚡Export Design Model Tests
-        pub use export_design_model_tests::*;
+        } // ⚡Export Design Representation Tests
+        pub use export_design_representation_tests::*;
 
         mod meta_and_shallow_tests {
             // 🃏Meta And Shallow Tests
@@ -24736,7 +24736,7 @@ mod tests {
                 assert_eq!(shallow.name, "Tambour");
                 assert!(!shallow.guid.is_empty());
                 assert!(shallow.connectors.is_some());
-                assert!(shallow.models.is_some());
+                assert!(shallow.representations.is_some());
                 assert!(shallow.props.is_some());
             }
 

@@ -11,6 +11,7 @@
     "semio/py",
     "semio/engine",
     "semio/js",
+    "semio/react",
     "semio/sites/docs",
     "semio/sites/play",
     "semio/desktop",

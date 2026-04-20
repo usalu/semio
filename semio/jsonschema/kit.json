@@ -474,8 +474,8 @@
             "title": "Location",
             "type": "object"
         },
-        "Model": {
-            "description": "Output fields returned when fetching a model.",
+        "Representation": {
+            "description": "Output fields returned when fetching a representation.",
             "properties": {
                 "url": {
                     "maxLength": 1024,
@@ -525,7 +525,7 @@
                 "url",
                 "file"
             ],
-            "title": "Model",
+            "title": "Representation",
             "type": "object"
         },
         "PieceId": {
@@ -855,11 +855,11 @@
                     ],
                     "default": null
                 },
-                "models": {
+                "representations": {
                     "items": {
-                        "$ref": "#/$defs/Model"
+                        "$ref": "#/$defs/Representation"
                     },
-                    "title": "Models",
+                    "title": "Representations",
                     "type": "array"
                 },
                 "connectors": {

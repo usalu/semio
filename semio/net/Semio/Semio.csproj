@@ -9,13 +9,13 @@
     <SignAssembly>False</SignAssembly>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Ueli Saluz &lt;ueli@semio-tech.com&gt;</Authors>
-    <Description>🧩Design-Information-Modeling for Kit-of-Parts 🏘️ </Description>
+    <Description>🧩Design-Information-Representationing for Kit-of-Parts 🏘️ </Description>
     <Title>semio</Title>
     <Copyright>GNU Affero General Public License v3 or later</Copyright>
     <PackageProjectUrl>https://docs.semio-tech.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/usalu/semio</RepositoryUrl>
     <PackageIcon>emblem_dark_round.png</PackageIcon>
-    <PackageTags>building information modeling,computer aided architectural design,parametric design,procedural modeling,generative design,kit-of-parts,connector-based thinking,shape grammar,graph-based design,graph transformations,graph rewriting,design prototypes,design systems,computer-based design synthesis,computer-generated architecture</PackageTags>
+    <PackageTags>building information representationing,computer aided architectural design,parametric design,procedural representationing,generative design,kit-of-parts,connector-based thinking,shape grammar,graph-based design,graph transformations,graph rewriting,design prototypes,design systems,computer-based design synthesis,computer-generated architecture</PackageTags>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

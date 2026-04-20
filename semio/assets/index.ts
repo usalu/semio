@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Barrel export for all asset modules including icons, fonts, models and images.
+// Barrel export for all asset modules including icons, fonts, representations and images.
 
 // #endregion 🧲Header
 
@@ -27,7 +27,7 @@ export { default as MetabolismKitDiff } from "./semio/metabolism.kit.diff.semio.
 export { default as MetabolismKitDiffed } from "./semio/metabolism.kit.diffed.semio.json";
 export { default as MetabolismMetaKit } from "./semio/metabolism.meta.kit.semio.json";
 export { default as MetabolismShallowKit } from "./semio/metabolism.shallow.kit.semio.json";
-export { default as ModelSelectionCases } from "./semio/model.selection.semio.json";
+export { default as RepresentationSelectionCases } from "./semio/representation.selection.semio.json";
 export { default as NakaginCapsuleTowerCopySelection } from "./semio/nakagin-capsule-tower.copy.design.selection.semio.json";
 export { default as NakaginCapsuleTowerCopyDesign } from "./semio/nakagin-capsule-tower.copy.design.semio.json";
 export { default as NakaginCapsuleTowerDeletedDesignDiff } from "./semio/nakagin-capsule-tower.deleted.design.diff.semio.json";
@@ -52,7 +52,7 @@ export { default as FilterKitCases } from "./semio/filter-kit.cases.semio.json";
 export { default as FindReplaceableTypesCases } from "./semio/find-replaceable-types.cases.semio.json";
 export { default as FlattenCases } from "./semio/flatten.cases.semio.json";
 export { default as SyntheticFindReplaceableKit } from "./semio/synthetic-find-replaceable.kit.semio.json";
-export { default as ExportDesignModelCases } from "./semio/export-design-model.cases.semio.json";
+export { default as ExportDesignRepresentationCases } from "./semio/export-design-representation.cases.semio.json";
 export { default as DeleteCases } from "./semio/delete.cases.semio.json";
 export { default as CopyPasteCases } from "./semio/copy-paste.cases.semio.json";
 export { MetabolismKitData as MetabolismKit };

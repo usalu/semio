@@ -27,7 +27,7 @@
           "icon": "updated-base-icon.svg",
           "image": "updated-base-image.png",
           "description": "Updated base type description",
-          "models": {
+          "representations": {
             "removed": [
               {
                 "guid": "c1b9624e-51ed-459c-8f9c-497e39768cc3"
@@ -35,7 +35,7 @@
             ],
             "updated": [
               {
-                "model": {
+                "representation": {
                   "guid": "c2aded58-7995-4ea5-b990-91bd44482bcb"
                 },
                 "diff": {
@@ -51,7 +51,7 @@
             "added": [
               {
                 "guid": "019caa00-0000-7000-a000-000000000001",
-                "name": "new-test-model",
+                "name": "new-test-representation",
                 "tags": [
                   {
                     "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
@@ -60,7 +60,7 @@
                 "file": {
                   "guid": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
                 },
-                "description": "A newly added model",
+                "description": "A newly added representation",
                 "attributes": []
               }
             ]
@@ -148,10 +148,10 @@
         "name": "New Comprehensive Type",
         "isAbstract": false,
         "folder": "new-type-folder",
-        "models": [
+        "representations": [
           {
             "guid": "019caa00-0000-7000-a000-00000000000b",
-            "name": "new-model",
+            "name": "new-representation",
             "tags": [
               {
                 "guid": "212dec6a-b3ba-42e9-a624-b097176dbaa6"
@@ -160,11 +160,11 @@
             "file": {
               "guid": "457d2061-ac4b-4317-8563-ba41afffd149"
             },
-            "description": "New model",
+            "description": "New representation",
             "attributes": [
               {
                 "guid": "019caa00-0000-7000-a000-00000000000c",
-                "key": "new.model.attr",
+                "key": "new.representation.attr",
                 "value": "val"
               }
             ]
@@ -561,7 +561,7 @@
           "guid": "348efbfa-e275-4dda-9f66-229917c6b4ab"
         },
         "diff": {
-          "name": "model/vnd.3dm Modified"
+          "name": "representation/vnd.3dm Modified"
         }
       }
     ],

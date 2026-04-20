@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Type.stories.tsx
-// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses a type prop directly. Kit is optional for 3D models.
-// Summary: Type stories: Default, ConnectorsOnly, ModelOnly, Selection, FeaturesDisabled.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses a type prop directly. Kit is optional for 3D representations.
+// Summary: Type stories: Default, ConnectorsOnly, RepresentationOnly, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -16,10 +16,10 @@ import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 const rawKind = (metabolismKit.types ?? []).find((kind) => kind.name === 'Tambour')! as SemioKind;
 const storyKind: SemioKind = {
   ...rawKind,
-  models: (rawKind.models ?? []).slice(0, 1),
+  representations: (rawKind.representations ?? []).slice(0, 1),
 } as SemioKind;
 
-const usedFileGuids = new Set((storyKind.models ?? []).map((model) => model.file?.guid).filter(Boolean));
+const usedFileGuids = new Set((storyKind.representations ?? []).map((representation) => representation.file?.guid).filter(Boolean));
 const minimalKit: Kit = {
   guid: (metabolismKit as any).guid,
   name: (metabolismKit as any).name,
@@ -60,19 +60,19 @@ export const Default: Story = {
 export const ConnectorsOnly: Story = {
   args: {
     type: storyKind,
-    showModel: false,
+    showRepresentation: false,
     title: "Connectors Only",
     defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
   },
   render: (args) => frame(<TypeView {...args} />),
 };
 
-export const ModelOnly: Story = {
+export const RepresentationOnly: Story = {
   args: {
     type: storyKind,
     kit: minimalKit,
     showConnectors: false,
-    title: "Model Only",
+    title: "Representation Only",
   },
   render: (args) => frame(<TypeView {...args} />),
 };

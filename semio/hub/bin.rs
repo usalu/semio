@@ -108,7 +108,7 @@ pub use field_patch::*;
 #[serde(rename_all = "snake_case")]
 pub enum EntityKind {
     Kit, Author, Location, Folder, File, Tag, Concept, Port, Quality,
-    Benchmark, Type, Model, Connector, Prop, Attribute, Design, Layer,
+    Benchmark, Type, Representation, Connector, Prop, Attribute, Design, Layer,
     Piece, Group, Connection, Stat,
 }
 
@@ -430,7 +430,7 @@ pub struct TypeState {
     pub description: Option<String>, pub icon: Option<String>, pub image: Option<String>,
     pub folder: Option<String>, pub unit: Option<String>, pub stock: Option<i32>,
     pub is_abstract: Option<bool>, pub virtual_type: Option<bool>, pub location_id: Option<Uuid>,
-    pub connectors: BTreeMap<Uuid, ConnectorState>, pub models: BTreeMap<Uuid, ModelState>,
+    pub connectors: BTreeMap<Uuid, ConnectorState>, pub representations: BTreeMap<Uuid, RepresentationState>,
     pub props: BTreeMap<Uuid, PropState>, pub lifecycle: Lifecycle,
 }
 
@@ -443,7 +443,7 @@ pub struct ConnectorState {
 }
 
 #[derive(Debug, Clone)]
-pub struct ModelState { pub model_id: Uuid, pub file_id: Uuid, pub name: Option<String>, pub description: Option<String>, pub lifecycle: Lifecycle }
+pub struct RepresentationState { pub representation_id: Uuid, pub file_id: Uuid, pub name: Option<String>, pub description: Option<String>, pub lifecycle: Lifecycle }
 
 #[derive(Debug, Clone)]
 pub struct PropState { pub prop_id: Uuid, pub quality_id: Uuid, pub value: String, pub unit: Option<String>, pub lifecycle: Lifecycle }
@@ -646,7 +646,7 @@ async fn create_core_tables(pool: &PgPool) {
     create_core_kit(pool).await; create_core_author(pool).await; create_core_location(pool).await;
     create_core_folder(pool).await; create_core_file(pool).await; create_core_tag(pool).await;
     create_core_concept(pool).await; create_core_port(pool).await; create_core_quality(pool).await;
-    create_core_type(pool).await; create_core_connector(pool).await; create_core_model(pool).await;
+    create_core_type(pool).await; create_core_connector(pool).await; create_core_representation(pool).await;
     create_core_prop(pool).await; create_core_attribute(pool).await; create_core_design(pool).await;
     create_core_layer(pool).await; create_core_piece(pool).await; create_core_group(pool).await;
     create_core_connection(pool).await; create_core_stat(pool).await;
@@ -749,12 +749,12 @@ async fn create_core_connector(pool: &PgPool) {
     )", "core.connector").await;
 }
 
-async fn create_core_model(pool: &PgPool) {
-    exec(pool, "CREATE TABLE IF NOT EXISTS core.model (
-        session_id UUID NOT NULL, model_id UUID NOT NULL, type_id UUID NOT NULL, file_id UUID NOT NULL,
+async fn create_core_representation(pool: &PgPool) {
+    exec(pool, "CREATE TABLE IF NOT EXISTS core.representation (
+        session_id UUID NOT NULL, representation_id UUID NOT NULL, type_id UUID NOT NULL, file_id UUID NOT NULL,
         name TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, model_id)
-    )", "core.model").await;
+        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, representation_id)
+    )", "core.representation").await;
 }
 
 async fn create_core_prop(pool: &PgPool) {
@@ -1058,7 +1058,7 @@ async fn load_types(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, TypeState
     Ok(rows.into_iter().map(|r| (r.0, TypeState {
         type_id: r.0, name: r.1, parent_type_id: r.2, description: r.3, icon: r.4, image: r.5,
         folder: r.6, unit: r.7, stock: r.8, is_abstract: r.9, virtual_type: r.10, location_id: r.11,
-        connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+        connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
     })).collect())
 }
 
@@ -1346,8 +1346,8 @@ pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
                 "mandatory": c.mandatory,
                 "maxChildren": c.max_children,
             })).collect::<Vec<_>>(),
-            "models": t.models.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
-                "guid": m.model_id,
+            "representations": t.representations.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
+                "guid": m.representation_id,
                 "file": { "guid": m.file_id },
                 "name": m.name,
                 "description": m.description,
@@ -1800,7 +1800,7 @@ impl SessionActor {
                     type_id: create.entity_id, name: name.to_string(), parent_type_id: None, description: None,
                     icon: None, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                     virtual_type: None, location_id: None,
-                    connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                    connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
                 });
                 changes.push(EntityChange::Created { entity_kind: EntityKind::Type, entity_id: create.entity_id, snapshot: create.fields.clone() });
             }
@@ -3499,7 +3499,7 @@ use super::*;
         let mut ts = TypeState {
             type_id: tid, name: "Box".into(), parent_type_id: None, description: None, icon: None, image: None,
             folder: None, unit: None, stock: None, is_abstract: None, virtual_type: None, location_id: None,
-            connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+            connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
         };
         ts.connectors.insert(cid, ConnectorState {
             connector_id: cid, name: Some("top".into()), t: 0.5,
@@ -3608,7 +3608,7 @@ use super::*;
                 type_id: guid, name, parent_type_id: parent_id, description: desc,
                 icon, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
         }
         assert_eq!(state.types.len(), 50, "state should contain all 50 metabolism types");
@@ -3955,7 +3955,7 @@ use super::*;
                 icon: t.get("icon").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
             state.domain_version += 1;
         }
@@ -4168,7 +4168,7 @@ use super::*;
                 type_id: tid, name: format!("Type{}", i), parent_type_id: None, description: None,
                 icon: None, image: None, folder: None, unit: None, stock: None, is_abstract: None,
                 virtual_type: None, location_id: None,
-                connectors: BTreeMap::new(), models: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
+                connectors: BTreeMap::new(), representations: BTreeMap::new(), props: BTreeMap::new(), lifecycle: Lifecycle::Active,
             });
         }
         let kit_json = serialize_session_kit(&state);

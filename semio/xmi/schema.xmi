@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xmi:XMI xmlns:uml="http://www.omg.org/spec/UML/20161101" xmlns:xmi="http://www.omg.org/spec/XMI/20131001" xmi:version="20131001">
-  <uml:Model xmi:id="model_semio" name="Semio" visibility="public">
-    <ownedComment xmi:id="comment_model_scope" body="Conceptual UML/XMI model for the semio domain. Primary source: semio specification in AGENTS.md; explicit field limits and validation rules were folded in from the Python, Go, and C# implementations. This file encodes the semio conceptual schema plus OCL invariants for the constraints that fit naturally in UML/XMI. It is not intended to be a byte-for-byte export of any single runtime implementation."/>
+  <uml:Representation xmi:id="representation_semio" name="Semio" visibility="public">
+    <ownedComment xmi:id="comment_representation_scope" body="Conceptual UML/XMI representation for the semio domain. Primary source: semio specification in AGENTS.md; explicit field limits and validation rules were folded in from the Python, Go, and C# implementations. This file encodes the semio conceptual schema plus OCL invariants for the constraints that fit naturally in UML/XMI. It is not intended to be a byte-for-byte export of any single runtime implementation."/>
     <packagedElement xmi:type="uml:Package" xmi:id="pkg_primitives" name="PrimitiveTypes">
       <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_String" name="String"/>
       <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_Integer" name="Integer"/>
@@ -304,7 +304,7 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_guid" name="guid" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_guid_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_guid_upper" value="1"/>
-          <ownedComment xmi:id="cls_Benchmark_guid_comment" body="Optional in the conceptual model.">
+          <ownedComment xmi:id="cls_Benchmark_guid_comment" body="Optional in the conceptual representation.">
             <annotatedElement xmi:idref="cls_Benchmark_guid"/>
           </ownedComment>
         </ownedAttribute>
@@ -508,45 +508,45 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Prop_attributes_upper" value="*"/>
         </ownedAttribute>
       </packagedElement>
-      <packagedElement xmi:type="uml:Class" xmi:id="cls_Model" name="Model">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_guid_upper" value="1"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Representation" name="Representation">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_guid" name="guid" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_guid_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_guid_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_name" name="name" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_name_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_name_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_name" name="name" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_name_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_name_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_description" name="description" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_description_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_description_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_description" name="description" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_description_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_description_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_file" name="file" type="cls_File">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_file_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_file_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_file" name="file" type="cls_File">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_file_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_file_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_tags" name="tags" type="cls_Tag" isOrdered="true">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_tags_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Model_tags_upper" value="*"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_tags" name="tags" type="cls_Tag" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_tags_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Representation_tags_upper" value="*"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_typeOwner" name="typeOwner" type="cls_Type">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_typeOwner_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_typeOwner_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_typeOwner" name="typeOwner" type="cls_Type">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_typeOwner_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_typeOwner_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Model_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Model_attributes_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Model_attributes_upper" value="*"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_attributes" name="attributes" type="cls_Attribute" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_attributes_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Representation_attributes_upper" value="*"/>
         </ownedAttribute>
-        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Model_FileBelongsToOwningKit" name="FileBelongsToOwningKit">
-          <constrainedElement xmi:idref="cls_Model"/>
-          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Model_FileBelongsToOwningKit_spec">
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Representation_FileBelongsToOwningKit" name="FileBelongsToOwningKit">
+          <constrainedElement xmi:idref="cls_Representation"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Representation_FileBelongsToOwningKit_spec">
             <language>OCL</language>
             <body>self.file.kit = self.typeOwner.kit</body>
           </specification>
         </ownedRule>
-        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Model_TagsBelongToOwningKit" name="TagsBelongToOwningKit">
-          <constrainedElement xmi:idref="cls_Model"/>
-          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Model_TagsBelongToOwningKit_spec">
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Representation_TagsBelongToOwningKit" name="TagsBelongToOwningKit">
+          <constrainedElement xmi:idref="cls_Representation"/>
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Representation_TagsBelongToOwningKit_spec">
             <language>OCL</language>
             <body>self.tags-&gt;forAll(t | self.typeOwner.kit.tags-&gt;includes(t))</body>
           </specification>
@@ -739,9 +739,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_concepts_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_concepts_upper" value="*"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_models" name="models" type="cls_Model" aggregation="composite" isOrdered="true">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_models_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_models_upper" value="*"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_representations" name="representations" type="cls_Representation" aggregation="composite" isOrdered="true">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_representations_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_representations_upper" value="*"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_connectors" name="connectors" type="cls_Connector" aggregation="composite" isOrdered="true">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_connectors_lower" value="0"/>
@@ -755,11 +755,11 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_attributes_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="cls_Type_attributes_upper" value="*"/>
         </ownedAttribute>
-        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_ModelNamesUnique" name="ModelNamesUnique">
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_RepresentationNamesUnique" name="RepresentationNamesUnique">
           <constrainedElement xmi:idref="cls_Type"/>
-          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_ModelNamesUnique_spec">
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Type_RepresentationNamesUnique_spec">
             <language>OCL</language>
-            <body>self.models-&gt;select(not name.oclIsUndefined() and name &lt;&gt; "")-&gt;isUnique(name)</body>
+            <body>self.representations-&gt;select(not name.oclIsUndefined() and name &lt;&gt; "")-&gt;isUnique(name)</body>
           </specification>
         </ownedRule>
         <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Type_AvailableCountNonNegative" name="AvailableCountNonNegative">
@@ -1485,7 +1485,7 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
             <body>let gs : Bag(String) =
   Bag{self.guid}
     -&gt;union(self.types-&gt;collect(t | t.guid))
-    -&gt;union(self.types-&gt;collect(t | t.models-&gt;collect(m | m.guid))-&gt;flatten())
+    -&gt;union(self.types-&gt;collect(t | t.representations-&gt;collect(m | m.guid))-&gt;flatten())
     -&gt;union(self.types-&gt;collect(t | t.connectors-&gt;collect(c | c.guid))-&gt;flatten())
     -&gt;union(self.designs-&gt;collect(d | d.guid))
     -&gt;union(self.designs-&gt;collect(d | d.pieces-&gt;collect(p | p.guid))-&gt;flatten())
@@ -1502,8 +1502,8 @@ in gs-&gt;asSet()-&gt;size() = gs-&gt;size()</body>
     </packagedElement>
     <packagedElement xmi:type="uml:Package" xmi:id="pkg_notes" name="Notes">
       <packagedElement xmi:type="uml:Comment" xmi:id="note_compatibility" body="Connector compatibility in semio is one-sided: it is enough for one connector to list the other connector's port as compatible. This XMI stores the underlying Port references but leaves the dynamic compatibility predicate to consuming tools."/>
-      <packagedElement xmi:type="uml:Comment" xmi:id="note_hierarchy" body="Design hierarchy, fixed/linked placement, shortest-distance root levels, and breadth-first parent selection are defined semantically in the specification. They are derivable operations and are documented here rather than modeled as executable behavior in XMI."/>
+      <packagedElement xmi:type="uml:Comment" xmi:id="note_hierarchy" body="Design hierarchy, fixed/linked placement, shortest-distance root levels, and breadth-first parent selection are defined semantically in the specification. They are derivable operations and are documented here rather than representationed as executable behavior in XMI."/>
       <packagedElement xmi:type="uml:Comment" xmi:id="note_lengths" body="String length limits come primarily from the Python implementation: NAME 64, ID 128, URL 1024, URI 2048, DESCRIPTION 512, FORMULA 4096. UML/XMI does not have a portable built-in maxLength facet on primitive String, so these limits are captured in comments and OCL where practical."/>
     </packagedElement>
-  </uml:Model>
+  </uml:Representation>
 </xmi:XMI>

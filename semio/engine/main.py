@@ -107,7 +107,7 @@ from semio_core import (
     KitZipDoesNotContainSemioFolder,
     LocalKitUriIsNotAbsolute,
     Location,
-    Model,
+    Representation,
     OnlyRemoteKitsCanBeCached,
     Piece,
     Plane,
@@ -392,7 +392,7 @@ class DatabaseStore(Store, abc.ABC):
         kit_data = json.loads(row[0])
         match kind:
             case OperationKind.KIT:
-                return KitOutput.model_validate(kit_data)
+                return KitOutput.representation_validate(kit_data)
             case OperationKind.DESIGN:
                 raise FeatureNotYetSupported()
             case OperationKind.TYPE:
@@ -410,7 +410,7 @@ class DatabaseStore(Store, abc.ABC):
 
         if kind == OperationKind.KIT:
             self.initialize()
-            dump = input.model_dump()
+            dump = input.representation_dump()
             dump["uri"] = kitUri
             with self._connect() as conn:
                 cursor = conn.execute("SELECT 1 FROM kit WHERE uri = ?", (kitUri,))
@@ -420,7 +420,7 @@ class DatabaseStore(Store, abc.ABC):
                     "INSERT INTO kit (uri, data) VALUES (?, ?)",
                     (kitUri, json.dumps(dump)),
                 )
-            return KitOutput.model_validate(dump)
+            return KitOutput.representation_validate(dump)
 
         if not self.initialized():
             raise KitNotFound(kitUri)
@@ -434,7 +434,7 @@ class DatabaseStore(Store, abc.ABC):
 
             match kind:
                 case OperationKind.DESIGN:
-                    design_dump = input.model_dump()
+                    design_dump = input.representation_dump()
                     designs = kit_data.get("designs", [])
                     designs = [d for d in designs if not (d.get("name") == input.name and d.get("variant") == input.variant and d.get("view") == input.view)]
                     designs.append(design_dump)
@@ -444,7 +444,7 @@ class DatabaseStore(Store, abc.ABC):
                         (json.dumps(kit_data), kitUri),
                     )
                 case OperationKind.TYPE:
-                    type_dump = input.model_dump()
+                    type_dump = input.representation_dump()
                     types = kit_data.get("types", [])
                     types = [t for t in types if not (t.get("name") == input.name and t.get("variant") == input.variant)]
                     types.append(type_dump)
@@ -769,7 +769,7 @@ class RemoteStore(Store):
             if kind == OperationKind.KIT:
                 response = requests.get(self._api_url(), headers=self._headers(), timeout=30)
                 response.raise_for_status()
-                return KitOutput.model_validate(response.json())
+                return KitOutput.representation_validate(response.json())
             else:
                 raise FeatureNotYetSupported()
         except requests.exceptions.ConnectionError:
@@ -788,7 +788,7 @@ class RemoteStore(Store):
             if kind == OperationKind.KIT:
                 response = requests.put(
                     self._api_url(),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -800,7 +800,7 @@ class RemoteStore(Store):
                 path = f"types/{typeName},{typeVariant}"
                 response = requests.put(
                     self._api_url(path),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -813,7 +813,7 @@ class RemoteStore(Store):
                 path = f"designs/{designName},{designVariant},{designView}"
                 response = requests.put(
                     self._api_url(path),
-                    json=input.model_dump() if hasattr(input, "model_dump") else input,
+                    json=input.representation_dump() if hasattr(input, "representation_dump") else input,
                     headers=self._headers(),
                     timeout=30,
                 )
@@ -945,7 +945,7 @@ def encodeType(type: TypeContext):
     """🎨Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
     Callers MUST provide a valid TypeContext with populated connectors.
     """
-    typeClone = type.model_copy(deep=True)
+    typeClone = type.representation_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
     typeClone.description = encodeForPrompt(typeClone.description) if typeClone.description != "" else "NO_DESCRIPTION"
     for connector in typeClone.connectors:
@@ -955,7 +955,7 @@ def encodeType(type: TypeContext):
 
 
 def decodeDesign(design: dict):
-    """📩Decodes a raw AI response dict into a DesignPrediction model.
+    """📩Decodes a raw AI response dict into a DesignPrediction representation.
     Callers MUST provide a dict with pieces and connections arrays.
     """
     decodedDesign = {
@@ -1007,7 +1007,7 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     TODO: Replace prototype healing with one that makes more for every single property.
     Callers MUST provide a design with pieces referencing types available in the types list.
     """
-    designClone = design.model_copy(deep=True)
+    designClone = design.representation_copy(deep=True)
     typeD = {}
     connectorD = {}
     pieceD = {}
@@ -1090,7 +1090,7 @@ Every piece in the design MUST be connected to at least one other piece.
 One piece is the root piece of the design. The connections MUST form a tree.
 Ids SHOULD be abreviated and don't have to be globally unique.
 Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
-The diagram is only a nice 2D model of the design and does not change the design.
+The diagram is only a nice 2D representation of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a connector of another piece, there SHOULD be a connecting between the pieces."""
 
@@ -1243,7 +1243,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     logger.debug("Generated prompt: {}", prompt)
     try:
         response = openaiClient.chat.completions.create(
-            model="gpt-4o",
+            representation="gpt-4o",
             messages=[
                 {
                     "role": "system",
@@ -1273,7 +1273,7 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
             responseDump = {
                 "id": response.id,
                 "created": response.created,
-                "model": response.model,
+                "representation": response.representation,
                 "object": response.object,
                 "system_fingerprint": response.system_fingerprint,
                 "usage": {
@@ -1313,13 +1313,13 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
     if result and result.finish_reason == "stop" and result.message.refusal is None and result.message.content:
         design = decodeDesign(json.loads(result.message.content))
 
-        if hasattr(design, "model_dump"):
-            logger.debug("Predicted Design: {}", json.dumps(design.model_dump(), indent=4))
+        if hasattr(design, "representation_dump"):
+            logger.debug("Predicted Design: {}", json.dumps(design.representation_dump(), indent=4))
 
         healedDesign = healDesign(typing.cast(DesignPrediction, design), types)
         logger.debug(
             "Predicted Design Healed: {}",
-            json.dumps(healedDesign.model_dump(), indent=4),
+            json.dumps(healedDesign.representation_dump(), indent=4),
         )
         return healedDesign
 
@@ -1402,7 +1402,7 @@ graphql_mutation = MutationType()
 
 @graphql_mutation.field("createKit")
 def _resolve_graphql_create_kit(_: typing.Any, info: typing.Any, kit: dict[str, typing.Any]) -> typing.Any:
-    ki = KitInput.model_validate(kit)
+    ki = KitInput.representation_validate(kit)
     parent = os.path.join(os.path.expanduser(USER_FOLDER), "graphql-kits")
     os.makedirs(parent, exist_ok=True)
     kit_dir = tempfile.mkdtemp(dir=parent)
@@ -1439,7 +1439,7 @@ rest.add_middleware(
 )
 
 
-class NativeAlgorithmExecuteBody(pydantic.BaseModel):
+class NativeAlgorithmExecuteBody(pydantic.BaseRepresentation):
     """🔺Request body for POST /api/native-algorithms/execute.
     """
 
@@ -1685,7 +1685,7 @@ async def app_payload(token: str) -> fastapi.responses.JSONResponse:
 
 @rest.get("/app/files/{file_guid}")
 async def app_file(file_guid: str) -> fastapi.Response:
-    """Serve a kit file blob by guid. Used by MCP app iframes to load 3D models."""
+    """Serve a kit file blob by guid. Used by MCP app iframes to load 3D representations."""
     blob = _mcp_app_file_blobs.get(file_guid)
     if blob is None:
         return fastapi.Response(content="File not found", status_code=404)
@@ -1903,7 +1903,7 @@ rest.openapi = custom_openapi
 # Auth endpoints MUST expose login, logout and status for remote server authentication.
 
 
-class LoginRequest(pydantic.BaseModel):
+class LoginRequest(pydantic.BaseRepresentation):
     """📜Login request body.
     """
 
@@ -1912,7 +1912,7 @@ class LoginRequest(pydantic.BaseModel):
     password: str
 
 
-class LoginResponse(pydantic.BaseModel):
+class LoginResponse(pydantic.BaseRepresentation):
     """🟪Login response body.
     """
 
@@ -1922,14 +1922,14 @@ class LoginResponse(pydantic.BaseModel):
     token: str
 
 
-class LogoutRequest(pydantic.BaseModel):
+class LogoutRequest(pydantic.BaseRepresentation):
     """🟫Logout request body.
     """
 
     serverUrl: str
 
 
-class AuthStatusResponse(pydantic.BaseModel):
+class AuthStatusResponse(pydantic.BaseRepresentation):
     """💠Auth status response body.
     """
 
@@ -1980,7 +1980,7 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
 # #endregion 🌟Rest
 
 # #region ⛩️Mcp
-# Mcp MUST expose stateful kit operations via Model Context Protocol.
+# Mcp MUST expose stateful kit operations via Representation Context Protocol.
 # Call start_working_in_local_kit(path) first; then use start_working_in_design/start_working_in_type to scope further.
 
 mcp = FastMCP("semio", stateless_http=False, json_response=True)
@@ -2087,7 +2087,7 @@ def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
         if not merged.get(key) and reference.get(key):
             merged[key] = copy.deepcopy(reference[key])
     merged["designs"] = _merge_reference_collection_links(merged.get("designs", []) or [], reference.get("designs", []) or [], ("parent", "connections", "authors", "concepts", "props", "layers", "groups"))
-    merged["types"] = _merge_reference_collection_links(merged.get("types", []) or [], reference.get("types", []) or [], ("parent", "families", "authors", "concepts", "models", "connectors", "props"))
+    merged["types"] = _merge_reference_collection_links(merged.get("types", []) or [], reference.get("types", []) or [], ("parent", "families", "authors", "concepts", "representations", "connectors", "props"))
     return merged
 
 
@@ -2102,12 +2102,12 @@ def _load_kit_from_path(path: str) -> dict:
         sqlite_path = p / KIT_LOCAL_FOLDERNAME / KIT_LOCAL_FILENAME
         if sqlite_path.exists():
             kit, _files = _semio_core.import_folder_kit(str(p))
-            if hasattr(kit, "model_dump"):
-                loaded_kit = kit.model_dump()
+            if hasattr(kit, "representation_dump"):
+                loaded_kit = kit.representation_dump()
             elif hasattr(kit, "to_dict"):
                 loaded_kit = kit.to_dict()
             else:
-                loaded_kit = KitOutput.model_validate(kit).model_dump()
+                loaded_kit = KitOutput.representation_validate(kit).representation_dump()
             return _merge_reference_kit_links(loaded_kit, _load_reference_kit_json_for_folder(p))
         for name in ("metabolism.kit.semio.json", "kit.json"):
             json_path = p / name
@@ -2460,7 +2460,7 @@ def validate_kit(kit: dict) -> dict:
     """🟤Validate a kit dict and return any validation problems."""
     try:
         result = validateKitDict(kit)
-        return result.model_dump() if hasattr(result, "model_dump") else {"problems": []}
+        return result.representation_dump() if hasattr(result, "representation_dump") else {"problems": []}
     except Exception as e:
         return {"error": str(e)}
 
@@ -3141,7 +3141,7 @@ def clear_current_selection(ctx: Context) -> dict:
 # MCP App Tools MUST expose kit/design/diagram/scene visualization and selection intents as MCP tools.
 # Each tool declares the resource URI matching its viewer: kit-viewer, design-viewer, scene-viewer, or diagram-viewer.
 # Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
-# host compatibility, matching the registerAppTool normalization from @modelcontextprotocol/ext-apps/server.
+# host compatibility, matching the registerAppTool normalization from @representationcontextprotocol/ext-apps/server.
 
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
@@ -3524,10 +3524,10 @@ def _is_gltf_file(file: dict) -> bool:
     return name.endswith(".glb") or name.endswith(".gltf")
 
 
-def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
-    """🔖Return file GUIDs for the GLB/GLTF model file to inline per type used in the design.
-    Mirrors JS buildScenePieceAssets: picks the untagged (or first) model, then falls back
-    to any model with a GLB/GLTF file if the best model's file isn't a GLB/GLTF."""
+def _select_best_representation_file_guids(kit: dict, design: dict | None) -> set[str]:
+    """🔖Return file GUIDs for the GLB/GLTF representation file to inline per type used in the design.
+    Mirrors JS buildScenePieceAssets: picks the untagged (or first) representation, then falls back
+    to any representation with a GLB/GLTF file if the best representation's file isn't a GLB/GLTF."""
     if not design:
         return set()
     files_by_guid = {f.get("guid"): f for f in kit.get("files", []) if f.get("guid")}
@@ -3537,16 +3537,16 @@ def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
     for typ in kit.get("types", []):
         if typ.get("guid") not in type_guids:
             continue
-        models = typ.get("models") or []
-        # Mirror JS selectBestModel: prefer first untagged model, else first model.
-        best = next((m for m in models if not m.get("tags")), models[0] if models else None)
+        representations = typ.get("representations") or []
+        # Mirror JS selectBestRepresentation: prefer first untagged representation, else first representation.
+        best = next((m for m in representations if not m.get("tags")), representations[0] if representations else None)
         best_file_guid = (best.get("file") or {}).get("guid") if best else None
         best_file = files_by_guid.get(best_file_guid) if best_file_guid else None
         if best_file and _is_gltf_file(best_file):
             result.add(best_file_guid)
             continue
-        # Fallback: mirror JS buildScenePieceAssets lines 2110-2118: find any model with a GLB file.
-        for m in models:
+        # Fallback: mirror JS buildScenePieceAssets lines 2110-2118: find any representation with a GLB file.
+        for m in representations:
             fguid = (m.get("file") or {}).get("guid")
             f = files_by_guid.get(fguid) if fguid else None
             if f and _is_gltf_file(f):
@@ -3557,9 +3557,9 @@ def _select_best_model_file_guids(kit: dict, design: dict | None) -> set[str]:
 
 def _strip_kit_blobs(kit: dict, design: dict | None = None) -> dict:
     """💾Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport.
-    GLB/GLTF blobs for the design's selected type models are kept inline as data URLs to avoid CSP/HTTP
+    GLB/GLTF blobs for the design's selected type representations are kept inline as data URLs to avoid CSP/HTTP
     issues in sandboxed iframes. All other blobs are stripped and served via HTTP endpoint."""
-    inline_guids = _select_best_model_file_guids(kit, design)
+    inline_guids = _select_best_representation_file_guids(kit, design)
     kit_for_ui = copy.deepcopy(kit)
     for f in kit_for_ui.get("files", []):
         guid = f.get("guid")
@@ -3664,7 +3664,7 @@ def kit_viewer_resource() -> str:
 @mcp.resource(
     _SCENE_APP_RESOURCE_URI,
     name="semio scene viewer",
-    description="3D scene viewer for semio designs. Renders pieces with GLTF models in 3D from @semio/ui.",
+    description="3D scene viewer for semio designs. Renders pieces with GLTF representations in 3D from @semio/ui.",
     mime_type="text/html;profile=mcp-app",
     meta=_mcp_app_html_resource_meta(),
 )

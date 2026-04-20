@@ -75,13 +75,13 @@ input ConceptPatchInput:name,description,icon,attributes
 type Family:hash,id,kit,name,description,icon,ports,attributes
 input FamilyInput:id,name,description,icon,ports,attributes
 input FamilyPatchInput:name,description,icon,ports,attributes
-type Model:hash,id,type,name,tags,file,description,attributes
-input ModelInput:id,name,tagIds,fileId,description,attributes
+type Representation:hash,id,type,name,tags,file,description,attributes
+input RepresentationInput:id,name,tagIds,fileId,description,attributes
 type Connector:hash,id,type,name,t,point,direction,description,port,mandatory,maxChildren,props,attributes,pieces,compatibleConnectors
 input ConnectorInput:id,name,t,point,direction,description,portId,mandatory,maxChildren,props,attributes
-type Type:hash,id,kit,name,parent,children,isAbstract,folder,models,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authors,concepts,icon,image,description,attributes,fixedPieces
-input TypeInput:id,name,parentId,isAbstract,folderId,models,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authorIds,conceptIds,icon,image,description,attributes
-input TypePatchInput:name,parentId,isAbstract,folderId,models,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authorIds,conceptIds,icon,image,description,attributes
+type Type:hash,id,kit,name,parent,children,isAbstract,folder,representations,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authors,concepts,icon,image,description,attributes,fixedPieces
+input TypeInput:id,name,parentId,isAbstract,folderId,representations,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authorIds,conceptIds,icon,image,description,attributes
+input TypePatchInput:name,parentId,isAbstract,folderId,representations,connectors,props,stock,virtual,unit,createdAt,updatedAt,location,authorIds,conceptIds,icon,image,description,attributes
 type Layer:hash,id,design,path,isHidden,isLocked,color,description,attributes
 input LayerInput:id,path,isHidden,isLocked,color,description,attributes
 type Side:hash,connection,piece,designPiece,connector
@@ -114,8 +114,8 @@ type SessionWarningAction:hash,kind,label
 type KitSessionWarning:hash,code,message,actions
 type SessionConnectorSelection:hash,piece,designPiece,connector
 input SessionConnectorSelectionInput:pieceId,designPieceId,connectorId
-type KitSessionSelection:hash,activeDesign,pieces,connections,connectors,models,designs,types,replacementTypeCandidates,replacementDesignCandidates,boundaryConnectorCount
-input SessionSelectionInput:activeDesignId,pieceIds,connectionIds,connectorSelections,modelIds,designIds,typeIds
+type KitSessionSelection:hash,activeDesign,pieces,connections,connectors,representations,designs,types,replacementTypeCandidates,replacementDesignCandidates,boundaryConnectorCount
+input SessionSelectionInput:activeDesignId,pieceIds,connectionIds,connectorSelections,representationIds,designIds,typeIds
 type KitSession:hash,id,kit,actor,client,state,strictMode,timeoutSeconds,startedAt,lastSeenAt,expiresAt,disconnectedAt,locked,canReconnect,canSaveLocalChanges,warning,selection,activeTransactions
 enum ValidationSeverity
 type ValidationNote:hash,severity,code,path,entityId,message
@@ -405,7 +405,7 @@ const ROOT_COLLECTION_TYPE_BY_KEY: Record<string, string> = {
 	pieces: "Piece",
 	connections: "Connection",
 	benchmarks: "Benchmark",
-	models: "Model",
+	representations: "Representation",
 	connectors: "Connector",
 	stats: "Stat",
 	props: "Prop",
@@ -660,9 +660,9 @@ function findLiveEntity(kit: KitImpl, typeName: string, guid?: string): any {
 	if (typeName === "Tag") return kit.tags?.find((entry) => entry.guid === guid);
 	if (typeName === "Concept") return kit.concepts?.find((entry) => entry.guid === guid);
 	if (typeName === "Family") return kit.families?.find((entry) => entry.guid === guid);
-	if (typeName === "Model") {
+	if (typeName === "Representation") {
 		for (const entry of kit.types ?? []) {
-			const match = entry.models?.find((model) => model.guid === guid);
+			const match = entry.representations?.find((representation) => representation.guid === guid);
 			if (match) return match;
 		}
 	}
@@ -1093,7 +1093,7 @@ export const AuthorProvider = createEntityProvider("Author");
 export const TagProvider = createEntityProvider("Tag");
 export const ConceptProvider = createEntityProvider("Concept");
 export const FamilyProvider = createEntityProvider("Family");
-export const ModelProvider = createEntityProvider("Model");
+export const RepresentationProvider = createEntityProvider("Representation");
 export const ConnectorProvider = createEntityProvider("Connector");
 export const BenchmarkProvider = createEntityProvider("Benchmark");
 export const LayerProvider = createEntityProvider("Layer");
@@ -1216,9 +1216,9 @@ export const useProp = createSchemaObjectHook("Prop"), usePropHash = createSchem
 export const useTag = createSchemaObjectHook("Tag"), useTagHash = createSchemaFieldHook("Tag", "hash"), useTagId = createSchemaFieldHook("Tag", "id"), useTagKit = createSchemaFieldHook("Tag", "kit"), useTagName = createSchemaFieldHook("Tag", "name"), useTagDescription = createSchemaFieldHook("Tag", "description"), useTagIcon = createSchemaFieldHook("Tag", "icon"), useTagAttributes = createSchemaFieldHook("Tag", "attributes");
 export const useConcept = createSchemaObjectHook("Concept"), useConceptHash = createSchemaFieldHook("Concept", "hash"), useConceptId = createSchemaFieldHook("Concept", "id"), useConceptKit = createSchemaFieldHook("Concept", "kit"), useConceptName = createSchemaFieldHook("Concept", "name"), useConceptDescription = createSchemaFieldHook("Concept", "description"), useConceptIcon = createSchemaFieldHook("Concept", "icon"), useConceptAttributes = createSchemaFieldHook("Concept", "attributes");
 export const useFamily = createSchemaObjectHook("Family"), useFamilyHash = createSchemaFieldHook("Family", "hash"), useFamilyId = createSchemaFieldHook("Family", "id"), useFamilyKit = createSchemaFieldHook("Family", "kit"), useFamilyName = createSchemaFieldHook("Family", "name"), useFamilyDescription = createSchemaFieldHook("Family", "description"), useFamilyIcon = createSchemaFieldHook("Family", "icon"), useFamilyPorts = createSchemaFieldHook("Family", "ports"), useFamilyAttributes = createSchemaFieldHook("Family", "attributes");
-export const useModel = createSchemaObjectHook("Model"), useModelHash = createSchemaFieldHook("Model", "hash"), useModelId = createSchemaFieldHook("Model", "id"), useModelType = createSchemaFieldHook("Model", "type"), useModelName = createSchemaFieldHook("Model", "name"), useModelTags = createSchemaFieldHook("Model", "tags"), useModelFile = createSchemaFieldHook("Model", "file"), useModelDescription = createSchemaFieldHook("Model", "description"), useModelAttributes = createSchemaFieldHook("Model", "attributes");
+export const useRepresentation = createSchemaObjectHook("Representation"), useRepresentationHash = createSchemaFieldHook("Representation", "hash"), useRepresentationId = createSchemaFieldHook("Representation", "id"), useRepresentationType = createSchemaFieldHook("Representation", "type"), useRepresentationName = createSchemaFieldHook("Representation", "name"), useRepresentationTags = createSchemaFieldHook("Representation", "tags"), useRepresentationFile = createSchemaFieldHook("Representation", "file"), useRepresentationDescription = createSchemaFieldHook("Representation", "description"), useRepresentationAttributes = createSchemaFieldHook("Representation", "attributes");
 export const useConnector = createSchemaObjectHook("Connector"), useConnectorHash = createSchemaFieldHook("Connector", "hash"), useConnectorId = createSchemaFieldHook("Connector", "id"), useConnectorType = createSchemaFieldHook("Connector", "type"), useConnectorName = createSchemaFieldHook("Connector", "name"), useConnectorT = createSchemaFieldHook("Connector", "t"), useConnectorPoint = createSchemaFieldHook("Connector", "point"), useConnectorDirection = createSchemaFieldHook("Connector", "direction"), useConnectorDescription = createSchemaFieldHook("Connector", "description"), useConnectorPort = createSchemaFieldHook("Connector", "port"), useConnectorMandatory = createSchemaFieldHook("Connector", "mandatory"), useConnectorMaxChildren = createSchemaFieldHook("Connector", "maxChildren"), useConnectorProps = createSchemaFieldHook("Connector", "props"), useConnectorAttributes = createSchemaFieldHook("Connector", "attributes"), useConnectorPieces = createSchemaFieldHook("Connector", "pieces"), useConnectorCompatibleConnectors = createSchemaFieldHook("Connector", "compatibleConnectors");
-export const useType = createSchemaObjectHook("Type"), useTypeHash = createSchemaFieldHook("Type", "hash"), useTypeId = createSchemaFieldHook("Type", "id"), useTypeKit = createSchemaFieldHook("Type", "kit"), useTypeName = createSchemaFieldHook("Type", "name"), useTypeParent = createSchemaFieldHook("Type", "parent"), useTypeChildren = createSchemaFieldHook("Type", "children"), useTypeIsAbstract = createSchemaFieldHook("Type", "isAbstract"), useTypeFolder = createSchemaFieldHook("Type", "folder"), useTypeModels = createSchemaFieldHook("Type", "models"), useTypeConnectors = createSchemaFieldHook("Type", "connectors"), useTypeProps = createSchemaFieldHook("Type", "props"), useTypeStock = createSchemaFieldHook("Type", "stock"), useTypeVirtual = createSchemaFieldHook("Type", "virtual"), useTypeUnit = createSchemaFieldHook("Type", "unit"), useTypeCreatedAt = createSchemaFieldHook("Type", "createdAt"), useTypeUpdatedAt = createSchemaFieldHook("Type", "updatedAt"), useTypeLocation = createSchemaFieldHook("Type", "location"), useTypeAuthors = createSchemaFieldHook("Type", "authors"), useTypeConcepts = createSchemaFieldHook("Type", "concepts"), useTypeIcon = createSchemaFieldHook("Type", "icon"), useTypeImage = createSchemaFieldHook("Type", "image"), useTypeDescription = createSchemaFieldHook("Type", "description"), useTypeAttributes = createSchemaFieldHook("Type", "attributes"), useTypeFixedPieces = createSchemaFieldHook("Type", "fixedPieces");
+export const useType = createSchemaObjectHook("Type"), useTypeHash = createSchemaFieldHook("Type", "hash"), useTypeId = createSchemaFieldHook("Type", "id"), useTypeKit = createSchemaFieldHook("Type", "kit"), useTypeName = createSchemaFieldHook("Type", "name"), useTypeParent = createSchemaFieldHook("Type", "parent"), useTypeChildren = createSchemaFieldHook("Type", "children"), useTypeIsAbstract = createSchemaFieldHook("Type", "isAbstract"), useTypeFolder = createSchemaFieldHook("Type", "folder"), useTypeRepresentations = createSchemaFieldHook("Type", "representations"), useTypeConnectors = createSchemaFieldHook("Type", "connectors"), useTypeProps = createSchemaFieldHook("Type", "props"), useTypeStock = createSchemaFieldHook("Type", "stock"), useTypeVirtual = createSchemaFieldHook("Type", "virtual"), useTypeUnit = createSchemaFieldHook("Type", "unit"), useTypeCreatedAt = createSchemaFieldHook("Type", "createdAt"), useTypeUpdatedAt = createSchemaFieldHook("Type", "updatedAt"), useTypeLocation = createSchemaFieldHook("Type", "location"), useTypeAuthors = createSchemaFieldHook("Type", "authors"), useTypeConcepts = createSchemaFieldHook("Type", "concepts"), useTypeIcon = createSchemaFieldHook("Type", "icon"), useTypeImage = createSchemaFieldHook("Type", "image"), useTypeDescription = createSchemaFieldHook("Type", "description"), useTypeAttributes = createSchemaFieldHook("Type", "attributes"), useTypeFixedPieces = createSchemaFieldHook("Type", "fixedPieces");
 export const useLayer = createSchemaObjectHook("Layer"), useLayerHash = createSchemaFieldHook("Layer", "hash"), useLayerId = createSchemaFieldHook("Layer", "id"), useLayerDesign = createSchemaFieldHook("Layer", "design"), useLayerPath = createSchemaFieldHook("Layer", "path"), useLayerIsHidden = createSchemaFieldHook("Layer", "isHidden"), useLayerIsLocked = createSchemaFieldHook("Layer", "isLocked"), useLayerColor = createSchemaFieldHook("Layer", "color"), useLayerDescription = createSchemaFieldHook("Layer", "description"), useLayerAttributes = createSchemaFieldHook("Layer", "attributes");
 export const useSide = createSchemaObjectHook("Side"), useSideHash = createSchemaFieldHook("Side", "hash"), useSideConnection = createSchemaFieldHook("Side", "connection"), useSidePiece = createSchemaFieldHook("Side", "piece"), useSideDesignPiece = createSchemaFieldHook("Side", "designPiece"), useSideConnector = createSchemaFieldHook("Side", "connector");
 export const useConnection = createSchemaObjectHook("Connection"), useConnectionHash = createSchemaFieldHook("Connection", "hash"), useConnectionId = createSchemaFieldHook("Connection", "id"), useConnectionDesign = createSchemaFieldHook("Connection", "design"), useConnectionConnected = createSchemaFieldHook("Connection", "connected"), useConnectionConnecting = createSchemaFieldHook("Connection", "connecting"), useConnectionGap = createSchemaFieldHook("Connection", "gap"), useConnectionShift = createSchemaFieldHook("Connection", "shift"), useConnectionRise = createSchemaFieldHook("Connection", "rise"), useConnectionRotation = createSchemaFieldHook("Connection", "rotation"), useConnectionTurn = createSchemaFieldHook("Connection", "turn"), useConnectionTilt = createSchemaFieldHook("Connection", "tilt"), useConnectionU = createSchemaFieldHook("Connection", "u"), useConnectionV = createSchemaFieldHook("Connection", "v"), useConnectionDescription = createSchemaFieldHook("Connection", "description"), useConnectionAttributes = createSchemaFieldHook("Connection", "attributes"), useConnectionChildPiece = createSchemaFieldHook("Connection", "childPiece"), useConnectionChildConnector = createSchemaFieldHook("Connection", "childConnector"), useConnectionParentPiece = createSchemaFieldHook("Connection", "parentPiece"), useConnectionParentConnector = createSchemaFieldHook("Connection", "parentConnector");

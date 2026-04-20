@@ -44,7 +44,7 @@ import {
   exportKit,
   FileDiff,
   findDesignInKit,
-  findModel,
+  findRepresentation,
   findPieceInDesign,
   findTypeInKit,
   fixPiecesInDesign,
@@ -72,7 +72,7 @@ import {
   type KitStoreSnapshot,
   type KitStoreStatus,
   kitToSqlite,
-  Model,
+  Representation,
   Piece,
   PieceDiff,
   PieceId,
@@ -84,7 +84,7 @@ import {
   Quality,
   QualityDiff,
   replaceClusterWithDesign,
-  selectBestModel,
+  selectBestRepresentation,
   File as SemioFile,
   sqliteToKit,
   sumQualityInDesign,
@@ -1288,7 +1288,7 @@ const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
         parent: mapGuidRef(entry.parent ?? entry.parentType),
         location: mapGuidRef(entry.location),
         connectors: entry.connectors ?? [],
-        models: entry.models ?? [],
+        representations: entry.representations ?? [],
         props: entry.props ?? [],
       }))
     : [];
@@ -1859,7 +1859,7 @@ export class SessionKitStore implements UndoableKitStore {
             delete (rawFields as any).props;
           }
           if (key === "types") {
-            delete (rawFields as any).models;
+            delete (rawFields as any).representations;
             delete (rawFields as any).connectors;
             delete (rawFields as any).props;
           }
@@ -10583,14 +10583,14 @@ export enum KitAppFullscreenWindow {
  **/
 export interface TypeAppSelection {
   connectors?: Guid[];
-  models?: Guid[];
+  representations?: Guid[];
 }
 /**
  * Hover state for the type app view.
  **/
 export interface TypeAppHover {
   connector?: Guid;
-  model?: Guid;
+  representation?: Guid;
 }
 /**
  * Fullscreen window options for the type app view.
@@ -10598,7 +10598,7 @@ export interface TypeAppHover {
 export enum TypeAppFullscreenWindow {
   None = "none",
   Connectors = "connectors",
-  Models = "models",
+  Representations = "representations",
 }
 
 /**
@@ -10722,23 +10722,23 @@ export type SketchpadEvent =
   | { type: "TYPE.CLEAR_SELECTION"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.SELECT_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
   | { type: "TYPE.DESELECT_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
-  | { type: "TYPE.SET_HOVER"; kitGuid: Guid; typeGuid: Guid; hover: { connector?: Guid; model?: Guid } }
+  | { type: "TYPE.SET_HOVER"; kitGuid: Guid; typeGuid: Guid; hover: { connector?: Guid; representation?: Guid } }
   | { type: "TYPE.CLEAR_HOVER"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.FOCUS_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid?: Guid }
-  | { type: "TYPE.SELECT_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
-  | { type: "TYPE.DESELECT_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
-  | { type: "TYPE.SET_MODEL_TAGS"; kitGuid: Guid; typeGuid: Guid; tags: Guid[] }
+  | { type: "TYPE.SELECT_REPRESENTATION_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
+  | { type: "TYPE.DESELECT_REPRESENTATION_TAG"; kitGuid: Guid; typeGuid: Guid; tagGuid: Guid }
+  | { type: "TYPE.SET_REPRESENTATION_TAGS"; kitGuid: Guid; typeGuid: Guid; tags: Guid[] }
   | { type: "TYPE.SET_CAMERA"; kitGuid: Guid; typeGuid: Guid; camera: any }
   | { type: "TYPE.SELECT_ALL"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.DESELECT_ALL"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.CLEAR_FOCUS"; kitGuid: Guid; typeGuid: Guid }
-  | { type: "TYPE.SELECT_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
-  | { type: "TYPE.DESELECT_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
+  | { type: "TYPE.SELECT_REPRESENTATION"; kitGuid: Guid; typeGuid: Guid; representationGuid: Guid }
+  | { type: "TYPE.DESELECT_REPRESENTATION"; kitGuid: Guid; typeGuid: Guid; representationGuid: Guid }
   | { type: "TYPE.HOVER_CONNECTOR"; kitGuid: Guid; typeGuid: Guid; connectorGuid: Guid }
-  | { type: "TYPE.HOVER_MODEL"; kitGuid: Guid; typeGuid: Guid; modelGuid: Guid }
-  | { type: "TYPE.ADD_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
-  | { type: "TYPE.REMOVE_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
-  | { type: "TYPE.CLEAR_MODEL_TAGS"; kitGuid: Guid; typeGuid: Guid }
+  | { type: "TYPE.HOVER_REPRESENTATION"; kitGuid: Guid; typeGuid: Guid; representationGuid: Guid }
+  | { type: "TYPE.ADD_REPRESENTATION_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
+  | { type: "TYPE.REMOVE_REPRESENTATION_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
+  | { type: "TYPE.CLEAR_REPRESENTATION_TAGS"; kitGuid: Guid; typeGuid: Guid }
   // Design app events (scoped by kitGuid:designGuid)
   | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
   | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: Partial<DesignAppState> }
@@ -10755,8 +10755,8 @@ export type SketchpadEvent =
   | { type: "DESIGN.SET_HOVER"; kitGuid: Guid; designGuid: Guid; hover: DesignAppHover }
   | { type: "DESIGN.CLEAR_HOVER"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid?: Guid }
-  | { type: "DESIGN.SELECT_MODEL_TAG"; kitGuid: Guid; designGuid: Guid; typeGuid: Guid; tagGuid: Guid }
-  | { type: "DESIGN.DESELECT_MODEL_TAG"; kitGuid: Guid; designGuid: Guid; typeGuid: Guid; tagGuid: Guid }
+  | { type: "DESIGN.SELECT_REPRESENTATION_TAG"; kitGuid: Guid; designGuid: Guid; typeGuid: Guid; tagGuid: Guid }
+  | { type: "DESIGN.DESELECT_REPRESENTATION_TAG"; kitGuid: Guid; designGuid: Guid; typeGuid: Guid; tagGuid: Guid }
   | { type: "DESIGN.SET_DIAGRAM_CENTER"; kitGuid: Guid; designGuid: Guid; center: { x: number; y: number } }
   | { type: "DESIGN.SET_DIAGRAM_SCALE"; kitGuid: Guid; designGuid: Guid; scale: number }
   | { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: any }
@@ -10962,7 +10962,7 @@ export function createDefaultDesignAppState(): DesignAppState {
     selection: undefined,
     hover: undefined,
     focusedPiece: undefined,
-    selectedModelTags: {},
+    selectedRepresentationTags: {},
     diagramCenter: undefined,
     diagramScale: undefined,
     camera: undefined,
@@ -10983,8 +10983,8 @@ export function createDefaultTypeAppState(): TypeAppState {
     selection: undefined,
     hover: undefined,
     focusedConnector: undefined,
-    selectedModelTags: [],
-    selectedModelGuid: undefined,
+    selectedRepresentationTags: [],
+    selectedRepresentationGuid: undefined,
     camera: undefined,
     windowLayout: undefined,
     transaction: createDefaultTransactionState(),
@@ -11353,7 +11353,7 @@ export const sketchpadMachine = setup({
       const key = `${kitGuid}:${typeGuid}`;
       const app = context.typeApps[key];
       if (!app?.hover) return false;
-      return app.hover.connector !== undefined || app.hover.model !== undefined;
+      return app.hover.connector !== undefined || app.hover.representation !== undefined;
     },
 
     hasKitHover: ({ context, event }) => {
@@ -11374,7 +11374,7 @@ export const sketchpadMachine = setup({
       const key = `${kitGuid}:${typeGuid}`;
       const app = context.typeApps[key];
       if (!app?.selection) return false;
-      return (app.selection.connectors?.length ?? 0) > 0 || (app.selection.models?.length ?? 0) > 0;
+      return (app.selection.connectors?.length ?? 0) > 0 || (app.selection.representations?.length ?? 0) > 0;
     },
 
     designAppExists: ({ context, event }) => {
@@ -11820,11 +11820,11 @@ export const createDesignFocusedPieceSelector = (kitGuid: Guid, designGuid: Guid
 };
 
 /**
- * Creates a selector for the design selected model tags.
+ * Creates a selector for the design selected representation tags.
  **/
-export const createDesignSelectedModelTagsSelector = (kitGuid: Guid, designGuid: Guid) => {
+export const createDesignSelectedRepresentationTagsSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
-  return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selectedModelTags ?? {};
+  return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selectedRepresentationTags ?? {};
 };
 
 /**
@@ -11911,11 +11911,11 @@ export const createTypeFocusedConnectorSelector = (kitGuid: Guid, typeGuid: Guid
 };
 
 /**
- * Creates a selector for the type selected model tags.
+ * Creates a selector for the type selected representation tags.
  **/
-export const createTypeSelectedModelTagsSelector = (kitGuid: Guid, typeGuid: Guid) => {
+export const createTypeSelectedRepresentationTagsSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
-  return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.selectedModelTags ?? [];
+  return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.selectedRepresentationTags ?? [];
 };
 
 /**
@@ -12206,7 +12206,7 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 /**
  * Union of entity kind identifiers for UI selection and hover.
  **/
-export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag";
+export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "representation" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag";
 
 /**
  * Selector extracting the active kit guid from the navigation path.
@@ -29324,7 +29324,7 @@ export interface DesignAppDiff {
   diagramCenter?: Coord;
   diagramScale?: number;
   focusedPieceGuid?: Guid | null;
-  selectedModelTags?: Record<Guid, string[]>;
+  selectedRepresentationTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
 /**
@@ -29347,7 +29347,7 @@ export interface DesignAppState {
   diagramScale?: number;
   focusedPieceGuid?: Guid;
   currentTransactionStackLength?: number;
-  selectedModelTags?: Record<Guid, string[]>;
+  selectedRepresentationTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
 
@@ -30164,7 +30164,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
       diagramCenter: initialState?.diagramCenter,
       diagramScale: initialState?.diagramScale,
       focusedPieceGuid: initialState?.focusedPieceGuid,
-      selectedModelTags: initialState?.selectedModelTags || {},
+      selectedRepresentationTags: initialState?.selectedRepresentationTags || {},
       windowLayout: initialState?.windowLayout,
     };
     super(parent, defaultState);
@@ -30255,8 +30255,8 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
     if (diff.focusedPieceGuid !== undefined) {
       newState.focusedPieceGuid = diff.focusedPieceGuid === null ? undefined : diff.focusedPieceGuid;
     }
-    if (diff.selectedModelTags !== undefined) {
-      newState.selectedModelTags = { ...(newState.selectedModelTags || {}), ...diff.selectedModelTags };
+    if (diff.selectedRepresentationTags !== undefined) {
+      newState.selectedRepresentationTags = { ...(newState.selectedRepresentationTags || {}), ...diff.selectedRepresentationTags };
     }
     if (Object.prototype.hasOwnProperty.call(diff, "windowLayout")) {
       newState.windowLayout = (diff as any).windowLayout;
@@ -30385,7 +30385,7 @@ const designAppPlugin: AppPlugin = {
       diagramCenter: undefined,
       diagramScale: undefined,
       focusedPieceGuid: undefined,
-      selectedModelTags: {},
+      selectedRepresentationTags: {},
       windowLayout: undefined,
       fullscreenWindow: DesignAppFullscreenWindow.None,
       activeTool: ToolKind.SELECTION_NORMAL,
@@ -30451,21 +30451,21 @@ if (typeof window !== "undefined") {
       return { designApps: { ...context.designApps, [key]: { ...app, diagramScale: event.scale } } };
     },
   });
-  registerEventHandler("DESIGN.SELECT_MODEL_TAG", {
+  registerEventHandler("DESIGN.SELECT_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = `${event.kitGuid}:${event.designGuid}`;
       const app = context.designApps[key] || createDefaultDesignAppState();
-      const tags = app.selectedModelTags[event.typeGuid] || [];
+      const tags = app.selectedRepresentationTags[event.typeGuid] || [];
       if (tags.includes(event.tagGuid)) return {};
-      return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: [...tags, event.tagGuid] } } } };
+      return { designApps: { ...context.designApps, [key]: { ...app, selectedRepresentationTags: { ...app.selectedRepresentationTags, [event.typeGuid]: [...tags, event.tagGuid] } } } };
     },
   });
-  registerEventHandler("DESIGN.DESELECT_MODEL_TAG", {
+  registerEventHandler("DESIGN.DESELECT_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = `${event.kitGuid}:${event.designGuid}`;
       const app = context.designApps[key] || createDefaultDesignAppState();
-      const tags = app.selectedModelTags[event.typeGuid] || [];
-      return { designApps: { ...context.designApps, [key]: { ...app, selectedModelTags: { ...app.selectedModelTags, [event.typeGuid]: tags.filter((g: Guid) => g !== event.tagGuid) } } } };
+      const tags = app.selectedRepresentationTags[event.typeGuid] || [];
+      return { designApps: { ...context.designApps, [key]: { ...app, selectedRepresentationTags: { ...app.selectedRepresentationTags, [event.typeGuid]: tags.filter((g: Guid) => g !== event.tagGuid) } } } };
     },
   });
   registerEventHandler("DESIGN.SELECT_PIECE", {
@@ -30583,7 +30583,7 @@ function useDesignAppInitialize() {
         hover: undefined,
         camera: undefined,
         fullscreenWindow: DesignAppFullscreenWindow.None,
-        selectedModelTags: {},
+        selectedRepresentationTags: {},
         transaction: {
           isTransactionActive: false,
           currentTransactionStack: [],
@@ -30670,9 +30670,9 @@ const EMPTY_SELECTION: DesignAppSelection = {};
  **/
 const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 /**
- * EMPTY_MODEL_TAGS holds the data fields for a EMPTY_MODEL_TAGS record.
+ * EMPTY_REPRESENTATION_TAGS holds the data fields for a EMPTY_REPRESENTATION_TAGS record.
  **/
-const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
+const EMPTY_REPRESENTATION_TAGS: Record<Guid, string[]> = {};
 const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, details: true, rightSidePanel: true };
 
 /**
@@ -30902,23 +30902,23 @@ export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
 }
 
 /**
- * Returns a hook result for the Design app selected model tags.
- *MUST provide the current selected model tags, a setter, and a canSet flag.
+ * Returns a hook result for the Design app selected representation tags.
+ *MUST provide the current selected representation tags, a setter, and a canSet flag.
  **/
-export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
+export function useDesignAppSelectedRepresentationTags(): HookResult<Record<Guid, string[]>> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
   const kitGuid = kitScope?.guid ?? "";
   const designGuid = designScope?.guid ?? "";
-  const selector = useMemo(() => createDesignSelectedModelTagsSelector(kitGuid, designGuid), [kitGuid, designGuid]);
-  const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAGS;
+  const selector = useMemo(() => createDesignSelectedRepresentationTagsSelector(kitGuid, designGuid), [kitGuid, designGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_REPRESENTATION_TAGS;
   const canSetEvent = useMemo(() => ({ type: "DESIGN.SYNC" as const, kitGuid, designGuid, state: {} }), [kitGuid, designGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (tags: Record<Guid, string[]>) => {
-      actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: tags } });
+      actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedRepresentationTags: tags } });
     };
   }, [actor, kitGuid, designGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
@@ -31326,43 +31326,43 @@ export function useDesignAppTogglePanel(): ActionHookResult<[panelKey: keyof Pan
 }
 
 /**
- * Returns an action to add a model tag for all types.
+ * Returns an action to add a representation tag for all types.
  *MUST return a callback that adds the given tag to all type entries.
  **/
-export function useDesignAppAddModelTagForAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
-  const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
+export function useDesignAppAddRepresentationTagForAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
+  const [selectedRepresentationTags, setSelectedRepresentationTags, canSetSelectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const action = useMemo(() => {
-    if (!canSetSelectedModelTags || !setSelectedModelTags) return undefined;
+    if (!canSetSelectedRepresentationTags || !setSelectedRepresentationTags) return undefined;
     return (tagGuid: string, typeGuids: string[]) => {
-      const updated: Record<Guid, string[]> = { ...selectedModelTags };
+      const updated: Record<Guid, string[]> = { ...selectedRepresentationTags };
       typeGuids.forEach((typeGuid) => {
         const existing = updated[typeGuid] ?? [];
         if (!existing.includes(tagGuid)) updated[typeGuid] = [...existing, tagGuid];
       });
-      setSelectedModelTags(updated);
+      setSelectedRepresentationTags(updated);
     };
-  }, [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags]);
-  return [action, canSetSelectedModelTags];
+  }, [selectedRepresentationTags, setSelectedRepresentationTags, canSetSelectedRepresentationTags]);
+  return [action, canSetSelectedRepresentationTags];
 }
 
 /**
- * Returns an action to remove a model tag from all types.
+ * Returns an action to remove a representation tag from all types.
  *MUST return a callback that removes the given tag from all type entries.
  **/
-export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
-  const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
+export function useDesignAppRemoveRepresentationTagFromAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
+  const [selectedRepresentationTags, setSelectedRepresentationTags, canSetSelectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const action = useMemo(() => {
-    if (!canSetSelectedModelTags || !setSelectedModelTags) return undefined;
+    if (!canSetSelectedRepresentationTags || !setSelectedRepresentationTags) return undefined;
     return (tagGuid: string, typeGuids: string[]) => {
-      const updated: Record<Guid, string[]> = { ...selectedModelTags };
+      const updated: Record<Guid, string[]> = { ...selectedRepresentationTags };
       typeGuids.forEach((typeGuid) => {
         const existing = updated[typeGuid] ?? [];
         updated[typeGuid] = existing.filter((t) => t !== tagGuid);
       });
-      setSelectedModelTags(updated);
+      setSelectedRepresentationTags(updated);
     };
-  }, [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags]);
-  return [action, canSetSelectedModelTags];
+  }, [selectedRepresentationTags, setSelectedRepresentationTags, canSetSelectedRepresentationTags]);
+  return [action, canSetSelectedRepresentationTags];
 }
 
 /**
@@ -31706,9 +31706,9 @@ const EMPTY_COMMANDS = {
   hoverDesign: () => {},
   hoverDesigns: () => {},
   clearHover: () => {},
-  setModelTagsForType: () => {},
-  addModelTagForAllTypes: () => {},
-  removeModelTagFromAllTypes: () => {},
+  setRepresentationTagsForType: () => {},
+  addRepresentationTagForAllTypes: () => {},
+  removeRepresentationTagFromAllTypes: () => {},
 } as any;
 
 /**
@@ -31826,27 +31826,27 @@ export function useDesignAppCommands(id?: DesignAppId) {
         queueMicrotask(() => actor.send({ type: "DESIGN.CLEAR_HOVER", kitGuid, designGuid }));
       },
       togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => actor.send({ type: "DESIGN.TOGGLE_PANEL", kitGuid, designGuid, panel: panelKey }),
-      setModelTagsForType: (_origin: string, typeGuid: Guid, tags: string[]) => {
-        const current = store.snapshot().selectedModelTags ?? {};
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: { ...current, [typeGuid]: tags } } });
+      setRepresentationTagsForType: (_origin: string, typeGuid: Guid, tags: string[]) => {
+        const current = store.snapshot().selectedRepresentationTags ?? {};
+        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedRepresentationTags: { ...current, [typeGuid]: tags } } });
       },
-      addModelTagForAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
-        const current = store.snapshot().selectedModelTags ?? {};
+      addRepresentationTagForAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
+        const current = store.snapshot().selectedRepresentationTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
           const existing = updated[typeGuid] ?? [];
           if (!existing.includes(tagGuid)) updated[typeGuid] = [...existing, tagGuid];
         });
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: updated } });
+        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedRepresentationTags: updated } });
       },
-      removeModelTagFromAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
-        const current = store.snapshot().selectedModelTags ?? {};
+      removeRepresentationTagFromAllTypes: (_origin: string, tagGuid: string, typeGuids: Guid[]) => {
+        const current = store.snapshot().selectedRepresentationTags ?? {};
         const updated: Record<Guid, string[]> = { ...current };
         typeGuids.forEach((typeGuid) => {
           const existing = updated[typeGuid] ?? [];
           updated[typeGuid] = existing.filter((t) => t !== tagGuid);
         });
-        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedModelTags: updated } });
+        actor.send({ type: "DESIGN.SYNC", kitGuid, designGuid, state: { selectedRepresentationTags: updated } });
       },
       execute: (origin: string, command: string, ...args: any[]) => store.execute(command, origin, ...args),
     };
@@ -31880,7 +31880,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
     selection: DesignAppSelection | undefined;
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
-    selectedModelTags: Record<Guid, string[]>;
+    selectedRepresentationTags: Record<Guid, string[]>;
     diagramCenter: Coord | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
@@ -31896,7 +31896,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
       selection: state.selection,
       hover: state.hover,
       focusedPieceGuid: state.focusedPieceGuid,
-      selectedModelTags: state.selectedModelTags ?? {},
+      selectedRepresentationTags: state.selectedRepresentationTags ?? {},
       diagramCenter: state.diagramCenter ? { x: state.diagramCenter.u, y: state.diagramCenter.v } : undefined,
       diagramScale: state.diagramScale,
       camera: state.camera,
@@ -32130,7 +32130,7 @@ function areDesignSyncStatesEqual(
     selection: DesignAppSelection | undefined;
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
-    selectedModelTags: Record<Guid, string[]>;
+    selectedRepresentationTags: Record<Guid, string[]>;
     diagramCenter: Coord | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
@@ -32142,7 +32142,7 @@ function areDesignSyncStatesEqual(
     selection: DesignAppSelection | undefined;
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
-    selectedModelTags: Record<Guid, string[]>;
+    selectedRepresentationTags: Record<Guid, string[]>;
     diagramCenter: Coord | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
@@ -32157,7 +32157,7 @@ function areDesignSyncStatesEqual(
     areSelectionsEqual(a.selection, b.selection) &&
     areHoverStatesEqual(a.hover, b.hover) &&
     a.focusedPieceGuid === b.focusedPieceGuid &&
-    areStringArrayRecordsEqual(a.selectedModelTags, b.selectedModelTags) &&
+    areStringArrayRecordsEqual(a.selectedRepresentationTags, b.selectedRepresentationTags) &&
     areCoordsEqual(a.diagramCenter, b.diagramCenter) &&
     a.diagramScale === b.diagramScale &&
     JSON.stringify(a.camera ?? null) === JSON.stringify(b.camera ?? null) &&
@@ -32741,9 +32741,9 @@ export const DesignAppFooter: FC = () => {
   const design = useDesign() as Design | undefined;
   const types = useKitTypes();
   const tags = useKitTags();
-  const [selectedModelTags] = useDesignAppSelectedModelTags();
-  const [addModelTagForAllTypes] = useDesignAppAddModelTagForAllTypes();
-  const [removeModelTagFromAllTypes] = useDesignAppRemoveModelTagFromAllTypes();
+  const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
+  const [addRepresentationTagForAllTypes] = useDesignAppAddRepresentationTagForAllTypes();
+  const [removeRepresentationTagFromAllTypes] = useDesignAppRemoveRepresentationTagFromAllTypes();
 
   const designTypeGuids = useMemo(() => {
     if (!design?.pieces) return [];
@@ -32756,14 +32756,14 @@ export const DesignAppFooter: FC = () => {
     return Array.from(typeGuids);
   }, [design?.pieces]);
 
-  const { allModelTagGuids, tagNameMap } = useMemo(() => {
-    if (!types || designTypeGuids.length === 0) return { allModelTagGuids: [], tagNameMap: new Map<string, string>() };
+  const { allRepresentationTagGuids, tagNameMap } = useMemo(() => {
+    if (!types || designTypeGuids.length === 0) return { allRepresentationTagGuids: [], tagNameMap: new Map<string, string>() };
     const tagGuids = new Set<string>();
     const nameMap = new Map<string, string>();
     designTypeGuids.forEach((typeGuid) => {
       const type = types.find((t) => t.guid === typeGuid);
-      type?.models?.forEach((model) => {
-        model.tags?.forEach((tag) => {
+      type?.representations?.forEach((representation) => {
+        representation.tags?.forEach((tag) => {
           tagGuids.add(tag.guid);
         });
       });
@@ -32774,40 +32774,40 @@ export const DesignAppFooter: FC = () => {
         nameMap.set(tag.guid, tag.name);
       }
     });
-    return { allModelTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
+    return { allRepresentationTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
   }, [types, designTypeGuids, tags]);
 
   const designTypeGuidsRef = useRef(designTypeGuids);
   const typesRef = useRef(types);
-  const selectedModelTagsRef = useRef(selectedModelTags);
-  const addModelTagForAllTypesRef = useRef(addModelTagForAllTypes);
-  const removeModelTagFromAllTypesRef = useRef(removeModelTagFromAllTypes);
+  const selectedRepresentationTagsRef = useRef(selectedRepresentationTags);
+  const addRepresentationTagForAllTypesRef = useRef(addRepresentationTagForAllTypes);
+  const removeRepresentationTagFromAllTypesRef = useRef(removeRepresentationTagFromAllTypes);
   const footerTagsKey = useMemo(
     () =>
       JSON.stringify({
         appType,
-        allModelTagGuids,
+        allRepresentationTagGuids,
         designTypeGuids,
-        selectedModelTags,
+        selectedRepresentationTags,
         tagNames: Array.from(tagNameMap.entries()),
       }),
-    [appType, allModelTagGuids, designTypeGuids, selectedModelTags, tagNameMap],
+    [appType, allRepresentationTagGuids, designTypeGuids, selectedRepresentationTags, tagNameMap],
   );
 
   useEffect(() => {
     typesRef.current = types;
     designTypeGuidsRef.current = designTypeGuids;
-    selectedModelTagsRef.current = selectedModelTags;
-    addModelTagForAllTypesRef.current = addModelTagForAllTypes;
-    removeModelTagFromAllTypesRef.current = removeModelTagFromAllTypes;
-  }, [types, designTypeGuids, selectedModelTags, addModelTagForAllTypes, removeModelTagFromAllTypes]);
+    selectedRepresentationTagsRef.current = selectedRepresentationTags;
+    addRepresentationTagForAllTypesRef.current = addRepresentationTagForAllTypes;
+    removeRepresentationTagFromAllTypesRef.current = removeRepresentationTagFromAllTypes;
+  }, [types, designTypeGuids, selectedRepresentationTags, addRepresentationTagForAllTypes, removeRepresentationTagFromAllTypes]);
 
   useEffect(() => {
     if (appType !== "design") return;
 
     const isTagSelected = (tagGuid: string): boolean => {
       return designTypeGuidsRef.current.some((typeGuid) => {
-        const tags = selectedModelTagsRef.current[typeGuid] ?? [];
+        const tags = selectedRepresentationTagsRef.current[typeGuid] ?? [];
         return tags.includes(tagGuid);
       });
     };
@@ -32817,15 +32817,15 @@ export const DesignAppFooter: FC = () => {
       if (!currentTypes || currentTypes.length === 0) return [];
       return designTypeGuidsRef.current.filter((typeGuid) => {
         const type = currentTypes.find((t) => t.guid === typeGuid);
-        return type?.models?.some((model) => model.tags?.some((tag) => tag.guid === tagGuid));
+        return type?.representations?.some((representation) => representation.tags?.some((tag) => tag.guid === tagGuid));
       });
     };
 
-    allModelTagGuids.forEach((tagGuid) => {
+    allRepresentationTagGuids.forEach((tagGuid) => {
       removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
     });
 
-    allModelTagGuids.forEach((tagGuid, index) => {
+    allRepresentationTagGuids.forEach((tagGuid, index) => {
       const tagName = tagNameMap.get(tagGuid) || tagGuid.slice(0, 8);
       const selected = isTagSelected(tagGuid);
       const typesWithTag = getTypesWithTag(tagGuid);
@@ -32838,9 +32838,9 @@ export const DesignAppFooter: FC = () => {
           const currentSelected = isTagSelected(tagGuid);
           const currentTypesWithTag = getTypesWithTag(tagGuid);
           if (currentSelected) {
-            removeModelTagFromAllTypesRef.current?.(tagGuid, currentTypesWithTag);
+            removeRepresentationTagFromAllTypesRef.current?.(tagGuid, currentTypesWithTag);
           } else {
-            addModelTagForAllTypesRef.current?.(tagGuid, currentTypesWithTag);
+            addRepresentationTagForAllTypesRef.current?.(tagGuid, currentTypesWithTag);
           }
         },
         order: index,
@@ -32848,7 +32848,7 @@ export const DesignAppFooter: FC = () => {
     });
 
     return () => {
-      allModelTagGuids.forEach((tagGuid) => {
+      allRepresentationTagGuids.forEach((tagGuid) => {
         removeFooterItem(`semio.sketchpad.app.design.footer.tag.${tagGuid}`);
       });
     };
@@ -36629,7 +36629,7 @@ const resolveSelectionEntryGuid = (entry: any): Guid | undefined => {
     return guidFromString(entry);
   }
   if (!entry || typeof entry !== "object") return undefined;
-  const directGuid = entry.guid || entry.id_ || entry.id || entry.pieceGuid || entry.connectionGuid || entry.modelGuid || entry.pieceId;
+  const directGuid = entry.guid || entry.id_ || entry.id || entry.pieceGuid || entry.connectionGuid || entry.representationGuid || entry.pieceId;
   if (typeof directGuid === "string" && directGuid.length > 0) return guidFromString(directGuid);
   const pieceGuid = entry.piece?.guid || entry.piece || entry.piece?.id_ || entry.piece?.id;
   if (typeof pieceGuid === "string" && pieceGuid.length > 0) return guidFromString(pieceGuid);
@@ -36780,7 +36780,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
               unit: "m",
               description: `Missing design: ${piece.design}`,
               connectors: [],
-              models: [],
+              representations: [],
             };
             return pieceToNode(piece, fallbackType, center, i, selected);
           }
@@ -36790,7 +36790,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             unit: design.unit || "m",
             description: design.description,
             connectors: [],
-            models: [],
+            representations: [],
           };
           return pieceToNode(piece, designAsType, center, i, selected);
         }
@@ -36808,7 +36808,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             unit: "m",
             description: `Missing type: ${typeGuid}`,
             connectors: [],
-            models: [],
+            representations: [],
           };
           return pieceToNode(piece, fallbackType, center, i, selected);
         }
@@ -38821,7 +38821,7 @@ class MeshErrorBoundary extends React.Component<{ children: ReactNode; fallback:
     return { hasError: true };
   }
   componentDidCatch(error: Error) {
-    console.debug(`[DEBUG] [MeshErrorBoundary] Caught error loading 3D model:`, error.message);
+    console.debug(`[DEBUG] [MeshErrorBoundary] Caught error loading 3D representation:`, error.message);
   }
   render() {
     if (this.state.hasError) {
@@ -38850,74 +38850,74 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const typeConcepts = type?.concepts;
   const files = useKitFiles();
   const kitStore = useKitStore() as CollaborativeKitStore;
-  const [selectedModelTags] = useDesignAppSelectedModelTags();
+  const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const prevModelGuidRef = useRef<string | null>(null);
+  const prevRepresentationGuidRef = useRef<string | null>(null);
 
   useEffect(() => {
     const typeRef = typeof piece.type === "string" ? piece.type : piece.type?.guid;
-    console.log("[DEBUG] [PieceMesh] piece.guid:", piece.guid, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.guid, type?.name, "models:", type?.models?.length, "files:", files?.length);
+    console.log("[DEBUG] [PieceMesh] piece.guid:", piece.guid, "piece.type:", piece.type, "typeRef:", typeRef, "resolvedType:", type?.guid, type?.name, "representations:", type?.representations?.length, "files:", files?.length);
   }, [piece.guid, piece.type, type, files]);
 
-  const { modelUrl, fileExtension, fileGuid, modelGuid, selectionReason } = useMemo(() => {
-    if (!type?.models || type.models.length === 0) {
-      console.log("[DEBUG] [PieceMesh] No models for type:", type?.guid, type?.name, "type object:", type);
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-models" };
+  const { representationUrl, fileExtension, fileGuid, representationGuid, selectionReason } = useMemo(() => {
+    if (!type?.representations || type.representations.length === 0) {
+      console.log("[DEBUG] [PieceMesh] No representations for type:", type?.guid, type?.name, "type object:", type);
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: null, selectionReason: "no-representations" };
     }
 
-    const tagsForType = selectedModelTags[type.guid] ?? [];
-    let model: Model | undefined;
+    const tagsForType = selectedRepresentationTags[type.guid] ?? [];
+    let representation: Representation | undefined;
     let reason = "";
 
     if (tagsForType.length > 0) {
-      model = selectBestModel(type.models, tagsForType);
+      representation = selectBestRepresentation(type.representations, tagsForType);
       reason = "manual-tags";
     } else {
       const conceptGuids = typeConcepts?.map((concept) => concept.guid) ?? [];
       if (conceptGuids.length > 0) {
-        model = findModel(type.models, conceptGuids);
+        representation = findRepresentation(type.representations, conceptGuids);
         reason = "type-concepts";
       } else {
-        const defaultModel = type.models.find((entry) => !entry.tags || entry.tags.length === 0);
-        model = defaultModel ?? type.models[0];
+        const defaultRepresentation = type.representations.find((entry) => !entry.tags || entry.tags.length === 0);
+        representation = defaultRepresentation ?? type.representations[0];
         reason = "default/first";
       }
     }
 
-    if (!model) {
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-model-found" };
+    if (!representation) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: null, selectionReason: "no-representation-found" };
     }
 
-    const fileId = typeof model.file === "string" ? model.file : model.file?.guid;
+    const fileId = typeof representation.file === "string" ? representation.file : representation.file?.guid;
     const file = files.find((f) => f.guid === fileId);
     if (!file) {
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: model.guid, selectionReason: "file-not-found" };
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: representation.guid, selectionReason: "file-not-found" };
     }
 
     const ext = file.name?.split(".").pop() || "";
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
-      return { modelUrl: null, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
+      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
     }
 
-    return { modelUrl: url, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
-  }, [type, typeConcepts, files, kitStore, selectedModelTags]);
+    return { representationUrl: url, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
+  }, [type, typeConcepts, files, kitStore, selectedRepresentationTags]);
 
   useEffect(() => {
-    if (modelGuid && modelGuid !== prevModelGuidRef.current) {
-      prevModelGuidRef.current = modelGuid;
-    } else if (!modelGuid && selectionReason === "no-models") {
-      console.warn("[PieceMesh] No models available for type:", type?.guid, type?.name);
-    } else if (!modelGuid && selectionReason === "no-model-found") {
-      console.warn("[PieceMesh] No model found for type:", type?.guid);
-    } else if (selectionReason === "file-not-found" && modelGuid !== prevModelGuidRef.current) {
-      prevModelGuidRef.current = modelGuid;
-      console.warn("[PieceMesh] File not found in kit for model:", modelGuid);
+    if (representationGuid && representationGuid !== prevRepresentationGuidRef.current) {
+      prevRepresentationGuidRef.current = representationGuid;
+    } else if (!representationGuid && selectionReason === "no-representations") {
+      console.warn("[PieceMesh] No representations available for type:", type?.guid, type?.name);
+    } else if (!representationGuid && selectionReason === "no-representation-found") {
+      console.warn("[PieceMesh] No representation found for type:", type?.guid);
+    } else if (selectionReason === "file-not-found" && representationGuid !== prevRepresentationGuidRef.current) {
+      prevRepresentationGuidRef.current = representationGuid;
+      console.warn("[PieceMesh] File not found in kit for representation:", representationGuid);
     }
-  }, [modelGuid, selectionReason, type]);
+  }, [representationGuid, selectionReason, type]);
 
   useEffect(() => {
-    setBlobUrl(modelUrl ?? null);
+    setBlobUrl(representationUrl ?? null);
     if (!fileGuid) {
       return;
     }
@@ -38947,9 +38947,9 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitStore, modelUrl]);
+  }, [fileGuid, kitStore, representationUrl]);
 
-  const renderUrl = blobUrl ?? modelUrl;
+  const renderUrl = blobUrl ?? representationUrl;
 
   if (!renderUrl) {
     return <Geometry hovered={false} onClick={onClick} onDoubleClick={onDoubleClick} onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} showEdges={true} />;
@@ -38966,12 +38966,12 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   );
 };
 
-interface ModelPieceProps {}
-// [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨modelpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/ModelPiece)
+interface RepresentationPieceProps {}
+// [👤semio📚js🗃️sketchpad💻design🔖canvas🔖scene🪨representationpiece](repo://p/u/semio/b/l/js/fd/org/sketchpad/f/Design.tsx/s/Canvas/s/Scene/d/i/RepresentationPiece)
 /**
- * ModelPiece holds the data fields for a ModelPiece record.
+ * RepresentationPiece holds the data fields for a RepresentationPiece record.
  **/
-const ModelPiece: FC<ModelPieceProps> = () => {
+const RepresentationPiece: FC<RepresentationPieceProps> = () => {
   const piece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
   const isSelected = useIsPieceSelected();
@@ -39172,11 +39172,11 @@ const ModelPiece: FC<ModelPieceProps> = () => {
   );
 };
 
-/** ModelDesign holds the data fields for a ModelDesign record.
+/** RepresentationDesign holds the data fields for a RepresentationDesign record.
  **/
 /**
  **/
-const ModelDesign: FC = () => {
+const RepresentationDesign: FC = () => {
   const [transaction] = useDesignAppTransaction();
   const [updatePiece] = useDesignAppUpdatePiece();
   const [selection] = useDesignAppSelection();
@@ -39221,10 +39221,10 @@ const ModelDesign: FC = () => {
     [selectPieces, resolvePieceGuid, previousSelectionSet],
   );
 
-  type TransformableModel = { guid: string; plane: Plane | undefined; isTransformable: boolean; isSelected: boolean };
+  type TransformableRepresentation = { guid: string; plane: Plane | undefined; isTransformable: boolean; isSelected: boolean };
 
-  // 🔶Optimize selectedModels using Set for O(1) lookup instead of O(n) includes
-  const selectedModels = useMemo((): TransformableModel[] => {
+  // 🔶Optimize selectedRepresentations using Set for O(1) lookup instead of O(n) includes
+  const selectedRepresentations = useMemo((): TransformableRepresentation[] => {
     if (!selection.pieces || !flatDesign?.pieces) return [];
 
     const selectedPiecesSet = new Set((selection.pieces || []).map((entry) => resolveSelectionEntryGuid(entry)).filter((entry): entry is Guid => typeof entry === "string" && entry.length > 0));
@@ -39238,9 +39238,9 @@ const ModelDesign: FC = () => {
   }, [selection.pieces, flatDesign?.pieces]);
 
   const handleMultiPlaneUpdate = useCallback(
-    (updates: Array<{ modelGuid: string; newPlane: Plane }>) => {
-      updates.forEach(({ modelGuid, newPlane }) => {
-        updatePiece?.(modelGuid, { plane: newPlane });
+    (updates: Array<{ representationGuid: string; newPlane: Plane }>) => {
+      updates.forEach(({ representationGuid, newPlane }) => {
+        updatePiece?.(representationGuid, { plane: newPlane });
       });
     },
     [updatePiece],
@@ -39253,7 +39253,7 @@ const ModelDesign: FC = () => {
           {showPieces &&
             flatDesign?.pieces?.map((piece: Piece) => (
               <PieceScopeProvider key={piece.guid} guid={piece.guid}>
-                <ModelPiece />
+                <RepresentationPiece />
               </PieceScopeProvider>
             ))}
           {others.map((presence, id) => (
@@ -39493,7 +39493,7 @@ const DesignAppScene: FC = () => {
           transactionPiecesValue={transactionPiecesValue}
           hoverPiecesValue={hoverPiecesValue}
         >
-          <ModelDesign />
+          <RepresentationDesign />
         </SceneContextBridge>
       </SceneComponent>
     </div>
@@ -40558,18 +40558,18 @@ export interface TypeAppSelectionPortsDiff {
   removed?: Guid[];
 }
 /**
- * Diff for added and removed model selections.
+ * Diff for added and removed representation selections.
  **/
-export interface TypeAppSelectionModelsDiff {
+export interface TypeAppSelectionRepresentationsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
 /**
- * Combined selection diff for connectors and models.
+ * Combined selection diff for connectors and representations.
  **/
 export interface TypeAppSelectionDiff {
   connectors?: TypeAppSelectionPortsDiff;
-  models?: TypeAppSelectionModelsDiff;
+  representations?: TypeAppSelectionRepresentationsDiff;
 }
 /**
  * Window kind identifiers for the TypeApp layout.
@@ -40602,8 +40602,8 @@ export interface TypeAppDiff {
   activeTool?: ToolKind;
   camera?: Camera;
   focusedConnectorGuid?: Guid | null;
-  selectedModelGuid?: Guid | null;
-  selectedModelTags?: string[];
+  selectedRepresentationGuid?: Guid | null;
+  selectedRepresentationTags?: string[];
   windowLayout?: any;
 }
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
@@ -40617,8 +40617,8 @@ export interface TypeAppState {
   others: TypeAppPresenceOther[];
   camera?: Camera;
   focusedConnectorGuid?: Guid;
-  selectedModelGuid?: Guid;
-  selectedModelTags?: string[];
+  selectedRepresentationGuid?: Guid;
+  selectedRepresentationTags?: string[];
   windowLayout?: any;
 }
 
@@ -40642,9 +40642,9 @@ export interface TypeAppCommandResult {
  **/
 const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 /**
- * EMPTY_MODEL_TAG_ARRAY holds the data fields for a EMPTY_MODEL_TAG_ARRAY record.
+ * EMPTY_REPRESENTATION_TAG_ARRAY holds the data fields for a EMPTY_REPRESENTATION_TAG_ARRAY record.
  **/
-const EMPTY_MODEL_TAG_ARRAY: string[] = [];
+const EMPTY_REPRESENTATION_TAG_ARRAY: string[] = [];
 
 // #endregion 🧲Internal State Management
 
@@ -40672,8 +40672,8 @@ const typeAppPlugin: AppPlugin = {
       others: [],
       camera: undefined,
       focusedConnectorGuid: undefined,
-      selectedModelGuid: undefined,
-      selectedModelTags: [],
+      selectedRepresentationGuid: undefined,
+      selectedRepresentationTags: [],
       windowLayout: undefined,
     }),
   },
@@ -40733,24 +40733,24 @@ if (typeof window !== "undefined") {
     },
   });
 
-  registerEventHandler("TYPE.SELECT_MODEL", {
+  registerEventHandler("TYPE.SELECT_REPRESENTATION", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const models = [...(app.selection?.models || [])];
-      if (!models.includes(event.modelGuid)) models.push(event.modelGuid);
-      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, models } } } };
+      const representations = [...(app.selection?.representations || [])];
+      if (!representations.includes(event.representationGuid)) representations.push(event.representationGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, representations } } } };
     },
   });
 
-  registerEventHandler("TYPE.DESELECT_MODEL", {
+  registerEventHandler("TYPE.DESELECT_REPRESENTATION", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const models = (app.selection?.models || []).filter((m: Guid) => m !== event.modelGuid);
-      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, models } } } };
+      const representations = (app.selection?.representations || []).filter((m: Guid) => m !== event.representationGuid);
+      return { typeApps: { ...apps, [key]: { ...app, selection: { ...app.selection, representations } } } };
     },
   });
 
@@ -40763,81 +40763,81 @@ if (typeof window !== "undefined") {
     },
   });
 
-  registerEventHandler("TYPE.HOVER_MODEL", {
+  registerEventHandler("TYPE.HOVER_REPRESENTATION", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...apps, [key]: { ...app, hover: { model: event.modelGuid } } } };
+      return { typeApps: { ...apps, [key]: { ...app, hover: { representation: event.representationGuid } } } };
     },
   });
 
-  registerEventHandler("TYPE.SET_SELECTED_MODEL", {
+  registerEventHandler("TYPE.SET_SELECTED_REPRESENTATION", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelGuid: event.modelGuid } } };
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationGuid: event.representationGuid } } };
     },
   });
 
-  registerEventHandler("TYPE.SET_MODEL_TAGS", {
+  registerEventHandler("TYPE.SET_REPRESENTATION_TAGS", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: event.tags } } };
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: event.tags } } };
     },
   });
 
-  registerEventHandler("TYPE.ADD_MODEL_TAG", {
+  registerEventHandler("TYPE.ADD_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const tags = [...(app.selectedModelTags || [])];
+      const tags = [...(app.selectedRepresentationTags || [])];
       if (!tags.includes(event.tag)) tags.push(event.tag);
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags } } };
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: tags } } };
     },
   });
 
-  registerEventHandler("TYPE.REMOVE_MODEL_TAG", {
+  registerEventHandler("TYPE.REMOVE_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const tags = (app.selectedModelTags || []).filter((t: string) => t !== event.tag);
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags } } };
+      const tags = (app.selectedRepresentationTags || []).filter((t: string) => t !== event.tag);
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: tags } } };
     },
   });
 
-  registerEventHandler("TYPE.CLEAR_MODEL_TAGS", {
+  registerEventHandler("TYPE.CLEAR_REPRESENTATION_TAGS", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: [] } } };
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: [] } } };
     },
   });
 
-  registerEventHandler("TYPE.SELECT_MODEL_TAG", {
+  registerEventHandler("TYPE.SELECT_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const tags = app.selectedModelTags || [];
+      const tags = app.selectedRepresentationTags || [];
       if (tags.includes(event.tagGuid)) return {};
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: [...tags, event.tagGuid] } } };
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: [...tags, event.tagGuid] } } };
     },
   });
 
-  registerEventHandler("TYPE.DESELECT_MODEL_TAG", {
+  registerEventHandler("TYPE.DESELECT_REPRESENTATION_TAG", {
     action: (context: any, event: any) => {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      const tags = app.selectedModelTags || [];
-      return { typeApps: { ...apps, [key]: { ...app, selectedModelTags: tags.filter((g: Guid) => g !== event.tagGuid) } } };
+      const tags = app.selectedRepresentationTags || [];
+      return { typeApps: { ...apps, [key]: { ...app, selectedRepresentationTags: tags.filter((g: Guid) => g !== event.tagGuid) } } };
     },
   });
 
@@ -40846,7 +40846,7 @@ if (typeof window !== "undefined") {
       const key = typeAppEventConfig.getKey(event);
       const apps = context.typeApps || {};
       const app = apps[key] || createDefaultTypeAppState();
-      return { typeApps: { ...apps, [key]: { ...app, selection: { connectors: [], models: [] } } } };
+      return { typeApps: { ...apps, [key]: { ...app, selection: { connectors: [], representations: [] } } } };
     },
   });
 
@@ -40890,7 +40890,7 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
 }
 
 /**
- * Returns the current connector and model selection for the TypeApp.
+ * Returns the current connector and representation selection for the TypeApp.
  *MUST return a conditionalHookResult with setter availability.
  **/
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
@@ -41001,7 +41001,7 @@ export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
 }
 
 /**
- * Returns the current hover state indicating which connector or model is hovered.
+ * Returns the current hover state indicating which connector or representation is hovered.
  *MUST return a conditionalHookResult with setter availability.
  **/
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
@@ -41019,8 +41019,8 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
     return (hover: TypeAppHover | undefined) => {
       if (hover?.connector) {
         actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid: hover.connector });
-      } else if (hover?.model) {
-        actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid: hover.model });
+      } else if (hover?.representation) {
+        actor.send({ type: "TYPE.HOVER_REPRESENTATION", kitGuid, typeGuid, representationGuid: hover.representation });
       } else {
         actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid });
       }
@@ -41103,16 +41103,16 @@ export function useTypeAppCommands(id?: TypeAppId) {
         setActiveTool: noOp,
         selectConnector: noOp,
         deselectConnector: noOp,
-        selectModel: noOp,
-        deselectModel: noOp,
+        selectRepresentation: noOp,
+        deselectRepresentation: noOp,
         hoverPort: noOp,
-        hoverModel: noOp,
+        hoverRepresentation: noOp,
         clearHover: noOp,
-        setSelectedModel: noOp,
-        addModelTag: noOp,
-        removeModelTag: noOp,
-        clearModelTags: noOp,
-        setModelTags: noOp,
+        setSelectedRepresentation: noOp,
+        addRepresentationTag: noOp,
+        removeRepresentationTag: noOp,
+        clearRepresentationTags: noOp,
+        setRepresentationTags: noOp,
         execute: noOp,
       };
     }
@@ -41132,16 +41132,16 @@ export function useTypeAppCommands(id?: TypeAppId) {
       setActiveTool: (tool: ToolKind) => actor.send({ type: "TYPE.SET_ACTIVE_TOOL", kitGuid, typeGuid, tool }),
       selectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.SELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
       deselectConnector: (connectorGuid: Guid) => actor.send({ type: "TYPE.DESELECT_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      selectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SELECT_MODEL", kitGuid, typeGuid, modelGuid }),
-      deselectModel: (modelGuid: Guid) => actor.send({ type: "TYPE.DESELECT_MODEL", kitGuid, typeGuid, modelGuid }),
+      selectRepresentation: (representationGuid: Guid) => actor.send({ type: "TYPE.SELECT_REPRESENTATION", kitGuid, typeGuid, representationGuid }),
+      deselectRepresentation: (representationGuid: Guid) => actor.send({ type: "TYPE.DESELECT_REPRESENTATION", kitGuid, typeGuid, representationGuid }),
       hoverPort: (connectorGuid: Guid) => actor.send({ type: "TYPE.HOVER_CONNECTOR", kitGuid, typeGuid, connectorGuid }),
-      hoverModel: (modelGuid: Guid) => actor.send({ type: "TYPE.HOVER_MODEL", kitGuid, typeGuid, modelGuid }),
+      hoverRepresentation: (representationGuid: Guid) => actor.send({ type: "TYPE.HOVER_REPRESENTATION", kitGuid, typeGuid, representationGuid }),
       clearHover: () => actor.send({ type: "TYPE.CLEAR_HOVER", kitGuid, typeGuid }),
-      setSelectedModel: (modelGuid: Guid) => actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid }),
-      addModelTag: (tag: string) => actor.send({ type: "TYPE.ADD_MODEL_TAG", kitGuid, typeGuid, tag }),
-      removeModelTag: (tag: string) => actor.send({ type: "TYPE.REMOVE_MODEL_TAG", kitGuid, typeGuid, tag }),
-      clearModelTags: () => actor.send({ type: "TYPE.CLEAR_MODEL_TAGS", kitGuid, typeGuid }),
-      setModelTags: (tags: string[]) => actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags }),
+      setSelectedRepresentation: (representationGuid: Guid) => actor.send({ type: "TYPE.SET_SELECTED_REPRESENTATION", kitGuid, typeGuid, representationGuid }),
+      addRepresentationTag: (tag: string) => actor.send({ type: "TYPE.ADD_REPRESENTATION_TAG", kitGuid, typeGuid, tag }),
+      removeRepresentationTag: (tag: string) => actor.send({ type: "TYPE.REMOVE_REPRESENTATION_TAG", kitGuid, typeGuid, tag }),
+      clearRepresentationTags: () => actor.send({ type: "TYPE.CLEAR_REPRESENTATION_TAGS", kitGuid, typeGuid }),
+      setRepresentationTags: (tags: string[]) => actor.send({ type: "TYPE.SET_REPRESENTATION_TAGS", kitGuid, typeGuid, tags }),
       execute: (command: string, ..._args: any[]) => {
         console.warn(`Type app execute not yet migrated for command: ${command}`);
       },
@@ -41208,10 +41208,10 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean
 }
 
 /**
- * Returns the GUID of the selected model for mesh display.
+ * Returns the GUID of the selected representation for mesh display.
  *MUST return a conditionalHookResult with setter availability.
  **/
-export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
+export function useTypeAppSelectedRepresentationGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -41219,14 +41219,14 @@ export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
   const typeGuid = typeScope?.guid ?? "";
   const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   const state = useSelector(actor, selector);
-  const value = state?.selectedModelGuid;
-  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_SELECTED_MODEL" as const, kitGuid, typeGuid, modelGuid: "" }), [kitGuid, typeGuid]);
+  const value = state?.selectedRepresentationGuid;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_SELECTED_REPRESENTATION" as const, kitGuid, typeGuid, representationGuid: "" }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (modelGuid: Guid | undefined) => {
-      if (modelGuid) {
-        actor.send({ type: "TYPE.SET_SELECTED_MODEL", kitGuid, typeGuid, modelGuid });
+    return (representationGuid: Guid | undefined) => {
+      if (representationGuid) {
+        actor.send({ type: "TYPE.SET_SELECTED_REPRESENTATION", kitGuid, typeGuid, representationGuid });
       }
     };
   }, [actor, kitGuid, typeGuid, canSet]);
@@ -41234,23 +41234,23 @@ export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
 }
 
 /**
- * Returns the selected model tags used for model filtering.
+ * Returns the selected representation tags used for representation filtering.
  *MUST return a conditionalHookResult with setter availability.
  **/
-export function useTypeAppSelectedModelTags(): HookResult<string[]> {
+export function useTypeAppSelectedRepresentationTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kitGuid = kitScope?.guid ?? "";
   const typeGuid = typeScope?.guid ?? "";
-  const selector = useMemo(() => createTypeSelectedModelTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
-  const value = useSelector(actor, selector) ?? EMPTY_MODEL_TAG_ARRAY;
-  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_MODEL_TAGS" as const, kitGuid, typeGuid, tags: [] as string[] }), [kitGuid, typeGuid]);
+  const selector = useMemo(() => createTypeSelectedRepresentationTagsSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
+  const value = useSelector(actor, selector) ?? EMPTY_REPRESENTATION_TAG_ARRAY;
+  const canSetEvent = useMemo(() => ({ type: "TYPE.SET_REPRESENTATION_TAGS" as const, kitGuid, typeGuid, tags: [] as string[] }), [kitGuid, typeGuid]);
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
     return (tags: string[]) => {
-      actor.send({ type: "TYPE.SET_MODEL_TAGS", kitGuid, typeGuid, tags });
+      actor.send({ type: "TYPE.SET_REPRESENTATION_TAGS", kitGuid, typeGuid, tags });
     };
   }, [actor, kitGuid, typeGuid, canSet]);
   return conditionalHookResult(canSet, value, setter);
@@ -41258,14 +41258,14 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
 
 /**
  * Selects a single connector replacing the current selection.
- *MUST clear model selection when selecting a connector.
+ *MUST clear representation selection when selecting a connector.
  **/
 export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (connectorGuid: string) => setSelection({ ...selection, connectors: [connectorGuid], models: [] });
+    return (connectorGuid: string) => setSelection({ ...selection, connectors: [connectorGuid], representations: [] });
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
 }
@@ -41301,14 +41301,14 @@ export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]>
 }
 
 /**
- * Sets the hover state to a specific model.
+ * Sets the hover state to a specific representation.
  *MUST delegate to the hover state setter.
  **/
-export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
+export function useTypeAppHoverRepresentation(): ActionHookResult<[representationGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
   const action = useMemo(() => {
     if (!canSetHover || !setHover) return undefined;
-    return (modelGuid: string) => setHover({ model: modelGuid });
+    return (representationGuid: string) => setHover({ representation: representationGuid });
   }, [setHover, canSetHover]);
   return [action, canSetHover];
 }
@@ -41353,44 +41353,44 @@ export function useTypeAppClearFocus(): ActionHookResult<[]> {
 }
 
 /**
- * Clears all connector and model selections.
- *MUST set both connector and model arrays to empty.
+ * Clears all connector and representation selections.
+ *MUST set both connector and representation arrays to empty.
  **/
 export function useTypeAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return () => setSelection({ connectors: [], models: [] });
+    return () => setSelection({ connectors: [], representations: [] });
   }, [setSelection, canSetSelection]);
   return [action, canSetSelection];
 }
 
 /**
- * Selects a single model replacing the current selection.
- *MUST clear connector selection when selecting a model.
+ * Selects a single representation replacing the current selection.
+ *MUST clear connector selection when selecting a representation.
  **/
-export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
+export function useTypeAppSelectRepresentation(): ActionHookResult<[representationGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (modelGuid: string) => setSelection({ ...selection, models: [modelGuid], connectors: [] });
+    return (representationGuid: string) => setSelection({ ...selection, representations: [representationGuid], connectors: [] });
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
 }
 
 /**
- * Removes a model from the current selection.
- *MUST filter the model GUID from the selection array.
+ * Removes a representation from the current selection.
+ *MUST filter the representation GUID from the selection array.
  **/
-export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]> {
+export function useTypeAppDeselectRepresentation(): ActionHookResult<[representationGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
   const action = useMemo(() => {
     if (!canSetSelection || !setSelection) return undefined;
-    return (modelGuid: string) => {
-      const currentModels = selection?.models ?? [];
-      setSelection({ ...selection, models: currentModels.filter((m) => m !== modelGuid) });
+    return (representationGuid: string) => {
+      const currentRepresentations = selection?.representations ?? [];
+      setSelection({ ...selection, representations: currentRepresentations.filter((m) => m !== representationGuid) });
     };
   }, [setSelection, canSetSelection, selection]);
   return [action, canSetSelection];
@@ -41438,11 +41438,11 @@ export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof Panel
 }
 
 /**
- * Adds a tag to the selected model tags if not already present.
+ * Adds a tag to the selected representation tags if not already present.
  *MUST avoid duplicate tags.
  **/
-export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
-  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
+export function useTypeAppAddRepresentationTag(): ActionHookResult<[tag: string]> {
+  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedRepresentationTags();
   const action = useMemo(() => {
     if (!canSetSelectedTags || !setSelectedTags) return undefined;
     return (tag: string) => {
@@ -41455,11 +41455,11 @@ export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
 }
 
 /**
- * Removes a tag from the selected model tags.
+ * Removes a tag from the selected representation tags.
  *MUST filter the tag string from the tags array.
  **/
-export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
-  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
+export function useTypeAppRemoveRepresentationTag(): ActionHookResult<[tag: string]> {
+  const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedRepresentationTags();
   const action = useMemo(() => {
     if (!canSetSelectedTags || !setSelectedTags) return undefined;
     return (tag: string) => {
@@ -41470,16 +41470,16 @@ export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
 }
 
 /**
- * Sets the selected model GUID for mesh display.
- *MUST delegate to the selected model state setter.
+ * Sets the selected representation GUID for mesh display.
+ *MUST delegate to the selected representation state setter.
  **/
-export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: string]> {
-  const [, setSelectedModel, canSetSelectedModel] = useTypeAppSelectedModelGuid();
+export function useTypeAppSetSelectedRepresentation(): ActionHookResult<[representationGuid: string]> {
+  const [, setSelectedRepresentation, canSetSelectedRepresentation] = useTypeAppSelectedRepresentationGuid();
   const action = useMemo(() => {
-    if (!canSetSelectedModel || !setSelectedModel) return undefined;
-    return (modelGuid: string) => setSelectedModel(modelGuid);
-  }, [setSelectedModel, canSetSelectedModel]);
-  return [action, canSetSelectedModel];
+    if (!canSetSelectedRepresentation || !setSelectedRepresentation) return undefined;
+    return (representationGuid: string) => setSelectedRepresentation(representationGuid);
+  }, [setSelectedRepresentation, canSetSelectedRepresentation]);
+  return [action, canSetSelectedRepresentation];
 }
 
 //#endregion 🛒Action Hooks
@@ -41532,20 +41532,20 @@ export const typeAppCommands = {
       },
     };
   },
-  "semio.typeApp.selectModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.selectRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
         selection: {
-          models: { added: [reprGuid], removed: [] },
+          representations: { added: [reprGuid], removed: [] },
         },
       },
     };
   },
-  "semio.typeApp.deselectModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.deselectRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
         selection: {
-          models: { added: [], removed: [reprGuid] },
+          representations: { added: [], removed: [reprGuid] },
         },
       },
     };
@@ -41557,10 +41557,10 @@ export const typeAppCommands = {
       },
     };
   },
-  "semio.typeApp.hoverModel": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
+  "semio.typeApp.hoverRepresentation": (context: TypeAppCommandContext, reprGuid: Guid): TypeAppCommandResult => {
     return {
       diff: {
-        hover: { model: reprGuid },
+        hover: { representation: reprGuid },
       },
     };
   },
@@ -41613,7 +41613,7 @@ export const typeAppCommands = {
       diff: {
         selection: {
           connectors: { removed: context.typeApp.selection?.connectors || [] },
-          models: { removed: context.typeApp.selection?.models || [] },
+          representations: { removed: context.typeApp.selection?.representations || [] },
         },
       },
     };
@@ -41621,46 +41621,46 @@ export const typeAppCommands = {
   "semio.typeApp.selectAll": (context: TypeAppCommandContext): TypeAppCommandResult => {
     const type = context.kit.types?.find((t) => t.guid === context.Guid);
     const allConnectors = type?.connectors?.map((p) => p.guid) || [];
-    const allModels = type?.models?.map((r) => r.guid) || [];
+    const allRepresentations = type?.representations?.map((r) => r.guid) || [];
     return {
       diff: {
         selection: {
           connectors: { added: allConnectors },
-          models: { added: allModels },
+          representations: { added: allRepresentations },
         },
       },
     };
   },
-  "semio.typeApp.addModelTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
-    const currentTags = context.typeApp.selectedModelTags || [];
+  "semio.typeApp.addRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedRepresentationTags || [];
     if (currentTags.includes(tag)) {
       return {};
     }
     return {
       diff: {
-        selectedModelTags: [...currentTags, tag],
+        selectedRepresentationTags: [...currentTags, tag],
       },
     };
   },
-  "semio.typeApp.removeModelTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
-    const currentTags = context.typeApp.selectedModelTags || [];
+  "semio.typeApp.removeRepresentationTag": (context: TypeAppCommandContext, tag: string): TypeAppCommandResult => {
+    const currentTags = context.typeApp.selectedRepresentationTags || [];
     return {
       diff: {
-        selectedModelTags: currentTags.filter((t) => t !== tag),
+        selectedRepresentationTags: currentTags.filter((t) => t !== tag),
       },
     };
   },
-  "semio.typeApp.clearModelTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
+  "semio.typeApp.clearRepresentationTags": (context: TypeAppCommandContext): TypeAppCommandResult => {
     return {
       diff: {
-        selectedModelTags: [],
+        selectedRepresentationTags: [],
       },
     };
   },
-  "semio.typeApp.setModelTags": (context: TypeAppCommandContext, tags: string[]): TypeAppCommandResult => {
+  "semio.typeApp.setRepresentationTags": (context: TypeAppCommandContext, tags: string[]): TypeAppCommandResult => {
     return {
       diff: {
-        selectedModelTags: tags,
+        selectedRepresentationTags: tags,
       },
     };
   },
@@ -41922,11 +41922,11 @@ const LoadedTypeMesh: FC<{
   }
 };
 
-/** selectTypeModels holds the data fields for a selectTypeModels record.
+/** selectTypeRepresentations holds the data fields for a selectTypeRepresentations record.
  **/
 /**
  **/
-const selectTypeModels = (type: Type) => type.models;
+const selectTypeRepresentations = (type: Type) => type.representations;
 /**
  * selectTypeConcepts holds the data fields for a selectTypeConcepts record.
  **/
@@ -41946,85 +41946,85 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   onPortCreate,
   onClearPreview,
 }) => {
-  const typeModels = useType(selectTypeModels) as Model[] | undefined;
+  const typeRepresentations = useType(selectTypeRepresentations) as Representation[] | undefined;
   const typeConcepts = useType(selectTypeConcepts) as any[] | undefined;
   const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
 
   const files = useKitFiles();
   const kitDataSource = useKitStore() as CollaborativeKitStore;
-  const [selectedModelGuid] = useTypeAppSelectedModelGuid();
-  const [selectedModelTags] = useTypeAppSelectedModelTags();
+  const [selectedRepresentationGuid] = useTypeAppSelectedRepresentationGuid();
+  const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
   const gl = useThree((state) => state.gl);
   const raycaster = useThree((state) => state.raycaster);
   const meshSceneRef = useRef<THREE.Object3D | null>(null);
   const isPointerDownRef = useRef(false);
 
-  const prevModelGuidRef = useRef<string | null>(null);
+  const prevRepresentationGuidRef = useRef<string | null>(null);
 
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  const { modelUrl, fileExtension, fileGuid, modelGuid, selectionReason } = useMemo(() => {
-    if (!typeModels || typeModels.length === 0) {
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-models" };
+  const { representationUrl, fileExtension, fileGuid, representationGuid, selectionReason } = useMemo(() => {
+    if (!typeRepresentations || typeRepresentations.length === 0) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: null, selectionReason: "no-representations" };
     }
 
-    let model: Model | undefined;
+    let representation: Representation | undefined;
     let reason = "";
 
-    if (selectedModelGuid) {
-      model = typeModels.find((r) => r.guid === selectedModelGuid);
+    if (selectedRepresentationGuid) {
+      representation = typeRepresentations.find((r) => r.guid === selectedRepresentationGuid);
       reason = "explicit-guid";
-    } else if (selectedModelTags.length > 0) {
-      model = selectBestModel(typeModels, selectedModelTags);
+    } else if (selectedRepresentationTags.length > 0) {
+      representation = selectBestRepresentation(typeRepresentations, selectedRepresentationTags);
       reason = "manual-tags";
     } else {
       const conceptGuids = typeConcepts?.map((c) => c.guid) ?? [];
       if (conceptGuids.length > 0) {
-        model = findModel(typeModels, conceptGuids);
+        representation = findRepresentation(typeRepresentations, conceptGuids);
         reason = "type-concepts";
       } else {
-        const defaultRep = typeModels.find((r) => !r.tags || r.tags.length === 0);
-        model = defaultRep ?? typeModels[0];
+        const defaultRep = typeRepresentations.find((r) => !r.tags || r.tags.length === 0);
+        representation = defaultRep ?? typeRepresentations[0];
         reason = "default/first";
       }
     }
 
-    if (!model) {
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: null, selectionReason: "no-model-found" };
+    if (!representation) {
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: null, selectionReason: "no-representation-found" };
     }
 
-    const fileId = typeof model.file === "string" ? model.file : model.file?.guid;
+    const fileId = typeof representation.file === "string" ? representation.file : representation.file?.guid;
     const file = files.find((f) => f.guid === fileId);
     if (!file) {
-      return { modelUrl: null, fileExtension: "", fileGuid: null, modelGuid: model.guid, selectionReason: "file-not-found" };
+      return { representationUrl: null, fileExtension: "", fileGuid: null, representationGuid: representation.guid, selectionReason: "file-not-found" };
     }
 
     const ext = file.name?.split(".").pop() || "";
 
     const url = kitDataSource.getFileUrl(file.guid);
     if (url) {
-      return { modelUrl: url, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
+      return { representationUrl: url, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
     }
 
-    return { modelUrl: null, fileExtension: ext, fileGuid: file.guid, modelGuid: model.guid, selectionReason: reason };
-  }, [typeModels, typeConcepts, files, kitDataSource, selectedModelGuid, selectedModelTags]);
+    return { representationUrl: null, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
+  }, [typeRepresentations, typeConcepts, files, kitDataSource, selectedRepresentationGuid, selectedRepresentationTags]);
 
   useEffect(() => {
-    if (modelGuid && modelGuid !== prevModelGuidRef.current) {
-      prevModelGuidRef.current = modelGuid;
-    } else if (!modelGuid && typeGuid && !typeModels) {
-      console.warn("[TypeMesh] No models available for type:", typeGuid);
-    } else if (!modelGuid && selectionReason === "no-model-found") {
-      console.warn("[TypeMesh] No model found for type:", typeGuid);
-    } else if (selectionReason === "file-not-found" && modelGuid !== prevModelGuidRef.current) {
-      prevModelGuidRef.current = modelGuid;
-      console.warn("[TypeMesh] File not found in kit for model:", modelGuid);
+    if (representationGuid && representationGuid !== prevRepresentationGuidRef.current) {
+      prevRepresentationGuidRef.current = representationGuid;
+    } else if (!representationGuid && typeGuid && !typeRepresentations) {
+      console.warn("[TypeMesh] No representations available for type:", typeGuid);
+    } else if (!representationGuid && selectionReason === "no-representation-found") {
+      console.warn("[TypeMesh] No representation found for type:", typeGuid);
+    } else if (selectionReason === "file-not-found" && representationGuid !== prevRepresentationGuidRef.current) {
+      prevRepresentationGuidRef.current = representationGuid;
+      console.warn("[TypeMesh] File not found in kit for representation:", representationGuid);
     }
-  }, [modelGuid, selectionReason, typeGuid, typeModels]);
+  }, [representationGuid, selectionReason, typeGuid, typeRepresentations]);
 
   useEffect(() => {
-    setBlobUrl(modelUrl ?? null);
+    setBlobUrl(representationUrl ?? null);
     if (!fileGuid) {
       return;
     }
@@ -42056,7 +42056,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [fileGuid, kitDataSource, modelUrl]);
+  }, [fileGuid, kitDataSource, representationUrl]);
 
   const resolveMeshIntersection = useCallback(
     (clientX: number, clientY: number) => {
@@ -42140,7 +42140,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
   const foregroundColor = useMemo(() => getComputedColor("--foreground"), []);
 
-  const renderUrl = blobUrl ?? modelUrl;
+  const renderUrl = blobUrl ?? representationUrl;
 
   if (!renderUrl) {
     return null;
@@ -42264,7 +42264,7 @@ const SceneContent: FC = React.memo(() => {
       setSelection({
         ...(selection || {}),
         connectors: applySelectionComposition(selection?.connectors, [connectorId], compositionKind),
-        models: compositionKind === "replace" ? [] : selection?.models || [],
+        representations: compositionKind === "replace" ? [] : selection?.representations || [],
       });
     },
     [selection, setSelection, activeTool],
@@ -42290,7 +42290,7 @@ const SceneContent: FC = React.memo(() => {
 
   return (
     <>
-      {typeFilters.showModels && <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />}
+      {typeFilters.showRepresentations && <TypeMesh activeTool={activeTool} onPortPreview={handlePortPreview} onPortCreate={handlePortCreate} onClearPreview={handleClearPreview} />}
       {visibleTypePorts?.map((connector) => {
         const isSelected = selection?.connectors?.includes(connector.guid) || false;
         const isHovered = hover?.connector === connector.guid;
@@ -42371,7 +42371,7 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 // #region 🧭Right
 
 // #region 💧Details
-// Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
+// Detail panel sections for editing type properties, connectors, representations, authors, and attributes. MUST render within tree items.
 
 /**
  * Detail panel section displaying editable type properties.
@@ -42438,21 +42438,21 @@ const TypeDetailsForm: FC = () => {
 };
 
 /**
- * Detail panel section for managing type models with add, remove, and reorder.
+ * Detail panel section for managing type representations with add, remove, and reorder.
  **/
-export const ModelsSection: FC = () => {
+export const RepresentationsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
-  return <ModelsSectionForm />;
+  return <RepresentationsSectionForm />;
 };
 
-/** ModelsSectionForm holds the data fields for a ModelsSectionForm record.
+/** RepresentationsSectionForm holds the data fields for a RepresentationsSectionForm record.
  **/
 /**
  **/
-const ModelsSectionForm: FC = () => {
+const RepresentationsSectionForm: FC = () => {
   const tooltip = useTooltip();
-  const [hoverModel] = useTypeAppHoverModel();
+  const [hoverRepresentation] = useTypeAppHoverRepresentation();
   const [clearHover] = useTypeAppClearHover();
   const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
@@ -42464,27 +42464,27 @@ const ModelsSectionForm: FC = () => {
     kitCommands?.updateType(type.guid, diff);
   };
 
-  const updateModel = (id: string, modelDiff: any) => {
+  const updateRepresentation = (id: string, representationDiff: any) => {
     applyDiff({
-      models: {
-        updated: [{ id, diff: modelDiff }],
+      representations: {
+        updated: [{ id, diff: representationDiff }],
       },
     });
   };
 
-  const hasModels = type.models && type.models.length > 0;
+  const hasRepresentations = type.representations && type.representations.length > 0;
 
   return (
     <>
       <TreeItem
-        id="semio.sketchpad.app.type.models"
+        id="semio.sketchpad.app.type.representations"
         actions={[
           {
             icon: <AddIcon />,
             onClick: () => {
-              const origin = "semio.sketchpad.app.type.panel.details.models.add";
+              const origin = "semio.sketchpad.app.type.panel.details.representations.add";
               applyDiff({
-                models: {
+                representations: {
                   added: [{ guid: guid(), url: "", tags: [] }],
                 },
               });
@@ -42493,31 +42493,31 @@ const ModelsSectionForm: FC = () => {
           },
         ]}
       >
-        {hasModels && (
+        {hasRepresentations && (
           <SortableTreeItems
-            items={(type.models || []).map((model: any, index: number) => ({
-              ...model,
-              id: `model-${index}`,
+            items={(type.representations || []).map((representation: any, index: number) => ({
+              ...representation,
+              id: `representation-${index}`,
               index,
             }))}
             onReorder={(oldIndex, newIndex) => {
-              if (!type.models) return;
-              const origin = "semio.sketchpad.app.type.panel.details.models.reorder";
+              if (!type.representations) return;
+              const origin = "semio.sketchpad.app.type.panel.details.representations.reorder";
               applyDiff({
-                models: {
-                  removed: type.models.map((model: any) => model.guid),
-                  added: arrayMove(type.models, oldIndex, newIndex),
+                representations: {
+                  removed: type.representations.map((representation: any) => representation.guid),
+                  added: arrayMove(type.representations, oldIndex, newIndex),
                 },
               });
             }}
           >
-            {(model, index) => {
-              const isSelected = selection?.models?.includes(model.guid) || false;
-              const isHovered = hover?.model === model.guid;
+            {(representation, index) => {
+              const isSelected = selection?.representations?.includes(representation.guid) || false;
+              const isHovered = hover?.representation === representation.guid;
               return (
                 <div
-                  key={`model-${index}`}
-                  onPointerEnter={() => hoverModel && hoverModel(model.guid)}
+                  key={`representation-${index}`}
+                  onPointerEnter={() => hoverRepresentation && hoverRepresentation(representation.guid)}
                   onPointerLeave={() => clearHover && clearHover()}
                   onClick={(e: React.MouseEvent) => {
                     if (!setSelection) return;
@@ -42529,27 +42529,27 @@ const ModelsSectionForm: FC = () => {
                     });
                     setSelection({
                       ...(selection || {}),
-                      models: applySelectionComposition(selection?.models, [model.guid], compositionKind),
+                      representations: applySelectionComposition(selection?.representations, [representation.guid], compositionKind),
                       connectors: compositionKind === "replace" ? [] : selection?.connectors || [],
                     });
                   }}
                 >
                   <TreeItem
-                    key={`model-${index}`}
-                    id="semio.sketchpad.app.type.model"
-                    label={model.url}
+                    key={`representation-${index}`}
+                    id="semio.sketchpad.app.type.representation"
+                    label={representation.url}
                     sortable={true}
-                    sortableId={`model-${index}`}
+                    sortableId={`representation-${index}`}
                     isDragHandle={true}
                     className={`${isSelected ? "bg-accent/20" : ""} ${isHovered ? "bg-hover" : ""}`}
                     actions={[
                       {
                         icon: <RemoveIcon />,
                         onClick: () => {
-                          const origin = "semio.sketchpad.app.type.panel.details.models.remove";
+                          const origin = "semio.sketchpad.app.type.panel.details.representations.remove";
                           applyDiff({
-                            models: {
-                              removed: [model.guid],
+                            representations: {
+                              removed: [representation.guid],
                             },
                           });
                         },
@@ -42559,32 +42559,32 @@ const ModelsSectionForm: FC = () => {
                   >
                     <TreeRow>
                       <Input
-                        id="semio.sketchpad.app.type.panel.details.section.models.url"
-                        value={model.url}
+                        id="semio.sketchpad.app.type.panel.details.section.representations.url"
+                        value={representation.url}
                         onChange={(e) => {
-                          updateModel(model.guid, { url: e.target.value });
+                          updateRepresentation(representation.guid, { url: e.target.value });
                         }}
                         showLabel
                       />
                     </TreeRow>
                     <TreeRow>
                       <Textarea
-                        id="semio.sketchpad.app.type.panel.details.section.models.description"
-                        value={model.description || ""}
-                        placeholderId="semio.sketchpad.app.type.modelDescriptionPlaceholder.label"
+                        id="semio.sketchpad.app.type.panel.details.section.representations.description"
+                        value={representation.description || ""}
+                        placeholderId="semio.sketchpad.app.type.representationDescriptionPlaceholder.label"
                         onChange={(e) => {
-                          updateModel(model.guid, { description: e.target.value });
+                          updateRepresentation(representation.guid, { description: e.target.value });
                         }}
                         showLabel
                       />
                     </TreeRow>
                     <TreeRow>
                       <Input
-                        id="semio.sketchpad.app.type.panel.details.section.models.tags"
-                        value={(model.tags || []).join(", ")}
-                        placeholderId="semio.sketchpad.app.type.modelTagsPlaceholder.label"
+                        id="semio.sketchpad.app.type.panel.details.section.representations.tags"
+                        value={(representation.tags || []).join(", ")}
+                        placeholderId="semio.sketchpad.app.type.representationTagsPlaceholder.label"
                         onChange={(e) => {
-                          updateModel(model.guid, {
+                          updateRepresentation(representation.guid, {
                             tags: e.target.value
                               .split(",")
                               .map((tag) => tag.trim())
@@ -42706,7 +42706,7 @@ const ConnectorsListSectionForm: FC = () => {
                 setSelection({
                   ...(selection || {}),
                   connectors: [orbId],
-                  models: [],
+                  representations: [],
                 });
               }}
               onOrbHoverChange={(orbId, hovered) => {
@@ -42750,7 +42750,7 @@ const ConnectorsListSectionForm: FC = () => {
                 setSelection({
                   ...(selection || {}),
                   connectors: applySelectionComposition(selection?.connectors, [connector.guid], compositionKind),
-                  models: compositionKind === "replace" ? [] : selection?.models || [],
+                  representations: compositionKind === "replace" ? [] : selection?.representations || [],
                 });
               };
 
@@ -43834,7 +43834,7 @@ const TypeWindowApp: FC = () => {
       content: () => (
         <>
           <TypeDetails />
-          <ModelsSection />
+          <RepresentationsSection />
           <ConnectorsListSection />
           <AuthorsSection />
           <AttributesSection />
@@ -43863,7 +43863,7 @@ const TypeWindowApp: FC = () => {
 
   const type = useType() as Type | undefined;
   const kitCommands = useKitCommands();
-  const [setSelectedModel] = useTypeAppSetSelectedModel();
+  const [setSelectedRepresentation] = useTypeAppSetSelectedRepresentation();
 
   useEffect(() => {
     if (appType !== "type") return;
@@ -43874,7 +43874,7 @@ const TypeWindowApp: FC = () => {
       setIsDragOver(false);
 
       const files = event.dataTransfer?.files;
-      if (!files || files.length === 0 || !type || !kitCommands || !setSelectedModel) return;
+      if (!files || files.length === 0 || !type || !kitCommands || !setSelectedRepresentation) return;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -43888,9 +43888,9 @@ const TypeWindowApp: FC = () => {
           updatedAt: new Date().toISOString(),
         };
 
-        const newModelGuid = guid();
-        const newModel: Model = {
-          guid: newModelGuid,
+        const newRepresentationGuid = guid();
+        const newRepresentation: Representation = {
+          guid: newRepresentationGuid,
           file: { guid: newFileGuid },
           description: file.name,
         };
@@ -43898,12 +43898,12 @@ const TypeWindowApp: FC = () => {
         await kitCommands.addFile(newFile, file);
 
         await kitCommands.updateType(type.guid, {
-          models: {
-            added: [newModel],
+          representations: {
+            added: [newRepresentation],
           },
         });
 
-        setSelectedModel(newModelGuid);
+        setSelectedRepresentation(newRepresentationGuid);
       }
     };
 
@@ -43933,7 +43933,7 @@ const TypeWindowApp: FC = () => {
       document.removeEventListener("dragover", handleDragOver);
       document.removeEventListener("dragleave", handleDragLeave);
     };
-  }, [appType, type, kitCommands, setSelectedModel]);
+  }, [appType, type, kitCommands, setSelectedRepresentation]);
 
   const persistedWindowLayout = useTypeApp((s) => s?.windowLayout);
   const addSidePanelTab = useAddSidePanelTab();
@@ -44017,29 +44017,29 @@ const TypeWindowApp: FC = () => {
 };
 
 // #region ⛅Filters
-// Type filter context and toolbar toggles MUST control connector and model visibility via URL search params.
+// Type filter context and toolbar toggles MUST control connector and representation visibility via URL search params.
 
-type TypeFilterKind = "connectors" | "models";
+type TypeFilterKind = "connectors" | "representations";
 
 interface TypeFilterState {
   showConnectors: boolean;
-  showModels: boolean;
+  showRepresentations: boolean;
 }
 
-const isTypeFilterKind = (value: string): value is TypeFilterKind => value === "connectors" || value === "models";
+const isTypeFilterKind = (value: string): value is TypeFilterKind => value === "connectors" || value === "representations";
 const parseTypeFilterState = (searchParams: URLSearchParams): TypeFilterState => {
   const kinds = searchParams.getAll("filter").filter(isTypeFilterKind);
   if (kinds.length === 0) {
-    return { showConnectors: true, showModels: true };
+    return { showConnectors: true, showRepresentations: true };
   }
   return {
     showConnectors: kinds.includes("connectors"),
-    showModels: kinds.includes("models"),
+    showRepresentations: kinds.includes("representations"),
   };
 };
 
 const createTypeFilterStore = () => {
-  let state: TypeFilterState = { showConnectors: true, showModels: true };
+  let state: TypeFilterState = { showConnectors: true, showRepresentations: true };
   const listeners = new Set<() => void>();
 
   const getState = () => state;
@@ -44050,7 +44050,7 @@ const createTypeFilterStore = () => {
     };
   };
   const setState = (nextState: TypeFilterState) => {
-    if (state.showConnectors === nextState.showConnectors && state.showModels === nextState.showModels) {
+    if (state.showConnectors === nextState.showConnectors && state.showRepresentations === nextState.showRepresentations) {
       return;
     }
     state = nextState;
@@ -44075,7 +44075,7 @@ const TypeKindToggles: FC = () => {
   }, [searchParams]);
 
   const toggleKind = (kind: TypeFilterKind) => {
-    const allKinds: TypeFilterKind[] = ["connectors", "models"];
+    const allKinds: TypeFilterKind[] = ["connectors", "representations"];
     const newParams = new URLSearchParams(searchParams);
     const kinds = newParams.getAll("filter").filter(isTypeFilterKind);
 
@@ -44100,12 +44100,12 @@ const TypeKindToggles: FC = () => {
   const isActive = (kind: TypeFilterKind) => selectedKindsFromUrl.length === 0 || selectedKinds.has(kind);
 
   const labelConnectors = useLabel("semio.sketchpad.app.type.toolbar.showConnectors");
-  const labelModels = useLabel("semio.sketchpad.app.type.toolbar.showModels");
+  const labelRepresentations = useLabel("semio.sketchpad.app.type.toolbar.showRepresentations");
 
   return (
     <ToolbarGroup>
       <Toggle pressed={isActive("connectors")} onPressedChange={() => toggleKind("connectors")} id="semio.sketchpad.app.type.toolbar.showConnectors" icon={<ConnectorIcon className="size-tiny" />} text={labelConnectors} />
-      <Toggle pressed={isActive("models")} onPressedChange={() => toggleKind("models")} id="semio.sketchpad.app.type.toolbar.showModels" icon={<SceneIcon className="size-tiny" />} text={labelModels} />
+      <Toggle pressed={isActive("representations")} onPressedChange={() => toggleKind("representations")} id="semio.sketchpad.app.type.toolbar.showRepresentations" icon={<SceneIcon className="size-tiny" />} text={labelRepresentations} />
     </ToolbarGroup>
   );
 };
@@ -44230,7 +44230,7 @@ function useTypeAppInitialize() {
         camera: undefined,
         activeTool: ToolKind.SELECTION_NORMAL,
         fullscreenWindow: TypeAppFullscreenWindow.None,
-        selectedModelTags: [],
+        selectedRepresentationTags: [],
         transaction: {
           isTransactionActive: false,
           currentTransactionStack: [],
@@ -44246,10 +44246,10 @@ function useTypeAppInitialize() {
 // #endregion 🖲️App
 
 // #region 🎮Footer
-// Footer component displaying model tag toggles. MUST update footer items when tags change.
+// Footer component displaying representation tag toggles. MUST update footer items when tags change.
 
 /**
- * Footer component rendering model tag toggle buttons.
+ * Footer component rendering representation tag toggle buttons.
  **/
 export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -44257,26 +44257,26 @@ export const TypeAppFooter: FC = () => {
   const appType = useAppType();
   const type = useType() as Type | undefined;
   const tags = useKitTags();
-  const [selectedModelTags] = useTypeAppSelectedModelTags();
-  const [addModelTag] = useTypeAppAddModelTag();
-  const [removeModelTag] = useTypeAppRemoveModelTag();
+  const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
+  const [addRepresentationTag] = useTypeAppAddRepresentationTag();
+  const [removeRepresentationTag] = useTypeAppRemoveRepresentationTag();
 
-  const addModelTagRef = useRef(addModelTag);
-  const removeModelTagRef = useRef(removeModelTag);
-  const selectedModelTagsRef = useRef(selectedModelTags);
+  const addRepresentationTagRef = useRef(addRepresentationTag);
+  const removeRepresentationTagRef = useRef(removeRepresentationTag);
+  const selectedRepresentationTagsRef = useRef(selectedRepresentationTags);
 
   useEffect(() => {
-    addModelTagRef.current = addModelTag;
-    removeModelTagRef.current = removeModelTag;
-    selectedModelTagsRef.current = selectedModelTags;
-  }, [addModelTag, removeModelTag, selectedModelTags]);
+    addRepresentationTagRef.current = addRepresentationTag;
+    removeRepresentationTagRef.current = removeRepresentationTag;
+    selectedRepresentationTagsRef.current = selectedRepresentationTags;
+  }, [addRepresentationTag, removeRepresentationTag, selectedRepresentationTags]);
 
-  const { allModelTagGuids, tagNameMap } = useMemo(() => {
-    if (!type?.models) return { allModelTagGuids: [], tagNameMap: new Map<string, string>() };
+  const { allRepresentationTagGuids, tagNameMap } = useMemo(() => {
+    if (!type?.representations) return { allRepresentationTagGuids: [], tagNameMap: new Map<string, string>() };
     const tagGuids = new Set<string>();
     const nameMap = new Map<string, string>();
-    type.models.forEach((model) => {
-      model.tags?.forEach((tag) => {
+    type.representations.forEach((representation) => {
+      representation.tags?.forEach((tag) => {
         tagGuids.add(tag.guid);
       });
     });
@@ -44286,23 +44286,23 @@ export const TypeAppFooter: FC = () => {
         nameMap.set(tag.guid, tag.name);
       }
     });
-    return { allModelTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
-  }, [type?.models, tags]);
+    return { allRepresentationTagGuids: Array.from(tagGuids), tagNameMap: nameMap };
+  }, [type?.representations, tags]);
 
   useEffect(() => {
     if (appType !== "type") return;
 
     const isTagSelected = (tagGuid: string): boolean => {
-      return selectedModelTagsRef.current.includes(tagGuid);
+      return selectedRepresentationTagsRef.current.includes(tagGuid);
     };
 
-    allModelTagGuids.forEach((tagGuid) => {
+    allRepresentationTagGuids.forEach((tagGuid) => {
       removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
     });
 
-    allModelTagGuids.forEach((tagGuid, index) => {
+    allRepresentationTagGuids.forEach((tagGuid, index) => {
       const tagName = tagNameMap.get(tagGuid) || tagGuid.slice(0, 8);
-      const isSelected = selectedModelTags.includes(tagGuid);
+      const isSelected = selectedRepresentationTags.includes(tagGuid);
 
       addFooterItem({
         id: `semio.sketchpad.app.type.footer.tag.${tagGuid}`,
@@ -44311,9 +44311,9 @@ export const TypeAppFooter: FC = () => {
         onClick: () => {
           const currentSelected = isTagSelected(tagGuid);
           if (currentSelected) {
-            if (removeModelTagRef.current) removeModelTagRef.current(tagGuid);
+            if (removeRepresentationTagRef.current) removeRepresentationTagRef.current(tagGuid);
           } else {
-            if (addModelTagRef.current) addModelTagRef.current(tagGuid);
+            if (addRepresentationTagRef.current) addRepresentationTagRef.current(tagGuid);
           }
         },
         order: index,
@@ -44321,11 +44321,11 @@ export const TypeAppFooter: FC = () => {
     });
 
     return () => {
-      allModelTagGuids.forEach((tagGuid) => {
+      allRepresentationTagGuids.forEach((tagGuid) => {
         removeFooterItem(`semio.sketchpad.app.type.footer.tag.${tagGuid}`);
       });
     };
-  }, [appType, allModelTagGuids, tagNameMap, selectedModelTags, addFooterItem, removeFooterItem]);
+  }, [appType, allRepresentationTagGuids, tagNameMap, selectedRepresentationTags, addFooterItem, removeFooterItem]);
 
   return null;
 };
@@ -51468,14 +51468,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const kit = kitStore.getSnapshot().kit;
       return (
         kit?.types?.find((entry: any) =>
-          (entry.models ?? []).some((model: any) => {
-            const fileGuid = typeof model.file === "string" ? model.file : model.file?.guid;
+          (entry.representations ?? []).some((representation: any) => {
+            const fileGuid = typeof representation.file === "string" ? representation.file : representation.file?.guid;
             return Boolean(fileGuid && typeof kitStore.getFileUrl === "function" && kitStore.getFileUrl(fileGuid));
           }),
         )?.guid ?? null
       );
     });
-    console.log(`[initType] Preferred type with models: ${preferredTypeGuid}`);
+    console.log(`[initType] Preferred type with representations: ${preferredTypeGuid}`);
     const targetTypeRowId = preferredTypeGuid && typeRowIds.includes(`type-${preferredTypeGuid}`) ? `type-${preferredTypeGuid}` : typeRowIds[0];
     console.log(`[initType] Target type row ID: ${targetTypeRowId}`);
 
@@ -51560,30 +51560,30 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     await page.waitForTimeout(2000);
   }
 
-  async function getSceneModelResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedModel: boolean; typeGuid: string | null; modelGuid: string | null }> {
+  async function getSceneRepresentationResolutionForPiece(page: PlaywrightPage, pieceGuid: string): Promise<{ hasResolvedRepresentation: boolean; typeGuid: string | null; representationGuid: string | null }> {
     return await page.evaluate((targetPieceGuid) => {
       const store = (window as any).__SEMIO_STORE__;
-      if (!store) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!store) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const kitGuids = Array.from((store as any).kits?.keys() ?? []) as string[];
-      if (kitGuids.length === 0) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (kitGuids.length === 0) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const kitStore = store.kit(kitGuids[0]);
-      if (!kitStore) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!kitStore) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const kit = kitStore.snapshot();
       const url = window.location.pathname;
       const designGuidMatch = url.match(/\/designs\/([^/]+)/);
       const designGuid = designGuidMatch?.[1];
       const design = designGuid ? kit.designs?.find((d: any) => d.guid === designGuid) : kit.designs?.[kit.designs?.length - 1];
-      if (!design) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!design) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const piece = (design.pieces ?? []).find((p: any) => p.guid === targetPieceGuid);
-      if (!piece) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!piece) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const typeGuid = typeof piece.type === "string" ? piece.type : (piece.type?.guid ?? piece.typeGuid ?? piece.kind?.guid ?? piece.kindGuid ?? null);
-      if (!typeGuid) return { hasResolvedModel: false, typeGuid: null, modelGuid: null };
+      if (!typeGuid) return { hasResolvedRepresentation: false, typeGuid: null, representationGuid: null };
       const type = (kit.types ?? []).find((t: any) => t.guid === typeGuid);
-      if (!type || !type.models || type.models.length === 0) return { hasResolvedModel: false, typeGuid, modelGuid: null };
-      const defaultModel = type.models.find((m: any) => !m.tags || m.tags.length === 0) ?? type.models[0];
-      if (!defaultModel) return { hasResolvedModel: false, typeGuid, modelGuid: null };
-      const fileGuid = typeof defaultModel.file === "string" ? defaultModel.file : defaultModel.file?.guid;
-      return { hasResolvedModel: !!fileGuid, typeGuid, modelGuid: fileGuid ?? null };
+      if (!type || !type.representations || type.representations.length === 0) return { hasResolvedRepresentation: false, typeGuid, representationGuid: null };
+      const defaultRepresentation = type.representations.find((m: any) => !m.tags || m.tags.length === 0) ?? type.representations[0];
+      if (!defaultRepresentation) return { hasResolvedRepresentation: false, typeGuid, representationGuid: null };
+      const fileGuid = typeof defaultRepresentation.file === "string" ? defaultRepresentation.file : defaultRepresentation.file?.guid;
+      return { hasResolvedRepresentation: !!fileGuid, typeGuid, representationGuid: fileGuid ?? null };
     }, pieceGuid);
   }
 
@@ -51634,8 +51634,8 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       };
       const existingPieceTypeGuid = (currentDesign?.pieces ?? []).map(resolvePieceTypeGuid).find(Boolean) ?? null;
       if (existingPieceTypeGuid) return existingPieceTypeGuid;
-      const typesWithModels = (kit.types ?? []).filter((t: any) => t.models && t.models.length > 0);
-      if (typesWithModels.length > 0) return typesWithModels[0].guid;
+      const typesWithRepresentations = (kit.types ?? []).filter((t: any) => t.representations && t.representations.length > 0);
+      if (typesWithRepresentations.length > 0) return typesWithRepresentations[0].guid;
       return (kit.types ?? [])[0]?.guid ?? null;
     });
   }
@@ -52016,14 +52016,14 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     expect((copiedKit.designs ?? []).length).toBeGreaterThan(0);
   }
 
-  async function verifyTypeCreateKeepsNewNameInsteadOfFocusedModelValue(page: PlaywrightPage): Promise<void> {
+  async function verifyTypeCreateKeepsNewNameInsteadOfFocusedRepresentationValue(page: PlaywrightPage): Promise<void> {
     await initType(page);
     await openDetailsPanel(page);
     await page.waitForTimeout(1000);
 
-    const modelUrlInput = page.locator('[id="semio.sketchpad.app.type.panel.details.section.type.image"]').first();
-    await expect(modelUrlInput).toBeVisible({ timeout: 10000 });
-    const focusedModelUrl = `carry-over-model-${Date.now()}.glb`;
+    const representationUrlInput = page.locator('[id="semio.sketchpad.app.type.panel.details.section.type.image"]').first();
+    await expect(representationUrlInput).toBeVisible({ timeout: 10000 });
+    const focusedRepresentationUrl = `carry-over-representation-${Date.now()}.glb`;
     // Use page.evaluate to set value directly to avoid main thread blocking from fill()
     await page.evaluate(
       ({ value }) => {
@@ -52036,7 +52036,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           input.blur();
         }
       },
-      { value: focusedModelUrl },
+      { value: focusedRepresentationUrl },
     );
 
     const createdType = await page.evaluate(() => {
@@ -52075,10 +52075,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     await expect(typeNameInput).toBeVisible({ timeout: 10000 });
     // Element is a custom textbox, not a native input - use textContent instead of inputValue
     const visibleTypeName = (await typeNameInput.textContent())?.trim() ?? "";
-    console.log(`[Type Create] Focused model value before create: ${focusedModelUrl}`);
+    console.log(`[Type Create] Focused representation value before create: ${focusedRepresentationUrl}`);
     console.log(`[Type Create] Visible new type name after create: ${visibleTypeName}`);
     expect(visibleTypeName).toBe(createdType.uniqueName);
-    expect(visibleTypeName).not.toBe(focusedModelUrl);
+    expect(visibleTypeName).not.toBe(focusedRepresentationUrl);
   }
 
   test.describe("sketchpad", () => {
@@ -53386,7 +53386,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         if (await leftSidePanel.isVisible({ timeout: 1000 }).catch(() => false)) {
           const connectorsSection = leftSidePanel.locator('[id*="connector"], [role="treeitem"]').first();
           const hasPortsSection = await connectorsSection.isVisible({ timeout: 2000 }).catch(() => false);
-          console.log(`[Type] Left sidepanel has connectors/models section: ${hasPortsSection}`);
+          console.log(`[Type] Left sidepanel has connectors/representations section: ${hasPortsSection}`);
         }
       }
       const rightSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.rightSidePanel"]');
@@ -53463,32 +53463,32 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       const hasTypeConnectorFilterToggle = await typeConnectorFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
       console.log(`[Type] Connector filter toggle visible: ${hasTypeConnectorFilterToggle}`);
       expect(hasTypeConnectorFilterToggle).toBe(true);
-      const typeModelFilterToggle = page.locator('[id="semio.sketchpad.app.type.toolbar.showModels"]');
-      const hasTypeModelFilterToggle = await typeModelFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
-      console.log(`[Type] Model filter toggle visible: ${hasTypeModelFilterToggle}`);
-      expect(hasTypeModelFilterToggle).toBe(true);
+      const typeRepresentationFilterToggle = page.locator('[id="semio.sketchpad.app.type.toolbar.showRepresentations"]');
+      const hasTypeRepresentationFilterToggle = await typeRepresentationFilterToggle.isVisible({ timeout: 3000 }).catch(() => false);
+      console.log(`[Type] Representation filter toggle visible: ${hasTypeRepresentationFilterToggle}`);
+      expect(hasTypeRepresentationFilterToggle).toBe(true);
 
-      await typeModelFilterToggle.click();
+      await typeRepresentationFilterToggle.click();
       await page.waitForTimeout(300);
-      const urlAfterModelToggleOff = new URL(page.url());
-      const filtersAfterModelToggleOff = urlAfterModelToggleOff.searchParams.getAll("filter");
-      console.log(`[Type] Filters after model toggle off: ${JSON.stringify(filtersAfterModelToggleOff)}`);
-      expect(filtersAfterModelToggleOff).toContain("connectors");
-      expect(filtersAfterModelToggleOff).not.toContain("models");
+      const urlAfterRepresentationToggleOff = new URL(page.url());
+      const filtersAfterRepresentationToggleOff = urlAfterRepresentationToggleOff.searchParams.getAll("filter");
+      console.log(`[Type] Filters after representation toggle off: ${JSON.stringify(filtersAfterRepresentationToggleOff)}`);
+      expect(filtersAfterRepresentationToggleOff).toContain("connectors");
+      expect(filtersAfterRepresentationToggleOff).not.toContain("representations");
 
-      await typeModelFilterToggle.click();
+      await typeRepresentationFilterToggle.click();
       await page.waitForTimeout(300);
-      const urlAfterModelToggleOn = new URL(page.url());
-      const filtersAfterModelToggleOn = urlAfterModelToggleOn.searchParams.getAll("filter");
-      console.log(`[Type] Filters after model toggle on: ${JSON.stringify(filtersAfterModelToggleOn)}`);
-      expect(filtersAfterModelToggleOn).toHaveLength(0);
+      const urlAfterRepresentationToggleOn = new URL(page.url());
+      const filtersAfterRepresentationToggleOn = urlAfterRepresentationToggleOn.searchParams.getAll("filter");
+      console.log(`[Type] Filters after representation toggle on: ${JSON.stringify(filtersAfterRepresentationToggleOn)}`);
+      expect(filtersAfterRepresentationToggleOn).toHaveLength(0);
 
       await typeConnectorFilterToggle.click();
       await page.waitForTimeout(300);
       const urlAfterConnectorToggleOff = new URL(page.url());
       const filtersAfterConnectorToggleOff = urlAfterConnectorToggleOff.searchParams.getAll("filter");
       console.log(`[Type] Filters after connector toggle off: ${JSON.stringify(filtersAfterConnectorToggleOff)}`);
-      expect(filtersAfterConnectorToggleOff).toContain("models");
+      expect(filtersAfterConnectorToggleOff).toContain("representations");
       expect(filtersAfterConnectorToggleOff).not.toContain("connectors");
 
       await typeConnectorFilterToggle.click();
@@ -53640,7 +53640,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         }
       }
 
-      await verifyTypeCreateKeepsNewNameInsteadOfFocusedModelValue(page);
+      await verifyTypeCreateKeepsNewNameInsteadOfFocusedRepresentationValue(page);
     });
     test("Design", async ({ page }) => {
       test.setTimeout(1500000);
@@ -54280,10 +54280,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
             expect(addedDropPieces).toHaveLength(1);
             expect(addedDropPieces[0].typeGuid).toBe(draggedTypeGuid);
             expect(addedDropPieces[0].plane).not.toBeNull();
-            const droppedPieceModelResolution = await getSceneModelResolutionForPiece(page, addedDropPieces[0].guid);
-            console.log(`[Design] Dropped piece model resolution: ${JSON.stringify(droppedPieceModelResolution)}`);
-            expect(droppedPieceModelResolution.hasResolvedModel).toBe(true);
-            expect(droppedPieceModelResolution.typeGuid).toBe(draggedTypeGuid);
+            const droppedPieceRepresentationResolution = await getSceneRepresentationResolutionForPiece(page, addedDropPieces[0].guid);
+            console.log(`[Design] Dropped piece representation resolution: ${JSON.stringify(droppedPieceRepresentationResolution)}`);
+            expect(droppedPieceRepresentationResolution.hasResolvedRepresentation).toBe(true);
+            expect(droppedPieceRepresentationResolution.typeGuid).toBe(draggedTypeGuid);
 
             // After adding a piece via store, the app's rendering may be heavy.
             // Don't reload (kits won't restore from Y.js persistence reliably).
@@ -54384,10 +54384,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
           expect(addedPlusPieces).toHaveLength(1);
           expect(addedPlusPieces[0].typeGuid).toBe(sourceTypeGuidForPlus);
           expect(addedPlusPieces[0].plane).not.toBeNull();
-          const plusPieceModelResolution = await getSceneModelResolutionForPiece(page, addedPlusPieces[0].guid);
-          console.log(`[Design] Plus-add piece model resolution: ${JSON.stringify(plusPieceModelResolution)}`);
-          expect(plusPieceModelResolution.hasResolvedModel).toBe(true);
-          expect(plusPieceModelResolution.typeGuid).toBe(sourceTypeGuidForPlus);
+          const plusPieceRepresentationResolution = await getSceneRepresentationResolutionForPiece(page, addedPlusPieces[0].guid);
+          console.log(`[Design] Plus-add piece representation resolution: ${JSON.stringify(plusPieceRepresentationResolution)}`);
+          expect(plusPieceRepresentationResolution.hasResolvedRepresentation).toBe(true);
+          expect(plusPieceRepresentationResolution.typeGuid).toBe(sourceTypeGuidForPlus);
 
           // Verify duplicateType capability via store (no UI clicks to avoid triggering
           // heavy Three.js re-renders with 182 pieces)
@@ -57268,7 +57268,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const pageTitle = page.locator("h1").first();
       await expect(pageTitle).toBeVisible({ timeout: 15000 });
-      const pageDescription = page.getByText("Design Information Modeling for Architecture").first();
+      const pageDescription = page.getByText("Design Information Representationing for Architecture").first();
       await expect(pageDescription).toBeVisible();
       const cardHeading = page.getByRole("heading", { name: /Just want to toy around/ }).first();
       await expect(cardHeading).toBeVisible();

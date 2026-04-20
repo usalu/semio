@@ -5,7 +5,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Core domain model types, schemas and utilities for the semio platform.
+// Core domain representation types, schemas and utilities for the semio platform.
 
 // #endregion ­ƒº▓Header
 
@@ -224,9 +224,9 @@ export type PortId = { guid: Guid };
  **/
 export type PropId = { guid: Guid };
 /**
- * Identifier type for Model entities.
+ * Identifier type for Representation entities.
  **/
-export type ModelId = { guid: Guid };
+export type RepresentationId = { guid: Guid };
 /**
  * Identifier type for Connector entities.
  **/
@@ -313,9 +313,9 @@ export const PortIdSchema = z.object({ guid: z.string() });
  **/
 export const PropIdSchema = z.object({ guid: z.string() });
 /**
- * Zod schema for validating Model identifiers.
+ * Zod schema for validating Representation identifiers.
  **/
-export const ModelIdSchema = z.object({ guid: z.string() });
+export const RepresentationIdSchema = z.object({ guid: z.string() });
 /**
  * Zod schema for validating Connector identifiers.
  **/
@@ -402,9 +402,9 @@ export const createPortId = (guid: Guid): PortId => ({ guid });
  **/
 export const createPropId = (guid: Guid): PropId => ({ guid });
 /**
- * Factory for creating Model identifiers.
+ * Factory for creating Representation identifiers.
  **/
-export const createModelId = (guid: Guid): ModelId => ({ guid });
+export const createRepresentationId = (guid: Guid): RepresentationId => ({ guid });
 /**
  * Factory for creating Connector identifiers.
  **/
@@ -491,9 +491,9 @@ export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.gui
  **/
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
 /**
- * Equality check for Model identifiers.
+ * Equality check for Representation identifiers.
  **/
-export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
+export const areSameRepresentationId = (a: RepresentationId, b: RepresentationId): boolean => a.guid === b.guid;
 /**
  * Equality check for Connector identifiers.
  **/
@@ -580,9 +580,9 @@ export const getPortGuid = (id: PortId): Guid => id.guid;
  **/
 export const getPropGuid = (id: PropId): Guid => id.guid;
 /**
- * Extracts the GUID from a Model identifier.
+ * Extracts the GUID from a Representation identifier.
  **/
-export const getModelGuid = (id: ModelId): Guid => id.guid;
+export const getRepresentationGuid = (id: RepresentationId): Guid => id.guid;
 /**
  * Extracts the GUID from a Connector identifier.
  **/
@@ -3910,13 +3910,13 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 
 // #endregion ­ƒÆíConcept
 
-// #region ­ƒù┐Model
-// Model entity types, schemas, and helpers MUST be defined here.
+// #region ­ƒù┐Representation
+// Representation entity types, schemas, and helpers MUST be defined here.
 
 /**
- * Zod schema for Model validation.
+ * Zod schema for Representation validation.
  **/
-export const ModelSchema = z.object({
+export const RepresentationSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
   tags: z.array(TagIdSchema).optional(),
@@ -3925,38 +3925,38 @@ export const ModelSchema = z.object({
   attributes: z.array(AttributeSchema).optional(),
 });
 /**
- * Type alias for Model.
+ * Type alias for Representation.
  **/
-export type ModelPlain = z.infer<typeof ModelSchema>;
-export class Model implements ModelPlain {
+export type RepresentationPlain = z.infer<typeof RepresentationSchema>;
+export class Representation implements RepresentationPlain {
   guid!: string;
   name?: string;
   tags?: TagId[];
   file!: FileId;
   description?: string;
   attributes?: Attribute[];
-  constructor(plain: ModelPlain) {
-    const p = ModelSchema.parse(plain);
+  constructor(plain: RepresentationPlain) {
+    const p = RepresentationSchema.parse(plain);
     Object.assign(this, p);
     this.attributes = p.attributes?.map((a) => new Attribute(a));
   }
-  static from(plain: ModelPlain): Model {
-    return new Model(plain);
+  static from(plain: RepresentationPlain): Representation {
+    return new Representation(plain);
   }
-  toPlain(): ModelPlain {
-    return ModelSchema.parse(this as unknown as ModelPlain);
+  toPlain(): RepresentationPlain {
+    return RepresentationSchema.parse(this as unknown as RepresentationPlain);
   }
-  /** ­ƒù┐Serialize this model for transport. */
+  /** ­ƒù┐Serialize this representation for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ­ƒù┐Deserialize a model from transport JSON. */
-  static deserialize(json: string): Model {
-    return new Model(ModelSchema.parse(JSON.parse(json)));
+  /** ­ƒù┐Deserialize a representation from transport JSON. */
+  static deserialize(json: string): Representation {
+    return new Representation(RepresentationSchema.parse(JSON.parse(json)));
   }
-  /** ­ƒù┐Compute a model delta from this model to another model. */
-  diffTo(after: Model): ModelDiff {
-    const diff: ModelDiff = {};
+  /** ­ƒù┐Compute a representation delta from this representation to another representation. */
+  diffTo(after: Representation): RepresentationDiff {
+    const diff: RepresentationDiff = {};
     if (this.name !== after.name) diff.name = after.name;
     if (JSON.stringify(this.tags) !== JSON.stringify(after.tags)) diff.tags = after.tags;
     if (this.file.guid !== after.file.guid) diff.file = after.file;
@@ -3964,9 +3964,9 @@ export class Model implements ModelPlain {
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
     return diff;
   }
-  /** ­ƒù┐Build the reverse model delta for an already-applied delta. */
-  inverseDiff(appliedDiff: ModelDiff): ModelDiff {
-    const inverse: ModelDiff = {};
+  /** ­ƒù┐Build the reverse representation delta for an already-applied delta. */
+  inverseDiff(appliedDiff: RepresentationDiff): RepresentationDiff {
+    const inverse: RepresentationDiff = {};
     if (appliedDiff.name !== undefined) inverse.name = this.name;
     if (appliedDiff.tags !== undefined) inverse.tags = this.tags;
     if (appliedDiff.file !== undefined) inverse.file = this.file;
@@ -3974,12 +3974,12 @@ export class Model implements ModelPlain {
     if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
     return inverse;
   }
-  /** ­ƒù┐Merge two model deltas. */
-  static mergeDiff(first: ModelDiff, second: ModelDiff): ModelDiff {
+  /** ­ƒù┐Merge two representation deltas. */
+  static mergeDiff(first: RepresentationDiff, second: RepresentationDiff): RepresentationDiff {
     return { ...first, ...second, attributes: first.attributes && second.attributes ? mergeAttributesDiff(first.attributes, second.attributes) : (second.attributes ?? first.attributes) };
   }
-  /** ­ƒù┐Apply a model delta to this model. */
-  applyDiff(diff: ModelDiff): void {
+  /** ­ƒù┐Apply a representation delta to this representation. */
+  applyDiff(diff: RepresentationDiff): void {
     if (diff.file !== undefined) this.file = diff.file;
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.tags !== undefined) this.tags = diff.tags;
@@ -3991,103 +3991,103 @@ export class Model implements ModelPlain {
   }
 }
 /**
- * Serializes Model for transport.
+ * Serializes Representation for transport.
  **/
-export const serializeModel = (model: Model): string => model.serialize();
+export const serializeRepresentation = (representation: Representation): string => representation.serialize();
 /**
  **/
-export const deserializeModel = (json: string): Model => Model.deserialize(json);
+export const deserializeRepresentation = (json: string): Representation => Representation.deserialize(json);
 
 /**
- * Definition of ModelMetaSchema.
+ * Definition of RepresentationMetaSchema.
  **/
-export const ModelMetaSchema = ModelSchema.omit({ tags: true, attributes: true });
+export const RepresentationMetaSchema = RepresentationSchema.omit({ tags: true, attributes: true });
 /**
- * Type alias for ModelMeta.
+ * Type alias for RepresentationMeta.
  **/
-export type ModelMeta = z.infer<typeof ModelMetaSchema>;
+export type RepresentationMeta = z.infer<typeof RepresentationMetaSchema>;
 /**
- * Serializes ModelMeta for transport.
+ * Serializes RepresentationMeta for transport.
  **/
-export const serializeModelMeta = (model: ModelMeta): string => JSON.stringify(ModelMetaSchema.parse(model));
-/**
- **/
-export const deserializeModelMeta = (json: string): ModelMeta => ModelMetaSchema.parse(JSON.parse(json));
-/**
- * Definition of ModelShallowSchema.
- **/
-export const ModelShallowSchema = ModelSchema;
-/**
- * Type alias for ModelShallow.
- **/
-export type ModelShallow = z.infer<typeof ModelShallowSchema>;
-/**
- * Serializes ModelShallow for transport.
- **/
-export const serializeModelShallow = (model: ModelShallow): string => JSON.stringify(ModelShallowSchema.parse(model));
+export const serializeRepresentationMeta = (representation: RepresentationMeta): string => JSON.stringify(RepresentationMetaSchema.parse(representation));
 /**
  **/
-export const deserializeModelShallow = (json: string): ModelShallow => ModelShallowSchema.parse(JSON.parse(json));
+export const deserializeRepresentationMeta = (json: string): RepresentationMeta => RepresentationMetaSchema.parse(JSON.parse(json));
+/**
+ * Definition of RepresentationShallowSchema.
+ **/
+export const RepresentationShallowSchema = RepresentationSchema;
+/**
+ * Type alias for RepresentationShallow.
+ **/
+export type RepresentationShallow = z.infer<typeof RepresentationShallowSchema>;
+/**
+ * Serializes RepresentationShallow for transport.
+ **/
+export const serializeRepresentationShallow = (representation: RepresentationShallow): string => JSON.stringify(RepresentationShallowSchema.parse(representation));
+/**
+ **/
+export const deserializeRepresentationShallow = (json: string): RepresentationShallow => RepresentationShallowSchema.parse(JSON.parse(json));
 
 /**
- * Zod schema for Model diff validation.
+ * Zod schema for Representation diff validation.
  **/
-export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).extend({
+export const RepresentationDiffSchema = RepresentationSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
 /**
- * Diff type for tracking Model changes.
+ * Diff type for tracking Representation changes.
  **/
-export type ModelDiff = z.infer<typeof ModelDiffSchema>;
+export type RepresentationDiff = z.infer<typeof RepresentationDiffSchema>;
 /**
- * Retrieves the ModelDiff value.
+ * Retrieves the RepresentationDiff value.
  **/
-export const getModelDiff = (before: Model, after: Model): ModelDiff => {
+export const getRepresentationDiff = (before: Representation, after: Representation): RepresentationDiff => {
   return before.diffTo(after);
 };
 /**
- * Diff type for tracking inverseModel changes.
+ * Diff type for tracking inverseRepresentation changes.
  **/
-export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
+export const inverseRepresentationDiff = (original: Representation, appliedDiff: RepresentationDiff): RepresentationDiff => {
   return original.inverseDiff(appliedDiff);
 };
 /**
- * Diff type for tracking mergeModel changes.
+ * Diff type for tracking mergeRepresentation changes.
  **/
-export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
-  return Model.mergeDiff(diff1, diff2);
+export const mergeRepresentationDiff = (diff1: RepresentationDiff, diff2: RepresentationDiff): RepresentationDiff => {
+  return Representation.mergeDiff(diff1, diff2);
 };
 /**
- * Diff type for tracking applyModel changes.
+ * Diff type for tracking applyRepresentation changes.
  **/
-export const applyModelDiff = (target: Model, diff: ModelDiff): void => {
+export const applyRepresentationDiff = (target: Representation, diff: RepresentationDiff): void => {
   target.applyDiff(diff);
 };
 
 /**
- * Zod schema for Models diff validation.
+ * Zod schema for Representations diff validation.
  **/
-export const ModelsDiffSchema = z.object({
-  removed: z.array(ModelIdSchema).optional(),
-  updated: z.array(z.object({ model: ModelIdSchema, diff: ModelDiffSchema })).optional(),
+export const RepresentationsDiffSchema = z.object({
+  removed: z.array(RepresentationIdSchema).optional(),
+  updated: z.array(z.object({ representation: RepresentationIdSchema, diff: RepresentationDiffSchema })).optional(),
   added: z.array(z.any()).optional(),
 });
-export type ModelsDiff = z.infer<typeof ModelsDiffSchema>;
+export type RepresentationsDiff = z.infer<typeof RepresentationsDiffSchema>;
 
 /**
- * Equality check for Model values.
+ * Equality check for Representation values.
  **/
-export const areSameModel = (model: Model, other: Model): boolean => {
-  const modelTagGuids = model.tags?.map((t) => t.guid) ?? [];
+export const areSameRepresentation = (representation: Representation, other: Representation): boolean => {
+  const representationTagGuids = representation.tags?.map((t) => t.guid) ?? [];
   const otherTagGuids = other.tags?.map((t) => t.guid) ?? [];
-  return modelTagGuids.every((guid) => otherTagGuids.includes(guid));
+  return representationTagGuids.every((guid) => otherTagGuids.includes(guid));
 };
 
 /**
- * Searches for matching Model entry.
+ * Searches for matching Representation entry.
  **/
-export const findModel = (models: Model[], tagGuids: string[]): Model => {
-  const indices = models.map((r) =>
+export const findRepresentation = (representations: Representation[], tagGuids: string[]): Representation => {
+  const indices = representations.map((r) =>
     jaccard(
       r.tags?.map((t) => t.guid),
       tagGuids,
@@ -4095,15 +4095,15 @@ export const findModel = (models: Model[], tagGuids: string[]): Model => {
   );
   const maxIndex = Math.max(...indices);
   const maxIndexIndex = indices.indexOf(maxIndex);
-  return models[maxIndexIndex];
+  return representations[maxIndexIndex];
 };
 
 /**
- * Retrieves the AllTagGuidsFromModels value.
+ * Retrieves the AllTagGuidsFromRepresentations value.
  **/
-export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
+export const getAllTagGuidsFromRepresentations = (representations: Representation[]): string[] => {
   const tagsSet = new Set<string>();
-  models.forEach((r) => {
+  representations.forEach((r) => {
     toArray(r.tags).forEach((tag) => tagsSet.add(tag.guid));
   });
   return Array.from(tagsSet).sort();
@@ -4111,35 +4111,35 @@ export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
 
 /**
  **/
-export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string[]): Model[] => {
-  if (!selectedTagGuids || selectedTagGuids.length === 0) return models;
-  return models.filter((r) => {
+export const filterRepresentationsByTagGuids = (representations: Representation[], selectedTagGuids: string[]): Representation[] => {
+  if (!selectedTagGuids || selectedTagGuids.length === 0) return representations;
+  return representations.filter((r) => {
     if (!r.tags || r.tags.length === 0) return false;
-    const modelTagGuids = r.tags.map((t) => t.guid);
-    return selectedTagGuids.every((guid) => modelTagGuids.includes(guid));
+    const representationTagGuids = r.tags.map((t) => t.guid);
+    return selectedTagGuids.every((guid) => representationTagGuids.includes(guid));
   });
 };
 
 /**
- * Retrieves the AvailableTagGuidsForModels value.
+ * Retrieves the AvailableTagGuidsForRepresentations value.
  **/
-export const getAvailableTagGuidsForModels = (models: Model[], selectedTagGuids: string[]): string[] => {
-  const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
-  const availableTags = getAllTagGuidsFromModels(filteredReps);
+export const getAvailableTagGuidsForRepresentations = (representations: Representation[], selectedTagGuids: string[]): string[] => {
+  const filteredReps = filterRepresentationsByTagGuids(representations, selectedTagGuids);
+  const availableTags = getAllTagGuidsFromRepresentations(filteredReps);
   return availableTags.filter((guid) => !selectedTagGuids.includes(guid));
 };
 
 /**
  **/
-export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Model | undefined => {
-  if (models.length === 0) return undefined;
+export const selectBestRepresentation = (representations: Representation[], selectedTagGuids: string[]): Representation | undefined => {
+  if (representations.length === 0) return undefined;
   if (selectedTagGuids.length === 0) {
-    const defaultRep = models.find((r) => !r.tags || r.tags.length === 0);
-    return defaultRep ?? models[0];
+    const defaultRep = representations.find((r) => !r.tags || r.tags.length === 0);
+    return defaultRep ?? representations[0];
   }
-  const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
+  const filteredReps = filterRepresentationsByTagGuids(representations, selectedTagGuids);
   if (filteredReps.length === 0) return undefined;
-  return findModel(filteredReps, selectedTagGuids);
+  return findRepresentation(filteredReps, selectedTagGuids);
 };
 
 /**
@@ -4208,29 +4208,29 @@ export type Supported3DExtension = (typeof SUPPORTED_3D_EXTENSIONS)[number];
 
 /**
  **/
-export const isSupportedModelExtension = (filename: string): boolean => {
+export const isSupportedRepresentationExtension = (filename: string): boolean => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   return SUPPORTED_3D_EXTENSIONS.includes(ext as Supported3DExtension);
 };
 
 /**
- * Interface defining ModelFileValidation structure.
+ * Interface defining RepresentationFileValidation structure.
  **/
-export interface ModelFileValidation {
+export interface RepresentationFileValidation {
   isValid: boolean;
   warning?: string;
   extension?: string;
 }
 
 /**
- * Validates ModelFile against constraints.
+ * Validates RepresentationFile against constraints.
  **/
-export const validateModelFile = (filename: string): ModelFileValidation => {
+export const validateRepresentationFile = (filename: string): RepresentationFileValidation => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   if (!ext) {
     return { isValid: false, warning: "File has no extension" };
   }
-  if (!isSupportedModelExtension(filename)) {
+  if (!isSupportedRepresentationExtension(filename)) {
     return {
       isValid: true,
       warning: `File extension '.${ext}' is not a common 3D format. Supported: ${SUPPORTED_3D_EXTENSIONS.slice(0, 5).join(", ")}...`,
@@ -4240,7 +4240,7 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
   return { isValid: true, extension: ext };
 };
 
-// #endregion ­ƒù┐Model
+// #endregion ­ƒù┐Representation
 
 // #region ­ƒöîConnector
 // Connector entity types, schemas, and helpers MUST be defined here.
@@ -4511,7 +4511,7 @@ export const TypeSchema = z.object({
   families: z.array(FamilyIdSchema).optional(),
   isAbstract: z.boolean().optional(),
   folder: z.string().optional(),
-  models: z.array(ModelSchema).optional(),
+  representations: z.array(RepresentationSchema).optional(),
   connectors: z.array(ConnectorSchema).optional(),
   props: z.array(PropSchema).optional(),
   stock: z.number().optional(),
@@ -4542,7 +4542,7 @@ export class Type {
   families?: FamilyId[];
   isAbstract?: boolean;
   folder?: string;
-  models?: Model[];
+  representations?: Representation[];
   connectors?: Connector[];
   props?: Prop[];
   stock?: number;
@@ -4569,7 +4569,7 @@ export class Type {
   constructor(plain: TypePlain, kit?: KitImpl) {
     const p = TypeSchema.parse(plain);
     Object.assign(this, p);
-    this.models = p.models?.map((m) => new Model(m));
+    this.representations = p.representations?.map((m) => new Representation(m));
     this.connectors = p.connectors?.map((c) => new Connector(c));
     this.props = p.props?.map((x) => new Prop(x));
     this.attributes = p.attributes?.map((a) => new Attribute(a));
@@ -4581,9 +4581,9 @@ export class Type {
     return new Type(plain, kit);
   }
 
-  /** Pick a representative model for the given tag ids (UI / scene helpers). */
-  static pickBestModel(models: Model[], tagGuids: string[]): Model | undefined {
-    return selectBestModel(models, tagGuids);
+  /** Pick a representative representation for the given tag ids (UI / scene helpers). */
+  static pickBestRepresentation(representations: Representation[], tagGuids: string[]): Representation | undefined {
+    return selectBestRepresentation(representations, tagGuids);
   }
 
   // #region Ô£Å´©ÅMethods
@@ -4667,7 +4667,7 @@ export class Type {
     const plain = this.toPlain();
     return TypeShallowSchema.parse({
       ...plain,
-      models: this.models?.map((m) => ModelMetaSchema.parse(m.toPlain())),
+      representations: this.representations?.map((m) => RepresentationMetaSchema.parse(m.toPlain())),
       connectors: this.connectors?.map((c) => ConnectorMetaSchema.parse(c.toPlain())),
       props: this.props?.map((p) => PropMetaSchema.parse(p.toPlain())),
       attributes: this.attributes?.map((a) => AttributeMetaSchema.parse(a.toPlain())),
@@ -4697,7 +4697,7 @@ export class Type {
     if (this.deletedInChangeId !== after.deletedInChangeId) diff.deletedInChangeId = after.deletedInChangeId ?? null;
     if (JSON.stringify(this.authors) !== JSON.stringify(after.authors)) diff.authors = after.authors ?? null;
     if (JSON.stringify(this.concepts) !== JSON.stringify(after.concepts)) diff.concepts = after.concepts ?? null;
-    if (!deepEqual(this.models, after.models)) diff.models = getCollectionDiff("model", this.models ?? [], after.models ?? [], getModelDiff);
+    if (!deepEqual(this.representations, after.representations)) diff.representations = getCollectionDiff("representation", this.representations ?? [], after.representations ?? [], getRepresentationDiff);
     if (!deepEqual(this.connectors, after.connectors)) diff.connectors = getCollectionDiff("connector", this.connectors ?? [], after.connectors ?? [], getConnectorDiff);
     if (!deepEqual(this.props, after.props)) diff.props = getPropsDiff(this.props ?? [], after.props ?? []);
     if (!deepEqual(this.attributes, after.attributes)) diff.attributes = getAttributesDiff(this.attributes ?? [], after.attributes ?? []);
@@ -4727,7 +4727,7 @@ export class Type {
     if (appliedDiff.deletedInChangeId !== undefined) inverse.deletedInChangeId = this.deletedInChangeId ?? null;
     if (appliedDiff.authors !== undefined) inverse.authors = this.authors ?? null;
     if (appliedDiff.concepts !== undefined) inverse.concepts = this.concepts ?? null;
-    if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", this.models ?? [], appliedDiff.models, inverseModelDiff);
+    if (appliedDiff.representations) inverse.representations = inverseCollectionDiff("representation", this.representations ?? [], appliedDiff.representations, inverseRepresentationDiff);
     if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", this.connectors ?? [], appliedDiff.connectors, inverseConnectorDiff);
     if (appliedDiff.props) inverse.props = inversePropsDiff(this.props ?? [], appliedDiff.props);
     if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(this.attributes ?? [], appliedDiff.attributes);
@@ -4765,9 +4765,9 @@ export class Type {
     if (diff.deletedInChangeId !== undefined) this.deletedInChangeId = diff.deletedInChangeId ?? undefined;
     if (diff.authors !== undefined) this.authors = diff.authors ?? undefined;
     if (diff.concepts !== undefined) this.concepts = diff.concepts ?? undefined;
-    if (diff.models) {
-      if (!this.models) this.models = [];
-      applyCollectionDiff("model", this.models, diff.models, applyModelDiff, (raw) => new Model(raw as ModelPlain));
+    if (diff.representations) {
+      if (!this.representations) this.representations = [];
+      applyCollectionDiff("representation", this.representations, diff.representations, applyRepresentationDiff, (raw) => new Representation(raw as RepresentationPlain));
     }
     if (diff.connectors) {
       if (!this.connectors) this.connectors = [];
@@ -4794,7 +4794,7 @@ export const deserializeType = (json: string): Type => Type.deserialize(json);
 /**
  * Definition of TypeMetaSchema.
  **/
-export const TypeMetaSchema = TypeSchema.omit({ models: true, connectors: true, props: true, attributes: true, authors: true, concepts: true });
+export const TypeMetaSchema = TypeSchema.omit({ representations: true, connectors: true, props: true, attributes: true, authors: true, concepts: true });
 /**
  * Type alias for TypeMeta.
  **/
@@ -4809,8 +4809,8 @@ export const deserializeTypeMeta = (json: string): TypeMeta => TypeMetaSchema.pa
 /**
  * Definition of TypeShallowSchema.
  **/
-export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true, props: true, attributes: true }).extend({
-  models: z.array(ModelMetaSchema).optional(),
+export const TypeShallowSchema = TypeSchema.omit({ representations: true, connectors: true, props: true, attributes: true }).extend({
+  representations: z.array(RepresentationMetaSchema).optional(),
   connectors: z.array(ConnectorMetaSchema).optional(),
   props: z.array(PropMetaSchema).optional(),
   attributes: z.array(AttributeMetaSchema).optional(),
@@ -4830,9 +4830,9 @@ export const deserializeTypeShallow = (json: string): TypeShallow => TypeShallow
  * Zod schema for Type diff validation.
  **/
 export const TypeDiffSchema = TypeSchema.partial()
-  .omit({ models: true, connectors: true, props: true, attributes: true })
+  .omit({ representations: true, connectors: true, props: true, attributes: true })
   .extend({
-    models: ModelsDiffSchema.optional(),
+    representations: RepresentationsDiffSchema.optional(),
     connectors: ConnectorsDiffSchema.optional(),
     props: PropsDiffSchema.optional(),
     attributes: AttributesDiffSchema.optional(),
@@ -5477,37 +5477,37 @@ export const PiecesDiffSchema = z.object({
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 
 /**
- * Retrieves the PieceModelFileGuids value.
+ * Retrieves the PieceRepresentationFileGuids value.
  **/
-export const getPieceModelFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
-  const modelFileGuids = new Map<string, string>();
+export const getPieceRepresentationFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
+  const representationFileGuids = new Map<string, string>();
   toArray(design.pieces).forEach((p) => {
     if (!p.type) return;
     const type = types.find((t) => t.guid === p.type!.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
-    if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
-    const model = findModel(type.models, tags);
-    modelFileGuids.set(p.guid, model.file.guid);
+    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
+    const representation = findRepresentation(type.representations, tags);
+    representationFileGuids.set(p.guid, representation.file.guid);
   });
-  return modelFileGuids;
+  return representationFileGuids;
 };
 
 /**
- * Retrieves the PieceModelUrls value.
+ * Retrieves the PieceRepresentationUrls value.
  **/
-export const getPieceModelUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
-  const modelUrls = new Map<string, string>();
+export const getPieceRepresentationUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
+  const representationUrls = new Map<string, string>();
   toArray(design.pieces).forEach((p) => {
     if (!p.type) return;
     const type = types.find((t) => t.guid === p.type!.guid);
     if (!type) throw new Error(`Type ${p.type.guid} for piece ${p.guid} not found`);
-    if (!type.models) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no models`);
-    const model = findModel(type.models, tags);
-    const file = files.find((f) => f.guid === model.file.guid);
-    if (!file) throw new Error(`File ${model.file.guid} for model ${model.guid} not found`);
-    modelUrls.set(p.guid, getFileUrl(file.guid));
+    if (!type.representations) throw new Error(`Type ${p.type.guid} for piece ${p.guid} has no representations`);
+    const representation = findRepresentation(type.representations, tags);
+    const file = files.find((f) => f.guid === representation.file.guid);
+    if (!file) throw new Error(`File ${representation.file.guid} for representation ${representation.guid} not found`);
+    representationUrls.set(p.guid, getFileUrl(file.guid));
   });
-  return modelUrls;
+  return representationUrls;
 };
 /**
  **/
@@ -8578,7 +8578,7 @@ export type KitEntityPieceId = string;
 export type InteractionId = string;
 export type ChangeId = string;
 
-/** Optimistic precondition on an interaction step (see collaboration model). */
+/** Optimistic precondition on an interaction step (see collaboration representation). */
 export type ChangePrecondition = {
   entityKind: "Type" | string;
   entityId: string;
@@ -11045,7 +11045,7 @@ export class KitImpl {
     const hasGlobFilters = !!(filter.designs || filter.types || filter.families || filter.files || filter.tags || filter.concepts || filter.qualities || filter.authors || filter.folders);
     if (!filter.designGuid && !hasGlobFilters) return this;
 
-    const baseData: KitData = filter.designGuid ? filterKitByDesign(this, filter.designGuid, filter.modelTags) : this.toData();
+    const baseData: KitData = filter.designGuid ? filterKitByDesign(this, filter.designGuid, filter.representationTags) : this.toData();
 
     if (!hasGlobFilters) {
       return new KitImpl(KitSchema.parse(stripNullsJsonClone(baseData)));
@@ -11530,7 +11530,7 @@ function _isKitDataShape(x: unknown): x is KitData {
 type KitCallable = (this: unknown, arg0?: KitData | Backbone, arg1?: Backbone) => InstanceType<typeof KitImpl>;
 
 /**
- * Primary kit factory from the object model spec: `Kit()` opens an empty graph; `Kit(plainData)` hydrates; `new Kit(plain, backbone)` is supported. Static methods match {@link KitImpl}.
+ * Primary kit factory from the object representation spec: `Kit()` opens an empty graph; `Kit(plainData)` hydrates; `new Kit(plain, backbone)` is supported. Static methods match {@link KitImpl}.
  */
 const _kitFactory: KitCallable = function (this: unknown, arg0?: KitData | Backbone, arg1?: Backbone): InstanceType<typeof KitImpl> {
   if (new.target !== undefined) {
@@ -12626,7 +12626,7 @@ export const toTypeMeta = (type: Type): TypeMeta => TypeMetaSchema.parse(type);
  **/
 export const toTypeShallow = (type: Type): TypeShallow => {
   const result: any = { ...type };
-  if (result.models) result.models = result.models.map((m: Model) => ModelMetaSchema.parse(m));
+  if (result.representations) result.representations = result.representations.map((m: Representation) => RepresentationMetaSchema.parse(m));
   if (result.connectors) result.connectors = result.connectors.map((c: Connector) => ConnectorMetaSchema.parse(c));
   if (result.props) result.props = result.props.map((p: Prop) => PropMetaSchema.parse(p));
   if (result.attributes) result.attributes = result.attributes.map((a: Attribute) => AttributeMetaSchema.parse(a));
@@ -13595,11 +13595,11 @@ export const hashConcept = (c: Concept): string => {
 };
 
 /**
- * Computes SHA-256 hash of a Model entity.
+ * Computes SHA-256 hash of a Representation entity.
  **/
-export const hashModel = (m: Model): string => {
+export const hashRepresentation = (m: Representation): string => {
   const w = new HashWriter();
-  w.writeString("Model");
+  w.writeString("Representation");
   if (m.attributes && m.attributes.length > 0) {
     w.writeString("attributes");
     w.writeHashList(m.attributes.map(hashAttribute));
@@ -13732,9 +13732,9 @@ export const hashType = (t: Type): string => {
     w.writeString("location");
     w.writeString(t.location.guid);
   }
-  if (t.models && t.models.length > 0) {
-    w.writeString("models");
-    w.writeHashList(t.models.map(hashModel));
+  if (t.representations && t.representations.length > 0) {
+    w.writeString("representations");
+    w.writeHashList(t.representations.map(hashRepresentation));
   }
   w.writeString("name");
   w.writeString(t.name);
@@ -14472,9 +14472,9 @@ export const hashConceptDiff = (d: ConceptDiff): string => {
 
 export const hashConceptsDiff = (d: ConceptsDiff): string => hashCollectionDiffGeneric("ConceptsDiff", "ConceptDiffUpdate", "concept", hashConcept, hashConceptDiff, d);
 
-export const hashModelDiff = (d: ModelDiff): string => {
+export const hashRepresentationDiff = (d: RepresentationDiff): string => {
   const w = new HashWriter();
-  w.writeString("ModelDiff");
+  w.writeString("RepresentationDiff");
   writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
   writeNullableString(w, "description", d.description);
   writeNullableId(w, "file", d.file);
@@ -14483,7 +14483,7 @@ export const hashModelDiff = (d: ModelDiff): string => {
   return w.digest();
 };
 
-export const hashModelsDiff = (d: ModelsDiff): string => hashCollectionDiffGeneric("ModelsDiff", "ModelDiffUpdate", "model", hashModel, hashModelDiff, d);
+export const hashRepresentationsDiff = (d: RepresentationsDiff): string => hashCollectionDiffGeneric("RepresentationsDiff", "RepresentationDiffUpdate", "representation", hashRepresentation, hashRepresentationDiff, d);
 
 export const hashConnectorDiff = (d: ConnectorDiff): string => {
   const w = new HashWriter();
@@ -14515,7 +14515,7 @@ export const hashTypeDiff = (d: TypeDiff): string => {
   writeNullableString(w, "image", d.image);
   writeNullableBool(w, "isAbstract", d.isAbstract);
   writeNullableId(w, "location", d.location);
-  writeNullableHash(w, "models", d.models, hashModelsDiff);
+  writeNullableHash(w, "representations", d.representations, hashRepresentationsDiff);
   writeNullableString(w, "name", d.name);
   if (d.families !== undefined) {
     w.writeString("families");
@@ -14740,7 +14740,7 @@ export type GlobFilter = {
  **/
 export type KitFilter = {
   designGuid?: string;
-  modelTags?: string[];
+  representationTags?: string[];
   designs?: GlobFilter;
   types?: GlobFilter;
   families?: GlobFilter;
@@ -14780,7 +14780,7 @@ export const matchesGlobFilter = (name: string, filter?: GlobFilter): boolean =>
 /**
  * Internal design-based transitive kit filtering. Produces a minimal kit subset scoped to a single design.
  **/
-const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[]): KitData => {
+const filterKitByDesign = (kit: KitLike, designGuid: string, representationTags?: string[]): KitData => {
   const k = asKitInstance(kit);
   const design = k.requireDesign(designGuid);
 
@@ -14807,7 +14807,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
   };
   for (const typeGuid of [...usedTypeGuids]) collectFamilyTypes(typeGuid);
 
-  const tags = modelTags;
+  const tags = representationTags;
   const resolvedTagGuids = (tags ?? []).flatMap((tagValue) => {
     const byGuid = (k.tags ?? []).find((tag) => tag.guid === tagValue);
     if (byGuid) return [byGuid.guid];
@@ -14821,7 +14821,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
   const usedQualityGuids = new Set<string>();
   const usedAuthorGuids = new Set<string>();
   const usedFolderNames = new Set<string>();
-  const selectedModels = new Map<string, Model>();
+  const selectedRepresentations = new Map<string, Representation>();
 
   const collectQualityFromProps = (props?: Array<{ quality?: { guid: string } }>) => {
     for (const prop of props ?? []) {
@@ -14843,11 +14843,11 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
     collectQualityFromProps(type.props);
     for (const author of type.authors ?? []) if (author.guid) usedAuthorGuids.add(author.guid);
     for (const concept of type.concepts ?? []) if (concept.guid) usedConceptGuids.add(concept.guid);
-    const selectedModel = selectBestModel(type.models ?? [], resolvedTagGuids);
-    if (selectedModel) {
-      selectedModels.set(typeGuid, selectedModel);
-      if (selectedModel.file?.guid) usedFileGuids.add(selectedModel.file.guid);
-      for (const tag of selectedModel.tags ?? []) if (tag.guid) usedTagGuids.add(tag.guid);
+    const selectedRepresentation = selectBestRepresentation(type.representations ?? [], resolvedTagGuids);
+    if (selectedRepresentation) {
+      selectedRepresentations.set(typeGuid, selectedRepresentation);
+      if (selectedRepresentation.file?.guid) usedFileGuids.add(selectedRepresentation.file.guid);
+      for (const tag of selectedRepresentation.tags ?? []) if (tag.guid) usedTagGuids.add(tag.guid);
     }
   }
 
@@ -14883,7 +14883,7 @@ const filterKitByDesign = (kit: KitLike, designGuid: string, modelTags?: string[
       .filter((type) => usedTypeGuids.has(type.guid))
       .map((type) => ({
         ...type,
-        models: selectedModels.has(type.guid) ? [selectedModels.get(type.guid)!] : [],
+        representations: selectedRepresentations.has(type.guid) ? [selectedRepresentations.get(type.guid)!] : [],
       })),
     designs: (k.designs ?? []).filter((candidate) => usedDesignGuids.has(candidate.guid)).map((d) => d.toPlain()),
     families: (k.families ?? []).filter((family) => usedFamilyGuids.has(family.guid)),
@@ -15214,11 +15214,11 @@ const validatePropsDiffNested = (ctx: KitDiffValidationCtx, path: string, base: 
   });
 };
 
-const validateModelDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Model[], files: Set<string>, d: ModelsDiff | undefined): void => {
-  validateGuidCollectionDiff(ctx, path, "model", base, d, (item, diff, p) => {
-    const fid = (diff as ModelDiff).file?.guid ?? item.file?.guid;
-    if (fid && !files.has(fid)) kitDiffPush(ctx, "errors", "kitdiff.ref.file-missing", `${p}: model file ${fid} not in kit`);
-    if ((diff as ModelDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (diff as ModelDiff).attributes);
+const validateRepresentationDiffNested = (ctx: KitDiffValidationCtx, path: string, base: Representation[], files: Set<string>, d: RepresentationsDiff | undefined): void => {
+  validateGuidCollectionDiff(ctx, path, "representation", base, d, (item, diff, p) => {
+    const fid = (diff as RepresentationDiff).file?.guid ?? item.file?.guid;
+    if (fid && !files.has(fid)) kitDiffPush(ctx, "errors", "kitdiff.ref.file-missing", `${p}: representation file ${fid} not in kit`);
+    if ((diff as RepresentationDiff).attributes) validateAttributesDiffNested(ctx, `${p}.attributes`, item.attributes ?? [], (diff as RepresentationDiff).attributes);
   });
 };
 
@@ -15238,7 +15238,7 @@ const validateTypeDiffNested = (
   diff: TypeDiff,
   ctxRefs: { typeGuids: Set<string>; fileGuids: Set<string>; portGuids: Set<string>; conceptGuids: Set<string>; authorGuids: Set<string>; qualityGuids: Set<string> },
 ): void => {
-  if (diff.models) validateModelDiffNested(ctx, `${path}.models`, item.models ?? [], ctxRefs.fileGuids, diff.models);
+  if (diff.representations) validateRepresentationDiffNested(ctx, `${path}.representations`, item.representations ?? [], ctxRefs.fileGuids, diff.representations);
   if (diff.connectors) validateConnectorDiffNested(ctx, `${path}.connectors`, item.connectors ?? [], ctxRefs.portGuids, ctxRefs.qualityGuids, diff.connectors);
   if (diff.props) validatePropsDiffNested(ctx, `${path}.props`, item.props ?? [], ctxRefs.qualityGuids, diff.props);
   if (diff.attributes) validateAttributesDiffNested(ctx, `${path}.attributes`, item.attributes ?? [], diff.attributes);
@@ -15452,7 +15452,7 @@ function validateKitGraphDiff(kit: KitImpl, diff: KitDiff, heal: boolean): KitDi
 /**
  * Enumeration of EntityKind values.
  **/
-export type EntityKind = "KitImpl" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+export type EntityKind = "KitImpl" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Representation" | "Layer" | "Group" | "Stat";
 
 /**
  * Interface defining DomainLocation structure.
@@ -15508,7 +15508,7 @@ export interface ValidationContext {
   designsByGuid: Map<Guid, Design>;
   piecesByGuid: Map<Guid, { designGuid: Guid; piece: Piece }>;
   connectorsByTypeGuid: Map<Guid, Connector[]>;
-  modelsByTypeGuid: Map<Guid, Model[]>;
+  representationsByTypeGuid: Map<Guid, Representation[]>;
 }
 
 /**
@@ -15520,17 +15520,17 @@ export const buildValidationContext = (kit: KitLike): ValidationContext => {
   const designsByGuid = new Map<Guid, Design>();
   const piecesByGuid = new Map<Guid, { designGuid: Guid; piece: Piece }>();
   const connectorsByTypeGuid = new Map<Guid, Connector[]>();
-  const modelsByTypeGuid = new Map<Guid, Model[]>();
+  const representationsByTypeGuid = new Map<Guid, Representation[]>();
   toArray(k.types).forEach((t) => {
     typesByGuid.set(t.guid, t);
     connectorsByTypeGuid.set(t.guid, toArray(t.connectors));
-    modelsByTypeGuid.set(t.guid, toArray(t.models));
+    representationsByTypeGuid.set(t.guid, toArray(t.representations));
   });
   toArray(k.designs).forEach((d) => {
     designsByGuid.set(d.guid, d);
     toArray(d.pieces).forEach((p) => piecesByGuid.set(p.guid, { designGuid: d.guid, piece: p }));
   });
-  return { kit: k, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
+  return { kit: k, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, representationsByTypeGuid };
 };
 
 /**
@@ -15976,18 +15976,18 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #endregion ­ƒöîConstraint: Connector Name Uniqueness Within Type
 
-// #region ­ƒù┐Constraint: Model Name Uniqueness Within Type
-// Model name uniqueness within type constraint MUST be enforced here.
+// #region ­ƒù┐Constraint: Representation Name Uniqueness Within Type
+// Representation name uniqueness within type constraint MUST be enforced here.
 
 /**
- * Constraint validating ModelNameUniqueness rules.
+ * Constraint validating RepresentationNameUniqueness rules.
  **/
-export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
+export const semioRepresentationNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
-  for (const [typeGuid, models] of ctx.modelsByTypeGuid) {
-    if (models.length === 0) continue;
-    const nameMap = new Map<string, Model[]>();
-    models.forEach((m) => {
+  for (const [typeGuid, representations] of ctx.representationsByTypeGuid) {
+    if (representations.length === 0) continue;
+    const nameMap = new Map<string, Representation[]>();
+    representations.forEach((m) => {
       const name = m.name ?? "";
       if (!nameMap.has(name)) nameMap.set(name, []);
       nameMap.get(name)!.push(m);
@@ -15995,17 +15995,17 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
     for (const [name, list] of nameMap) {
       if (list.length <= 1) continue;
       const [first, ...rest] = list;
-      const allNames = models.map((m) => m.name ?? "");
+      const allNames = representations.map((m) => m.name ?? "");
       const type = ctx.typesByGuid.get(typeGuid);
-      rest.forEach((model) => {
-        const fix = semioMakeFix(ctx, `Rename model "${name}"`, () => ({
+      rest.forEach((representation) => {
+        const fix = semioMakeFix(ctx, `Rename representation "${name}"`, () => ({
           types: {
             updated: [
               {
                 type: { guid: typeGuid },
                 diff: {
-                  models: {
-                    updated: [{ model: { guid: model.guid }, diff: { name: generateUniqueName(name, allNames) } }],
+                  representations: {
+                    updated: [{ representation: { guid: representation.guid }, diff: { name: generateUniqueName(name, allNames) } }],
                   },
                 },
               },
@@ -16013,9 +16013,9 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
           },
         }));
         problems.push({
-          constraintId: "model-name-unique",
-          message: `Duplicate model name "${name}" inside type "${type?.name}".`,
-          location: { entityKind: "Model", entityGuid: model.guid, field: "name" },
+          constraintId: "representation-name-unique",
+          message: `Duplicate representation name "${name}" inside type "${type?.name}".`,
+          location: { entityKind: "Representation", entityGuid: representation.guid, field: "name" },
           relatedGuids: list.map((m) => m.guid),
           fixes: [fix],
         });
@@ -16025,7 +16025,7 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion ­ƒù┐Constraint: Model Name Uniqueness Within Type
+// #endregion ­ƒù┐Constraint: Representation Name Uniqueness Within Type
 
 // #region ­ƒÄ¿Constraint: Layer Path Uniqueness Within Design
 // Layer path uniqueness within design constraint MUST be enforced here.
@@ -16142,7 +16142,7 @@ defaultConstraints = [
   semioFileNameUniquenessConstraint,
   semioFolderNameUniquenessConstraint,
   semioConnectorNameUniquenessConstraint,
-  semioModelNameUniquenessConstraint,
+  semioRepresentationNameUniquenessConstraint,
   semioLayerPathUniquenessConstraint,
   semioDesignPieceSameFamilyConstraint,
 ];
@@ -16448,11 +16448,11 @@ export const importArchiveKit = async (source: string | ArrayBuffer | Buffer | B
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
         const ext = file.name.split(".").pop()?.toLowerCase() || "";
         const mimeMap: Record<string, string> = {
-          stl: "model/stl",
-          obj: "model/obj",
-          glb: "model/gltf-binary",
-          gltf: "model/gltf+json",
-          "3dm": "model/vnd.3dm",
+          stl: "representation/stl",
+          obj: "representation/obj",
+          glb: "representation/gltf-binary",
+          gltf: "representation/gltf+json",
+          "3dm": "representation/vnd.3dm",
           png: "image/png",
           jpg: "image/jpeg",
           jpeg: "image/jpeg",
@@ -16697,20 +16697,20 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
     return true;
   };
 
-  const areModelsEqual = (a?: Model[], b?: Model[]): boolean => {
+  const areRepresentationsEqual = (a?: Representation[], b?: Representation[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
     if (arrA.length !== arrB.length) return false;
-    for (const modelA of arrA) {
-      const modelB = arrB.find((x) => x.guid === modelA.guid);
-      if (!modelB) return false;
-      if (normalizeValue(modelA.name) !== normalizeValue(modelB.name)) return false;
-      if (modelA.file.guid !== modelB.file.guid) return false;
+    for (const representationA of arrA) {
+      const representationB = arrB.find((x) => x.guid === representationA.guid);
+      if (!representationB) return false;
+      if (normalizeValue(representationA.name) !== normalizeValue(representationB.name)) return false;
+      if (representationA.file.guid !== representationB.file.guid) return false;
 
-      const tagsA = normalizeArray(modelA.tags).map((t) => (typeof t === "object" ? t.guid : t));
-      const tagsB = normalizeArray(modelB.tags).map((t) => (typeof t === "object" ? t.guid : t));
+      const tagsA = normalizeArray(representationA.tags).map((t) => (typeof t === "object" ? t.guid : t));
+      const tagsB = normalizeArray(representationB.tags).map((t) => (typeof t === "object" ? t.guid : t));
       if (tagsA.length !== tagsB.length || !tagsA.every((g) => tagsB.includes(g))) return false;
-      if (!areAttributesEqual(modelA.attributes, modelB.attributes)) return false;
+      if (!areAttributesEqual(representationA.attributes, representationB.attributes)) return false;
     }
     return true;
   };
@@ -16741,7 +16741,7 @@ export const areKitsEqual = (a: KitImpl, b: KitImpl): boolean => {
       if (!arraysEqual(normalizeArray(typeA.concepts), normalizeArray(typeB.concepts))) return false;
       if (!arraysEqual(normalizeArray(typeA.authors?.map((a) => a.guid)), normalizeArray(typeB.authors?.map((a) => a.guid)))) return false;
       if (!arePropsEqual(typeA.props, typeB.props)) return false;
-      if (!areModelsEqual(typeA.models, typeB.models)) return false;
+      if (!areRepresentationsEqual(typeA.representations, typeB.representations)) return false;
       if (!areConnectorsEqual(typeA.connectors, typeB.connectors)) return false;
       if (!areAttributesEqual(typeA.attributes, typeB.attributes)) return false;
     }
@@ -17006,7 +17006,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const getComparableId = (value: unknown): string | undefined => {
     if (!value || typeof value !== "object") return undefined;
     const record = value as Record<string, any>;
-    return record.guid ?? record.type?.guid ?? record.design?.guid ?? record.piece?.guid ?? record.connection?.guid ?? record.model?.guid ?? record.port?.guid ?? record.connector?.guid ?? record.prop?.guid ?? record.attribute?.guid;
+    return record.guid ?? record.type?.guid ?? record.design?.guid ?? record.piece?.guid ?? record.connection?.guid ?? record.representation?.guid ?? record.port?.guid ?? record.connector?.guid ?? record.prop?.guid ?? record.attribute?.guid;
   };
   const canonicalize = (value: unknown, key = ""): unknown => {
     if (value === null || value === undefined || value === "") return undefined;
@@ -17172,7 +17172,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const areModelsDiffsEqual = (a?: z.infer<typeof ModelsDiffSchema>, b?: z.infer<typeof ModelsDiffSchema>): boolean => {
+  const areRepresentationsDiffsEqual = (a?: z.infer<typeof RepresentationsDiffSchema>, b?: z.infer<typeof RepresentationsDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
@@ -17180,9 +17180,9 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     const updatedB = normalizeArray(b.updated);
     if (updatedA.length !== updatedB.length) return false;
     for (const ua of updatedA) {
-      const ub = updatedB.find((x) => x.model.guid === ua.model.guid);
+      const ub = updatedB.find((x) => x.representation.guid === ua.representation.guid);
       if (!ub) return false;
-      if (!areModelDiffsEqual(ua.diff, ub.diff)) return false;
+      if (!areRepresentationDiffsEqual(ua.diff, ub.diff)) return false;
     }
     const addedA = normalizeArray(a.added);
     const addedB = normalizeArray(b.added);
@@ -17197,7 +17197,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const areModelDiffsEqual = (a?: ModelDiff, b?: ModelDiff): boolean => {
+  const areRepresentationDiffsEqual = (a?: RepresentationDiff, b?: RepresentationDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
@@ -17253,7 +17253,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     } else if (a.concepts || b.concepts) {
       return false;
     }
-    if (!areModelsDiffsEqual(a.models, b.models)) return false;
+    if (!areRepresentationsDiffsEqual(a.representations, b.representations)) return false;
     if (!areConnectorsDiffsEqual(a.connectors, b.connectors)) return false;
     if (!arePropsDiffsEqual(a.props, b.props)) return false;
     if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
@@ -17656,7 +17656,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   const types = execResult("SELECT * FROM type WHERE kit_guid = ?", [kit.guid]);
   kit.types = mapOrUndefined(types, (row: any) => {
     const typeGuid = row.guid || String(row.id);
-    const models = execResult("SELECT * FROM model WHERE type_guid = ?", [typeGuid]);
+    const representations = execResult("SELECT * FROM representation WHERE type_guid = ?", [typeGuid]);
     const connectors = execResult("SELECT * FROM connector WHERE type_guid = ?", [typeGuid]);
     const typeAttributes = execResult("SELECT * FROM attribute WHERE type_guid = ?", [typeGuid]);
     const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_guid = ?", [typeGuid]);
@@ -17691,19 +17691,19 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     const authors = mapOrUndefined(typeAuthors, (ta: any) => ({ guid: ta.author_guid }));
     if (authors) type.authors = authors;
 
-    const models_value = mapOrUndefined(models, (m: any) => {
-      const modelTags = execResult("SELECT tag_guid FROM model_tag WHERE model_guid = ?", [m.guid]);
-      const modelAttributes = execResult("SELECT * FROM attribute WHERE model_guid = ?", [m.guid]);
+    const representations_value = mapOrUndefined(representations, (m: any) => {
+      const representationTags = execResult("SELECT tag_guid FROM representation_tag WHERE representation_guid = ?", [m.guid]);
+      const representationAttributes = execResult("SELECT * FROM attribute WHERE representation_guid = ?", [m.guid]);
       return {
         guid: m.guid,
         file: { guid: m.file_guid },
         name: toUndefined(m.name),
         description: toUndefined(m.description),
-        tags: modelTags.map((t: any) => ({ guid: t.tag_guid })),
-        attributes: mapOrUndefined(modelAttributes, buildAttribute),
+        tags: representationTags.map((t: any) => ({ guid: t.tag_guid })),
+        attributes: mapOrUndefined(representationAttributes, buildAttribute),
       };
     });
-    if (models_value) type.models = models_value;
+    if (representations_value) type.representations = representations_value;
 
     const connectors_value = mapOrUndefined(connectors, (p: any) => {
       const connectorProps = execResult("SELECT * FROM prop WHERE connector_guid = ?", [p.guid]);
@@ -18202,7 +18202,7 @@ CREATE TABLE type (
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
-CREATE TABLE model (
+CREATE TABLE representation (
 	guid VARCHAR(36) NOT NULL,
 	file_guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),
@@ -18213,11 +18213,11 @@ CREATE TABLE model (
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
 );
 
-CREATE TABLE model_tag (
-	model_guid VARCHAR(36) NOT NULL,
+CREATE TABLE representation_tag (
+	representation_guid VARCHAR(36) NOT NULL,
 	tag_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (model_guid, tag_guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	PRIMARY KEY (representation_guid, tag_guid),
+	FOREIGN KEY(representation_guid) REFERENCES representation (guid),
 	FOREIGN KEY(tag_guid) REFERENCES tag (guid)
 );
 
@@ -18465,7 +18465,7 @@ CREATE TABLE attribute (
 	folder_guid VARCHAR(36),
 	file_guid VARCHAR(36),
 	author_guid VARCHAR(36),
-	model_guid VARCHAR(36),
+	representation_guid VARCHAR(36),
 	prop_guid VARCHAR(36),
 	connector_guid VARCHAR(36),
 	type_guid VARCHAR(36),
@@ -18484,7 +18484,7 @@ CREATE TABLE attribute (
 	FOREIGN KEY(folder_guid) REFERENCES folder (guid),
 	FOREIGN KEY(file_guid) REFERENCES file (guid),
 	FOREIGN KEY(author_guid) REFERENCES author (guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	FOREIGN KEY(representation_guid) REFERENCES representation (guid),
 	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
 	FOREIGN KEY(connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid),
@@ -18653,15 +18653,15 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
       db.run("INSERT INTO type_author (type_guid, author_guid, rank) VALUES (?, ?, ?)", [type.guid, typeof authorId === "object" ? authorId.guid : authorId, index]);
     });
 
-    toArray(type.models).forEach((model) => {
-      db.run("INSERT INTO model (guid, file_guid, name, description, type_guid) VALUES (?, ?, ?, ?, ?)", [model.guid, model.file.guid, model.name || null, model.description || null, type.guid]);
+    toArray(type.representations).forEach((representation) => {
+      db.run("INSERT INTO representation (guid, file_guid, name, description, type_guid) VALUES (?, ?, ?, ?, ?)", [representation.guid, representation.file.guid, representation.name || null, representation.description || null, type.guid]);
 
-      toArray(model.tags).forEach((tag) => {
-        db.run("INSERT INTO model_tag (model_guid, tag_guid) VALUES (?, ?)", [model.guid, typeof tag === "object" ? tag.guid : tag]);
+      toArray(representation.tags).forEach((tag) => {
+        db.run("INSERT INTO representation_tag (representation_guid, tag_guid) VALUES (?, ?)", [representation.guid, typeof tag === "object" ? tag.guid : tag]);
       });
 
-      toArray(model.attributes).forEach((attr) => {
-        db.run("INSERT INTO attribute (guid, key, value, definition, model_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, model.guid]);
+      toArray(representation.attributes).forEach((attr) => {
+        db.run("INSERT INTO attribute (guid, key, value, definition, representation_guid) VALUES (?, ?, ?, ?, ?)", [attr.guid, attr.key, attr.value || null, attr.definition || null, representation.guid]);
       });
     });
 
@@ -18875,19 +18875,19 @@ export const kitToSqlite = async (kit: KitImpl, db: any): Promise<void> => {
 
 // #endregion ­ƒº┐KitImpl Import/Export
 
-// #region ­ƒö®KitImpl Model Export
-// Design model export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
+// #region ­ƒö®KitImpl Representation Export
+// Design representation export to 3D formats (GLB, glTF, OBJ, STL, PLY, USDZ) MUST be defined here.
 
 /**
  * Supported 3D export formats with their MIME types.
  **/
 export const EXPORT_REPRESENTATION_FORMATS: Record<string, string> = {
-  ".glb": "model/gltf-binary",
-  ".gltf": "model/gltf+json",
-  ".obj": "model/obj",
-  ".stl": "model/stl",
+  ".glb": "representation/gltf-binary",
+  ".gltf": "representation/gltf+json",
+  ".obj": "representation/obj",
+  ".stl": "representation/stl",
   ".ply": "application/x-ply",
-  ".usdz": "model/vnd.usdz+zip",
+  ".usdz": "representation/vnd.usdz+zip",
 };
 
 const SEMIO_TO_GLTF_BASIS = new THREE.Matrix4().set(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
@@ -18901,15 +18901,15 @@ const semioMatrixToGltfMatrix = (matrix: THREE.Matrix4): number[] => {
 const planeToGlbTransform = (plane: Plane): number[] => {
   return semioMatrixToGltfMatrix(planeToMatrix(plane));
 };
-const findMatchingModel = (kit: KitImpl, type: Type, tags: string[]): Model | undefined => {
-  if (!type.models || type.models.length === 0) return undefined;
+const findMatchingRepresentation = (kit: KitImpl, type: Type, tags: string[]): Representation | undefined => {
+  if (!type.representations || type.representations.length === 0) return undefined;
   const kitTags = kit.tags ?? [];
   const selectedTagGuids = tags.flatMap((tagValue) => {
     const byGuid = kitTags.find((tag) => tag.guid === tagValue);
     if (byGuid) return [byGuid.guid];
     return kitTags.filter((tag) => tag.name === tagValue).map((tag) => tag.guid);
   });
-  return selectBestModel(type.models, selectedTagGuids);
+  return selectBestRepresentation(type.representations, selectedTagGuids);
 };
 
 /**
@@ -19052,7 +19052,7 @@ const copyGltfMeshes = (sourceDoc: GltfDocument, targetDoc: GltfDocument, target
 };
 
 /**
- * Creates a unit box mesh (1x1x1 centered at origin) as a placeholder for types without models.
+ * Creates a unit box mesh (1x1x1 centered at origin) as a placeholder for types without representations.
  **/
 const createBoxMesh = (name: string, doc: GltfDocument, buffer: GltfBuffer): GltfMesh => {
   const s = 0.5;
@@ -19145,10 +19145,10 @@ const createBoxMesh = (name: string, doc: GltfDocument, buffer: GltfBuffer): Glt
 };
 
 /**
- * Exports the 3D model of a design to a specified format.
+ * Exports the 3D representation of a design to a specified format.
  * Connection hierarchy is translated into a scene graph; planes become relative transformation matrices.
  **/
-export const exportDesignModel = async (kit: KitImpl, designId: string, format: string = ".glb", tags: string[] = [], options: Record<string, unknown> = {}): Promise<ArrayBuffer> => {
+export const exportDesignRepresentation = async (kit: KitImpl, designId: string, format: string = ".glb", tags: string[] = [], options: Record<string, unknown> = {}): Promise<ArrayBuffer> => {
   const io = new NodeIO();
   const design = kit.requireDesign(designId);
   const pieces = design.pieces ?? [];
@@ -19263,12 +19263,12 @@ export const exportDesignModel = async (kit: KitImpl, designId: string, format: 
     const type = typesDict[typeGuid];
     if (!type) continue;
 
-    const model = findMatchingModel(kit, type, tags);
-    if (!model) {
+    const representation = findMatchingRepresentation(kit, type, tags);
+    if (!representation) {
       continue;
     }
 
-    const file = kit.files?.find((f) => f.guid === model.file.guid);
+    const file = kit.files?.find((f) => f.guid === representation.file.guid);
     if (!file?.blob) continue;
 
     const fileBytes = decodeBlobToBytes(file.blob);
@@ -19336,13 +19336,13 @@ export const exportDesignModel = async (kit: KitImpl, designId: string, format: 
   return glb.buffer as ArrayBuffer;
 };
 
-// #endregion ­ƒö®KitImpl Model Export
+// #endregion ­ƒö®KitImpl Representation Export
 
 // #region ÔØä´©ÅGeometric Insights
-// Key performance indicators for GLB/GLTF model geometry. Model MUST be glb/gltf.
+// Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
 /**
- * ­ƒöÀGeometric KPIs for a GLB/GLTF model in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
+ * ­ƒöÀGeometric KPIs for a GLB/GLTF representation in semio coordinate system (semio x=glb x, semio y=-glb x, semio z=glb y).
  */
 export interface GeometricInsights {
   boundingBoxMin?: Point;
@@ -19386,26 +19386,26 @@ function signedTetrahedronVolume(o: THREE.Vector3, a: THREE.Vector3, b: THREE.Ve
 }
 
 /**
- * ­ƒôïComputes key performance indicators for the geometry of a GLB/GLTF model.
+ * ­ƒôïComputes key performance indicators for the geometry of a GLB/GLTF representation.
  */
-export const getGeometricInsightsForModel = async (model: string | ArrayBuffer | Uint8Array): Promise<GeometricInsights> => {
+export const getGeometricInsightsForRepresentation = async (representation: string | ArrayBuffer | Uint8Array): Promise<GeometricInsights> => {
   const io = new NodeIO();
   let doc: GltfDocument;
 
-  if (typeof model === "string") {
-    if (model.startsWith("data:")) {
-      const base64 = model.slice(model.indexOf(",") + 1);
+  if (typeof representation === "string") {
+    if (representation.startsWith("data:")) {
+      const base64 = representation.slice(representation.indexOf(",") + 1);
       const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
       doc = await io.readBinary(binary);
     } else {
       let arrBuf: ArrayBuffer;
-      const isPath = !model.startsWith("http://") && !model.startsWith("https://") && (model.endsWith(".glb") || model.endsWith(".gltf") || model.includes("/") || model.includes("\\"));
+      const isPath = !representation.startsWith("http://") && !representation.startsWith("https://") && (representation.endsWith(".glb") || representation.endsWith(".gltf") || representation.includes("/") || representation.includes("\\"));
       if (typeof globalThis !== "undefined" && "process" in globalThis && typeof (globalThis as any).process?.versions?.node === "string" && isPath) {
         const { readFileSync } = await import("node:fs");
         const { dirname, join } = await import("node:path");
-        const dir = dirname(model);
-        if (model.endsWith(".gltf")) {
-          const raw = readFileSync(model, "utf8");
+        const dir = dirname(representation);
+        if (representation.endsWith(".gltf")) {
+          const raw = readFileSync(representation, "utf8");
           const json = JSON.parse(raw) as { buffers?: Array<{ uri?: string }>; images?: Array<{ uri?: string }> };
           const resources: Record<string, Uint8Array<ArrayBuffer>> = {};
           const addResource = (uri: string | undefined) => {
@@ -19426,22 +19426,22 @@ export const getGeometricInsightsForModel = async (model: string | ArrayBuffer |
           for (const img of json.images ?? []) addResource(img.uri);
           doc = await io.readJSON({ json: json as any, resources });
         } else {
-          const buf = readFileSync(model);
+          const buf = readFileSync(representation);
           arrBuf = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
           doc = await io.readBinary(new Uint8Array(arrBuf));
         }
       } else {
-        const res = await fetch(model);
-        if (!res.ok) throw new Error(`Failed to load model: ${res.statusText}`);
+        const res = await fetch(representation);
+        if (!res.ok) throw new Error(`Failed to load representation: ${res.statusText}`);
         arrBuf = await res.arrayBuffer();
         const bytes = new Uint8Array(arrBuf);
-        const isGlb = model.endsWith(".glb") || (bytes.length >= 4 && new TextDecoder().decode(bytes.slice(0, 4)) === "glTF");
-        const base = model.replace(/\/[^/]*$/, "") || ".";
+        const isGlb = representation.endsWith(".glb") || (bytes.length >= 4 && new TextDecoder().decode(bytes.slice(0, 4)) === "glTF");
+        const base = representation.replace(/\/[^/]*$/, "") || ".";
         doc = isGlb ? await io.readBinary(new Uint8Array(arrBuf)) : await io.readJSON({ json: JSON.parse(new TextDecoder().decode(new Uint8Array(arrBuf))), resources: {} });
       }
     }
   } else {
-    const bytes = model instanceof Uint8Array ? model : new Uint8Array(model);
+    const bytes = representation instanceof Uint8Array ? representation : new Uint8Array(representation);
     const magic = bytes.length >= 4 ? new TextDecoder().decode(bytes.slice(0, 4)) : "";
     doc = magic === "glTF" ? await io.readBinary(bytes) : await io.readJSON({ json: JSON.parse(new TextDecoder().decode(bytes)), resources: {} });
   }
@@ -19657,7 +19657,7 @@ export interface ObservablePathStore {
 // In-memory kit store implementation for testing and fake backends.
 
 // Specs: InMemoryKitStore implements UndoableKitStore using a plain KitImpl object
-// in memory with a command-stack undo model. No persistence, no sync, no CRDT.
+// in memory with a command-stack undo representation. No persistence, no sync, no CRDT.
 // Used for: unit tests, integration tests, fake backends, storybook.
 
 /**
@@ -19894,7 +19894,7 @@ export const piecesMetadataCached = (kit: KitLike, designGuid: string, cache?: {
 /**
  * Searches for matching AttributeValue entry.
  **/
-export const findAttributeValue = (entity: KitImpl | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
+export const findAttributeValue = (entity: KitImpl | Type | Design | Piece | Connection | Representation | Connector, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
   if (attribute?.value === undefined && defaultValue === null) return null;
@@ -20098,350 +20098,6 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 
 // #endregion 📂File Tree Utilities
 
-// #region ⚛️React
-// React hooks for reactive kit data access backed by a KitStore.
-// All hooks are read-only selectors; mutations go through KitStore.apply/transact.
-// <KitProvider store?> wraps a KitStore (local/dev/remote).
-// <PieceProvider guid designGuid> scopes piece hooks to a specific piece.
-
-// #region ⚛️LazyReact
-// Lazily imported React — available only when react is installed.
-let _React: typeof import("react") | undefined;
-try {
-  _React = await import("react");
-} catch {
-  // React not available — hooks will throw at runtime if used without React.
-}
-
-function requireReact(): typeof import("react") {
-  if (!_React) throw new Error("React is required for semio React hooks. Install react as a dependency.");
-  return _React;
-}
-// #endregion ⚛️LazyReact
-
-// #region ⚛️KitContext
-/** 🏗️ Internal context value carrying the kit store and current snapshot. */
-type KitContextValue = {
-  store: KitStore;
-  kit: KitImpl;
-};
-
-let _KitContext: import("react").Context<KitContextValue | null> | undefined;
-function getKitContext(): import("react").Context<KitContextValue | null> {
-  if (!_KitContext) {
-    const React = requireReact();
-    _KitContext = React.createContext<KitContextValue | null>(null);
-  }
-  return _KitContext;
-}
-
-function useKitContext(): KitContextValue {
-  const React = requireReact();
-  const ctx = React.useContext(getKitContext());
-  if (!ctx) throw new Error("useKit*() hooks must be used inside <KitProvider>.");
-  return ctx;
-}
-
-/** 🏪 Returns the raw KitStore from the nearest KitProvider. */
-export function useKitStore(): KitStore {
-  return useKitContext().store;
-}
-
-/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */
-export function useKit(): KitImpl {
-  return useKitContext().kit;
-}
-// #endregion ⚛️KitContext
-
-// #region ⚛️KitProvider
-/** 🏗️ Provides a reactive KitStore to the component tree.
- *
- * Accepts a `store` prop (pre-built KitStore).
- * Children re-render only when the store emits a change.
- */
-export type KitProviderProps = {
-  /** Pre-built store — use this when the caller manages the store lifecycle. */
-  store?: KitStore;
-  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */
-  initialKit?: KitLike;
-  children: import("react").ReactNode;
-};
-
-export const KitProvider = (props: KitProviderProps): import("react").ReactElement | null => {
-  const React = requireReact();
-  const { store: externalStore, initialKit, children } = props;
-
-  const internalStoreRef = React.useRef<KitStore | null>(null);
-
-  if (!externalStore && !internalStoreRef.current) {
-    const kit = initialKit
-      ? asKitInstance(initialKit)
-      : asKitInstance({
-          guid: guid(),
-          name: "Untitled",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as KitData);
-    internalStoreRef.current = new InMemoryKitStore(kit);
-  }
-
-  const store = externalStore ?? internalStoreRef.current!;
-
-  const subscribe = React.useCallback((onStoreChange: () => void) => store.subscribe(onStoreChange), [store]);
-  const getSnapshot = React.useCallback(() => store.getSnapshot(), [store]);
-  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-
-  const value = React.useMemo<KitContextValue>(() => ({ store, kit: snapshot.kit }), [store, snapshot]);
-
-  return React.createElement(getKitContext().Provider, { value }, children);
-};
-// #endregion ⚛️KitProvider
-
-// #region ⚛️PieceContext
-/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */
-type PieceContextValue = {
-  pieceGuid: string;
-  designGuid: string;
-};
-
-let _PieceContext: import("react").Context<PieceContextValue | null> | undefined;
-function getPieceContext(): import("react").Context<PieceContextValue | null> {
-  if (!_PieceContext) {
-    const React = requireReact();
-    _PieceContext = React.createContext<PieceContextValue | null>(null);
-  }
-  return _PieceContext;
-}
-
-function usePieceContext(): PieceContextValue {
-  const React = requireReact();
-  const ctx = React.useContext(getPieceContext());
-  if (!ctx) throw new Error("usePiece*() hooks must be used inside <PieceProvider> or pass guid+designGuid arguments.");
-  return ctx;
-}
-
-/** 🧩 Scopes piece hooks to a specific piece within a design.
- *
- * Pieces live inside designs, so both guids are required for resolution.
- */
-export type PieceProviderProps = {
-  guid: string;
-  designGuid: string;
-  children: import("react").ReactNode;
-};
-
-export const PieceProvider = (props: PieceProviderProps): import("react").ReactElement | null => {
-  const React = requireReact();
-  const { guid: pieceGuid, designGuid, children } = props;
-
-  const value = React.useMemo<PieceContextValue>(() => ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);
-
-  return React.createElement(getPieceContext().Provider, { value }, children);
-};
-// #endregion ⚛️PieceContext
-
-// #region ⚛️PieceHookHelpers
-/** 🔍 Resolves guid + designGuid from either context or explicit args. */
-function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {
-  const React = requireReact();
-  const ctx = React.useContext(getPieceContext());
-  const resolved = pieceGuid && designGuid ? { pieceGuid, designGuid } : ctx;
-  if (!resolved) throw new Error("Piece guid and designGuid required — use <PieceProvider> or pass both arguments.");
-  return resolved;
-}
-
-/** 🔧 Internal: find a piece in a design within the kit. */
-function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {
-  const design = kit.findDesign(designGuid);
-  if (!design) return undefined;
-  return design.findPiece(pieceGuid);
-}
-
-/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */
-function usePieceSelector<T>(selector: (piece: Piece, kit: KitImpl, designGuid: string) => T, pieceGuid?: string, designGuid?: string): T | undefined {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);
-    if (!piece) return undefined;
-    return selector(piece, kit, ids.designGuid);
-  }, [kit, ids.pieceGuid, ids.designGuid, selector]);
-}
-// #endregion ⚛️PieceHookHelpers
-
-// #region ⚛️PieceHooks
-
-/** 📛 Returns the name of the piece (or undefined if not found). */
-export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.name, []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 📝 Returns the description of the piece. */
-export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.description, []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 🧱 Returns the type id (guid) of the piece. */
-export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.wireTypeId(), []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 📐 Returns the design id (guid) when this piece references a sub-design. */
-export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.wireDesignAsPieceId(), []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 🔵 Returns the blueprint id — either type or design reference. */
-export type BlueprintId = { kind: "type"; guid: string } | { kind: "design"; guid: string };
-
-export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece): BlueprintId | undefined => {
-    const designRefId = p.wireDesignAsPieceId();
-    if (designRefId) return { kind: "design", guid: designRefId.guid };
-    const typeId = p.wireTypeId();
-    if (typeId) return { kind: "type", guid: typeId.guid };
-    return undefined;
-  }, []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** ✈️ Returns the 3D placement plane of the piece. */
-export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.plane, []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 📍 Returns the 2D center coordinate of the piece. */
-export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.center, []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */
-export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.flatPlane(), []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */
-export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {
-  const React = requireReact();
-  const sel = React.useCallback((p: Piece) => p.flatCenter(), []);
-  return usePieceSelector(sel, pieceGuid, designGuid);
-}
-
-/** 👆 Returns the parent piece id in the design tree. */
-export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    try {
-      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);
-      return { guid: parent.guid };
-    } catch {
-      return undefined;
-    }
-  }, [kit, ids.pieceGuid, ids.designGuid]);
-}
-
-/** 🔗 Returns the connection id linking this piece to its parent. */
-export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    try {
-      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);
-      return { guid: conn.guid };
-    } catch {
-      return undefined;
-    }
-  }, [kit, ids.pieceGuid, ids.designGuid]);
-}
-
-/** 👶 Returns the ids of all child pieces in the design tree. */
-export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    try {
-      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);
-      return children.map((c) => ({ guid: c.guid }));
-    } catch {
-      return [];
-    }
-  }, [kit, ids.pieceGuid, ids.designGuid]);
-}
-
-/** 🔗 Returns the connection ids for all child connections of this piece. */
-export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    try {
-      const design = kit.requireDesign(ids.designGuid);
-      const metadata = kit.piecesMetadataFor(ids.designGuid);
-      if (!metadata.ok) return [];
-      const connections = design._connections ?? [];
-      const childConns = connections.filter((c) => {
-        try {
-          const connectedPieceGuid = c.connected.wirePieceId().guid;
-          const connectingPieceGuid = c.connecting.wirePieceId().guid;
-          if (connectedPieceGuid === ids.pieceGuid) {
-            const childMeta = metadata.diff.get(connectingPieceGuid);
-            return childMeta?.parentPieceId === ids.pieceGuid;
-          }
-          if (connectingPieceGuid === ids.pieceGuid) {
-            const childMeta = metadata.diff.get(connectedPieceGuid);
-            return childMeta?.parentPieceId === ids.pieceGuid;
-          }
-          return false;
-        } catch {
-          return false;
-        }
-      });
-      return childConns.map((c) => ({ guid: c.guid }));
-    } catch {
-      return [];
-    }
-  }, [kit, ids.pieceGuid, ids.designGuid]);
-}
-
-/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */
-export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {
-  const React = requireReact();
-  const { kit } = useKitContext();
-  const ids = useResolvedPieceIds(pieceGuid, designGuid);
-  return React.useMemo(() => {
-    try {
-      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);
-      return types.map((t) => ({ guid: t.guid }));
-    } catch {
-      return [];
-    }
-  }, [kit, ids.pieceGuid, ids.designGuid]);
-}
-
-// #endregion ⚛️PieceHooks
-
-// #endregion ⚛️React
-
 // #region 🔬Runtime Test Flags
 // Test and benchmark blocks MUST compile out of browser bundles while staying runnable in Node.
 declare const __SEMIO_JS_RUN_EMBEDDED_TESTS__: boolean | undefined;
@@ -20453,286 +20109,7 @@ const shouldRunEmbeddedJsTests =
 
 const shouldRunJsBenchmarks = (typeof __SEMIO_JS_RUN_BENCHMARKS__ !== "undefined" && __SEMIO_JS_RUN_BENCHMARKS__) || (typeof __SEMIO_JS_RUN_BENCHMARKS__ === "undefined" && typeof process !== "undefined" && process.argv?.includes("--bench"));
 
-// #endregion ­ƒº¬Runtime Test Flags
-
-// #region ­ƒº¬Tests
-// Vitest test suites for domain logic. MUST NOT export any symbols.
-// Test code is guarded so it only executes under vitest, not in browser bundles.
-// Specs: Other workspaces (e.g. @semio/ui) import this module while Vitest runs their tests; `SEMIO_JS_RUN_EMBEDDED_TESTS` is set only in @semio/js `npm test` so we do not pull @semio/sketchpad into unrelated Vitest SSR graphs.
-if (shouldRunEmbeddedJsTests) {
-  const { beforeAll, describe, expect, it, vi } = await import("vitest");
-  const { createElement } = await import("react");
-  const { renderToStaticMarkup } = await import("react-dom/server");
-  const ElementsBundle = await import("@elements/ui");
-  const { buildControlTree, Action: UiAction } = ElementsBundle;
-  type ControlDef = import("@elements/ui").ControlDef;
-  const {
-    DragDesign,
-    DragDiffDesign,
-    DragOffset,
-    DragPieces,
-    MoveDiffDesign,
-    MoveVector,
-    InvalidKit,
-    InvalidKitValidation,
-    MetabolismKit,
-    MetabolismKitDiff,
-    MetabolismKitDiffed,
-    MetabolismKitDiffInverted,
-    MetabolismKitFilteredNakaginCapsuleTower,
-    ModelSelectionCases,
-    NakaginCapsuleTowerFilteredKit,
-    MetabolismMetaKit,
-    MetabolismShallowKit,
-    TambourMetaType,
-    TambourShallowType,
-    NakaginCapsuleTowerMetaDesign,
-    NakaginCapsuleTowerShallowDesign,
-    NakaginCapsuleTowerDeletedDesignDiff,
-    NakaginCapsuleTowerDeletedSelection,
-    NakaginCapsuleTowerCopySelection,
-    NakaginCapsuleTowerCopyDesign,
-    NakaginCapsuleTowerPasteDesignDiff,
-    NakaginCapsuleTowerPasteDesign,
-    NakaginCapsuleTowerPasteWithCoordDesignDiff,
-    NakaginCapsuleTowerDiffDesign,
-    NakaginCapsuleTowerWithDiffDesign,
-    ValidateKitDiffCases,
-    FlattenMerkleCases,
-    HashCases,
-    QualitySumCases,
-    DesignWithDiffCases,
-    FilterKitCases,
-    FindReplaceableTypesCases,
-    FlattenCases,
-    SyntheticFindReplaceableKit,
-    ExportDesignModelCases,
-    DeleteCases,
-    CopyPasteCases,
-  } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
-  type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
-  type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
-
-  const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
-  const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; selectionAsset: string; expectedDiffAsset: string }>;
-  const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{
-    name: string;
-    designName: string;
-    designFamilies: string[];
-    selectionAsset: string;
-    expectedCopyAsset: string;
-    pasteTargetAsset: string;
-    expectedPasteDiffAsset: string;
-    pasteCoord: { u: number; v: number };
-    expectedPasteWithCoordDiffAsset: string;
-  }>;
-  const filterKitCasesData = FilterKitCases as any;
-
-  const TEST_TOLERANCE = 0.001;
-
-  const planesEqual = (p1?: Plane, p2?: Plane): boolean => {
-    if (!p1 || !p2) return false;
-    if (!p1.origin || !p2.origin || !p1.xAxis || !p2.xAxis || !p1.yAxis || !p2.yAxis) return false;
-    return (
-      Math.abs(p1.origin.x - p2.origin.x) < TEST_TOLERANCE &&
-      Math.abs(p1.origin.y - p2.origin.y) < TEST_TOLERANCE &&
-      Math.abs(p1.origin.z - p2.origin.z) < TEST_TOLERANCE &&
-      Math.abs(p1.xAxis.x - p2.xAxis.x) < TEST_TOLERANCE &&
-      Math.abs(p1.xAxis.y - p2.xAxis.y) < TEST_TOLERANCE &&
-      Math.abs(p1.xAxis.z - p2.xAxis.z) < TEST_TOLERANCE &&
-      Math.abs(p1.yAxis.x - p2.yAxis.x) < TEST_TOLERANCE &&
-      Math.abs(p1.yAxis.y - p2.yAxis.y) < TEST_TOLERANCE &&
-      Math.abs(p1.yAxis.z - p2.yAxis.z) < TEST_TOLERANCE
-    );
-  };
-
-  const centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number; v: number } | undefined): boolean => {
-    if (!c1 || !c2) return c1 === c2;
-    return Math.abs(c1.u - c2.u) < TEST_TOLERANCE && Math.abs(c1.v - c2.v) < TEST_TOLERANCE;
-  };
-
-  const findDesign = (kit: KitImpl, name: string) => {
-    const d = kit.designs?.find((d) => d.name === name);
-    if (!d) throw new Error(`Design ${name} not found`);
-    return d;
-  };
-
-  const getTestNodePaths = async () => {
-    const { dirname, resolve } = await import("node:path");
-    const { fileURLToPath } = await import("node:url");
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    const EXPORT_REPORTS_DIR = resolve(__dirname, "../../reports/export-design-model");
-    return { __filename, __dirname, EXPORT_REPORTS_DIR, dirname, resolve };
-  };
-
-  const writeExportReport = async (implementation: string, bytes: Uint8Array<ArrayBufferLike>) => {
-    const { mkdirSync, writeFileSync } = await import("node:fs");
-    const { EXPORT_REPORTS_DIR, resolve } = await getTestNodePaths();
-    mkdirSync(EXPORT_REPORTS_DIR, { recursive: true });
-    const reportPath = resolve(EXPORT_REPORTS_DIR, `${implementation}.gltf`);
-    writeFileSync(reportPath, bytes);
-    return reportPath;
-  };
-
-  const roundSceneNumber = (value: number) => {
-    const rounded = Math.round(value * 10_000) / 10_000;
-    return Object.is(rounded, -0) ? 0 : rounded;
-  };
-
-  const composeNodeMatrix = (node: { matrix?: number[]; translation?: number[]; rotation?: number[]; scale?: number[] }) => {
-    if (node.matrix) {
-      return node.matrix.map((value) => roundSceneNumber(value));
-    }
-    const translation = node.translation ?? [0, 0, 0];
-    const rotation = node.rotation ?? [0, 0, 0, 1];
-    const scale = node.scale ?? [1, 1, 1];
-    const [x, y, z, w] = rotation;
-    const x2 = x + x;
-    const y2 = y + y;
-    const z2 = z + z;
-    const xx = x * x2;
-    const xy = x * y2;
-    const xz = x * z2;
-    const yy = y * y2;
-    const yz = y * z2;
-    const zz = z * z2;
-    const wx = w * x2;
-    const wy = w * y2;
-    const wz = w * z2;
-    const sx = scale[0];
-    const sy = scale[1];
-    const sz = scale[2];
-    return [
-      roundSceneNumber((1 - (yy + zz)) * sx),
-      roundSceneNumber((xy + wz) * sx),
-      roundSceneNumber((xz - wy) * sx),
-      0,
-      roundSceneNumber((xy - wz) * sy),
-      roundSceneNumber((1 - (xx + zz)) * sy),
-      roundSceneNumber((yz + wx) * sy),
-      0,
-      roundSceneNumber((xz + wy) * sz),
-      roundSceneNumber((yz - wx) * sz),
-      roundSceneNumber((1 - (xx + yy)) * sz),
-      0,
-      roundSceneNumber(translation[0]),
-      roundSceneNumber(translation[1]),
-      roundSceneNumber(translation[2]),
-      1,
-    ];
-  };
-
-  const normalizeSceneGraph = (gltfText: string) => {
-    const gltf = JSON.parse(gltfText) as {
-      scene?: number;
-      scenes?: Array<{ nodes?: number[] }>;
-      nodes?: Array<{ name?: string; children?: number[]; matrix?: number[]; mesh?: number; translation?: number[]; rotation?: number[]; scale?: number[] }>;
-    };
-    const nodes = gltf.nodes ?? [];
-    const defaultScene = gltf.scenes?.[gltf.scene ?? 0] ?? { nodes: [] };
-    const names = nodes.map((node, index) => node.name ?? `__node_${index}`);
-    const parents = new Map<string, string | null>();
-    for (const name of names) parents.set(name, null);
-    for (let index = 0; index < nodes.length; index += 1) {
-      for (const childIndex of nodes[index].children ?? []) {
-        parents.set(names[childIndex], names[index]);
-      }
-    }
-    let normalizedRoots = [...(defaultScene.nodes ?? [])].map((index) => names[index]).sort();
-    let normalizedNodes = nodes
-      .map((node, index) => ({
-        name: names[index],
-        parent: parents.get(names[index]) ?? null,
-        children: [...(node.children ?? [])].map((childIndex) => names[childIndex]).sort(),
-        hasMesh: node.mesh !== undefined,
-        matrix: composeNodeMatrix(node),
-      }))
-      .sort((left, right) => left.name.localeCompare(right.name));
-    const syntheticWorld = normalizedNodes.find((node) => node.name === "world");
-    if (
-      syntheticWorld &&
-      !syntheticWorld.hasMesh &&
-      syntheticWorld.parent === null &&
-      syntheticWorld.children.length === 1 &&
-      normalizedRoots.length === 1 &&
-      normalizedRoots[0] === "world" &&
-      syntheticWorld.matrix.every((value, index) => value === [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1][index])
-    ) {
-      const childName = syntheticWorld.children[0];
-      normalizedRoots = [childName];
-      normalizedNodes = normalizedNodes.filter((node) => node.name !== "world").map((node) => (node.name === childName ? { ...node, parent: null } : node));
-    }
-    return {
-      roots: normalizedRoots,
-      nodes: normalizedNodes,
-    };
-  };
-
-  const runExportReportCommand = async (command: string, args: string[], cwd: string) => {
-    const { execFileSync } = await import("node:child_process");
-    let lastError: unknown;
-    for (let attempt = 1; attempt <= 2; attempt++) {
-      try {
-        execFileSync(command, args, {
-          cwd,
-          stdio: "pipe",
-        });
-        return;
-      } catch (error) {
-        lastError = error;
-        if (attempt === 2) break;
-      }
-    }
-    throw lastError;
-  };
-
-  const parseSelfContainedGltf = async (reportText: string) => {
-    const parsed = JSON.parse(reportText) as {
-      buffers?: Array<{ uri?: string }>;
-      images?: Array<{ uri?: string }>;
-    };
-    const resources: Record<string, Uint8Array<ArrayBuffer>> = {};
-    const collectResource = (uri?: string) => {
-      if (!uri?.startsWith("data:")) return;
-      const base64 = uri.slice(uri.indexOf(",") + 1);
-      resources[uri] = new Uint8Array(Buffer.from(base64, "base64"));
-    };
-    for (const buffer of parsed.buffers ?? []) collectResource(buffer.uri);
-    for (const image of parsed.images ?? []) collectResource(image.uri);
-    const io = new NodeIO();
-    return io.readJSON({ json: parsed as any, resources });
-  };
-
-  const getMeshNames = (reportText: string) => {
-    const parsed = JSON.parse(reportText) as { meshes?: Array<{ name?: string }> };
-    return (parsed.meshes ?? []).map((mesh) => mesh.name).filter((name): name is string => Boolean(name));
-  };
-
-  describe("KitDiffValidation", () => {
-    const cases = ValidateKitDiffCases as {
-      tinyKit: unknown;
-      cases: Array<{
-        id: string;
-        diff: Record<string, unknown>;
-        expectOk: boolean;
-        errorCodes: string[];
-        warningCodes: string[];
-      }>;
-    };
-    const tinyKit = new KitImpl(KitSchema.parse(cases.tinyKit) as KitData);
-    for (const tc of cases.cases) {
-      it(`asset case ${tc.id}`, () => {
-        const r = validateKitGraphDiff(tinyKit, tc.diff as KitDiff, false);
-        expect(r.ok).toBe(tc.expectOk);
-        const errCodes = r.errors.map((e) => e.code).filter(Boolean) as string[];
-        const warnCodes = r.warnings.map((w) => w.code).filter(Boolean) as string[];
-        for (const c of tc.errorCodes) {
-          expect(errCodes).toContain(c);
-        }
-        for (const c of tc.warningCodes) {
-          expect(warnCodes).toContain(c);
+  // #endregion 🔄Transaction Undo/Redo Tests
         }
       });
     }
@@ -20750,7 +20127,7 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  describe("Kit object model (spec API)", () => {
+  describe("Kit object representation (spec API)", () => {
     it("Kit(), transactions.start (uuid v7), setActiveTransaction, findDesign/findPiece objects, connections(), piece ops, history undo", () => {
       const kit = Kit(MetabolismKit as KitData);
 
@@ -20852,23 +20229,23 @@ if (shouldRunEmbeddedJsTests) {
         expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
       });
 
-      describe("Design/Model", () => {
-        it("selectBestModel uses tag filtering + modified jaccard and matches shared semio asset cases", () => {
-          const payload = ModelSelectionCases as {
+      describe("Design/Representation", () => {
+        it("selectBestRepresentation uses tag filtering + modified jaccard and matches shared semio asset cases", () => {
+          const payload = RepresentationSelectionCases as {
             cases: Array<{
               name: string;
               selectedTagGuids: string[];
               expectedGuid: string | null;
-              models: Array<{ guid: string; fileGuid: string; tagGuids: string[] }>;
+              representations: Array<{ guid: string; fileGuid: string; tagGuids: string[] }>;
             }>;
           };
           payload.cases.forEach((testCase) => {
-            const models: Model[] = testCase.models.map((model) => ({
-              guid: model.guid,
-              file: { guid: model.fileGuid },
-              tags: model.tagGuids.map((guid) => ({ guid })),
+            const representations: Representation[] = testCase.representations.map((representation) => ({
+              guid: representation.guid,
+              file: { guid: representation.fileGuid },
+              tags: representation.tagGuids.map((guid) => ({ guid })),
             }));
-            const selected = selectBestModel(models, testCase.selectedTagGuids);
+            const selected = selectBestRepresentation(representations, testCase.selectedTagGuids);
             expect(selected?.guid ?? null).toBe(testCase.expectedGuid);
           });
         });
@@ -20903,7 +20280,7 @@ if (shouldRunEmbeddedJsTests) {
       for (const expectedType of expected.types) {
         const filteredType = filtered.types?.find((t: any) => t.guid === expectedType.guid);
         expect(filteredType).toBeDefined();
-        expect(filteredType!.models?.length ?? 0).toBe(expectedType.models?.length ?? 0);
+        expect(filteredType!.representations?.length ?? 0).toBe(expectedType.representations?.length ?? 0);
       }
 
       for (const piece of filteredDesign!.pieces ?? []) {
@@ -20913,9 +20290,9 @@ if (shouldRunEmbeddedJsTests) {
       }
 
       for (const type of filtered.types ?? []) {
-        expect((type.models ?? []).length).toBeLessThanOrEqual(1);
-        for (const model of type.models ?? []) {
-          expect(filtered.files?.some((f) => f.guid === model.file.guid)).toBe(true);
+        expect((type.representations ?? []).length).toBeLessThanOrEqual(1);
+        for (const representation of type.representations ?? []) {
+          expect(filtered.files?.some((f) => f.guid === representation.file.guid)).toBe(true);
         }
         for (const connector of type.connectors ?? []) {
           if (connector.port?.guid) {
@@ -21235,7 +20612,7 @@ if (shouldRunEmbeddedJsTests) {
       for (const expectedType of expected.types) {
         const filteredType = filtered.types?.find((t: any) => t.guid === expectedType.guid);
         expect(filteredType).toBeDefined();
-        expect(filteredType!.models?.length ?? 0).toBe(expectedType.models?.length ?? 0);
+        expect(filteredType!.representations?.length ?? 0).toBe(expectedType.representations?.length ?? 0);
       }
 
       for (const piece of filteredDesign!.pieces ?? []) {
@@ -21245,8 +20622,8 @@ if (shouldRunEmbeddedJsTests) {
       }
 
       for (const type of filtered.types ?? []) {
-        for (const model of type.models ?? []) {
-          expect(filtered.files?.some((f) => f.guid === model.file.guid)).toBe(true);
+        for (const representation of type.representations ?? []) {
+          expect(filtered.files?.some((f) => f.guid === representation.file.guid)).toBe(true);
         }
         for (const connector of type.connectors ?? []) {
           if (connector.port?.guid) {
@@ -21263,10 +20640,10 @@ if (shouldRunEmbeddedJsTests) {
       expect(filtered.version).toBe(kit.version);
     });
 
-    it("each type has at most one model", () => {
+    it("each type has at most one representation", () => {
       const filtered = filterKit(kit, { designGuid: nakaginDesign!.guid });
       for (const type of filtered.types ?? []) {
-        expect((type.models ?? []).length).toBeLessThanOrEqual(1);
+        expect((type.representations ?? []).length).toBeLessThanOrEqual(1);
       }
     });
   });
@@ -22994,14 +22371,14 @@ if (shouldRunEmbeddedJsTests) {
     }
   });
 
-  describe("ExportDesignModel", () => {
-    const exportCases = (ExportDesignModelCases as any).cases as Array<{ name: string; designName: string }>;
+  describe("ExportDesignRepresentation", () => {
+    const exportCases = (ExportDesignRepresentationCases as any).cases as Array<{ name: string; designName: string }>;
     const exportCase = exportCases[0];
     const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
     const design = kit.designs?.find((d) => d.name === exportCase.designName)!;
 
     it("exports .glb format with valid GLB header", async () => {
-      const result = await exportDesignModel(kit, design.guid, ".glb");
+      const result = await exportDesignRepresentation(kit, design.guid, ".glb");
       expect(result.byteLength).toBeGreaterThan(0);
 
       const view = new DataView(result);
@@ -23016,7 +22393,7 @@ if (shouldRunEmbeddedJsTests) {
     });
 
     it("exports .gltf format as valid JSON string", async () => {
-      const result = await exportDesignModel(kit, design.guid, ".gltf");
+      const result = await exportDesignRepresentation(kit, design.guid, ".gltf");
       const decoder = new TextDecoder();
       const str = decoder.decode(result);
       expect(() => JSON.parse(str)).not.toThrow();
@@ -23035,13 +22412,13 @@ if (shouldRunEmbeddedJsTests) {
       const { EXPORT_REPORTS_DIR, resolve, __dirname } = await getTestNodePaths();
       mkdirSync(EXPORT_REPORTS_DIR, { recursive: true });
 
-      const jsResult = new Uint8Array(await exportDesignModel(kit, design.guid, ".gltf"));
+      const jsResult = new Uint8Array(await exportDesignRepresentation(kit, design.guid, ".gltf"));
       await writeExportReport("js", jsResult);
 
       await runExportReportCommand("uv", ["run", "pytest", "main.py", "-k", "export_scene_graph_report", "-q"], resolve(__dirname, "../py"));
       let skipGo = false;
       try {
-        await runExportReportCommand("go", ["test", "./...", "-run", "TestExportDesignModelSceneGraphReport$", "-count=1"], resolve(__dirname, "../go"));
+        await runExportReportCommand("go", ["test", "./...", "-run", "TestExportDesignRepresentationSceneGraphReport$", "-count=1"], resolve(__dirname, "../go"));
       } catch (e: any) {
         const message = String(e?.message ?? e);
         const looksLikeGoToolchainMismatch = message.includes("requires go >= 1.25.0") && message.includes("go.work lists go 1.24.0");
@@ -23049,7 +22426,7 @@ if (shouldRunEmbeddedJsTests) {
           // [DEBUG] This repository's Go modules require a newer Go toolchain than the one installed in some CI/dev containers.
           // Skip the cross-implementation "go" comparison in that case; other implementations still run.
           // eslint-disable-next-line no-console
-          console.warn(`[DEBUG] skipping go ExportDesignModelSceneGraphReport due to Go toolchain mismatch: ${message}`);
+          console.warn(`[DEBUG] skipping go ExportDesignRepresentationSceneGraphReport due to Go toolchain mismatch: ${message}`);
           skipGo = true;
         } else {
           throw e;
@@ -23058,7 +22435,7 @@ if (shouldRunEmbeddedJsTests) {
       await runExportReportCommand("cargo", ["test", "export_scene_graph_report", "--", "--nocapture"], resolve(__dirname, "../rs"));
       await runExportReportCommand(
         "dotnet",
-        ["test", "Semio.Tests.csproj", "-f", "net8.0", "--filter", "FullyQualifiedName=Semio.Tests.Tests+ExportDesignModel.Nakagin_Capsule_Tower_Export_Scene_Graph_Report"],
+        ["test", "Semio.Tests.csproj", "-f", "net8.0", "--filter", "FullyQualifiedName=Semio.Tests.Tests+ExportDesignRepresentation.Nakagin_Capsule_Tower_Export_Scene_Graph_Report"],
         resolve(__dirname, "../net/Semio.Tests"),
       );
 
@@ -23097,16 +22474,16 @@ if (shouldRunEmbeddedJsTests) {
     }, 300000);
   });
 
-  describe("Model/KPI", () => {
-    it("getGeometricInsightsForModel(nakagin-capsule-tower.gltf) returns canonical insights and writes report", async () => {
+  describe("Representation/KPI", () => {
+    it("getGeometricInsightsForRepresentation(nakagin-capsule-tower.gltf) returns canonical insights and writes report", async () => {
       const fs = await import("node:fs/promises");
       const { resolve, __dirname } = await getTestNodePaths();
-      const modelPath = resolve(__dirname, "../assets/semio/nakagin-capsule-tower.gltf");
-      const insights = await getGeometricInsightsForModel(modelPath);
+      const representationPath = resolve(__dirname, "../assets/semio/nakagin-capsule-tower.gltf");
+      const insights = await getGeometricInsightsForRepresentation(representationPath);
       const round6 = (x: number) => Math.round(x * 1e6) / 1e6;
       const pt = (p: { x: number; y: number; z: number } | undefined) => (p ? { x: round6(p.x), y: round6(p.y), z: round6(p.z) } : undefined);
 
-      const reportsDir = resolve(__dirname, "../reports/model-kpi");
+      const reportsDir = resolve(__dirname, "../reports/representation-kpi");
       await fs.mkdir(reportsDir, { recursive: true });
       const report: Record<string, unknown> = {
         aspect_ratio_xy: insights.aspectRatioXy != null ? round6(insights.aspectRatioXy) : undefined,
@@ -23128,7 +22505,7 @@ if (shouldRunEmbeddedJsTests) {
       };
       await fs.writeFile(resolve(reportsDir, "js.json"), JSON.stringify(report, null, 2), "utf8");
 
-      const canonicalPath = resolve(__dirname, "../assets/semio/nakagin.kpi.model.semio.json");
+      const canonicalPath = resolve(__dirname, "../assets/semio/nakagin.kpi.representation.semio.json");
       const canonical = JSON.parse(await fs.readFile(canonicalPath, "utf8"));
       const skipKeys = new Set(["centroid", "total_surface_area"]);
       for (const key of Object.keys(canonical)) {
@@ -24264,26 +23641,26 @@ if (shouldRunEmbeddedJsTests) {
         expect(files.some((p) => p === "representations/base.glb")).toBe(true);
       });
 
-      it("loads types with models pointing at kit files so 3D meshes resolve", async () => {
+      it("loads types with representations pointing at kit files so 3D meshes resolve", async () => {
         const studio = await loadStudio();
         const folderPath = await getMetabolismFolderPath();
         const adapter = await makeNodeFolderAdapter(folderPath);
         const store = await studio.createFolderKitStore(adapter);
         const kit = store.getSnapshot().kit;
 
-        const typesWithModels = (kit.types ?? []).filter((t: any) => (t.models ?? []).length > 0);
-        expect(typesWithModels.length).toBeGreaterThan(0);
+        const typesWithRepresentations = (kit.types ?? []).filter((t: any) => (t.representations ?? []).length > 0);
+        expect(typesWithRepresentations.length).toBeGreaterThan(0);
 
         const fileGuidSet = new Set((kit.files ?? []).map((f: any) => f.guid));
-        for (const type of typesWithModels) {
-          for (const model of (type as any).models ?? []) {
-            expect(model.file?.guid).toBeDefined();
-            expect(fileGuidSet.has(model.file.guid)).toBe(true);
+        for (const type of typesWithRepresentations) {
+          for (const representation of (type as any).representations ?? []) {
+            expect(representation.file?.guid).toBeDefined();
+            expect(fileGuidSet.has(representation.file.guid)).toBe(true);
           }
         }
 
-        const firstModel = typesWithModels[0].models?.[0];
-        const firstFile = (kit.files ?? []).find((f: any) => f.guid === firstModel?.file?.guid);
+        const firstRepresentation = typesWithRepresentations[0].representations?.[0];
+        const firstFile = (kit.files ?? []).find((f: any) => f.guid === firstRepresentation?.file?.guid);
         expect(firstFile).toBeDefined();
         const storagePath = (() => {
           const foldersByGuid = new Map((kit.folders ?? []).map((f: any) => [f.guid, f]));
@@ -24479,9 +23856,9 @@ if (shouldRunEmbeddedJsTests) {
         expect(parsed.name).toBe("Metabolism");
         expect(parsed.types).toBeDefined();
         expect(parsed.types!.length).toBeGreaterThan(0);
-        // ­ƒÅÀ´©ÅShallow types should be meta (no nested collections like models)
+        // ­ƒÅÀ´©ÅShallow types should be meta (no nested collections like representations)
         const firstType = parsed.types![0] as any;
-        expect(firstType.models).toBeUndefined();
+        expect(firstType.representations).toBeUndefined();
         expect(firstType.connectors).toBeUndefined();
       });
       it("toKitShallow converts full kit to shallow with meta children", () => {
@@ -24491,7 +23868,7 @@ if (shouldRunEmbeddedJsTests) {
         expect(shallow.types).toBeDefined();
         expect(shallow.types!.length).toBeGreaterThan(0);
         const firstType = shallow.types![0] as any;
-        expect(firstType.models).toBeUndefined();
+        expect(firstType.representations).toBeUndefined();
         expect(firstType.connectors).toBeUndefined();
       });
       it("roundtrips KitShallow through serialize/deserialize", () => {
@@ -24509,7 +23886,7 @@ if (shouldRunEmbeddedJsTests) {
         const parsed = TypeMetaSchema.parse(TambourMetaType);
         expect(parsed.name).toBe("Tambour");
         expect(parsed.guid).toBe("2a6bb3e8-4adb-44a3-bc87-3314b77b40f7");
-        expect((parsed as any).models).toBeUndefined();
+        expect((parsed as any).representations).toBeUndefined();
         expect((parsed as any).connectors).toBeUndefined();
         expect((parsed as any).props).toBeUndefined();
       });
@@ -24518,7 +23895,7 @@ if (shouldRunEmbeddedJsTests) {
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const meta = toTypeMeta(tambour);
         expect(meta.name).toBe("Tambour");
-        expect((meta as any).models).toBeUndefined();
+        expect((meta as any).representations).toBeUndefined();
         expect((meta as any).connectors).toBeUndefined();
       });
     });
@@ -24527,9 +23904,9 @@ if (shouldRunEmbeddedJsTests) {
       it("parses tambour.shallow.type.semio.json with TypeShallowSchema", () => {
         const parsed = TypeShallowSchema.parse(TambourShallowType);
         expect(parsed.name).toBe("Tambour");
-        if (parsed.models) {
-          const firstModel = parsed.models[0] as any;
-          expect(firstModel.tags).toBeUndefined();
+        if (parsed.representations) {
+          const firstRepresentation = parsed.representations[0] as any;
+          expect(firstRepresentation.tags).toBeUndefined();
         }
       });
       it("toTypeShallow converts full type to shallow with meta children", () => {
@@ -24537,9 +23914,9 @@ if (shouldRunEmbeddedJsTests) {
         const tambour = kit.types!.find((t: Type) => t.name === "Tambour")!;
         const shallow = toTypeShallow(tambour);
         expect(shallow.name).toBe("Tambour");
-        if (shallow.models) {
-          const firstModel = shallow.models[0] as any;
-          expect(firstModel.tags).toBeUndefined();
+        if (shallow.representations) {
+          const firstRepresentation = shallow.representations[0] as any;
+          expect(firstRepresentation.tags).toBeUndefined();
         }
       });
     });

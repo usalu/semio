@@ -2,7 +2,7 @@
 -- semio/sqlite/schema.sql
 -- 2025 Ueli Saluz <ueli@semio-tech.com>
 -- This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
--- This schema supports the complete semio data model with GUIDs as primary identifiers
+-- This schema supports the complete semio data representation with GUIDs as primary identifiers
 -- #endregion 🧲Header
 CREATE TABLE semio (
 	release VARCHAR NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE tag (
 	FOREIGN KEY(kit_guid) REFERENCES kit (guid)
 );
 
-CREATE TABLE model (
+CREATE TABLE representation (
 	guid VARCHAR(36) NOT NULL,
 	file_guid VARCHAR(36) NOT NULL,
 	name VARCHAR(256),
@@ -163,11 +163,11 @@ CREATE TABLE model (
 	FOREIGN KEY(type_guid) REFERENCES type (guid)
 );
 
-CREATE TABLE model_tag (
-	model_guid VARCHAR(36) NOT NULL,
+CREATE TABLE representation_tag (
+	representation_guid VARCHAR(36) NOT NULL,
 	tag_guid VARCHAR(36) NOT NULL,
-	PRIMARY KEY (model_guid, tag_guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	PRIMARY KEY (representation_guid, tag_guid),
+	FOREIGN KEY(representation_guid) REFERENCES representation (guid),
 	FOREIGN KEY(tag_guid) REFERENCES tag (guid)
 );
 
@@ -421,7 +421,7 @@ CREATE TABLE attribute (
 	folder_guid VARCHAR(36),
 	file_guid VARCHAR(36),
 	author_guid VARCHAR(36),
-	model_guid VARCHAR(36),
+	representation_guid VARCHAR(36),
 	prop_guid VARCHAR(36),
 	connector_guid VARCHAR(36),
 	type_guid VARCHAR(36),
@@ -439,7 +439,7 @@ CREATE TABLE attribute (
 	FOREIGN KEY(tag_guid) REFERENCES tag (guid),
 	FOREIGN KEY(concept_guid) REFERENCES concept (guid),
 	FOREIGN KEY(author_guid) REFERENCES author (guid),
-	FOREIGN KEY(model_guid) REFERENCES model (guid),
+	FOREIGN KEY(representation_guid) REFERENCES representation (guid),
 	FOREIGN KEY(prop_guid) REFERENCES prop (guid),
 	FOREIGN KEY(connector_guid) REFERENCES connector (guid),
 	FOREIGN KEY(type_guid) REFERENCES type (guid),

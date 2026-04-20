@@ -33,7 +33,7 @@ erDiagram
         string key
         string value
         string definition
-        int model_id FK
+        int representation_id FK
         int connector_id FK
         int type_id FK
         int piece_id FK
@@ -89,7 +89,7 @@ erDiagram
         string unit
         datetime created_at
         datetime updated_at
-        int model_id FK
+        int representation_id FK
         int connector_id FK
         int type_id FK
         int piece_id FK
@@ -128,7 +128,7 @@ erDiagram
         int kit_id FK
     }
 
-    models {
+    representations {
         int id PK
         string guid
         string name
@@ -295,8 +295,8 @@ erDiagram
         datetime updated_at
     }
 
-    model_tags {
-        int model_id PK
+    representation_tags {
+        int representation_id PK
         int tag_id PK
         int order
     }
@@ -324,11 +324,11 @@ erDiagram
     types ||--o{ author_artifact : references
     designs ||--o{ author_artifact : references
 
-    models ||--o{ model_tags : links
-    tags ||--o{ model_tags : references
+    representations ||--o{ representation_tags : links
+    tags ||--o{ representation_tags : references
 
-    models ||--o{ attributes : has
-    files ||--o{ models : might_reference
+    representations ||--o{ attributes : has
+    files ||--o{ representations : might_reference
 
     connectors ||--o{ compatible_ports : has
     connectors ||--o{ attributes : has
@@ -345,7 +345,7 @@ erDiagram
     kits ||--o{ kit_concepts : links
     concepts ||--o{ kit_concepts : references
 
-    types ||--o{ models : has
+    types ||--o{ representations : has
     types ||--o{ connectors : has
     types ||--o{ authors : has
     types ||--o{ attributes : has
@@ -399,7 +399,7 @@ kit : !Kit{
     name : !String
     types : *Type[
         name : !String
-        models : +Model[
+        representations : +Representation[
             guid : !String
             name : ?String
             tags : *TagId[] // references to kit-level tags
@@ -851,17 +851,17 @@ class TagStore {
   +toFullDto() TagFullDto
 }
 
-class ModelStore {
-  +ModelStore(dto: ModelIdDto)
-  +ModelStore(dto: ModelInputDto)
-  +ModelStore(dto: ModelMetadataDto)
-  +ModelStore(dto: ModelShallowDto)
-  +ModelStore(dto: ModelFullDto)
-  +toIdDto() ModelIdDto
-  +toInputDto() ModelInputDto
-  +toMetadataDto() ModelMetadataDto
-  +toShallowDto() ModelShallowDto
-  +toFullDto() ModelFullDto
+class RepresentationStore {
+  +RepresentationStore(dto: RepresentationIdDto)
+  +RepresentationStore(dto: RepresentationInputDto)
+  +RepresentationStore(dto: RepresentationMetadataDto)
+  +RepresentationStore(dto: RepresentationShallowDto)
+  +RepresentationStore(dto: RepresentationFullDto)
+  +toIdDto() RepresentationIdDto
+  +toInputDto() RepresentationInputDto
+  +toMetadataDto() RepresentationMetadataDto
+  +toShallowDto() RepresentationShallowDto
+  +toFullDto() RepresentationFullDto
 }
 
 class PortStore {
@@ -1451,10 +1451,10 @@ class TagFullDto {
   +attributes: AttributeFullDto[]
 }
 
-class ModelIdDto {
+class RepresentationIdDto {
   +id: String
 }
-class ModelInputDto {
+class RepresentationInputDto {
   +id: String
   +name: String
   +tags: TagIdDto[]
@@ -1462,7 +1462,7 @@ class ModelInputDto {
   +description: String
   +attributes: AttributeInputDto[]
 }
-class ModelMetadataDto {
+class RepresentationMetadataDto {
   <<abstract>>
   +id: String
   +name: String
@@ -1470,7 +1470,7 @@ class ModelMetadataDto {
   +file: FileIdDto
   +description: String
 }
-class ModelShallowDto {
+class RepresentationShallowDto {
   <<abstract>>
   +id: String
   +name: String
@@ -1479,7 +1479,7 @@ class ModelShallowDto {
   +description: String
   +attributes: AttributeMetadataDto[]
 }
-class ModelFullDto {
+class RepresentationFullDto {
   <<abstract>>
   +id: String
   +name: String
@@ -1847,7 +1847,7 @@ class TypeInputDto {
   +parent: TypeIdDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelInputDto[]
+  +representations: RepresentationInputDto[]
   +connectors: ConnectorInputDto[]
   +props: PropInputDto[]
   +stock: Int
@@ -1889,7 +1889,7 @@ class TypeShallowDto {
   +parent: TypeMetadataDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelMetadataDto[]
+  +representations: RepresentationMetadataDto[]
   +connectors: ConnectorMetadataDto[]
   +props: PropMetadataDto[]
   +stock: Int
@@ -1912,7 +1912,7 @@ class TypeFullDto {
   +parent: TypeMetadataDto
   +isAbstract: Boolean
   +folder: String
-  +models: ModelFullDto[]
+  +representations: RepresentationFullDto[]
   +connectors: ConnectorFullDto[]
   +props: PropFullDto[]
   +stock: Int
@@ -2145,7 +2145,7 @@ QualityStore --|> Store
 BenchmarkStore --|> Store
 StatStore --|> Store
 TagStore --|> Store
-ModelStore --|> Store
+RepresentationStore --|> Store
 PortStore --|> Store
 ConnectorStore --|> Store
 PropStore --|> Store
@@ -2217,11 +2217,11 @@ TagMetadataDto --|> MetadataDto
 TagShallowDto --|> ShallowDto
 TagFullDto --|> FullDto
 
-ModelIdDto --|> IdDto
-ModelInputDto --|> InputDto
-ModelMetadataDto --|> MetadataDto
-ModelShallowDto --|> ShallowDto
-ModelFullDto --|> FullDto
+RepresentationIdDto --|> IdDto
+RepresentationInputDto --|> InputDto
+RepresentationMetadataDto --|> MetadataDto
+RepresentationShallowDto --|> ShallowDto
+RepresentationFullDto --|> FullDto
 
 PortIdDto --|> IdDto
 PortInputDto --|> InputDto
@@ -2421,7 +2421,7 @@ $$
 \tau =
 (
 name,
-models,
+representations,
 connectors,
 props,
 isVirtual,
@@ -2624,7 +2624,7 @@ $$
 \bigl(\operatorname{port}^{\ast}(\kappa_1) \in compatiblePorts(\kappa_2)\bigr).
 $$
 
-### 💾 Model
+### 💾 Representation
 
 $$
 m = (guid, name, tags, file, description, attributes).

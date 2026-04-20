@@ -115,18 +115,18 @@ func appendBenchmarkCsv(language string, name string, durationSeconds float64) {
 	_ = os.WriteFile(path, []byte(out.String()), 0644)
 }
 
-type modelSelectionAsset struct {
-	Cases []modelSelectionCase `json:"cases"`
+type representationSelectionAsset struct {
+	Cases []representationSelectionCase `json:"cases"`
 }
 
-type modelSelectionCase struct {
+type representationSelectionCase struct {
 	Name             string                `json:"name"`
 	SelectedTagGuids []string              `json:"selectedTagGuids"`
 	ExpectedGuid     *string               `json:"expectedGuid"`
-	Models           []modelSelectionModel `json:"models"`
+	Representations           []representationSelectionRepresentation `json:"representations"`
 }
 
-type modelSelectionModel struct {
+type representationSelectionRepresentation struct {
 	Guid     string   `json:"guid"`
 	FileGuid string   `json:"fileGuid"`
 	TagGuids []string `json:"tagGuids"`
@@ -285,10 +285,10 @@ func loadJSON(t *testing.T, filename string, v interface{}) {
 	}
 }
 
-func containsAllTags(model Model, selectedTagGuids []string) bool {
+func containsAllTags(representation Representation, selectedTagGuids []string) bool {
 	for _, selectedGuid := range selectedTagGuids {
 		found := false
-		for _, tag := range model.Tags {
+		for _, tag := range representation.Tags {
 			if tag.Guid == selectedGuid {
 				found = true
 				break
@@ -331,22 +331,22 @@ func jaccardTagGuids(a []TagId, b []string) float64 {
 	return float64(intersection) / float64(union)
 }
 
-func selectBestModelLikeSemioTS(models []Model, selectedTagGuids []string) *Model {
-	if len(models) == 0 {
+func selectBestRepresentationLikeSemioTS(representations []Representation, selectedTagGuids []string) *Representation {
+	if len(representations) == 0 {
 		return nil
 	}
 	if len(selectedTagGuids) == 0 {
-		for i := range models {
-			if len(models[i].Tags) == 0 {
-				return &models[i]
+		for i := range representations {
+			if len(representations[i].Tags) == 0 {
+				return &representations[i]
 			}
 		}
-		return &models[0]
+		return &representations[0]
 	}
-	filtered := make([]Model, 0)
-	for _, model := range models {
-		if containsAllTags(model, selectedTagGuids) {
-			filtered = append(filtered, model)
+	filtered := make([]Representation, 0)
+	for _, representation := range representations {
+		if containsAllTags(representation, selectedTagGuids) {
+			filtered = append(filtered, representation)
 		}
 	}
 	if len(filtered) == 0 {
@@ -541,24 +541,24 @@ func TestRoundtrip(t *testing.T) {
 	})
 }
 
-func TestDesignModel(t *testing.T) {
-	t.Run("Model selection cases from shared semio assets", func(t *testing.T) {
-		var payload modelSelectionAsset
-		loadJSON(t, "model.selection.semio.json", &payload)
+func TestDesignRepresentation(t *testing.T) {
+	t.Run("Representation selection cases from shared semio assets", func(t *testing.T) {
+		var payload representationSelectionAsset
+		loadJSON(t, "representation.selection.semio.json", &payload)
 		for _, testCase := range payload.Cases {
-			models := make([]Model, 0, len(testCase.Models))
-			for _, model := range testCase.Models {
-				tags := make([]TagId, 0, len(model.TagGuids))
-				for _, guid := range model.TagGuids {
+			representations := make([]Representation, 0, len(testCase.Representations))
+			for _, representation := range testCase.Representations {
+				tags := make([]TagId, 0, len(representation.TagGuids))
+				for _, guid := range representation.TagGuids {
 					tags = append(tags, TagId{Guid: guid})
 				}
-				models = append(models, Model{
-					Guid: model.Guid,
-					File: FileId{Guid: model.FileGuid},
+				representations = append(representations, Representation{
+					Guid: representation.Guid,
+					File: FileId{Guid: representation.FileGuid},
 					Tags: tags,
 				})
 			}
-			selected := selectBestModelLikeSemioTS(models, testCase.SelectedTagGuids)
+			selected := selectBestRepresentationLikeSemioTS(representations, testCase.SelectedTagGuids)
 			if testCase.ExpectedGuid == nil {
 				if selected != nil {
 					t.Fatalf("Case %q failed: got %q expected nil", testCase.Name, selected.Guid)
@@ -623,8 +623,8 @@ func TestKitFilterDesign(t *testing.T) {
 			for _, filteredType := range filtered.Types {
 				if filteredType.Guid == expectedType.Guid {
 					matches++
-					if len(filteredType.Models) != len(expectedType.Models) {
-						t.Fatalf("Expected type %s to have %d models, got %d", expectedType.Guid, len(expectedType.Models), len(filteredType.Models))
+					if len(filteredType.Representations) != len(expectedType.Representations) {
+						t.Fatalf("Expected type %s to have %d representations, got %d", expectedType.Guid, len(expectedType.Representations), len(filteredType.Representations))
 					}
 				}
 			}
@@ -650,19 +650,19 @@ func TestKitFilterDesign(t *testing.T) {
 		}
 
 		for _, filteredType := range filtered.Types {
-			if len(filteredType.Models) > 1 {
-				t.Fatalf("Type %s has %d models, expected at most 1", filteredType.Guid, len(filteredType.Models))
+			if len(filteredType.Representations) > 1 {
+				t.Fatalf("Type %s has %d representations, expected at most 1", filteredType.Guid, len(filteredType.Representations))
 			}
-			for _, model := range filteredType.Models {
+			for _, representation := range filteredType.Representations {
 				foundFile := false
 				for _, file := range filtered.Files {
-					if file.Guid == model.File.Guid {
+					if file.Guid == representation.File.Guid {
 						foundFile = true
 						break
 					}
 				}
 				if !foundFile {
-					t.Fatalf("Missing filtered file %s for type %s", model.File.Guid, filteredType.Guid)
+					t.Fatalf("Missing filtered file %s for type %s", representation.File.Guid, filteredType.Guid)
 				}
 			}
 			for _, connector := range filteredType.Connectors {
@@ -708,7 +708,7 @@ func TestFlatten(t *testing.T) {
 
 // #region 🌳Flatten Merkle Hash Tests
 
-// 🌳flattenMerkleMutation models a single kit mutation described by the shared merkle cases asset.
+// 🌳flattenMerkleMutation representations a single kit mutation described by the shared merkle cases asset.
 type flattenMerkleMutation struct {
 	Kind           string          `json:"kind"`
 	PieceGuid      string          `json:"pieceGuid"`
@@ -2169,7 +2169,7 @@ func TestDesignQualitySum(t *testing.T) {
 	}
 }
 
-func TestExportDesignModel(t *testing.T) {
+func TestExportDesignRepresentation(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "metabolism.kit.semio.json", &kit)
 
@@ -2179,9 +2179,9 @@ func TestExportDesignModel(t *testing.T) {
 	}
 
 	t.Run("GLB format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".glb", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Guid, ".glb", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		if result == nil {
 			t.Fatal("result is nil")
@@ -2207,9 +2207,9 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("GLTF format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Guid, ".gltf", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		if result == nil {
 			t.Fatal("result is nil")
@@ -2224,7 +2224,7 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("Invalid format", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".xyz", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Guid, ".xyz", nil, nil)
 		if err == nil {
 			t.Fatal("expected error for invalid format, got nil")
 		}
@@ -2234,15 +2234,15 @@ func TestExportDesignModel(t *testing.T) {
 	})
 
 	t.Run("Scene graph report", func(t *testing.T) {
-		result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+		result, err := ExportDesignRepresentation(&kit, design.Guid, ".gltf", nil, nil)
 		if err != nil {
-			t.Fatalf("ExportDesignModel failed: %v", err)
+			t.Fatalf("ExportDesignRepresentation failed: %v", err)
 		}
 		var parsed interface{}
 		if err := json.Unmarshal(result, &parsed); err != nil {
 			t.Fatalf("result is not valid JSON: %v", err)
 		}
-		reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+		reportsDir := filepath.Join("..", "..", "reports", "export-design-representation")
 		if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 			t.Fatalf("failed to create reports directory: %v", err)
 		}
@@ -2253,22 +2253,22 @@ func TestExportDesignModel(t *testing.T) {
 	})
 }
 
-func TestExportDesignModelSceneGraphReport(t *testing.T) {
+func TestExportDesignRepresentationSceneGraphReport(t *testing.T) {
 	var kit Kit
 	loadJSON(t, "metabolism.kit.semio.json", &kit)
 	design := findDesignByName(kit.Designs, "Nakagin Capsule Tower", nil)
 	if design == nil {
 		t.Fatal("Nakagin Capsule Tower design not found")
 	}
-	result, err := ExportDesignModel(&kit, design.Guid, ".gltf", nil, nil)
+	result, err := ExportDesignRepresentation(&kit, design.Guid, ".gltf", nil, nil)
 	if err != nil {
-		t.Fatalf("ExportDesignModel failed: %v", err)
+		t.Fatalf("ExportDesignRepresentation failed: %v", err)
 	}
 	var parsed interface{}
 	if err := json.Unmarshal(result, &parsed); err != nil {
 		t.Fatalf("result is not valid JSON: %v", err)
 	}
-	reportsDir := filepath.Join("..", "..", "reports", "export-design-model")
+	reportsDir := filepath.Join("..", "..", "reports", "export-design-representation")
 	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 		t.Fatalf("failed to create reports directory: %v", err)
 	}
@@ -2280,16 +2280,16 @@ func TestExportDesignModelSceneGraphReport(t *testing.T) {
 
 func round6(x float64) float64 { return math.Round(x*1e6) / 1e6 }
 
-func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
-	modelPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
-	if _, err := os.Stat(modelPath); err != nil {
+func TestGetGeometricInsightsForRepresentation_NakaginCapsuleTower(t *testing.T) {
+	representationPath := filepath.Join(AssetsPath, "nakagin-capsule-tower.gltf")
+	if _, err := os.Stat(representationPath); err != nil {
 		t.Skipf("nakagin-capsule-tower.gltf not found: %v", err)
 	}
-	insights, err := GetGeometricInsightsForModel(modelPath)
+	insights, err := GetGeometricInsightsForRepresentation(representationPath)
 	if err != nil {
-		t.Fatalf("GetGeometricInsightsForModel: %v", err)
+		t.Fatalf("GetGeometricInsightsForRepresentation: %v", err)
 	}
-	reportsDir := filepath.Join("..", "..", "reports", "model-kpi")
+	reportsDir := filepath.Join("..", "..", "reports", "representation-kpi")
 	if err := os.MkdirAll(reportsDir, 0o755); err != nil {
 		t.Fatalf("failed to create reports directory: %v", err)
 	}
@@ -2314,24 +2314,24 @@ func TestGetGeometricInsightsForModel_NakaginCapsuleTower(t *testing.T) {
 	}
 	b, err := json.MarshalIndent(report, "", "  ")
 	if err != nil {
-		t.Fatalf("failed to marshal go model-kpi report: %v", err)
+		t.Fatalf("failed to marshal go representation-kpi report: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(reportsDir, "go.json"), b, 0o644); err != nil {
-		t.Fatalf("failed to write go model-kpi report: %v", err)
+		t.Fatalf("failed to write go representation-kpi report: %v", err)
 	}
 
-	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.model.semio.json")
+	canonicalPath := filepath.Join(AssetsPath, "nakagin.kpi.representation.semio.json")
 	canonicalData, err := os.ReadFile(canonicalPath)
 	if err != nil {
-		t.Fatalf("failed to read canonical model-kpi asset: %v", err)
+		t.Fatalf("failed to read canonical representation-kpi asset: %v", err)
 	}
 	var canonical map[string]any
 	if err := json.Unmarshal(canonicalData, &canonical); err != nil {
-		t.Fatalf("failed to unmarshal canonical model-kpi asset: %v", err)
+		t.Fatalf("failed to unmarshal canonical representation-kpi asset: %v", err)
 	}
 	var current map[string]any
 	if err := json.Unmarshal(b, &current); err != nil {
-		t.Fatalf("failed to unmarshal go model-kpi report: %v", err)
+		t.Fatalf("failed to unmarshal go representation-kpi report: %v", err)
 	}
 	// Skip centroid and total_surface_area until GLTF merge/float pipeline matches Python exactly.
 	skipKeys := map[string]bool{"centroid": true, "total_surface_area": true}
@@ -2415,8 +2415,8 @@ func TestMetaShallow(t *testing.T) {
 		if len(shallow.Connectors) == 0 {
 			t.Error("TypeShallow.Connectors is empty")
 		}
-		if len(shallow.Models) == 0 {
-			t.Error("TypeShallow.Models is empty")
+		if len(shallow.Representations) == 0 {
+			t.Error("TypeShallow.Representations is empty")
 		}
 		if len(shallow.Props) == 0 {
 			t.Error("TypeShallow.Props is empty")
@@ -2912,8 +2912,8 @@ func TestFilterKit(t *testing.T) {
 			}
 
 			for _, typeItem := range filtered.Types {
-				if len(typeItem.Models) > 1 {
-					t.Errorf("type %s has %d models, expected at most 1", typeItem.Guid, len(typeItem.Models))
+				if len(typeItem.Representations) > 1 {
+					t.Errorf("type %s has %d representations, expected at most 1", typeItem.Guid, len(typeItem.Representations))
 				}
 			}
 		})

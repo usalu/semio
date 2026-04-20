@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 semio/ui/.storybook/stories/Scene.stories.tsx
-// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D models.
+// Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D representations.
 // Summary: Scene stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -29,10 +29,10 @@ const usedTypeGuids = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.gu
 const minimalTypes = (metabolismKit.types ?? [])
   .filter((t: any) => usedTypeGuids.has(t.guid))
   .map((t: any) => {
-    const models = (t.models ?? []).slice(0, 1);
-    return { ...t, models };
+    const representations = (t.representations ?? []).slice(0, 1);
+    return { ...t, representations };
   });
-const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.models ?? []).map((m: any) => m.file?.guid).filter(Boolean)));
+const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.representations ?? []).map((m: any) => m.file?.guid).filter(Boolean)));
 const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileGuids.has(f.guid));
 const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 

@@ -260,10 +260,10 @@
       ]
     },
     {
-      "constraintId": "model-name-unique",
-      "message": "Duplicate model name \"Duplicate Model Name\" inside type \"Duplicate Type Name\".",
+      "constraintId": "representation-name-unique",
+      "message": "Duplicate representation name \"Duplicate Representation Name\" inside type \"Duplicate Type Name\".",
       "location": {
-        "entityKind": "Model",
+        "entityKind": "Representation",
         "entityGuid": "019ab664-1111-1111-1111-111111110002",
         "field": "name"
       },
@@ -273,7 +273,7 @@
       ],
       "fixes": [
         {
-          "title": "Rename model \"Duplicate Model Name\"",
+          "title": "Rename representation \"Duplicate Representation Name\"",
           "diff": {
             "types": {
               "updated": [
@@ -282,14 +282,14 @@
                     "guid": "019ab664-1111-1111-1111-111111111111"
                   },
                   "diff": {
-                    "models": {
+                    "representations": {
                       "updated": [
                         {
-                          "model": {
+                          "representation": {
                             "guid": "019ab664-1111-1111-1111-111111110002"
                           },
                           "diff": {
-                            "name": "Duplicate Model Name 2"
+                            "name": "Duplicate Representation Name 2"
                           }
                         }
                       ]

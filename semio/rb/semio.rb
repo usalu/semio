@@ -30,8 +30,8 @@ module Semio
   # ✍️ A named contributor with optional email and rank.
   Author = Struct.new(:name, :email, :rank, keyword_init: true)
 
-  # � A 3D model reference linking a file with tags and description.
-  Model = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
+  # � A 3D representation reference linking a file with tags and description.
+  Representation = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
 
   # ◻️ A plane defined by an origin point and two axis vectors.
   Plane = Struct.new(:origin, :x_axis, :y_axis, keyword_init: true)
@@ -87,7 +87,7 @@ module Semio
     :created,
     :updated,
     :location,
-    :models,
+    :representations,
     :connectors,
     :authors,
     :attributes,

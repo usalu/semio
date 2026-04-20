@@ -26,20 +26,20 @@ public class Tests
     public static readonly string AssetsPath = "../../../../../assets/semio";
     private const double Tolerance = 0.001;
 
-    private sealed class ModelSelectionAsset
+    private sealed class RepresentationSelectionAsset
     {
-        public List<ModelSelectionCase> Cases { get; set; } = new();
+        public List<RepresentationSelectionCase> Cases { get; set; } = new();
     }
 
-    private sealed class ModelSelectionCase
+    private sealed class RepresentationSelectionCase
     {
         public string Name { get; set; } = "";
         public List<string> SelectedTagGuids { get; set; } = new();
         public string? ExpectedGuid { get; set; }
-        public List<ModelSelectionModel> Models { get; set; } = new();
+        public List<RepresentationSelectionRepresentation> Representations { get; set; } = new();
     }
 
-    private sealed class ModelSelectionModel
+    private sealed class RepresentationSelectionRepresentation
     {
         public string Guid { get; set; } = "";
         public string FileGuid { get; set; } = "";
@@ -1128,40 +1128,40 @@ public class Tests
         }
     }
 
-    public class DesignModel
+    public class DesignRepresentation
     {
-        private static Model? SelectBestModelLikeSemioTs(List<Model> models, List<string> selectedTagGuids)
+        private static Representation? SelectBestRepresentationLikeSemioTs(List<Representation> representations, List<string> selectedTagGuids)
         {
-            if (models.Count == 0) return null;
+            if (representations.Count == 0) return null;
             if (selectedTagGuids.Count == 0)
             {
-                var defaultModel = models.FirstOrDefault(r => r.Tags == null || r.Tags.Count == 0);
-                return defaultModel ?? models[0];
+                var defaultRepresentation = representations.FirstOrDefault(r => r.Tags == null || r.Tags.Count == 0);
+                return defaultRepresentation ?? representations[0];
             }
 
-            var filtered = models.Where(r => selectedTagGuids.All(tag => r.Tags.Any(t => t.Guid == tag))).ToList();
+            var filtered = representations.Where(r => selectedTagGuids.All(tag => r.Tags.Any(t => t.Guid == tag))).ToList();
             if (filtered.Count == 0) return null;
 
-            var type = new Type { Name = "selection-test", Models = filtered };
-            return type.FindModel(selectedTagGuids);
+            var type = new Type { Name = "selection-test", Representations = filtered };
+            return type.FindRepresentation(selectedTagGuids);
         }
 
         [Fact]
-        public void Model_Selection_From_Shared_Semio_Assets()
+        public void Representation_Selection_From_Shared_Semio_Assets()
         {
-            var payload = Tests.LoadAsset<ModelSelectionAsset>("model.selection.semio.json");
+            var payload = Tests.LoadAsset<RepresentationSelectionAsset>("representation.selection.semio.json");
             foreach (var testCase in payload.Cases)
             {
-                var models = testCase.Models
-                    .Select(model => new Model
+                var representations = testCase.Representations
+                    .Select(representation => new Representation
                     {
-                        Guid = model.Guid,
-                        File = new FileId { Guid = model.FileGuid },
-                        Tags = model.TagGuids.Select(tagGuid => new TagId { Guid = tagGuid }).ToList(),
+                        Guid = representation.Guid,
+                        File = new FileId { Guid = representation.FileGuid },
+                        Tags = representation.TagGuids.Select(tagGuid => new TagId { Guid = tagGuid }).ToList(),
                     })
                     .ToList();
 
-                var selected = SelectBestModelLikeSemioTs(models, testCase.SelectedTagGuids);
+                var selected = SelectBestRepresentationLikeSemioTs(representations, testCase.SelectedTagGuids);
                 Assert.Equal(testCase.ExpectedGuid, selected?.Guid);
             }
         }
@@ -1201,7 +1201,7 @@ public class Tests
             {
                 var filteredType = filtered.Types!.FirstOrDefault(t => t.Guid == expectedType.Guid);
                 Assert.NotNull(filteredType);
-                Assert.Equal(expectedType.Models?.Count ?? 0, filteredType!.Models?.Count ?? 0);
+                Assert.Equal(expectedType.Representations?.Count ?? 0, filteredType!.Representations?.Count ?? 0);
             }
 
             foreach (var piece in filteredDesign.Pieces ?? new List<Piece>())
@@ -1212,9 +1212,9 @@ public class Tests
 
             foreach (var kind in filtered.Types ?? new List<Type>())
             {
-                Assert.True((kind.Models?.Count ?? 0) <= 1, $"Type {kind.Guid} has more than one model");
-                foreach (var model in kind.Models ?? new List<Model>())
-                    Assert.Contains(filtered.Files ?? new List<File>(), file => file.Guid == model.File.Guid);
+                Assert.True((kind.Representations?.Count ?? 0) <= 1, $"Type {kind.Guid} has more than one representation");
+                foreach (var representation in kind.Representations ?? new List<Representation>())
+                    Assert.Contains(filtered.Files ?? new List<File>(), file => file.Guid == representation.File.Guid);
                 foreach (var connector in kind.Connectors ?? new List<Connector>())
                 {
                     if (connector.Port?.Guid == null) continue;
@@ -1326,7 +1326,7 @@ public class Tests
         }
     }
 
-    public class GetGeometricInsightsForModel
+    public class GetGeometricInsightsForRepresentation
     {
         static double Round6(double x) => Math.Round(x, 6);
         static object Pt(Point p) => p == null ? null : new { x = Round6(p.X), y = Round6(p.Y), z = Round6(p.Z) };
@@ -1337,9 +1337,9 @@ public class Tests
             var path = Path.Combine(AssetsPath, "nakagin-capsule-tower.gltf");
             if (!System.IO.File.Exists(path))
                 return;
-            var insights = Kit.GetGeometricInsightsForModel(path);
+            var insights = Kit.GetGeometricInsightsForRepresentation(path);
 
-            var reportsDir = Path.Combine("..", "..", "reports", "model-kpi");
+            var reportsDir = Path.Combine("..", "..", "reports", "representation-kpi");
             Directory.CreateDirectory(reportsDir);
             var report = new JObject
             {
@@ -1362,7 +1362,7 @@ public class Tests
             };
             System.IO.File.WriteAllText(Path.Combine(reportsDir, "net.json"), report.ToString());
 
-            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.model.semio.json");
+            var canonicalPath = Path.Combine(AssetsPath, "nakagin.kpi.representation.semio.json");
             var canonical = JObject.Parse(System.IO.File.ReadAllText(canonicalPath));
             var skip = new HashSet<string> { "centroid", "total_surface_area" };
             foreach (var kv in canonical)
@@ -1373,14 +1373,14 @@ public class Tests
         }
     }
 
-    public class ExportDesignModel
+    public class ExportDesignRepresentation
     {
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".glb");
+            var result = Kit.ExportDesignRepresentation(kit, design.Guid, ".glb");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             Assert.True(result.Length >= 12, "GLB header requires at least 12 bytes");
@@ -1399,7 +1399,7 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            var result = Kit.ExportDesignRepresentation(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
@@ -1412,7 +1412,7 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            Assert.Throws<ArgumentException>(() => Kit.ExportDesignModel(kit, design.Guid, ".invalid"));
+            Assert.Throws<ArgumentException>(() => Kit.ExportDesignRepresentation(kit, design.Guid, ".invalid"));
         }
 
         [Fact]
@@ -1420,13 +1420,13 @@ public class Tests
         {
             var kit = Tests.LoadAsset<Kit>("metabolism.kit.semio.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
-            var result = Kit.ExportDesignModel(kit, design.Guid, ".gltf");
+            var result = Kit.ExportDesignRepresentation(kit, design.Guid, ".gltf");
             Assert.NotNull(result);
             Assert.True(result.Length > 0, "Result must not be empty");
             var json = System.Text.Encoding.UTF8.GetString(result);
             var parsed = JsonConvert.DeserializeObject(json);
             Assert.NotNull(parsed);
-            var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-model"));
+            var reportsDir = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../../reports/export-design-representation"));
             Directory.CreateDirectory(reportsDir);
             System.IO.File.WriteAllBytes(Path.Combine(reportsDir, "net.gltf"), result);
         }
@@ -1466,17 +1466,17 @@ public class Tests
 
             Assert.Equal(type.Guid, shallow.Guid);
             Assert.Equal(type.Name, shallow.Name);
-            Assert.Equal(type.Models.Count, shallow.Models.Count);
+            Assert.Equal(type.Representations.Count, shallow.Representations.Count);
             Assert.Equal(type.Connectors.Count, shallow.Connectors.Count);
             Assert.Equal(type.Props.Count, shallow.Props.Count);
             Assert.Equal(type.Authors.Count, shallow.Authors.Count);
             Assert.Equal(type.Concepts.Count, shallow.Concepts.Count);
             Assert.Equal(type.Attributes.Count, shallow.Attributes.Count);
 
-            for (int i = 0; i < type.Models.Count; i++)
+            for (int i = 0; i < type.Representations.Count; i++)
             {
-                Assert.Equal(type.Models[i].Guid, shallow.Models[i].Guid);
-                Assert.Equal(type.Models[i].Name, shallow.Models[i].Name);
+                Assert.Equal(type.Representations[i].Guid, shallow.Representations[i].Guid);
+                Assert.Equal(type.Representations[i].Name, shallow.Representations[i].Name);
             }
             for (int i = 0; i < type.Connectors.Count; i++)
             {
@@ -1615,7 +1615,7 @@ public class Tests
                 var typeShallow = type.ToShallow();
                 Assert.Equal(type.Guid, typeMeta.Guid);
                 Assert.Equal(type.Guid, typeShallow.Guid);
-                Assert.Equal(type.Models.Count, typeShallow.Models.Count);
+                Assert.Equal(type.Representations.Count, typeShallow.Representations.Count);
                 Assert.Equal(type.Connectors.Count, typeShallow.Connectors.Count);
             }
 

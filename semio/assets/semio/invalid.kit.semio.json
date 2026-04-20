@@ -5,17 +5,17 @@
     {
       "guid": "019ab664-1111-1111-1111-111111111111",
       "name": "Duplicate Type Name",
-      "models": [
+      "representations": [
         {
           "guid": "019ab664-1111-1111-1111-111111110001",
-          "name": "Duplicate Model Name",
+          "name": "Duplicate Representation Name",
           "file": {
             "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000"
           }
         },
         {
           "guid": "019ab664-1111-1111-1111-111111110002",
-          "name": "Duplicate Model Name",
+          "name": "Duplicate Representation Name",
           "file": {
             "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
           }

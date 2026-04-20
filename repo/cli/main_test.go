@@ -6263,7 +6263,7 @@ func TestToolRenameRewritesFilesAndFilenames(t *testing.T) {
 		t.Fatalf("write .gitignore: %v", err)
 	}
 
-	result := ToolRename("model", "representation")
+	result := ToolRename("model", "representation", "")
 	if result.Error != "" {
 		t.Fatalf("ToolRename error: %s", result.Error)
 	}
@@ -6296,14 +6296,61 @@ func TestToolRenameRewritesFilesAndFilenames(t *testing.T) {
 }
 
 func TestToolRenameRejectsEmptyAndIdenticalTokens(t *testing.T) {
-	if got := ToolRename("", "new"); got.Error == "" {
+	if got := ToolRename("", "new", ""); got.Error == "" {
 		t.Fatalf("expected error for empty old token")
 	}
-	if got := ToolRename("model", ""); got.Error == "" {
+	if got := ToolRename("model", "", ""); got.Error == "" {
 		t.Fatalf("expected error for empty new token")
 	}
-	if got := ToolRename("Model", "MODEL"); got.Error == "" {
+	if got := ToolRename("Model", "MODEL", ""); got.Error == "" {
 		t.Fatalf("expected error for case-only identical tokens")
+	}
+}
+
+func TestToolRenameScopeLimitsWalk(t *testing.T) {
+	tmpRoot := t.TempDir()
+	oldRoot := GetRootDir()
+	SetRootDir(tmpRoot)
+	defer SetRootDir(oldRoot)
+	rootDir = tmpRoot
+
+	inScope := filepath.Join(tmpRoot, "semio", "model.txt")
+	outOfScope := filepath.Join(tmpRoot, "elements", "model.txt")
+	if err := os.MkdirAll(filepath.Dir(inScope), 0755); err != nil {
+		t.Fatalf("mkdir in-scope: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(outOfScope), 0755); err != nil {
+		t.Fatalf("mkdir out-of-scope: %v", err)
+	}
+	if err := os.WriteFile(inScope, []byte("model in"), 0644); err != nil {
+		t.Fatalf("write in: %v", err)
+	}
+	if err := os.WriteFile(outOfScope, []byte("model out"), 0644); err != nil {
+		t.Fatalf("write out: %v", err)
+	}
+
+	result := ToolRename("model", "representation", "semio")
+	if result.Error != "" {
+		t.Fatalf("ToolRename error: %s", result.Error)
+	}
+
+	if _, err := os.Stat(inScope); !os.IsNotExist(err) {
+		t.Fatalf("expected in-scope file to be renamed, stat err: %v", err)
+	}
+	renamed := filepath.Join(tmpRoot, "semio", "representation.txt")
+	data, err := os.ReadFile(renamed)
+	if err != nil {
+		t.Fatalf("expected renamed file at %s: %v", renamed, err)
+	}
+	if string(data) != "representation in" {
+		t.Fatalf("in-scope content not rewritten: %q", string(data))
+	}
+	outData, err := os.ReadFile(outOfScope)
+	if err != nil {
+		t.Fatalf("out-of-scope file disappeared: %v", err)
+	}
+	if string(outData) != "model out" {
+		t.Fatalf("out-of-scope file was rewritten: %q", string(outData))
 	}
 }
 
