@@ -19,7 +19,8 @@
 use crate::{
     export_dev_kit, export_local_kit, import_dev_kit,
     import_local_kit, remap_kit_file_bytes, remove_stale_local_assets,
-    Kit, KitGraphChange, Result, SemioError, SemioUtil,
+    Kit, KitGranularEvent, KitGraphChange, Result, SemioError, SemioUtil,
+    extract_granular_events,
 };
 use futures::{SinkExt, StreamExt};
 use serde::{Deserialize, Serialize};
@@ -68,6 +69,8 @@ pub struct KitStateSnapshot {
     kit_json: Arc<str>,
     pub revision: u64,
     pub interaction_lock: InteractionLockWarning,
+    /// 🔔 Granular events extracted from the last committed change (empty for initial snapshot).
+    pub granular_events: Arc<Vec<KitGranularEvent>>,
 }
 
 impl KitStateSnapshot {
@@ -165,6 +168,16 @@ fn snapshot_from_kit(kit: &Kit, revision: u64, lock: InteractionLockWarning) -> 
         kit_json: Arc::from(kit.to_json_pretty()?.into_boxed_str()),
         revision,
         interaction_lock: lock,
+        granular_events: Arc::new(Vec::new()),
+    })
+}
+
+fn snapshot_from_kit_with_events(kit: &Kit, revision: u64, lock: InteractionLockWarning, events: Vec<KitGranularEvent>) -> Result<KitStateSnapshot> {
+    Ok(KitStateSnapshot {
+        kit_json: Arc::from(kit.to_json_pretty()?.into_boxed_str()),
+        revision,
+        interaction_lock: lock,
+        granular_events: Arc::new(events),
     })
 }
 
@@ -308,6 +321,28 @@ fn broadcast_kit(
     Ok(())
 }
 
+fn broadcast_kit_with_change(
+    state: &AuthorityState,
+    snapshot_tx: &watch::Sender<KitStateSnapshot>,
+    change: &KitGraphChange,
+) -> Result<()> {
+    let events = extract_granular_events(change);
+    let snap = snapshot_from_kit_with_events(&state.kit()?, state.revision, InteractionLockWarning::None, events)?;
+    let _ = snapshot_tx.send(snap);
+    Ok(())
+}
+
+fn broadcast_kit_with_change(
+    state: &AuthorityState,
+    snapshot_tx: &watch::Sender<KitStateSnapshot>,
+    change: &KitGraphChange,
+) -> Result<()> {
+    let events = extract_granular_events(change);
+    let snap = snapshot_from_kit_with_events(&state.kit()?, state.revision, InteractionLockWarning::None, events)?;
+    let _ = snapshot_tx.send(snap);
+    Ok(())
+}
+
 fn authority_main_loop(
     rx: Receiver<AuthRequest>,
     mut state: AuthorityState,
@@ -396,7 +431,7 @@ fn handle_auth_request(
                 match state.apply_committed_change(&change) {
                     Ok(()) => {
                         let rev = state.revision;
-                        let _ = broadcast_kit(state, snapshot_tx);
+                        let _ = broadcast_kit_with_change(state, snapshot_tx, &change);
                         let committed = BackboneEvent::Committed {
                             revision: rev,
                             change: change.clone(),
@@ -466,7 +501,7 @@ fn handle_auth_request(
                 match state.apply_committed_change(&touch) {
                     Ok(()) => {
                         let rev = state.revision;
-                        let _ = broadcast_kit(state, snapshot_tx);
+                        let _ = broadcast_kit_with_change(state, snapshot_tx, &touch);
                         let committed = BackboneEvent::Committed {
                             revision: rev,
                             change: touch.clone(),
@@ -1137,12 +1172,13 @@ where
                         .unwrap_or(&change.forward)
                         .clone();
                     let complete = candidate_id.clone();
+                    let events = extract_granular_events(&change);
                     {
                         let mut kit = Kit::from_json_str(&kit_json)?;
                         kit.apply_diff(&diff);
                         kit_json = kit.to_json_pretty()?;
                         if let Ok(snap) =
-                            snapshot_from_kit(&kit, revision, InteractionLockWarning::None)
+                            snapshot_from_kit_with_events(&kit, revision, InteractionLockWarning::None, events)
                         {
                             let _ = snapshot_tx.send(snap);
                         }

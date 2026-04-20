@@ -656,6 +656,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(moveCommand(factory, &config))
 	root.AddCommand(integrateCommand(factory, &config))
 	root.AddCommand(extractCommand(factory, &config))
+	root.AddCommand(renameCommand(factory, &config))
 	root.AddCommand(syncCommand(factory, &config))
 	root.AddCommand(searchCommand(factory, &config))
 	root.AddCommand(listCommand(factory, &config))
@@ -5017,6 +5018,187 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().String("target-file", "", "Target file path")
 	return cmd
 }
+
+// #region 🔤Rename
+// 🔤applyRenameCasings rewrites UPPER, Title and lower case variants of old→new in the input string.
+func applyRenameCasings(content, oldToken, newToken string) string {
+	oldUpper := strings.ToUpper(oldToken)
+	newUpper := strings.ToUpper(newToken)
+	oldLower := strings.ToLower(oldToken)
+	newLower := strings.ToLower(newToken)
+	oldTitle := titleCaseToken(oldLower)
+	newTitle := titleCaseToken(newLower)
+	out := content
+	if oldUpper != oldLower {
+		out = strings.ReplaceAll(out, oldUpper, newUpper)
+	}
+	if oldTitle != oldUpper && oldTitle != oldLower {
+		out = strings.ReplaceAll(out, oldTitle, newTitle)
+	}
+	out = strings.ReplaceAll(out, oldLower, newLower)
+	return out
+}
+
+// 🅰️titleCaseToken returns s with the first rune upper-cased and the rest lower-cased.
+func titleCaseToken(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
+}
+
+// 🔤ToolRename rewrites every UPPER/Title/lower variant of oldToken to newToken across non-gitignored file contents and filenames.
+func ToolRename(oldToken, newToken string) ToolResult {
+	output := NewOutput()
+	if oldToken == "" || newToken == "" {
+		return toolErrorMsg("Old and new token must be non-empty")
+	}
+	if strings.EqualFold(oldToken, newToken) {
+		return toolErrorMsg("Old and new token are identical")
+	}
+	var files []string
+	var dirs []string
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		rel, relErr := filepath.Rel(rootDir, path)
+		if relErr != nil {
+			return nil
+		}
+		rel = filepath.ToSlash(rel)
+		if rel == "." {
+			return nil
+		}
+		base := filepath.Base(rel)
+		if d.IsDir() && (base == ".git" || base == "node_modules") {
+			return filepath.SkipDir
+		}
+		if isGitIgnored(rel) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if d.IsDir() {
+			dirs = append(dirs, rel)
+		} else {
+			files = append(files, rel)
+		}
+		return nil
+	})
+	if err != nil {
+		return toolErrorResult(err)
+	}
+	filesChanged := 0
+	for _, rel := range files {
+		abs := filepath.Join(rootDir, filepath.FromSlash(rel))
+		data, readErr := os.ReadFile(abs)
+		if readErr != nil {
+			continue
+		}
+		if !utf8.Valid(data) {
+			continue
+		}
+		original := string(data)
+		replaced := applyRenameCasings(original, oldToken, newToken)
+		if replaced == original {
+			continue
+		}
+		info, statErr := os.Stat(abs)
+		mode := os.FileMode(0644)
+		if statErr == nil {
+			mode = info.Mode().Perm()
+		}
+		if writeErr := os.WriteFile(abs, []byte(replaced), mode); writeErr != nil {
+			return toolErrorResult(writeErr)
+		}
+		filesChanged++
+	}
+	type renameEntry struct {
+		rel   string
+		isDir bool
+	}
+	entries := make([]renameEntry, 0, len(files)+len(dirs))
+	for _, f := range files {
+		entries = append(entries, renameEntry{f, false})
+	}
+	for _, d := range dirs {
+		entries = append(entries, renameEntry{d, true})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		di := strings.Count(entries[i].rel, "/")
+		dj := strings.Count(entries[j].rel, "/")
+		if di != dj {
+			return di > dj
+		}
+		return entries[i].rel > entries[j].rel
+	})
+	filesRenamed := 0
+	foldersRenamed := 0
+	for _, e := range entries {
+		base := filepath.Base(e.rel)
+		newBase := applyRenameCasings(base, oldToken, newToken)
+		if newBase == base {
+			continue
+		}
+		parent := filepath.Dir(e.rel)
+		var newRel string
+		if parent == "." || parent == "" {
+			newRel = newBase
+		} else {
+			newRel = parent + "/" + newBase
+		}
+		absSrc := filepath.Join(rootDir, filepath.FromSlash(e.rel))
+		absDst := filepath.Join(rootDir, filepath.FromSlash(newRel))
+		if _, statErr := os.Stat(absDst); statErr == nil {
+			return toolErrorMsg(fmt.Sprintf("Rename target already exists: %s", newRel))
+		}
+		if err := EnsureDir(filepath.Dir(absDst)); err != nil {
+			return toolErrorResult(err)
+		}
+		if err := os.Rename(absSrc, absDst); err != nil {
+			return toolErrorResult(err)
+		}
+		if e.isDir {
+			foldersRenamed++
+		} else {
+			filesRenamed++
+		}
+	}
+	output.Success(fmt.Sprintf("\n🔤Renamed %s → %s: %d files edited, %d files renamed, %d folders renamed", oldToken, newToken, filesChanged, filesRenamed, foldersRenamed))
+	return ToolResult{Output: *output, Data: map[string]int{
+		"filesChanged":   filesChanged,
+		"filesRenamed":   filesRenamed,
+		"foldersRenamed": foldersRenamed,
+	}}
+}
+
+// 🔤renameCommand returns a cobra command that renames a token across the repo in all case variants.
+func renameCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "rename <old> <new>",
+		Short: "Rename a token across non-gitignored files (all case variants)",
+		Long:  "Rewrite UPPER, Title and lower case variants of <old> to <new> in every non-gitignored file's contents and filenames (including folder names). Example: repo rename model representation.",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := factory(*config)
+			if err != nil {
+				return err
+			}
+			result := ToolRename(args[0], args[1])
+			if result.Error != "" {
+				return fmt.Errorf("%s", result.Error)
+			}
+			for _, line := range result.Output.Lines {
+				fmt.Println(line.Text)
+			}
+			return nil
+		},
+	}
+}
+
+// #endregion 🔤Rename
 
 // #region 🎼Utilities
 // General-purpose utility functions for time parsing and formatting.

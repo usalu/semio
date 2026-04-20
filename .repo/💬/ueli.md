@@ -808,6 +808,40 @@ Requirements:
 semio/graphql:
 Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.
 
+### ⚛️react
+
+semio/react:
+Create a react library that exports all semio hooks.
+
+Work with providers.
+
+Use a long lived
+
+You MUST
+
+e.g.
+
+// <KitProvider>
+
+// <BackboneProvider folder={folder}> for local kits
+// <BackboneProvider file={file}> for dev kits
+// <BackboneProvider url={url}> for remote kits
+
+// either usePiece*() inside <PieceProvider guid={piece.guid}> or usePiece*(GUID)
+usePieceName():String
+usePieceDescription():String
+usePieceTypeId():TypeId
+usePieceDesignId():DesignId
+usePieceBlueprintId():TypeId|DesignId
+usePiecePlane():Plane
+usePieceCenter():Coordinate
+usePieceFlatPlane():Plane
+usePieceFlatCenter():Coordinate
+useParentPieceId():PieceId
+useParentConnectionId():ConnectionId
+useChildPiecesIds():PieceId[]
+useChildConnectionsIds():ConnectionId[]
+
 ### ✏️sketchpad
 
 semio/sketchpad:
@@ -7215,6 +7249,17 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
     - STATUTE
 
 #### 🫡commands
+
+Introduce a command for renaming.
+Rename all files that are not git ignored.
+e.g. repo rename "model" "representation"
+renames:
+
+- MODEL to REPRESENTATION
+- model to representation
+- Model to Representation
+- etc
+  regardless if part of variables, classes, casing, ...
 
 Rename `tree` to command to `search`.
 

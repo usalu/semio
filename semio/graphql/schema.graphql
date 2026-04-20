@@ -1,4 +1,6 @@
-"""Arbitrary structured payloads such as diff previews, clipboard payloads or backend-specific metadata."""
+"""
+Arbitrary structured payloads such as diff previews, clipboard payloads or backend-specific metadata.
+"""
 scalar JSON
 
 scalar DateTime
@@ -444,8 +446,9 @@ input ConceptPatchInput {
   attributes: [AttributeInput!]
 }
 
-
-"""👪Named connector family grouping ports and shared attributes."""
+"""
+👪Named connector family grouping ports and shared attributes.
+"""
 type Family {
   hash: Hash!
   id: ID!
@@ -457,7 +460,9 @@ type Family {
   attributes: [Attribute!]!
 }
 
-"""👪Input fields for creating or replacing a connector family."""
+"""
+👪Input fields for creating or replacing a connector family.
+"""
 input FamilyInput {
   id: ID!
   name: String!
@@ -467,7 +472,9 @@ input FamilyInput {
   attributes: [AttributeInput!]
 }
 
-"""👪Patch fields for updating a connector family."""
+"""
+👪Patch fields for updating a connector family.
+"""
 input FamilyPatchInput {
   name: String
   description: String
@@ -510,6 +517,8 @@ type Connector {
   maxChildren: Int
   props: [Prop!]!
   attributes: [Attribute!]!
+  pieces: [Piece!]!
+  compatibleConnectors: [Connector!]!
 }
 
 input ConnectorInput {
@@ -550,6 +559,7 @@ type Type {
   image: String
   description: String
   attributes: [Attribute!]!
+  fixedPieces: [Piece!]!
 }
 
 input TypeInput {
@@ -649,6 +659,10 @@ type Connection {
   v: Float
   description: String
   attributes: [Attribute!]!
+  childPiece: Piece!
+  childConnector: Connector!
+  parentPiece: Piece!
+  parentConnector: Connector!
 }
 
 input ConnectionInput {
@@ -704,13 +718,20 @@ input StatInput {
   maxExcluded: Boolean
 }
 
-type Piece {
-  hash: Hash!
-  id: ID!
-  design: Design!
-  name: String
+enum PieceKind {
+  TYPE
+  DESIGN
+}
+
+type Blueprint {
   type: Type
-  designReference: Design
+  design: Design
+}
+
+type Piece {
+  id: ID!
+  hash: Hash!
+  name: String
   plane: Plane
   center: Coordinate
   scale: Float
@@ -719,12 +740,20 @@ type Piece {
   isLocked: Boolean
   color: String
   description: String
+  kind: PieceKind
+  type: Type
+  design: Design
   props: [Prop!]!
   attributes: [Attribute!]!
   flatPlane: Plane
   flatCenter: Coordinate
   parentPiece: Piece
+  parentConnection: Connection
   childPieces: [Piece!]!
+  childConnections: [Connection!]!
+  alternatives: [Blueprint!]!
+  alternativeTypes: [Type!]!
+  alternativeDesigns: [Design!]!
 }
 
 input PieceInput {
@@ -1321,8 +1350,9 @@ type KitHistoryPage {
   totalCount: Int!
 }
 
-
-"""🧭Shared fields present on every recorded kit store interaction."""
+"""
+🧭Shared fields present on every recorded kit store interaction.
+"""
 interface KitInteraction {
   id: ID!
   hash: Hash!
@@ -1340,7 +1370,9 @@ interface KitInteraction {
   createdAt: DateTime!
 }
 
-"""🔁Shared fields present on interactions that change kit state."""
+"""
+🔁Shared fields present on interactions that change kit state.
+"""
 interface ChangeKitInteraction implements KitInteraction {
   id: ID!
   hash: Hash!
@@ -1360,7 +1392,9 @@ interface ChangeKitInteraction implements KitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded SetSessionSelection command interaction with computed links and change data."""
+"""
+🧾Recorded SetSessionSelection command interaction with computed links and change data.
+"""
 type SetSessionSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1383,7 +1417,9 @@ type SetSessionSelectionKitInteraction implements KitInteraction & ChangeKitInte
   previousSelection: KitSessionSelection
 }
 
-"""🧾Recorded CreateAuthor command interaction with computed links and change data."""
+"""
+🧾Recorded CreateAuthor command interaction with computed links and change data.
+"""
 type CreateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1404,7 +1440,9 @@ type CreateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction
   author: Author
 }
 
-"""🧾Recorded UpdateAuthor command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateAuthor command interaction with computed links and change data.
+"""
 type UpdateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1426,7 +1464,9 @@ type UpdateAuthorKitInteraction implements KitInteraction & ChangeKitInteraction
   previousAuthor: Author
 }
 
-"""🧾Recorded DeleteAuthor command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteAuthor command interaction with computed links and change data.
+"""
 type DeleteAuthorKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1447,7 +1487,9 @@ type DeleteAuthorKitInteraction implements KitInteraction & ChangeKitInteraction
   previousAuthor: Author
 }
 
-"""🧾Recorded CreateType command interaction with computed links and change data."""
+"""
+🧾Recorded CreateType command interaction with computed links and change data.
+"""
 type CreateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1468,7 +1510,9 @@ type CreateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   type: Type
 }
 
-"""🧾Recorded UpdateType command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateType command interaction with computed links and change data.
+"""
 type UpdateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1490,7 +1534,9 @@ type UpdateTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousType: Type
 }
 
-"""🧾Recorded DeleteType command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteType command interaction with computed links and change data.
+"""
 type DeleteTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1511,7 +1557,9 @@ type DeleteTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousType: Type
 }
 
-"""🧾Recorded CreateDesign command interaction with computed links and change data."""
+"""
+🧾Recorded CreateDesign command interaction with computed links and change data.
+"""
 type CreateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1532,7 +1580,9 @@ type CreateDesignKitInteraction implements KitInteraction & ChangeKitInteraction
   design: Design
 }
 
-"""🧾Recorded UpdateDesign command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateDesign command interaction with computed links and change data.
+"""
 type UpdateDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1554,7 +1604,9 @@ type UpdateDesignKitInteraction implements KitInteraction & ChangeKitInteraction
   previousDesign: Design
 }
 
-"""🧾Recorded DeleteDesign command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteDesign command interaction with computed links and change data.
+"""
 type DeleteDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1575,7 +1627,9 @@ type DeleteDesignKitInteraction implements KitInteraction & ChangeKitInteraction
   previousDesign: Design
 }
 
-"""🧾Recorded CreateQuality command interaction with computed links and change data."""
+"""
+🧾Recorded CreateQuality command interaction with computed links and change data.
+"""
 type CreateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1596,7 +1650,9 @@ type CreateQualityKitInteraction implements KitInteraction & ChangeKitInteractio
   quality: Quality
 }
 
-"""🧾Recorded UpdateQuality command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateQuality command interaction with computed links and change data.
+"""
 type UpdateQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1618,7 +1674,9 @@ type UpdateQualityKitInteraction implements KitInteraction & ChangeKitInteractio
   previousQuality: Quality
 }
 
-"""🧾Recorded DeleteQuality command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteQuality command interaction with computed links and change data.
+"""
 type DeleteQualityKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1639,7 +1697,9 @@ type DeleteQualityKitInteraction implements KitInteraction & ChangeKitInteractio
   previousQuality: Quality
 }
 
-"""🧾Recorded CreatePort command interaction with computed links and change data."""
+"""
+🧾Recorded CreatePort command interaction with computed links and change data.
+"""
 type CreatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1660,7 +1720,9 @@ type CreatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   port: Port
 }
 
-"""🧾Recorded UpdatePort command interaction with computed links and change data."""
+"""
+🧾Recorded UpdatePort command interaction with computed links and change data.
+"""
 type UpdatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1682,7 +1744,9 @@ type UpdatePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousPort: Port
 }
 
-"""🧾Recorded DeletePort command interaction with computed links and change data."""
+"""
+🧾Recorded DeletePort command interaction with computed links and change data.
+"""
 type DeletePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1703,7 +1767,9 @@ type DeletePortKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousPort: Port
 }
 
-"""🧾Recorded CreateFamily command interaction with computed links and change data."""
+"""
+🧾Recorded CreateFamily command interaction with computed links and change data.
+"""
 type CreateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1724,7 +1790,9 @@ type CreateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction
   family: Family
 }
 
-"""🧾Recorded UpdateFamily command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateFamily command interaction with computed links and change data.
+"""
 type UpdateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1746,7 +1814,9 @@ type UpdateFamilyKitInteraction implements KitInteraction & ChangeKitInteraction
   previousFamily: Family
 }
 
-"""🧾Recorded DeleteFamily command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteFamily command interaction with computed links and change data.
+"""
 type DeleteFamilyKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1767,7 +1837,9 @@ type DeleteFamilyKitInteraction implements KitInteraction & ChangeKitInteraction
   previousFamily: Family
 }
 
-"""🧾Recorded CreateTag command interaction with computed links and change data."""
+"""
+🧾Recorded CreateTag command interaction with computed links and change data.
+"""
 type CreateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1788,7 +1860,9 @@ type CreateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   tag: Tag
 }
 
-"""🧾Recorded UpdateTag command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateTag command interaction with computed links and change data.
+"""
 type UpdateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1810,7 +1884,9 @@ type UpdateTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousTag: Tag
 }
 
-"""🧾Recorded DeleteTag command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteTag command interaction with computed links and change data.
+"""
 type DeleteTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1831,7 +1907,9 @@ type DeleteTagKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousTag: Tag
 }
 
-"""🧾Recorded CreateConcept command interaction with computed links and change data."""
+"""
+🧾Recorded CreateConcept command interaction with computed links and change data.
+"""
 type CreateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1852,7 +1930,9 @@ type CreateConceptKitInteraction implements KitInteraction & ChangeKitInteractio
   concept: Concept
 }
 
-"""🧾Recorded UpdateConcept command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateConcept command interaction with computed links and change data.
+"""
 type UpdateConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1874,7 +1954,9 @@ type UpdateConceptKitInteraction implements KitInteraction & ChangeKitInteractio
   previousConcept: Concept
 }
 
-"""🧾Recorded DeleteConcept command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteConcept command interaction with computed links and change data.
+"""
 type DeleteConceptKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1895,7 +1977,9 @@ type DeleteConceptKitInteraction implements KitInteraction & ChangeKitInteractio
   previousConcept: Concept
 }
 
-"""🧾Recorded CreateFile command interaction with computed links and change data."""
+"""
+🧾Recorded CreateFile command interaction with computed links and change data.
+"""
 type CreateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1916,7 +2000,9 @@ type CreateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   file: File
 }
 
-"""🧾Recorded UpdateFile command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateFile command interaction with computed links and change data.
+"""
 type UpdateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1938,7 +2024,9 @@ type UpdateFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousFile: File
 }
 
-"""🧾Recorded DeleteFile command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteFile command interaction with computed links and change data.
+"""
 type DeleteFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1959,7 +2047,9 @@ type DeleteFileKitInteraction implements KitInteraction & ChangeKitInteraction {
   previousFile: File
 }
 
-"""🧾Recorded CreateFolder command interaction with computed links and change data."""
+"""
+🧾Recorded CreateFolder command interaction with computed links and change data.
+"""
 type CreateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -1980,7 +2070,9 @@ type CreateFolderKitInteraction implements KitInteraction & ChangeKitInteraction
   folder: Folder
 }
 
-"""🧾Recorded UpdateFolder command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateFolder command interaction with computed links and change data.
+"""
 type UpdateFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2002,7 +2094,9 @@ type UpdateFolderKitInteraction implements KitInteraction & ChangeKitInteraction
   previousFolder: Folder
 }
 
-"""🧾Recorded DeleteFolder command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteFolder command interaction with computed links and change data.
+"""
 type DeleteFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2023,7 +2117,9 @@ type DeleteFolderKitInteraction implements KitInteraction & ChangeKitInteraction
   previousFolder: Folder
 }
 
-"""🧾Recorded MoveArtifactToFolder command interaction with computed links and change data."""
+"""
+🧾Recorded MoveArtifactToFolder command interaction with computed links and change data.
+"""
 type MoveArtifactToFolderKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2047,7 +2143,9 @@ type MoveArtifactToFolderKitInteraction implements KitInteraction & ChangeKitInt
   previousFolder: Folder
 }
 
-"""🧾Recorded CreatePiece command interaction with computed links and change data."""
+"""
+🧾Recorded CreatePiece command interaction with computed links and change data.
+"""
 type CreatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2067,7 +2165,9 @@ type CreatePieceKitInteraction implements KitInteraction & ChangeKitInteraction 
   backward: KitChange
 }
 
-"""🧾Recorded CreatePieces command interaction with computed links and change data."""
+"""
+🧾Recorded CreatePieces command interaction with computed links and change data.
+"""
 type CreatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2087,7 +2187,9 @@ type CreatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction
   backward: KitChange
 }
 
-"""🧾Recorded UpdatePiece command interaction with computed links and change data."""
+"""
+🧾Recorded UpdatePiece command interaction with computed links and change data.
+"""
 type UpdatePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2107,7 +2209,9 @@ type UpdatePieceKitInteraction implements KitInteraction & ChangeKitInteraction 
   backward: KitChange
 }
 
-"""🧾Recorded UpdatePieces command interaction with computed links and change data."""
+"""
+🧾Recorded UpdatePieces command interaction with computed links and change data.
+"""
 type UpdatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2127,7 +2231,9 @@ type UpdatePiecesKitInteraction implements KitInteraction & ChangeKitInteraction
   backward: KitChange
 }
 
-"""🧾Recorded DeletePiece command interaction with computed links and change data."""
+"""
+🧾Recorded DeletePiece command interaction with computed links and change data.
+"""
 type DeletePieceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2147,7 +2253,9 @@ type DeletePieceKitInteraction implements KitInteraction & ChangeKitInteraction 
   backward: KitChange
 }
 
-"""🧾Recorded DeletePieces command interaction with computed links and change data."""
+"""
+🧾Recorded DeletePieces command interaction with computed links and change data.
+"""
 type DeletePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2167,7 +2275,9 @@ type DeletePiecesKitInteraction implements KitInteraction & ChangeKitInteraction
   backward: KitChange
 }
 
-"""🧾Recorded CreateConnection command interaction with computed links and change data."""
+"""
+🧾Recorded CreateConnection command interaction with computed links and change data.
+"""
 type CreateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2187,7 +2297,9 @@ type CreateConnectionKitInteraction implements KitInteraction & ChangeKitInterac
   backward: KitChange
 }
 
-"""🧾Recorded CreateConnections command interaction with computed links and change data."""
+"""
+🧾Recorded CreateConnections command interaction with computed links and change data.
+"""
 type CreateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2207,7 +2319,9 @@ type CreateConnectionsKitInteraction implements KitInteraction & ChangeKitIntera
   backward: KitChange
 }
 
-"""🧾Recorded UpdateConnection command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateConnection command interaction with computed links and change data.
+"""
 type UpdateConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2227,7 +2341,9 @@ type UpdateConnectionKitInteraction implements KitInteraction & ChangeKitInterac
   backward: KitChange
 }
 
-"""🧾Recorded UpdateConnections command interaction with computed links and change data."""
+"""
+🧾Recorded UpdateConnections command interaction with computed links and change data.
+"""
 type UpdateConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2247,7 +2363,9 @@ type UpdateConnectionsKitInteraction implements KitInteraction & ChangeKitIntera
   backward: KitChange
 }
 
-"""🧾Recorded DeleteConnection command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteConnection command interaction with computed links and change data.
+"""
 type DeleteConnectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2267,7 +2385,9 @@ type DeleteConnectionKitInteraction implements KitInteraction & ChangeKitInterac
   backward: KitChange
 }
 
-"""🧾Recorded DeleteConnections command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteConnections command interaction with computed links and change data.
+"""
 type DeleteConnectionsKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2287,7 +2407,9 @@ type DeleteConnectionsKitInteraction implements KitInteraction & ChangeKitIntera
   backward: KitChange
 }
 
-"""🧾Recorded DeleteSelection command interaction with computed links and change data."""
+"""
+🧾Recorded DeleteSelection command interaction with computed links and change data.
+"""
 type DeleteSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2307,7 +2429,9 @@ type DeleteSelectionKitInteraction implements KitInteraction & ChangeKitInteract
   backward: KitChange
 }
 
-"""🧾Recorded FixPieces command interaction with computed links and change data."""
+"""
+🧾Recorded FixPieces command interaction with computed links and change data.
+"""
 type FixPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2327,7 +2451,9 @@ type FixPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded ClusterPieces command interaction with computed links and change data."""
+"""
+🧾Recorded ClusterPieces command interaction with computed links and change data.
+"""
 type ClusterPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2347,7 +2473,9 @@ type ClusterPiecesKitInteraction implements KitInteraction & ChangeKitInteractio
   backward: KitChange
 }
 
-"""🧾Recorded ExpandDesignReference command interaction with computed links and change data."""
+"""
+🧾Recorded ExpandDesignReference command interaction with computed links and change data.
+"""
 type ExpandDesignReferenceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2367,7 +2495,9 @@ type ExpandDesignReferenceKitInteraction implements KitInteraction & ChangeKitIn
   backward: KitChange
 }
 
-"""🧾Recorded FlattenDesign command interaction with computed links and change data."""
+"""
+🧾Recorded FlattenDesign command interaction with computed links and change data.
+"""
 type FlattenDesignKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2387,7 +2517,9 @@ type FlattenDesignKitInteraction implements KitInteraction & ChangeKitInteractio
   backward: KitChange
 }
 
-"""🧾Recorded DragPieces command interaction with computed links and change data."""
+"""
+🧾Recorded DragPieces command interaction with computed links and change data.
+"""
 type DragPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2407,7 +2539,9 @@ type DragPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded MovePieces command interaction with computed links and change data."""
+"""
+🧾Recorded MovePieces command interaction with computed links and change data.
+"""
 type MovePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2427,7 +2561,9 @@ type MovePiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded CreateFixedPiece command interaction with computed links and change data."""
+"""
+🧾Recorded CreateFixedPiece command interaction with computed links and change data.
+"""
 type CreateFixedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2447,7 +2583,9 @@ type CreateFixedPieceKitInteraction implements KitInteraction & ChangeKitInterac
   backward: KitChange
 }
 
-"""🧾Recorded CreateConnectedPiece command interaction with computed links and change data."""
+"""
+🧾Recorded CreateConnectedPiece command interaction with computed links and change data.
+"""
 type CreateConnectedPieceKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2467,7 +2605,9 @@ type CreateConnectedPieceKitInteraction implements KitInteraction & ChangeKitInt
   backward: KitChange
 }
 
-"""🧾Recorded CreateHangingPieces command interaction with computed links and change data."""
+"""
+🧾Recorded CreateHangingPieces command interaction with computed links and change data.
+"""
 type CreateHangingPiecesKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2487,7 +2627,9 @@ type CreateHangingPiecesKitInteraction implements KitInteraction & ChangeKitInte
   backward: KitChange
 }
 
-"""🧾Recorded ChangePieceType command interaction with computed links and change data."""
+"""
+🧾Recorded ChangePieceType command interaction with computed links and change data.
+"""
 type ChangePieceTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2507,7 +2649,9 @@ type ChangePieceTypeKitInteraction implements KitInteraction & ChangeKitInteract
   backward: KitChange
 }
 
-"""🧾Recorded ChangePiecesType command interaction with computed links and change data."""
+"""
+🧾Recorded ChangePiecesType command interaction with computed links and change data.
+"""
 type ChangePiecesTypeKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2527,7 +2671,9 @@ type ChangePiecesTypeKitInteraction implements KitInteraction & ChangeKitInterac
   backward: KitChange
 }
 
-"""🧾Recorded PasteDesignSelection command interaction with computed links and change data."""
+"""
+🧾Recorded PasteDesignSelection command interaction with computed links and change data.
+"""
 type PasteDesignSelectionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2547,7 +2693,9 @@ type PasteDesignSelectionKitInteraction implements KitInteraction & ChangeKitInt
   backward: KitChange
 }
 
-"""🧾Recorded ImportKit command interaction with computed links and change data."""
+"""
+🧾Recorded ImportKit command interaction with computed links and change data.
+"""
 type ImportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2567,7 +2715,9 @@ type ImportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded ResetKit command interaction with computed links and change data."""
+"""
+🧾Recorded ResetKit command interaction with computed links and change data.
+"""
 type ResetKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2587,7 +2737,9 @@ type ResetKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded ExportKit command interaction with computed links and change data."""
+"""
+🧾Recorded ExportKit command interaction with computed links and change data.
+"""
 type ExportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2607,7 +2759,9 @@ type ExportKitKitInteraction implements KitInteraction & ChangeKitInteraction {
   backward: KitChange
 }
 
-"""🧾Recorded StartKitSession command interaction with computed links and change data."""
+"""
+🧾Recorded StartKitSession command interaction with computed links and change data.
+"""
 type StartKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2627,7 +2781,9 @@ type StartKitSessionKitInteraction implements KitInteraction & ChangeKitInteract
   backward: KitChange
 }
 
-"""🧾Recorded HeartbeatKitSession command interaction with computed links and change data."""
+"""
+🧾Recorded HeartbeatKitSession command interaction with computed links and change data.
+"""
 type HeartbeatKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2647,7 +2803,9 @@ type HeartbeatKitSessionKitInteraction implements KitInteraction & ChangeKitInte
   backward: KitChange
 }
 
-"""🧾Recorded EndKitSession command interaction with computed links and change data."""
+"""
+🧾Recorded EndKitSession command interaction with computed links and change data.
+"""
 type EndKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2667,7 +2825,9 @@ type EndKitSessionKitInteraction implements KitInteraction & ChangeKitInteractio
   backward: KitChange
 }
 
-"""🧾Recorded ReconnectKitSession command interaction with computed links and change data."""
+"""
+🧾Recorded ReconnectKitSession command interaction with computed links and change data.
+"""
 type ReconnectKitSessionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2687,7 +2847,9 @@ type ReconnectKitSessionKitInteraction implements KitInteraction & ChangeKitInte
   backward: KitChange
 }
 
-"""🧾Recorded BeginKitTransaction command interaction with computed links and change data."""
+"""
+🧾Recorded BeginKitTransaction command interaction with computed links and change data.
+"""
 type BeginKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2707,7 +2869,9 @@ type BeginKitTransactionKitInteraction implements KitInteraction & ChangeKitInte
   backward: KitChange
 }
 
-"""🧾Recorded FinalizeKitTransaction command interaction with computed links and change data."""
+"""
+🧾Recorded FinalizeKitTransaction command interaction with computed links and change data.
+"""
 type FinalizeKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2727,7 +2891,9 @@ type FinalizeKitTransactionKitInteraction implements KitInteraction & ChangeKitI
   backward: KitChange
 }
 
-"""🧾Recorded AbortKitTransaction command interaction with computed links and change data."""
+"""
+🧾Recorded AbortKitTransaction command interaction with computed links and change data.
+"""
 type AbortKitTransactionKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2747,7 +2913,9 @@ type AbortKitTransactionKitInteraction implements KitInteraction & ChangeKitInte
   backward: KitChange
 }
 
-"""🧾Recorded TransactionStep command interaction with computed links and change data."""
+"""
+🧾Recorded TransactionStep command interaction with computed links and change data.
+"""
 type TransactionStepKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2767,7 +2935,9 @@ type TransactionStepKitInteraction implements KitInteraction & ChangeKitInteract
   backward: KitChange
 }
 
-"""🧾Recorded HistoryStep command interaction with computed links and change data."""
+"""
+🧾Recorded HistoryStep command interaction with computed links and change data.
+"""
 type HistoryStepKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2787,7 +2957,9 @@ type HistoryStepKitInteraction implements KitInteraction & ChangeKitInteraction 
   backward: KitChange
 }
 
-"""🧾Recorded VoteOnKitChangeCandidate command interaction with computed links and change data."""
+"""
+🧾Recorded VoteOnKitChangeCandidate command interaction with computed links and change data.
+"""
 type VoteOnKitChangeCandidateKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2807,7 +2979,9 @@ type VoteOnKitChangeCandidateKitInteraction implements KitInteraction & ChangeKi
   backward: KitChange
 }
 
-"""🧾Recorded ResolveKitConflict command interaction with computed links and change data."""
+"""
+🧾Recorded ResolveKitConflict command interaction with computed links and change data.
+"""
 type ResolveKitConflictKitInteraction implements KitInteraction & ChangeKitInteraction {
   id: ID!
   hash: Hash!
@@ -2827,7 +3001,78 @@ type ResolveKitConflictKitInteraction implements KitInteraction & ChangeKitInter
   backward: KitChange
 }
 
-union KitInteractionRecord = SetSessionSelectionKitInteraction | CreateAuthorKitInteraction | UpdateAuthorKitInteraction | DeleteAuthorKitInteraction | CreateTypeKitInteraction | UpdateTypeKitInteraction | DeleteTypeKitInteraction | CreateDesignKitInteraction | UpdateDesignKitInteraction | DeleteDesignKitInteraction | CreateQualityKitInteraction | UpdateQualityKitInteraction | DeleteQualityKitInteraction | CreatePortKitInteraction | UpdatePortKitInteraction | DeletePortKitInteraction | CreateFamilyKitInteraction | UpdateFamilyKitInteraction | DeleteFamilyKitInteraction | CreateTagKitInteraction | UpdateTagKitInteraction | DeleteTagKitInteraction | CreateConceptKitInteraction | UpdateConceptKitInteraction | DeleteConceptKitInteraction | CreateFileKitInteraction | UpdateFileKitInteraction | DeleteFileKitInteraction | CreateFolderKitInteraction | UpdateFolderKitInteraction | DeleteFolderKitInteraction | MoveArtifactToFolderKitInteraction | CreatePieceKitInteraction | CreatePiecesKitInteraction | UpdatePieceKitInteraction | UpdatePiecesKitInteraction | DeletePieceKitInteraction | DeletePiecesKitInteraction | CreateConnectionKitInteraction | CreateConnectionsKitInteraction | UpdateConnectionKitInteraction | UpdateConnectionsKitInteraction | DeleteConnectionKitInteraction | DeleteConnectionsKitInteraction | DeleteSelectionKitInteraction | FixPiecesKitInteraction | ClusterPiecesKitInteraction | ExpandDesignReferenceKitInteraction | FlattenDesignKitInteraction | DragPiecesKitInteraction | MovePiecesKitInteraction | CreateFixedPieceKitInteraction | CreateConnectedPieceKitInteraction | CreateHangingPiecesKitInteraction | ChangePieceTypeKitInteraction | ChangePiecesTypeKitInteraction | PasteDesignSelectionKitInteraction | ImportKitKitInteraction | ResetKitKitInteraction | ExportKitKitInteraction | StartKitSessionKitInteraction | HeartbeatKitSessionKitInteraction | EndKitSessionKitInteraction | ReconnectKitSessionKitInteraction | BeginKitTransactionKitInteraction | FinalizeKitTransactionKitInteraction | AbortKitTransactionKitInteraction | TransactionStepKitInteraction | HistoryStepKitInteraction | VoteOnKitChangeCandidateKitInteraction | ResolveKitConflictKitInteraction
+union KitInteractionRecord =
+  | SetSessionSelectionKitInteraction
+  | CreateAuthorKitInteraction
+  | UpdateAuthorKitInteraction
+  | DeleteAuthorKitInteraction
+  | CreateTypeKitInteraction
+  | UpdateTypeKitInteraction
+  | DeleteTypeKitInteraction
+  | CreateDesignKitInteraction
+  | UpdateDesignKitInteraction
+  | DeleteDesignKitInteraction
+  | CreateQualityKitInteraction
+  | UpdateQualityKitInteraction
+  | DeleteQualityKitInteraction
+  | CreatePortKitInteraction
+  | UpdatePortKitInteraction
+  | DeletePortKitInteraction
+  | CreateFamilyKitInteraction
+  | UpdateFamilyKitInteraction
+  | DeleteFamilyKitInteraction
+  | CreateTagKitInteraction
+  | UpdateTagKitInteraction
+  | DeleteTagKitInteraction
+  | CreateConceptKitInteraction
+  | UpdateConceptKitInteraction
+  | DeleteConceptKitInteraction
+  | CreateFileKitInteraction
+  | UpdateFileKitInteraction
+  | DeleteFileKitInteraction
+  | CreateFolderKitInteraction
+  | UpdateFolderKitInteraction
+  | DeleteFolderKitInteraction
+  | MoveArtifactToFolderKitInteraction
+  | CreatePieceKitInteraction
+  | CreatePiecesKitInteraction
+  | UpdatePieceKitInteraction
+  | UpdatePiecesKitInteraction
+  | DeletePieceKitInteraction
+  | DeletePiecesKitInteraction
+  | CreateConnectionKitInteraction
+  | CreateConnectionsKitInteraction
+  | UpdateConnectionKitInteraction
+  | UpdateConnectionsKitInteraction
+  | DeleteConnectionKitInteraction
+  | DeleteConnectionsKitInteraction
+  | DeleteSelectionKitInteraction
+  | FixPiecesKitInteraction
+  | ClusterPiecesKitInteraction
+  | ExpandDesignReferenceKitInteraction
+  | FlattenDesignKitInteraction
+  | DragPiecesKitInteraction
+  | MovePiecesKitInteraction
+  | CreateFixedPieceKitInteraction
+  | CreateConnectedPieceKitInteraction
+  | CreateHangingPiecesKitInteraction
+  | ChangePieceTypeKitInteraction
+  | ChangePiecesTypeKitInteraction
+  | PasteDesignSelectionKitInteraction
+  | ImportKitKitInteraction
+  | ResetKitKitInteraction
+  | ExportKitKitInteraction
+  | StartKitSessionKitInteraction
+  | HeartbeatKitSessionKitInteraction
+  | EndKitSessionKitInteraction
+  | ReconnectKitSessionKitInteraction
+  | BeginKitTransactionKitInteraction
+  | FinalizeKitTransactionKitInteraction
+  | AbortKitTransactionKitInteraction
+  | TransactionStepKitInteraction
+  | HistoryStepKitInteraction
+  | VoteOnKitChangeCandidateKitInteraction
+  | ResolveKitConflictKitInteraction
 
 type KitInteractionPage {
   hash: Hash!
@@ -3345,7 +3590,9 @@ input ExportKitCommandInput {
   context: KitCommandContextInput!
 }
 
-"""🔎Read the current kit store, history, candidates, conflicts and command catalog."""
+"""
+🔎Read the current kit store, history, candidates, conflicts and command catalog.
+"""
 type Query {
   kit(id: ID!): Kit
   kitStore(id: ID!): KitStore
@@ -3358,7 +3605,9 @@ type Query {
   kitCommandCatalog: [KitCommandDescriptor!]!
 }
 
-"""🌱Apply semantic kit store commands through explicit command inputs."""
+"""
+🌱Apply semantic kit store commands through explicit command inputs.
+"""
 type Mutation {
   startKitSession(input: StartKitSessionInput!): KitMutationResult!
   heartbeatKitSession(input: HeartbeatKitSessionInput!): KitMutationResult!
@@ -3475,7 +3724,9 @@ type KitStoreEvent {
   transaction: KitTransaction
 }
 
-"""📡Stream semantic kit store events for synchronized UI state."""
+"""
+📡Stream semantic kit store events for synchronized UI state.
+"""
 type Subscription {
   kitStoreEvents(kitId: ID!, sessionId: ID): KitStoreEvent!
 }

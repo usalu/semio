@@ -1,12 +1,18 @@
 # Prompts
 
-## Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
+---
+
+Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
 
 ---
 
-## Welche konstruktiven Verbindungen gibt es, um wiederverwendete Stahlbetonteile zu fügen?
+Welche konstruktiven Verbindungen gibt es, um wiederverwendete Stahlbetonteile zu fügen?
 
-## Berichte
+---
+
+Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen themen die das Notebook umfasst.
+
+---
 
 Erstellen Sie einen Bericht mit den
 

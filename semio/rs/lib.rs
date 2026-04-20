@@ -20514,6 +20514,227 @@ pub fn kit_graph_change_from_diffs(forward: KitDiff, backward: KitDiff) -> KitGr
     }
 }
 
+// ——— Granular Kit Events ————————————————————————————————————————————————————
+
+/// 🔔 Fine-grained event emitted when a KitGraphChange is committed.
+/// Each variant targets a specific entity or field so subscribers can
+/// react to exactly the data they care about (e.g. a single piece's name).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum KitGranularEvent {
+    /// A piece was added to a design.
+    PieceAdded { design_guid: String, piece_guid: String },
+    /// A piece was removed from a design.
+    PieceRemoved { design_guid: String, piece_guid: String },
+    /// One or more fields on a piece changed.
+    PieceUpdated { design_guid: String, piece_guid: String, fields: Vec<String> },
+    /// A connection was added to a design.
+    ConnectionAdded { design_guid: String, connection_guid: String },
+    /// A connection was removed from a design.
+    ConnectionRemoved { design_guid: String, connection_guid: String },
+    /// One or more fields on a connection changed.
+    ConnectionUpdated { design_guid: String, connection_guid: String, fields: Vec<String> },
+    /// A type was added to the kit.
+    TypeAdded { type_guid: String },
+    /// A type was removed from the kit.
+    TypeRemoved { type_guid: String },
+    /// One or more fields on a type changed.
+    TypeUpdated { type_guid: String, fields: Vec<String> },
+    /// A design was added to the kit.
+    DesignAdded { design_guid: String },
+    /// A design was removed from the kit.
+    DesignRemoved { design_guid: String },
+    /// One or more fields on a design changed (excluding pieces/connections which have their own events).
+    DesignUpdated { design_guid: String, fields: Vec<String> },
+    /// Kit-level metadata changed (name, version, description, etc.).
+    KitMetadataUpdated { fields: Vec<String> },
+}
+
+/// Extracts granular events from a committed [`KitGraphChange`].
+/// Uses the effective diff (validation.diff if present, otherwise forward).
+pub fn extract_granular_events(change: &KitGraphChange) -> Vec<KitGranularEvent> {
+    let diff = change.validation.diff.as_ref().unwrap_or(&change.forward);
+    let mut events = Vec::new();
+
+    // Kit-level metadata
+    let mut kit_fields = Vec::new();
+    if diff.name.is_some() { kit_fields.push("name".to_string()); }
+    if diff.version.is_some() { kit_fields.push("version".to_string()); }
+    if diff.description.is_some() { kit_fields.push("description".to_string()); }
+    if diff.icon.is_some() { kit_fields.push("icon".to_string()); }
+    if diff.image.is_some() { kit_fields.push("image".to_string()); }
+    if diff.preview.is_some() { kit_fields.push("preview".to_string()); }
+    if diff.remote.is_some() { kit_fields.push("remote".to_string()); }
+    if diff.homepage.is_some() { kit_fields.push("homepage".to_string()); }
+    if diff.license.is_some() { kit_fields.push("license".to_string()); }
+    if !kit_fields.is_empty() {
+        events.push(KitGranularEvent::KitMetadataUpdated { fields: kit_fields });
+    }
+
+    // Types
+    if let Some(ref types_diff) = diff.types {
+        if let Some(ref added) = types_diff.added {
+            for t in added {
+                events.push(KitGranularEvent::TypeAdded { type_guid: t.guid.clone() });
+            }
+        }
+        if let Some(ref removed) = types_diff.removed {
+            for r in removed {
+                events.push(KitGranularEvent::TypeRemoved { type_guid: r.guid.clone() });
+            }
+        }
+        if let Some(ref updated) = types_diff.updated {
+            for u in updated {
+                let mut fields = Vec::new();
+                let d = &u.diff;
+                if d.name.is_some() { fields.push("name".to_string()); }
+                if d.description.is_some() { fields.push("description".to_string()); }
+                if d.icon.is_some() { fields.push("icon".to_string()); }
+                if d.image.is_some() { fields.push("image".to_string()); }
+                if d.folder.is_some() { fields.push("folder".to_string()); }
+                if d.unit.is_some() { fields.push("unit".to_string()); }
+                if d.stock.is_some() { fields.push("stock".to_string()); }
+                if d.is_abstract.is_some() { fields.push("isAbstract".to_string()); }
+                if d.models.is_some() { fields.push("models".to_string()); }
+                if d.connectors.is_some() { fields.push("connectors".to_string()); }
+                if d.props.is_some() { fields.push("props".to_string()); }
+                if d.attributes.is_some() { fields.push("attributes".to_string()); }
+                if !fields.is_empty() {
+                    events.push(KitGranularEvent::TypeUpdated {
+                        type_guid: u.guid.clone(),
+                        fields,
+                    });
+                }
+            }
+        }
+    }
+
+    // Designs and their pieces/connections
+    if let Some(ref designs_diff) = diff.designs {
+        if let Some(ref added) = designs_diff.added {
+            for d in added {
+                events.push(KitGranularEvent::DesignAdded { design_guid: d.guid.clone() });
+            }
+        }
+        if let Some(ref removed) = designs_diff.removed {
+            for r in removed {
+                events.push(KitGranularEvent::DesignRemoved { design_guid: r.guid.clone() });
+            }
+        }
+        if let Some(ref updated) = designs_diff.updated {
+            for u in updated {
+                let design_guid = u.guid.clone();
+                let d = &u.diff;
+
+                // Design-level fields
+                let mut fields = Vec::new();
+                if d.name.is_some() { fields.push("name".to_string()); }
+                if d.description.is_some() { fields.push("description".to_string()); }
+                if d.icon.is_some() { fields.push("icon".to_string()); }
+                if d.image.is_some() { fields.push("image".to_string()); }
+                if d.folder.is_some() { fields.push("folder".to_string()); }
+                if d.unit.is_some() { fields.push("unit".to_string()); }
+                if d.is_abstract.is_some() { fields.push("isAbstract".to_string()); }
+                if d.props.is_some() { fields.push("props".to_string()); }
+                if d.attributes.is_some() { fields.push("attributes".to_string()); }
+                if !fields.is_empty() {
+                    events.push(KitGranularEvent::DesignUpdated {
+                        design_guid: design_guid.clone(),
+                        fields,
+                    });
+                }
+
+                // Pieces within this design
+                if let Some(ref pieces_diff) = d.pieces {
+                    if let Some(ref added) = pieces_diff.added {
+                        for p in added {
+                            events.push(KitGranularEvent::PieceAdded {
+                                design_guid: design_guid.clone(),
+                                piece_guid: p.guid.clone(),
+                            });
+                        }
+                    }
+                    if let Some(ref removed) = pieces_diff.removed {
+                        for r in removed {
+                            events.push(KitGranularEvent::PieceRemoved {
+                                design_guid: design_guid.clone(),
+                                piece_guid: r.guid.clone(),
+                            });
+                        }
+                    }
+                    if let Some(ref updated) = pieces_diff.updated {
+                        for pu in updated {
+                            let mut pf = Vec::new();
+                            let pd = &pu.diff;
+                            if pd.name.is_some() { pf.push("name".to_string()); }
+                            if pd.description.is_some() { pf.push("description".to_string()); }
+                            if pd.type_ref.is_some() { pf.push("type".to_string()); }
+                            if pd.design.is_some() { pf.push("design".to_string()); }
+                            if pd.plane.is_some() { pf.push("plane".to_string()); }
+                            if pd.center.is_some() { pf.push("center".to_string()); }
+                            if pd.scale.is_some() { pf.push("scale".to_string()); }
+                            if pd.color.is_some() { pf.push("color".to_string()); }
+                            if pd.props.is_some() { pf.push("props".to_string()); }
+                            if pd.attributes.is_some() { pf.push("attributes".to_string()); }
+                            if !pf.is_empty() {
+                                events.push(KitGranularEvent::PieceUpdated {
+                                    design_guid: design_guid.clone(),
+                                    piece_guid: pu.guid.clone(),
+                                    fields: pf,
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Connections within this design
+                if let Some(ref connections_diff) = d.connections {
+                    if let Some(ref added) = connections_diff.added {
+                        for c in added {
+                            events.push(KitGranularEvent::ConnectionAdded {
+                                design_guid: design_guid.clone(),
+                                connection_guid: c.guid.clone(),
+                            });
+                        }
+                    }
+                    if let Some(ref removed) = connections_diff.removed {
+                        for r in removed {
+                            events.push(KitGranularEvent::ConnectionRemoved {
+                                design_guid: design_guid.clone(),
+                                connection_guid: r.guid.clone(),
+                            });
+                        }
+                    }
+                    if let Some(ref updated) = connections_diff.updated {
+                        for cu in updated {
+                            let mut cf = Vec::new();
+                            let cd = &cu.diff;
+                            if cd.gap.is_some() { cf.push("gap".to_string()); }
+                            if cd.shift.is_some() { cf.push("shift".to_string()); }
+                            if cd.rise.is_some() { cf.push("rise".to_string()); }
+                            if cd.rotation.is_some() { cf.push("rotation".to_string()); }
+                            if cd.turn.is_some() { cf.push("turn".to_string()); }
+                            if cd.tilt.is_some() { cf.push("tilt".to_string()); }
+                            if cd.connected.is_some() { cf.push("connected".to_string()); }
+                            if cd.connecting.is_some() { cf.push("connecting".to_string()); }
+                            if cd.description.is_some() { cf.push("description".to_string()); }
+                            if cd.attributes.is_some() { cf.push("attributes".to_string()); }
+                            if !cf.is_empty() {
+                                events.push(KitGranularEvent::ConnectionUpdated {
+                                    design_guid: design_guid.clone(),
+                                    connection_guid: cu.guid.clone(),
+                                    fields: cf,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    events
+}
+
 // ——— Backbone (TypeScript `Backbone` parallel)
 
 /// Notified after a successful graph commit (see [`KitGraphSession::commit`]).

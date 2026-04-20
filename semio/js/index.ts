@@ -20096,9 +20096,353 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
   return result;
 };
 
-// #endregion ­ƒòîFile Tree Utilities
+// #endregion 📂File Tree Utilities
 
-// #region ­ƒº¬Runtime Test Flags
+// #region ⚛️React
+// React hooks for reactive kit data access backed by a KitStore.
+// All hooks are read-only selectors; mutations go through KitStore.apply/transact.
+// <KitProvider store?> wraps a KitStore (local/dev/remote).
+// <PieceProvider guid designGuid> scopes piece hooks to a specific piece.
+
+// #region ⚛️LazyReact
+// Lazily imported React — available only when react is installed.
+let _React: typeof import("react") | undefined;
+try {
+  _React = await import("react");
+} catch {
+  // React not available — hooks will throw at runtime if used without React.
+}
+
+function requireReact(): typeof import("react") {
+  if (!_React) throw new Error("React is required for semio React hooks. Install react as a dependency.");
+  return _React;
+}
+// #endregion ⚛️LazyReact
+
+// #region ⚛️KitContext
+/** 🏗️ Internal context value carrying the kit store and current snapshot. */
+type KitContextValue = {
+  store: KitStore;
+  kit: KitImpl;
+};
+
+let _KitContext: import("react").Context<KitContextValue | null> | undefined;
+function getKitContext(): import("react").Context<KitContextValue | null> {
+  if (!_KitContext) {
+    const React = requireReact();
+    _KitContext = React.createContext<KitContextValue | null>(null);
+  }
+  return _KitContext;
+}
+
+function useKitContext(): KitContextValue {
+  const React = requireReact();
+  const ctx = React.useContext(getKitContext());
+  if (!ctx) throw new Error("useKit*() hooks must be used inside <KitProvider>.");
+  return ctx;
+}
+
+/** 🏪 Returns the raw KitStore from the nearest KitProvider. */
+export function useKitStore(): KitStore {
+  return useKitContext().store;
+}
+
+/** 🏗️ Returns the live KitImpl instance from the nearest KitProvider. */
+export function useKit(): KitImpl {
+  return useKitContext().kit;
+}
+// #endregion ⚛️KitContext
+
+// #region ⚛️KitProvider
+/** 🏗️ Provides a reactive KitStore to the component tree.
+ *
+ * Accepts a `store` prop (pre-built KitStore).
+ * Children re-render only when the store emits a change.
+ */
+export type KitProviderProps = {
+  /** Pre-built store — use this when the caller manages the store lifecycle. */
+  store?: KitStore;
+  /** Initial kit data when no store is provided (creates an InMemoryKitStore). */
+  initialKit?: KitLike;
+  children: import("react").ReactNode;
+};
+
+export const KitProvider = (props: KitProviderProps): import("react").ReactElement | null => {
+  const React = requireReact();
+  const { store: externalStore, initialKit, children } = props;
+
+  const internalStoreRef = React.useRef<KitStore | null>(null);
+
+  if (!externalStore && !internalStoreRef.current) {
+    const kit = initialKit
+      ? asKitInstance(initialKit)
+      : asKitInstance({
+          guid: guid(),
+          name: "Untitled",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as KitData);
+    internalStoreRef.current = new InMemoryKitStore(kit);
+  }
+
+  const store = externalStore ?? internalStoreRef.current!;
+
+  const subscribe = React.useCallback((onStoreChange: () => void) => store.subscribe(onStoreChange), [store]);
+  const getSnapshot = React.useCallback(() => store.getSnapshot(), [store]);
+  const snapshot = React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  const value = React.useMemo<KitContextValue>(() => ({ store, kit: snapshot.kit }), [store, snapshot]);
+
+  return React.createElement(getKitContext().Provider, { value }, children);
+};
+// #endregion ⚛️KitProvider
+
+// #region ⚛️PieceContext
+/** 🧩 Context for scoping piece hooks to a specific piece guid and design guid. */
+type PieceContextValue = {
+  pieceGuid: string;
+  designGuid: string;
+};
+
+let _PieceContext: import("react").Context<PieceContextValue | null> | undefined;
+function getPieceContext(): import("react").Context<PieceContextValue | null> {
+  if (!_PieceContext) {
+    const React = requireReact();
+    _PieceContext = React.createContext<PieceContextValue | null>(null);
+  }
+  return _PieceContext;
+}
+
+function usePieceContext(): PieceContextValue {
+  const React = requireReact();
+  const ctx = React.useContext(getPieceContext());
+  if (!ctx) throw new Error("usePiece*() hooks must be used inside <PieceProvider> or pass guid+designGuid arguments.");
+  return ctx;
+}
+
+/** 🧩 Scopes piece hooks to a specific piece within a design.
+ *
+ * Pieces live inside designs, so both guids are required for resolution.
+ */
+export type PieceProviderProps = {
+  guid: string;
+  designGuid: string;
+  children: import("react").ReactNode;
+};
+
+export const PieceProvider = (props: PieceProviderProps): import("react").ReactElement | null => {
+  const React = requireReact();
+  const { guid: pieceGuid, designGuid, children } = props;
+
+  const value = React.useMemo<PieceContextValue>(() => ({ pieceGuid, designGuid }), [pieceGuid, designGuid]);
+
+  return React.createElement(getPieceContext().Provider, { value }, children);
+};
+// #endregion ⚛️PieceContext
+
+// #region ⚛️PieceHookHelpers
+/** 🔍 Resolves guid + designGuid from either context or explicit args. */
+function useResolvedPieceIds(pieceGuid?: string, designGuid?: string): { pieceGuid: string; designGuid: string } {
+  const React = requireReact();
+  const ctx = React.useContext(getPieceContext());
+  const resolved = pieceGuid && designGuid ? { pieceGuid, designGuid } : ctx;
+  if (!resolved) throw new Error("Piece guid and designGuid required — use <PieceProvider> or pass both arguments.");
+  return resolved;
+}
+
+/** 🔧 Internal: find a piece in a design within the kit. */
+function findPieceInKitDesign(kit: KitImpl, designGuid: string, pieceGuid: string): Piece | undefined {
+  const design = kit.findDesign(designGuid);
+  if (!design) return undefined;
+  return design.findPiece(pieceGuid);
+}
+
+/** 🔧 Internal: select a value from a piece, stable reference via useMemo. */
+function usePieceSelector<T>(selector: (piece: Piece, kit: KitImpl, designGuid: string) => T, pieceGuid?: string, designGuid?: string): T | undefined {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    const piece = findPieceInKitDesign(kit, ids.designGuid, ids.pieceGuid);
+    if (!piece) return undefined;
+    return selector(piece, kit, ids.designGuid);
+  }, [kit, ids.pieceGuid, ids.designGuid, selector]);
+}
+// #endregion ⚛️PieceHookHelpers
+
+// #region ⚛️PieceHooks
+
+/** 📛 Returns the name of the piece (or undefined if not found). */
+export function usePieceName(pieceGuid?: string, designGuid?: string): string | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.name, []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 📝 Returns the description of the piece. */
+export function usePieceDescription(pieceGuid?: string, designGuid?: string): string | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.description, []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 🧱 Returns the type id (guid) of the piece. */
+export function usePieceTypeId(pieceGuid?: string, designGuid?: string): ReactTypeId | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.wireTypeId(), []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 📐 Returns the design id (guid) when this piece references a sub-design. */
+export function usePieceDesignId(pieceGuid?: string, designGuid?: string): ReactDesignId | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.wireDesignAsPieceId(), []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 🔵 Returns the blueprint id — either type or design reference. */
+export type BlueprintId = { kind: "type"; guid: string } | { kind: "design"; guid: string };
+
+export function usePieceBlueprintId(pieceGuid?: string, designGuid?: string): BlueprintId | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece): BlueprintId | undefined => {
+    const designRefId = p.wireDesignAsPieceId();
+    if (designRefId) return { kind: "design", guid: designRefId.guid };
+    const typeId = p.wireTypeId();
+    if (typeId) return { kind: "type", guid: typeId.guid };
+    return undefined;
+  }, []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** ✈️ Returns the 3D placement plane of the piece. */
+export function usePiecePlane(pieceGuid?: string, designGuid?: string): Plane | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.plane, []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 📍 Returns the 2D center coordinate of the piece. */
+export function usePieceCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.center, []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** ✈️ Returns the flattened 3D plane (resolved through parent hierarchy). */
+export function usePieceFlatPlane(pieceGuid?: string, designGuid?: string): Plane | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.flatPlane(), []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 📍 Returns the flattened 2D center (resolved through parent hierarchy). */
+export function usePieceFlatCenter(pieceGuid?: string, designGuid?: string): Coord | undefined {
+  const React = requireReact();
+  const sel = React.useCallback((p: Piece) => p.flatCenter(), []);
+  return usePieceSelector(sel, pieceGuid, designGuid);
+}
+
+/** 👆 Returns the parent piece id in the design tree. */
+export function useParentPieceId(pieceGuid?: string, designGuid?: string): ReactPieceId | undefined {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    try {
+      const parent = kit.findParentPieceInDesign(ids.designGuid, ids.pieceGuid);
+      return { guid: parent.guid };
+    } catch {
+      return undefined;
+    }
+  }, [kit, ids.pieceGuid, ids.designGuid]);
+}
+
+/** 🔗 Returns the connection id linking this piece to its parent. */
+export function useParentConnectionId(pieceGuid?: string, designGuid?: string): ReactConnectionId | undefined {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    try {
+      const conn = kit.findParentConnectionForPieceInDesign(ids.designGuid, ids.pieceGuid);
+      return { guid: conn.guid };
+    } catch {
+      return undefined;
+    }
+  }, [kit, ids.pieceGuid, ids.designGuid]);
+}
+
+/** 👶 Returns the ids of all child pieces in the design tree. */
+export function useChildPiecesIds(pieceGuid?: string, designGuid?: string): ReactPieceId[] {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    try {
+      const children = kit.findChildrenPiecesInDesign(ids.designGuid, ids.pieceGuid);
+      return children.map((c) => ({ guid: c.guid }));
+    } catch {
+      return [];
+    }
+  }, [kit, ids.pieceGuid, ids.designGuid]);
+}
+
+/** 🔗 Returns the connection ids for all child connections of this piece. */
+export function useChildConnectionsIds(pieceGuid?: string, designGuid?: string): ReactConnectionId[] {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    try {
+      const design = kit.requireDesign(ids.designGuid);
+      const metadata = kit.piecesMetadataFor(ids.designGuid);
+      if (!metadata.ok) return [];
+      const connections = design._connections ?? [];
+      const childConns = connections.filter((c) => {
+        try {
+          const connectedPieceGuid = c.connected.wirePieceId().guid;
+          const connectingPieceGuid = c.connecting.wirePieceId().guid;
+          if (connectedPieceGuid === ids.pieceGuid) {
+            const childMeta = metadata.diff.get(connectingPieceGuid);
+            return childMeta?.parentPieceId === ids.pieceGuid;
+          }
+          if (connectingPieceGuid === ids.pieceGuid) {
+            const childMeta = metadata.diff.get(connectedPieceGuid);
+            return childMeta?.parentPieceId === ids.pieceGuid;
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      });
+      return childConns.map((c) => ({ guid: c.guid }));
+    } catch {
+      return [];
+    }
+  }, [kit, ids.pieceGuid, ids.designGuid]);
+}
+
+/** 🔄 Returns type ids that can replace this piece's current type (connector-compatible). */
+export function useAlternativeTypeIds(pieceGuid?: string, designGuid?: string): ReactTypeId[] {
+  const React = requireReact();
+  const { kit } = useKitContext();
+  const ids = useResolvedPieceIds(pieceGuid, designGuid);
+  return React.useMemo(() => {
+    try {
+      const types = kit.findReplacableTypesForPieceInDesign(ids.designGuid, ids.pieceGuid);
+      return types.map((t) => ({ guid: t.guid }));
+    } catch {
+      return [];
+    }
+  }, [kit, ids.pieceGuid, ids.designGuid]);
+}
+
+// #endregion ⚛️PieceHooks
+
+// #endregion ⚛️React
+
+// #region 🔬Runtime Test Flags
 // Test and benchmark blocks MUST compile out of browser bundles while staying runnable in Node.
 declare const __SEMIO_JS_RUN_EMBEDDED_TESTS__: boolean | undefined;
 declare const __SEMIO_JS_RUN_BENCHMARKS__: boolean | undefined;
@@ -24991,7 +25335,218 @@ if (shouldRunEmbeddedJsTests) {
     });
   });
 
-  // #endregion ­ƒöäTransaction Undo/Redo Tests
+  // #endregion 🔄Transaction Undo/Redo Tests
+
+  // #region ⚛️React Hooks Tests
+  describe("React Hooks", () => {
+    let testKit: KitImpl;
+    let testStore: InMemoryKitStore;
+    let testDesignGuid: string;
+    let testPieceGuid: string;
+
+    beforeAll(() => {
+      testKit = asKitInstance(MetabolismKit as unknown as KitImpl);
+      testStore = new InMemoryKitStore(testKit);
+      const design = testKit.designs![0];
+      testDesignGuid = design.guid;
+      const piece = design.pieces![0];
+      testPieceGuid = piece.guid;
+    });
+
+    const renderHookResult = <T>(hookFn: () => T): T => {
+      let result: T | undefined;
+      const TestComponent = () => {
+        result = hookFn();
+        return createElement("span", null, JSON.stringify(result));
+      };
+      const tree = createElement(KitProvider, { store: testStore } as any, createElement(TestComponent, null));
+      renderToStaticMarkup(tree);
+      return result as T;
+    };
+
+    const renderPieceHookResult = <T>(hookFn: () => T, pieceGuid: string, designGuid: string): T => {
+      let result: T | undefined;
+      const TestComponent = () => {
+        result = hookFn();
+        return createElement("span", null, JSON.stringify(result));
+      };
+      const tree = createElement(KitProvider, { store: testStore } as any, createElement(PieceProvider, { guid: pieceGuid, designGuid } as any, createElement(TestComponent, null)));
+      renderToStaticMarkup(tree);
+      return result as T;
+    };
+
+    it("useKit returns a KitImpl instance", () => {
+      const kit = renderHookResult(() => useKit());
+      expect(kit).toBeDefined();
+      expect(kit.guid).toBe(testKit.guid);
+    });
+
+    it("useKitStore returns the store", () => {
+      const store = renderHookResult(() => useKitStore());
+      expect(store).toBe(testStore);
+    });
+
+    it("usePieceName returns piece name via PieceProvider", () => {
+      const piece = testKit.designs![0].pieces![0];
+      const name = renderPieceHookResult(() => usePieceName(), testPieceGuid, testDesignGuid);
+      expect(name).toBe(piece.name);
+    });
+
+    it("usePieceName returns piece name via explicit args", () => {
+      const piece = testKit.designs![0].pieces![0];
+      const name = renderHookResult(() => usePieceName(testPieceGuid, testDesignGuid));
+      expect(name).toBe(piece.name);
+    });
+
+    it("usePieceDescription returns piece description", () => {
+      const piece = testKit.designs![0].pieces![0];
+      const desc = renderPieceHookResult(() => usePieceDescription(), testPieceGuid, testDesignGuid);
+      expect(desc).toBe(piece.description);
+    });
+
+    it("usePieceTypeId returns the type reference guid", () => {
+      const piece = testKit.designs![0].pieces![0];
+      const typeId = renderPieceHookResult(() => usePieceTypeId(), testPieceGuid, testDesignGuid);
+      const expectedTypeId = piece.wireTypeId();
+      if (expectedTypeId) {
+        expect(typeId).toBeDefined();
+        expect(typeId!.guid).toBe(expectedTypeId.guid);
+      } else {
+        expect(typeId).toBeUndefined();
+      }
+    });
+
+    it("usePieceDesignId returns the design reference", () => {
+      const designId = renderPieceHookResult(() => usePieceDesignId(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      const expectedDesignId = piece.wireDesignAsPieceId();
+      if (expectedDesignId) {
+        expect(designId).toBeDefined();
+        expect(designId!.guid).toBe(expectedDesignId.guid);
+      } else {
+        expect(designId).toBeUndefined();
+      }
+    });
+
+    it("usePieceBlueprintId returns either type or design", () => {
+      const blueprint = renderPieceHookResult(() => usePieceBlueprintId(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      const designRef = piece.wireDesignAsPieceId();
+      if (designRef) {
+        expect(blueprint).toEqual({ kind: "design", guid: designRef.guid });
+      } else {
+        const typeRef = piece.wireTypeId();
+        if (typeRef) {
+          expect(blueprint).toEqual({ kind: "type", guid: typeRef.guid });
+        } else {
+          expect(blueprint).toBeUndefined();
+        }
+      }
+    });
+
+    it("usePiecePlane returns the placement plane", () => {
+      const plane = renderPieceHookResult(() => usePiecePlane(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      expect(plane).toEqual(piece.plane);
+    });
+
+    it("usePieceCenter returns the center coordinate", () => {
+      const center = renderPieceHookResult(() => usePieceCenter(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      expect(center).toEqual(piece.center);
+    });
+
+    it("usePieceFlatPlane returns flattened plane", () => {
+      const flatPlane = renderPieceHookResult(() => usePieceFlatPlane(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      expect(flatPlane).toEqual(piece.flatPlane());
+    });
+
+    it("usePieceFlatCenter returns flattened center", () => {
+      const flatCenter = renderPieceHookResult(() => usePieceFlatCenter(), testPieceGuid, testDesignGuid);
+      const piece = testKit.designs![0].pieces![0];
+      expect(flatCenter).toEqual(piece.flatCenter());
+    });
+
+    it("useParentPieceId returns parent piece id", () => {
+      const metadata = testKit.piecesMetadataFor(testDesignGuid);
+      expect(metadata.ok).toBe(true);
+      let childGuid: string | undefined;
+      let parentGuid: string | undefined;
+      for (const [pg, meta] of metadata.diff!) {
+        if (meta.parentPieceId) {
+          childGuid = pg;
+          parentGuid = meta.parentPieceId;
+          break;
+        }
+      }
+      if (childGuid && parentGuid) {
+        const parentId = renderPieceHookResult(() => useParentPieceId(), childGuid, testDesignGuid);
+        expect(parentId).toBeDefined();
+        expect(parentId!.guid).toBe(parentGuid);
+      }
+    });
+
+    it("useParentConnectionId returns parent connection id", () => {
+      const metadata = testKit.piecesMetadataFor(testDesignGuid);
+      expect(metadata.ok).toBe(true);
+      let childGuid: string | undefined;
+      for (const [pg, meta] of metadata.diff!) {
+        if (meta.parentPieceId) {
+          childGuid = pg;
+          break;
+        }
+      }
+      if (childGuid) {
+        const connId = renderPieceHookResult(() => useParentConnectionId(), childGuid, testDesignGuid);
+        expect(connId).toBeDefined();
+        expect(typeof connId!.guid).toBe("string");
+      }
+    });
+
+    it("useChildPiecesIds returns child piece ids", () => {
+      const metadata = testKit.piecesMetadataFor(testDesignGuid);
+      expect(metadata.ok).toBe(true);
+      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;
+      const children = renderPieceHookResult(() => useChildPiecesIds(), rootGuid, testDesignGuid);
+      expect(Array.isArray(children)).toBe(true);
+    });
+
+    it("useAlternativeTypeIds returns replaceable types", () => {
+      const altTypes = renderPieceHookResult(() => useAlternativeTypeIds(), testPieceGuid, testDesignGuid);
+      expect(Array.isArray(altTypes)).toBe(true);
+    });
+
+    it("usePieceName returns undefined for nonexistent piece", () => {
+      const name = renderHookResult(() => usePieceName("nonexistent-guid", testDesignGuid));
+      expect(name).toBeUndefined();
+    });
+
+    it("useParentPieceId returns undefined for root piece", () => {
+      const metadata = testKit.piecesMetadataFor(testDesignGuid);
+      expect(metadata.ok).toBe(true);
+      const rootGuid = metadata.diff!.entries().next().value![1].fixedPieceId;
+      const parentId = renderPieceHookResult(() => useParentPieceId(), rootGuid, testDesignGuid);
+      expect(parentId).toBeUndefined();
+    });
+
+    it("throws when hooks are used outside KitProvider", () => {
+      expect(() => {
+        const TestComponent = () => {
+          useKit();
+          return createElement("span", null, "fail");
+        };
+        renderToStaticMarkup(createElement(TestComponent, null));
+      }).toThrow("useKit*() hooks must be used inside <KitProvider>.");
+    });
+
+    it("throws when piece hooks are used without PieceProvider or args", () => {
+      expect(() => {
+        renderHookResult(() => usePieceName());
+      }).toThrow();
+    });
+  });
+  // #endregion ⚛️React Hooks Tests
 } // end vitest guard
 // #endregion ­ƒº¬Tests
 

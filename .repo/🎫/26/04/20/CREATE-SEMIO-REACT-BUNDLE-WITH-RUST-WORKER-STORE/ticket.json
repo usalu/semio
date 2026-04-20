@@ -1,0 +1,12 @@
+{
+  "title": "Create Semio React Bundle With Rust Worker Store",
+  "status": "open",
+  "description": "Create `semio/react` bundle that exports React hooks backed by a long-lived Rust worker as store. Extend `semio/rs` with async tokio events for granular kit changes. Hooks use KitProvider with backbone support (local/dev/remote) and PieceProvider for scoped piece data access. Hooks: usePieceName, usePieceDescription, usePieceTypeId, usePieceDesignId, usePieceBlueprintId, usePiecePlane, usePieceCenter, usePieceFlatPlane, usePieceFlatCenter, useParentPieceId, useParentConnectionId, useChildPiecesIds, useChildConnectionsIds, useAlternativeTypeIds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1366"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪b862a2e9c8de43e58461c59f72e0bf57"
+  ]
+}
