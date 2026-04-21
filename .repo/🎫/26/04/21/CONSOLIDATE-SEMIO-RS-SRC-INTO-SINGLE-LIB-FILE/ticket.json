@@ -1,0 +1,12 @@
+{
+  "title": "Consolidate Semio Rs Src Into Single Lib File",
+  "status": "open",
+  "description": "Implement semio/rs consolidation so every module under semio/rs/src, including io and tests, is moved into a single physical src/lib.rs file using inline modules. Remove the old source and test files after migration. Preserve the public API and cfg behavior, then run cargo fmt, cargo check, cargo test, and wasm-target cargo check.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1370"
+  },
+  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
+  "sessions": [
+    "⚪06662fa45ee449b1afc4ce27a3d96c68"
+  ]
+}
