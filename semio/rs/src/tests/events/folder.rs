@@ -17,10 +17,11 @@ fn folder_set_description_emits() {
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    kit.read().unwrap().folders[0]
-        .write()
-        .unwrap()
-        .set_description(Some("d".into()));
+    let f = {
+        let kr = kit.read().unwrap();
+        kr.folders[0].clone()
+    };
+    f.write().unwrap().set_description(Some("d".into()));
     let evs = super::common::drain(&mut rx);
     assert!(evs
         .iter()

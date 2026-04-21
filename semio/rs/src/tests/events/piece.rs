@@ -10,13 +10,14 @@ macro_rules! piece_geom_test {
             let dre = EntityRef::new(EntityKind::Design, dg.clone());
             let kre = super::common::kit_entity_ref(&kit);
             let mut rx = kit.read().unwrap().subscribe();
-            {
+            let p = {
                 let kr = kit.read().unwrap();
                 let d = kr.design(dg.as_str()).unwrap();
-                let p = d.read().unwrap().piece(pg.as_str()).unwrap();
-                let mut pw = p.write().unwrap();
-                $op(&mut *pw);
-            }
+                let dr = d.read().unwrap();
+                dr.piece(pg.as_str()).unwrap().clone()
+            };
+            let mut pw = p.write().unwrap();
+            $op(&mut *pw);
             let evs = super::common::drain(&mut rx);
             super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, $field);
         }
@@ -58,13 +59,14 @@ fn piece_set_color_hash_only() {
     let dre = EntityRef::new(EntityKind::Design, dg.clone());
     let kre = super::common::kit_entity_ref(&kit);
     let mut rx = kit.read().unwrap().subscribe();
-    {
+    let p = {
         let kr = kit.read().unwrap();
         let d = kr.design(dg.as_str()).unwrap();
-        let p = d.read().unwrap().piece(pg.as_str()).unwrap();
-        let mut pw = p.write().unwrap();
-        pw.set_color(Some("#fff".into()));
-    }
+        let dr = d.read().unwrap();
+        dr.piece(pg.as_str()).unwrap().clone()
+    };
+    let mut pw = p.write().unwrap();
+    pw.set_color(Some("#fff".into()));
     let evs = super::common::drain(&mut rx);
     super::common::assert_piece_scalar_hash_only(&evs, pre, dre, kre, "color");
 }
@@ -82,13 +84,14 @@ fn piece_set_type_weak_geometry() {
         .semio_type(tg.as_str())
         .map(|t| std::sync::Arc::downgrade(&t))
         .unwrap();
-    {
+    let p = {
         let kr = kit.read().unwrap();
         let d = kr.design(dg.as_str()).unwrap();
-        let p = d.read().unwrap().piece(pg.as_str()).unwrap();
-        let mut pw = p.write().unwrap();
-        pw.set_type_weak(Some(tw));
-    }
+        let dr = d.read().unwrap();
+        dr.piece(pg.as_str()).unwrap().clone()
+    };
+    let mut pw = p.write().unwrap();
+    pw.set_type_weak(Some(tw));
     let evs = super::common::drain(&mut rx);
     super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, "type");
 }

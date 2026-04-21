@@ -19,7 +19,10 @@ fn author_set_email_emits() {
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    let a = kit.read().unwrap().authors[0].clone();
+    let a = {
+        let kr = kit.read().unwrap();
+        kr.authors[0].clone()
+    };
     a.write().unwrap().set_email("e2@x".into());
     let evs = super::common::drain(&mut rx);
     assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "email", .. })));

@@ -1,6 +1,6 @@
 //! Helpers for event-sequence tests.
 
-use crate::connection::{ConnectionFullDto, SideMetadataDto};
+use crate::connection::ConnectionFullDto;
 use crate::connector::ConnectorFullDto;
 use crate::design::DesignFullDto;
 use crate::events::{EntityKind, EntityRef, KitEvent};
@@ -10,6 +10,7 @@ use crate::guid::Guid;
 use crate::kit::{KitFullDto, KitStore, KitStoreRef};
 use crate::layer::LayerFullDto;
 use crate::piece::{PieceFullDto, PieceIdDto};
+use crate::side::SideMetadataDto;
 use crate::port::{PortFullDto, PortIdDto};
 use crate::typ::{TypeFullDto, TypeIdDto};
 

@@ -1,28 +1,27 @@
-use crate::attribute::AttributeFullDto;
 use crate::events::KitEvent;
 use crate::guid::Guid;
 use crate::kit::{KitFullDto, KitStore};
+use crate::tag::TagFullDto;
 
 #[test]
-fn attribute_set_value_emits() {
+fn tag_set_order_emits() {
     let g = Guid::new_v7();
     let kit = KitStore::from_full_dto(KitFullDto {
         guid: Guid::new_v7(),
         name: "k".into(),
-        attributes: vec![AttributeFullDto {
+        tags: vec![TagFullDto {
             guid: g.clone(),
-            key: "k".into(),
-            value: "v".into(),
-            definition: None,
+            name: "t".into(),
+            order: None,
         }],
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    let a = {
+    let t = {
         let kr = kit.read().unwrap();
-        kr.attributes[0].clone()
+        kr.tags[0].clone()
     };
-    a.write().unwrap().set_value("v2".into());
+    t.write().unwrap().set_order(Some(1));
     let evs = super::common::drain(&mut rx);
-    assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "value", .. })));
+    assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "order", .. })));
 }

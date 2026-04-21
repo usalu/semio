@@ -2,6 +2,7 @@
 
 mod io_json;
 mod diff;
+mod events;
 mod entities;
 mod flatten;
 mod invalidation;

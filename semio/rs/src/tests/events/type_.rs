@@ -8,12 +8,12 @@ macro_rules! type_meta_test {
             let tre = EntityRef::new(EntityKind::Type, tg.clone());
             let kre = super::common::kit_entity_ref(&kit);
             let mut rx = kit.read().unwrap().subscribe();
-            {
+            let t = {
                 let kr = kit.read().unwrap();
-                let t = kr.semio_type(tg.as_str()).unwrap();
-                let mut tw = t.write().unwrap();
-                $op(&mut *tw);
-            }
+                kr.semio_type(tg.as_str()).unwrap().clone()
+            };
+            let mut tw = t.write().unwrap();
+            $op(&mut *tw);
             let evs = super::common::drain(&mut rx);
             super::common::assert_type_metadata_core(&evs, tre, kre, $field);
         }

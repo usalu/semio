@@ -37,8 +37,16 @@ fn benchmark_set_min_emits() {
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    let b = kit.read().unwrap().types[0].read().unwrap().ports[0].read().unwrap().qualities[0].read().unwrap().benchmarks[0]
-        .clone();
+    let b = {
+        let kr = kit.read().unwrap();
+        let t = kr.types[0].clone();
+        let tr = t.read().unwrap();
+        let p = tr.ports[0].clone();
+        let pr = p.read().unwrap();
+        let q = pr.qualities[0].clone();
+        let qr = q.read().unwrap();
+        qr.benchmarks[0].clone()
+    };
     b.write().unwrap().set_min(Some(1.0));
     let evs = super::common::drain(&mut rx);
     assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "min", .. })));

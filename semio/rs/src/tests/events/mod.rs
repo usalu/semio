@@ -8,6 +8,7 @@ mod backbone;
 mod benchmark;
 mod concept;
 mod connection;
+mod diff_apply;
 mod connector;
 mod design;
 mod file;

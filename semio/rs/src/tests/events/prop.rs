@@ -1,28 +1,28 @@
-use crate::attribute::AttributeFullDto;
 use crate::events::KitEvent;
 use crate::guid::Guid;
 use crate::kit::{KitFullDto, KitStore};
+use crate::prop::PropFullDto;
 
 #[test]
-fn attribute_set_value_emits() {
+fn prop_set_unit_emits() {
     let g = Guid::new_v7();
     let kit = KitStore::from_full_dto(KitFullDto {
         guid: Guid::new_v7(),
         name: "k".into(),
-        attributes: vec![AttributeFullDto {
+        props: vec![PropFullDto {
             guid: g.clone(),
             key: "k".into(),
             value: "v".into(),
-            definition: None,
+            unit: None,
         }],
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    let a = {
+    let p = {
         let kr = kit.read().unwrap();
-        kr.attributes[0].clone()
+        kr.props[0].clone()
     };
-    a.write().unwrap().set_value("v2".into());
+    p.write().unwrap().set_unit(Some("u".into()));
     let evs = super::common::drain(&mut rx);
-    assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "value", .. })));
+    assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "unit", .. })));
 }

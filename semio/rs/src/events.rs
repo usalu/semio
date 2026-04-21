@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Weak};
 
-use async_broadcast::{broadcast, Receiver, Sender};
+use async_broadcast::{broadcast, InactiveReceiver, Receiver, Sender};
 
 use crate::guid::Guid;
 
@@ -78,13 +78,21 @@ pub enum KitEvent {
 #[derive(Debug)]
 pub struct EventBus {
     sender: Sender<KitEvent>,
+    /// Keeps the channel open when no [`Receiver`] is subscribed yet (dropping the initial
+    /// receiver from [`broadcast`] would close the channel and break all later subscribers).
+    #[allow(dead_code)]
+    _inactive: InactiveReceiver<KitEvent>,
 }
 
 impl EventBus {
     pub fn new(capacity: usize) -> Arc<Self> {
-        let (mut sender, _rx) = broadcast(capacity);
+        let (mut sender, r) = broadcast(capacity);
         sender.set_overflow(true);
-        Arc::new(Self { sender })
+        let inactive = r.deactivate();
+        Arc::new(Self {
+            sender,
+            _inactive: inactive,
+        })
     }
 
     pub fn subscribe(&self) -> Receiver<KitEvent> {

@@ -351,11 +351,11 @@ impl DesignStore {
     }
 
     #[inline]
-    fn emit_ev(&self, ev: KitEvent) {
+    pub(crate) fn emit_ev(&self, ev: KitEvent) {
         emit_weak(&self.event_bus, ev);
     }
 
-    fn entity_ref(&self) -> EntityRef {
+    pub(crate) fn entity_ref(&self) -> EntityRef {
         EntityRef::new(EntityKind::Design, self.guid.clone())
     }
 
@@ -394,21 +394,34 @@ impl DesignStore {
         });
     }
 
+    /// Invalidate flatten caches and emit flatten + derived events for all pieces in this design.
+    ///
+    /// When a [`crate::piece::PieceStore`] mutator bubbles here, it **holds that piece's write
+    /// lock**; pass its guid so we can still list it in `FlattenInvalidated` without blocking on
+    /// `read()` (which would deadlock).
     pub fn invalidate_flatten(&self) {
+        self.invalidate_flatten_with_locked_piece(None);
+    }
+
+    pub(crate) fn invalidate_flatten_with_locked_piece(&self, locked_piece: Option<Guid>) {
         let design_guid = self.guid.clone();
         let mut piece_guids: Vec<Guid> = self
             .pieces
             .iter()
-            .filter_map(|p| p.read().ok().map(|pr| pr.guid.clone()))
+            .filter_map(|p| match p.try_read() {
+                Ok(pr) => Some(pr.guid.clone()),
+                Err(_) => locked_piece.clone(),
+            })
             .collect();
         piece_guids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
+        piece_guids.dedup();
         self.flatten_cache.invalidate();
         self.emit_ev(KitEvent::FlattenInvalidated {
             design: design_guid,
             pieces: piece_guids.clone(),
         });
         for p in &self.pieces {
-            if let Ok(pr) = p.read() {
+            if let Ok(pr) = p.try_read() {
                 pr.invalidate_flat_pose();
             }
         }

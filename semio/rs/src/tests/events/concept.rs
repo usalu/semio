@@ -18,10 +18,11 @@ fn concept_set_name_emits() {
         ..Default::default()
     });
     let mut rx = kit.read().unwrap().subscribe();
-    kit.read().unwrap().concepts[0]
-        .write()
-        .unwrap()
-        .set_name("c2".into());
+    let c = {
+        let kr = kit.read().unwrap();
+        kr.concepts[0].clone()
+    };
+    c.write().unwrap().set_name("c2".into());
     let evs = super::common::drain(&mut rx);
     assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: "name", .. })));
 }

@@ -9,12 +9,12 @@ macro_rules! design_meta_test {
             let dre = EntityRef::new(EntityKind::Design, dg.clone());
             let kre = super::common::kit_entity_ref(&kit);
             let mut rx = kit.read().unwrap().subscribe();
-            {
+            let d = {
                 let kr = kit.read().unwrap();
-                let d = kr.design(dg.as_str()).expect("design");
-                let mut dw = d.write().unwrap();
-                $op(&mut *dw);
-            }
+                kr.design(dg.as_str()).expect("design").clone()
+            };
+            let mut dw = d.write().unwrap();
+            $op(&mut *dw);
             let evs = super::common::drain(&mut rx);
             super::common::assert_design_scalar_metadata_events(&evs, dre, kre, &pg, $field);
         }

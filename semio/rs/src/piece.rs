@@ -273,7 +273,7 @@ impl PieceStore {
     fn bubble_design_flatten(&self) {
         if let Some(d) = self.parent_design.upgrade() {
             if let Ok(d) = d.read() {
-                d.invalidate_flatten();
+                d.invalidate_flatten_with_locked_piece(Some(self.guid.clone()));
             }
         }
     }
