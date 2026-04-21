@@ -12,7 +12,10 @@ import type { ReactNode, SetStateAction } from "react";
 import {
 	asKitInstance,
 	Coord,
+	createFolderKitStore,
+	createJsonFileKitStore,
 	createKitStoreClient,
+	createSessionKitStore,
 	Design,
 	guid,
 	InMemoryKitStore,
@@ -101,6 +104,8 @@ type KitRuntimeContextValue = {
 	snapshot: KitStoreSnapshot;
 	state: IndexedSchemaState;
 	recentEvents: SchemaPropertyEvent[];
+	recentSetRejections: SetError[];
+	pushSetRejection: (e: SetError) => void;
 	canWrite: boolean;
 	kitClient: KitStoreClient | null;
 	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
@@ -688,11 +693,6 @@ async function createNodeFolderAdapter(folderPath: string) {
 	};
 }
 
-async function loadSketchpadModule() {
-	const sketchpadModuleId = "@semio" + "/sketchpad";
-	return import(/* @vite-ignore */ sketchpadModuleId);
-}
-
 async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined, initialKit?: KitLike): Promise<KitStore> {
 	const resolvedBackbone = backbone?.kind ? backbone : ({ kind: "memory", initialKit } as MemoryBackboneConfig);
 	if (resolvedBackbone.kind === "memory") {
@@ -700,14 +700,11 @@ async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined
 		return new InMemoryKitStore(asKitInstance(seed));
 	}
 	if (resolvedBackbone.kind === "dev") {
-		const { createJsonFileKitStore } = await loadSketchpadModule();
 		return createJsonFileKitStore(await createNodeJsonFileAdapter(resolvedBackbone.filePath));
 	}
 	if (resolvedBackbone.kind === "local") {
-		const { createFolderKitStore } = await loadSketchpadModule();
 		return createFolderKitStore(await createNodeFolderAdapter(resolvedBackbone.folderPath), initialKit ? asKitInstance(initialKit).toJSON() as any : undefined);
 	}
-	const { createSessionKitStore } = await loadSketchpadModule();
 	return createSessionKitStore({
 		serverUrl: resolvedBackbone.serverUrl,
 		sessionId: resolvedBackbone.sessionId,
@@ -726,6 +723,110 @@ async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined
 const KitRuntimeContext = React.createContext<KitRuntimeContextValue | null>(null);
 const SchemaScopeContext = React.createContext<SchemaScope | null>(null);
 
+// #region KitRegistry
+
+export type KitRegistryEntry = {
+	store: KitStore;
+	kitClient: KitStoreClient;
+	refs: number;
+};
+
+export type KitRegistryValue = {
+	open: (guid: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore }) => Promise<void>;
+	close: (guid: string) => void;
+	get: (guid: string) => KitRegistryEntry | undefined;
+	list: () => string[];
+	status: (guid: string) => "idle" | "loading" | "ready" | "error";
+};
+
+type RegistryRow = {
+	store: KitStore;
+	kitClient: KitStoreClient;
+	refs: number;
+	unsub: () => void;
+};
+
+const KitRegistryContext = React.createContext<KitRegistryValue | null>(null);
+
+export function KitRegistryProvider({ children }: { children: ReactNode }): React.ReactElement {
+	const rowsRef = React.useRef(new Map<string, RegistryRow>());
+	const loadingRef = React.useRef(new Set<string>());
+	const errRef = React.useRef(new Map<string, Error>());
+	const [, bump] = React.useReducer((x: number) => x + 1, 0);
+
+	const value = React.useMemo<KitRegistryValue>(
+		() => ({
+			async open(guid, init) {
+				const cur = rowsRef.current.get(guid);
+				if (cur) {
+					cur.refs += 1;
+					bump();
+					return;
+				}
+				loadingRef.current.add(guid);
+				errRef.current.delete(guid);
+				bump();
+				try {
+					const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
+					const kitClient = await createKitStoreClient({ initialKit: store.getSnapshot().kit });
+					const unsub = kitClient.subscribe(() => {
+						try {
+							const incoming = kitClient.getDto();
+							const curJson = store.getSnapshot().kit.toJSON();
+							if (JSON.stringify(incoming) === JSON.stringify(curJson)) return;
+							store.replace(asKitInstance(incoming));
+						} catch {
+							store.replace(asKitInstance(kitClient.getDto()));
+						}
+					});
+					rowsRef.current.set(guid, { store, kitClient, refs: 1, unsub });
+				} catch (e) {
+					errRef.current.set(guid, e instanceof Error ? e : new Error(String(e)));
+				} finally {
+					loadingRef.current.delete(guid);
+					bump();
+				}
+			},
+			close(guid) {
+				const row = rowsRef.current.get(guid);
+				if (!row) return;
+				row.refs -= 1;
+				if (row.refs <= 0) {
+					row.unsub();
+					row.kitClient.dispose();
+					rowsRef.current.delete(guid);
+				}
+				bump();
+			},
+			get(guid) {
+				const row = rowsRef.current.get(guid);
+				if (!row) return undefined;
+				return { store: row.store, kitClient: row.kitClient, refs: row.refs };
+			},
+			list() {
+				return Array.from(rowsRef.current.keys());
+			},
+			status(guid) {
+				if (loadingRef.current.has(guid)) return "loading";
+				if (errRef.current.has(guid)) return "error";
+				if (rowsRef.current.has(guid)) return "ready";
+				return "idle";
+			},
+		}),
+		[],
+	);
+
+	return React.createElement(KitRegistryContext.Provider, { value }, children);
+}
+
+export function useKitRegistry(): KitRegistryValue {
+	const v = React.useContext(KitRegistryContext);
+	if (!v) throw new Error("useKitRegistry must be used within <KitRegistryProvider>.");
+	return v;
+}
+
+// #endregion KitRegistry
+
 function useKitRuntime(): KitRuntimeContextValue {
 	const runtime = React.useContext(KitRuntimeContext);
 	if (!runtime) throw new Error("semio/react hooks must be used inside <KitProvider>.");
@@ -734,17 +835,36 @@ function useKitRuntime(): KitRuntimeContextValue {
 
 export type KitProviderProps = {
 	store?: KitStore;
+	/** When set with <KitRegistryProvider>, uses the registry entry for this kit (warm WASM worker). */
+	kitGuid?: string;
+	/** When provided (e.g. from registry), skips creating a new worker client. */
+	kitClient?: KitStoreClient | null;
 	backbone?: KitProviderBackbone;
 	initialKit?: KitLike;
 	children: ReactNode;
 	fallback?: ReactNode;
 };
 
-export function KitProvider({ store: externalStore, backbone, initialKit, children, fallback = null }: KitProviderProps): React.ReactElement | null {
+export function KitProvider({
+	store: externalStore,
+	kitGuid,
+	kitClient: kitClientProp,
+	backbone,
+	initialKit,
+	children,
+	fallback = null,
+}: KitProviderProps): React.ReactElement | null {
+	const registry = React.useContext(KitRegistryContext);
+	if (kitGuid && !registry) {
+		throw new Error("semio/react: <KitProvider kitGuid={...}> must be wrapped in <KitRegistryProvider>.");
+	}
+	const registryEntry = kitGuid && registry ? registry.get(kitGuid) : undefined;
+
 	const [internalStore, setInternalStore] = React.useState<KitStore | null>(externalStore ?? null);
-	const [kitClient, setKitClient] = React.useState<KitStoreClient | null>(null);
+	const [kitClientState, setKitClientState] = React.useState<KitStoreClient | null>(kitClientProp ?? null);
 
 	React.useEffect(() => {
+		if (kitGuid) return;
 		if (externalStore) {
 			setInternalStore(externalStore);
 			return;
@@ -756,30 +876,41 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 		return () => {
 			disposed = true;
 		};
-	}, [externalStore, backbone, initialKit]);
-
-	const store = externalStore ?? internalStore;
-	if (!store) return React.createElement(React.Fragment, null, fallback);
+	}, [kitGuid, externalStore, backbone, initialKit]);
 
 	React.useEffect(() => {
+		if (kitGuid) return;
+		if (kitClientProp !== undefined) {
+			setKitClientState(kitClientProp);
+			return;
+		}
+		const st = externalStore ?? internalStore;
+		if (!st) return;
 		let cancelled = false;
 		let client: KitStoreClient | null = null;
-		void createKitStoreClient({ initialKit: store.getSnapshot().kit }).then((c) => {
+		void createKitStoreClient({ initialKit: st.getSnapshot().kit }).then((c) => {
 			if (cancelled) {
 				c.dispose();
 				return;
 			}
 			client = c;
-			setKitClient(c);
+			setKitClientState(c);
 		});
 		return () => {
 			cancelled = true;
 			client?.dispose();
-			setKitClient(null);
+			setKitClientState(null);
 		};
-	}, [store]);
+	}, [kitGuid, externalStore, internalStore, kitClientProp]);
+
+	const store = kitGuid && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
+	const kitClient = kitGuid && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
+
+	if (kitGuid && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
+	if (!store) return React.createElement(React.Fragment, null, fallback);
 
 	React.useEffect(() => {
+		if (kitGuid) return;
 		if (!kitClient) return;
 		return kitClient.subscribe(() => {
 			try {
@@ -791,7 +922,7 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 				store.replace(asKitInstance(kitClient.getDto()));
 			}
 		});
-	}, [kitClient, store]);
+	}, [kitClient, store, kitGuid]);
 
 	const snapshotRef = React.useRef<KitStoreSnapshot | null>(null);
 	const getSnapshot = React.useCallback(() => {
@@ -833,6 +964,11 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 		previousStateRef.current = state;
 	}, [state]);
 
+	const [recentSetRejections, setRecentSetRejections] = React.useState<SetError[]>([]);
+	const pushSetRejection = React.useCallback((e: SetError) => {
+		setRecentSetRejections((r) => [...r.slice(-99), e]);
+	}, []);
+
 	const setFieldValue = React.useCallback((typeName: string, fieldName: string, next: SetStateAction<any>, guidValue?: string, scope?: SchemaScope | null) => {
 		const currentState = scanSchemaState(store.getSnapshot().kit.toJSON());
 		if (!isWritableField(currentState, typeName, fieldName, guidValue, scope)) return;
@@ -861,11 +997,13 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 		snapshot,
 		state,
 		recentEvents,
+		recentSetRejections,
+		pushSetRejection,
 		canWrite: !snapshot.sync.readonly,
 		kitClient,
 		setFieldValue,
 		setObjectValue,
-	}), [store, snapshot, state, recentEvents, kitClient, setFieldValue, setObjectValue]);
+	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, kitClient, setFieldValue, setObjectValue]);
 
 	return React.createElement(KitRuntimeContext.Provider, { value }, children);
 }
@@ -1024,6 +1162,88 @@ export function useSchemaEvents(filter?: Partial<Pick<SchemaPropertyEvent, "type
 	}, [runtime.recentEvents, filter]);
 }
 
+export function useSetErrors(filter?: Partial<{ entityKind: string; guid: string }>): SetError[] {
+	const runtime = useKitRuntime();
+	return React.useMemo(() => {
+		if (!filter) return runtime.recentSetRejections;
+		return runtime.recentSetRejections.filter((e) => {
+			if (filter.entityKind && e.entity?.kind !== filter.entityKind) return false;
+			if (filter.guid && e.entity?.guid !== filter.guid) return false;
+			return true;
+		});
+	}, [runtime.recentSetRejections, filter]);
+}
+
+export function useWriteQueue(): { pending: number; byEntity: Record<string, number> } {
+	const runtime = useKitRuntime();
+	return React.useMemo(() => ({ pending: 0, byEntity: {} }), [runtime.snapshot.sync.status]);
+}
+
+export function useKitSync(): { status: "idle" | "loading" | "saving" | "error"; lastError?: SetError } {
+	const runtime = useKitRuntime();
+	const s = runtime.snapshot.sync;
+	if (s.status === "loading") return { status: "loading" };
+	if (s.status === "saving") return { status: "saving" };
+	if (s.status === "error")
+		return {
+			status: "error",
+			lastError: { kind: "Internal", message: s.error instanceof Error ? s.error.message : String(s.error ?? "") },
+		};
+	return { status: "idle" };
+}
+
+export function useWriteIndicator(status: WriteStatus): {
+	disabled: boolean;
+	spinning: boolean;
+	error?: SetError;
+	warning?: SetError;
+} {
+	if (status.kind === "readonly") return { disabled: true, spinning: false };
+	if (status.kind === "pending") return { disabled: true, spinning: true, error: status.lastError, warning: undefined };
+	if (status.kind === "error") return { disabled: false, spinning: false, error: status.lastError };
+	return { disabled: false, spinning: false };
+}
+
+export function useOptimistic<T>(triad: HookTriad<T>): {
+	display: T;
+	draft: T;
+	setDraft: (next: SetStateAction<T>) => void;
+	commit: () => Promise<SetResult>;
+	reset: () => void;
+	status: WriteStatus;
+	dirty: boolean;
+} {
+	const [value, setValue, status] = triad;
+	const [draft, setDraft] = React.useState<T | undefined>(undefined);
+	const dirty = draft !== undefined;
+	const display = (dirty ? draft : value) as T;
+	const commit = React.useCallback(async () => {
+		if (draft === undefined) return { ok: true } as const;
+		const r = await setValue(draft);
+		if (r.ok) setDraft(undefined);
+		return r;
+	}, [draft, setValue]);
+	const reset = React.useCallback(() => setDraft(undefined), []);
+	const setDraftFn = React.useCallback(
+		(next: SetStateAction<T>) => {
+			setDraft((d) => {
+				const base = (d !== undefined ? d : value) as T;
+				return typeof next === "function" ? (next as (p: T) => T)(base) : next;
+			});
+		},
+		[value],
+	);
+	return {
+		display,
+		draft: (draft !== undefined ? draft : value) as T,
+		setDraft: setDraftFn,
+		commit,
+		reset,
+		status,
+		dirty,
+	};
+}
+
 export function useKitStore(): SchemaHookTriad<KitStore> {
 	const runtime = useKitRuntime();
 	return [runtime.store, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
@@ -1077,6 +1297,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: st
 				setPending((p) => p - 1);
 				if (!r.ok) {
 					setLastErr(r.error);
+					runtime.pushSetRejection(r.error);
 					return r;
 				}
 				return r;
@@ -12211,6 +12432,53 @@ if (shouldRunReactEmbeddedTests) {
 			const r = await setName!("");
 			expect(r.ok).toBe(false);
 			await waitFor(() => expect(lastStatus?.kind).toBe("error"));
+		});
+	});
+
+	describe("KitRegistry + useOptimistic", () => {
+		it("registry open/close refcounts and useOptimistic keeps draft until commit", async () => {
+			const kit = asKitInstance({
+				guid: "k1",
+				name: "K",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			});
+			const store = new InMemoryKitStore(kit);
+			let reg: ReturnType<typeof useKitRegistry> | null = null;
+			function RegProbe() {
+				reg = useKitRegistry();
+				return null;
+			}
+			render(
+				React.createElement(
+					KitRegistryProvider,
+					null,
+					React.createElement(RegProbe),
+				),
+			);
+			await waitFor(() => expect(reg).not.toBeNull());
+			await reg!.open("k1", { store });
+			expect(reg!.get("k1")?.refs).toBe(1);
+			await reg!.open("k1", { store });
+			expect(reg!.get("k1")?.refs).toBe(2);
+			reg!.close("k1");
+			expect(reg!.get("k1")?.refs).toBe(1);
+			reg!.close("k1");
+			expect(reg!.get("k1")).toBeUndefined();
+
+			const triad: HookTriad<string> = [
+				"hello",
+				async () => ({ ok: true } as const),
+				{ kind: "idle", pending: 0 },
+			];
+			let opt: ReturnType<typeof useOptimistic<string>> | null = null;
+			function OptProbe() {
+				opt = useOptimistic(triad);
+				return null;
+			}
+			render(React.createElement(OptProbe));
+			await waitFor(() => expect(opt).not.toBeNull());
+			expect(opt!.dirty).toBe(false);
 		});
 	});
 }

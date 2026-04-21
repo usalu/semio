@@ -15,6 +15,7 @@
     "publish": "vite build && npm publish"
   },
   "dependencies": {
+    "@semio/react": "*",
     "@semio/ui": "*",
     "@semio/js": "*",
     "react": "^19.2.3",

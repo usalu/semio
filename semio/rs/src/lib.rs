@@ -1293,6 +1293,39 @@ pub mod connection {
             }
         }
 
+        pub(crate) fn flatten_parent_and_child_sides(
+            &self,
+            child_guid: &Guid,
+        ) -> Option<(SideStoreRef, SideStoreRef)> {
+            let connected_guid = self
+                .connected
+                .read()
+                .ok()
+                .and_then(|side| {
+                    side.piece
+                        .upgrade()
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                });
+            let connecting_guid = self
+                .connecting
+                .read()
+                .ok()
+                .and_then(|side| {
+                    side.piece
+                        .upgrade()
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                });
+            match (connected_guid, connecting_guid) {
+                (Some(_), Some(connecting_guid)) if &connecting_guid == child_guid => {
+                    Some((self.connected.clone(), self.connecting.clone()))
+                }
+                (Some(connected_guid), Some(_)) if &connected_guid == child_guid => {
+                    Some((self.connecting.clone(), self.connected.clone()))
+                }
+                _ => None,
+            }
+        }
+
         pub(crate) fn apply_metadata_fields(&mut self, d: ConnectionMetadataDto) {
             self.guid = d.guid;
             self.gap = d.gap;
@@ -2098,7 +2131,7 @@ pub mod design {
         pub stats: Vec<StatFullDto>,
     }
 
-    fn resolve_connector_for_side(
+    pub(crate) fn resolve_connector_for_side(
         side: &crate::side::SideStore,
         typ: &crate::typ::TypeStore,
     ) -> Option<ConnectorStoreRef> {
@@ -2267,6 +2300,106 @@ pub mod design {
         pub(crate) fn emit_ev(&self, ev: KitEvent) {
             emit_weak(&self.event_bus, ev);
         }
+
+        // #region 🔖FlattenParentage
+        pub(crate) fn rewire_piece_flatten_parents(&self) {
+            let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            for piece in &self.pieces {
+                if let Ok(pr) = piece.read() {
+                    piece_index.insert(pr.guid.clone(), piece.clone());
+                }
+            }
+
+            for piece in piece_index.values() {
+                if let Ok(mut pw) = piece.write() {
+                    pw.set_flatten_parent_refs(None, None);
+                }
+            }
+
+            if piece_index.is_empty() {
+                return;
+            }
+
+            let mut adjacency: HashMap<Guid, Vec<(Guid, ConnectionStoreRef)>> = HashMap::new();
+            for connection in &self.connections {
+                let Ok(connection_read) = connection.read() else {
+                    continue;
+                };
+                let connected_guid = connection_read
+                    .connected
+                    .read()
+                    .ok()
+                    .and_then(|side| {
+                        side.piece
+                            .upgrade()
+                            .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                    });
+                let connecting_guid = connection_read
+                    .connecting
+                    .read()
+                    .ok()
+                    .and_then(|side| {
+                        side.piece
+                            .upgrade()
+                            .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                    });
+                let (Some(connected_guid), Some(connecting_guid)) =
+                    (connected_guid, connecting_guid)
+                else {
+                    continue;
+                };
+                if !piece_index.contains_key(&connected_guid)
+                    || !piece_index.contains_key(&connecting_guid)
+                {
+                    continue;
+                }
+                adjacency
+                    .entry(connected_guid.clone())
+                    .or_default()
+                    .push((connecting_guid.clone(), connection.clone()));
+                adjacency
+                    .entry(connecting_guid)
+                    .or_default()
+                    .push((connected_guid, connection.clone()));
+            }
+
+            let roots: Vec<Guid> = self
+                .pieces
+                .iter()
+                .filter_map(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                .collect();
+            let mut visited: HashSet<Guid> = HashSet::new();
+            for root in roots {
+                if !visited.insert(root.clone()) {
+                    continue;
+                }
+                let mut queue = VecDeque::new();
+                queue.push_back(root.clone());
+                while let Some(current) = queue.pop_front() {
+                    for (child_guid, connection_ref) in
+                        adjacency.get(&current).cloned().unwrap_or_default()
+                    {
+                        if !visited.insert(child_guid.clone()) {
+                            continue;
+                        }
+                        let Some(child_ref) = piece_index.get(&child_guid) else {
+                            continue;
+                        };
+                        let Some(parent_ref) = piece_index.get(&current) else {
+                            continue;
+                        };
+                        if let Ok(mut child) = child_ref.write() {
+                            child.set_flatten_parent_refs(
+                                Some(Arc::downgrade(parent_ref)),
+                                Some(Arc::downgrade(&connection_ref)),
+                            );
+                        }
+                        queue.push_back(child_guid);
+                    }
+                }
+            }
+        }
+        // #endregion
 
         pub(crate) fn entity_ref(&self) -> EntityRef {
             EntityRef::new(EntityKind::Design, self.guid.clone())
@@ -2916,6 +3049,7 @@ pub mod design {
                     true
                 }
             });
+            self.rewire_piece_flatten_parents();
             if invalidate {
                 self.invalidate_hash();
                 self.invalidate_flatten();
@@ -3002,6 +3136,7 @@ pub mod design {
                     child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
                 });
             }
+            self.rewire_piece_flatten_parents();
             // Do not bubble hash/validation to kit here: [`KitStore::apply_design_diff`] may hold the
             // kit write lock. Flatten events are design-local.
             self.invalidate_hash_local();
@@ -3400,6 +3535,10 @@ pub mod design {
                 dw.stats = stats;
             }
 
+            if let Ok(dr) = design.read() {
+                dr.rewire_piece_flatten_parents();
+            }
+
             design
         }
     }
@@ -3579,6 +3718,7 @@ pub mod diff {
                     .map(|c| !connection_guids.iter().any(|g| *g == c.guid))
                     .unwrap_or(true)
             });
+            self.rewire_piece_flatten_parents();
             let _deleted = self.delete_pieces(piece_guids);
 
             let after = self.to_full_dto();
@@ -7445,6 +7585,7 @@ pub mod piece {
     use crate::attribute::{
         AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
     };
+    use crate::connection::ConnectionStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coord, Plane};
@@ -7473,6 +7614,8 @@ pub mod piece {
         pub props: Vec<PropStoreRef>,
         pub attributes: Vec<AttributeStoreRef>,
         pub type_ref: Option<TypeStoreWeak>,
+        pub parent_piece: Option<PieceStoreWeak>,
+        pub parent_connection: Option<ConnectionStoreWeak>,
         pub parent_design: DesignStoreWeak,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
@@ -7609,6 +7752,8 @@ pub mod piece {
                 props: Vec::new(),
                 attributes: Vec::new(),
                 type_ref: None,
+                parent_piece: None,
+                parent_connection: None,
                 parent_design: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
@@ -7633,6 +7778,8 @@ pub mod piece {
                 props: Vec::new(),
                 attributes: Vec::new(),
                 type_ref: None,
+                parent_piece: None,
+                parent_connection: None,
                 parent_design: Weak::new(),
                 event_bus: Weak::new(),
                 hash_cache: Cache::default(),
@@ -7688,11 +7835,14 @@ pub mod piece {
                 r#type: d.r#type.clone(),
                 design: d.design.clone(),
             });
+            self.type_ref = None;
             if let Some(tid) = d.r#type.as_ref().map(|t| t.guid.clone()) {
                 if let Some(tr) = type_index.get(&tid) {
                     self.type_ref = Some(Arc::downgrade(tr));
                 }
             }
+            self.parent_piece = None;
+            self.parent_connection = None;
             self.parent_design = design_weak;
             self.props = d
                 .props
@@ -7709,6 +7859,63 @@ pub mod piece {
         pub fn invalidate_flat_pose(&self) {
             self.flat_plane.invalidate();
             self.flat_center.invalidate();
+        }
+
+        pub(crate) fn set_flatten_parent_refs(
+            &mut self,
+            parent_piece: Option<PieceStoreWeak>,
+            parent_connection: Option<ConnectionStoreWeak>,
+        ) {
+            self.parent_piece = parent_piece;
+            self.parent_connection = parent_connection;
+            self.invalidate_flat_pose();
+        }
+
+        fn computed_flat_plane(&self) -> Option<Plane> {
+            let parent_piece_ref = self.parent_piece.as_ref()?.upgrade()?;
+            let parent_connection_ref = self.parent_connection.as_ref()?.upgrade()?;
+            let parent_piece = parent_piece_ref.read().ok()?;
+            let parent_plane = parent_piece.flat_plane();
+            let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
+            let parent_connection = parent_connection_ref.read().ok()?;
+            let (parent_side_ref, child_side_ref) =
+                parent_connection.flatten_parent_and_child_sides(&self.guid)?;
+            let parent_side = parent_side_ref.read().ok()?;
+            let child_side = child_side_ref.read().ok()?;
+            let child_type_ref = self.type_ref.as_ref()?.upgrade()?;
+            let parent_type = parent_type_ref.read().ok()?;
+            let child_type = child_type_ref.read().ok()?;
+            let parent_connector =
+                crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
+            let child_connector =
+                crate::design::resolve_connector_for_side(&child_side, &child_type)?;
+            let parent_connector = parent_connector.read().ok()?;
+            let child_connector = child_connector.read().ok()?;
+            Some(parent_connection.compute_child_plane_for_flatten(
+                &parent_plane,
+                &parent_connector,
+                &child_connector,
+            ))
+        }
+
+        fn computed_flat_center(&self) -> Option<Coord> {
+            let parent_piece_ref = self.parent_piece.as_ref()?.upgrade()?;
+            let parent_connection_ref = self.parent_connection.as_ref()?.upgrade()?;
+            let parent_piece = parent_piece_ref.read().ok()?;
+            let parent_center = parent_piece.flat_center();
+            let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
+            let parent_connection = parent_connection_ref.read().ok()?;
+            let (parent_side_ref, _) =
+                parent_connection.flatten_parent_and_child_sides(&self.guid)?;
+            let parent_side = parent_side_ref.read().ok()?;
+            let parent_type = parent_type_ref.read().ok()?;
+            let parent_connector =
+                crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
+            let parent_connector = parent_connector.read().ok()?;
+            Some(parent_connection.compute_child_center_for_flatten(
+                parent_center,
+                &parent_connector,
+            ))
         }
 
         pub fn invalidate_hash(&self) {
@@ -7903,31 +8110,21 @@ pub mod piece {
             Ok(())
         }
 
-        /// World-space plane from design flatten cache.
+        /// World-space plane from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_plane(&self) -> Plane {
             self.flat_plane.get_or_init(|| {
-                if let Some(d) = self.parent_design.upgrade() {
-                    if let Ok(d) = d.read() {
-                        if let Some((pl, _)) = d.flatten_map().get(&self.guid) {
-                            return *pl;
-                        }
-                    }
-                }
-                self.plane.unwrap_or_else(Plane::world_xy)
+                self.plane
+                    .or_else(|| self.computed_flat_plane())
+                    .unwrap_or_else(Plane::world_xy)
             })
         }
 
-        /// World-space center from design flatten cache.
+        /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coord {
             self.flat_center.get_or_init(|| {
-                if let Some(d) = self.parent_design.upgrade() {
-                    if let Ok(d) = d.read() {
-                        if let Some((_, ce)) = d.flatten_map().get(&self.guid) {
-                            return *ce;
-                        }
-                    }
-                }
-                self.center.unwrap_or_default()
+                self.center
+                    .or_else(|| self.computed_flat_center())
+                    .unwrap_or_default()
             })
         }
 
@@ -11907,13 +12104,219 @@ mod tests {
     }
 
     mod flatten {
-        use crate::design::DesignStore;
+        use crate::connection::ConnectionFullDto;
+        use crate::connector::ConnectorFullDto;
+        use crate::design::{DesignFullDto, DesignStore};
+        use crate::geom::{Coord, Plane};
+        use crate::guid::Guid;
+        use crate::kit::{KitFullDto, KitStore};
+        use crate::piece::{PieceFullDto, PieceIdDto};
+        use crate::port::{PortFullDto, PortIdDto};
+        use crate::side::SideMetadataDto;
+        use crate::typ::{TypeFullDto, TypeIdDto};
+
+        fn kit_with_flatten_chain(
+            leaf_plane: Option<Plane>,
+        ) -> (crate::kit::KitStoreRef, Guid, Guid, Guid, Guid) {
+            let kit_guid = Guid::new_v7();
+            let type_guid = Guid::new_v7();
+            let port_guid = Guid::new_v7();
+            let connector_guid = Guid::new_v7();
+            let design_guid = Guid::new_v7();
+            let root_guid = Guid::new_v7();
+            let middle_guid = Guid::new_v7();
+            let leaf_guid = Guid::new_v7();
+            let root_side_guid = Guid::new_v7();
+            let middle_ab_side_guid = Guid::new_v7();
+            let middle_bc_side_guid = Guid::new_v7();
+            let leaf_side_guid = Guid::new_v7();
+            let ab_guid = Guid::new_v7();
+            let bc_guid = Guid::new_v7();
+
+            let kit = KitStore::from_full_dto(KitFullDto {
+                guid: kit_guid,
+                name: "kit".into(),
+                types: vec![TypeFullDto {
+                    guid: type_guid.clone(),
+                    name: "typ".into(),
+                    ports: vec![PortFullDto {
+                        guid: port_guid.clone(),
+                        point: Some(Coord::ZERO),
+                        direction: Some(Coord::new(0.0, 0.0, 1.0)),
+                        ..Default::default()
+                    }],
+                    connectors: vec![ConnectorFullDto {
+                        guid: connector_guid,
+                        code: "C".into(),
+                        port: Some(PortIdDto {
+                            guid: port_guid.clone(),
+                        }),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                designs: vec![DesignFullDto {
+                    guid: design_guid.clone(),
+                    name: "design".into(),
+                    pieces: vec![
+                        PieceFullDto {
+                            guid: root_guid.clone(),
+                            plane: Some(Plane::world_xy()),
+                            center: Some(Coord::new(5.0, 0.0, 0.0)),
+                            r#type: Some(TypeIdDto {
+                                guid: type_guid.clone(),
+                            }),
+                            ..Default::default()
+                        },
+                        PieceFullDto {
+                            guid: middle_guid.clone(),
+                            r#type: Some(TypeIdDto {
+                                guid: type_guid.clone(),
+                            }),
+                            ..Default::default()
+                        },
+                        PieceFullDto {
+                            guid: leaf_guid.clone(),
+                            plane: leaf_plane,
+                            r#type: Some(TypeIdDto {
+                                guid: type_guid.clone(),
+                            }),
+                            ..Default::default()
+                        },
+                    ],
+                    connections: vec![
+                        ConnectionFullDto {
+                            guid: ab_guid,
+                            connected: SideMetadataDto {
+                                guid: root_side_guid,
+                                piece: PieceIdDto {
+                                    guid: root_guid.clone(),
+                                },
+                                port: Some(PortIdDto {
+                                    guid: port_guid.clone(),
+                                }),
+                                design_piece: None,
+                            },
+                            connecting: SideMetadataDto {
+                                guid: middle_ab_side_guid,
+                                piece: PieceIdDto {
+                                    guid: middle_guid.clone(),
+                                },
+                                port: Some(PortIdDto {
+                                    guid: port_guid.clone(),
+                                }),
+                                design_piece: None,
+                            },
+                            ..Default::default()
+                        },
+                        ConnectionFullDto {
+                            guid: bc_guid,
+                            connected: SideMetadataDto {
+                                guid: middle_bc_side_guid,
+                                piece: PieceIdDto {
+                                    guid: middle_guid.clone(),
+                                },
+                                port: Some(PortIdDto {
+                                    guid: port_guid.clone(),
+                                }),
+                                design_piece: None,
+                            },
+                            connecting: SideMetadataDto {
+                                guid: leaf_side_guid,
+                                piece: PieceIdDto {
+                                    guid: leaf_guid.clone(),
+                                },
+                                port: Some(PortIdDto { guid: port_guid }),
+                                design_piece: None,
+                            },
+                            ..Default::default()
+                        },
+                    ],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            });
+
+            (kit, design_guid, root_guid, middle_guid, leaf_guid)
+        }
 
         #[test]
         fn flatten_map_empty_design() {
             let d = DesignStore::new("x");
             let m = d.flatten_map();
             assert!(m.is_empty());
+        }
+
+        #[test]
+        fn connected_piece_flat_plane_prefers_explicit_plane() {
+            let explicit_plane = Plane {
+                origin: Coord::new(42.0, -3.0, 7.0),
+                x_axis: Coord::new(0.0, 1.0, 0.0),
+                y_axis: Coord::new(-1.0, 0.0, 0.0),
+            };
+            let (kit, design_guid, _, _, leaf_guid) =
+                kit_with_flatten_chain(Some(explicit_plane));
+            let leaf = {
+                let kit_read = kit.read().expect("kit read");
+                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design_read = design.read().expect("design read");
+                design_read.piece(leaf_guid.as_str()).expect("leaf").clone()
+            };
+
+            assert_eq!(leaf.read().expect("leaf read").flat_plane(), explicit_plane);
+        }
+
+        #[test]
+        fn delete_piece_rewires_flatten_parent_refs() {
+            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+                kit_with_flatten_chain(None);
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read.design(design_guid.as_str()).expect("design").clone()
+            };
+
+            {
+                let design_read = design.read().expect("design read");
+                let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+                let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+                let middle_parent = middle
+                    .read()
+                    .expect("middle read")
+                    .parent_piece
+                    .as_ref()
+                    .and_then(|parent| parent.upgrade())
+                    .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
+                let leaf_parent = leaf
+                    .read()
+                    .expect("leaf read")
+                    .parent_piece
+                    .as_ref()
+                    .and_then(|parent| parent.upgrade())
+                    .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
+                assert_eq!(middle_parent, Some(root_guid.clone()));
+                assert_eq!(leaf_parent, Some(middle_guid.clone()));
+            }
+
+            design
+                .write()
+                .expect("design write")
+                .delete_pieces(&[root_guid.clone()]);
+
+            let design_read = design.read().expect("design read after delete");
+            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+            let middle_read = middle.read().expect("middle read after delete");
+            let leaf_read = leaf.read().expect("leaf read after delete");
+            assert!(middle_read.parent_piece.is_none());
+            assert!(middle_read.parent_connection.is_none());
+            assert_eq!(middle_read.flat_plane(), Plane::world_xy());
+            let leaf_parent = leaf_read
+                .parent_piece
+                .as_ref()
+                .and_then(|parent| parent.upgrade())
+                .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
+            assert_eq!(leaf_parent, Some(middle_guid));
+            assert!(leaf_read.parent_connection.is_some());
         }
     }
 

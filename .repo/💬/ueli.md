@@ -744,6 +744,11 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ### 🦀rs
 
 semio/rs:
+pub fn flat_plane(&self) -> Plane
+MUST not call the flatten map but instead calculate the flat plane (either when plane is set then return flat plane or otherwise calculate it based on the parent piece type connector and parent piece flat plane. Make sure to cache it according the dependency).
+E.g. when the parent flat plane changes then the cache gets invalided.
+Another example is when a piece is deleted then the design store sets the correct parent piece and parent connection reference on the updated pieces.
+
 The code is very smelly and incomplete.
 You MUST refactor everything to be purely object-oriented, lazy-loading and no free pure functions.
 Use no ids to track and instead use pointers. Parents always have mutable pointers and children have immutable pointers to the parents. Mutations always happen on the lowest level possible. When it doesnt affect others, then it happens locally. As soon as the mutation affects others, then parent that has a complete picture is responsible for mutating.

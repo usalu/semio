@@ -2197,6 +2197,7 @@ export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion ­ƒôüFolder
 
+
 // #region ­ƒôÅBenchmark
 // Benchmark entity types, schemas, and helpers MUST be defined here.
 
@@ -20609,10 +20610,6 @@ if (shouldRunEmbeddedJsTests) {
     DeleteCases,
     CopyPasteCases,
   } = await import("@semio/assets");
-  const { createFolderKitStore, createJsonFileKitStore } = await import("@semio/sketchpad");
-  type KitFolderAdapter = import("@semio/sketchpad").KitFolderAdapter;
-  type KitJsonFileAdapter = import("@semio/sketchpad").KitJsonFileAdapter;
-
   const NAKAGIN_DESIGN_NAME = (HashCases as any).designName as string;
   const deleteCasesData = (DeleteCases as any).cases as Array<{ name: string; designName: string; designFamilies: string[]; selectionAsset: string; expectedDiffAsset: string }>;
   const copyPasteCasesData = (CopyPasteCases as any).cases as Array<{
@@ -24029,10 +24026,12 @@ if (shouldRunEmbeddedJsTests) {
   // system access or mocked server transport to guarantee the desktop/vscode/web entry points work.
 
   describe("Open Synchronized KitImpl E2E", () => {
-    const { createJsonFileKitStore: makeJsonFileKitStore, createFolderKitStore: makeFolderKitStore, createSessionKitStore: makeSessionKitStore } = (async () => await import("@semio/sketchpad"))() as any;
+    const makeJsonFileKitStore = createJsonFileKitStore;
+    const makeFolderKitStore = createFolderKitStore;
+    const makeSessionKitStore = createSessionKitStore;
 
     const loadStudio = async () => {
-      const studio = await import("@semio/sketchpad");
+      const studio = await import("./index.js");
       return studio;
     };
 
@@ -25343,6 +25342,1710 @@ if (shouldRunEmbeddedJsTests) {
   // #endregion 🔄Transaction Undo/Redo Tests
 } // end vitest guard
 // #endregion ­ƒº¬Tests
+
+
+
+// #region BackboneKitStores
+// JSON file, folder, and session-backed KitStore implementations (moved from semio/sketchpad).
+
+// #region ðŸ”©JsonFileKitStore
+// JSON file-backed kit store implementing UndoableKitStore.
+// Specs: Loads a Kit from a JSON file via adapter, holds an in-memory working copy,
+// persists on save() by serializing the full Kit back to JSON. Supports undo/redo
+// with a command stack. reload() re-reads state from the file, discarding changes.
+
+/**
+ * Adapter for reading/writing Kit JSON to a file.
+ **/
+export interface KitJsonFileAdapter {
+  read(): Promise<string | null>;
+  write(json: string): Promise<void>;
+}
+
+/**
+ * JSON file-backed kit store with undo/redo.
+ **/
+export class JsonFileKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private readonly adapter: KitJsonFileAdapter;
+
+  private constructor(kit: Kit, adapter: KitJsonFileAdapter, status: KitStoreStatus) {
+    this.kit = kit;
+    this.adapter = adapter;
+    this.status = status;
+  }
+
+  static async create(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+    const json = await adapter.read();
+    if (json) {
+      try {
+        const parsed = JSON.parse(json);
+        const kit = KitSchema.parse(parsed);
+        const store = new JsonFileKitStore(kit, adapter, "ready");
+        store.lastSyncedAt = new Date().toISOString();
+        return store;
+      } catch (e) {
+        const emptyKit: Kit = {
+          guid: guid(),
+          name: "New Kit",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const store = new JsonFileKitStore(emptyKit, adapter, "error");
+        store.error = e instanceof Error ? e : new Error(String(e));
+        return store;
+      }
+    }
+    const emptyKit: Kit = {
+      guid: guid(),
+      name: "New Kit",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const store = new JsonFileKitStore(emptyKit, adapter, "ready");
+    return store;
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: false,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  async save(): Promise<void> {
+    // Specs: capture the kit reference at save start so we can detect whether
+    // another apply mutated the kit while adapter.write was in flight. Only
+    // clear dirty when the saved kit still matches â€” otherwise the next
+    // auto-save must re-run to persist the interleaved change. This prevents
+    // losing data when an async apply (e.g. JsonFileKitStore.embedFileBlob's
+    // blob.arrayBuffer() await) interleaves with a pending auto-save.
+    const savedKit = this.kit;
+    this.status = "saving";
+    this.notify();
+    try {
+      const json = JSON.stringify(savedKit, null, 2);
+      await this.adapter.write(json);
+      if (this.kit === savedKit) {
+        this.dirty = false;
+      }
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const json = await this.adapter.read();
+      if (json) {
+        const parsed = JSON.parse(json);
+        this.kit = KitSchema.parse(parsed);
+      }
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    this.listeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  redo(): void {
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  applyExternalUpdate(kit: Kit): void {
+    this.kit = kit;
+    this.dirty = false;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.lastSyncedAt = new Date().toISOString();
+    this.error = undefined;
+    this.status = "ready";
+    this.notify();
+  }
+
+  // Embeds a dropped file blob into the kit JSON as a data URL on file.blob.
+  // Specs: File kits keep everything inside the single *.kit.semio.json file, so
+  // binary assets MUST be inlined as data URLs rather than written to a sidecar store.
+  async embedFileBlob(fileGuid: string, blob: Blob): Promise<void> {
+    const existingFile = this.kit.files?.find((f) => f.guid === fileGuid);
+    if (!existingFile) return;
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let base64: string;
+    if (typeof Buffer !== "undefined") {
+      base64 = Buffer.from(bytes).toString("base64");
+    } else {
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      base64 = btoa(binary);
+    }
+    const mime = blob.type || "application/octet-stream";
+    const dataUrl = `data:${mime};base64,${base64}`;
+    this.apply({ files: { updated: [{ file: { guid: fileGuid }, diff: { blob: dataUrl } }] } } as any);
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a JsonFileKitStore by loading kit data from a file adapter.
+ **/
+export async function createJsonFileKitStore(adapter: KitJsonFileAdapter): Promise<JsonFileKitStore> {
+  return JsonFileKitStore.create(adapter);
+}
+
+// #endregion ðŸ”©JsonFileKitStore
+
+// #region ðŸ“¯FolderKitStore
+// Folder-backed kit store implementing UndoableKitStore.
+// Specs: Uses a folder with `.semio/kit.db` SQLite database for kit data.
+
+/**
+ * Adapter for folder-based kit storage I/O.
+ **/
+export interface KitFolderAdapter {
+  readKit(): Promise<Uint8Array | null>;
+  writeKit(data: Uint8Array): Promise<void>;
+  readFile(path: string): Promise<Blob | null>;
+  writeFile(path: string, blob: Blob): Promise<void>;
+  deleteFile(path: string): Promise<void>;
+  createDirectory?(path: string): Promise<void>;
+  moveEntry?(fromPath: string, toPath: string): Promise<void>;
+  listFiles(): Promise<string[]>;
+  watch?(callback: () => void): () => void;
+}
+
+/**
+ * Folder-backed kit store with undo/redo.
+ **/
+export class FolderKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private readonly adapter: KitFolderAdapter;
+  private unwatchFn?: () => void;
+  private suppressAutoReloadUntil = 0;
+
+  private constructor(kit: Kit, adapter: KitFolderAdapter, status: KitStoreStatus) {
+    this.kit = kit;
+    this.adapter = adapter;
+    this.status = status;
+    if (adapter.watch) {
+      this.unwatchFn = adapter.watch(() => {
+        if (this.disposed) return;
+        if (Date.now() < this.suppressAutoReloadUntil) return;
+        this.reload().catch(console.error);
+      });
+    }
+  }
+
+  static async create(adapter: KitFolderAdapter, initialKit?: Kit): Promise<FolderKitStore> {
+    const data = await adapter.readKit();
+    if (data) {
+      try {
+        const SQL = await getSqlJs();
+        const db = new SQL.Database(new Uint8Array(data));
+        const kit = await sqliteToKit(db);
+        db.close();
+        const store = new FolderKitStore(kit, adapter, "ready");
+        store.lastSyncedAt = new Date().toISOString();
+        return store;
+      } catch (e) {
+        const fallbackKit: Kit = initialKit ?? {
+          guid: guid(),
+          name: "New Kit",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const store = new FolderKitStore(fallbackKit, adapter, "error");
+        store.error = e instanceof Error ? e : new Error(String(e));
+        return store;
+      }
+    }
+    const seedKit: Kit = initialKit ?? {
+      guid: guid(),
+      name: "New Kit",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const store = new FolderKitStore(seedKit, adapter, "ready");
+    store.dirty = true;
+    return store;
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: false,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.notify();
+  }
+
+  async save(): Promise<void> {
+    this.status = "saving";
+    this.notify();
+    try {
+      const SQL = await getSqlJs();
+      const db = new SQL.Database();
+      await kitToSqlite(this.kit, db);
+      const data = db.export();
+      db.close();
+      await this.adapter.writeKit(data);
+      this.suppressAutoReloadUntil = Date.now() + 500;
+      this.dirty = false;
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const data = await this.adapter.readKit();
+      if (data) {
+        const SQL = await getSqlJs();
+        const db = new SQL.Database(new Uint8Array(data));
+        this.kit = await sqliteToKit(db);
+        db.close();
+      }
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    if (this.unwatchFn) {
+      this.unwatchFn();
+      this.unwatchFn = undefined;
+    }
+    this.listeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  redo(): void {
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.notify();
+  }
+
+  applyExternalUpdate(kit: Kit): void {
+    this.kit = kit;
+    this.dirty = false;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.lastSyncedAt = new Date().toISOString();
+    this.error = undefined;
+    this.status = "ready";
+    this.notify();
+  }
+
+  async writeFile(path: string, blob: Blob): Promise<void> {
+    await this.adapter.writeFile(path, blob);
+  }
+
+  async readFile(path: string): Promise<Blob | null> {
+    return this.adapter.readFile(path);
+  }
+
+  async deleteFile(path: string): Promise<void> {
+    await this.adapter.deleteFile(path);
+  }
+
+  async createDirectory(path: string): Promise<void> {
+    if (!this.adapter.createDirectory) {
+      return;
+    }
+    await this.adapter.createDirectory(path);
+  }
+
+  async moveEntry(fromPath: string, toPath: string): Promise<void> {
+    if (!this.adapter.moveEntry || fromPath === toPath) {
+      return;
+    }
+    await this.adapter.moveEntry(fromPath, toPath);
+  }
+
+  async listFiles(): Promise<string[]> {
+    return this.adapter.listFiles();
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a FolderKitStore by loading kit data from a folder adapter.
+ **/
+export async function createFolderKitStore(adapter: KitFolderAdapter, initialKit?: Kit): Promise<FolderKitStore> {
+  return FolderKitStore.create(adapter, initialKit);
+}
+
+// #endregion ðŸ“¯FolderKitStore
+
+// #region âš™ï¸SessionKitStore
+// Server-backed kit store implementing UndoableKitStore.
+// Specs: Connects to a semio-session backend via HTTP+WS. Commands are sent via HTTP POST,
+// events received via WebSocket. Local Kit state is maintained in-memory and updated on
+// accepted domain events. Baseline snapshots and incremental diffs are stored server-side.
+// Supports undo/redo with a local command stack. Lookback history via server API.
+// Used by: sketchpad, desktop, any frontend needing real-time collaborative kit editing.
+
+/**
+ * Configuration for creating a SessionKitStore.
+ *
+ * Specs: serverUrl is the base URL (e.g. http://localhost:8080). sessionId is optional â€”
+ * if omitted, a new session is created. kitName is used when creating a new session.
+ * personId and clientId identify this frontend instance for presence.
+ **/
+export interface SessionKitStoreConfig {
+  serverUrl: string;
+  sessionId?: string;
+  kitName?: string;
+  personId?: string;
+  clientId?: string;
+  authToken?: string;
+  readOnly?: boolean;
+}
+
+/**
+ * Server event received via WebSocket.
+ *
+ * Specs: Mirrors the Rust SessionEvent enum. Used internally by SessionKitStore
+ * to update local state on server-side changes.
+ **/
+interface ServerEvent {
+  event: string;
+  command_id?: { "0": string };
+  domain_version?: number;
+  semio_version?: number;
+  changes?: ServerEntityChange[];
+  person_id?: { "0": string };
+  frontend_id?: string;
+  update?: ServerSemioUpdate;
+}
+
+interface ServerEntityChange {
+  op: "Created" | "Updated" | "Deleted";
+  entity_kind: string;
+  entity_id: string;
+  snapshot?: Record<string, any>;
+  changed_fields?: Record<string, any>;
+}
+
+interface ServerSemioUpdate {
+  kind: string;
+  u?: number;
+  v?: number;
+  position?: [number, number, number];
+  forward?: [number, number, number];
+  up?: [number, number, number];
+  piece_ids?: string[];
+  design_ids?: string[];
+}
+
+/**
+ * Presence state for one person on one frontend.
+ *
+ * Specs: Tracks cursor position, camera look, selection, and display metadata.
+ * Updated by SemioUpdated events from the server.
+ **/
+export interface PresenceState {
+  personId: string;
+  frontendId: string;
+  displayName?: string;
+  color?: string;
+  cursor?: { u: number; v: number };
+  look?: { position: [number, number, number]; forward: [number, number, number]; up: [number, number, number] };
+  selectedPieceIds: string[];
+  selectedDesignIds: string[];
+}
+
+/**
+ * Share token resolved from the server.
+ *
+ * Specs: Represents a sharable link with access mode and optional entity scope.
+ **/
+export interface ResolvedShareToken {
+  session_id: string;
+  access_mode: "owner" | "viewer";
+  entity_kind?: string;
+  entity_id?: string;
+  label?: string;
+}
+
+/**
+ * Share token entry from the server.
+ *
+ * Specs: Represents a share token with metadata.
+ **/
+export interface ShareTokenEntry {
+  token: string;
+  session_id: string;
+  access_mode: string;
+  entity_kind?: string;
+  entity_id?: string;
+  label?: string;
+}
+
+const mapServerSnapshotKitToKit = (rawKit: any, fallbackName: string): Kit => {
+  if (rawKit && typeof rawKit === "object" && typeof rawKit.guid === "string") {
+    try {
+      return KitSchema.parse(rawKit);
+    } catch {
+      // Fall through to tolerate partial server payloads.
+    }
+  }
+
+  const kitGuid = typeof rawKit?.guid === "string" ? rawKit.guid : typeof rawKit?.kit_id === "string" ? rawKit.kit_id : guid();
+  const mapGuidRef = (value: any) => (value ? { guid: typeof value === "string" ? value : value.guid } : undefined);
+  const types = Array.isArray(rawKit?.types)
+    ? rawKit.types.map((entry: any) => ({
+        guid: entry.guid,
+        name: entry.name,
+        description: entry.description,
+        icon: entry.icon,
+        image: entry.image,
+        folder: entry.folder,
+        unit: entry.unit,
+        stock: entry.stock,
+        isAbstract: entry.isAbstract,
+        virtual: entry.virtual,
+        parent: mapGuidRef(entry.parent ?? entry.parentType),
+        location: mapGuidRef(entry.location),
+        connectors: entry.connectors ?? [],
+        representations: entry.representations ?? [],
+        props: entry.props ?? [],
+      }))
+    : [];
+  const designs = Array.isArray(rawKit?.designs)
+    ? rawKit.designs.map((entry: any) => ({
+        guid: entry.guid,
+        name: entry.name,
+        description: entry.description,
+        icon: entry.icon,
+        image: entry.image,
+        folder: entry.folder,
+        unit: entry.unit,
+        isAbstract: entry.isAbstract,
+        canScale: entry.canScale,
+        canMirror: entry.canMirror,
+        parent: mapGuidRef(entry.parent ?? entry.parentDesign),
+        activeLayer: mapGuidRef(entry.activeLayer),
+        location: mapGuidRef(entry.location),
+        pieces: (entry.pieces ?? []).map((piece: any) => ({
+          ...piece,
+          type: mapGuidRef(piece.type),
+          design: mapGuidRef(piece.design),
+        })),
+        connections: (entry.connections ?? []).map((connection: any) => ({
+          ...connection,
+          connected: connection.connected
+            ? {
+                piece: mapGuidRef(connection.connected.piece),
+                designPiece: mapGuidRef(connection.connected.designPiece),
+                connector: mapGuidRef(connection.connected.connector),
+              }
+            : connection.connected,
+          connecting: connection.connecting
+            ? {
+                piece: mapGuidRef(connection.connecting.piece),
+                designPiece: mapGuidRef(connection.connecting.designPiece),
+                connector: mapGuidRef(connection.connecting.connector),
+              }
+            : connection.connecting,
+        })),
+        layers: entry.layers ?? [],
+        groups: entry.groups ?? [],
+        stats: entry.stats ?? [],
+        props: entry.props ?? [],
+      }))
+    : [];
+
+  return {
+    guid: kitGuid,
+    name: rawKit?.name ?? fallbackName,
+    version: rawKit?.version,
+    description: rawKit?.description,
+    icon: rawKit?.icon,
+    image: rawKit?.image,
+    preview: rawKit?.preview,
+    remote: rawKit?.remote,
+    homepage: rawKit?.homepage,
+    license: rawKit?.license,
+    authors: rawKit?.authors ?? [],
+    tags: rawKit?.tags ?? [],
+    concepts: rawKit?.concepts ?? [],
+    ports: rawKit?.ports ?? [],
+    qualities: rawKit?.qualities ?? [],
+    files: rawKit?.files ?? [],
+    folders: rawKit?.folders ?? [],
+    types,
+    designs,
+    createdAt: rawKit?.createdAt ?? new Date().toISOString(),
+    updatedAt: rawKit?.updatedAt ?? new Date().toISOString(),
+  };
+};
+
+const getDiffEntityId = (entry: any, singularKey: string): string | undefined => {
+  if (!entry || typeof entry !== "object") return undefined;
+  if (typeof entry.guid === "string") return entry.guid;
+  const ref = entry[singularKey];
+  if (ref && typeof ref === "object" && typeof ref.guid === "string") return ref.guid;
+  return undefined;
+};
+
+const updateNestedDesignEntity = <T extends { guid: string }>(designs: any[] | undefined, designId: string | undefined, collectionKey: "pieces" | "connections", entityId: string, changedFields: Record<string, any>): any[] => {
+  return (designs ?? []).map((design) => {
+    const isTargetDesign = !designId || design.guid === designId || (design[collectionKey] ?? []).some((entry: T) => entry.guid === entityId);
+    if (!isTargetDesign) return design;
+    return {
+      ...design,
+      [collectionKey]: (design[collectionKey] ?? []).map((entry: T) => (entry.guid === entityId ? { ...entry, ...changedFields } : entry)),
+    };
+  });
+};
+
+const removeNestedDesignEntity = <T extends { guid: string }>(designs: any[] | undefined, collectionKey: "pieces" | "connections", entityId: string): any[] => {
+  return (designs ?? []).map((design) => ({
+    ...design,
+    [collectionKey]: (design[collectionKey] ?? []).filter((entry: T) => entry.guid !== entityId),
+  }));
+};
+
+/**
+ * Server-backed kit store with undo/redo and real-time sync.
+ *
+ * Specs: Connects to semio-session server via HTTP for commands and WS for events.
+ * On connect: fetches snapshot to initialize local Kit. On mutation: sends DomainCommand
+ * via POST, waits for Accepted event via WS. On WS event: applies entity changes to
+ * local Kit and notifies subscribers. Undo/redo operates on local command stack.
+ * Provides presence tracking via semio commands.
+ **/
+export class SessionKitStore implements UndoableKitStore {
+  private kit: Kit;
+  private listeners: Set<() => void> = new Set();
+  private undoStack: KitChange[] = [];
+  private redoStack: KitChange[] = [];
+  private dirty: boolean = false;
+  private disposed: boolean = false;
+  private status: KitStoreStatus;
+  private transacting: boolean = false;
+  private error?: Error;
+  private lastSyncedAt?: string;
+  private ws: WebSocket | null = null;
+  private domainVersion: number = 0;
+  private semioVersion: number = 0;
+  private presences: Map<string, PresenceState> = new Map();
+  private presenceListeners: Set<() => void> = new Set();
+  private entityListeners: Map<string, Set<() => void>> = new Map();
+  private collectionListeners: Map<string, Set<() => void>> = new Map();
+  private propertyListeners: Map<string, Set<() => void>> = new Map();
+
+  readonly serverUrl: string;
+  readonly sessionId: string;
+  readonly personId: string;
+  readonly clientId: string;
+  private authToken: string | undefined;
+  readonly readOnly: boolean;
+
+  private constructor(kit: Kit, config: SessionKitStoreConfig & { sessionId: string }, status: KitStoreStatus) {
+    this.kit = kit;
+    this.serverUrl = config.serverUrl;
+    this.sessionId = config.sessionId;
+    this.personId = config.personId ?? guid();
+    this.clientId = config.clientId ?? guid();
+    this.authToken = config.authToken;
+    this.readOnly = config.readOnly ?? false;
+    this.status = status;
+  }
+
+  private authHeaders(): Record<string, string> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (this.authToken) headers["Authorization"] = `Bearer ${this.authToken}`;
+    return headers;
+  }
+
+  /**
+   * Creates a SessionKitStore by connecting to the server.
+   * If sessionId is provided, fetches the existing session snapshot.
+   * If not, creates a new session on the server.
+   *
+   * Specs: Factory method handling async connection. Establishes WebSocket
+   * for real-time events after initial snapshot load.
+   **/
+  static async create(config: SessionKitStoreConfig): Promise<SessionKitStore> {
+    let sessionId = config.sessionId;
+    let kitName = config.kitName ?? "New Kit";
+    let authToken = config.authToken;
+
+    if (!sessionId) {
+      const resp = await fetch(`${config.serverUrl}/sessions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kit_name: kitName }),
+      });
+      if (!resp.ok) throw new Error(`Failed to create session: ${resp.statusText}`);
+      const body = await resp.json();
+      sessionId = body.session_id;
+      // Store the owner_token as authToken for full access
+      if (body.owner_token && !authToken) {
+        authToken = body.owner_token;
+      }
+    }
+
+    const snapHeaders: Record<string, string> = {};
+    if (authToken) snapHeaders["Authorization"] = `Bearer ${authToken}`;
+    const snapResp = await fetch(`${config.serverUrl}/sessions/${sessionId}/snapshot`, { headers: snapHeaders });
+    if (!snapResp.ok) throw new Error(`Failed to load snapshot: ${snapResp.statusText}`);
+    const snapshot = await snapResp.json();
+    const kit = mapServerSnapshotKitToKit(snapshot.kit, kitName);
+
+    const store = new SessionKitStore(kit, { ...config, sessionId: sessionId!, authToken }, "ready");
+    store.domainVersion = snapshot.domain_version ?? 0;
+    store.semioVersion = snapshot.semio_version ?? 0;
+    store.lastSyncedAt = new Date().toISOString();
+    store.connectWebSocket();
+    return store;
+  }
+
+  private connectWebSocket(): void {
+    const wsUrl = this.serverUrl.replace(/^http/, "ws") + `/sessions/${this.sessionId}/ws`;
+    this.ws = new WebSocket(wsUrl);
+    this.ws.onmessage = (event) => {
+      try {
+        const data: ServerEvent = JSON.parse(typeof event.data === "string" ? event.data : "");
+        this.handleServerEvent(data);
+      } catch (e) {
+        // Ignore unparseable messages
+      }
+    };
+    this.ws.onclose = () => {
+      if (!this.disposed) {
+        this.status = "offline";
+        this.notify();
+        // Auto-reconnect after 2 seconds
+        setTimeout(() => {
+          if (!this.disposed) this.connectWebSocket();
+        }, 2000);
+      }
+    };
+    this.ws.onerror = () => {
+      this.status = "offline";
+      this.notify();
+    };
+    this.ws.onopen = () => {
+      this.status = "ready";
+      this.error = undefined;
+      this.notify();
+    };
+  }
+
+  private handleServerEvent(event: ServerEvent): void {
+    switch (event.event) {
+      case "DomainCommandAccepted": {
+        if (event.domain_version !== undefined) {
+          this.domainVersion = event.domain_version;
+        }
+        if (event.changes) {
+          this.applyServerChanges(event.changes);
+          this.lastSyncedAt = new Date().toISOString();
+          // Notify granular listeners
+          for (const change of event.changes) {
+            this.notifyEntityListeners(change.entity_kind, change.entity_id);
+            this.notifyCollectionListeners(change.entity_kind);
+            if (change.op === "Updated" && change.changed_fields) {
+              for (const field of Object.keys(change.changed_fields)) {
+                this.notifyPropertyListeners(change.entity_kind, change.entity_id, field);
+              }
+            }
+          }
+        }
+        this.dirty = false;
+        this.notify();
+        break;
+      }
+      case "SemioUpdated": {
+        if (event.semio_version !== undefined) {
+          this.semioVersion = event.semio_version;
+        }
+        if (event.person_id && event.frontend_id && event.update) {
+          const key = `${event.person_id["0"]}:${event.frontend_id}`;
+          let presence = this.presences.get(key) ?? {
+            personId: event.person_id["0"],
+            frontendId: event.frontend_id,
+            selectedPieceIds: [],
+            selectedDesignIds: [],
+          };
+          switch (event.update.kind) {
+            case "CursorMoved":
+              presence.cursor = { u: event.update.u!, v: event.update.v! };
+              break;
+            case "LookChanged":
+              presence.look = { position: event.update.position!, forward: event.update.forward!, up: event.update.up! };
+              break;
+            case "SelectionChanged":
+              presence.selectedPieceIds = event.update.piece_ids ?? [];
+              presence.selectedDesignIds = event.update.design_ids ?? [];
+              break;
+            case "PresenceCleared":
+              this.presences.delete(key);
+              this.notifyPresenceListeners();
+              this.notify();
+              return;
+          }
+          this.presences.set(key, presence);
+          this.notifyPresenceListeners();
+        }
+        this.notify();
+        break;
+      }
+      case "SessionClosed":
+        this.status = "offline";
+        this.notify();
+        break;
+    }
+  }
+
+  private applyServerChanges(changes: ServerEntityChange[]): void {
+    for (const change of changes) {
+      switch (change.op) {
+        case "Created":
+          this.applyCreatedEntity(change.entity_kind, change.entity_id, change.snapshot ?? {});
+          break;
+        case "Updated":
+          this.applyUpdatedEntity(change.entity_kind, change.entity_id, change.changed_fields ?? {});
+          break;
+        case "Deleted":
+          this.applyDeletedEntity(change.entity_kind, change.entity_id);
+          break;
+      }
+    }
+  }
+
+  private applyCreatedEntity(entityKind: string, entityId: string, snapshot: Record<string, any>): void {
+    const entity = { guid: entityId, ...snapshot };
+    switch (entityKind) {
+      case "type":
+        this.kit = { ...this.kit, types: [...(this.kit.types ?? []), entity as any] };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: [...(this.kit.designs ?? []), entity as any] };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: [...(this.kit.authors ?? []), entity as any] };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: [...(this.kit.tags ?? []), entity as any] };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: [...(this.kit.concepts ?? []), entity as any] };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: [...(this.kit.ports ?? []), entity as any] };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: [...(this.kit.qualities ?? []), entity as any] };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: [...(this.kit.files ?? []), entity as any] };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: [...(this.kit.folders ?? []), entity as any] };
+        break;
+      case "piece": {
+        const designId = typeof snapshot.design_id === "string" ? snapshot.design_id : typeof snapshot.designId === "string" ? snapshot.designId : undefined;
+        this.kit = {
+          ...this.kit,
+          designs: (this.kit.designs ?? []).map((design) => (design.guid === designId ? { ...design, pieces: [...(design.pieces ?? []), entity as any] } : design)),
+        };
+        break;
+      }
+      case "connection": {
+        const designId = typeof snapshot.design_id === "string" ? snapshot.design_id : typeof snapshot.designId === "string" ? snapshot.designId : undefined;
+        this.kit = {
+          ...this.kit,
+          designs: (this.kit.designs ?? []).map((design) => (design.guid === designId ? { ...design, connections: [...(design.connections ?? []), entity as any] } : design)),
+        };
+        break;
+      }
+    }
+  }
+
+  private applyUpdatedEntity(entityKind: string, entityId: string, changedFields: Record<string, any>): void {
+    const updateInArray = <T extends { guid: string }>(arr: T[] | undefined, id: string, fields: Record<string, any>): T[] => {
+      return (arr ?? []).map((item) => (item.guid === id ? { ...item, ...fields } : item));
+    };
+    switch (entityKind) {
+      case "kit":
+        this.kit = { ...this.kit, ...changedFields };
+        break;
+      case "type":
+        this.kit = { ...this.kit, types: updateInArray(this.kit.types, entityId, changedFields) };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: updateInArray(this.kit.designs, entityId, changedFields) };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: updateInArray(this.kit.authors, entityId, changedFields) };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: updateInArray(this.kit.tags, entityId, changedFields) };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: updateInArray(this.kit.concepts, entityId, changedFields) };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: updateInArray(this.kit.ports, entityId, changedFields) };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: updateInArray(this.kit.qualities, entityId, changedFields) };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: updateInArray(this.kit.files, entityId, changedFields) };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: updateInArray(this.kit.folders, entityId, changedFields) };
+        break;
+      case "piece": {
+        const designId = typeof changedFields.design_id === "string" ? changedFields.design_id : typeof changedFields.designId === "string" ? changedFields.designId : undefined;
+        this.kit = { ...this.kit, designs: updateNestedDesignEntity(this.kit.designs, designId, "pieces", entityId, changedFields) };
+        break;
+      }
+      case "connection": {
+        const designId = typeof changedFields.design_id === "string" ? changedFields.design_id : typeof changedFields.designId === "string" ? changedFields.designId : undefined;
+        this.kit = { ...this.kit, designs: updateNestedDesignEntity(this.kit.designs, designId, "connections", entityId, changedFields) };
+        break;
+      }
+    }
+  }
+
+  private applyDeletedEntity(entityKind: string, entityId: string): void {
+    const removeFromArray = <T extends { guid: string }>(arr: T[] | undefined, id: string): T[] => {
+      return (arr ?? []).filter((item) => item.guid !== id);
+    };
+    switch (entityKind) {
+      case "type":
+        this.kit = { ...this.kit, types: removeFromArray(this.kit.types, entityId) };
+        break;
+      case "design":
+        this.kit = { ...this.kit, designs: removeFromArray(this.kit.designs, entityId) };
+        break;
+      case "author":
+        this.kit = { ...this.kit, authors: removeFromArray(this.kit.authors, entityId) };
+        break;
+      case "tag":
+        this.kit = { ...this.kit, tags: removeFromArray(this.kit.tags, entityId) };
+        break;
+      case "concept":
+        this.kit = { ...this.kit, concepts: removeFromArray(this.kit.concepts, entityId) };
+        break;
+      case "port":
+        this.kit = { ...this.kit, ports: removeFromArray(this.kit.ports, entityId) };
+        break;
+      case "quality":
+        this.kit = { ...this.kit, qualities: removeFromArray(this.kit.qualities, entityId) };
+        break;
+      case "file":
+        this.kit = { ...this.kit, files: removeFromArray(this.kit.files, entityId) };
+        break;
+      case "folder":
+        this.kit = { ...this.kit, folders: removeFromArray(this.kit.folders, entityId) };
+        break;
+      case "piece":
+        this.kit = { ...this.kit, designs: removeNestedDesignEntity(this.kit.designs, "pieces", entityId) };
+        break;
+      case "connection":
+        this.kit = { ...this.kit, designs: removeNestedDesignEntity(this.kit.designs, "connections", entityId) };
+        break;
+    }
+  }
+
+  getSnapshot(): KitStoreSnapshot {
+    return {
+      kit: this.kit,
+      sync: {
+        status: this.status,
+        dirty: this.dirty,
+        readonly: this.readOnly,
+        lastSyncedAt: this.lastSyncedAt,
+        error: this.error,
+      },
+    };
+  }
+
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  transact<T>(label: string, run: () => T): T {
+    const before = this.kit;
+    this.transacting = true;
+    try {
+      const result = run();
+      const after = this.kit;
+      if (before !== after && !this.disposed) {
+        const forward = getKitDiff(before, after);
+        const backward = inverseKitDiff(before, forward);
+        this.undoStack.push({ forward, backward });
+        this.redoStack = [];
+      }
+      return result;
+    } finally {
+      this.transacting = false;
+    }
+  }
+
+  apply(diff: KitDiff, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = applyKitDiff(this.kit, diff);
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, this.kit);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    // Send diff as domain commands to server
+    this.sendKitDiffToServer(diff).catch((e) => {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    });
+    this.notify();
+  }
+
+  replace(next: Kit, meta?: { origin?: string }): void {
+    const before = this.kit;
+    this.kit = next;
+    this.dirty = true;
+    if (!this.transacting && !this.disposed) {
+      const forward = getKitDiff(before, next);
+      const backward = inverseKitDiff(before, forward);
+      this.undoStack.push({ forward, backward });
+      this.redoStack = [];
+    }
+    this.sendKitDiffToServer(getKitDiff(before, next)).catch((e) => {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    });
+    this.notify();
+  }
+
+  private async sendKitDiffToServer(diff: KitDiff): Promise<void> {
+    if (this.readOnly) throw new Error("Cannot send changes in read-only mode");
+    const commands: any[] = [];
+    // Kit-level fields
+    const kitFields: Record<string, any> = {};
+    if (diff.name !== undefined) kitFields.name = diff.name;
+    if (diff.version !== undefined) kitFields.version = diff.version;
+    if (diff.description !== undefined) kitFields.description = diff.description;
+    if (diff.icon !== undefined) kitFields.icon = diff.icon;
+    if (diff.image !== undefined) kitFields.image = diff.image;
+    if (diff.remote !== undefined) kitFields.remote = diff.remote;
+    if (diff.homepage !== undefined) kitFields.homepage = diff.homepage;
+    if (diff.license !== undefined) kitFields.license = diff.license;
+    if (diff.preview !== undefined) kitFields.preview = diff.preview;
+    if (Object.keys(kitFields).length > 0) {
+      commands.push({ kind: "PatchKit", payload: { fields: kitFields } });
+    }
+    // Collection diffs
+    const collectionMap: Record<string, { create: string; patch: string; delete: string; singular: string }> = {
+      types: { create: "CreateType", patch: "PatchType", delete: "DeleteType", singular: "type" },
+      designs: { create: "CreateDesign", patch: "PatchDesign", delete: "DeleteDesign", singular: "design" },
+      authors: { create: "CreateAuthor", patch: "PatchAuthor", delete: "DeleteAuthor", singular: "author" },
+      tags: { create: "CreateTag", patch: "PatchTag", delete: "DeleteTag", singular: "tag" },
+      concepts: { create: "CreateConcept", patch: "PatchConcept", delete: "DeleteConcept", singular: "concept" },
+      ports: { create: "CreatePort", patch: "PatchPort", delete: "DeletePort", singular: "port" },
+      qualities: { create: "CreateQuality", patch: "PatchQuality", delete: "DeleteQuality", singular: "quality" },
+      files: { create: "CreateFile", patch: "PatchFile", delete: "DeleteFile", singular: "file" },
+      folders: { create: "CreateFolder", patch: "PatchFolder", delete: "DeleteFolder", singular: "folder" },
+    };
+    for (const [key, ops] of Object.entries(collectionMap)) {
+      const collDiff = (diff as any)[key];
+      if (!collDiff) continue;
+      if (collDiff.added) {
+        for (const item of collDiff.added) {
+          commands.push({ kind: ops.create, payload: { entity_id: item.guid ?? guid(), fields: item } });
+        }
+      }
+      if (collDiff.updated) {
+        for (const item of collDiff.updated) {
+          const entityId = getDiffEntityId(item, ops.singular);
+          if (!entityId) continue;
+          const rawFields = { ...(item.diff ?? item) };
+          if (key === "designs") {
+            delete (rawFields as any).pieces;
+            delete (rawFields as any).connections;
+            delete (rawFields as any).layers;
+            delete (rawFields as any).groups;
+            delete (rawFields as any).stats;
+            delete (rawFields as any).props;
+          }
+          if (key === "types") {
+            delete (rawFields as any).representations;
+            delete (rawFields as any).connectors;
+            delete (rawFields as any).props;
+          }
+          if (Object.keys(rawFields).length === 0) continue;
+          commands.push({ kind: ops.patch, payload: { entity_id: entityId, fields: rawFields } });
+        }
+      }
+      if (collDiff.removed) {
+        for (const item of collDiff.removed) {
+          const entityId = getDiffEntityId(item, ops.singular);
+          if (!entityId) continue;
+          commands.push({ kind: ops.delete, payload: { entity_id: entityId } });
+        }
+      }
+    }
+
+    const designsDiff = diff.designs;
+    if (designsDiff?.updated) {
+      for (const updatedDesign of designsDiff.updated) {
+        const designId = getDiffEntityId(updatedDesign, "design");
+        const designDiff = updatedDesign?.diff;
+        if (!designId || !designDiff) continue;
+
+        const piecesDiff = designDiff.pieces;
+        if (piecesDiff?.added) {
+          for (const piece of piecesDiff.added) {
+            commands.push({
+              kind: "CreatePiece",
+              payload: { piece_id: piece.guid, design_id: designId, fields: { ...piece, design_id: designId } },
+            });
+          }
+        }
+        if (piecesDiff?.updated) {
+          for (const pieceUpdate of piecesDiff.updated) {
+            const pieceId = getDiffEntityId(pieceUpdate, "piece");
+            if (!pieceId) continue;
+            commands.push({
+              kind: "PatchPiece",
+              payload: { entity_id: pieceId, fields: { ...(pieceUpdate.diff ?? {}), design_id: designId } },
+            });
+          }
+        }
+        if (piecesDiff?.removed) {
+          for (const piece of piecesDiff.removed) {
+            const pieceId = getDiffEntityId(piece, "piece");
+            if (!pieceId) continue;
+            commands.push({ kind: "DeletePiece", payload: { entity_id: pieceId } });
+          }
+        }
+
+        const connectionsDiff = designDiff.connections;
+        if (connectionsDiff?.added) {
+          for (const connection of connectionsDiff.added) {
+            commands.push({
+              kind: "CreateConnection",
+              payload: {
+                connection_id: connection.guid,
+                design_id: designId,
+                fields: {
+                  ...connection,
+                  design_id: designId,
+                  connected_piece_id: connection.connected?.piece?.guid,
+                  connecting_piece_id: connection.connecting?.piece?.guid,
+                },
+              },
+            });
+          }
+        }
+        if (connectionsDiff?.updated) {
+          for (const connectionUpdate of connectionsDiff.updated) {
+            const connectionId = getDiffEntityId(connectionUpdate, "connection");
+            if (!connectionId) continue;
+            commands.push({
+              kind: "PatchConnection",
+              payload: { entity_id: connectionId, fields: { ...(connectionUpdate.diff ?? {}), design_id: designId } },
+            });
+          }
+        }
+        if (connectionsDiff?.removed) {
+          for (const connection of connectionsDiff.removed) {
+            const connectionId = getDiffEntityId(connection, "connection");
+            if (!connectionId) continue;
+            commands.push({ kind: "DeleteConnection", payload: { entity_id: connectionId } });
+          }
+        }
+      }
+    }
+
+    if (commands.length === 0) return;
+    const batch = commands.length === 1 ? commands[0] : { kind: "Batch", payload: { commands } };
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/domain`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        command_id: { "0": guid() },
+        client_id: { "0": this.clientId },
+        request_id: { "0": guid() },
+        actor_person_id: { "0": this.personId },
+        base_domain_version: this.domainVersion,
+        ...batch,
+      }),
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to send command: ${resp.statusText}`);
+    }
+  }
+
+  async save(): Promise<void> {
+    // Server-backed: save is implicit on command submission
+    this.dirty = false;
+    this.lastSyncedAt = new Date().toISOString();
+    this.notify();
+  }
+
+  async reload(): Promise<void> {
+    this.status = "loading";
+    this.notify();
+    try {
+      const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/snapshot`, { headers: this.authHeaders() });
+      if (!resp.ok) throw new Error(`Failed to reload: ${resp.statusText}`);
+      const snapshot = await resp.json();
+      const reloadedKit = mapServerSnapshotKitToKit(snapshot.kit, this.kit.name);
+      this.kit = { ...reloadedKit, createdAt: this.kit.createdAt ?? reloadedKit.createdAt, updatedAt: new Date().toISOString() };
+      this.domainVersion = snapshot.domain_version ?? 0;
+      this.semioVersion = snapshot.semio_version ?? 0;
+      this.dirty = false;
+      this.undoStack = [];
+      this.redoStack = [];
+      this.lastSyncedAt = new Date().toISOString();
+      this.error = undefined;
+      this.status = "ready";
+    } catch (e) {
+      this.error = e instanceof Error ? e : new Error(String(e));
+      this.status = "error";
+    }
+    this.notify();
+  }
+
+  dispose(): void {
+    this.disposed = true;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.listeners.clear();
+    this.presenceListeners.clear();
+    this.entityListeners.clear();
+    this.collectionListeners.clear();
+    this.propertyListeners.clear();
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+  undo(): void {
+    if (this.readOnly) throw new Error("Cannot undo in read-only mode");
+    const change = this.undoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.backward);
+    this.redoStack.push(change);
+    this.dirty = true;
+    this.sendKitDiffToServer(change.backward).catch(() => {});
+    this.notify();
+  }
+
+  redo(): void {
+    if (this.readOnly) throw new Error("Cannot redo in read-only mode");
+    const change = this.redoStack.pop();
+    if (!change) return;
+    this.kit = applyKitDiff(this.kit, change.forward);
+    this.undoStack.push(change);
+    this.dirty = true;
+    this.sendKitDiffToServer(change.forward).catch(() => {});
+    this.notify();
+  }
+
+  // #region ðŸ“£Presence
+
+  async sendCursor(u: number, v: number): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "UpsertCursor",
+        payload: { u, v },
+      }),
+    });
+  }
+
+  async sendLook(position: [number, number, number], forward: [number, number, number], up: [number, number, number]): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "UpsertLook",
+        payload: { position, forward, up },
+      }),
+    });
+  }
+
+  async sendSelection(pieceIds: string[], designIds: string[]): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "SetSelection",
+        payload: { piece_ids: pieceIds, design_ids: designIds },
+      }),
+    });
+  }
+
+  async clearPresence(): Promise<void> {
+    await fetch(`${this.serverUrl}/sessions/${this.sessionId}/commands/semio`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        client_id: { "0": this.clientId },
+        person_id: { "0": this.personId },
+        frontend_id: this.clientId,
+        base_semio_version: this.semioVersion,
+        kind: "ClearPresence",
+        payload: null,
+      }),
+    });
+  }
+
+  getPresences(): PresenceState[] {
+    return Array.from(this.presences.values());
+  }
+
+  subscribePresence(listener: () => void): () => void {
+    this.presenceListeners.add(listener);
+    return () => {
+      this.presenceListeners.delete(listener);
+    };
+  }
+
+  // #endregion ðŸ“£Presence
+
+  // #region ï¿½Auth
+
+  /**
+   * Returns the current auth token (owner_token or share token).
+   *
+   * Specs: Useful for passing to child components or persisting across sessions.
+   **/
+  getAuthToken(): string | undefined {
+    return this.authToken;
+  }
+
+  /**
+   * Creates a share token for this session.
+   *
+   * Specs: Requires owner access. Returns the share token string.
+   **/
+  async createShare(opts: { accessMode?: "viewer"; entityKind?: string; entityId?: string; label?: string; expiresInSeconds?: number }): Promise<ShareTokenEntry> {
+    if (this.readOnly) throw new Error("Cannot create share in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares`, {
+      method: "POST",
+      headers: this.authHeaders(),
+      body: JSON.stringify({
+        access_mode: opts.accessMode ?? "viewer",
+        entity_kind: opts.entityKind,
+        entity_id: opts.entityId,
+        label: opts.label,
+        expires_in_seconds: opts.expiresInSeconds,
+      }),
+    });
+    if (!resp.ok) throw new Error(`Failed to create share: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Lists all share tokens for this session.
+   *
+   * Specs: Requires owner access.
+   **/
+  async listShares(): Promise<ShareTokenEntry[]> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares`, {
+      headers: this.authHeaders(),
+    });
+    if (!resp.ok) throw new Error(`Failed to list shares: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Deletes a share token for this session.
+   *
+   * Specs: Requires owner access.
+   **/
+  async deleteShare(token: string): Promise<void> {
+    if (this.readOnly) throw new Error("Cannot delete share in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/shares/${token}`, {
+      method: "DELETE",
+      headers: this.authHeaders(),
+    });
+    if (!resp.ok) throw new Error(`Failed to delete share: ${resp.statusText}`);
+  }
+
+  /**
+   * Resolves a share token to session info without needing to know the session ID.
+   *
+   * Specs: Static method. Returns session_id, access_mode, optional entity scope.
+   **/
+  static async resolveShare(serverUrl: string, token: string): Promise<ResolvedShareToken> {
+    const resp = await fetch(`${serverUrl}/shares/${token}`);
+    if (!resp.ok) throw new Error(`Failed to resolve share: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  /**
+   * Creates a SessionKitStore from a share token.
+   *
+   * Specs: Resolves the share token, then connects with viewer access.
+   **/
+  static async createFromShareToken(serverUrl: string, token: string, config?: Partial<SessionKitStoreConfig>): Promise<SessionKitStore> {
+    const share = await SessionKitStore.resolveShare(serverUrl, token);
+    return SessionKitStore.create({
+      serverUrl,
+      sessionId: share.session_id,
+      authToken: token,
+      readOnly: share.access_mode === "viewer",
+      ...config,
+    });
+  }
+
+  // #endregion ðŸ”‘Auth
+
+  // #region ï¿½ðŸ”©History
+
+  async getKitAtLookback(lookback: string): Promise<Kit> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at/${lookback}`, { headers: this.authHeaders() });
+    if (!resp.ok) throw new Error(`Failed to get kit at lookback ${lookback}: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  async getKitAtVersion(version: number): Promise<Kit> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/kit/at-version/${version}`, { headers: this.authHeaders() });
+    if (!resp.ok) throw new Error(`Failed to get kit at version ${version}: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  async compactHistory(): Promise<{ snapshots_created: number; logs_deleted: number }> {
+    if (this.readOnly) throw new Error("Cannot compact history in read-only mode");
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/compact`, { method: "POST", headers: this.authHeaders() });
+    if (!resp.ok) throw new Error(`Failed to compact: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  async getLookbackTokens(): Promise<string[]> {
+    const resp = await fetch(`${this.serverUrl}/sessions/${this.sessionId}/history/lookback-tokens`, { headers: this.authHeaders() });
+    if (!resp.ok) throw new Error(`Failed to get tokens: ${resp.statusText}`);
+    return resp.json();
+  }
+
+  getDomainVersion(): number {
+    return this.domainVersion;
+  }
+
+  getSemioVersion(): number {
+    return this.semioVersion;
+  }
+
+  // #endregion ðŸ”©History
+
+  // #region ðŸŽµGranularSubscriptions
+
+  subscribeEntity(entityKind: string, entityId: string, listener: () => void): () => void {
+    const key = `${entityKind}:${entityId}`;
+    if (!this.entityListeners.has(key)) this.entityListeners.set(key, new Set());
+    this.entityListeners.get(key)!.add(listener);
+    return () => {
+      this.entityListeners.get(key)?.delete(listener);
+    };
+  }
+
+  subscribeCollection(entityKind: string, listener: () => void): () => void {
+    if (!this.collectionListeners.has(entityKind)) this.collectionListeners.set(entityKind, new Set());
+    this.collectionListeners.get(entityKind)!.add(listener);
+    return () => {
+      this.collectionListeners.get(entityKind)?.delete(listener);
+    };
+  }
+
+  subscribeProperty(entityKind: string, entityId: string, field: string, listener: () => void): () => void {
+    const key = `${entityKind}:${entityId}:${field}`;
+    if (!this.propertyListeners.has(key)) this.propertyListeners.set(key, new Set());
+    this.propertyListeners.get(key)!.add(listener);
+    return () => {
+      this.propertyListeners.get(key)?.delete(listener);
+    };
+  }
+
+  private notifyEntityListeners(entityKind: string, entityId: string): void {
+    const key = `${entityKind}:${entityId}`;
+    this.entityListeners.get(key)?.forEach((l) => l());
+  }
+
+  private notifyCollectionListeners(entityKind: string): void {
+    this.collectionListeners.get(entityKind)?.forEach((l) => l());
+  }
+
+  private notifyPropertyListeners(entityKind: string, entityId: string, field: string): void {
+    const key = `${entityKind}:${entityId}:${field}`;
+    this.propertyListeners.get(key)?.forEach((l) => l());
+  }
+
+  private notifyPresenceListeners(): void {
+    this.presenceListeners.forEach((l) => l());
+  }
+
+  // #endregion ðŸŽµGranularSubscriptions
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
+}
+
+/**
+ * Creates a SessionKitStore by connecting to a semio-session server.
+ *
+ * Specs: Factory function matching the provider pattern.
+ **/
+export async function createSessionKitStore(config: SessionKitStoreConfig): Promise<SessionKitStore> {
+  return SessionKitStore.create(config);
+}
+
+// #endregion BackboneKitStores
 
 // #region ­ƒÅï´©ÅBenchmarks
 // Performance benchmarks for kit roundtrip, diff, flatten and validation operations.

@@ -30,6 +30,22 @@ Finden Sie alle Architektur und Ingenieurbüros, welche dieses Tool verwenden un
 
 ---
 
+```
+1.
+
+Analysieren Sie die NORM (LINK) im Detail.
+
+2.
+
+Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele, etc.
+
+3.
+
+Finden Sie alle Architektur und Ingenieurbüros, welche dieses Tool verwenden und welche Gebäude mit diesem Tool nachweislich verwendet wurde.
+```
+
+---
+
 Erstellen Sie einen Bericht mit den
 
 ---
