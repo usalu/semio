@@ -131,9 +131,17 @@ pub mod attribute {
             s
         }
 
-        pub fn set_key(&mut self, key: String) {
+        pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::attribute_key(&key, "key") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "key".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.key == key {
-                return;
+                return Ok(());
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
@@ -141,11 +149,20 @@ pub mod attribute {
                 field: "key",
             });
             self.invalidate_local_and_bubble();
+            Ok(())
         }
 
-        pub fn set_value(&mut self, value: String) {
+        pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::required_non_empty(&value, "value") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "value".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.value == value {
-                return;
+                return Ok(());
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
@@ -153,11 +170,12 @@ pub mod attribute {
                 field: "value",
             });
             self.invalidate_local_and_bubble();
+            Ok(())
         }
 
-        pub fn set_definition(&mut self, definition: Option<String>) {
+        pub fn set_definition(&mut self, definition: Option<String>) -> crate::error::SetResult {
             if self.definition == definition {
-                return;
+                return Ok(());
             }
             self.definition = definition;
             self.emit_ev(KitEvent::FieldChanged {
@@ -165,6 +183,7 @@ pub mod attribute {
                 field: "definition",
             });
             self.invalidate_local_and_bubble();
+            Ok(())
         }
 
         fn invalidate_local_and_bubble(&mut self) {
@@ -402,9 +421,18 @@ pub mod author {
             s
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
+            let name = name.trim().to_string();
+            if let Err(e) = crate::validate::required_name(&name, "name") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "name".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -412,11 +440,20 @@ pub mod author {
                 field: "name",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_email(&mut self, email: String) {
+        pub fn set_email(&mut self, email: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::email_basic(&email, "email") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "email".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.email == email {
-                return;
+                return Ok(());
             }
             self.email = email;
             self.emit_ev(KitEvent::FieldChanged {
@@ -424,11 +461,12 @@ pub mod author {
                 field: "email",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_role(&mut self, role: Option<String>) {
+        pub fn set_role(&mut self, role: Option<String>) -> crate::error::SetResult {
             if self.role == role {
-                return;
+                return Ok(());
             }
             self.role = role;
             self.emit_ev(KitEvent::FieldChanged {
@@ -436,11 +474,12 @@ pub mod author {
                 field: "role",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_rank(&mut self, rank: Option<i64>) {
+        pub fn set_rank(&mut self, rank: Option<i64>) -> crate::error::SetResult {
             if self.rank == rank {
-                return;
+                return Ok(());
             }
             self.rank = rank;
             self.emit_ev(KitEvent::FieldChanged {
@@ -448,6 +487,7 @@ pub mod author {
                 field: "rank",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -680,9 +720,9 @@ pub mod benchmark {
             self.hash_cache.invalidate();
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -690,11 +730,12 @@ pub mod benchmark {
                 field: "name",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_min(&mut self, min: Option<f64>) {
+        pub fn set_min(&mut self, min: Option<f64>) -> crate::error::SetResult {
             if self.min == min {
-                return;
+                return Ok(());
             }
             self.min = min;
             self.emit_ev(KitEvent::FieldChanged {
@@ -702,11 +743,12 @@ pub mod benchmark {
                 field: "min",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_max(&mut self, max: Option<f64>) {
+        pub fn set_max(&mut self, max: Option<f64>) -> crate::error::SetResult {
             if self.max == max {
-                return;
+                return Ok(());
             }
             self.max = max;
             self.emit_ev(KitEvent::FieldChanged {
@@ -714,11 +756,12 @@ pub mod benchmark {
                 field: "max",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_min_excluded(&mut self, v: Option<bool>) {
+        pub fn set_min_excluded(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.min_excluded == v {
-                return;
+                return Ok(());
             }
             self.min_excluded = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -726,11 +769,12 @@ pub mod benchmark {
                 field: "minExcluded",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_max_excluded(&mut self, v: Option<bool>) {
+        pub fn set_max_excluded(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.max_excluded == v {
-                return;
+                return Ok(());
             }
             self.max_excluded = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -738,6 +782,7 @@ pub mod benchmark {
                 field: "maxExcluded",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -920,9 +965,9 @@ pub mod concept {
             s
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -930,11 +975,12 @@ pub mod concept {
                 field: "name",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, description: Option<String>) {
+        pub fn set_description(&mut self, description: Option<String>) -> crate::error::SetResult {
             if self.description == description {
-                return;
+                return Ok(());
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
@@ -942,11 +988,12 @@ pub mod concept {
                 field: "description",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_order(&mut self, order: Option<i64>) {
+        pub fn set_order(&mut self, order: Option<i64>) -> crate::error::SetResult {
             if self.order == order {
-                return;
+                return Ok(());
             }
             self.order = order;
             self.emit_ev(KitEvent::FieldChanged {
@@ -954,6 +1001,7 @@ pub mod concept {
                 field: "order",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -1260,9 +1308,9 @@ pub mod connection {
             self.child_plane_matrix.invalidate();
         }
 
-        pub fn set_gap(&mut self, v: Option<f64>) {
+        pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.gap == v {
-                return;
+                return Ok(());
             }
             self.gap = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1270,10 +1318,11 @@ pub mod connection {
                 field: "gap",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_shift(&mut self, v: Option<f64>) {
+        pub fn set_shift(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.shift == v {
-                return;
+                return Ok(());
             }
             self.shift = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1281,10 +1330,11 @@ pub mod connection {
                 field: "shift",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_rise(&mut self, v: Option<f64>) {
+        pub fn set_rise(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.rise == v {
-                return;
+                return Ok(());
             }
             self.rise = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1292,10 +1342,11 @@ pub mod connection {
                 field: "rise",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_rotation(&mut self, v: Option<f64>) {
+        pub fn set_rotation(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.rotation == v {
-                return;
+                return Ok(());
             }
             self.rotation = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1303,10 +1354,11 @@ pub mod connection {
                 field: "rotation",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_turn(&mut self, v: Option<f64>) {
+        pub fn set_turn(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.turn == v {
-                return;
+                return Ok(());
             }
             self.turn = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1314,10 +1366,11 @@ pub mod connection {
                 field: "turn",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_tilt(&mut self, v: Option<f64>) {
+        pub fn set_tilt(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.tilt == v {
-                return;
+                return Ok(());
             }
             self.tilt = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1325,10 +1378,11 @@ pub mod connection {
                 field: "tilt",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_x(&mut self, v: Option<f64>) {
+        pub fn set_x(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.x == v {
-                return;
+                return Ok(());
             }
             self.x = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1336,10 +1390,11 @@ pub mod connection {
                 field: "x",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_y(&mut self, v: Option<f64>) {
+        pub fn set_y(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.y == v {
-                return;
+                return Ok(());
             }
             self.y = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1347,10 +1402,11 @@ pub mod connection {
                 field: "y",
             });
             self.bubble();
+            Ok(())
         }
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1358,6 +1414,7 @@ pub mod connection {
                 field: "description",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -1755,9 +1812,17 @@ pub mod connector {
             }
         }
 
-        pub fn set_code(&mut self, code: String) {
+        pub fn set_code(&mut self, code: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::required_non_empty(&code, "code") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "code".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.code == code {
-                return;
+                return Ok(());
             }
             self.code = code;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1765,11 +1830,12 @@ pub mod connector {
                 field: "code",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -1777,15 +1843,17 @@ pub mod connector {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) {
+        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
                 field: "port",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -2102,7 +2170,7 @@ pub mod design {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.guid) {
-                w.set_piece_weak(Arc::downgrade(pref));
+                let _ = w.set_piece_weak(Arc::downgrade(pref));
                 if let Some(port_id) = &meta.port {
                     if let Ok(pc) = pref.read() {
                         if let Some(tw) = &pc.type_ref {
@@ -2111,7 +2179,7 @@ pub mod design {
                                     for pr in &tr.ports {
                                         if let Ok(prr) = pr.read() {
                                             if prr.guid == port_id.guid {
-                                                w.set_port_weak(Some(Arc::downgrade(pr)));
+                                                let _ = w.set_port_weak(Some(Arc::downgrade(pr)));
                                                 break;
                                             }
                                         }
@@ -2123,7 +2191,7 @@ pub mod design {
                 }
                 if let Some(dp) = &meta.design_piece {
                     if let Some(dpref) = piece_index.get(&dp.guid) {
-                        w.set_design_piece_weak(Some(Arc::downgrade(dpref)));
+                        let _ = w.set_design_piece_weak(Some(Arc::downgrade(dpref)));
                     }
                 }
             }
@@ -2299,9 +2367,18 @@ pub mod design {
             }
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
+            let name = name.trim().to_string();
+            if let Err(e) = crate::validate::required_name(&name, "name") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "name".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2314,11 +2391,17 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
+            let v = match v {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2331,11 +2414,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_icon(&mut self, v: Option<String>) {
+        pub fn set_icon(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.icon == v {
-                return;
+                return Ok(());
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2348,11 +2432,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_image(&mut self, v: Option<String>) {
+        pub fn set_image(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.image == v {
-                return;
+                return Ok(());
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2365,11 +2450,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_variant(&mut self, v: Option<String>) {
+        pub fn set_variant(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.variant == v {
-                return;
+                return Ok(());
             }
             self.variant = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2382,11 +2468,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_view(&mut self, v: Option<String>) {
+        pub fn set_view(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.view == v {
-                return;
+                return Ok(());
             }
             self.view = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2399,11 +2486,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<Location>) {
+        pub fn set_location(&mut self, v: Option<Location>) -> crate::error::SetResult {
             if self.location == v {
-                return;
+                return Ok(());
             }
             self.location = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2416,11 +2504,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_camera(&mut self, v: Option<Camera>) {
+        pub fn set_camera(&mut self, v: Option<Camera>) -> crate::error::SetResult {
             if self.camera == v {
-                return;
+                return Ok(());
             }
             self.camera = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2433,11 +2522,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_unit(&mut self, v: Option<String>) {
+        pub fn set_unit(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.unit == v {
-                return;
+                return Ok(());
             }
             self.unit = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2450,11 +2540,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_created(&mut self, v: Option<String>) {
+        pub fn set_created(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.created == v {
-                return;
+                return Ok(());
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2467,11 +2558,12 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
-        pub fn set_updated(&mut self, v: Option<String>) {
+        pub fn set_updated(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.updated == v {
-                return;
+                return Ok(());
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -2484,6 +2576,7 @@ pub mod design {
             });
             self.invalidate_flatten();
             self.bubble_to_kit();
+            Ok(())
         }
 
         /// Flattened world-space plane and center per piece guid (BFS, Python `flattenDesignDict`).
@@ -3560,17 +3653,49 @@ pub mod diff {
 }
 
 pub mod error {
+    use serde::{Deserialize, Serialize};
     use thiserror::Error;
 
     use crate::guid::Guid;
+
+    /// 🧾 User-visible / wire rejection for a single field write (WASM + hooks).
+    #[derive(Error, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(tag = "kind", content = "message")]
+    pub enum SetError {
+        #[error("illegal name: {0}")]
+        IllegalName(String),
+        #[error("name too long: {0}")]
+        NameTooLong(String),
+        #[error("invalid url: {0}")]
+        InvalidUrl(String),
+        #[error("invalid value: {0}")]
+        InvalidValue(String),
+        #[error("duplicate guid: {0}")]
+        DuplicateGuid(String),
+        #[error("not found: {0}")]
+        NotFound(String),
+        #[error("cyclic reference: {0}")]
+        CyclicReference(String),
+        #[error("port family mismatch: {0}")]
+        PortFamilyMismatch(String),
+        #[error("readonly: {0}")]
+        Readonly(String),
+        #[error("disposed: {0}")]
+        Disposed(String),
+        #[error("timeout: {0}")]
+        Timeout(String),
+        #[error("lock poisoned: {0}")]
+        LockPoisoned(String),
+        #[error("internal: {0}")]
+        Internal(String),
+    }
+
+    pub type SetResult = std::result::Result<(), SetError>;
 
     #[derive(Error, Debug)]
     pub enum SemioError {
         #[error("entity not found: {kind} '{guid}'")]
         NotFound { kind: &'static str, guid: Guid },
-
-        #[error("validation failed: {0}")]
-        Validation(String),
 
         #[error("invalid operation: {0}")]
         InvalidOperation(String),
@@ -3597,6 +3722,135 @@ pub mod error {
     }
 
     pub type Result<T> = std::result::Result<T, SemioError>;
+
+    impl From<SetError> for SemioError {
+        fn from(e: SetError) -> Self {
+            SemioError::InvalidOperation(e.to_string())
+        }
+    }
+}
+
+pub mod validate {
+    //! 🧾 Field-level validation helpers returning [`crate::error::SetError`].
+
+    use crate::error::{SetError, SetResult};
+
+    const MAX_NAME_LEN: usize = 512;
+    const MAX_KEY_LEN: usize = 256;
+    const MAX_URL_LEN: usize = 4096;
+
+    pub fn required_name(s: &str, label: &str) -> SetResult {
+        let t = s.trim();
+        if t.is_empty() {
+            return Err(SetError::IllegalName(format!("{label} cannot be empty")));
+        }
+        if t.len() > MAX_NAME_LEN {
+            return Err(SetError::NameTooLong(format!(
+                "{label} exceeds {MAX_NAME_LEN} chars"
+            )));
+        }
+        Ok(())
+    }
+
+    pub fn optional_display_name(s: &Option<String>, label: &str) -> SetResult {
+        match s {
+            None => Ok(()),
+            Some(x) => {
+                let t = x.trim();
+                if t.is_empty() {
+                    return Err(SetError::IllegalName(format!("{label} cannot be empty")));
+                }
+                if t.len() > MAX_NAME_LEN {
+                    return Err(SetError::NameTooLong(format!(
+                        "{label} exceeds {MAX_NAME_LEN} chars"
+                    )));
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn required_non_empty(s: &str, label: &str) -> SetResult {
+        if s.trim().is_empty() {
+            return Err(SetError::InvalidValue(format!("{label} cannot be empty")));
+        }
+        Ok(())
+    }
+
+    pub fn required_url(s: &str, label: &str) -> SetResult {
+        let t = s.trim();
+        if t.is_empty() {
+            return Err(SetError::InvalidUrl(format!("{label} cannot be empty")));
+        }
+        if t.len() > MAX_URL_LEN {
+            return Err(SetError::InvalidUrl(format!(
+                "{label} exceeds {MAX_URL_LEN} chars"
+            )));
+        }
+        if t.starts_with('/') || t.starts_with("./") {
+            return Ok(());
+        }
+        if t.contains("://") {
+            return Ok(());
+        }
+        Err(SetError::InvalidUrl(format!(
+            "{label} must be a URL or path"
+        )))
+    }
+
+    pub fn optional_url(s: &Option<String>, label: &str) -> SetResult {
+        match s {
+            None => Ok(()),
+            Some(u) => {
+                if u.trim().is_empty() {
+                    return Ok(());
+                }
+                required_url(u, label)
+            }
+        }
+    }
+
+    pub fn optional_opaque_uri(s: &Option<String>, label: &str) -> SetResult {
+        match s {
+            None => Ok(()),
+            Some(u) => {
+                let t = u.trim();
+                if t.is_empty() {
+                    return Ok(());
+                }
+                if t.len() > MAX_URL_LEN {
+                    return Err(SetError::InvalidUrl(format!("{label} exceeds {MAX_URL_LEN} chars")));
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn email_basic(s: &str, label: &str) -> SetResult {
+        let t = s.trim();
+        if t.is_empty() {
+            return Err(SetError::InvalidValue(format!("{label} cannot be empty")));
+        }
+        if !t.contains('@') || t.len() < 3 {
+            return Err(SetError::InvalidValue(format!(
+                "{label} must look like an email"
+            )));
+        }
+        Ok(())
+    }
+
+    pub fn attribute_key(s: &str, label: &str) -> SetResult {
+        let t = s.trim();
+        if t.is_empty() {
+            return Err(SetError::IllegalName(format!("{label} cannot be empty")));
+        }
+        if t.len() > MAX_KEY_LEN {
+            return Err(SetError::NameTooLong(format!(
+                "{label} exceeds {MAX_KEY_LEN} chars"
+            )));
+        }
+        Ok(())
+    }
 }
 
 pub mod events {
@@ -3609,7 +3863,7 @@ pub mod events {
     use crate::guid::Guid;
 
     /// Entity discriminator for [`KitEvent`].
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub enum EntityKind {
         Kit,
         Type,
@@ -3635,7 +3889,7 @@ pub mod events {
     }
 
     /// Stable identity for event payloads.
-    #[derive(Clone, Debug, Eq, PartialEq, Hash)]
+    #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub struct EntityRef {
         pub kind: EntityKind,
         pub guid: Guid,
@@ -3648,7 +3902,7 @@ pub mod events {
     }
 
     /// All observable changes on a kit graph.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize)]
     pub enum KitEvent {
         FieldChanged {
             entity: EntityRef,
@@ -3673,6 +3927,11 @@ pub mod events {
         DerivedChanged {
             entity: EntityRef,
             field: &'static str,
+        },
+        SetRejected {
+            entity: EntityRef,
+            field: String,
+            error: crate::error::SetError,
         },
     }
 
@@ -4486,9 +4745,17 @@ pub mod file {
             }
         }
 
-        pub fn set_url(&mut self, url: String) {
+        pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::required_url(&url, "url") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "url".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.url == url {
-                return;
+                return Ok(());
             }
             self.url = url;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4496,11 +4763,12 @@ pub mod file {
                 field: "url",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_mime(&mut self, v: Option<String>) {
+        pub fn set_mime(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.mime == v {
-                return;
+                return Ok(());
             }
             self.mime = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4508,11 +4776,12 @@ pub mod file {
                 field: "mime",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_size(&mut self, v: Option<i64>) {
+        pub fn set_size(&mut self, v: Option<i64>) -> crate::error::SetResult {
             if self.size == v {
-                return;
+                return Ok(());
             }
             self.size = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4520,11 +4789,12 @@ pub mod file {
                 field: "size",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_hash(&mut self, v: Option<String>) {
+        pub fn set_hash(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.hash == v {
-                return;
+                return Ok(());
             }
             self.hash = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4532,11 +4802,12 @@ pub mod file {
                 field: "hash",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4544,11 +4815,12 @@ pub mod file {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_created(&mut self, v: Option<String>) {
+        pub fn set_created(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.created == v {
-                return;
+                return Ok(());
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4556,11 +4828,12 @@ pub mod file {
                 field: "created",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_updated(&mut self, v: Option<String>) {
+        pub fn set_updated(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.updated == v {
-                return;
+                return Ok(());
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4568,6 +4841,7 @@ pub mod file {
                 field: "updated",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -4751,9 +5025,9 @@ pub mod folder {
             }
         }
 
-        pub fn set_path(&mut self, path: String) {
+        pub fn set_path(&mut self, path: String) -> crate::error::SetResult {
             if self.path == path {
-                return;
+                return Ok(());
             }
             self.path = path;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4761,11 +5035,12 @@ pub mod folder {
                 field: "path",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -4773,6 +5048,7 @@ pub mod folder {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -5124,9 +5400,9 @@ pub mod group {
             EntityRef::new(EntityKind::Group, self.guid.clone())
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5134,11 +5410,12 @@ pub mod group {
                 field: "name",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5146,11 +5423,12 @@ pub mod group {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_color(&mut self, v: Option<String>) {
+        pub fn set_color(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.color == v {
-                return;
+                return Ok(());
             }
             self.color = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5158,11 +5436,12 @@ pub mod group {
                 field: "color",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_icon(&mut self, v: Option<String>) {
+        pub fn set_icon(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.icon == v {
-                return;
+                return Ok(());
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5170,15 +5449,17 @@ pub mod group {
                 field: "icon",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) {
+        pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) -> crate::error::SetResult {
             self.pieces = pieces;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
                 field: "pieces",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -5446,13 +5727,15 @@ pub mod kit {
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
-    use crate::error::{Result, SemioError};
+    use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
+    use crate::diff::DesignDiff;
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
+    use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::report::{SemioReport, ValidationResult};
@@ -5681,9 +5964,18 @@ pub mod kit {
             self.emit_ev(KitEvent::ValidationInvalidated);
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
+            let name = name.trim().to_string();
+            if let Err(e) = crate::validate::required_name(&name, "name") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "name".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5692,11 +5984,17 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
+            let v = match v {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5705,11 +6003,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_icon(&mut self, v: Option<String>) {
+        pub fn set_icon(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.icon == v {
-                return;
+                return Ok(());
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5718,11 +6017,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_image(&mut self, v: Option<String>) {
+        pub fn set_image(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.image == v {
-                return;
+                return Ok(());
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5731,11 +6031,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_preview(&mut self, v: Option<String>) {
+        pub fn set_preview(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.preview == v {
-                return;
+                return Ok(());
             }
             self.preview = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5744,11 +6045,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_version(&mut self, v: Option<String>) {
+        pub fn set_version(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.version == v {
-                return;
+                return Ok(());
             }
             self.version = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5757,11 +6059,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_remote(&mut self, v: Option<String>) {
+        pub fn set_remote(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.remote == v {
-                return;
+                return Ok(());
             }
             self.remote = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5770,11 +6073,20 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_homepage(&mut self, v: Option<String>) {
+        pub fn set_homepage(&mut self, v: Option<String>) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::optional_url(&v, "homepage") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "homepage".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.homepage == v {
-                return;
+                return Ok(());
             }
             self.homepage = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5783,11 +6095,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_license(&mut self, v: Option<String>) {
+        pub fn set_license(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.license == v {
-                return;
+                return Ok(());
             }
             self.license = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5796,11 +6109,20 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_uri(&mut self, v: Option<String>) {
+        pub fn set_uri(&mut self, v: Option<String>) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::optional_opaque_uri(&v, "uri") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "uri".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.uri == v {
-                return;
+                return Ok(());
             }
             self.uri = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5809,11 +6131,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_created(&mut self, v: Option<String>) {
+        pub fn set_created(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.created == v {
-                return;
+                return Ok(());
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5822,11 +6145,12 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_updated(&mut self, v: Option<String>) {
+        pub fn set_updated(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.updated == v {
-                return;
+                return Ok(());
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -5835,6 +6159,7 @@ pub mod kit {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
         pub fn hash(&self) -> String {
@@ -5983,6 +6308,298 @@ pub mod kit {
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
+        }
+
+        /// 🌐 Parse entity kind label from JS (`"Piece"`, `"Kit"`, …).
+        pub fn parse_entity_kind(s: &str) -> std::result::Result<EntityKind, SetError> {
+            match s {
+                "Kit" => Ok(EntityKind::Kit),
+                "Type" => Ok(EntityKind::Type),
+                "Design" => Ok(EntityKind::Design),
+                "Piece" => Ok(EntityKind::Piece),
+                "Connection" => Ok(EntityKind::Connection),
+                "Side" => Ok(EntityKind::Side),
+                "Port" => Ok(EntityKind::Port),
+                "Connector" => Ok(EntityKind::Connector),
+                "Representation" => Ok(EntityKind::Representation),
+                "File" => Ok(EntityKind::File),
+                "Folder" => Ok(EntityKind::Folder),
+                "Layer" => Ok(EntityKind::Layer),
+                "Group" => Ok(EntityKind::Group),
+                "Author" => Ok(EntityKind::Author),
+                "Concept" => Ok(EntityKind::Concept),
+                "Tag" => Ok(EntityKind::Tag),
+                "Prop" => Ok(EntityKind::Prop),
+                "Attribute" => Ok(EntityKind::Attribute),
+                "Quality" => Ok(EntityKind::Quality),
+                "Stat" => Ok(EntityKind::Stat),
+                "Benchmark" => Ok(EntityKind::Benchmark),
+                _ => Err(SetError::InvalidValue(format!("unknown entity kind '{s}'"))),
+            }
+        }
+
+        /// 🌐 Worker boundary: set one scalar field (extend match as hooks grow).
+        pub fn set_field_rpc(
+            kit: &KitStoreRef,
+            entity_kind: EntityKind,
+            guid: &str,
+            field: &str,
+            value: serde_json::Value,
+        ) -> SetResult {
+            match entity_kind {
+                EntityKind::Kit => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if g.guid.as_str() != guid {
+                        return Err(SetError::NotFound(format!("kit {guid}")));
+                    }
+                    match field {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_name(s)
+                        }
+                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
+                    }
+                }
+                EntityKind::Design => {
+                    let d = {
+                        let g = kit
+                            .read()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.design(guid)
+                            .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?
+                    };
+                    let mut dw = d
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    match field {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            dw.set_name(s)
+                        }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown design field '{field}'"
+                        ))),
+                    }
+                }
+                EntityKind::Type => {
+                    let t = {
+                        let g = kit
+                            .read()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.semio_type(guid)
+                            .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?
+                    };
+                    let mut tw = t
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                    match field {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            tw.set_name(s)
+                        }
+                        _ => Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
+                    }
+                }
+                EntityKind::Piece => {
+                    let pref = {
+                        let g = kit
+                            .read()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let mut found: Option<PieceStoreRef> = None;
+                        for d in &g.designs {
+                            if let Ok(dr) = d.read() {
+                                if let Some(p) = dr.piece(guid) {
+                                    found = Some(p);
+                                    break;
+                                }
+                            }
+                        }
+                        found.ok_or_else(|| SetError::NotFound(format!("piece {guid}")))?
+                    };
+                    let mut pw = pref
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?;
+                    match field {
+                        "name" => {
+                            let v: Option<String> = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            pw.set_name(v)
+                        }
+                        "color" => {
+                            let v: Option<String> = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            pw.set_color(v)
+                        }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown piece field '{field}'"
+                        ))),
+                    }
+                }
+                _ => Err(SetError::InvalidValue(format!(
+                    "set_field_rpc not implemented for {entity_kind:?}"
+                ))),
+            }
+        }
+
+        /// 🌐 Read one field as JSON (read-only).
+        pub fn get_field_rpc(
+            kit: &KitStoreRef,
+            entity_kind: EntityKind,
+            guid: &str,
+            field: &str,
+        ) -> std::result::Result<serde_json::Value, SetError> {
+            let g = kit
+                .read()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            match entity_kind {
+                EntityKind::Kit => {
+                    if g.guid.as_str() != guid {
+                        return Err(SetError::NotFound(format!("kit {guid}")));
+                    }
+                    match field {
+                        "name" => Ok(serde_json::json!(g.name)),
+                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
+                    }
+                }
+                EntityKind::Piece => {
+                    for d in &g.designs {
+                        if let Ok(dr) = d.read() {
+                            if let Some(p) = dr.piece(guid) {
+                                if let Ok(pr) = p.read() {
+                                    return match field {
+                                        "name" => Ok(serde_json::to_value(&pr.name).unwrap()),
+                                        "color" => Ok(serde_json::to_value(&pr.color).unwrap()),
+                                        _ => Err(SetError::InvalidValue(format!(
+                                            "unknown piece field '{field}'"
+                                        ))),
+                                    };
+                                }
+                            }
+                        }
+                    }
+                    Err(SetError::NotFound(format!("piece {guid}")))
+                }
+                EntityKind::Design => {
+                    let d = g
+                        .design(guid)
+                        .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    match field {
+                        "name" => Ok(serde_json::json!(dr.name)),
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown design field '{field}'"
+                        ))),
+                    }
+                }
+                EntityKind::Type => {
+                    let t = g
+                        .semio_type(guid)
+                        .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?;
+                    let tr = t
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                    match field {
+                        "name" => Ok(serde_json::json!(tr.name)),
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown type field '{field}'"
+                        ))),
+                    }
+                }
+                _ => Err(SetError::InvalidValue(format!(
+                    "get_field_rpc not implemented for {entity_kind:?}"
+                ))),
+            }
+        }
+
+        fn map_semio_err(e: SemioError) -> SetError {
+            match e {
+                SemioError::NotFound { kind, guid } => {
+                    SetError::NotFound(format!("{} {}", kind, guid.as_str()))
+                }
+                SemioError::LockPoisoned(s) => SetError::LockPoisoned(s.to_string()),
+                SemioError::InvalidOperation(m) => SetError::Internal(m),
+                SemioError::Json(j) => SetError::InvalidValue(j.to_string()),
+                SemioError::Io(i) => SetError::Internal(i.to_string()),
+                SemioError::Other(o) => SetError::Internal(o),
+                #[cfg(not(target_arch = "wasm32"))]
+                SemioError::Sqlite(s) => SetError::Internal(s.to_string()),
+                #[cfg(not(target_arch = "wasm32"))]
+                SemioError::Zip(z) => SetError::Internal(z.to_string()),
+            }
+        }
+
+        /// Apply a structural design diff through the same path as [`KitStore::apply_design_diff`], returning [`SetResult`].
+        pub fn apply_design_diff_rpc(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            diff: serde_json::Value,
+        ) -> SetResult {
+            let diff: DesignDiff = serde_json::from_value(diff)
+                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        /// Add a child entity under `parent` (currently `Design → Piece` only).
+        pub fn add_child_rpc(
+            kit: &KitStoreRef,
+            parent_kind: EntityKind,
+            parent_guid: &str,
+            child_kind: EntityKind,
+            dto: serde_json::Value,
+        ) -> SetResult {
+            match (parent_kind, child_kind) {
+                (EntityKind::Design, EntityKind::Piece) => {
+                    let piece: PieceFullDto = serde_json::from_value(dto)
+                        .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                    let mut diff = DesignDiff::default();
+                    diff.added_pieces.push(piece);
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.apply_design_diff(parent_guid, &diff)
+                        .map_err(Self::map_semio_err)
+                }
+                _ => Err(SetError::InvalidValue(format!(
+                    "add_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
+                ))),
+            }
+        }
+
+        /// Remove a child entity from `parent` (currently `Design → Piece` only).
+        pub fn remove_child_rpc(
+            kit: &KitStoreRef,
+            parent_kind: EntityKind,
+            parent_guid: &str,
+            child_kind: EntityKind,
+            child_guid: &str,
+        ) -> SetResult {
+            match (parent_kind, child_kind) {
+                (EntityKind::Design, EntityKind::Piece) => {
+                    let mut diff = DesignDiff::default();
+                    diff.removed_pieces.push(PieceIdDto {
+                        guid: Guid::from(child_guid),
+                    });
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.apply_design_diff(parent_guid, &diff)
+                        .map_err(Self::map_semio_err)
+                }
+                _ => Err(SetError::InvalidValue(format!(
+                    "remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
+                ))),
+            }
         }
 
         pub fn validate(&self) -> ValidationResult {
@@ -6706,9 +7323,9 @@ pub mod layer {
             EntityRef::new(EntityKind::Layer, self.guid.clone())
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6716,11 +7333,12 @@ pub mod layer {
                 field: "name",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6728,11 +7346,12 @@ pub mod layer {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_color(&mut self, v: Option<String>) {
+        pub fn set_color(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.color == v {
-                return;
+                return Ok(());
             }
             self.color = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6740,11 +7359,12 @@ pub mod layer {
                 field: "color",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_order(&mut self, v: Option<i64>) {
+        pub fn set_order(&mut self, v: Option<i64>) -> crate::error::SetResult {
             if self.order == v {
-                return;
+                return Ok(());
             }
             self.order = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6752,11 +7372,12 @@ pub mod layer {
                 field: "order",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_visible(&mut self, v: Option<bool>) {
+        pub fn set_visible(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.visible == v {
-                return;
+                return Ok(());
             }
             self.visible = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6764,11 +7385,12 @@ pub mod layer {
                 field: "visible",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_locked(&mut self, v: Option<bool>) {
+        pub fn set_locked(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.locked == v {
-                return;
+                return Ok(());
             }
             self.locked = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -6776,6 +7398,7 @@ pub mod layer {
                 field: "locked",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -7109,9 +7732,9 @@ pub mod piece {
             }
         }
 
-        pub fn set_plane(&mut self, plane: Option<Plane>) {
+        pub fn set_plane(&mut self, plane: Option<Plane>) -> crate::error::SetResult {
             if self.plane == plane {
-                return;
+                return Ok(());
             }
             self.plane = plane;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7120,11 +7743,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_center(&mut self, center: Option<Coord>) {
+        pub fn set_center(&mut self, center: Option<Coord>) -> crate::error::SetResult {
             if self.center == center {
-                return;
+                return Ok(());
             }
             self.center = center;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7133,11 +7757,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_color(&mut self, color: Option<String>) {
+        pub fn set_color(&mut self, color: Option<String>) -> crate::error::SetResult {
             if self.color == color {
-                return;
+                return Ok(());
             }
             self.color = color;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7145,9 +7770,13 @@ pub mod piece {
                 field: "color",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) {
+        pub fn set_type_weak(
+            &mut self,
+            type_ref: Option<TypeStoreWeak>,
+        ) -> crate::error::SetResult {
             self.type_ref = type_ref;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
@@ -7155,11 +7784,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_id(&mut self, id: Option<String>) {
+        pub fn set_id(&mut self, id: Option<String>) -> crate::error::SetResult {
             if self.id == id {
-                return;
+                return Ok(());
             }
             self.id = id;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7168,11 +7798,25 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_name(&mut self, name: Option<String>) {
+        pub fn set_name(&mut self, name: Option<String>) -> crate::error::SetResult {
+            let name = match name {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
+            if let Err(e) = crate::validate::optional_display_name(&name, "name") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "name".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7181,11 +7825,17 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, description: Option<String>) {
+        pub fn set_description(&mut self, description: Option<String>) -> crate::error::SetResult {
+            let description = match description {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
             if self.description == description {
-                return;
+                return Ok(());
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7194,11 +7844,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_scale(&mut self, scale: Option<f64>) {
+        pub fn set_scale(&mut self, scale: Option<f64>) -> crate::error::SetResult {
             if self.scale == scale {
-                return;
+                return Ok(());
             }
             self.scale = scale;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7207,11 +7858,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_mirror_plane(&mut self, mirror_plane: Option<Plane>) {
+        pub fn set_mirror_plane(&mut self, mirror_plane: Option<Plane>) -> crate::error::SetResult {
             if self.mirror_plane == mirror_plane {
-                return;
+                return Ok(());
             }
             self.mirror_plane = mirror_plane;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7220,11 +7872,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_hidden(&mut self, hidden: Option<bool>) {
+        pub fn set_hidden(&mut self, hidden: Option<bool>) -> crate::error::SetResult {
             if self.hidden == hidden {
-                return;
+                return Ok(());
             }
             self.hidden = hidden;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7233,11 +7886,12 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
-        pub fn set_locked(&mut self, locked: Option<bool>) {
+        pub fn set_locked(&mut self, locked: Option<bool>) -> crate::error::SetResult {
             if self.locked == locked {
-                return;
+                return Ok(());
             }
             self.locked = locked;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7246,6 +7900,7 @@ pub mod piece {
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
+            Ok(())
         }
 
         /// World-space plane from design flatten cache.
@@ -7733,9 +8388,9 @@ pub mod port {
             }
         }
 
-        pub fn set_id(&mut self, v: Option<String>) {
+        pub fn set_id(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.id == v {
-                return;
+                return Ok(());
             }
             self.id = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7743,11 +8398,12 @@ pub mod port {
                 field: "id",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_family(&mut self, v: Option<String>) {
+        pub fn set_family(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.family == v {
-                return;
+                return Ok(());
             }
             self.family = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7755,11 +8411,12 @@ pub mod port {
                 field: "family",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_compatible_families(&mut self, v: Vec<String>) {
+        pub fn set_compatible_families(&mut self, v: Vec<String>) -> crate::error::SetResult {
             if self.compatible_families == v {
-                return;
+                return Ok(());
             }
             self.compatible_families = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7767,11 +8424,12 @@ pub mod port {
                 field: "compatibleFamilies",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_mandatory(&mut self, v: Option<bool>) {
+        pub fn set_mandatory(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.mandatory == v {
-                return;
+                return Ok(());
             }
             self.mandatory = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7779,11 +8437,12 @@ pub mod port {
                 field: "mandatory",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_t(&mut self, v: Option<f64>) {
+        pub fn set_t(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.t == v {
-                return;
+                return Ok(());
             }
             self.t = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7791,11 +8450,12 @@ pub mod port {
                 field: "t",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7803,11 +8463,12 @@ pub mod port {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_point(&mut self, v: Option<Coord>) {
+        pub fn set_point(&mut self, v: Option<Coord>) -> crate::error::SetResult {
             if self.point == v {
-                return;
+                return Ok(());
             }
             self.point = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7815,11 +8476,12 @@ pub mod port {
                 field: "point",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_direction(&mut self, v: Option<Vector>) {
+        pub fn set_direction(&mut self, v: Option<Vector>) -> crate::error::SetResult {
             if self.direction == v {
-                return;
+                return Ok(());
             }
             self.direction = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7827,6 +8489,7 @@ pub mod port {
                 field: "direction",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -7986,9 +8649,9 @@ pub mod prop {
             s
         }
 
-        pub fn set_key(&mut self, key: String) {
+        pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if self.key == key {
-                return;
+                return Ok(());
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
@@ -7996,11 +8659,12 @@ pub mod prop {
                 field: "key",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_value(&mut self, value: String) {
+        pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
             if self.value == value {
-                return;
+                return Ok(());
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8008,11 +8672,12 @@ pub mod prop {
                 field: "value",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_unit(&mut self, unit: Option<String>) {
+        pub fn set_unit(&mut self, unit: Option<String>) -> crate::error::SetResult {
             if self.unit == unit {
-                return;
+                return Ok(());
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8020,6 +8685,7 @@ pub mod prop {
                 field: "unit",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -8253,9 +8919,9 @@ pub mod quality {
             self.hash_cache.invalidate();
         }
 
-        pub fn set_key(&mut self, key: String) {
+        pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if self.key == key {
-                return;
+                return Ok(());
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8263,11 +8929,12 @@ pub mod quality {
                 field: "key",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_value(&mut self, value: Option<String>) {
+        pub fn set_value(&mut self, value: Option<String>) -> crate::error::SetResult {
             if self.value == value {
-                return;
+                return Ok(());
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8275,11 +8942,12 @@ pub mod quality {
                 field: "value",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_unit(&mut self, unit: Option<String>) {
+        pub fn set_unit(&mut self, unit: Option<String>) -> crate::error::SetResult {
             if self.unit == unit {
-                return;
+                return Ok(());
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8287,11 +8955,12 @@ pub mod quality {
                 field: "unit",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_definition(&mut self, definition: Option<String>) {
+        pub fn set_definition(&mut self, definition: Option<String>) -> crate::error::SetResult {
             if self.definition == definition {
-                return;
+                return Ok(());
             }
             self.definition = definition;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8299,11 +8968,12 @@ pub mod quality {
                 field: "definition",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, description: Option<String>) {
+        pub fn set_description(&mut self, description: Option<String>) -> crate::error::SetResult {
             if self.description == description {
-                return;
+                return Ok(());
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8311,6 +8981,7 @@ pub mod quality {
                 field: "description",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -8846,9 +9517,17 @@ pub mod representation {
             }
         }
 
-        pub fn set_url(&mut self, url: String) {
+        pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
+            if let Err(e) = crate::validate::required_url(&url, "url") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "url".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.url == url {
-                return;
+                return Ok(());
             }
             self.url = url;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8856,11 +9535,12 @@ pub mod representation {
                 field: "url",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -8868,6 +9548,7 @@ pub mod representation {
                 field: "description",
             });
             self.invalidate_hash();
+            Ok(())
         }
 
         pub fn invalidate_hash(&self) {
@@ -9118,31 +9799,37 @@ pub mod side {
             self.hash_cache.invalidate();
         }
 
-        pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) {
+        pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
             self.piece = piece;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
                 field: "piece",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) {
+        pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
                 field: "port",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) {
+        pub fn set_design_piece_weak(
+            &mut self,
+            design_piece: Option<PieceStoreWeak>,
+        ) -> crate::error::SetResult {
             self.design_piece = design_piece;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
                 field: "designPiece",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -9360,9 +10047,9 @@ pub mod stat {
             s
         }
 
-        pub fn set_key(&mut self, key: String) {
+        pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if self.key == key {
-                return;
+                return Ok(());
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9370,11 +10057,12 @@ pub mod stat {
                 field: "key",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_value(&mut self, value: String) {
+        pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
             if self.value == value {
-                return;
+                return Ok(());
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9382,11 +10070,12 @@ pub mod stat {
                 field: "value",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_unit(&mut self, unit: Option<String>) {
+        pub fn set_unit(&mut self, unit: Option<String>) -> crate::error::SetResult {
             if self.unit == unit {
-                return;
+                return Ok(());
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9394,11 +10083,12 @@ pub mod stat {
                 field: "unit",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, description: Option<String>) {
+        pub fn set_description(&mut self, description: Option<String>) -> crate::error::SetResult {
             if self.description == description {
-                return;
+                return Ok(());
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9406,6 +10096,7 @@ pub mod stat {
                 field: "description",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -9598,9 +10289,9 @@ pub mod tag {
             s
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9608,11 +10299,12 @@ pub mod tag {
                 field: "name",
             });
             self.bubble();
+            Ok(())
         }
 
-        pub fn set_order(&mut self, order: Option<i64>) {
+        pub fn set_order(&mut self, order: Option<i64>) -> crate::error::SetResult {
             if self.order == order {
-                return;
+                return Ok(());
             }
             self.order = order;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9620,6 +10312,7 @@ pub mod tag {
                 field: "order",
             });
             self.bubble();
+            Ok(())
         }
 
         fn bubble(&mut self) {
@@ -9946,9 +10639,18 @@ pub mod typ {
             }
         }
 
-        pub fn set_name(&mut self, name: String) {
+        pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
+            let name = name.trim().to_string();
+            if let Err(e) = crate::validate::required_name(&name, "name") {
+                self.emit_ev(KitEvent::SetRejected {
+                    entity: self.entity_ref(),
+                    field: "name".into(),
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
             if self.name == name {
-                return;
+                return Ok(());
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9957,11 +10659,17 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_description(&mut self, v: Option<String>) {
+        pub fn set_description(&mut self, v: Option<String>) -> crate::error::SetResult {
+            let v = match v {
+                None => None,
+                Some(s) if s.trim().is_empty() => None,
+                Some(s) => Some(s.trim().to_string()),
+            };
             if self.description == v {
-                return;
+                return Ok(());
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9970,11 +10678,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_icon(&mut self, v: Option<String>) {
+        pub fn set_icon(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.icon == v {
-                return;
+                return Ok(());
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9983,11 +10692,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_image(&mut self, v: Option<String>) {
+        pub fn set_image(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.image == v {
-                return;
+                return Ok(());
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -9996,11 +10706,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_variant(&mut self, v: Option<String>) {
+        pub fn set_variant(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.variant == v {
-                return;
+                return Ok(());
             }
             self.variant = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10009,11 +10720,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_stock(&mut self, v: Option<i64>) {
+        pub fn set_stock(&mut self, v: Option<i64>) -> crate::error::SetResult {
             if self.stock == v {
-                return;
+                return Ok(());
             }
             self.stock = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10022,11 +10734,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_virtual(&mut self, v: Option<bool>) {
+        pub fn set_virtual(&mut self, v: Option<bool>) -> crate::error::SetResult {
             if self.virtual_ == v {
-                return;
+                return Ok(());
             }
             self.virtual_ = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10035,11 +10748,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_unit(&mut self, v: Option<String>) {
+        pub fn set_unit(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.unit == v {
-                return;
+                return Ok(());
             }
             self.unit = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10048,11 +10762,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_location(&mut self, v: Option<Location>) {
+        pub fn set_location(&mut self, v: Option<Location>) -> crate::error::SetResult {
             if self.location == v {
-                return;
+                return Ok(());
             }
             self.location = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10061,11 +10776,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_created(&mut self, v: Option<String>) {
+        pub fn set_created(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.created == v {
-                return;
+                return Ok(());
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10074,11 +10790,12 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
-        pub fn set_updated(&mut self, v: Option<String>) {
+        pub fn set_updated(&mut self, v: Option<String>) -> crate::error::SetResult {
             if self.updated == v {
-                return;
+                return Ok(());
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
@@ -10087,6 +10804,7 @@ pub mod typ {
             });
             self.invalidate_hash();
             self.invalidate_validation();
+            Ok(())
         }
 
         pub fn hash(&self) -> String {
@@ -10573,7 +11291,7 @@ mod async_kit {
         pub async fn set_name_async(this: &KitStoreRef, name: String) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_name(name);
+                g.set_name(name)?;
                 Ok(())
             })();
             ready(r).await
@@ -10582,7 +11300,7 @@ mod async_kit {
         pub async fn set_description_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_description(v);
+                g.set_description(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10591,7 +11309,7 @@ mod async_kit {
         pub async fn set_icon_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_icon(v);
+                g.set_icon(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10600,7 +11318,7 @@ mod async_kit {
         pub async fn set_image_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_image(v);
+                g.set_image(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10609,7 +11327,7 @@ mod async_kit {
         pub async fn set_preview_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_preview(v);
+                g.set_preview(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10618,7 +11336,7 @@ mod async_kit {
         pub async fn set_version_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_version(v);
+                g.set_version(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10627,7 +11345,7 @@ mod async_kit {
         pub async fn set_remote_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_remote(v);
+                g.set_remote(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10636,7 +11354,7 @@ mod async_kit {
         pub async fn set_homepage_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_homepage(v);
+                g.set_homepage(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10645,7 +11363,7 @@ mod async_kit {
         pub async fn set_license_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_license(v);
+                g.set_license(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10654,7 +11372,7 @@ mod async_kit {
         pub async fn set_uri_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_uri(v);
+                g.set_uri(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10663,7 +11381,7 @@ mod async_kit {
         pub async fn set_created_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_created(v);
+                g.set_created(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10672,7 +11390,7 @@ mod async_kit {
         pub async fn set_updated_async(this: &KitStoreRef, v: Option<String>) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.set_updated(v);
+                g.set_updated(v)?;
                 Ok(())
             })();
             ready(r).await
@@ -10868,8 +11586,21 @@ pub mod wasm {
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
 
+    use crate::error::SetError;
     use crate::guid::Guid;
-    use crate::kit::KitStore;
+    use crate::kit::{KitStore, KitStoreRef};
+
+    fn js_settle_set(r: crate::error::SetResult) -> Result<JsValue, JsValue> {
+        match r {
+            Ok(()) => serde_wasm_bindgen::to_value(&serde_json::json!({ "ok": true }))
+                .map_err(|e| JsValue::from_str(&e.to_string())),
+            Err(err) => serde_wasm_bindgen::to_value(&serde_json::json!({
+                "ok": false,
+                "error": err
+            }))
+            .map_err(|e| JsValue::from_str(&e.to_string())),
+        }
+    }
 
     #[wasm_bindgen(js_name = generateGuid)]
     pub fn wasm_generate_guid() -> String {
@@ -10904,6 +11635,7 @@ pub mod wasm {
                 .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
             guard
                 .to_json_pretty()
+                .map(|json| JsValue::from_str(&json))
                 .map_err(|e| JsValue::from_str(&e.to_string()))
         })
     }
@@ -10965,11 +11697,176 @@ pub mod wasm {
             .to_ascii_lowercase()
             .replace(|c: char| c.is_whitespace(), "-")
     }
+
+    /// 🌐 Stateful [`KitStoreRef`] for web-worker-hosted mutations + event stream.
+    #[wasm_bindgen]
+    pub struct KitStoreHandle {
+        inner: KitStoreRef,
+    }
+
+    #[wasm_bindgen]
+    impl KitStoreHandle {
+        #[wasm_bindgen(js_name = create)]
+        pub fn create(dto: JsValue) -> Result<KitStoreHandle, JsValue> {
+            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            Ok(KitStoreHandle {
+                inner: KitStore::from_full_dto(dto),
+            })
+        }
+
+        #[wasm_bindgen(js_name = snapshot)]
+        pub fn snapshot(&self) -> Result<JsValue, JsValue> {
+            let g = self
+                .inner
+                .read()
+                .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
+            serde_wasm_bindgen::to_value(&g.to_full_dto())
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = getField)]
+        pub fn get_field(&self, kind: &str, guid: &str, field: &str) -> Result<JsValue, JsValue> {
+            let ek = KitStore::parse_entity_kind(kind)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let v = KitStore::get_field_rpc(&self.inner, ek, guid, field)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = setField)]
+        pub fn set_field(
+            &self,
+            kind: &str,
+            guid: &str,
+            field: &str,
+            value: JsValue,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let kind = kind.to_string();
+            let guid = guid.to_string();
+            let field = field.to_string();
+            future_to_promise(async move {
+                let ek = match KitStore::parse_entity_kind(&kind) {
+                    Ok(v) => v,
+                    Err(e) => return js_settle_set(Err(e)),
+                };
+                let val: serde_json::Value = match serde_wasm_bindgen::from_value(value) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
+                    }
+                };
+                js_settle_set(KitStore::set_field_rpc(&inner, ek, &guid, &field, val))
+            })
+        }
+
+        #[wasm_bindgen(js_name = addChild)]
+        pub fn add_child(
+            &self,
+            parent_kind: &str,
+            parent_guid: &str,
+            child_kind: &str,
+            dto: JsValue,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let pk = parent_kind.to_string();
+            let pg = parent_guid.to_string();
+            let ck = child_kind.to_string();
+            future_to_promise(async move {
+                let pk = match KitStore::parse_entity_kind(&pk) {
+                    Ok(v) => v,
+                    Err(e) => return js_settle_set(Err(e)),
+                };
+                let ck = match KitStore::parse_entity_kind(&ck) {
+                    Ok(v) => v,
+                    Err(e) => return js_settle_set(Err(e)),
+                };
+                let dto: serde_json::Value = match serde_wasm_bindgen::from_value(dto) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
+                    }
+                };
+                js_settle_set(KitStore::add_child_rpc(
+                    &inner, pk, &pg, ck, dto,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = removeChild)]
+        pub fn remove_child(
+            &self,
+            parent_kind: &str,
+            parent_guid: &str,
+            child_kind: &str,
+            child_guid: &str,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let pk = parent_kind.to_string();
+            let pg = parent_guid.to_string();
+            let ck = child_kind.to_string();
+            let cg = child_guid.to_string();
+            future_to_promise(async move {
+                let pk = match KitStore::parse_entity_kind(&pk) {
+                    Ok(v) => v,
+                    Err(e) => return js_settle_set(Err(e)),
+                };
+                let ck = match KitStore::parse_entity_kind(&ck) {
+                    Ok(v) => v,
+                    Err(e) => return js_settle_set(Err(e)),
+                };
+                js_settle_set(KitStore::remove_child_rpc(
+                    &inner, pk, &pg, ck, &cg,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = applyDesignDiff)]
+        pub fn apply_design_diff(&self, design_guid: &str, diff: JsValue) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let diff: serde_json::Value = match serde_wasm_bindgen::from_value(diff) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
+                    }
+                };
+                js_settle_set(KitStore::apply_design_diff_rpc(&inner, &dg, diff))
+            })
+        }
+
+        #[wasm_bindgen(js_name = subscribe)]
+        pub fn subscribe(&self, callback: &js_sys::Function) -> Result<(), JsValue> {
+            let mut rx = self
+                .inner
+                .read()
+                .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                .subscribe();
+            let cb = callback.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                loop {
+                    match rx.recv().await {
+                        Ok(ev) => {
+                            if let Ok(v) = serde_wasm_bindgen::to_value(&ev) {
+                                let _ = cb.call1(&JsValue::NULL, &v);
+                            }
+                        }
+                        Err(async_broadcast::RecvError::Closed) => break,
+                        Err(async_broadcast::RecvError::Overflowed(_)) => {}
+                    }
+                }
+            });
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     //! Integration-style tests (in-crate) for JSON/hash and I/O helpers.
+    #![allow(unused_must_use)]
 
     mod io_json {
         use std::sync::{Arc, RwLock};
@@ -11029,8 +11926,9 @@ mod tests {
         fn kit_name_change_recomputes_validation() {
             let kit = Arc::new(RwLock::new(KitStore::new("ok")));
             assert!(kit.read().expect("r").validate().is_valid);
-            kit.write().expect("w").set_name("   ".to_string());
-            assert!(!kit.read().expect("r").validate().is_valid);
+            assert!(kit.write().expect("w").set_name("   ".to_string()).is_err());
+            assert!(kit.read().expect("r").validate().is_valid);
+            assert_eq!(kit.read().expect("r").name, "ok");
         }
     }
 
@@ -11651,7 +12549,7 @@ mod tests {
                 let kit: KitStoreRef = Arc::new(std::sync::RwLock::new(KitStore::new("a")));
                 let mut a = kit.read().unwrap().subscribe();
                 let mut b = kit.read().unwrap().subscribe();
-                kit.write().unwrap().set_name("b".into());
+                kit.write().unwrap().set_name("b".into()).unwrap();
                 let ea = drain(&mut a);
                 let eb = drain(&mut b);
                 assert_eq!(ea, eb);
@@ -11877,7 +12775,7 @@ mod tests {
                             kr.design(dg.as_str()).expect("design").clone()
                         };
                         let mut dw = d.write().unwrap();
-                        $op(&mut *dw);
+                        $op(&mut *dw).unwrap();
                         let evs = super::common::drain(&mut rx);
                         super::common::assert_design_scalar_metadata_events(
                             &evs, dre, kre, &pg, $field,
@@ -11887,58 +12785,58 @@ mod tests {
             }
 
             design_meta_test!(design_set_name, "name", |d: &mut crate::DesignStore| {
-                d.set_name("x".into());
+                d.set_name("x".into())
             });
             design_meta_test!(
                 design_set_description,
                 "description",
                 |d: &mut crate::DesignStore| {
-                    d.set_description(Some("d".into()));
+                    d.set_description(Some("d".into()))
                 }
             );
             design_meta_test!(design_set_icon, "icon", |d: &mut crate::DesignStore| {
-                d.set_icon(Some("i".into()));
+                d.set_icon(Some("i".into()))
             });
             design_meta_test!(design_set_image, "image", |d: &mut crate::DesignStore| {
-                d.set_image(Some("m".into()));
+                d.set_image(Some("m".into()))
             });
             design_meta_test!(
                 design_set_variant,
                 "variant",
                 |d: &mut crate::DesignStore| {
-                    d.set_variant(Some("v".into()));
+                    d.set_variant(Some("v".into()))
                 }
             );
             design_meta_test!(design_set_view, "view", |d: &mut crate::DesignStore| {
-                d.set_view(Some("vw".into()));
+                d.set_view(Some("vw".into()))
             });
             design_meta_test!(
                 design_set_location,
                 "location",
                 |d: &mut crate::DesignStore| {
-                    d.set_location(Some(Location::new(1.0, 2.0)));
+                    d.set_location(Some(Location::new(1.0, 2.0)))
                 }
             );
             design_meta_test!(design_set_camera, "camera", |d: &mut crate::DesignStore| {
                 let mut cam = Camera::default();
                 cam.position = Coord::new(0.0, 0.0, 1.0);
-                d.set_camera(Some(cam));
+                d.set_camera(Some(cam))
             });
             design_meta_test!(design_set_unit, "unit", |d: &mut crate::DesignStore| {
-                d.set_unit(Some("mm".into()));
+                d.set_unit(Some("mm".into()))
             });
             design_meta_test!(
                 design_set_created,
                 "created",
                 |d: &mut crate::DesignStore| {
-                    d.set_created(Some("c".into()));
+                    d.set_created(Some("c".into()))
                 }
             );
             design_meta_test!(
                 design_set_updated,
                 "updated",
                 |d: &mut crate::DesignStore| {
-                    d.set_updated(Some("u".into()));
+                    d.set_updated(Some("u".into()))
                 }
             );
         }
@@ -12030,7 +12928,7 @@ mod tests {
                         let mut rx = kit.read().unwrap().subscribe();
                         {
                             let mut g = kit.write().unwrap();
-                            $op(&mut *g);
+                            $op(&mut *g).unwrap();
                         }
                         let evs = super::common::drain(&mut rx);
                         super::common::assert_kit_metadata_core(&evs, kref, $field);
@@ -12039,51 +12937,51 @@ mod tests {
             }
 
             kit_meta_test!(kit_set_name, "name", |k: &mut crate::KitStore| {
-                k.set_name("a".into());
+                k.set_name("a".into())
             });
             kit_meta_test!(
                 kit_set_description,
                 "description",
                 |k: &mut crate::KitStore| {
-                    k.set_description(Some("d".into()));
+                    k.set_description(Some("d".into()))
                 }
             );
             kit_meta_test!(kit_set_icon, "icon", |k: &mut crate::KitStore| {
-                k.set_icon(Some("ic".into()));
+                k.set_icon(Some("ic".into()))
             });
             kit_meta_test!(kit_set_image, "image", |k: &mut crate::KitStore| {
-                k.set_image(Some("im".into()));
+                k.set_image(Some("im".into()))
             });
             kit_meta_test!(kit_set_preview, "preview", |k: &mut crate::KitStore| {
-                k.set_preview(Some("pr".into()));
+                k.set_preview(Some("pr".into()))
             });
             kit_meta_test!(kit_set_version, "version", |k: &mut crate::KitStore| {
-                k.set_version(Some("1".into()));
+                k.set_version(Some("1".into()))
             });
             kit_meta_test!(kit_set_remote, "remote", |k: &mut crate::KitStore| {
-                k.set_remote(Some("r".into()));
+                k.set_remote(Some("r".into()))
             });
             kit_meta_test!(kit_set_homepage, "homepage", |k: &mut crate::KitStore| {
-                k.set_homepage(Some("h".into()));
+                k.set_homepage(Some("https://example.com".into()))
             });
             kit_meta_test!(kit_set_license, "license", |k: &mut crate::KitStore| {
-                k.set_license(Some("l".into()));
+                k.set_license(Some("l".into()))
             });
             kit_meta_test!(kit_set_uri, "uri", |k: &mut crate::KitStore| {
-                k.set_uri(Some("u".into()));
+                k.set_uri(Some("u".into()))
             });
             kit_meta_test!(kit_set_created, "created", |k: &mut crate::KitStore| {
-                k.set_created(Some("c".into()));
+                k.set_created(Some("c".into()))
             });
             kit_meta_test!(kit_set_updated, "updated", |k: &mut crate::KitStore| {
-                k.set_updated(Some("u2".into()));
+                k.set_updated(Some("u2".into()))
             });
 
             #[test]
             fn kit_set_name_idempotent_no_events() {
                 let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitStore::new("same")));
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write().unwrap().set_name("same".into());
+                kit.write().unwrap().set_name("same".into()).unwrap();
                 assert!(super::common::drain(&mut rx).is_empty());
             }
         }
@@ -12129,7 +13027,7 @@ mod tests {
                             dr.piece(pg.as_str()).unwrap().clone()
                         };
                         let mut pw = p.write().unwrap();
-                        $op(&mut *pw);
+                        $op(&mut *pw).unwrap();
                         let evs = super::common::drain(&mut rx);
                         super::common::assert_piece_geometry_change(
                             &evs, pre, dre, kre, &pg, $field,
@@ -12139,38 +13037,38 @@ mod tests {
             }
 
             piece_geom_test!(piece_set_plane, "plane", |p: &mut crate::PieceStore| {
-                p.set_plane(Some(Plane::world_xy()));
+                p.set_plane(Some(Plane::world_xy()))
             });
             piece_geom_test!(piece_set_center, "center", |p: &mut crate::PieceStore| {
-                p.set_center(Some(Coord::new(1.0, 2.0, 3.0)));
+                p.set_center(Some(Coord::new(1.0, 2.0, 3.0)))
             });
             piece_geom_test!(
                 piece_set_mirror_plane,
                 "mirrorPlane",
                 |p: &mut crate::PieceStore| {
-                    p.set_mirror_plane(Some(Plane::world_xy()));
+                    p.set_mirror_plane(Some(Plane::world_xy()))
                 }
             );
             piece_geom_test!(piece_set_scale, "scale", |p: &mut crate::PieceStore| {
-                p.set_scale(Some(2.0));
+                p.set_scale(Some(2.0))
             });
             piece_geom_test!(piece_set_hidden, "hidden", |p: &mut crate::PieceStore| {
-                p.set_hidden(Some(true));
+                p.set_hidden(Some(true))
             });
             piece_geom_test!(piece_set_locked, "locked", |p: &mut crate::PieceStore| {
-                p.set_locked(Some(true));
+                p.set_locked(Some(true))
             });
             piece_geom_test!(piece_set_id, "id", |p: &mut crate::PieceStore| {
-                p.set_id(Some("id1".into()));
+                p.set_id(Some("id1".into()))
             });
             piece_geom_test!(piece_set_name, "name", |p: &mut crate::PieceStore| {
-                p.set_name(Some("p".into()));
+                p.set_name(Some("p".into()))
             });
             piece_geom_test!(
                 piece_set_description,
                 "description",
                 |p: &mut crate::PieceStore| {
-                    p.set_description(Some("pd".into()));
+                    p.set_description(Some("pd".into()))
                 }
             );
 
@@ -12506,50 +13404,69 @@ mod tests {
                             kr.semio_type(tg.as_str()).unwrap().clone()
                         };
                         let mut tw = t.write().unwrap();
-                        $op(&mut *tw);
+                        $op(&mut *tw).unwrap();
                         let evs = super::common::drain(&mut rx);
                         super::common::assert_type_metadata_core(&evs, tre, kre, $field);
                     }
                 };
             }
 
-            type_meta_test!(type_set_name, "name", |t: &mut crate::TypeStore| t
-                .set_name("tn".into()));
+            type_meta_test!(type_set_name, "name", |t: &mut crate::TypeStore| {
+                t.set_name("tn".into())
+            });
             type_meta_test!(
                 type_set_description,
                 "description",
                 |t: &mut crate::TypeStore| {
-                    t.set_description(Some("td".into()));
+                    t.set_description(Some("td".into()))
                 }
             );
             type_meta_test!(type_set_icon, "icon", |t: &mut crate::TypeStore| {
-                t.set_icon(Some("i".into()));
+                t.set_icon(Some("i".into()))
             });
             type_meta_test!(type_set_image, "image", |t: &mut crate::TypeStore| {
-                t.set_image(Some("m".into()));
+                t.set_image(Some("m".into()))
             });
             type_meta_test!(type_set_variant, "variant", |t: &mut crate::TypeStore| {
-                t.set_variant(Some("v".into()));
+                t.set_variant(Some("v".into()))
             });
             type_meta_test!(type_set_stock, "stock", |t: &mut crate::TypeStore| {
-                t.set_stock(Some(3));
+                t.set_stock(Some(3))
             });
             type_meta_test!(type_set_virtual, "virtual", |t: &mut crate::TypeStore| {
-                t.set_virtual(Some(true));
+                t.set_virtual(Some(true))
             });
             type_meta_test!(type_set_unit, "unit", |t: &mut crate::TypeStore| {
-                t.set_unit(Some("u".into()));
+                t.set_unit(Some("u".into()))
             });
             type_meta_test!(type_set_location, "location", |t: &mut crate::TypeStore| {
-                t.set_location(Some(crate::geom::Location::new(1.0, 2.0)));
+                t.set_location(Some(crate::geom::Location::new(1.0, 2.0)))
             });
             type_meta_test!(type_set_created, "created", |t: &mut crate::TypeStore| {
-                t.set_created(Some("c".into()));
+                t.set_created(Some("c".into()))
             });
             type_meta_test!(type_set_updated, "updated", |t: &mut crate::TypeStore| {
-                t.set_updated(Some("u".into()));
+                t.set_updated(Some("u".into()))
             });
         }
+    }
+}
+
+#[cfg(all(test, target_arch = "wasm32"))]
+mod wasm_handle_tests {
+    use wasm_bindgen_test::*;
+
+    use crate::kit::KitStore;
+    use crate::wasm::KitStoreHandle;
+
+    #[wasm_bindgen_test]
+    fn kit_store_handle_create_roundtrips_snapshot() {
+        let kit = KitStore::new("wasm-kit-test");
+        let dto = kit.read().unwrap().to_full_dto();
+        let h = KitStoreHandle::create(serde_wasm_bindgen::to_value(&dto).unwrap()).unwrap();
+        let snap = h.snapshot().expect("snapshot");
+        let parsed: serde_json::Value = serde_wasm_bindgen::from_value(snap).unwrap();
+        assert_eq!(parsed["name"], "wasm-kit-test");
     }
 }
 
@@ -12582,7 +13499,7 @@ pub use design::{
     DesignStoreWeak,
 };
 pub use diff::{DesignChange, DesignDiff};
-pub use error::{Result, SemioError};
+pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{
     FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak,

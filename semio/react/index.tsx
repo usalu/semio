@@ -12,13 +12,18 @@ import type { ReactNode, SetStateAction } from "react";
 import {
 	asKitInstance,
 	Coord,
+	createKitStoreClient,
 	Design,
 	guid,
 	InMemoryKitStore,
 	KitImpl,
 	type KitLike,
 	type KitStore,
+	type KitStoreClient,
 	type KitStoreSnapshot,
+	type SetError,
+	type SetResult,
+	type WriteStatus,
 	Plane,
 	Piece,
 } from "@semio/js";
@@ -27,7 +32,11 @@ import {
 
 // #region ⚛️Types
 
-export type SchemaHookTriad<T> = readonly [T, (next: SetStateAction<T>) => void, boolean];
+/** @deprecated use HookTriad */
+export type SchemaHookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
+
+export type { SetError, SetResult, WriteStatus };
+export type HookTriad<T> = readonly [T, (next: SetStateAction<T>) => Promise<SetResult>, WriteStatus];
 
 export type SchemaPropertyEvent = {
 	key: string;
@@ -93,6 +102,7 @@ type KitRuntimeContextValue = {
 	state: IndexedSchemaState;
 	recentEvents: SchemaPropertyEvent[];
 	canWrite: boolean;
+	kitClient: KitStoreClient | null;
 	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
 	setObjectValue: (typeName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
 };
@@ -210,6 +220,10 @@ const NEVER_WRITABLE_FIELDS = new Set([
 // #region ⚛️Utilities
 
 function noop(): void {}
+
+async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
+	return { ok: true } as const;
+}
 
 function deepClone<T>(value: T): T {
 	return JSON.parse(JSON.stringify(value));
@@ -728,6 +742,7 @@ export type KitProviderProps = {
 
 export function KitProvider({ store: externalStore, backbone, initialKit, children, fallback = null }: KitProviderProps): React.ReactElement | null {
 	const [internalStore, setInternalStore] = React.useState<KitStore | null>(externalStore ?? null);
+	const [kitClient, setKitClient] = React.useState<KitStoreClient | null>(null);
 
 	React.useEffect(() => {
 		if (externalStore) {
@@ -746,10 +761,61 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 	const store = externalStore ?? internalStore;
 	if (!store) return React.createElement(React.Fragment, null, fallback);
 
+	React.useEffect(() => {
+		let cancelled = false;
+		let client: KitStoreClient | null = null;
+		void createKitStoreClient({ initialKit: store.getSnapshot().kit }).then((c) => {
+			if (cancelled) {
+				c.dispose();
+				return;
+			}
+			client = c;
+			setKitClient(c);
+		});
+		return () => {
+			cancelled = true;
+			client?.dispose();
+			setKitClient(null);
+		};
+	}, [store]);
+
+	React.useEffect(() => {
+		if (!kitClient) return;
+		return kitClient.subscribe(() => {
+			try {
+				const incoming = kitClient.getDto();
+				const cur = store.getSnapshot().kit.toJSON();
+				if (JSON.stringify(incoming) === JSON.stringify(cur)) return;
+				store.replace(asKitInstance(incoming));
+			} catch {
+				store.replace(asKitInstance(kitClient.getDto()));
+			}
+		});
+	}, [kitClient, store]);
+
+	const snapshotRef = React.useRef<KitStoreSnapshot | null>(null);
+	const getSnapshot = React.useCallback(() => {
+		const snap = store.getSnapshot();
+		const prev = snapshotRef.current;
+		if (
+			prev &&
+			prev.kit === snap.kit &&
+			prev.sync.status === snap.sync.status &&
+			prev.sync.dirty === snap.sync.dirty &&
+			prev.sync.readonly === snap.sync.readonly &&
+			prev.sync.lastSyncedAt === snap.sync.lastSyncedAt &&
+			prev.sync.error === snap.sync.error
+		) {
+			return prev;
+		}
+		snapshotRef.current = snap;
+		return snap;
+	}, [store]);
+
 	const snapshot = React.useSyncExternalStore(
 		React.useCallback((listener) => store.subscribe(listener), [store]),
-		React.useCallback(() => store.getSnapshot(), [store]),
-		React.useCallback(() => store.getSnapshot(), [store]),
+		getSnapshot,
+		getSnapshot,
 	);
 
 	const state = React.useMemo(() => scanSchemaState(snapshot.kit.toJSON()), [snapshot]);
@@ -796,9 +862,10 @@ export function KitProvider({ store: externalStore, backbone, initialKit, childr
 		state,
 		recentEvents,
 		canWrite: !snapshot.sync.readonly,
+		kitClient,
 		setFieldValue,
 		setObjectValue,
-	}), [store, snapshot, state, recentEvents, setFieldValue, setObjectValue]);
+	}), [store, snapshot, state, recentEvents, kitClient, setFieldValue, setObjectValue]);
 
 	return React.createElement(KitRuntimeContext.Provider, { value }, children);
 }
@@ -914,6 +981,35 @@ export function AttributeProvider({ guid: guidValue, children }: { guid?: string
 
 // #region ⚛️Core Hooks
 
+function resolveRustFieldTarget(
+	runtime: KitRuntimeContextValue,
+	typeName: string,
+	fieldName: string,
+	guidValue: string | undefined,
+	scope: SchemaScope | null,
+): { kind: string; guid: string; field: string } | null {
+	if (!runtime.kitClient) return null;
+	if (typeName === "Piece" && (fieldName === "name" || fieldName === "color")) {
+		const g = guidValue ?? scope?.guid;
+		if (!g) return null;
+		return { kind: "Piece", guid: g, field: fieldName };
+	}
+	if (typeName === "Kit" && fieldName === "name") {
+		return { kind: "Kit", guid: runtime.snapshot.kit.guid, field: "name" };
+	}
+	if (typeName === "Design" && fieldName === "name") {
+		const g = guidValue ?? scope?.guid;
+		if (!g) return null;
+		return { kind: "Design", guid: g, field: "name" };
+	}
+	if (typeName === "Type" && fieldName === "name") {
+		const g = guidValue ?? scope?.guid;
+		if (!g) return null;
+		return { kind: "Type", guid: g, field: "name" };
+	}
+	return null;
+}
+
 export function useSchemaEvents(filter?: Partial<Pick<SchemaPropertyEvent, "typeName" | "fieldName" | "guid" | "key">>): SchemaPropertyEvent[] {
 	const runtime = useKitRuntime();
 	return React.useMemo(() => {
@@ -930,12 +1026,12 @@ export function useSchemaEvents(filter?: Partial<Pick<SchemaPropertyEvent, "type
 
 export function useKitStore(): SchemaHookTriad<KitStore> {
 	const runtime = useKitRuntime();
-	return [runtime.store, noop, false] as const;
+	return [runtime.store, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
 
 export function useKitSnapshot(): SchemaHookTriad<KitStoreSnapshot> {
 	const runtime = useKitRuntime();
-	return [runtime.snapshot, noop, false] as const;
+	return [runtime.snapshot, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
 
 function useSchemaObjectState(typeName: string, guidValue?: string): SchemaHookTriad<any> {
@@ -943,18 +1039,73 @@ function useSchemaObjectState(typeName: string, guidValue?: string): SchemaHookT
 	const scope = React.useContext(SchemaScopeContext);
 	const ref = resolveReference(runtime.state, typeName, guidValue, scope);
 	const value = ref?.value;
-	const canSet = runtime.canWrite && !!ref;
-	const setValue = React.useCallback((next: SetStateAction<any>) => runtime.setObjectValue(typeName, next, guidValue, scope), [runtime, typeName, guidValue, scope]);
-	return [value, setValue, canSet] as const;
+	const canWrite = runtime.canWrite && !!ref;
+	const setValue = React.useCallback(
+		async (next: SetStateAction<any>) => {
+			if (!canWrite) return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
+			runtime.setObjectValue(typeName, next, guidValue, scope);
+			return { ok: true } as const;
+		},
+		[runtime, typeName, guidValue, scope, canWrite],
+	);
+	const status: WriteStatus = canWrite ? { kind: "idle", pending: 0 } : { kind: "readonly", pending: 0 };
+	return [value, setValue, status] as const;
 }
 
 function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: string): SchemaHookTriad<any> {
 	const runtime = useKitRuntime();
 	const scope = React.useContext(SchemaScopeContext);
 	const value = readSchemaFieldValue(runtime.state, typeName, fieldName, guidValue, scope);
-	const canSet = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, guidValue, scope);
-	const setValue = React.useCallback((next: SetStateAction<any>) => runtime.setFieldValue(typeName, fieldName, next, guidValue, scope), [runtime, typeName, fieldName, guidValue, scope]);
-	return [value, setValue, canSet] as const;
+	const classicWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, guidValue, scope);
+	const rustTarget = React.useMemo(
+		() => resolveRustFieldTarget(runtime, typeName, fieldName, guidValue, scope),
+		[runtime.kitClient, runtime.snapshot.kit.guid, runtime.canWrite, typeName, fieldName, guidValue, scope],
+	);
+	const [pending, setPending] = React.useState(0);
+	const [lastErr, setLastErr] = React.useState<SetError | undefined>(undefined);
+
+	const setValue = React.useCallback(
+		async (next: SetStateAction<any>) => {
+			const resolved = typeof next === "function" ? (next as (p: any) => any)(value) : next;
+			if (rustTarget && runtime.kitClient) {
+				if (!runtime.canWrite) {
+					return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
+				}
+				setPending((p) => p + 1);
+				setLastErr(undefined);
+				const r = await runtime.kitClient.setField(rustTarget.kind, rustTarget.guid, rustTarget.field, resolved);
+				setPending((p) => p - 1);
+				if (!r.ok) {
+					setLastErr(r.error);
+					return r;
+				}
+				return r;
+			}
+			if (!classicWritable) {
+				return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
+			}
+			runtime.setFieldValue(typeName, fieldName, resolved, guidValue, scope);
+			return { ok: true } as const;
+		},
+		[runtime, rustTarget, classicWritable, typeName, fieldName, guidValue, scope, value],
+	);
+
+	let status: WriteStatus;
+	if (rustTarget && runtime.kitClient) {
+		if (!runtime.canWrite) {
+			status = { kind: "readonly", pending: 0 };
+		} else if (pending > 0) {
+			status = { kind: "pending", pending, lastError: lastErr };
+		} else if (lastErr) {
+			status = { kind: "error", pending: 0, lastError: lastErr };
+		} else {
+			status = { kind: "idle", pending: 0 };
+		}
+	} else {
+		status = classicWritable ? { kind: "idle", pending: 0 } : { kind: "readonly", pending: 0 };
+	}
+
+	return [value, setValue, status] as const;
 }
 
 // #endregion ⚛️Core Hooks
@@ -12007,8 +12158,60 @@ export const schemaHooks = Object.freeze({
 
 export function useSchemaHook(hookName: string, guidValue?: string): SchemaHookTriad<any> {
 	const hook = (schemaHooks)[hookName];
-	if (typeof hook !== "function") return [undefined, noop, false] as const;
+	if (typeof hook !== "function") {
+		return [undefined, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
+	}
 	return hook(guidValue);
 }
 
 // #endregion ⚛️Direct Domain Exports
+
+// #region ⚛️Embedded tests
+const shouldRunReactEmbeddedTests =
+	(typeof process !== "undefined" && process.env.SEMIO_REACT_RUN_EMBEDDED_TESTS === "1") ||
+	(typeof (globalThis as any).__SEMIO_REACT_RUN_EMBEDDED_TESTS__ !== "undefined" &&
+		(globalThis as any).__SEMIO_REACT_RUN_EMBEDDED_TESTS__ === true);
+
+if (shouldRunReactEmbeddedTests) {
+	const { describe, expect, it } = await import("vitest");
+	const { render, waitFor } = await import("@testing-library/react");
+	const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
+
+	describe("pipeline hooks", () => {
+		it("useKitName rejects empty required name via kit client", async () => {
+			const kit = asKitInstance({
+				guid: "k1",
+				name: "K",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				designs: [
+					{
+						guid: "d1",
+						name: "D",
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+						pieces: [{ guid: "p1", name: "N" }],
+					},
+				],
+			});
+			const store = new InMemoryKitStore(kit);
+			let setName: ((v: any) => Promise<any>) | undefined;
+			let lastStatus: WriteStatus | undefined;
+
+			function Probe() {
+				const triad = useKitName();
+				setName = triad[1];
+				lastStatus = triad[2];
+				return null;
+			}
+
+			render(React.createElement(KitProvider, { store }, React.createElement(Probe)));
+
+			await waitFor(() => expect(setName).toBeDefined());
+			const r = await setName!("");
+			expect(r.ok).toBe(false);
+			await waitFor(() => expect(lastStatus?.kind).toBe("error"));
+		});
+	});
+}
+// #endregion ⚛️Embedded tests

@@ -14,7 +14,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     name: "semio-react",
-    environment: "node",
+    environment: "jsdom",
     testTimeout: 30000,
     include: ["index.tsx"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],

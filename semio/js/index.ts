@@ -19653,6 +19653,449 @@ export interface ObservablePathStore {
   subscribePath(path: readonly string[], listener: () => void): () => void;
 }
 
+// #region 🌐 KitStorePipeline
+// Worker-hosted WASM kit store client, structured [`SetResult`] / [`WriteStatus`] types, and JSON fallback for Node/tests.
+
+/** Wire-format rejection kinds from Rust [`SetError`]. */
+export type SetErrorKind =
+  | "IllegalName"
+  | "NameTooLong"
+  | "InvalidUrl"
+  | "InvalidValue"
+  | "DuplicateGuid"
+  | "NotFound"
+  | "CyclicReference"
+  | "PortFamilyMismatch"
+  | "Readonly"
+  | "Disposed"
+  | "Timeout"
+  | "LockPoisoned"
+  | "Internal";
+
+export type SetError = {
+  kind: SetErrorKind;
+  message: string;
+  field?: string;
+  entity?: { kind: string; guid: string };
+};
+
+export type SetResult = { ok: true } | { ok: false; error: SetError };
+
+export type WriteStatus =
+  | { kind: "idle"; pending: 0; lastError?: undefined }
+  | { kind: "pending"; pending: number; lastError?: SetError }
+  | { kind: "error"; pending: 0; lastError: SetError }
+  | { kind: "readonly"; pending: 0 };
+
+export type HookTriad<T> = readonly [
+  T,
+  (next: T | ((prev: T) => T)) => Promise<SetResult>,
+  WriteStatus,
+];
+
+export function normalizeRustSetError(raw: any): SetError {
+  if (!raw || typeof raw !== "object") {
+    return { kind: "Internal", message: "invalid error payload" };
+  }
+  const kind = typeof raw.kind === "string" ? (raw.kind as SetErrorKind) : "Internal";
+  const message = typeof raw.message === "string" ? raw.message : JSON.stringify(raw);
+  return { kind, message };
+}
+
+export function settleSetPromise(p: Promise<unknown>): Promise<SetResult> {
+  return p.then((v: any) => {
+    if (v && typeof v === "object" && v.ok === true) return { ok: true } as const;
+    if (v && typeof v === "object" && v.ok === false && v.error) {
+      return { ok: false, error: normalizeRustSetError(v.error) } as const;
+    }
+    return { ok: false, error: { kind: "Internal", message: "unexpected setField result" } } as const;
+  });
+}
+
+/** Boundary contract consumed by [`@semio/react`] and sketchpad. */
+export interface KitStoreClient {
+  getDto(): any;
+  getSnapshot(): Promise<any>;
+  setField(kind: string, guid: string, field: string, value: unknown): Promise<SetResult>;
+  addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown): Promise<SetResult>;
+  removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string): Promise<SetResult>;
+  applyDesignDiff(designGuid: string, diff: unknown): Promise<SetResult>;
+  subscribe(cb: (ev: any) => void): () => void;
+  dispose(): void;
+}
+
+export type CreateKitStoreClientOptions = {
+  initialKit: KitLike;
+  /** Vite/consumer should `resolve.alias` this to the wasm-bindgen `*.js` entry. */
+  wasmSpecifier?: string;
+  timeoutMs?: number;
+  /** Use in-process JSON mirror (no Worker). Defaults to true when [`Worker`] is undefined. */
+  forceFallback?: boolean;
+  workerFactory?: () => Worker;
+};
+
+const KIT_NAME_MAX = 512;
+
+function validateRequiredName(raw: string, label: string): SetResult {
+  const t = raw.trim();
+  if (!t) return { ok: false, error: { kind: "IllegalName", message: `${label} cannot be empty` } };
+  if (t.length > KIT_NAME_MAX) return { ok: false, error: { kind: "NameTooLong", message: `${label} exceeds ${KIT_NAME_MAX} chars` } };
+  return { ok: true } as const;
+}
+
+function validateOptionalDisplayName(name: string | null | undefined, label: string): SetResult {
+  if (name == null) return { ok: true } as const;
+  const t = String(name).trim();
+  if (!t) return { ok: false, error: { kind: "IllegalName", message: `${label} cannot be empty` } };
+  if (t.length > KIT_NAME_MAX) return { ok: false, error: { kind: "NameTooLong", message: `${label} exceeds ${KIT_NAME_MAX} chars` } };
+  return { ok: true } as const;
+}
+
+/** In-process mirror of a subset of [`KitStore::set_field_rpc`] for Node/tests. */
+export class FallbackKitStoreClient implements KitStoreClient {
+  private dto: any;
+  private listeners: Set<(ev: any) => void> = new Set();
+
+  constructor(initialDto: any) {
+    this.dto = initialDto;
+  }
+
+  getDto() {
+    return this.dto;
+  }
+
+  async getSnapshot() {
+    return this.dto;
+  }
+
+  private emit(ev: any) {
+    for (const l of this.listeners) {
+      try {
+        l(ev);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  subscribe(cb: (ev: any) => void): () => void {
+    this.listeners.add(cb);
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+
+  dispose() {
+    this.listeners.clear();
+  }
+
+  private findPiece(guid: string): { piece: any; design: any } | null {
+    for (const d of this.dto.designs ?? []) {
+      const p = d.pieces?.find((x: any) => x.guid === guid);
+      if (p) return { piece: p, design: d };
+    }
+    return null;
+  }
+
+  async setField(kind: string, guid: string, field: string, value: unknown): Promise<SetResult> {
+    try {
+      if (kind === "Kit") {
+        if (this.dto.guid !== guid) return { ok: false, error: { kind: "NotFound", message: `kit ${guid}` } };
+        if (field === "name") {
+          const s = String(value ?? "");
+          const v = validateRequiredName(s, "name");
+          if (!v.ok) {
+            this.emit({ SetRejected: { entity: { kind: "Kit", guid }, field: "name", error: v.error } });
+            return v;
+          }
+          if (this.dto.name === s.trim()) return { ok: true } as const;
+          this.dto.name = s.trim();
+          this.emit({ FieldChanged: { entity: { kind: "Kit", guid }, field: "name" } });
+          return { ok: true } as const;
+        }
+        return { ok: false, error: { kind: "InvalidValue", message: `unknown kit field '${field}'` } };
+      }
+      if (kind === "Design") {
+        const d = this.dto.designs?.find((x: any) => x.guid === guid);
+        if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${guid}` } };
+        if (field === "name") {
+          const s = String(value ?? "");
+          const v = validateRequiredName(s, "name");
+          if (!v.ok) {
+            this.emit({ SetRejected: { entity: { kind: "Design", guid }, field: "name", error: v.error } });
+            return v;
+          }
+          if (d.name === s.trim()) return { ok: true } as const;
+          d.name = s.trim();
+          this.emit({ FieldChanged: { entity: { kind: "Design", guid }, field: "name" } });
+          return { ok: true } as const;
+        }
+        return { ok: false, error: { kind: "InvalidValue", message: `unknown design field '${field}'` } };
+      }
+      if (kind === "Type") {
+        const t = this.dto.types?.find((x: any) => x.guid === guid);
+        if (!t) return { ok: false, error: { kind: "NotFound", message: `type ${guid}` } };
+        if (field === "name") {
+          const s = String(value ?? "");
+          const v = validateRequiredName(s, "name");
+          if (!v.ok) {
+            this.emit({ SetRejected: { entity: { kind: "Type", guid }, field: "name", error: v.error } });
+            return v;
+          }
+          if (t.name === s.trim()) return { ok: true } as const;
+          t.name = s.trim();
+          this.emit({ FieldChanged: { entity: { kind: "Type", guid }, field: "name" } });
+          return { ok: true } as const;
+        }
+        return { ok: false, error: { kind: "InvalidValue", message: `unknown type field '${field}'` } };
+      }
+      if (kind === "Piece") {
+        const hit = this.findPiece(guid);
+        if (!hit) return { ok: false, error: { kind: "NotFound", message: `piece ${guid}` } };
+        if (field === "name") {
+          let next: string | undefined;
+          if (value == null) next = undefined;
+          else next = String(value).trim() || undefined;
+          const v = validateOptionalDisplayName(next, "name");
+          if (!v.ok) {
+            this.emit({ SetRejected: { entity: { kind: "Piece", guid }, field: "name", error: v.error } });
+            return v;
+          }
+          if (hit.piece.name === next) return { ok: true } as const;
+          hit.piece.name = next;
+          this.emit({ FieldChanged: { entity: { kind: "Piece", guid }, field: "name" } });
+          return { ok: true } as const;
+        }
+        if (field === "color") {
+          const next = value == null ? undefined : String(value);
+          if (hit.piece.color === next) return { ok: true } as const;
+          hit.piece.color = next;
+          this.emit({ FieldChanged: { entity: { kind: "Piece", guid }, field: "color" } });
+          return { ok: true } as const;
+        }
+        return { ok: false, error: { kind: "InvalidValue", message: `unknown piece field '${field}'` } };
+      }
+      return { ok: false, error: { kind: "InvalidValue", message: `setField not implemented for ${kind}` } };
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown): Promise<SetResult> {
+    if (parentKind !== "Design" || childKind !== "Piece") {
+      return { ok: false, error: { kind: "InvalidValue", message: `addChild not implemented for ${parentKind} -> ${childKind}` } };
+    }
+    const d = this.dto.designs?.find((x: any) => x.guid === parentGuid);
+    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${parentGuid}` } };
+    const piece = dto as any;
+    if (!piece?.guid) return { ok: false, error: { kind: "InvalidValue", message: "piece dto needs guid" } };
+    if (!d.pieces) d.pieces = [];
+    d.pieces.push(piece);
+    this.emit({ ChildAdded: { parent: { kind: "Design", guid: parentGuid }, child: { kind: "Piece", guid: piece.guid } } });
+    return { ok: true } as const;
+  }
+
+  async removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string): Promise<SetResult> {
+    if (parentKind !== "Design" || childKind !== "Piece") {
+      return { ok: false, error: { kind: "InvalidValue", message: `removeChild not implemented for ${parentKind} -> ${childKind}` } };
+    }
+    const d = this.dto.designs?.find((x: any) => x.guid === parentGuid);
+    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${parentGuid}` } };
+    const before = d.pieces?.length ?? 0;
+    d.pieces = (d.pieces ?? []).filter((p: any) => p.guid !== childGuid);
+    if (d.pieces.length === before) return { ok: false, error: { kind: "NotFound", message: `piece ${childGuid}` } };
+    this.emit({ ChildRemoved: { parent: { kind: "Design", guid: parentGuid }, child: { kind: "Piece", guid: childGuid } } });
+    return { ok: true } as const;
+  }
+
+  async applyDesignDiff(designGuid: string, diff: any): Promise<SetResult> {
+    const d = this.dto.designs?.find((x: any) => x.guid === designGuid);
+    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+    try {
+      for (const id of diff?.removedPieces ?? []) {
+        const g = typeof id === "string" ? id : id.guid;
+        d.pieces = (d.pieces ?? []).filter((p: any) => p.guid !== g);
+      }
+      for (const p of diff?.addedPieces ?? []) {
+        if (!d.pieces) d.pieces = [];
+        d.pieces.push(p);
+      }
+      for (const p of diff?.modifiedPieces ?? []) {
+        const idx = d.pieces?.findIndex((x: any) => x.guid === p.guid) ?? -1;
+        if (idx >= 0) d.pieces[idx] = p;
+      }
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  if (!ms || ms <= 0) return p;
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(label)), ms);
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
+
+/** Comlink-backed client; falls back if worker fails to boot. */
+export class WorkerKitStoreClient implements KitStoreClient {
+  private worker: Worker;
+  private api: any;
+  private listeners: Set<(ev: any) => void> = new Set();
+  private cached: any;
+  private timeoutMs: number;
+
+  constructor(worker: Worker, api: any, cachedDto: any, timeoutMs: number) {
+    this.worker = worker;
+    this.api = api;
+    this.cached = cachedDto;
+    this.timeoutMs = timeoutMs;
+  }
+
+  getDto() {
+    return this.cached;
+  }
+
+  async getSnapshot() {
+    try {
+      this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "snapshot timeout");
+    } catch {
+      /* keep cached */
+    }
+    return this.cached;
+  }
+
+  subscribe(cb: (ev: any) => void): () => void {
+    this.listeners.add(cb);
+    void import("comlink").then((Comlink) => {
+      void this.api.subscribe(Comlink.proxy((ev: any) => {
+        for (const l of this.listeners) {
+          try {
+            l(ev);
+          } catch {
+            /* ignore */
+          }
+        }
+      }));
+    });
+    return () => {
+      this.listeners.delete(cb);
+    };
+  }
+
+  dispose() {
+    this.listeners.clear();
+    this.worker.terminate();
+  }
+
+  async setField(kind: string, guid: string, field: string, value: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.setField(kind, guid, field, value), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.addChild(parentKind, parentGuid, childKind, dto), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.removeChild(parentKind, parentGuid, childKind, childGuid), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async applyDesignDiff(designGuid: string, diff: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.applyDesignDiff(designGuid, diff), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+}
+
+/** Hosts should map this import to the wasm-bindgen JS glue (see sketchpad Vite config). */
+export async function createKitStoreClient(opts: CreateKitStoreClientOptions): Promise<KitStoreClient> {
+  const dto = structuredClone(asKitInstance(opts.initialKit).toJSON());
+  const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
+  if (useFallback) {
+    return new FallbackKitStoreClient(dto);
+  }
+  const wasmSpecifier =
+    opts.wasmSpecifier ??
+    (globalThis as any).__SEMIO_WASM_SPECIFIER__ ??
+    "@semio/rs-wasm";
+  const timeoutMs = opts.timeoutMs ?? 60_000;
+  try {
+    const Comlink = await import("comlink");
+    const worker =
+      opts.workerFactory?.() ??
+      new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
+    const api = Comlink.wrap(worker);
+    await api.init(wasmSpecifier, dto);
+    return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
+  } catch {
+    return new FallbackKitStoreClient(dto);
+  }
+}
+
+// #endregion 🌐 KitStorePipeline
+
 // #region ­ƒûÑ´©ÅInMemoryKitStore
 // In-memory kit store implementation for testing and fake backends.
 
@@ -22644,6 +23087,62 @@ if (shouldRunEmbeddedJsTests) {
       }
     });
   });
+
+  // #region 🌐KitStoreClient Tests
+  describe("KitStoreClient", () => {
+    it("fallback: setField piece name success and kit name IllegalName rejection", async () => {
+      const initialKit = asKitInstance({
+        guid: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        designs: [
+          {
+            guid: "d1",
+            name: "D",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            pieces: [{ guid: "p1", name: "Alpha" }],
+          },
+        ],
+      });
+      const client = await createKitStoreClient({ initialKit, forceFallback: true });
+      const ok = await client.setField("Piece", "p1", "name", "Beta");
+      expect(ok.ok).toBe(true);
+      expect(client.getDto().designs[0].pieces[0].name).toBe("Beta");
+      const bad = await client.setField("Kit", "k1", "name", "");
+      expect(bad.ok).toBe(false);
+      if (!bad.ok) expect(bad.error.kind).toBe("IllegalName");
+      expect(client.getDto().name).toBe("K");
+      client.dispose();
+    });
+
+    it("fallback: concurrent writes bump pending semantics via client serialization", async () => {
+      const initialKit = asKitInstance({
+        guid: "k1",
+        name: "K",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        designs: [
+          {
+            guid: "d1",
+            name: "D",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            pieces: [{ guid: "p1", name: "A" }],
+          },
+        ],
+      });
+      const client = await createKitStoreClient({ initialKit, forceFallback: true });
+      const a = client.setField("Piece", "p1", "name", "X");
+      const b = client.setField("Piece", "p1", "name", "Y");
+      const c = client.setField("Piece", "p1", "name", "Z");
+      await Promise.all([a, b, c]);
+      expect(["X", "Y", "Z"]).toContain(client.getDto().designs[0].pieces[0].name);
+      client.dispose();
+    });
+  });
+  // #endregion 🌐KitStoreClient Tests
 
   // #region ­ƒîèInMemoryKitStore Tests
   // Contract tests for InMemoryKitStore MUST verify the full KitStore interface.

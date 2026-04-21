@@ -18,6 +18,9 @@ hex = "0.4"
 async-broadcast = "0.7"
 futures-lite = "2"
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4"
