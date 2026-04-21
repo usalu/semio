@@ -1,17 +1,21 @@
-Fachbericht: Zirkuläre Tragwerksplanung – Technische und regulatorische Leitlinien für die Wiederverwendung von Trägern und Balken
+---
+title: Wiederverwendung von Trägern und Balken
+---
 
-1. Paradigmenwechsel im Bauwesen: Von der Abfallwirtschaft zur zirkulären Wertschöpfung
+## Bericht 1: Zirkuläre Tragwerksplanung – Technische und regulatorische Leitlinien für die Wiederverwendung von Trägern und Balken
+
+### 1. Paradigmenwechsel im Bauwesen: Von der Abfallwirtschaft zur zirkulären Wertschöpfung
 
 Das globale Bauwesen steht an einem existenziellen Scheideweg. Angesichts eines Sektors, der für 50 % des weltweiten Ressourcenverbrauchs verantwortlich ist und in Europa rund ein Drittel des gesamten Abfallaufkommens verursacht – in der Schweiz sogar zwei Drittel –, ist die Transformation zur Kreislaufwirtschaft (Circular Economy) eine zwingende Notwendigkeit. Das bisherige lineare Modell („Take-Make-Waste“) stößt an die planetaren Belastbarkeitsgrenzen und vernichtet enorme Mengen an grauer Energie.
 
 Im Zentrum der zirkulären Wertschöpfung steht der Erhalt der Bauteilintegrität. Während das Recycling Materialien oft unter hohem Energieeinsatz stofflich umwandelt, bewahrt der „Reuse“ (Wiederverwendung) die geometrische Form und die gebundene Energie. Ein Stahlträger, der erneut eingebaut statt eingeschmolzen wird, spart nahezu 100 % der Primärproduktionsenergie ein. Die folgende Tabelle priorisiert die Strategien nach ihrem ökologischen Impact:
 
-Strategie	Priorität (R-Maxime)	Beschreibung	Ökologischer Impact / Graue Energie
-Refuse/Rethink	Hoch	Verzicht auf Neubau, Umnutzung von Bestand	Maximaler Erhalt; Vermeidung von Primärressourcen
-Reuse	Mittel-Hoch	Erneute Nutzung für denselben Zweck	Hoher Erhalt der Bauteilintegrität; Einsparung bis zu 95 % CO₂
-Repair/Refurbish	Mittel	Instandsetzung gebrauchter Bauteile	Lebensdauerverlängerung bestehender Strukturen
-Recycle	Niedrig	Stoffliche Verwertung (Schmelzen/Zerkleinern)	Hoher Energieaufwand zur stofflichen Umformung
-Recover	Sehr Niedrig	Energetische Verwertung (Verbrennung)	Vollständiger Verlust der stofflichen Ressource
+Strategie Priorität (R-Maxime) Beschreibung Ökologischer Impact / Graue Energie
+Refuse/Rethink Hoch Verzicht auf Neubau, Umnutzung von Bestand Maximaler Erhalt; Vermeidung von Primärressourcen
+Reuse Mittel-Hoch Erneute Nutzung für denselben Zweck Hoher Erhalt der Bauteilintegrität; Einsparung bis zu 95 % CO₂
+Repair/Refurbish Mittel Instandsetzung gebrauchter Bauteile Lebensdauerverlängerung bestehender Strukturen
+Recycle Niedrig Stoffliche Verwertung (Schmelzen/Zerkleinern) Hoher Energieaufwand zur stofflichen Umformung
+Recover Sehr Niedrig Energetische Verwertung (Verbrennung) Vollständiger Verlust der stofflichen Ressource
 
 Die technische Machbarkeit dieser Strategien ist jedoch untrennbar mit den rechtlichen Rahmenbedingungen und der Bereitstellung belastbarer Materialdaten verknüpft.
 
@@ -27,8 +31,8 @@ Der Weg zur Genehmigung
 
 Da Sekundärbauteile oft nicht den „allgemein anerkannten Regeln der Technik“ entsprechen, erfolgt die rechtliche Absicherung meist über:
 
-* Zustimmung im Einzelfall (ZiE): Erforderlich für den Nachweis von Standsicherheit und Dauerhaftigkeit bei den obersten Bauaufsichtsbehörden.
-* Vorhabenbezogene Bauartgenehmigung (vBGA): Ergänzendes Instrument für spezifische Konstruktionstypen. Der Übergang vom „Abfall“ zum „Produkt“ (§ 5 KrWG) erfordert eine lückenlose technische Dokumentation, die als Grundlage für eben jene bauaufsichtlichen Verfahren dient.
+- Zustimmung im Einzelfall (ZiE): Erforderlich für den Nachweis von Standsicherheit und Dauerhaftigkeit bei den obersten Bauaufsichtsbehörden.
+- Vorhabenbezogene Bauartgenehmigung (vBGA): Ergänzendes Instrument für spezifische Konstruktionstypen. Der Übergang vom „Abfall“ zum „Produkt“ (§ 5 KrWG) erfordert eine lückenlose technische Dokumentation, die als Grundlage für eben jene bauaufsichtlichen Verfahren dient.
 
 3. Technische Anforderungen und Prüfmethodik für Stahlträger
 
@@ -38,19 +42,19 @@ Klassifizierung und historische Festigkeiten
 
 Die Bewertung erfordert eine präzise zeitliche Einordnung der Bestandsstähle:
 
-* Vor 1937: Häufig St37; hier muss eine Streckgrenze von ca. 24 \text{ kN/cm}^2 angesetzt werden. Zudem besteht ein erhöhtes Risiko der Sprödbruchneigung.
-* Baujahr ab 1962 (Spezialregel): Gemäß DASt-Richtlinie 028 kann bei Stählen ab 1962 in der Regel die Güte S235 ohne aufwendige chemische Analyse angenommen werden, sofern keine Korrosionsschäden vorliegen.
-* Nach 1995: Produktion nach EN 10025; Materialkennwerte sind meist durch Zeugnisse gut dokumentiert.
+- Vor 1937: Häufig St37; hier muss eine Streckgrenze von ca. 24 \text{ kN/cm}^2 angesetzt werden. Zudem besteht ein erhöhtes Risiko der Sprödbruchneigung.
+- Baujahr ab 1962 (Spezialregel): Gemäß DASt-Richtlinie 028 kann bei Stählen ab 1962 in der Regel die Güte S235 ohne aufwendige chemische Analyse angenommen werden, sofern keine Korrosionsschäden vorliegen.
+- Nach 1995: Produktion nach EN 10025; Materialkennwerte sind meist durch Zeugnisse gut dokumentiert.
 
 Prüfprotokolle (P1 bis P6) als ZiE-Grundlage
 
 Zur Bestimmung der Materialgüte werden Bauteile zu Prüfeinheiten zusammengefasst (max. 50 Bauteile / 20 Tonnen aus gleichem Ursprung). Die Ergebnisse dieser Protokolle bilden das technische Dossier für die ZiE:
 
-Protokoll	Prüfumfang	Voraussetzung
-P1	Keine Prüfung	Vollständige, verlässliche Originalunterlagen vorhanden
-P3	Stichprobenartige ZfP	Plausibilitätsprüfung bei moderater Datenlage
-P5	100% ZfP + 3 ZP	Unbekannte Herkunft; erforderlich für Standsicherheitsnachweis
-P6	100% ZP	Älteste Bestände oder extreme Versagensfolgen
+Protokoll Prüfumfang Voraussetzung
+P1 Keine Prüfung Vollständige, verlässliche Originalunterlagen vorhanden
+P3 Stichprobenartige ZfP Plausibilitätsprüfung bei moderater Datenlage
+P5 100% ZfP + 3 ZP Unbekannte Herkunft; erforderlich für Standsicherheitsnachweis
+P6 100% ZP Älteste Bestände oder extreme Versagensfolgen
 
 Prüfmethodik:
 
@@ -59,7 +63,7 @@ Prüfmethodik:
 3. Thermische Trennung: Bei der Demontage muss die Wärmeeinflusszone (WEZ) im Bereich thermischer Schnitte statisch kritisch bewertet werden.
 4. Korrosionsschutz: Bewertung nach DIN EN 1090-2 und ISO 1461 (Feuerverzinkung).
 
-4. Herausforderungen bei Holzträgern: Tragfähigkeit und Schadstoffanalytik
+5. Herausforderungen bei Holzträgern: Tragfähigkeit und Schadstoffanalytik
 
 Holz ist als Kohlenstoffspeicher essenziell für die Kaskadennutzung. Die Herausforderung liegt hier in der biologischen Variabilität und der hygroskopischen Natur des Materials.
 
@@ -71,12 +75,12 @@ Die Schadstoff-Problematik (PCP, Lindan, DDT)
 
 Historische Holzschutzmittel aus den 70er/80er Jahren stellen ein massives Gesundheitsrisiko dar. Ein entscheidendes technisches Kriterium ist der Quotient aus behandelter Holzoberfläche und Raumvolumen:
 
-* Trigger: Liegt dieser Wert über 0,2 \text{ m}^2/\text{m}^3, ist eine Materialanalyse der obersten 2 mm zwingend erforderlich.
+- Trigger: Liegt dieser Wert über 0,2 \text{ m}^2/\text{m}^3, ist eine Materialanalyse der obersten 2 mm zwingend erforderlich.
 
-Schadstoff	Konzentration	Bewertung / Maßnahme
-PCP	< 30 \text{ mg/kg}	Gering belastet; keine Sofortmaßnahme
-PCP	> 1000 \text{ mg/kg}	Sehr hohe Belastung; Entsorgung als Sondermüll
-Lindan	> 30 \text{ mg/kg}	Hohe Belastung; Dekontamination (Abhobeln) oder Maskierung
+Schadstoff Konzentration Bewertung / Maßnahme
+PCP < 30 \text{ mg/kg} Gering belastet; keine Sofortmaßnahme
+PCP > 1000 \text{ mg/kg} Sehr hohe Belastung; Entsorgung als Sondermüll
+Lindan > 30 \text{ mg/kg} Hohe Belastung; Dekontamination (Abhobeln) oder Maskierung
 
 5. Zirkuläre Betonstrategien: Reuse von Fertigteilen und Ortbeton
 
@@ -84,17 +88,17 @@ Beton ist aufgrund der Zementproduktion ein Haupttreiber der Bauemissionen. Ein 
 
 Technologische Ansätze: ReCreate vs. Abbau Aufbau
 
-* Betonfertigteile (ReCreate): Dank modularer Struktur und Diamantseilsägen zur Trennung von Vergussfugen ideal für den Reuse.
-* Ortbeton (Abbau Aufbau): Erfordert "Design-Led Cutting". Hier bestimmt der neue Entwurf das Schnittmuster des Spendergebäudes. Dies verlangt komplexe statische Begleitberechnungen während des Rückbauprozesses.
+- Betonfertigteile (ReCreate): Dank modularer Struktur und Diamantseilsägen zur Trennung von Vergussfugen ideal für den Reuse.
+- Ortbeton (Abbau Aufbau): Erfordert "Design-Led Cutting". Hier bestimmt der neue Entwurf das Schnittmuster des Spendergebäudes. Dies verlangt komplexe statische Begleitberechnungen während des Rückbauprozesses.
 
 Quantitative CO₂-Bilanzierung und CPC-Technologie
 
 Schlanke Bauteile sind der Schlüssel zur Dekarbonisierung. Der Einsatz von CPC-Technologie (Carbon Prestressed Concrete) ermöglicht in Kombination mit CEM VI-Zementen eine Reduktion des CO₂-Gehalts auf nur 12 % im Vergleich zu Standard-Bauteilen.
 
-Beton-Typ	Treibhausgasemissionen (C30/37)	Einsparpotenzial
-Durchschnittsbeton heutiger Stand	219 \text{ kg CO2-eq/m}^3	Referenz
-Beton mit CEM VI (z.B. 30% unter Schnitt)	153 \text{ kg CO2-eq/m}^3	-30 %
-CPC-Bauteile (Carbonbewehrung)	-	-75 % CO₂ / -80 % Material
+Beton-Typ Treibhausgasemissionen (C30/37) Einsparpotenzial
+Durchschnittsbeton heutiger Stand 219 \text{ kg CO2-eq/m}^3 Referenz
+Beton mit CEM VI (z.B. 30% unter Schnitt) 153 \text{ kg CO2-eq/m}^3 -30 %
+CPC-Bauteile (Carbonbewehrung) - -75 % CO₂ / -80 % Material
 
 6. Management des selektiven Rückbaus und digitale Infrastruktur
 
@@ -108,8 +112,8 @@ Logistik und Regionalität
 
 Ein kritischer Faktor für die CO₂-Bilanz ist die Transportdistanz. Daten zeigen eine signifikante Diskrepanz bei den Durchschnittswerten:
 
-* Steine/Erden (mineralisch): ca. 42 km.
-* Maschinen/Fertigwaren: ca. 177 km. Dies unterstreicht die Notwendigkeit regionaler Urban Mining Hubs, um die ökologischen Vorteile des Reuse nicht durch lange Transportwege zu negieren.
+- Steine/Erden (mineralisch): ca. 42 km.
+- Maschinen/Fertigwaren: ca. 177 km. Dies unterstreicht die Notwendigkeit regionaler Urban Mining Hubs, um die ökologischen Vorteile des Reuse nicht durch lange Transportwege zu negieren.
 
 7. Fazit und Handlungsempfehlungen für die Praxis
 
@@ -124,13 +128,11 @@ Zentrale Handlungsempfehlungen:
 
 Circular Engineering bedeutet eine neue Wertschätzung materieller Ressourcen: Jedes Bestandsgebäude ist kein Abfallhaufen, sondern ein Depot wertvoller, bereits dekarbonisierter Tragwerkselemente.
 
+---
 
-----------------------------------------------------------------------------------------------------
+## Bericht 2: Wiederverwendung von Tragwerkselementen (Stahl, Holz, Beton) und Sekundärbauteilen
 
-
-Fachbericht: Wiederverwendung von Tragwerkselementen (Stahl, Holz, Beton) und Sekundärbauteilen
-
-1. Definition und Abgrenzung
+### 1. Definition und Abgrenzung
 
 Die Bauwirtschaft steht vor einer existenziellen Transformation: Angesichts eines globalen Ressourcenverbrauchs von ca. 50 % und eines Abfallaufkommens, das in der Schweiz bereits zwei Drittel des Gesamtaufkommens erreicht, ist der Übergang zur Kreislaufwirtschaft zwingend. Hierbei ist die „direkte Wiederverwendung“ (Reuse) technisch präzise vom „Recycling“ abzugrenzen. Während Recycling die stoffliche Umformung unter hohem Energieeinsatz (Schmelzen, Zerkleinern) beschreibt, sichert Reuse den Erhalt der geometrischen Form und der im Bauteil gebundenen „grauen Energie“. Ein wiederverwendeter Stahlträger spart nahezu 100 % der für die Primärproduktion erforderlichen Energie ein.
 
@@ -144,10 +146,10 @@ Quellen: [1, 2, 3, 4, 8].
 
 Die zirkuläre Relevanz von Bauteilen wird primär durch ihre konstruktive Rolle bestimmt:
 
-* Stahlbau: Primärtragwerke (Träger, Fachwerke), Sekundärtragwerke (Pfetten) aus Industrie- und Skelettbau.
-* Holzbau: Vollholzkomponenten (Balken, Stützen), die für die Kaskadennutzung prädestiniert sind.
-* Betonbau: Differenzierung zwischen modularen Betonfertigteilen (Wände, Decken, Binder) und monolithischen Ortbetonstrukturen.
-* Sekundär- und Infrastruktur: Rohr- und Schachtsysteme aus Beton, Sandwichfassaden sowie Ausbauelemente (Fenster, Türen).
+- Stahlbau: Primärtragwerke (Träger, Fachwerke), Sekundärtragwerke (Pfetten) aus Industrie- und Skelettbau.
+- Holzbau: Vollholzkomponenten (Balken, Stützen), die für die Kaskadennutzung prädestiniert sind.
+- Betonbau: Differenzierung zwischen modularen Betonfertigteilen (Wände, Decken, Binder) und monolithischen Ortbetonstrukturen.
+- Sekundär- und Infrastruktur: Rohr- und Schachtsysteme aus Beton, Sandwichfassaden sowie Ausbauelemente (Fenster, Türen).
 
 So What? Layer: Die Kategorisierung folgt der logistischen Eignung: Modulare Fertigteile besitzen durch ihre systemische Trennbarkeit ein natürliches Reuse-Potenzial, während monolithische Strukturen (Ortbeton) eine entgegengesetzte Entwurfslogik erfordern.
 
@@ -159,9 +161,9 @@ Quellen: [1, 8, 16, 28, 32, 47, 48].
 
 Die stoffliche Analyse ist die Basis für die Bewertung der Restnutzungsdauer:
 
-* Stahl: Einordnung nach Baujahren. Altstähle vor 1937 (oft St37) bergen Sprödbruchrisiken. Ab 1970 entsprechen die Güten modernen Standards; seit 1995 (EN 10025) ist die Dokumentationslage meist stabil.
-* Holz: Fokus auf Vollholz. Als hygroskopischer Baustoff erfordert es die Anpassung an das Ausgleichsklima der neuen Umgebung.
-* Beton: Neben klassischem Beton gewinnen R-Beton (rezyklierte Körnung), CPC-Betonplatten (carbon prestressed concrete) und Carbonbeton an Bedeutung. CPC-Technologie ermöglicht Materialeinsparungen von bis zu 80 % durch den Entfall der korrosionsbedingten Mindestüberdeckung.
+- Stahl: Einordnung nach Baujahren. Altstähle vor 1937 (oft St37) bergen Sprödbruchrisiken. Ab 1970 entsprechen die Güten modernen Standards; seit 1995 (EN 10025) ist die Dokumentationslage meist stabil.
+- Holz: Fokus auf Vollholz. Als hygroskopischer Baustoff erfordert es die Anpassung an das Ausgleichsklima der neuen Umgebung.
+- Beton: Neben klassischem Beton gewinnen R-Beton (rezyklierte Körnung), CPC-Betonplatten (carbon prestressed concrete) und Carbonbeton an Bedeutung. CPC-Technologie ermöglicht Materialeinsparungen von bis zu 80 % durch den Entfall der korrosionsbedingten Mindestüberdeckung.
 
 So What? Layer: Die Materialwahl determiniert die Dauerhaftigkeit: Während Stahl bei ruhender Belastung nahezu unbegrenzt wiederverwendbar bleibt, sind bei Holz die biologische Integrität und bei Beton die Carbonatisierungstiefe die kritischen Grenzwerte für den Reuse.
 
@@ -173,9 +175,9 @@ Quellen: [8, 13, 17, 18, 23, 37, 42].
 
 Die Verbindungstechnik ist das funktionale Nadelöhr der Kreislaufwirtschaft.
 
-* Stahlbau: Hier dominieren thermische Trennverfahren. Von entscheidender Bedeutung ist die Bewertung der Wärmeeinflusszone (WEZ), die durch das Brennschneiden entsteht und bei der statischen Neubemessung berücksichtigt werden muss.
-* Betonbau: Fertigteile nutzen oft Vergussfugen (Hybridverbindungen). Die DAfStb-Planungshilfe (2021) gibt Leitlinien für deren Trennung. Ideal sind mechanisch lösbare Verbindungen.
-* Holzbau: Mechanische oder zimmermannsmäßige Verbindungen, die oft manuell gelöst werden müssen.
+- Stahlbau: Hier dominieren thermische Trennverfahren. Von entscheidender Bedeutung ist die Bewertung der Wärmeeinflusszone (WEZ), die durch das Brennschneiden entsteht und bei der statischen Neubemessung berücksichtigt werden muss.
+- Betonbau: Fertigteile nutzen oft Vergussfugen (Hybridverbindungen). Die DAfStb-Planungshilfe (2021) gibt Leitlinien für deren Trennung. Ideal sind mechanisch lösbare Verbindungen.
+- Holzbau: Mechanische oder zimmermannsmäßige Verbindungen, die oft manuell gelöst werden müssen.
 
 So What? Layer: Die Verbindungstechnik entscheidet über die Zerstörungsfreiheit. Nur wenn die Demontage ohne Schädigung der Hauptkomponente (z. B. unter Vermeidung kritischer WEZ im Stahlbau) erfolgt, bleibt der wirtschaftliche und statische Wert erhalten.
 
@@ -187,9 +189,9 @@ Quellen: [11, 16, 17, 33, 34, 38, 42, 48].
 
 Sekundärbauteile werden aus drei Hauptquellen gewonnen:
 
-* Spenderbauwerke: Industriehallen, Plattenbauten und Bürogebäude bieten homogene, großvolumige Materialposten.
-* Überbestände/Fehlbestellungen: Originalverpackte Neuware, die durch Fehlkalkulationen auf Baustellen blockiert ist.
-* Urban Mining Hubs: Regionale Logistikzentren, die Rückbaumaterialien sammeln, prüfen und für den Markt verfügbar machen.
+- Spenderbauwerke: Industriehallen, Plattenbauten und Bürogebäude bieten homogene, großvolumige Materialposten.
+- Überbestände/Fehlbestellungen: Originalverpackte Neuware, die durch Fehlkalkulationen auf Baustellen blockiert ist.
+- Urban Mining Hubs: Regionale Logistikzentren, die Rückbaumaterialien sammeln, prüfen und für den Markt verfügbar machen.
 
 So What? Layer: Die Etablierung von Urban Mining Hubs ist kritisch, um die zeitliche Diskrepanz zwischen Rückbau und Neubau zu überbrücken und Sekundärmaterialien eine marktfähige Verfügbarkeit zu verleihen.
 
@@ -201,9 +203,9 @@ Quellen: [43, Concular Shop].
 
 Der „selektive Rückbau“ ist die Umkehrung des Erstellungsprozesses.
 
-* Verfahren: Diamant-Trenntechnik (Seilsägen) für Beton, thermisches Brennschneiden für Stahl und manuelle Handdemontage für Holz.
-* Design-Led Cutting: Bei Ortbetonstrukturen wird das Schnittraster des Spendergebäudes direkt aus dem Entwurf des Zielgebäudes abgeleitet.
-* Statik: Da sich das statische System bei jedem Schnitt ändert, sind präzise Lastflussberechnungen und die Berücksichtigung der Wärmeeinflusszone (WEZ) bei Stahl essenziell für die Arbeitssicherheit und Qualität.
+- Verfahren: Diamant-Trenntechnik (Seilsägen) für Beton, thermisches Brennschneiden für Stahl und manuelle Handdemontage für Holz.
+- Design-Led Cutting: Bei Ortbetonstrukturen wird das Schnittraster des Spendergebäudes direkt aus dem Entwurf des Zielgebäudes abgeleitet.
+- Statik: Da sich das statische System bei jedem Schnitt ändert, sind präzise Lastflussberechnungen und die Berücksichtigung der Wärmeeinflusszone (WEZ) bei Stahl essenziell für die Arbeitssicherheit und Qualität.
 
 So What? Layer: Die „Inversion der Montage“ ist technisch anspruchsvoller als der Abbruch, sichert jedoch die strukturelle Integrität und damit die wirtschaftliche Verwertbarkeit der Komponenten.
 
@@ -213,9 +215,9 @@ Quellen: [5, 17, 34, 35, 38, 42].
 
 Die Zustandsbewertung muss potenzielle Gesundheits- und Sicherheitsrisiken ausschließen.
 
-* Holz: Belastung durch PCP, Lindan und DDT. PCP-Grenzwerte: Sanierung ab 100 mg/kg; Sondermüll ab 1000 mg/kg. Entscheidend: Eine Materialanalyse ist zwingend erforderlich, wenn der Quotient aus behandelter Holzoberfläche zu Raumvolumen den Wert von 0,2\text{ m}^2/\text{m}^3 überschreitet.
-* Stahl: Sprödbruchgefahr bei Stählen vor 1937 sowie Korrosionsschäden.
-* Beton: Bewehrungskorrosion und chemische Angriffe (z. B. Chloride).
+- Holz: Belastung durch PCP, Lindan und DDT. PCP-Grenzwerte: Sanierung ab 100 mg/kg; Sondermüll ab 1000 mg/kg. Entscheidend: Eine Materialanalyse ist zwingend erforderlich, wenn der Quotient aus behandelter Holzoberfläche zu Raumvolumen den Wert von 0,2\text{ m}^2/\text{m}^3 überschreitet.
+- Stahl: Sprödbruchgefahr bei Stählen vor 1937 sowie Korrosionsschäden.
+- Beton: Bewehrungskorrosion und chemische Angriffe (z. B. Chloride).
 
 So What? Layer: Schadstoffbelastungen sind das größte ökonomische Risiko des Reuse; übersteigen die Dekontaminationskosten den Bauteilwert, ist eine Wiederverwendung wirtschaftlich nicht mehr darstellbar.
 
@@ -227,9 +229,9 @@ Quellen: [17, 23, 26, 27, 28, 29].
 
 Die statische Sicherheit basiert auf einer lückenlosen Dokumentation:
 
-* Stahl: Protokolle P1 bis P6 (nach DASt/KIT). P1 ist nur bei Originalunterlagen zulässig; P6 erfordert 100 % zerstörende Materialprüfungen. Zerstörungsfreie Prüfungen (ZfP) umfassen Ultraschall und Härteprüfungen.
-* Holz: Visuelle Sortierung gemäß DIN 4074 und chemische Analysen der obersten 2 mm.
-* Beton: Einsatz von Georadar und Ultraschall zur Bewehrungsortung und Schadensdetektion.
+- Stahl: Protokolle P1 bis P6 (nach DASt/KIT). P1 ist nur bei Originalunterlagen zulässig; P6 erfordert 100 % zerstörende Materialprüfungen. Zerstörungsfreie Prüfungen (ZfP) umfassen Ultraschall und Härteprüfungen.
+- Holz: Visuelle Sortierung gemäß DIN 4074 und chemische Analysen der obersten 2 mm.
+- Beton: Einsatz von Georadar und Ultraschall zur Bewehrungsortung und Schadensdetektion.
 
 So What? Layer: Eine präzise Zustandsbewertung ist das zentrale Instrument zur Minimierung von Haftungsrisiken für Tragwerksplaner und Bauherren.
 
@@ -251,9 +253,9 @@ Quellen: [17, 20, 48].
 
 Die rechtliche Einordnung von Sekundärbauteilen ist ein komplexer Prozess:
 
-* Haftung: Wer gebrauchte Bauteile aufbereitet, übernimmt oft die Rolle des „neuen Herstellers“ gemäß BauPVO (Paradoxon des Herstellers).
-* Abfallrecht: Die Beendigung der Abfalleigenschaft nach § 5 KrWG ist ein formaler Akt. Der Eigentümer muss die unmittelbare Wiederverwendungsabsicht und die Einhaltung aller Qualitätsanforderungen nachweisen.
-* Zulassung: Mangels harmonisierter Normen für Gebrauchtteile sind meist „Zustimmungen im Einzelfall“ (ZiE) oder „vorhabenbezogene Bauartgenehmigungen“ (vBGA) erforderlich.
+- Haftung: Wer gebrauchte Bauteile aufbereitet, übernimmt oft die Rolle des „neuen Herstellers“ gemäß BauPVO (Paradoxon des Herstellers).
+- Abfallrecht: Die Beendigung der Abfalleigenschaft nach § 5 KrWG ist ein formaler Akt. Der Eigentümer muss die unmittelbare Wiederverwendungsabsicht und die Einhaltung aller Qualitätsanforderungen nachweisen.
+- Zulassung: Mangels harmonisierter Normen für Gebrauchtteile sind meist „Zustimmungen im Einzelfall“ (ZiE) oder „vorhabenbezogene Bauartgenehmigungen“ (vBGA) erforderlich.
 
 So What? Layer: Die CE-Kennzeichnung fungiert aktuell oft als Handelsbarriere. Die rechtssichere Abwicklung erfordert einen frühzeitigen Dialog mit den Bauaufsichtsbehörden zur Anerkennung von Sekundärbauteilen als vollwertige Bauprodukte.
 
@@ -265,9 +267,9 @@ Quellen: [10, 12, 13, 19].
 
 Die Wiederherstellung der Gebrauchstauglichkeit umfasst:
 
-* Stahl: Entschichtung und Erneuerung des Korrosionsschutzes (nach EN 1090-2).
-* Holz: Mechanische Dekontamination (Abhobeln) oder chemische Maskierung (Sperrlacke).
-* Beton: Reinigung und das Bohren nachträglicher Transportanker für den Hub.
+- Stahl: Entschichtung und Erneuerung des Korrosionsschutzes (nach EN 1090-2).
+- Holz: Mechanische Dekontamination (Abhobeln) oder chemische Maskierung (Sperrlacke).
+- Beton: Reinigung und das Bohren nachträglicher Transportanker für den Hub.
 
 So What? Layer: Die Aufbereitungsqualität ist entscheidend für die Akzeptanz bei Nachnutzern, da sie nicht nur statische, sondern auch optische und hygienische Standards (Emissionsfreiheit) garantiert.
 
@@ -277,9 +279,9 @@ Quellen: [11, 21, 24, 26, 33, 34].
 
 12. Wiederverwendungsszenarien im Neubau oder Bestand
 
-* Kaskadennutzung: Holzbalken aus Rückbau für tragende Strukturen oder den Innenausbau.
-* Primärtragwerke: Integration gebrauchter Stahlträger in neue Skelettbauten (z. B. CRCLR House).
-* Modularität: Variowohnungen nutzen die Flexibilität von Fertigteilen für anpassbare Wohnräume (Studenten/Senioren).
+- Kaskadennutzung: Holzbalken aus Rückbau für tragende Strukturen oder den Innenausbau.
+- Primärtragwerke: Integration gebrauchter Stahlträger in neue Skelettbauten (z. B. CRCLR House).
+- Modularität: Variowohnungen nutzen die Flexibilität von Fertigteilen für anpassbare Wohnräume (Studenten/Senioren).
 
 So What? Layer: Die Flexibilität von Variowohnungen belegt, dass zirkuläres Bauen über den Materialerhalt hinaus sozialen Mehrwert durch Anpassungsfähigkeit generiert.
 
@@ -321,8 +323,8 @@ Quellen: [20, 45, Objektbericht Bochum].
 
 Die Datenlage belegt die Überlegenheit zirkulärer Systeme:
 
-* CO2-Einsparung: Durch Reuse sind Reduktionen von 20–40 % realistisch. Innovative CPC-Platten senken den CO2-Fußabdruck sogar um bis zu 75 % bei 80 % Materialersparnis.
-* Direktvergleich: Laut Klimarechner (TU Kaiserslautern) verursacht ein Betonrohr (DN 500) ca. 58 kg CO2e/m, während ein PP-Rohr mit 130 kg CO2e/m eine mehr als doppelt so hohe Belastung aufweist.
+- CO2-Einsparung: Durch Reuse sind Reduktionen von 20–40 % realistisch. Innovative CPC-Platten senken den CO2-Fußabdruck sogar um bis zu 75 % bei 80 % Materialersparnis.
+- Direktvergleich: Laut Klimarechner (TU Kaiserslautern) verursacht ein Betonrohr (DN 500) ca. 58 kg CO2e/m, während ein PP-Rohr mit 130 kg CO2e/m eine mehr als doppelt so hohe Belastung aufweist.
 
 So What? Layer: Zirkuläres Bauen ist kein optionales Nachhaltigkeitsfeature, sondern eine fundamentale Voraussetzung zur Erreichung der Net-Zero-Ziele bis 2050.
 
@@ -332,10 +334,10 @@ Quellen: [5, 9, 20, 42, 45, Klimarechner TU KL].
 
 17. Fallstudien und Praxisbeispiele
 
-* CRCLR House (Berlin): Einsatz von Sekundär-Stahltragwerken und Re-Use-Fenstern.
-* Praxedis-Gärten (Singen): Ersatzneubau mit Fokus auf Rückbaufreundlichkeit und Sichtbetonfertigteilen.
-* Wattenscheider Bach (Bochum): Einbau von 150 Tonnen CO2-neutralen Rohr- und Schachtsystemen, was eine Einsparung von 7 Tonnen CO2 generierte.
-* Casa Rossa (Chemnitz): Restaurierung und Wiedereinsatz historischer Holzelemente im Bestand.
+- CRCLR House (Berlin): Einsatz von Sekundär-Stahltragwerken und Re-Use-Fenstern.
+- Praxedis-Gärten (Singen): Ersatzneubau mit Fokus auf Rückbaufreundlichkeit und Sichtbetonfertigteilen.
+- Wattenscheider Bach (Bochum): Einbau von 150 Tonnen CO2-neutralen Rohr- und Schachtsystemen, was eine Einsparung von 7 Tonnen CO2 generierte.
+- Casa Rossa (Chemnitz): Restaurierung und Wiedereinsatz historischer Holzelemente im Bestand.
 
 So What? Layer: Erfolgsfaktor dieser Projekte ist die Bereitschaft der Kommunen, Klimakriterien als harte Faktoren in die öffentliche Beschaffung zu integrieren.
 
@@ -351,5 +353,4 @@ So What? Layer: Die Transformation erfordert bis 2026 eine regulatorische Sicher
 
 Quellen: [6, 10, 19, 35, 48].
 
-
---------------------------------------------------------------------------------
+---

@@ -1,8 +1,18 @@
+---
+title: Wiederverwendung im Ortbetonbau
+---
+
+---
+
+## Prompt 1
+
 Erstelle auf Basis aller in diesem Notebook verfügbaren Quellen einen professionellen Bericht zum Thema „Wiederverwendung von Baukomponenten und Baumaterialien in Ortbeton- bzw. Stahlbetontragwerken“. Anforderungen: - Nutze ausschließlich die Informationen aus den vorhandenen Quellen. - Belege alle wesentlichen Aussagen mit präzisen Quellverweisen. - Stelle klar dar, welche Formen der Wiederverwendung tatsächlich beschrieben werden, z. B. Ausbau ganzer Elemente, Ausschneiden von Bauteilen, Weiterverwendung in neuer Tragfunktion etc. - Trenne sauber zwischen etablierter Praxis, Pilotprojekten und Forschung. - Schreibe auf Deutsch, fachlich präzise und analytisch. Struktur des Berichts: 1. Executive Summary 2. Definition und Abgrenzung von Ortbeton-/Stahlbetontragwerken im Kontext der Wiederverwendung 3. Typische Formen der Wiederverwendung - ausgeschnittene Deckenplatten - Wandsegmente - Träger / Sonderbauteile - komplette oder partielle Betonelemente 4. Konstruktive und materialtechnische Voraussetzungen - monolithische Bauweise als Herausforderung - Trennbarkeit - Schnitttechniken - Umgang mit Bewehrung und Spannstahl 5. Technische Bewertung und Prüfbedarf - Zustand - Risse / Schäden - Dauerhaftigkeit - Tragfähigkeit - Restlebensdauer 6. Rückbau- und Gewinnungsmethoden 7. Transport, Anpassung und Wiedereinbau 8. Ökologische Bewertung - Wiederverwendung vs. Recycling 9. Wirtschaftliche Aspekte 10. Normative, haftungsbezogene und praktische Hürden 11. Relevante Fallstudien / Prototypen / gebaute Beispiele 12. Chancen, Grenzen und Forschungslücken 13. Fazit Ergänze am Ende: - eine Tabelle „Wiederverwendungsansatz – technischer Aufwand – Potenzial – Hürden – Quellen“ - eine kurze Einordnung, ob die Quellen eher Praxis, Forschung oder Pilotcharakter zeigen - ein Quellenverzeichnis
 
-Technischer Bericht: Wiederverwendung von Baukomponenten aus Ort- und Stahlbeton
+---
 
-1. Executive Summary
+## Bericht 1: Technischer Bericht – Wiederverwendung von Baukomponenten aus Ort- und Stahlbeton
+
+### 1. Executive Summary
 
 Die Bauindustrie steht vor einer Zäsur. Die Zementproduktion ist nach aktuellen Erkenntnissen der EPFL (Devènes et al., 2024) und der KTH (Dervishaj et al., 2026) für rund 9 % der globalen prozessbedingten Treibhausgasemissionen verantwortlich. Die direkte Wiederverwendung von Betonkomponenten bietet hier eine weitaus effizientere Lösung als das herkömmliche Recycling (Crushing). Während das Recycling lediglich Primärzuschläge ersetzt, bleibt beim „Component Reuse“ der „Embodied Carbon“ sowie der strukturelle Wert des Bauteils erhalten.
 
@@ -94,13 +104,12 @@ Das größte Potenzial liegt in der massiven CO2-Reduktion und Ressourcenschonun
 
 13. Fazit
 
-Betonwiederverwendung ist technisch machbar und ökologisch alternativlos. Bei identischer Nutzung sind 90 % der Komponenten sofort einsatzfähig. Die Skalierung erfordert digitale Materialpässe und die Akzeptanz neuer Entwurfsprozesse, bei denen die Geometrie der Donor-Struktur den Entwurf leitet.
+Betonwiederverwendung ist technisch machbar und ökologisch alternativlos. Bei identischer Nutzung sind 90 % der Komponenten sofort einsatzfähig. Die Skalierung erfordert digitale Materialpässe und die Akzeptanz neuer Entwurfsprozesse, bei denen die Geometrie der Donor-Struktur den Entwurf leitet.
 
 
---------------------------------------------------------------------------------
+---
 
-
-Anhang
+### Anhang
 
 Tabelle: Wiederverwendungsansätze im Vergleich
 
@@ -121,14 +130,17 @@ Quellenverzeichnis
 * Madaster Global (2026): Material Passports and Circular Real Estate Documentation.
 * Nextsure (2026): Builder's Liability Insurance in the Context of Circular Construction.
 
+---
 
-------------------------------------------------------
+## Prompt 2
 
 Erstelle auf Basis ALLER in diesem Notebook / in diesen Quellen enthaltenen Informationen einen professionellen Fachbericht auf Deutsch zum Thema: „Wiederverwendung von Baukomponenten und Baumaterialien im Tragwerk – Fokus auf Ortbeton- und Stahlbetontragwerke, inklusive ausgeschnittener oder segmentierter Betonelemente“ Erstelle auf Basis ALLER in diesem Notebook / in diesen Quellen enthaltenen Informationen einen professionellen Fachbericht auf Deutsch zum Thema: „Wiederverwendung von Baukomponenten und Baumaterialien im Tragwerk – Fokus auf [TRAGWERKSSYSTEM]“ WICHTIG: - Nutze ausschließlich Informationen aus den vorhandenen Quellen. - Erfinde keine Angaben. Wenn Informationen fehlen oder widersprüchlich sind, benenne das ausdrücklich. - Der Bericht soll sich PRIMÄR auf das Tragwerk konzentrieren, nicht auf Ausbau, Fassade oder Innenraum – außer diese beeinflussen das Tragverhalten, die Demontage oder die Wiederverwendung direkt. - Ziehe Informationen aus ALLEN relevanten Quellen zusammen, konsolidiere Dopplungen und stelle Widersprüche zwischen Quellen explizit dar. - Schreibe in präziser, professioneller, wissenschaftlich klingender Fachsprache auf Deutsch. - Füge nach jedem Abschnitt konkrete Quellenhinweise ein. - Zitiere möglichst quellennah und nachvollziehbar. - Wenn vorhanden, nenne Autor, Jahr, Projektnamen, Bauteiltyp, Material und Ort. - Kennzeichne Fallbeispiele, Forschungsarbeiten, Leitfäden, Normen und Pilotprojekte getrennt. ZIEL: Ich möchte einen belastbaren Überblick darüber, was die Quellen speziell über dieses Tragwerkssystem im Kontext der Wiederverwendung aussagen. STRUKTUR DES BERICHTS: 1. Kurzfassung (5–10 Sätze) - wichtigste Erkenntnisse - Relevanz des Systems für Wiederverwendung - wichtigste Chancen und Hemmnisse 2. Systembeschreibung aus tragwerklicher Sicht - Definition und typische Ausprägungen des Systems - Primärtragstruktur, Sekundärtragstruktur - typische Spannweiten, Raster, Tragglieder, Knoten, Lastabtragung - häufige Materialien und Verbindungsmittel 3. Relevante wiederverwendbare Tragwerksbauteile - welche tragenden Komponenten in den Quellen genannt werden - z. B. Stützen, Träger, Deckenplatten, Verbände, Fachwerke, Rahmen, Module, Wandelemente, Knoten, Verbindungsmittel - in welcher Form die Bauteile wiederverwendet werden: direkt, angepasst, zugeschnitten, umgebaut, umgenutzt 4. Tragwerksrelevante Voraussetzungen für Wiederverwendung - Demontierbarkeit / Rückbaubarkeit - Art der Verbindungen - Grad der Standardisierung - Zugänglichkeit der Knoten - Beschädigungsrisiko beim Ausbau - Toleranzen, Geometrie, Maßordnung - Dokumentation / Materialpass / Rückverfolgbarkeit 5. Tragwerksrelevante Bewertungskriterien - statische Nachweisbarkeit - Resttragfähigkeit - Dauerhaftigkeit - Materialzustand - Ermüdung, Korrosion, Feuchte, Risse, Schadstoffe - Prüfmethoden, Inspektion, Monitoring, zerstörungsfreie Prüfungen - Anforderungen an Re-Zertifizierung oder Wiederzulassung 6. Konstruktive Strategien und Details - welche konstruktiven Lösungen die Wiederverwendung erleichtern - reversible Verbindungen - Schraub-, Steck-, Klemm-, Trocken- oder Segmentverbindungen - modulare Raster, Trennbarkeit von Schichten, Design for Disassembly, Design for Reuse - welche Details problematisch sind 7. Chancen, Grenzen und Risiken aus Tragwerksplanungssicht - statische Vorteile - technische Risiken - Unsicherheiten in Bemessung und Nachweis - logistische / geometrische Zwänge - wirtschaftliche und normative Hürden, soweit sie das Tragwerk betreffen 8. Fallbeispiele aus den Quellen - liste alle relevanten Projekte, Prototypen, Pilotbauten und Versuche - pro Fallbeispiel: Name, Ort, Jahr, System, wiederverwendete Bauteile, tragwerkliche Idee, wichtige Erkenntnisse - nur Informationen nennen, die in den Quellen belegt sind 9. Synthese - Welche Muster zeigen sich über alle Quellen hinweg? - Welche Bauteile dieses Systems eignen sich besonders gut zur Wiederverwendung? - Welche weniger? - Welche Faktoren entscheiden über Erfolg oder Scheitern? 10. Forschungslücken und offene Fragen - nur auf Basis der Quellen - z. B. fehlende Normen, fehlende Prüfverfahren, unklare Dauerhaftigkeit, fehlende Daten zu Anschlüssen, Skalierungsprobleme 11. Fazit - prägnante fachliche Bewertung des Systems für die Wiederverwendung im Tragwerk AUSGABEFORMAT: - Klar gegliedert mit Überschriften und Unterüberschriften - Fachlich präzise, keine Marketing-Sprache - Wichtige Informationen in Tabellenform, wenn sinnvoll - Am Ende: A) Tabelle „Quellenübersicht“ B) Tabelle „genannte Bauteile“ C) Tabelle „tragwerksrelevante Chancen / Risiken“ D) Literaturliste aller verwendeten Quellen aus dem Notebook QUELLENUMGANG: - Gib bei jeder wesentlichen Aussage die Quelle an.
 
-Fachbericht: Wiederverwendung von Baukomponenten und Baumaterialien im Tragwerk – Fokus auf Ortbeton- und Stahlbetontragwerke
+---
 
-1. Kurzfassung
+## Bericht 2: Wiederverwendung von Baukomponenten und Baumaterialien im Tragwerk – Fokus auf Ortbeton- und Stahlbetontragwerke
+
+### 1. Kurzfassung
 
 Die Dekarbonisierung des Bausektors ist eine der zentralen Aufgaben der modernen Tragwerksplanung. Angesichts der Tatsache, dass die Zementindustrie für ca. 9 % der globalen prozessbedingten Treibhausgasemissionen verantwortlich ist (Devènes et al. 2024; Johannesen 2024), stellt der Erhalt grauer Energie durch die Wiederverwendung von Bauteilen eine strategische Notwendigkeit dar. Aktuelle Schweizer Fallstudien (BCS 1–3) belegen, dass ca. 95 % der untersuchten mineralischen Komponenten als technisch wiederverwendbar einzustufen sind (Devènes et al. 2024). Während die technische Machbarkeit durch Pilotprojekte untermauert ist, verbleiben die Haupthürden in der logistischen Synchronisation und dem Fehlen standardisierter technischer Richtlinien. Um Beton nicht länger als Abfall, sondern als wertvolle Ressource in einem Bauteillager zu begreifen, ist eine präzise systemische Definition des Tragwerks als Depot modularer Komponenten unerlässlich.
 

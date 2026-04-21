@@ -1,6 +1,10 @@
-Fachbericht: Strategische Wiederverwendung von Stützen und Pfeilern im zirkulären Bauwesen
+---
+title: Wiederverwendung von Stützen und Pfeilern
+---
 
-1. Einleitung: Die Rolle vertikaler Tragglieder in der Circular Economy
+## Bericht 1: Strategische Wiederverwendung von Stützen und Pfeilern im zirkulären Bauwesen
+
+### 1. Einleitung: Die Rolle vertikaler Tragglieder in der Circular Economy
 
 In der Tragwerksplanung fungieren Stützen und Pfeiler als primäre Druckglieder. Ihre strategische Bedeutung im zirkulären Bauwesen ergibt sich aus ihrer geometrischen Kompaktheit und ihrem hohen statischen Wert. Der Erhalt dieser Bauteile durch Wiederverwendung (Reuse) ist dem stofflichen Recycling (Einschmelzen von Stahl, Zerkleinern von Beton) sowohl energetisch als auch ökonomisch überlegen, da die im Bauteil gebundene graue Energie (Embodied Carbon) und die ursprüngliche Wertschöpfung konserviert werden.
 
@@ -107,12 +111,11 @@ Strategische Empfehlungen für die Praxis:
 
 Die Stütze ist kein Abfall, sondern ein hochwertiges Kapitalgut. Ihre Wiederverwendung ist der entscheidende Hebel zur Erreichung der Klimaziele im konstruktiven Ingenieurbau.
 
+---
 
------------------------------------------------------------------------------
+## Bericht 2: Wiederverwendung tragender Stützen aus Stahl, Holz und Beton im zirkulären Bauwesen
 
-Fachbericht: Wiederverwendung tragender Stützen aus Stahl, Holz und Beton im zirkulären Bauwesen
-
-Einleitung
+### Einleitung
 
 Die Bauindustrie steht vor einer technologischen Transformation von weitreichender strategischer Bedeutung. Angesichts der Tatsache, dass das Bauwesen für rund 50 % des weltweiten Rohstoffverbrauchs und über 35 % des Abfallaufkommens in der EU verantwortlich ist, gewinnt der Übergang von der linearen Entsorgung hin zur gezielten Ressourcengewinnung – dem Urban Mining – eine existenzielle Relevanz für das Erreichen der Klimaziele. Ziel ist es, den Gebäudebestand als wertvolles Materiallager zu begreifen, um wirtschaftliches Wachstum konsequent vom Ressourcenverbrauch zu entkoppeln.
 
