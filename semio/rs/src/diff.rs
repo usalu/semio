@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::connection::ConnectionDto;
-use crate::design::{Design, DesignDto, DesignRef};
+use crate::connection::{ConnectionFullDto, ConnectionIdDto};
+use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
 use crate::guid::Guid;
-use crate::piece::PieceDto;
+use crate::piece::{PieceFullDto, PieceIdDto};
 use crate::report::SemioReport;
 
 /// A symmetric description of a modification to a design: forward re-plays
@@ -19,71 +19,65 @@ pub struct DesignChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub time: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub before: Option<DesignDto>,
+    pub before: Option<DesignFullDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub after: Option<DesignDto>,
+    pub after: Option<DesignFullDto>,
 }
 
-/// Structural delta between two [`Design`] states, expressed in DTO shape.
+/// Structural delta between two [`DesignStore`] states, expressed in DTO shape.
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct DesignDiff {
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedPieces")]
-    pub added_pieces: Vec<PieceDto>,
+    pub added_pieces: Vec<PieceFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedPieces")]
-    pub removed_pieces: Vec<Guid>,
+    pub removed_pieces: Vec<PieceIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedPieces")]
-    pub modified_pieces: Vec<PieceDto>,
+    pub modified_pieces: Vec<PieceFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedConnections")]
-    pub added_connections: Vec<ConnectionDto>,
+    pub added_connections: Vec<ConnectionFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedConnections")]
-    pub removed_connections: Vec<Guid>,
+    pub removed_connections: Vec<ConnectionIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedConnections")]
-    pub modified_connections: Vec<ConnectionDto>,
+    pub modified_connections: Vec<ConnectionFullDto>,
 }
 
 impl DesignChange {
-    /// A change whose forward/backward are both empty. Convenient starting
-    /// point before populating the affected pieces/connections.
     pub fn empty() -> Self {
         Self::default()
     }
 
-    /// Snapshot `design` into [`DesignChange::before`].
-    pub fn with_before(mut self, design: &Design) -> Self {
-        self.before = Some(DesignDto::from(design));
+    pub fn with_before(mut self, design: &DesignStore) -> Self {
+        self.before = Some(design.to_full_dto());
         self
     }
 
-    /// Snapshot `design` into [`DesignChange::after`].
-    pub fn with_after(mut self, design: &Design) -> Self {
-        self.after = Some(DesignDto::from(design));
+    pub fn with_after(mut self, design: &DesignStore) -> Self {
+        self.after = Some(design.to_full_dto());
         self
     }
 }
 
-impl Design {
-    /// Compute a change that removes the given pieces/connections, returning
-    /// a report with before/after snapshots and the symmetric diffs.
+impl DesignStore {
     pub fn delete_change(
         &mut self,
         piece_guids: &[Guid],
         connection_guids: &[Guid],
     ) -> SemioReport<DesignChange> {
-        let before = DesignDto::from(&*self);
+        let before = self.to_full_dto();
 
-        let mut removed_pieces: Vec<PieceDto> = Vec::new();
-        let mut removed_connections: Vec<ConnectionDto> = Vec::new();
+        let mut removed_pieces: Vec<PieceFullDto> = Vec::new();
+        let mut removed_connections: Vec<ConnectionFullDto> = Vec::new();
         for pg in piece_guids {
             if let Some(p) = self.piece(pg.as_str()) {
                 if let Ok(p) = p.read() {
-                    removed_pieces.push(PieceDto::from(&*p));
+                    removed_pieces.push(p.to_full_dto());
                 }
             }
         }
         for cg in connection_guids {
             if let Some(c) = self.connection(cg.as_str()) {
                 if let Ok(c) = c.read() {
-                    removed_connections.push(ConnectionDto::from(&*c));
+                    removed_connections.push(c.to_full_dto());
                 }
             }
         }
@@ -95,7 +89,7 @@ impl Design {
         });
         let _deleted = self.delete_pieces(piece_guids);
 
-        let after = DesignDto::from(&*self);
+        let after = self.to_full_dto();
 
         let backward = DesignDiff {
             added_pieces: removed_pieces.clone(),
@@ -103,8 +97,14 @@ impl Design {
             ..DesignDiff::default()
         };
         let forward = DesignDiff {
-            removed_pieces: removed_pieces.iter().filter_map(|p| p.guid.clone()).collect(),
-            removed_connections: removed_connections.iter().filter_map(|c| c.guid.clone()).collect(),
+            removed_pieces: removed_pieces
+                .iter()
+                .map(|p| PieceIdDto { guid: p.meta.guid.clone() })
+                .collect(),
+            removed_connections: removed_connections
+                .iter()
+                .map(|c| ConnectionIdDto { guid: c.meta.guid.clone() })
+                .collect(),
             ..DesignDiff::default()
         };
 
@@ -119,29 +119,22 @@ impl Design {
         SemioReport::ok(change)
     }
 
-    /// Compute the flatten-as-change: reports the current flattened poses as
-    /// modifications to the baseline (no-op backward).
     pub fn flatten_change(&self) -> SemioReport<DesignChange> {
-        let before = DesignDto::from(self);
-        let flattened = self.flatten();
-        let mut modified_pieces: Vec<PieceDto> = Vec::new();
-        for (guid, fp) in &flattened.pieces {
-            if let Some(piece) = self.piece(guid.as_str()) {
-                if let Ok(p) = piece.read() {
-                    let mut dto = PieceDto::from(&*p);
-                    dto.plane = Some(fp.plane);
-                    dto.center = Some(fp.center);
-                    modified_pieces.push(dto);
-                }
+        let before = self.to_full_dto();
+        let mut modified_pieces: Vec<PieceFullDto> = Vec::new();
+        for piece in &self.pieces {
+            if let Ok(p) = piece.read() {
+                let mut dto = p.to_full_dto();
+                dto.meta.plane = Some(p.flat_plane());
+                dto.meta.center = Some(p.flat_center());
+                modified_pieces.push(dto);
             }
         }
         let forward = DesignDiff { modified_pieces: modified_pieces.clone(), ..DesignDiff::default() };
-        let backward_mod: Vec<PieceDto> = before
+        let backward_mod: Vec<PieceFullDto> = before
             .pieces
             .iter()
-            .filter(|p| {
-                modified_pieces.iter().any(|m| m.guid == p.guid)
-            })
+            .filter(|p| modified_pieces.iter().any(|m| m.meta.guid == p.meta.guid))
             .cloned()
             .collect();
         let backward = DesignDiff { modified_pieces: backward_mod, ..DesignDiff::default() };
@@ -154,13 +147,9 @@ impl Design {
             after: Some(before),
         })
     }
-}
 
-impl Design {
-    /// Convenience for consumers: run a delete change on a [`DesignRef`]
-    /// without exposing the internal locking.
     pub fn delete_pieces_and_connections_ref(
-        design: &DesignRef,
+        design: &DesignStoreRef,
         piece_guids: &[Guid],
         connection_guids: &[Guid],
     ) -> SemioReport<DesignChange> {
@@ -171,6 +160,5 @@ impl Design {
     }
 }
 
-/// Keep an unused import warning silenced on stable rustc.
 #[allow(dead_code)]
 fn _keep_arc(_: Arc<()>) {}

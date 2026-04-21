@@ -5,7 +5,7 @@ mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 } // 🧲Header
 
-use semio::{Design, DesignRef, Guid, Kit, KitDto, KitRef};
+use semio::{DesignStore, DesignStoreRef, Guid, KitFullDto, KitStore, KitStoreRef};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
@@ -13,7 +13,7 @@ use std::io::Read;
 #[serde(rename_all = "camelCase")]
 struct BridgeRequest {
     op: String,
-    kit: KitDto,
+    kit: KitFullDto,
     design_guid: String,
     #[serde(default)]
     piece_guids: Vec<String>,
@@ -43,8 +43,8 @@ fn main() {
             return;
         }
     };
-    let kit_ref: KitRef = Kit::from_dto(req.kit);
-    let design_ref: DesignRef = {
+    let kit_ref: KitStoreRef = KitStore::from_full_dto(req.kit);
+    let design_ref: DesignStoreRef = {
         let guard = match kit_ref.read() {
             Ok(g) => g,
             Err(_) => {
@@ -78,7 +78,7 @@ fn main() {
             let piece_guids: Vec<Guid> = req.piece_guids.into_iter().map(Guid::from).collect();
             let connection_guids: Vec<Guid> =
                 req.connection_guids.into_iter().map(Guid::from).collect();
-            let report = Design::delete_pieces_and_connections_ref(
+            let report = DesignStore::delete_pieces_and_connections_ref(
                 &design_ref,
                 &piece_guids,
                 &connection_guids,

@@ -4,12 +4,12 @@ use std::sync::{Arc, OnceLock, RwLock, Weak};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
 
-pub type LayerRef = Arc<RwLock<Layer>>;
-pub type LayerWeak = Weak<RwLock<Layer>>;
+pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
+pub type LayerStoreWeak = Weak<RwLock<LayerStore>>;
 
-/// Visual layer inside a [`crate::design::Design`].
+/// Visual layer inside a [`crate::design::DesignStore`].
 #[derive(Debug)]
-pub struct Layer {
+pub struct LayerStore {
     pub guid: Guid,
     pub name: String,
     pub description: Option<String>,
@@ -17,11 +17,44 @@ pub struct Layer {
     pub order: Option<i64>,
     pub visible: Option<bool>,
     pub locked: Option<bool>,
-    pub parent_design: Weak<RwLock<crate::design::Design>>,
+    pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
     hash_cache: OnceLock<String>,
 }
 
-impl Layer {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct LayerIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct LayerMetadataDto {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct LayerShallowDto {
+    #[serde(flatten)]
+    pub meta: LayerMetadataDto,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct LayerFullDto {
+    #[serde(flatten)]
+    pub meta: LayerMetadataDto,
+}
+
+impl LayerStore {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -34,6 +67,66 @@ impl Layer {
             parent_design: Weak::new(),
             hash_cache: OnceLock::new(),
         }
+    }
+
+    pub fn from_id_dto(d: LayerIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: String::new(),
+            description: None,
+            color: None,
+            order: None,
+            visible: None,
+            locked: None,
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: LayerMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            order: d.order,
+            visible: d.visible,
+            locked: d.locked,
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: LayerShallowDto) -> Self {
+        Self::from_metadata_dto(d.meta)
+    }
+
+    pub fn from_full_dto(d: LayerFullDto) -> Self {
+        Self::from_metadata_dto(d.meta)
+    }
+
+    pub fn to_id_dto(&self) -> LayerIdDto {
+        LayerIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> LayerMetadataDto {
+        LayerMetadataDto {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            color: self.color.clone(),
+            order: self.order,
+            visible: self.visible,
+            locked: self.locked,
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> LayerShallowDto {
+        LayerShallowDto { meta: self.to_metadata_dto() }
+    }
+
+    pub fn to_full_dto(&self) -> LayerFullDto {
+        LayerFullDto { meta: self.to_metadata_dto() }
     }
 
     pub fn invalidate_hash(&mut self) {
@@ -60,52 +153,5 @@ impl Layer {
             w.f64(o as f64);
         }
         w.opt_bool(self.visible).opt_bool(self.locked);
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct LayerDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub color: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub order: Option<i64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub visible: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub locked: Option<bool>,
-}
-
-impl From<&Layer> for LayerDto {
-    fn from(l: &Layer) -> Self {
-        LayerDto {
-            guid: Some(l.guid.clone()),
-            name: l.name.clone(),
-            description: l.description.clone(),
-            color: l.color.clone(),
-            order: l.order,
-            visible: l.visible,
-            locked: l.locked,
-        }
-    }
-}
-
-impl From<LayerDto> for Layer {
-    fn from(d: LayerDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            name: d.name,
-            description: d.description,
-            color: d.color,
-            order: d.order,
-            visible: d.visible,
-            locked: d.locked,
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-        }
     }
 }

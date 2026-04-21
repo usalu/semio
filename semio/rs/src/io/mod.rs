@@ -1,5 +1,5 @@
 //! I/O backends for kit persistence. Each backend implements methods on
-//! [`crate::kit::Kit`] behind its own cfg, keeping the domain layer free of
+//! [`crate::kit::KitStore`] behind its own cfg, keeping the domain layer free of
 //! transport concerns.
 
 pub mod json;

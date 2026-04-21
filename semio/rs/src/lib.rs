@@ -41,31 +41,68 @@ pub mod typ;
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
 
-pub use attribute::Attribute;
-pub use author::Author;
-pub use benchmark::Benchmark;
-pub use concept::Concept;
-pub use connection::{Connection, ConnectionDto, ConnectionRef, ConnectionWeak};
-pub use connector::{Connector, ConnectorDto, ConnectorRef, ConnectorWeak};
-pub use design::{Design, DesignDto, DesignRef, DesignWeak, FlattenedDesign};
+pub use attribute::{
+    AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore,
+    AttributeStoreRef, AttributeStoreWeak,
+};
+pub use author::{
+    AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef, AuthorStoreWeak,
+};
+pub use benchmark::{
+    BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore,
+    BenchmarkStoreRef, BenchmarkStoreWeak,
+};
+pub use concept::{
+    ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef,
+    ConceptStoreWeak,
+};
+pub use connection::{
+    ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore,
+    ConnectionStoreRef, ConnectionStoreWeak,
+};
+pub use connector::{
+    ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore,
+    ConnectorStoreRef, ConnectorStoreWeak,
+};
+pub use design::{
+    DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak,
+};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError};
-pub use file::{File, FileDto, FileRef, FileWeak};
-pub use folder::{Folder, FolderDto, FolderRef, FolderWeak};
+pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
+pub use folder::{
+    FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak,
+};
 pub use geom::{Camera, Coord, Location, Plane, Vector};
-pub use group::{Group, GroupDto, GroupRef, GroupWeak};
+pub use group::{
+    GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak,
+};
 pub use guid::Guid;
 pub use hash::HashWriter;
-pub use kit::{Kit, KitDto, KitRef};
-pub use layer::{Layer, LayerDto, LayerRef, LayerWeak};
-pub use piece::{FlattenedPiece, Piece, PieceDto, PieceRef, PieceWeak};
-pub use port::{Port, PortDto, PortRef, PortWeak};
-pub use prop::Prop;
-pub use quality::{Quality, QualityDto, QualityRef, QualityWeak};
+pub use kit::{
+    KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef,
+};
+pub use layer::{
+    LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak,
+};
+pub use piece::{
+    PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak,
+};
+pub use port::{
+    PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak,
+};
+pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
+pub use quality::{
+    QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef,
+    QualityStoreWeak,
+};
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{Representation, RepresentationDto, RepresentationRef, RepresentationWeak};
+pub use representation::{
+    RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto,
+    RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak,
+};
 pub use session::KitGraphSession;
-pub use side::{Side, SideDto};
-pub use stat::Stat;
-pub use tag::Tag;
-pub use typ::{Type, TypeDto, TypeRef, TypeWeak};
+pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore};
+pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
+pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
+pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};

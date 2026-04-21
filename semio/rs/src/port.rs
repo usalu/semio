@@ -1,18 +1,18 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, OnceLock, RwLock};
 
-use crate::attribute::Attribute;
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::geom::{Coord, Vector};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::quality::{Quality, QualityDto, QualityRef};
+use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
-pub type PortRef = Arc<RwLock<Port>>;
-pub type PortWeak = Weak<RwLock<Port>>;
+pub type PortStoreRef = Arc<RwLock<PortStore>>;
+pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
 
-/// Connection anchor on a [`crate::typ::Type`].
+/// Connection anchor on a [`crate::typ::TypeStore`].
 #[derive(Debug)]
-pub struct Port {
+pub struct PortStore {
     pub guid: Guid,
     pub id: Option<String>,
     pub family: Option<String>,
@@ -22,12 +22,58 @@ pub struct Port {
     pub description: Option<String>,
     pub point: Option<Coord>,
     pub direction: Option<Vector>,
-    pub qualities: Vec<QualityRef>,
-    pub attributes: Vec<Attribute>,
+    pub qualities: Vec<QualityStoreRef>,
+    pub attributes: Vec<AttributeStore>,
     hash_cache: OnceLock<String>,
 }
 
-impl Port {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct PortIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct PortMetadataDto {
+    pub guid: Guid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
+    pub compatible_families: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mandatory: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub t: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direction: Option<Vector>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct PortShallowDto {
+    #[serde(flatten)]
+    pub meta: PortMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeShallowDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct PortFullDto {
+    #[serde(flatten)]
+    pub meta: PortMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeFullDto>,
+}
+
+impl PortStore {
     pub fn new() -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -42,6 +88,104 @@ impl Port {
             qualities: Vec::new(),
             attributes: Vec::new(),
             hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_id_dto(d: PortIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            id: None,
+            family: None,
+            compatible_families: Vec::new(),
+            mandatory: None,
+            t: None,
+            description: None,
+            point: None,
+            direction: None,
+            qualities: Vec::new(),
+            attributes: Vec::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            id: d.id,
+            family: d.family,
+            compatible_families: d.compatible_families,
+            mandatory: d.mandatory,
+            t: d.t,
+            description: d.description,
+            point: d.point,
+            direction: d.direction,
+            qualities: Vec::new(),
+            attributes: Vec::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: PortShallowDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.qualities = d
+            .qualities
+            .into_iter()
+            .map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q))))
+            .collect();
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+        s
+    }
+
+    pub fn from_full_dto(d: PortFullDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.qualities = d
+            .qualities
+            .into_iter()
+            .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
+            .collect();
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+        s
+    }
+
+    pub fn to_id_dto(&self) -> PortIdDto {
+        PortIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> PortMetadataDto {
+        PortMetadataDto {
+            guid: self.guid.clone(),
+            id: self.id.clone(),
+            family: self.family.clone(),
+            compatible_families: self.compatible_families.clone(),
+            mandatory: self.mandatory,
+            t: self.t,
+            description: self.description.clone(),
+            point: self.point,
+            direction: self.direction,
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> PortShallowDto {
+        PortShallowDto {
+            meta: self.to_metadata_dto(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
+                .collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> PortFullDto {
+        PortFullDto {
+            meta: self.to_metadata_dto(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
+                .collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
         }
     }
 
@@ -85,79 +229,8 @@ impl Port {
     }
 }
 
-impl Default for Port {
+impl Default for PortStore {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct PortDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub family: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
-    pub compatible_families: Vec<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub mandatory: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub t: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub point: Option<Coord>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub direction: Option<Vector>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub qualities: Vec<QualityDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<Attribute>,
-}
-
-impl From<&Port> for PortDto {
-    fn from(p: &Port) -> Self {
-        PortDto {
-            guid: Some(p.guid.clone()),
-            id: p.id.clone(),
-            family: p.family.clone(),
-            compatible_families: p.compatible_families.clone(),
-            mandatory: p.mandatory,
-            t: p.t,
-            description: p.description.clone(),
-            point: p.point,
-            direction: p.direction,
-            qualities: p
-                .qualities
-                .iter()
-                .filter_map(|q| q.read().ok().map(|q| QualityDto::from(&*q)))
-                .collect(),
-            attributes: p.attributes.clone(),
-        }
-    }
-}
-
-impl Port {
-    pub fn from_dto(d: PortDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            id: d.id,
-            family: d.family,
-            compatible_families: d.compatible_families,
-            mandatory: d.mandatory,
-            t: d.t,
-            description: d.description,
-            point: d.point,
-            direction: d.direction,
-            qualities: d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(Quality::from(q))))
-                .collect(),
-            attributes: d.attributes,
-            hash_cache: OnceLock::new(),
-        }
     }
 }

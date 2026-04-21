@@ -1,27 +1,62 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock, RwLock, Weak};
 
-use crate::benchmark::Benchmark;
+use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
 
-pub type QualityRef = Arc<RwLock<Quality>>;
-pub type QualityWeak = Weak<RwLock<Quality>>;
+pub type QualityStoreRef = Arc<RwLock<QualityStore>>;
+pub type QualityStoreWeak = Weak<RwLock<QualityStore>>;
 
 /// Measurable/named quality that can be attached to ports, types, designs, etc.
 #[derive(Debug)]
-pub struct Quality {
+pub struct QualityStore {
     pub guid: Guid,
     pub key: String,
     pub value: Option<String>,
     pub unit: Option<String>,
     pub definition: Option<String>,
     pub description: Option<String>,
-    pub benchmarks: Vec<Benchmark>,
+    pub benchmarks: Vec<BenchmarkStore>,
     hash_cache: OnceLock<String>,
 }
 
-impl Quality {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct QualityIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct QualityMetadataDto {
+    pub guid: Guid,
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct QualityShallowDto {
+    #[serde(flatten)]
+    pub meta: QualityMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub benchmarks: Vec<BenchmarkMetadataDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct QualityFullDto {
+    #[serde(flatten)]
+    pub meta: QualityMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub benchmarks: Vec<BenchmarkFullDto>,
+}
+
+impl QualityStore {
     pub fn new(key: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -32,6 +67,73 @@ impl Quality {
             description: None,
             benchmarks: Vec::new(),
             hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_id_dto(d: QualityIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            key: String::new(),
+            value: None,
+            unit: None,
+            definition: None,
+            description: None,
+            benchmarks: Vec::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: QualityMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+            definition: d.definition,
+            description: d.description,
+            benchmarks: Vec::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: QualityShallowDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.benchmarks = d.benchmarks.into_iter().map(BenchmarkStore::from_metadata_dto).collect();
+        s
+    }
+
+    pub fn from_full_dto(d: QualityFullDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.benchmarks = d.benchmarks.into_iter().map(BenchmarkStore::from_full_dto).collect();
+        s
+    }
+
+    pub fn to_id_dto(&self) -> QualityIdDto {
+        QualityIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> QualityMetadataDto {
+        QualityMetadataDto {
+            guid: self.guid.clone(),
+            key: self.key.clone(),
+            value: self.value.clone(),
+            unit: self.unit.clone(),
+            definition: self.definition.clone(),
+            description: self.description.clone(),
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> QualityShallowDto {
+        QualityShallowDto {
+            meta: self.to_metadata_dto(),
+            benchmarks: self.benchmarks.iter().map(BenchmarkStore::to_metadata_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> QualityFullDto {
+        QualityFullDto {
+            meta: self.to_metadata_dto(),
+            benchmarks: self.benchmarks.iter().map(BenchmarkStore::to_full_dto).collect(),
         }
     }
 
@@ -58,52 +160,6 @@ impl Quality {
             .opt_str(self.definition.as_deref());
         for b in &self.benchmarks {
             b.hash_into(w);
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct QualityDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub key: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub value: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unit: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub definition: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub benchmarks: Vec<Benchmark>,
-}
-
-impl From<&Quality> for QualityDto {
-    fn from(q: &Quality) -> Self {
-        QualityDto {
-            guid: Some(q.guid.clone()),
-            key: q.key.clone(),
-            value: q.value.clone(),
-            unit: q.unit.clone(),
-            definition: q.definition.clone(),
-            description: q.description.clone(),
-            benchmarks: q.benchmarks.clone(),
-        }
-    }
-}
-
-impl From<QualityDto> for Quality {
-    fn from(d: QualityDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            key: d.key,
-            value: d.value,
-            unit: d.unit,
-            definition: d.definition,
-            description: d.description,
-            benchmarks: d.benchmarks,
-            hash_cache: OnceLock::new(),
         }
     }
 }

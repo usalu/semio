@@ -2,27 +2,26 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock};
 
-use crate::attribute::Attribute;
-use crate::author::Author;
-use crate::concept::Concept;
-use crate::design::{Design, DesignDto, DesignRef, FlattenedDesign};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore};
+use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore};
+use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
 use crate::error::{Result, SemioError};
-use crate::file::{File, FileDto, FileRef};
-use crate::folder::{Folder, FolderDto, FolderRef};
+use crate::file::{FileFullDto, FileStore, FileStoreRef};
+use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::prop::Prop;
-use crate::quality::{Quality, QualityDto, QualityRef};
+use crate::prop::{PropFullDto, PropShallowDto, PropStore};
+use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 use crate::report::{SemioReport, ValidationResult};
-use crate::representation::Representation;
-use crate::tag::Tag;
-use crate::typ::{Type, TypeDto, TypeRef};
+use crate::tag::{TagFullDto, TagShallowDto, TagStore};
+use crate::typ::{TypeFullDto, TypeStore, TypeStoreRef};
 
-pub type KitRef = Arc<RwLock<Kit>>;
+pub type KitStoreRef = Arc<RwLock<KitStore>>;
 
 /// Root aggregate: a kit owns all components of the system.
 #[derive(Debug)]
-pub struct Kit {
+pub struct KitStore {
     pub guid: Guid,
     pub name: String,
     pub description: Option<String>,
@@ -36,20 +35,105 @@ pub struct Kit {
     pub uri: Option<String>,
     pub created: Option<String>,
     pub updated: Option<String>,
-    pub types: Vec<TypeRef>,
-    pub designs: Vec<DesignRef>,
-    pub files: Vec<FileRef>,
-    pub folders: Vec<FolderRef>,
-    pub authors: Vec<Author>,
-    pub concepts: Vec<Concept>,
-    pub tags: Vec<Tag>,
-    pub qualities: Vec<QualityRef>,
-    pub props: Vec<Prop>,
-    pub attributes: Vec<Attribute>,
+    pub types: Vec<TypeStoreRef>,
+    pub designs: Vec<DesignStoreRef>,
+    pub files: Vec<FileStoreRef>,
+    pub folders: Vec<FolderStoreRef>,
+    pub authors: Vec<AuthorStore>,
+    pub concepts: Vec<ConceptStore>,
+    pub tags: Vec<TagStore>,
+    pub qualities: Vec<QualityStoreRef>,
+    pub props: Vec<PropStore>,
+    pub attributes: Vec<AttributeStore>,
     hash_cache: OnceLock<String>,
 }
 
-impl Kit {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct KitIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct KitMetadataDto {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub homepage: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uri: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct KitShallowDto {
+    #[serde(flatten)]
+    pub meta: KitMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub types: Vec<crate::typ::TypeShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub designs: Vec<crate::design::DesignShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub files: Vec<crate::file::FileShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub folders: Vec<crate::folder::FolderShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub authors: Vec<AuthorShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub concepts: Vec<ConceptShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<TagShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub props: Vec<PropShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeShallowDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct KitFullDto {
+    #[serde(flatten)]
+    pub meta: KitMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub types: Vec<TypeFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub designs: Vec<DesignFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub files: Vec<FileFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub folders: Vec<FolderFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub authors: Vec<AuthorFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub concepts: Vec<ConceptFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<TagFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub props: Vec<PropFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeFullDto>,
+}
+
+impl KitStore {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -101,83 +185,102 @@ impl Kit {
             .opt_str(self.version.as_deref())
             .opt_str(self.license.as_deref());
         for t in &self.types {
-            if let Ok(t) = t.read() { t.hash_into(w); }
+            if let Ok(t) = t.read() {
+                t.hash_into(w);
+            }
         }
         for d in &self.designs {
-            if let Ok(d) = d.read() { d.hash_into(w); }
+            if let Ok(d) = d.read() {
+                d.hash_into(w);
+            }
         }
         for f in &self.files {
-            if let Ok(f) = f.read() { f.hash_into(w); }
+            if let Ok(f) = f.read() {
+                f.hash_into(w);
+            }
         }
         for f in &self.folders {
-            if let Ok(f) = f.read() { f.hash_into(w); }
+            if let Ok(f) = f.read() {
+                f.hash_into(w);
+            }
         }
-        for a in &self.authors { a.hash_into(w); }
-        for c in &self.concepts { c.hash_into(w); }
-        for t in &self.tags { t.hash_into(w); }
+        for a in &self.authors {
+            a.hash_into(w);
+        }
+        for c in &self.concepts {
+            c.hash_into(w);
+        }
+        for t in &self.tags {
+            t.hash_into(w);
+        }
         for q in &self.qualities {
-            if let Ok(q) = q.read() { q.hash_into(w); }
+            if let Ok(q) = q.read() {
+                q.hash_into(w);
+            }
         }
-        for p in &self.props { p.hash_into(w); }
-        for a in &self.attributes { a.hash_into(w); }
+        for p in &self.props {
+            p.hash_into(w);
+        }
+        for a in &self.attributes {
+            a.hash_into(w);
+        }
     }
 
-    /// Find a type by guid.
-    pub fn semio_type(&self, guid: &str) -> Option<TypeRef> {
+    pub fn semio_type(&self, guid: &str) -> Option<TypeStoreRef> {
         self.types
             .iter()
             .find(|t| t.read().map(|t| t.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    /// Find a type mutably by guid (returns the Arc, caller locks).
-    pub fn semio_type_mut(&self, guid: &str) -> Option<TypeRef> {
+    pub fn semio_type_mut(&self, guid: &str) -> Option<TypeStoreRef> {
         self.semio_type(guid)
     }
 
-    pub fn design(&self, guid: &str) -> Option<DesignRef> {
+    pub fn design(&self, guid: &str) -> Option<DesignStoreRef> {
         self.designs
             .iter()
             .find(|d| d.read().map(|d| d.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn design_mut(&self, guid: &str) -> Option<DesignRef> { self.design(guid) }
+    pub fn design_mut(&self, guid: &str) -> Option<DesignStoreRef> {
+        self.design(guid)
+    }
 
-    pub fn file(&self, guid: &str) -> Option<FileRef> {
+    pub fn file(&self, guid: &str) -> Option<FileStoreRef> {
         self.files
             .iter()
             .find(|f| f.read().map(|f| f.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn folder(&self, guid: &str) -> Option<FolderRef> {
+    pub fn folder(&self, guid: &str) -> Option<FolderStoreRef> {
         self.folders
             .iter()
             .find(|f| f.read().map(|f| f.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn quality(&self, guid: &str) -> Option<QualityRef> {
+    pub fn quality(&self, guid: &str) -> Option<QualityStoreRef> {
         self.qualities
             .iter()
             .find(|q| q.read().map(|q| q.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    /// Flatten a design by guid, returning a report with notes if any.
-    pub fn flatten_design(&self, design_guid: &str) -> Result<SemioReport<FlattenedDesign>> {
+    /// Flatten a design by guid: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
+    pub fn flatten_design(&self, design_guid: &str) -> Result<SemioReport<crate::diff::DesignChange>> {
         let d = self
             .design(design_guid)
             .ok_or_else(|| SemioError::NotFound { kind: "Design", guid: Guid::from(design_guid) })?;
-        let flat = d
-            .read()
-            .map_err(|_| SemioError::LockPoisoned("design"))?
-            .flatten();
-        Ok(SemioReport::ok(flat))
+        let report = match d.read() {
+            Ok(dr) => dr.flatten_change(),
+            Err(_) => return Err(SemioError::LockPoisoned("design")),
+        };
+        Ok(report)
     }
 
-    /// Validate the kit structure; currently a light check.
     pub fn validate(&self) -> ValidationResult {
         let mut result = ValidationResult::valid();
         if self.name.trim().is_empty() {
@@ -201,117 +304,42 @@ impl Kit {
         result
     }
 
-    /// Deep hash equality (ignores guid order within the same content).
-    pub fn are_equal(&self, other: &Kit) -> bool {
+    pub fn are_equal(&self, other: &KitStore) -> bool {
         self.hash() == other.hash()
     }
-}
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct KitDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub image: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub preview: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub remote: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub homepage: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub license: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub uri: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub created: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub updated: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub types: Vec<TypeDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub designs: Vec<DesignDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub files: Vec<FileDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub folders: Vec<FolderDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub authors: Vec<Author>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub concepts: Vec<Concept>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tags: Vec<Tag>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub qualities: Vec<QualityDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub props: Vec<Prop>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<Attribute>,
-}
-
-impl From<&Kit> for KitDto {
-    fn from(k: &Kit) -> Self {
-        KitDto {
-            guid: Some(k.guid.clone()),
-            name: k.name.clone(),
-            description: k.description.clone(),
-            icon: k.icon.clone(),
-            image: k.image.clone(),
-            preview: k.preview.clone(),
-            version: k.version.clone(),
-            remote: k.remote.clone(),
-            homepage: k.homepage.clone(),
-            license: k.license.clone(),
-            uri: k.uri.clone(),
-            created: k.created.clone(),
-            updated: k.updated.clone(),
-            types: k
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|t| TypeDto::from(&*t)))
-                .collect(),
-            designs: k
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|d| DesignDto::from(&*d)))
-                .collect(),
-            files: k
-                .files
-                .iter()
-                .filter_map(|f| f.read().ok().map(|f| FileDto::from(&*f)))
-                .collect(),
-            folders: k
-                .folders
-                .iter()
-                .filter_map(|f| f.read().ok().map(|f| FolderDto::from(&*f)))
-                .collect(),
-            authors: k.authors.clone(),
-            concepts: k.concepts.clone(),
-            tags: k.tags.clone(),
-            qualities: k
-                .qualities
-                .iter()
-                .filter_map(|q| q.read().ok().map(|q| QualityDto::from(&*q)))
-                .collect(),
-            props: k.props.clone(),
-            attributes: k.attributes.clone(),
+    pub fn from_id_dto(d: KitIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: String::new(),
+            description: None,
+            icon: None,
+            image: None,
+            preview: None,
+            version: None,
+            remote: None,
+            homepage: None,
+            license: None,
+            uri: None,
+            created: None,
+            updated: None,
+            types: Vec::new(),
+            designs: Vec::new(),
+            files: Vec::new(),
+            folders: Vec::new(),
+            authors: Vec::new(),
+            concepts: Vec::new(),
+            tags: Vec::new(),
+            qualities: Vec::new(),
+            props: Vec::new(),
+            attributes: Vec::new(),
+            hash_cache: OnceLock::new(),
         }
     }
-}
 
-impl Kit {
-    /// Hydrate a kit and all its descendants from a DTO, wiring parent/child
-    /// back-references throughout.
-    pub fn from_dto(d: KitDto) -> KitRef {
-        let kit = Arc::new(RwLock::new(Kit {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
+    pub fn from_metadata_dto(d: KitMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
             name: d.name,
             description: d.description,
             icon: d.icon,
@@ -328,66 +356,85 @@ impl Kit {
             designs: Vec::new(),
             files: Vec::new(),
             folders: Vec::new(),
-            authors: d.authors,
-            concepts: d.concepts,
-            tags: d.tags,
-            qualities: d
-                .qualities
+            authors: Vec::new(),
+            concepts: Vec::new(),
+            tags: Vec::new(),
+            qualities: Vec::new(),
+            props: Vec::new(),
+            attributes: Vec::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    /// Hydrate the full kit graph from a [`KitFullDto`].
+    pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
+        let KitFullDto {
+            meta,
+            types,
+            designs,
+            files,
+            folders,
+            authors,
+            concepts,
+            tags,
+            qualities,
+            props,
+            attributes,
+        } = d;
+
+        let kit = Arc::new(RwLock::new(KitStore {
+            guid: meta.guid.clone(),
+            name: meta.name.clone(),
+            description: meta.description.clone(),
+            icon: meta.icon.clone(),
+            image: meta.image.clone(),
+            preview: meta.preview.clone(),
+            version: meta.version.clone(),
+            remote: meta.remote.clone(),
+            homepage: meta.homepage.clone(),
+            license: meta.license.clone(),
+            uri: meta.uri.clone(),
+            created: meta.created.clone(),
+            updated: meta.updated.clone(),
+            types: Vec::new(),
+            designs: Vec::new(),
+            files: Vec::new(),
+            folders: Vec::new(),
+            authors: authors.into_iter().map(AuthorStore::from_full_dto).collect(),
+            concepts: concepts.into_iter().map(ConceptStore::from_full_dto).collect(),
+            tags: tags.into_iter().map(TagStore::from_full_dto).collect(),
+            qualities: qualities
                 .into_iter()
-                .map(|q| Arc::new(RwLock::new(Quality::from(q))))
+                .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
                 .collect(),
-            props: d.props,
-            attributes: d.attributes,
+            props: props.into_iter().map(PropStore::from_full_dto).collect(),
+            attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
             hash_cache: OnceLock::new(),
         }));
 
-        let file_refs: Vec<FileRef> = d
-            .files
+        let file_refs: Vec<FileStoreRef> = files
             .into_iter()
-            .map(|f| Arc::new(RwLock::new(File::from(f))))
+            .map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f))))
             .collect();
-        let folder_refs: Vec<FolderRef> = d
-            .folders
+        let folder_refs: Vec<FolderStoreRef> = folders
             .into_iter()
-            .map(|f| Arc::new(RwLock::new(Folder::from(f))))
+            .map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f))))
             .collect();
 
-        let mut type_refs: Vec<TypeRef> = Vec::with_capacity(d.types.len());
-        let mut type_index: HashMap<Guid, TypeRef> = HashMap::new();
-        for tdto in d.types {
-            let rep_file_map: Vec<(Option<Guid>, Guid)> = tdto
-                .representations
-                .iter()
-                .map(|r| (r.file_guid.clone(), r.guid.clone().unwrap_or_else(Guid::new_v7)))
-                .collect();
-            let t = Type::from_dto(tdto);
-            if let Ok(mut tw) = t.write() {
-                tw.parent_kit = Arc::downgrade(&kit);
-                for r in &tw.representations {
-                    if let Ok(mut r_mut) = r.write() {
-                        if let Some((Some(fg), _)) =
-                            rep_file_map.iter().find(|(_, g)| *g == r_mut.guid)
-                        {
-                            if let Some(fref) = file_refs.iter().find(|f| {
-                                f.read().map(|f| f.guid == *fg).unwrap_or(false)
-                            }) {
-                                r_mut.file = Some(Arc::downgrade(fref));
-                            }
-                        }
-                    }
-                }
-            }
+        let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
+        let mut type_index: HashMap<Guid, TypeStoreRef> = HashMap::new();
+        for tdto in types {
+            let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs);
             if let Ok(tr) = t.read() {
                 type_index.insert(tr.guid.clone(), t.clone());
             }
             type_refs.push(t);
         }
 
-        let design_refs: Vec<DesignRef> = d
-            .designs
+        let design_refs: Vec<DesignStoreRef> = designs
             .into_iter()
             .map(|ddto| {
-                let design = Design::from_dto(ddto, &type_index);
+                let design = DesignStore::hydrate_from_full_dto(ddto, &type_index);
                 if let Ok(mut dw) = design.write() {
                     dw.parent_kit = Arc::downgrade(&kit);
                 }
@@ -404,11 +451,97 @@ impl Kit {
         kit
     }
 
-    /// Convert this kit to its wire DTO.
-    pub fn to_dto(&self) -> KitDto { KitDto::from(self) }
+    pub fn to_id_dto(&self) -> KitIdDto {
+        KitIdDto { guid: self.guid.clone() }
+    }
 
-    // Suppress warning about unused import while keeping the symbol available
-    // for hash computation shadows through doc-tests.
-    #[allow(dead_code)]
-    fn _keep_representation_import() -> Option<Representation> { None }
+    pub fn to_metadata_dto(&self) -> KitMetadataDto {
+        KitMetadataDto {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            preview: self.preview.clone(),
+            version: self.version.clone(),
+            remote: self.remote.clone(),
+            homepage: self.homepage.clone(),
+            license: self.license.clone(),
+            uri: self.uri.clone(),
+            created: self.created.clone(),
+            updated: self.updated.clone(),
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> KitShallowDto {
+        KitShallowDto {
+            meta: self.to_metadata_dto(),
+            types: self
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto()))
+                .collect(),
+            designs: self
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto()))
+                .collect(),
+            files: self
+                .files
+                .iter()
+                .filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto()))
+                .collect(),
+            folders: self
+                .folders
+                .iter()
+                .filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto()))
+                .collect(),
+            authors: self.authors.iter().map(AuthorStore::to_shallow_dto).collect(),
+            concepts: self.concepts.iter().map(ConceptStore::to_shallow_dto).collect(),
+            tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
+                .collect(),
+            props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> KitFullDto {
+        KitFullDto {
+            meta: self.to_metadata_dto(),
+            types: self
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|t| t.to_full_dto()))
+                .collect(),
+            designs: self
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|d| d.to_full_dto()))
+                .collect(),
+            files: self
+                .files
+                .iter()
+                .filter_map(|f| f.read().ok().map(|f| f.to_full_dto()))
+                .collect(),
+            folders: self
+                .folders
+                .iter()
+                .filter_map(|f| f.read().ok().map(|f| f.to_full_dto()))
+                .collect(),
+            authors: self.authors.iter().map(AuthorStore::to_full_dto).collect(),
+            concepts: self.concepts.iter().map(ConceptStore::to_full_dto).collect(),
+            tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
+                .collect(),
+            props: self.props.iter().map(PropStore::to_full_dto).collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+        }
+    }
 }

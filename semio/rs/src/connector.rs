@@ -1,30 +1,65 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock, RwLock, Weak};
 
-use crate::attribute::Attribute;
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::port::PortWeak;
-use crate::quality::{Quality, QualityDto, QualityRef};
+use crate::port::{PortIdDto, PortStoreWeak};
+use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
-pub type ConnectorRef = Arc<RwLock<Connector>>;
-pub type ConnectorWeak = Weak<RwLock<Connector>>;
+pub type ConnectorStoreRef = Arc<RwLock<ConnectorStore>>;
+pub type ConnectorStoreWeak = Weak<RwLock<ConnectorStore>>;
 
-/// A named socket on a [`crate::typ::Type`] that references a concrete port.
+/// A named socket on a [`crate::typ::TypeStore`] that references a concrete port.
 #[derive(Debug)]
-pub struct Connector {
+pub struct ConnectorStore {
     pub guid: Guid,
     pub code: String,
     pub description: Option<String>,
-    pub port: Option<PortWeak>,
-    pub qualities: Vec<QualityRef>,
-    pub attributes: Vec<Attribute>,
+    pub port: Option<PortStoreWeak>,
+    pub qualities: Vec<QualityStoreRef>,
+    pub attributes: Vec<AttributeStore>,
     /// Back-reference to the owning type.
-    pub parent_type: Weak<RwLock<crate::typ::Type>>,
+    pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
     hash_cache: OnceLock<String>,
 }
 
-impl Connector {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectorIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectorMetadataDto {
+    pub guid: Guid,
+    pub code: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<PortIdDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectorShallowDto {
+    #[serde(flatten)]
+    pub meta: ConnectorMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeShallowDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectorFullDto {
+    #[serde(flatten)]
+    pub meta: ConnectorMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeFullDto>,
+}
+
+impl ConnectorStore {
     pub fn new(code: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -35,6 +70,92 @@ impl Connector {
             attributes: Vec::new(),
             parent_type: Weak::new(),
             hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_id_dto(d: ConnectorIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            code: String::new(),
+            description: None,
+            port: None,
+            qualities: Vec::new(),
+            attributes: Vec::new(),
+            parent_type: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: ConnectorMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            code: d.code,
+            description: d.description,
+            port: None,
+            qualities: Vec::new(),
+            attributes: Vec::new(),
+            parent_type: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.qualities = d
+            .qualities
+            .into_iter()
+            .map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q))))
+            .collect();
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+        s
+    }
+
+    pub fn from_full_dto(d: ConnectorFullDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.qualities = d
+            .qualities
+            .into_iter()
+            .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
+            .collect();
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+        s
+    }
+
+    pub fn to_id_dto(&self) -> ConnectorIdDto {
+        ConnectorIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> ConnectorMetadataDto {
+        let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
+        ConnectorMetadataDto {
+            guid: self.guid.clone(),
+            code: self.code.clone(),
+            description: self.description.clone(),
+            port,
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
+        ConnectorShallowDto {
+            meta: self.to_metadata_dto(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
+                .collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> ConnectorFullDto {
+        ConnectorFullDto {
+            meta: self.to_metadata_dto(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
+                .collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
         }
     }
 
@@ -66,61 +187,6 @@ impl Connector {
         }
         for a in &self.attributes {
             a.hash_into(w);
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct ConnectorDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub code: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "portGuid")]
-    pub port_guid: Option<Guid>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub qualities: Vec<QualityDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<Attribute>,
-}
-
-impl From<&Connector> for ConnectorDto {
-    fn from(c: &Connector) -> Self {
-        ConnectorDto {
-            guid: Some(c.guid.clone()),
-            code: c.code.clone(),
-            description: c.description.clone(),
-            port_guid: c
-                .port
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.guid.clone())),
-            qualities: c
-                .qualities
-                .iter()
-                .filter_map(|q| q.read().ok().map(|q| QualityDto::from(&*q)))
-                .collect(),
-            attributes: c.attributes.clone(),
-        }
-    }
-}
-
-impl Connector {
-    pub fn from_dto(d: ConnectorDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            code: d.code,
-            description: d.description,
-            port: None,
-            qualities: d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(Quality::from(q))))
-                .collect(),
-            attributes: d.attributes,
-            parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
         }
     }
 }

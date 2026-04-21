@@ -1,20 +1,20 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, OnceLock, RwLock, Weak};
 
-use crate::attribute::Attribute;
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::side::{Side, SideDto};
+use crate::side::SideStore;
 
-pub type ConnectionRef = Arc<RwLock<Connection>>;
-pub type ConnectionWeak = Weak<RwLock<Connection>>;
+pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
+pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
 
-/// Join between two [`crate::piece::Piece`] instances.
+/// Join between two [`crate::piece::PieceStore`] instances.
 #[derive(Debug)]
-pub struct Connection {
+pub struct ConnectionStore {
     pub guid: Guid,
-    pub connected: Side,
-    pub connecting: Side,
+    pub connected: SideStore,
+    pub connecting: SideStore,
     pub gap: Option<f64>,
     pub shift: Option<f64>,
     pub rise: Option<f64>,
@@ -24,17 +24,63 @@ pub struct Connection {
     pub x: Option<f64>,
     pub y: Option<f64>,
     pub description: Option<String>,
-    pub attributes: Vec<Attribute>,
-    pub parent_design: Weak<RwLock<crate::design::Design>>,
+    pub attributes: Vec<AttributeStore>,
+    pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
     hash_cache: OnceLock<String>,
 }
 
-impl Connection {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectionIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectionMetadataDto {
+    pub guid: Guid,
+    pub connected: crate::side::SideMetadataDto,
+    pub connecting: crate::side::SideMetadataDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gap: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rise: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turn: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tilt: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectionShallowDto {
+    #[serde(flatten)]
+    pub meta: ConnectionMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeShallowDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct ConnectionFullDto {
+    #[serde(flatten)]
+    pub meta: ConnectionMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeFullDto>,
+}
+
+impl ConnectionStore {
     pub fn new() -> Self {
         Self {
             guid: Guid::new_v7(),
-            connected: Side::default(),
-            connecting: Side::default(),
+            connected: SideStore::default(),
+            connecting: SideStore::default(),
             gap: None,
             shift: None,
             rise: None,
@@ -47,6 +93,93 @@ impl Connection {
             attributes: Vec::new(),
             parent_design: Weak::new(),
             hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_id_dto(d: ConnectionIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            connected: SideStore::default(),
+            connecting: SideStore::default(),
+            gap: None,
+            shift: None,
+            rise: None,
+            rotation: None,
+            turn: None,
+            tilt: None,
+            x: None,
+            y: None,
+            description: None,
+            attributes: Vec::new(),
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: ConnectionMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            connected: SideStore::from_metadata_dto(d.connected),
+            connecting: SideStore::from_metadata_dto(d.connecting),
+            gap: d.gap,
+            shift: d.shift,
+            rise: d.rise,
+            rotation: d.rotation,
+            turn: d.turn,
+            tilt: d.tilt,
+            x: d.x,
+            y: d.y,
+            description: d.description,
+            attributes: Vec::new(),
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: ConnectionShallowDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
+        s
+    }
+
+    pub fn from_full_dto(d: ConnectionFullDto) -> Self {
+        let mut s = Self::from_metadata_dto(d.meta);
+        s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
+        s
+    }
+
+    pub fn to_id_dto(&self) -> ConnectionIdDto {
+        ConnectionIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> ConnectionMetadataDto {
+        ConnectionMetadataDto {
+            guid: self.guid.clone(),
+            connected: self.connected.to_metadata_dto(),
+            connecting: self.connecting.to_metadata_dto(),
+            gap: self.gap,
+            shift: self.shift,
+            rise: self.rise,
+            rotation: self.rotation,
+            turn: self.turn,
+            tilt: self.tilt,
+            x: self.x,
+            y: self.y,
+            description: self.description.clone(),
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> ConnectionShallowDto {
+        ConnectionShallowDto {
+            meta: self.to_metadata_dto(),
+            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> ConnectionFullDto {
+        ConnectionFullDto {
+            meta: self.to_metadata_dto(),
+            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
         }
     }
 
@@ -83,94 +216,8 @@ impl Connection {
     }
 }
 
-impl Default for Connection {
-    fn default() -> Self { Self::new() }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct ConnectionDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub connected: SideDto,
-    pub connecting: SideDto,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub gap: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub shift: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub rise: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub rotation: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub turn: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tilt: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub x: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub y: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<Attribute>,
-}
-
-impl From<&Connection> for ConnectionDto {
-    fn from(c: &Connection) -> Self {
-        let side_to_dto = |s: &Side| -> SideDto {
-            let piece_guid = s
-                .piece
-                .upgrade()
-                .and_then(|p| p.read().ok().map(|p| p.guid.clone()))
-                .unwrap_or_default();
-            let port_guid = s
-                .port
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.guid.clone()));
-            let design_piece_guid = s
-                .design_piece
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.guid.clone()));
-            SideDto { piece_guid, port_guid, design_piece_guid }
-        };
-        ConnectionDto {
-            guid: Some(c.guid.clone()),
-            connected: side_to_dto(&c.connected),
-            connecting: side_to_dto(&c.connecting),
-            gap: c.gap,
-            shift: c.shift,
-            rise: c.rise,
-            rotation: c.rotation,
-            turn: c.turn,
-            tilt: c.tilt,
-            x: c.x,
-            y: c.y,
-            description: c.description.clone(),
-            attributes: c.attributes.clone(),
-        }
-    }
-}
-
-impl Connection {
-    pub fn from_dto(d: ConnectionDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            connected: Side::default(),
-            connecting: Side::default(),
-            gap: d.gap,
-            shift: d.shift,
-            rise: d.rise,
-            rotation: d.rotation,
-            turn: d.turn,
-            tilt: d.tilt,
-            x: d.x,
-            y: d.y,
-            description: d.description,
-            attributes: d.attributes,
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-        }
+impl Default for ConnectionStore {
+    fn default() -> Self {
+        Self::new()
     }
 }

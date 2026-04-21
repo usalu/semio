@@ -3,25 +3,56 @@ use std::sync::{Arc, OnceLock, RwLock, Weak};
 
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::piece::PieceWeak;
+use crate::piece::{PieceIdDto, PieceStoreWeak};
 
-pub type GroupRef = Arc<RwLock<Group>>;
-pub type GroupWeak = Weak<RwLock<Group>>;
+pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
+pub type GroupStoreWeak = Weak<RwLock<GroupStore>>;
 
-/// User-defined group of pieces inside a [`crate::design::Design`].
+/// User-defined group of pieces inside a [`crate::design::DesignStore`].
 #[derive(Debug)]
-pub struct Group {
+pub struct GroupStore {
     pub guid: Guid,
     pub name: String,
     pub description: Option<String>,
     pub color: Option<String>,
     pub icon: Option<String>,
-    pub pieces: Vec<PieceWeak>,
-    pub parent_design: Weak<RwLock<crate::design::Design>>,
+    pub pieces: Vec<PieceStoreWeak>,
+    pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
     hash_cache: OnceLock<String>,
 }
 
-impl Group {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct GroupIdDto {
+    pub guid: Guid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct GroupMetadataDto {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pieces: Vec<PieceIdDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct GroupShallowDto {
+    #[serde(flatten)]
+    pub meta: GroupMetadataDto,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct GroupFullDto {
+    #[serde(flatten)]
+    pub meta: GroupMetadataDto,
+}
+
+impl GroupStore {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -33,6 +64,68 @@ impl Group {
             parent_design: Weak::new(),
             hash_cache: OnceLock::new(),
         }
+    }
+
+    pub fn from_id_dto(d: GroupIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: String::new(),
+            description: None,
+            color: None,
+            icon: None,
+            pieces: Vec::new(),
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_metadata_dto(d: GroupMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            icon: d.icon,
+            pieces: Vec::new(),
+            parent_design: Weak::new(),
+            hash_cache: OnceLock::new(),
+        }
+    }
+
+    pub fn from_shallow_dto(d: GroupShallowDto) -> Self {
+        Self::from_metadata_dto(d.meta)
+    }
+
+    pub fn from_full_dto(d: GroupFullDto) -> Self {
+        Self::from_metadata_dto(d.meta)
+    }
+
+    pub fn to_id_dto(&self) -> GroupIdDto {
+        GroupIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> GroupMetadataDto {
+        GroupMetadataDto {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            color: self.color.clone(),
+            icon: self.icon.clone(),
+            pieces: self
+                .pieces
+                .iter()
+                .filter_map(|p| p.upgrade())
+                .filter_map(|p| p.read().ok().map(|p| p.to_id_dto()))
+                .collect(),
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> GroupShallowDto {
+        GroupShallowDto { meta: self.to_metadata_dto() }
+    }
+
+    pub fn to_full_dto(&self) -> GroupFullDto {
+        GroupFullDto { meta: self.to_metadata_dto() }
     }
 
     pub fn invalidate_hash(&mut self) {
@@ -62,54 +155,6 @@ impl Group {
                     w.str(p.guid.as_str());
                 }
             }
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct GroupDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub color: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "pieceGuids")]
-    pub piece_guids: Vec<Guid>,
-}
-
-impl From<&Group> for GroupDto {
-    fn from(g: &Group) -> Self {
-        GroupDto {
-            guid: Some(g.guid.clone()),
-            name: g.name.clone(),
-            description: g.description.clone(),
-            color: g.color.clone(),
-            icon: g.icon.clone(),
-            piece_guids: g
-                .pieces
-                .iter()
-                .filter_map(|p| p.upgrade())
-                .filter_map(|p| p.read().ok().map(|p| p.guid.clone()))
-                .collect(),
-        }
-    }
-}
-
-impl Group {
-    pub fn from_dto(d: GroupDto) -> Self {
-        Self {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
-            name: d.name,
-            description: d.description,
-            color: d.color,
-            icon: d.icon,
-            pieces: Vec::new(),
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
         }
     }
 }

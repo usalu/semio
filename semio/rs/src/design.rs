@@ -2,29 +2,28 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, OnceLock, RwLock, Weak};
 
-use crate::attribute::Attribute;
-use crate::author::Author;
-use crate::concept::Concept;
-use crate::connection::{Connection, ConnectionDto, ConnectionRef};
-use crate::geom::{Camera, Location, Plane};
-use crate::group::{Group, GroupDto, GroupRef};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore};
+use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore};
+use crate::connection::{ConnectionFullDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
+use crate::geom::{Camera, Location};
+use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
 use crate::guid::Guid;
 use crate::hash::HashWriter;
-use crate::layer::{Layer, LayerDto, LayerRef};
-use crate::piece::{FlattenedPiece, Piece, PieceDto, PieceRef};
-use crate::prop::Prop;
-use crate::quality::{Quality, QualityDto, QualityRef};
-use crate::side::Side;
-use crate::stat::Stat;
-use crate::tag::Tag;
-use crate::typ::TypeRef;
+use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
+use crate::piece::{PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
+use crate::prop::{PropFullDto, PropShallowDto, PropStore};
+use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+use crate::stat::{StatFullDto, StatShallowDto, StatStore};
+use crate::tag::{TagFullDto, TagShallowDto, TagStore};
+use crate::typ::TypeStoreRef;
 
-pub type DesignRef = Arc<RwLock<Design>>;
-pub type DesignWeak = Weak<RwLock<Design>>;
+pub type DesignStoreRef = Arc<RwLock<DesignStore>>;
+pub type DesignStoreWeak = Weak<RwLock<DesignStore>>;
 
 /// A placed/composed design: a scene of pieces joined by connections.
 #[derive(Debug)]
-pub struct Design {
+pub struct DesignStore {
     pub guid: Guid,
     pub name: String,
     pub description: Option<String>,
@@ -35,31 +34,113 @@ pub struct Design {
     pub location: Option<Location>,
     pub camera: Option<Camera>,
     pub unit: Option<String>,
-    pub pieces: Vec<PieceRef>,
-    pub connections: Vec<ConnectionRef>,
-    pub layers: Vec<LayerRef>,
-    pub groups: Vec<GroupRef>,
-    pub authors: Vec<Author>,
-    pub concepts: Vec<Concept>,
-    pub tags: Vec<Tag>,
-    pub qualities: Vec<QualityRef>,
-    pub props: Vec<Prop>,
-    pub attributes: Vec<Attribute>,
-    pub stats: Vec<Stat>,
+    pub pieces: Vec<PieceStoreRef>,
+    pub connections: Vec<ConnectionStoreRef>,
+    pub layers: Vec<LayerStoreRef>,
+    pub groups: Vec<GroupStoreRef>,
+    pub authors: Vec<AuthorStore>,
+    pub concepts: Vec<ConceptStore>,
+    pub tags: Vec<TagStore>,
+    pub qualities: Vec<QualityStoreRef>,
+    pub props: Vec<PropStore>,
+    pub attributes: Vec<AttributeStore>,
+    pub stats: Vec<StatStore>,
     pub created: Option<String>,
     pub updated: Option<String>,
-    pub parent_kit: Weak<RwLock<crate::kit::Kit>>,
+    pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
     hash_cache: OnceLock<String>,
-    flatten_cache: OnceLock<FlattenedDesign>,
 }
 
-/// Result of flattening a design: world-space poses for every piece.
-#[derive(Clone, Debug, Default)]
-pub struct FlattenedDesign {
-    pub pieces: Vec<(Guid, FlattenedPiece)>,
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct DesignIdDto {
+    pub guid: Guid,
 }
 
-impl Design {
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct DesignMetadataDto {
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub view: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Camera>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kit: Option<crate::kit::KitIdDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct DesignShallowDto {
+    #[serde(flatten)]
+    pub meta: DesignMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pieces: Vec<PieceShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub connections: Vec<ConnectionShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layers: Vec<LayerShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<GroupShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub authors: Vec<AuthorShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub concepts: Vec<ConceptShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<TagShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub props: Vec<PropShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeShallowDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stats: Vec<StatShallowDto>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+pub struct DesignFullDto {
+    #[serde(flatten)]
+    pub meta: DesignMetadataDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pieces: Vec<PieceFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub connections: Vec<ConnectionFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub layers: Vec<LayerFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub groups: Vec<GroupFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub authors: Vec<AuthorFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub concepts: Vec<ConceptFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<TagFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub qualities: Vec<QualityFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub props: Vec<PropFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub attributes: Vec<AttributeFullDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub stats: Vec<StatFullDto>,
+}
+
+impl DesignStore {
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             guid: Guid::new_v7(),
@@ -87,17 +168,20 @@ impl Design {
             updated: None,
             parent_kit: Weak::new(),
             hash_cache: OnceLock::new(),
-            flatten_cache: OnceLock::new(),
         }
     }
 
     pub fn invalidate_hash(&mut self) {
         self.hash_cache = OnceLock::new();
-        self.flatten_cache = OnceLock::new();
     }
 
-    pub fn invalidate_flatten(&mut self) {
-        self.flatten_cache = OnceLock::new();
+    /// Clear per-piece pose flatten caches (does not touch content hashes).
+    pub fn invalidate_piece_pose_caches(&mut self) {
+        for p in &self.pieces {
+            if let Ok(mut pw) = p.write() {
+                pw.invalidate_pose_caches();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {
@@ -119,50 +203,72 @@ impl Design {
             .opt_str(self.view.as_deref())
             .opt_str(self.unit.as_deref());
         for p in &self.pieces {
-            if let Ok(p) = p.read() { p.hash_into(w); }
+            if let Ok(p) = p.read() {
+                p.hash_into(w);
+            }
         }
         for c in &self.connections {
-            if let Ok(c) = c.read() { c.hash_into(w); }
+            if let Ok(c) = c.read() {
+                c.hash_into(w);
+            }
         }
         for l in &self.layers {
-            if let Ok(l) = l.read() { l.hash_into(w); }
+            if let Ok(l) = l.read() {
+                l.hash_into(w);
+            }
         }
         for g in &self.groups {
-            if let Ok(g) = g.read() { g.hash_into(w); }
+            if let Ok(g) = g.read() {
+                g.hash_into(w);
+            }
         }
-        for a in &self.authors { a.hash_into(w); }
-        for c in &self.concepts { c.hash_into(w); }
-        for t in &self.tags { t.hash_into(w); }
+        for a in &self.authors {
+            a.hash_into(w);
+        }
+        for c in &self.concepts {
+            c.hash_into(w);
+        }
+        for t in &self.tags {
+            t.hash_into(w);
+        }
         for q in &self.qualities {
-            if let Ok(q) = q.read() { q.hash_into(w); }
+            if let Ok(q) = q.read() {
+                q.hash_into(w);
+            }
         }
-        for p in &self.props { p.hash_into(w); }
-        for a in &self.attributes { a.hash_into(w); }
-        for s in &self.stats { s.hash_into(w); }
+        for p in &self.props {
+            p.hash_into(w);
+        }
+        for a in &self.attributes {
+            a.hash_into(w);
+        }
+        for s in &self.stats {
+            s.hash_into(w);
+        }
     }
 
-    pub fn piece(&self, guid: &str) -> Option<PieceRef> {
+    pub fn piece(&self, guid: &str) -> Option<PieceStoreRef> {
         self.pieces
             .iter()
             .find(|p| p.read().map(|p| p.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn connection(&self, guid: &str) -> Option<ConnectionRef> {
+    pub fn connection(&self, guid: &str) -> Option<ConnectionStoreRef> {
         self.connections
             .iter()
             .find(|c| c.read().map(|c| c.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn layer(&self, guid: &str) -> Option<LayerRef> {
+    pub fn layer(&self, guid: &str) -> Option<LayerStoreRef> {
         self.layers
             .iter()
             .find(|l| l.read().map(|l| l.guid.as_str() == guid).unwrap_or(false))
             .cloned()
     }
 
-    pub fn group(&self, guid: &str) -> Option<GroupRef> {
+    pub fn group(&self, guid: &str) -> Option<GroupStoreRef> {
         self.groups
             .iter()
             .find(|g| g.read().map(|g| g.guid.as_str() == guid).unwrap_or(false))
@@ -180,11 +286,11 @@ impl Design {
         });
         self.connections.retain(|c| {
             if let Ok(c) = c.read() {
-                let touches = |s: &Side| -> bool {
+                let touches = |s: &crate::side::SideStore| -> bool {
                     s.piece
                         .upgrade()
                         .and_then(|p| p.read().ok().map(|p| p.guid.clone()))
-                        .map(|g| piece_guids.iter().any(|x| *x == g))
+                        .map(|g| piece_guids.contains(&g))
                         .unwrap_or(false)
                 };
                 !(touches(&c.connected) || touches(&c.connecting))
@@ -196,131 +302,39 @@ impl Design {
         before - self.pieces.len()
     }
 
-    /// Compute the flattened (world-space) pose of every piece in this design.
-    /// Implements the identity/default pose layout; chained connection
-    /// resolution is handled during explicit flatten operations elsewhere.
-    pub fn flatten(&self) -> FlattenedDesign {
-        self.flatten_cache
-            .get_or_init(|| {
-                let mut out = Vec::with_capacity(self.pieces.len());
-                for p in &self.pieces {
-                    if let Ok(p) = p.read() {
-                        let plane = p.plane.unwrap_or_else(Plane::world_xy);
-                        let center = p.center.unwrap_or_default();
-                        out.push((p.guid.clone(), FlattenedPiece { plane, center }));
-                    }
-                }
-                FlattenedDesign { pieces: out }
-            })
-            .clone()
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct DesignDto {
-    #[serde(default)]
-    pub guid: Option<Guid>,
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub icon: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub image: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub variant: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub view: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub location: Option<Location>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub camera: Option<Camera>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub unit: Option<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub pieces: Vec<PieceDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub connections: Vec<ConnectionDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub layers: Vec<LayerDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub groups: Vec<GroupDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub authors: Vec<Author>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub concepts: Vec<Concept>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub tags: Vec<Tag>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub qualities: Vec<QualityDto>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub props: Vec<Prop>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub attributes: Vec<Attribute>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub stats: Vec<Stat>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub created: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub updated: Option<String>,
-}
-
-impl From<&Design> for DesignDto {
-    fn from(d: &Design) -> Self {
-        DesignDto {
-            guid: Some(d.guid.clone()),
-            name: d.name.clone(),
-            description: d.description.clone(),
-            icon: d.icon.clone(),
-            image: d.image.clone(),
-            variant: d.variant.clone(),
-            view: d.view.clone(),
-            location: d.location,
-            camera: d.camera,
-            unit: d.unit.clone(),
-            pieces: d
-                .pieces
-                .iter()
-                .filter_map(|p| p.read().ok().map(|p| PieceDto::from(&*p)))
-                .collect(),
-            connections: d
-                .connections
-                .iter()
-                .filter_map(|c| c.read().ok().map(|c| ConnectionDto::from(&*c)))
-                .collect(),
-            layers: d
-                .layers
-                .iter()
-                .filter_map(|l| l.read().ok().map(|l| LayerDto::from(&*l)))
-                .collect(),
-            groups: d
-                .groups
-                .iter()
-                .filter_map(|g| g.read().ok().map(|g| GroupDto::from(&*g)))
-                .collect(),
-            authors: d.authors.clone(),
-            concepts: d.concepts.clone(),
-            tags: d.tags.clone(),
-            qualities: d
-                .qualities
-                .iter()
-                .filter_map(|q| q.read().ok().map(|q| QualityDto::from(&*q)))
-                .collect(),
-            props: d.props.clone(),
-            attributes: d.attributes.clone(),
-            stats: d.stats.clone(),
-            created: d.created.clone(),
-            updated: d.updated.clone(),
+    pub fn from_id_dto(d: DesignIdDto) -> Self {
+        Self {
+            guid: d.guid,
+            name: String::new(),
+            description: None,
+            icon: None,
+            image: None,
+            variant: None,
+            view: None,
+            location: None,
+            camera: None,
+            unit: None,
+            pieces: Vec::new(),
+            connections: Vec::new(),
+            layers: Vec::new(),
+            groups: Vec::new(),
+            authors: Vec::new(),
+            concepts: Vec::new(),
+            tags: Vec::new(),
+            qualities: Vec::new(),
+            props: Vec::new(),
+            attributes: Vec::new(),
+            stats: Vec::new(),
+            created: None,
+            updated: None,
+            parent_kit: Weak::new(),
+            hash_cache: OnceLock::new(),
         }
     }
-}
 
-impl Design {
-    /// Build a hydrated design, wiring pieces' type references via `type_index`
-    /// and connection sides to the freshly-built piece/port graph.
-    pub fn from_dto(d: DesignDto, type_index: &HashMap<Guid, TypeRef>) -> DesignRef {
-        let design = Arc::new(RwLock::new(Design {
-            guid: d.guid.unwrap_or_else(Guid::new_v7),
+    pub fn from_metadata_dto(d: DesignMetadataDto) -> Self {
+        Self {
+            guid: d.guid,
             name: d.name,
             description: d.description,
             icon: d.icon,
@@ -334,29 +348,73 @@ impl Design {
             connections: Vec::new(),
             layers: Vec::new(),
             groups: Vec::new(),
-            authors: d.authors,
-            concepts: d.concepts,
-            tags: d.tags,
-            qualities: d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(Quality::from(q))))
-                .collect(),
-            props: d.props,
-            attributes: d.attributes,
-            stats: d.stats,
+            authors: Vec::new(),
+            concepts: Vec::new(),
+            tags: Vec::new(),
+            qualities: Vec::new(),
+            props: Vec::new(),
+            attributes: Vec::new(),
+            stats: Vec::new(),
             created: d.created,
             updated: d.updated,
             parent_kit: Weak::new(),
             hash_cache: OnceLock::new(),
-            flatten_cache: OnceLock::new(),
+        }
+    }
+
+    /// Build a fully hydrated design from `DesignFullDto`, wiring graph pointers.
+    pub fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Guid, TypeStoreRef>) -> DesignStoreRef {
+        let DesignFullDto {
+            meta,
+            pieces,
+            connections,
+            layers,
+            groups,
+            authors,
+            concepts,
+            tags,
+            qualities,
+            props,
+            attributes,
+            stats,
+        } = d;
+
+        let design = Arc::new(RwLock::new(DesignStore {
+            guid: meta.guid.clone(),
+            name: meta.name.clone(),
+            description: meta.description.clone(),
+            icon: meta.icon.clone(),
+            image: meta.image.clone(),
+            variant: meta.variant.clone(),
+            view: meta.view.clone(),
+            location: meta.location,
+            camera: meta.camera,
+            unit: meta.unit.clone(),
+            pieces: Vec::new(),
+            connections: Vec::new(),
+            layers: Vec::new(),
+            groups: Vec::new(),
+            authors: authors.into_iter().map(AuthorStore::from_full_dto).collect(),
+            concepts: concepts.into_iter().map(ConceptStore::from_full_dto).collect(),
+            tags: tags.into_iter().map(TagStore::from_full_dto).collect(),
+            qualities: qualities
+                .into_iter()
+                .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
+                .collect(),
+            props: props.into_iter().map(PropStore::from_full_dto).collect(),
+            attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
+            stats: stats.into_iter().map(StatStore::from_full_dto).collect(),
+            created: meta.created.clone(),
+            updated: meta.updated.clone(),
+            parent_kit: Weak::new(),
+            hash_cache: OnceLock::new(),
         }));
 
-        let mut piece_index: HashMap<Guid, PieceRef> = HashMap::new();
-        let mut piece_refs: Vec<PieceRef> = Vec::new();
-        for pdto in d.pieces {
-            let type_guid = pdto.type_guid.clone();
-            let mut piece = Piece::from_dto(pdto);
+        let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
+        let mut piece_refs: Vec<PieceStoreRef> = Vec::new();
+        for pdto in pieces {
+            let type_guid = pdto.meta.r#type.as_ref().map(|t| t.guid.clone());
+            let mut piece = PieceStore::from_full_dto(pdto);
             piece.parent_design = Arc::downgrade(&design);
             if let Some(tg) = type_guid {
                 if let Some(tref) = type_index.get(&tg) {
@@ -369,61 +427,70 @@ impl Design {
             piece_refs.push(arc);
         }
 
-        let mut connection_refs: Vec<ConnectionRef> = Vec::with_capacity(d.connections.len());
-        for cdto in d.connections {
-            let connected_dto = cdto.connected.clone();
-            let connecting_dto = cdto.connecting.clone();
-            let mut c = Connection::from_dto(cdto);
+        let mut connection_refs: Vec<ConnectionStoreRef> = Vec::with_capacity(connections.len());
+        for cdto in connections {
+            let connected_meta = cdto.meta.connected.clone();
+            let connecting_meta = cdto.meta.connecting.clone();
+            let mut c = ConnectionStore::from_full_dto(cdto);
             c.parent_design = Arc::downgrade(&design);
-            if let Some(p) = piece_index.get(&connected_dto.piece_guid) {
+            if let Some(p) = piece_index.get(&connected_meta.piece.guid) {
                 c.connected.piece = Arc::downgrade(p);
-                if let Some(pg) = &connected_dto.port_guid {
+                if let Some(pg) = &connected_meta.port {
                     if let Ok(piece) = p.read() {
                         if let Some(t) = piece.type_ref.as_ref().and_then(|t| t.upgrade()) {
                             if let Ok(t) = t.read() {
-                                if let Some(port) = t.port(pg.as_str()) {
+                                if let Some(port) = t.port(pg.guid.as_str()) {
                                     c.connected.port = Some(Arc::downgrade(&port));
                                 }
                             }
                         }
                     }
                 }
+                if let Some(dpg) = &connected_meta.design_piece {
+                    if let Some(dp) = piece_index.get(&dpg.guid) {
+                        c.connected.design_piece = Some(Arc::downgrade(dp));
+                    }
+                }
             }
-            if let Some(p) = piece_index.get(&connecting_dto.piece_guid) {
+            if let Some(p) = piece_index.get(&connecting_meta.piece.guid) {
                 c.connecting.piece = Arc::downgrade(p);
-                if let Some(pg) = &connecting_dto.port_guid {
+                if let Some(pg) = &connecting_meta.port {
                     if let Ok(piece) = p.read() {
                         if let Some(t) = piece.type_ref.as_ref().and_then(|t| t.upgrade()) {
                             if let Ok(t) = t.read() {
-                                if let Some(port) = t.port(pg.as_str()) {
+                                if let Some(port) = t.port(pg.guid.as_str()) {
                                     c.connecting.port = Some(Arc::downgrade(&port));
                                 }
                             }
                         }
                     }
                 }
+                if let Some(dpg) = &connecting_meta.design_piece {
+                    if let Some(dp) = piece_index.get(&dpg.guid) {
+                        c.connecting.design_piece = Some(Arc::downgrade(dp));
+                    }
+                }
             }
             connection_refs.push(Arc::new(RwLock::new(c)));
         }
 
-        let layer_refs: Vec<LayerRef> = d
-            .layers
+        let layer_refs: Vec<LayerStoreRef> = layers
             .into_iter()
             .map(|l| {
-                let mut layer = Layer::from(l);
+                let mut layer = LayerStore::from_full_dto(l);
                 layer.parent_design = Arc::downgrade(&design);
                 Arc::new(RwLock::new(layer))
             })
             .collect();
 
-        let group_refs: Vec<GroupRef> = d
-            .groups
+        let group_refs: Vec<GroupStoreRef> = groups
             .into_iter()
             .map(|g| {
-                let mut group = Group::from_dto(g.clone());
+                let pids: Vec<Guid> = g.meta.pieces.iter().map(|p| p.guid.clone()).collect();
+                let mut group = GroupStore::from_full_dto(g);
                 group.parent_design = Arc::downgrade(&design);
-                for pg in &g.piece_guids {
-                    if let Some(p) = piece_index.get(pg) {
+                for pid in pids {
+                    if let Some(p) = piece_index.get(&pid) {
                         group.pieces.push(Arc::downgrade(p));
                     }
                 }
@@ -438,5 +505,105 @@ impl Design {
             d_mut.groups = group_refs;
         }
         design
+    }
+
+    pub fn to_id_dto(&self) -> DesignIdDto {
+        DesignIdDto { guid: self.guid.clone() }
+    }
+
+    pub fn to_metadata_dto(&self) -> DesignMetadataDto {
+        let kit = self
+            .parent_kit
+            .upgrade()
+            .and_then(|k| k.read().ok().map(|k| crate::kit::KitIdDto { guid: k.guid.clone() }));
+        DesignMetadataDto {
+            guid: self.guid.clone(),
+            name: self.name.clone(),
+            description: self.description.clone(),
+            icon: self.icon.clone(),
+            image: self.image.clone(),
+            variant: self.variant.clone(),
+            view: self.view.clone(),
+            location: self.location,
+            camera: self.camera,
+            unit: self.unit.clone(),
+            created: self.created.clone(),
+            updated: self.updated.clone(),
+            kit,
+        }
+    }
+
+    pub fn to_shallow_dto(&self) -> DesignShallowDto {
+        DesignShallowDto {
+            meta: self.to_metadata_dto(),
+            pieces: self
+                .pieces
+                .iter()
+                .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
+                .collect(),
+            connections: self
+                .connections
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
+                .collect(),
+            layers: self
+                .layers
+                .iter()
+                .filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto()))
+                .collect(),
+            groups: self
+                .groups
+                .iter()
+                .filter_map(|g| g.read().ok().map(|g| g.to_shallow_dto()))
+                .collect(),
+            authors: self.authors.iter().map(AuthorStore::to_shallow_dto).collect(),
+            concepts: self.concepts.iter().map(ConceptStore::to_shallow_dto).collect(),
+            tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
+                .collect(),
+            props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+            stats: self.stats.iter().map(StatStore::to_shallow_dto).collect(),
+        }
+    }
+
+    pub fn to_full_dto(&self) -> DesignFullDto {
+        DesignFullDto {
+            meta: self.to_metadata_dto(),
+            pieces: self
+                .pieces
+                .iter()
+                .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
+                .collect(),
+            connections: self
+                .connections
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
+                .collect(),
+            layers: self
+                .layers
+                .iter()
+                .filter_map(|l| l.read().ok().map(|l| l.to_full_dto()))
+                .collect(),
+            groups: self
+                .groups
+                .iter()
+                .filter_map(|g| g.read().ok().map(|g| g.to_full_dto()))
+                .collect(),
+            authors: self.authors.iter().map(AuthorStore::to_full_dto).collect(),
+            concepts: self.concepts.iter().map(ConceptStore::to_full_dto).collect(),
+            tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
+            qualities: self
+                .qualities
+                .iter()
+                .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
+                .collect(),
+            props: self.props.iter().map(PropStore::to_full_dto).collect(),
+            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            stats: self.stats.iter().map(StatStore::to_full_dto).collect(),
+        }
     }
 }
