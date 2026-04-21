@@ -1,0 +1,9 @@
+{
+  "title": "Rename Coord to Coordinate",
+  "status": "open",
+  "description": "Rename the domain type `Coord` to `Coordinate` across all semio language implementations (py, ts, rs, cs, go, rb, graphql, jsonschema, openapi, xmi, liveblocks, assets, AGENTS.md). The AGENTS.md spec already standardizes on `Coordinate` (section \"Coordinate\" at line 2312, class `Coordinate` at line 701), but many source files still use the abbreviation `Coord`. Apply word-boundary aware substitution covering: Coord-\u003eCoordinate, Coords-\u003eCoordinates, coord-\u003ecoordinate, coords-\u003ecoordinates. Preserve already-correct `Coordinate` tokens. Do not touch ticket folders, session logs, cursor plans, or other historical artifacts. Run test suites per implementation to confirm.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪83007bd2a650405ea9eeaa98c51f599a"
+  ]
+}

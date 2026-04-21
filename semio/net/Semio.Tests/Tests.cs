@@ -78,7 +78,7 @@ public class Tests
                Math.Abs(v1.Z - v2.Z) < Tolerance;
     }
 
-    public static bool CentersEqual(Coord? c1, Coord? c2)
+    public static bool CentersEqual(Coordinate? c1, Coordinate? c2)
     {
         if (c1 == null || c2 == null) return c1 == c2;
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
@@ -926,7 +926,7 @@ public class Tests
         {
             var design = Tests.LoadAsset<Design>("drag/design.semio.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.semio.json");
-            var offset = Tests.LoadAsset<Coord>("drag/offset.semio.json");
+            var offset = Tests.LoadAsset<Coordinate>("drag/offset.semio.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("drag/diff.design.semio.json");
             var computedDiff = Design.DragPiecesInDesign(design, pieces, offset);
             Assert.NotNull(computedDiff.Pieces);
@@ -1064,19 +1064,19 @@ public class Tests
             // Compute CopyDesign
             var copyDesign = Design.CopyDesign(kit, design, pieceGuids, connectionGuids);
 
-            // Compute PasteDesign without coord (paste into the second storey target design)
+            // Compute PasteDesign without coordinate (paste into the second storey target design)
             var pasteDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original");
 
-            // Compute PasteDesign with coord
-            var pasteWithCoordDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original", new Coord { U = 10, V = 10 });
+            // Compute PasteDesign with coordinate
+            var pasteWithCoordinateDiff = Design.PasteDesign(kit, copyDesign, pasteTargetDesign, "original", new Coordinate { U = 10, V = 10 });
 
             // Save the generated files for cross-language comparison
             var copyJson = Utility.Serialize(copyDesign, "  ");
             var pasteJson = Utility.Serialize(pasteDiff, "  ");
-            var pasteWithCoordJson = Utility.Serialize(pasteWithCoordDiff, "  ");
+            var pasteWithCoordinateJson = Utility.Serialize(pasteWithCoordinateDiff, "  ");
             System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.copy.design.semio.json"), copyJson);
             System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.design.diff.semio.json"), pasteJson);
-            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json"), pasteWithCoordJson);
+            System.IO.File.WriteAllText(Path.Combine(Tests.AssetsPath, "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json"), pasteWithCoordinateJson);
 
             // Verify copy piece and connection counts
             Assert.Equal(11, copyDesign.Pieces.Count);
@@ -1104,7 +1104,7 @@ public class Tests
                 Assert.True(pp.Attributes.Any(a => a.Key == "semio.plane"), $"Pp-excl-pc-incl piece {pp.Guid} missing semio.plane");
             }
 
-            // Verify paste without coord
+            // Verify paste without coordinate
             Assert.NotNull(pasteDiff.Pieces);
             Assert.NotNull(pasteDiff.Pieces!.Added);
             foreach (var addedPiece in pasteDiff.Pieces.Added)
@@ -1115,16 +1115,16 @@ public class Tests
             Assert.NotNull(pasteDiff.Connections);
             Assert.NotNull(pasteDiff.Connections!.Added);
 
-            // Verify paste with coord
-            Assert.NotNull(pasteWithCoordDiff.Pieces);
-            Assert.NotNull(pasteWithCoordDiff.Pieces!.Added);
-            foreach (var addedPiece in pasteWithCoordDiff.Pieces.Added)
+            // Verify paste with coordinate
+            Assert.NotNull(pasteWithCoordinateDiff.Pieces);
+            Assert.NotNull(pasteWithCoordinateDiff.Pieces!.Added);
+            foreach (var addedPiece in pasteWithCoordinateDiff.Pieces.Added)
             {
                 Assert.False(addedPiece.Attributes.Any(a => a.Key == "semio.piece.origin" && a.Value == "external"),
-                    $"External-origin piece {addedPiece.Guid} should not be in paste with-coord output");
+                    $"External-origin piece {addedPiece.Guid} should not be in paste with-coordinate output");
             }
-            Assert.NotNull(pasteWithCoordDiff.Connections);
-            Assert.NotNull(pasteWithCoordDiff.Connections!.Added);
+            Assert.NotNull(pasteWithCoordinateDiff.Connections);
+            Assert.NotNull(pasteWithCoordinateDiff.Connections!.Added);
         }
     }
 

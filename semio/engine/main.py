@@ -89,7 +89,7 @@ from semio_core import (
     CodeUnreachable,
     Connection,
     Connector,
-    Coord,
+    Coordinate,
     Design,
     DesignContext,
     DesignInput,

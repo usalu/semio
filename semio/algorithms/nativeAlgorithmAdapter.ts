@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion Header
 
-import type { Coord, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, DesignPlain, FlatMerkleCacheEntry, Kit, MoveVector, OperationResult } from "@semio/js";
+import type { Coordinate, Design, DesignDiff, DesignDiffOperationResult, DesignOperationResult, DesignPlain, FlatMerkleCacheEntry, Kit, MoveVector, OperationResult } from "@semio/js";
 import { Design as DesignEntity, Kit as KitRuntime, normalizeDesignCopyResult, normalizeDesignDiffResult, normalizeDesignFlattenResult } from "@semio/js";
 
 // #region 🧠Flatten Merkle Cache (TS path only)
@@ -174,7 +174,7 @@ export async function nativeFlattenedDesign(kit: Kit, designGuid: string, langua
  * updates piece centers, so both flat designs keep their connections for display by applying
  * only the piece updates from the (re-)flatten diff.
  */
-export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], offset: Coord, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
+export async function nativeDragPieces(kit: Kit, rawDesign: Design, pieceGuids: readonly string[], offset: Coordinate, _language: NativeAlgorithmLanguage): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
   const designGuid = rawDesign.guid;
   const preFlat = KitRuntime.ensure(kit).flattenDesignCachedOp(designGuid, getFlatMerkleCache(designGuid));
   if (!preFlat.result.ok) {
@@ -244,9 +244,9 @@ export async function nativeCopyDesign(kit: Kit, design: Design, pieceGuids: rea
 /**
  * Runs paste-design in the chosen language: TypeScript in-process or native backends via REST.
  */
-export async function nativePasteDesign(kit: Kit, source: Design, target: Design, anchoring: string, coord: Coord | undefined, language: NativeAlgorithmLanguage): Promise<DesignDiff> {
+export async function nativePasteDesign(kit: Kit, source: Design, target: Design, anchoring: string, coordinate: Coordinate | undefined, language: NativeAlgorithmLanguage): Promise<DesignDiff> {
   if (language === "ts") {
-    return KitRuntime.ensure(kit).pasteDesignOp(source, target, anchoring, coord);
+    return KitRuntime.ensure(kit).pasteDesignOp(source, target, anchoring, coordinate);
   }
   const raw = await postNativeAlgorithm({
     language,

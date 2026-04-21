@@ -11,7 +11,7 @@ import * as React from "react";
 import type { ReactNode, SetStateAction } from "react";
 import {
 	asKitInstance,
-	Coord,
+	Coordinate,
 	createFolderKitStore,
 	createJsonFileKitStore,
 	createKitStoreClient,

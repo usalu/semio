@@ -10,14 +10,14 @@
       <packagedElement xmi:type="uml:PrimitiveType" xmi:id="pt_DateTime" name="DateTime"/>
     </packagedElement>
     <packagedElement xmi:type="uml:Package" xmi:id="pkg_geometry" name="Geometry">
-      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Coord" name="Coord">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coord_u" name="u" type="pt_Real">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coord_u_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coord_u_upper" value="1"/>
+      <packagedElement xmi:type="uml:DataType" xmi:id="dt_Coordinate" name="Coordinate">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coordinate_u" name="u" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_u_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_u_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coord_v" name="v" type="pt_Real">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coord_v_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coord_v_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="dt_Coordinate_v" name="v" type="pt_Real">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_v_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="dt_Coordinate_v_upper" value="1"/>
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:DataType" xmi:id="dt_Point" name="Point">
@@ -951,7 +951,7 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_plane_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_plane_upper" value="1"/>
         </ownedAttribute>
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_center" name="center" type="dt_Coord">
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_center" name="center" type="dt_Coordinate">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_center_lower" value="0"/>
           <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_center_upper" value="1"/>
         </ownedAttribute>

@@ -2407,13 +2407,13 @@ public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeD
 
 #endregion 🧲Attribute
 
-#region 🌥️Coord
+#region 🌥️Coordinate
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
-public class CoordGoo : Goo<Coord>
+public class CoordinateGoo : Goo<Coordinate>
 {
-    public CoordGoo() { }
-    public CoordGoo(Coord value) : base(value) { }
+    public CoordinateGoo() { }
+    public CoordinateGoo(Coordinate value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -2431,29 +2431,29 @@ public class CoordGoo : Goo<Coord>
         Point3d point = new Point3d();
         if (GH_Convert.ToPoint3d(source, ref point, GH_Conversion.Both))
         {
-            Value = new Coord { U = (float)point.X, V = (float)point.Y };
+            Value = new Coordinate { U = (float)point.X, V = (float)point.Y };
             return true;
         }
         return false;
     }
 }
 
-public class CoordParam : Param<CoordGoo, Coord>
+public class CoordinateParam : Param<CoordinateGoo, Coordinate>
 {
-    protected override string RepresentationName => "Coord";
+    protected override string RepresentationName => "Coordinate";
     protected override string RepresentationNickname => "DPt";
     protected override string RepresentationDescription => "2D coordinate";
-    protected override string IconResourceName => "coord_24x24";
+    protected override string IconResourceName => "coordinate_24x24";
     public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 }
 
-public class CoordComponent : PassthroughComponent<CoordParam, CoordGoo, Coord>
+public class CoordinateComponent : PassthroughComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
     public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
-    protected override string RepresentationName => "Coord";
+    protected override string RepresentationName => "Coordinate";
     protected override string RepresentationNickname => "DPt";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a 2d coordinate.";
-    protected override string IconResourceName => "coord_24x24";
+    protected override string IconResourceName => "coordinate_24x24";
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
@@ -2467,33 +2467,33 @@ public class CoordComponent : PassthroughComponent<CoordParam, CoordGoo, Coord>
         pManager.AddNumberParameter("V", "V", "The v-coordinate.", GH_ParamAccess.item);
     }
 
-    protected override void GetRepresentationData(IGH_DataAccess DA, Coord representation)
+    protected override void GetRepresentationData(IGH_DataAccess DA, Coordinate representation)
     {
         double u = 0, v = 0;
         if (DA.GetData(2, ref u)) representation.U = (float)u;
         if (DA.GetData(3, ref v)) representation.V = (float)v;
     }
 
-    protected override void SetRepresentationData(IGH_DataAccess DA, Coord representation)
+    protected override void SetRepresentationData(IGH_DataAccess DA, Coordinate representation)
     {
         DA.SetData(2, representation.U);
         DA.SetData(3, representation.V);
     }
 }
 
-public class SerializeCoordComponent : SerializeComponent<CoordParam, CoordGoo, Coord>
+public class SerializeCoordinateComponent : SerializeComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
-    public SerializeCoordComponent() { }
+    public SerializeCoordinateComponent() { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
 
-public class DeserializeCoordComponent : DeserializeComponent<CoordParam, CoordGoo, Coord>
+public class DeserializeCoordinateComponent : DeserializeComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
-    public DeserializeCoordComponent() { }
+    public DeserializeCoordinateComponent() { }
     public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
 }
 
-#endregion 🌥️Coord
+#endregion 🌥️Coordinate
 
 #region ⏲️Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
@@ -6383,7 +6383,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design of the piece.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane of the piece.", GH_ParamAccess.item);
-        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordinateParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Scale", "Sc?", "The optional scale factor.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether the piece is hidden.", GH_ParamAccess.item);
@@ -6401,7 +6401,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design of the piece.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane of the piece.", GH_ParamAccess.item);
-        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordinateParam(), "Center", "Ce?", "The optional center in the diagram.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Scale", "Sc?", "The optional scale factor.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether the piece is hidden.", GH_ParamAccess.item);
@@ -6418,7 +6418,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
         var type = new TypeIdGoo();
         var design = new DesignIdGoo();
         Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY;
-        var center = new CoordGoo();
+        var center = new CoordinateGoo();
         double scale = 0;
         Rhino.Geometry.Plane mirrorPlane = Rhino.Geometry.Plane.WorldXY;
         bool isHidden = false, isLocked = false;
@@ -6449,7 +6449,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
         DA.SetData(5, representation.Type is not null ? new TypeIdGoo(representation.Type.DeepClone()) : null);
         DA.SetData(6, representation.Design is not null ? new DesignIdGoo(representation.Design.DeepClone()) : null);
         DA.SetData(7, representation.Plane is not null ? RhinoConverter.Convert(representation.Plane) : Rhino.Geometry.Plane.WorldXY);
-        DA.SetData(8, representation.Center is not null ? new CoordGoo(representation.Center.DeepClone()) : null);
+        DA.SetData(8, representation.Center is not null ? new CoordinateGoo(representation.Center.DeepClone()) : null);
         DA.SetData(9, representation.Scale);
         DA.SetData(10, representation.MirrorPlane is not null ? RhinoConverter.Convert(representation.MirrorPlane) : Rhino.Geometry.Plane.Unset);
         DA.SetData(11, representation.IsHidden);
@@ -6607,7 +6607,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane.", GH_ParamAccess.item);
-        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordinateParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Scale", "Sc?", "The optional scale.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether hidden.", GH_ParamAccess.item);
@@ -6625,7 +6625,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Design", "Dn?", "The optional design.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("Plane", "Pl?", "The optional plane.", GH_ParamAccess.item);
-        pManager.AddParameter(new CoordParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
+        pManager.AddParameter(new CoordinateParam(), "Center", "Ce?", "The optional center.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Scale", "Sc?", "The optional scale.", GH_ParamAccess.item);
         pManager.AddPlaneParameter("MirrorPlane", "MP?", "The optional mirror plane.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether hidden.", GH_ParamAccess.item);
@@ -6641,7 +6641,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         var type = new TypeIdGoo();
         var design = new DesignIdGoo();
         Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY, mirrorPlane = Rhino.Geometry.Plane.WorldXY;
-        var center = new CoordGoo();
+        var center = new CoordinateGoo();
         double scale = 0;
         bool isHidden = false, isLocked = false;
         var props = new List<PropGoo>();
@@ -6671,7 +6671,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         if (representation.ShouldSerializeType()) DA.SetData(5, representation.Type is not null ? new TypeIdGoo(representation.Type.DeepClone()) : null);
         if (representation.ShouldSerializeDesign()) DA.SetData(6, representation.Design is not null ? new DesignIdGoo(representation.Design.DeepClone()) : null);
         if (representation.ShouldSerializePlane()) DA.SetData(7, representation.Plane is not null ? RhinoConverter.Convert(representation.Plane) : Rhino.Geometry.Plane.Unset);
-        if (representation.ShouldSerializeCenter()) DA.SetData(8, representation.Center is not null ? new CoordGoo(representation.Center.DeepClone()) : null);
+        if (representation.ShouldSerializeCenter()) DA.SetData(8, representation.Center is not null ? new CoordinateGoo(representation.Center.DeepClone()) : null);
         if (representation.ShouldSerializeScale()) DA.SetData(9, representation.Scale);
         if (representation.ShouldSerializeMirrorPlane()) DA.SetData(10, representation.MirrorPlane is not null ? RhinoConverter.Convert(representation.MirrorPlane) : Rhino.Geometry.Plane.Unset);
         if (representation.ShouldSerializeIsHidden()) DA.SetData(11, representation.IsHidden);

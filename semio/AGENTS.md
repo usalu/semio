@@ -501,7 +501,7 @@ kit : !Kit{
                     z : !Float
                 }
             }
-            center : ?Coord{
+            center : ?Coordinate{
                 u : !Float
                 v : !Float
             }

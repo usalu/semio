@@ -1156,12 +1156,12 @@
         "icon": ""
       },
       {
-        "name": "Deserialize Coord",
-        "description": "Deserialize a coord.",
+        "name": "Deserialize Coordinate",
+        "description": "Deserialize a coordinate.",
         "nickname": "<DPt",
         "inputs": [
           {
-            "description": "Text of serialized Coord.",
+            "description": "Text of serialized Coordinate.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -1169,10 +1169,10 @@
         ],
         "outputs": [
           {
-            "description": "Deserialized Coord.",
-            "name": "Coord",
+            "description": "Deserialized Coordinate.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           }
         ],
         "icon": ""
@@ -1644,18 +1644,18 @@
         "icon": ""
       },
       {
-        "name": "Serialize Coord",
-        "description": "Serialize a coord.",
+        "name": "Serialize Coordinate",
+        "description": "Serialize a coordinate.",
         "nickname": ">DPt",
         "inputs": [
           {
-            "description": "The coord to serialize.",
-            "name": "Coord",
+            "description": "The coordinate to serialize.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "The optional indent unit for the serialized coord. Empty text for no indent or spaces or tabs",
+            "description": "The optional indent unit for the serialized coordinate. Empty text for no indent or spaces or tabs",
             "name": "Indent",
             "nickname": "In?",
             "kind": "Indent"
@@ -1663,7 +1663,7 @@
         ],
         "outputs": [
           {
-            "description": "Text of serialized Coord.",
+            "description": "Text of serialized Coordinate.",
             "name": "Text",
             "nickname": "Tx",
             "kind": "Text"
@@ -2928,18 +2928,18 @@
         "icon": ""
       },
       {
-        "name": "Representation Coord",
-        "description": "Construct, deconstruct or modify a coord",
+        "name": "Representation Coordinate",
+        "description": "Construct, deconstruct or modify a coordinate",
         "nickname": "~DPt",
         "inputs": [
           {
-            "description": "The optional coord to deconstruct or modify.",
-            "name": "Coord",
+            "description": "The optional coordinate to deconstruct or modify.",
+            "name": "Coordinate",
             "nickname": "DP?",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "Whether the coord should be validated.",
+            "description": "Whether the coordinate should be validated.",
             "name": "Validate",
             "nickname": "Vd?",
             "kind": "Validate"
@@ -2959,13 +2959,13 @@
         ],
         "outputs": [
           {
-            "description": "The constructed or modified coord.",
-            "name": "Coord",
+            "description": "The constructed or modified coordinate.",
+            "name": "Coordinate",
             "nickname": "DP",
-            "kind": "Coord"
+            "kind": "Coordinate"
           },
           {
-            "description": "True if the coord is valid. Null if no validation was performed.",
+            "description": "True if the coordinate is valid. Null if no validation was performed.",
             "name": "Valid",
             "nickname": "Vd?",
             "kind": "Valid"

@@ -107,7 +107,7 @@ const WINDOWS_WITH: AlgorithmWindowDef[] = [
   { id: "cp-src", kind: WindowKind.SELECTION_INPUT, label: "Source Selection" },
   { id: "cp-tgt", kind: WindowKind.DESIGN_INPUT, label: "Target Design", component: TargetDesignWindow },
   { id: "cp-anchor", kind: WindowKind.DESIGN_INPUT, label: "Paste anchoring", component: PasteAnchoringWindow },
-  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coord" },
+  { id: "cp-vec", kind: WindowKind.VEC_INPUT, label: "Coordinate" },
   { id: "cp-diff", kind: WindowKind.DESIGN_DIFF_OUTPUT, label: "Diff" },
   { id: "cp-out", kind: WindowKind.DESIGN_OUTPUT, label: "Output" },
 ];
@@ -142,7 +142,7 @@ const LAYOUT_WITH = {
           { kind: "stack" as const, size: 36, children: [{ kind: "window" as const, windowKindId: "cp-src", title: "Source Selection" }] },
           { kind: "stack" as const, size: 24, children: [{ kind: "window" as const, windowKindId: "cp-tgt", title: "Target Design" }] },
           { kind: "stack" as const, size: 18, children: [{ kind: "window" as const, windowKindId: "cp-anchor", title: "Paste anchoring" }] },
-          { kind: "stack" as const, size: 22, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coord" }] },
+          { kind: "stack" as const, size: 22, children: [{ kind: "window" as const, windowKindId: "cp-vec", title: "Coordinate" }] },
         ],
       },
       { kind: "stack" as const, size: 33, children: [{ kind: "window" as const, windowKindId: "cp-diff", title: "Diff" }] },
@@ -200,8 +200,8 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
       if (cancelled) return;
       if (!copyRes.ok) return;
       const copied = copyRes.diff;
-      const coord = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
-      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coord, language);
+      const coordinate = mode === "with" ? { u: vec.u, v: vec.v } : undefined;
+      const diff = await nativePasteDesign(kit, copied, pasteTargetDesign, pasteAnchoring, coordinate, language);
       if (!cancelled) setDesignDiff(diff);
     })();
     return () => {
@@ -271,12 +271,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithoutCoord: Story = {
+export const WithoutCoordinate: Story = {
   args: { mode: "without" },
   render: (args) => <CopyAndPasteFrame {...args} />,
 };
 
-export const WithCoord: Story = {
+export const WithCoordinate: Story = {
   args: { mode: "with" },
   render: (args) => <CopyAndPasteFrame {...args} />,
 };

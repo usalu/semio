@@ -1843,22 +1843,22 @@ public static class SemioValidator
 
 #region 🖥️Weak Entities
 
-#region 📺Coord
+#region 📺Coordinate
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
-public class Coord : Entity<Coord>
+public class Coordinate : Entity<Coordinate>
 {
     public double U { get; set; }
     public double V { get; set; }
 
-    public Coord Normalize()
+    public Coordinate Normalize()
     {
         var length = (double)Math.Sqrt(U * U + V * V);
-        return new Coord { U = U / length, V = V / length };
+        return new Coordinate { U = U / length, V = V / length };
     }
 }
 
-#endregion 📺Coord
+#endregion 📺Coordinate
 
 
 #region 📦MoveVector
@@ -4131,7 +4131,7 @@ public class PieceDiff : Entity<PieceDiff>
     private TypeId? _type;
     private DesignId? _design;
     private Plane? _plane;
-    private Coord? _center;
+    private Coordinate? _center;
     private double? _scale;
     private Plane? _mirrorPlane;
     private bool? _isHidden;
@@ -4146,7 +4146,7 @@ public class PieceDiff : Entity<PieceDiff>
     public TypeId? Type { get => _type; set { _type = value; _setProperties.Add("Type"); } }
     public DesignId? Design { get => _design; set { _design = value; _setProperties.Add("Design"); } }
     public Plane? Plane { get => _plane; set { _plane = value; _setProperties.Add("Plane"); } }
-    public Coord? Center { get => _center; set { _center = value; _setProperties.Add("Center"); } }
+    public Coordinate? Center { get => _center; set { _center = value; _setProperties.Add("Center"); } }
     public double? Scale { get => _scale; set { _scale = value; _setProperties.Add("Scale"); } }
     public Plane? MirrorPlane { get => _mirrorPlane; set { _mirrorPlane = value; _setProperties.Add("MirrorPlane"); } }
     public bool? IsHidden { get => _isHidden; set { _isHidden = value; _setProperties.Add("IsHidden"); } }
@@ -4182,7 +4182,7 @@ public class Piece : Entity<Piece>
     public TypeId? Type { get; set; }
     public DesignId? Design { get; set; }
     public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
+    public Coordinate? Center { get; set; }
     public double? Scale { get; set; }
     public Plane? MirrorPlane { get; set; }
     public bool? IsHidden { get; set; }
@@ -5201,13 +5201,13 @@ public class Design : Entity<Design>
             }
 
             var piecePlanes = new Dictionary<string, Plane>();
-            var pieceCenters = new Dictionary<string, Coord>();
+            var pieceCenters = new Dictionary<string, Coordinate>();
             var pieceAttributes = new Dictionary<string, List<Attribute>>();
 
             var onRoot = new Action<Piece>(piece =>
             {
                 piecePlanes[piece.Guid] = piece.Plane ?? new Plane();
-                pieceCenters[piece.Guid] = piece.Center ?? new Coord();
+                pieceCenters[piece.Guid] = piece.Center ?? new Coordinate();
             });
             var onConnection = new Action<Piece, Piece, Connection>((parent, child, connection) =>
             {
@@ -5229,7 +5229,7 @@ public class Design : Entity<Design>
                 var radius = 2.697;
                 var verticalVExtra = 1.0;
                 var horizontalScale = 3.0633;
-                var parentCenter = pieceCenters.TryGetValue(parent.Guid, out var pc) ? pc : new Coord();
+                var parentCenter = pieceCenters.TryGetValue(parent.Guid, out var pc) ? pc : new Coordinate();
                 var connectionU = connection.U ?? 0;
                 var connectionV = connection.V ?? 0;
 
@@ -5255,7 +5255,7 @@ public class Design : Entity<Design>
                     }
                 }
 
-                pieceCenters[child.Guid] = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
+                pieceCenters[child.Guid] = new Coordinate { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
 
                 var existingAttributes = new List<Attribute>(child.Attributes);
                 var semioAttribute = existingAttributes.FirstOrDefault(q => q.Key == "semio.parent");
@@ -5687,7 +5687,7 @@ public class Design : Entity<Design>
         {
             if (piece.Center is null) return piece;
             var newPiece = Entity<Piece>.DeepClone(piece)!;
-            newPiece.Center = new Coord
+            newPiece.Center = new Coordinate
             {
                 U = piece.Center.U * iconWidth,
                 V = -(piece.Center.V * iconWidth)
@@ -5716,7 +5716,7 @@ public class Design : Entity<Design>
         {
             if (piece.Center is null) return piece;
             var newPiece = Entity<Piece>.DeepClone(piece)!;
-            newPiece.Center = new Coord { U = piece.Center.U + offsetX, V = piece.Center.V + offsetY };
+            newPiece.Center = new Coordinate { U = piece.Center.U + offsetX, V = piece.Center.V + offsetY };
             return newPiece;
         }).ToList();
 
@@ -6195,7 +6195,7 @@ text {
         };
     }
 
-    public static DesignDiff DragPiecesInDesign(Design design, Design pieces, Coord offset)
+    public static DesignDiff DragPiecesInDesign(Design design, Design pieces, Coordinate offset)
     {
         var designConnections = design.Connections;
         var selectedPieces = pieces.Pieces;
@@ -6220,7 +6220,7 @@ text {
                 pieceUpdates.Add(new PieceDiffUpdate
                 {
                     Piece = new PieceId { Guid = guid },
-                    Diff = new PieceDiff { Center = new Coord { U = piece.Center.U + offset.U, V = piece.Center.V + offset.V } },
+                    Diff = new PieceDiff { Center = new Coordinate { U = piece.Center.U + offset.U, V = piece.Center.V + offset.V } },
                 });
             }
         }
@@ -6674,7 +6674,7 @@ text {
         if (!flatRep.Ok)
             return SemioReport<DesignDiff>.Failure(flatRep.Errors);
         var flatResult = flatRep.Diff!.Forward;
-        var flatPieceMap = new Dictionary<string, (Plane? Plane, Coord? Center)>();
+        var flatPieceMap = new Dictionary<string, (Plane? Plane, Coordinate? Center)>();
         foreach (var piece in design.Pieces)
         {
             if (piece.Plane != null)
@@ -6686,7 +6686,7 @@ text {
             {
                 var existing = flatPieceMap.ContainsKey(update.Piece.Guid)
                     ? flatPieceMap[update.Piece.Guid]
-                    : ((Plane?)null, (Coord?)null);
+                    : ((Plane?)null, (Coordinate?)null);
                 if (update.Diff?.Plane != null) existing.Item1 = update.Diff.Plane;
                 if (update.Diff?.Center != null) existing.Item2 = update.Diff.Center;
                 flatPieceMap[update.Piece.Guid] = existing;
@@ -6695,14 +6695,14 @@ text {
 
         var piecesUpdated = fixedPieceGuids.Select(g =>
         {
-            var flat = flatPieceMap.ContainsKey(g) ? flatPieceMap[g] : ((Plane?)null, (Coord?)null);
+            var flat = flatPieceMap.ContainsKey(g) ? flatPieceMap[g] : ((Plane?)null, (Coordinate?)null);
             return new PieceDiffUpdate
             {
                 Piece = new PieceId { Guid = g },
                 Diff = new PieceDiff
                 {
                     Plane = flat.Item1 ?? new Plane(),
-                    Center = flat.Item2 ?? new Coord()
+                    Center = flat.Item2 ?? new Coordinate()
                 }
             };
         }).ToList();
@@ -6787,7 +6787,7 @@ text {
                 {
                     var centerValue = flatPiece.Center is not null
                         ? Utility.Serialize(flatPiece.Center)
-                        : Utility.Serialize(new Coord());
+                        : Utility.Serialize(new Coordinate());
                     var planeValue = flatPiece.Plane is not null
                         ? Utility.Serialize(flatPiece.Plane)
                         : Utility.Serialize(new Plane());
@@ -6842,7 +6842,7 @@ text {
                         {
                             var extCenterValue = flatExtPiece.Center is not null
                                 ? Utility.Serialize(flatExtPiece.Center)
-                                : Utility.Serialize(new Coord());
+                                : Utility.Serialize(new Coordinate());
                             extAttrs.Add(new Attribute { Key = "semio.center", Value = extCenterValue });
                         }
                         extPiece.Attributes = extAttrs;
@@ -6867,7 +6867,7 @@ text {
     /// </summary>
     /// <remarks>
     /// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-    /// - Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+    /// - Fixed pieces get -anchor offset applied to center; if coordinate is given, +coordinate offset is also applied.
     /// - Connected pieces with non-external parents are added as-is.
     /// - Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
     ///   the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
@@ -6879,7 +6879,7 @@ text {
         Design source,
         Design target,
         string anchoring = "bottomLeft",
-        Coord? coord = null)
+        Coordinate? coordinate = null)
     {
         var types = (kit.Types ?? new List<Type>()).ToDictionary(t => t.Guid);
         var ports = (kit.Ports ?? new List<Port>()).ToDictionary(p => p.Guid);
@@ -6913,21 +6913,21 @@ text {
         // For pp_excl_pc_incl pieces, the semio.center and semio.plane attributes have the flat values
 
         // Compute bounding rectangle from flat centers
-        var centerCoords = new List<Coord>();
+        var centerCoordinates = new List<Coordinate>();
         foreach (var piece in source.Pieces)
         {
             if (externalOriginGuids.Contains(piece.Guid)) continue;
 
-            Coord? center = piece.Center;
+            Coordinate? center = piece.Center;
             if (center is null)
             {
                 // Try to get from semio.center attribute
                 var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
                 if (centerAttr?.Value is not null)
-                    center = Utility.Deserialize<Coord>(centerAttr.Value);
+                    center = Utility.Deserialize<Coordinate>(centerAttr.Value);
             }
             if (center is not null)
-                centerCoords.Add(center);
+                centerCoordinates.Add(center);
         }
 
         // Also add centers for external pieces referenced by connections
@@ -6937,57 +6937,57 @@ text {
             var connectingGuid = conn.Connecting.Piece.Guid;
             if (externalOriginGuids.Contains(connectedGuid) && sourcePieceMap.TryGetValue(connectedGuid, out var extPiece1))
             {
-                Coord? c = extPiece1.Center;
+                Coordinate? c = extPiece1.Center;
                 if (c is null)
                 {
                     var attr = extPiece1.Attributes.FirstOrDefault(a => a.Key == "semio.center");
-                    if (attr?.Value is not null) c = Utility.Deserialize<Coord>(attr.Value);
+                    if (attr?.Value is not null) c = Utility.Deserialize<Coordinate>(attr.Value);
                 }
-                if (c is not null) centerCoords.Add(c);
+                if (c is not null) centerCoordinates.Add(c);
             }
             if (externalOriginGuids.Contains(connectingGuid) && sourcePieceMap.TryGetValue(connectingGuid, out var extPiece2))
             {
-                Coord? c = extPiece2.Center;
+                Coordinate? c = extPiece2.Center;
                 if (c is null)
                 {
                     var attr = extPiece2.Attributes.FirstOrDefault(a => a.Key == "semio.center");
-                    if (attr?.Value is not null) c = Utility.Deserialize<Coord>(attr.Value);
+                    if (attr?.Value is not null) c = Utility.Deserialize<Coordinate>(attr.Value);
                 }
-                if (c is not null) centerCoords.Add(c);
+                if (c is not null) centerCoordinates.Add(c);
             }
         }
 
-        if (centerCoords.Count == 0)
-            centerCoords.Add(new Coord());
+        if (centerCoordinates.Count == 0)
+            centerCoordinates.Add(new Coordinate());
 
-        var minU = centerCoords.Min(c => c.U);
-        var maxU = centerCoords.Max(c => c.U);
-        var minV = centerCoords.Min(c => c.V);
-        var maxV = centerCoords.Max(c => c.V);
+        var minU = centerCoordinates.Min(c => c.U);
+        var maxU = centerCoordinates.Max(c => c.U);
+        var minV = centerCoordinates.Min(c => c.V);
+        var maxV = centerCoordinates.Max(c => c.V);
 
-        Coord anchor;
+        Coordinate anchor;
         switch (anchoring)
         {
             case "middle":
-                anchor = new Coord { U = (minU + maxU) / 2, V = (minV + maxV) / 2 };
+                anchor = new Coordinate { U = (minU + maxU) / 2, V = (minV + maxV) / 2 };
                 break;
             case "centroid":
-                anchor = new Coord { U = centerCoords.Average(c => c.U), V = centerCoords.Average(c => c.V) };
+                anchor = new Coordinate { U = centerCoordinates.Average(c => c.U), V = centerCoordinates.Average(c => c.V) };
                 break;
             case "bottomLeft":
-                anchor = new Coord { U = minU, V = minV };
+                anchor = new Coordinate { U = minU, V = minV };
                 break;
             case "bottomRight":
-                anchor = new Coord { U = maxU, V = minV };
+                anchor = new Coordinate { U = maxU, V = minV };
                 break;
             case "topLeft":
-                anchor = new Coord { U = minU, V = maxV };
+                anchor = new Coordinate { U = minU, V = maxV };
                 break;
             case "topRight":
-                anchor = new Coord { U = maxU, V = maxV };
+                anchor = new Coordinate { U = maxU, V = maxV };
                 break;
             default: // "original"
-                anchor = new Coord { U = 0, V = 0 };
+                anchor = new Coordinate { U = 0, V = 0 };
                 break;
         }
 
@@ -7039,12 +7039,12 @@ text {
 
             if (isFixed && !isConnected)
             {
-                // Fixed piece: apply -anchor offset, then +coord if given
+                // Fixed piece: apply -anchor offset, then +coordinate if given
                 var copied = Entity<Piece>.DeepClone(piece)!;
-                var center = copied.Center ?? new Coord();
-                center = new Coord { U = center.U - anchor.U, V = center.V - anchor.V };
-                if (coord is not null)
-                    center = new Coord { U = center.U + coord.U, V = center.V + coord.V };
+                var center = copied.Center ?? new Coordinate();
+                center = new Coordinate { U = center.U - anchor.U, V = center.V - anchor.V };
+                if (coordinate is not null)
+                    center = new Coordinate { U = center.U + coordinate.U, V = center.V + coordinate.V };
                 copied.Center = center;
                 addedPieces.Add(copied);
             }
@@ -7105,33 +7105,33 @@ text {
                                         };
                                     }
 
-                                    if (coord is not null)
+                                    if (coordinate is not null)
                                     {
                                         var connectedStub = externalOriginGuids.Contains(parentConn.Connected.Piece.Guid);
                                         var connectingStub = externalOriginGuids.Contains(parentConn.Connecting.Piece.Guid);
                                         var connMatchesParentage =
                                             (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == parentGuid) ||
                                             (parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == parentGuid);
-                                        // Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+                                        // Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                         // internal–internal source edges (neither side a stub) must keep cloned u/v.
                                         if (connMatchesParentage && connectedStub != connectingStub)
                                         {
-                                            Coord? flatParentCenter = null;
+                                            Coordinate? flatParentCenter = null;
                                             if (flatPiecesByGuid_PassThrough(candidate, out var candCenter))
                                                 flatParentCenter = candCenter;
                                             else if (flatPiecesByGuid_PassThrough(externalParent, out var epCenter))
                                                 flatParentCenter = epCenter;
-                                            Coord? flatChildCenter = null;
+                                            Coordinate? flatChildCenter = null;
                                             var childCenterAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
                                             if (childCenterAttr?.Value is not null)
-                                                flatChildCenter = Utility.Deserialize<Coord>(childCenterAttr.Value);
+                                                flatChildCenter = Utility.Deserialize<Coordinate>(childCenterAttr.Value);
                                             if (flatChildCenter is null && piece.Center is not null)
                                                 flatChildCenter = piece.Center;
 
                                             if (flatParentCenter is not null && flatChildCenter is not null)
                                             {
-                                                var offsetU = flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U));
-                                                var offsetV = flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V));
+                                                var offsetU = flatParentCenter.U - (coordinate.U + (anchor.U - flatChildCenter.U));
+                                                var offsetV = flatParentCenter.V - (coordinate.V + (anchor.V - flatChildCenter.V));
                                                 copiedConn.U = offsetU;
                                                 copiedConn.V = offsetV;
                                             }
@@ -7152,14 +7152,14 @@ text {
                         var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
                         var planeAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.plane");
                         if (centerAttr?.Value is not null)
-                            copied.Center = Utility.Deserialize<Coord>(centerAttr.Value);
+                            copied.Center = Utility.Deserialize<Coordinate>(centerAttr.Value);
                         if (planeAttr?.Value is not null)
                             copied.Plane = Utility.Deserialize<Plane>(planeAttr.Value);
                         // Apply anchor offset
-                        var center = copied.Center ?? new Coord();
-                        center = new Coord { U = center.U - anchor.U, V = center.V - anchor.V };
-                        if (coord is not null)
-                            center = new Coord { U = center.U + coord.U, V = center.V + coord.V };
+                        var center = copied.Center ?? new Coordinate();
+                        center = new Coordinate { U = center.U - anchor.U, V = center.V - anchor.V };
+                        if (coordinate is not null)
+                            center = new Coordinate { U = center.U + coordinate.U, V = center.V + coordinate.V };
                         copied.Center = center;
                         addedPieces.Add(copied);
                     }
@@ -7202,12 +7202,12 @@ text {
         return diff;
     }
 
-    private static bool flatPiecesByGuid_PassThrough(Piece piece, out Coord? center)
+    private static bool flatPiecesByGuid_PassThrough(Piece piece, out Coordinate? center)
     {
         var centerAttr = piece.Attributes.FirstOrDefault(a => a.Key == "semio.center");
         if (centerAttr?.Value is not null)
         {
-            center = Utility.Deserialize<Coord>(centerAttr.Value);
+            center = Utility.Deserialize<Coordinate>(centerAttr.Value);
             return true;
         }
         center = piece.Center;
@@ -8489,7 +8489,7 @@ public class PieceMeta
     public TypeId? Type { get; set; }
     public DesignId? Design { get; set; }
     public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
+    public Coordinate? Center { get; set; }
     public double? Scale { get; set; }
     public Plane? MirrorPlane { get; set; }
     public bool? IsHidden { get; set; }
@@ -9145,10 +9145,10 @@ public static class Hashing
         return prefix + expanded;
     }
 
-    public static string HashCoord(Coord c)
+    public static string HashCoordinate(Coordinate c)
     {
         var w = new HashWriter();
-        w.WriteString("Coord");
+        w.WriteString("Coordinate");
         w.WriteString("u");
         w.WriteNumber(c.U);
         w.WriteString("v");
@@ -9902,7 +9902,7 @@ public static class Hashing
         if (p.Center != null)
         {
             w.WriteString("center");
-            w.WriteHash(HashCoord(p.Center));
+            w.WriteHash(HashCoordinate(p.Center));
         }
         if (p.Color != null)
         {
@@ -10259,10 +10259,10 @@ public static class Hashing
 
     // #region 🐹Hash Diff Value Types
 
-    public static string HashCoordDiff(Coord c)
+    public static string HashCoordinateDiff(Coordinate c)
     {
         var w = new HashWriter();
-        w.WriteString("CoordDiff");
+        w.WriteString("CoordinateDiff");
         w.WriteString("u");
         w.WriteNumber(c.U);
         w.WriteString("v");
@@ -10918,7 +10918,7 @@ public static class Hashing
         if (d.ShouldSerializeCenter() && d.Center != null)
         {
             w.WriteString("center");
-            w.WriteHash(HashCoordDiff(d.Center));
+            w.WriteHash(HashCoordinateDiff(d.Center));
         }
         WriteDiffOptString(w, "color", d.Color, d.ShouldSerializeColor());
         WriteDiffOptString(w, "description", d.Description, d.ShouldSerializeDescription());
@@ -11180,7 +11180,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    internal static string HashFlatCenterRoot(string guid, Coord? center)
+    internal static string HashFlatCenterRoot(string guid, Coordinate? center)
     {
         var w = new HashWriter();
         if (center == null)
@@ -11597,7 +11597,7 @@ public sealed class FlatMerkleCacheEntry
     public string PlaneHash { get; set; } = "";
     public string CenterHash { get; set; } = "";
     public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
+    public Coordinate? Center { get; set; }
 }
 
 public partial class Kit
@@ -11735,7 +11735,7 @@ public partial class Kit
             if (rootPieceIndex != -1)
             {
                 flatDesign.Pieces[rootPieceIndex].Plane = rootPlane;
-                flatDesign.Pieces[rootPieceIndex].Center ??= new Coord { U = 0, V = 0 };
+                flatDesign.Pieces[rootPieceIndex].Center ??= new Coordinate { U = 0, V = 0 };
             }
 
             var bfs = new UndirectedBreadthFirstSearchAlgorithm<string, Edge<string>>(graph);
@@ -11778,7 +11778,7 @@ public partial class Kit
                 var radius = 2.697;
                 var verticalVExtra = 1.0;
                 var horizontalScale = 3.0633;
-                var parentCenter = parentPiece.Center ?? new Coord { U = 0, V = 0 };
+                var parentCenter = parentPiece.Center ?? new Coordinate { U = 0, V = 0 };
 
                 double childU, childV;
                 if (parentCenter.U == 0 && parentCenter.V == 0)
@@ -11802,7 +11802,7 @@ public partial class Kit
                     }
                 }
 
-                var childCenter = new Coord { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
+                var childCenter = new Coordinate { U = Math.Round(childU, 6), V = Math.Round(childV, 6) };
                 var fixedPieceId = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.fixedPieceId")?.Value ?? "";
                 var parentPath = parentPiece.Attributes?.FirstOrDefault(q => q.Key == "semio.path")?.Value ?? "";
 
@@ -11839,7 +11839,7 @@ public partial class Kit
             return Pt(a.Origin, b.Origin) && Vt(a.XAxis, b.XAxis) && Vt(a.YAxis, b.YAxis);
         }
 
-        static bool FlattenCoordsApproxEqual(Coord? a, Coord? b)
+        static bool FlattenCoordinatesApproxEqual(Coordinate? a, Coordinate? b)
         {
             if (a == null && b == null) return true;
             if (a == null || b == null) return false;
@@ -11877,7 +11877,7 @@ public partial class Kit
                 hasChanges = true;
             }
 
-            if (flatPiece.Center != null && !FlattenCoordsApproxEqual(flatPiece.Center, originalPiece.Center))
+            if (flatPiece.Center != null && !FlattenCoordinatesApproxEqual(flatPiece.Center, originalPiece.Center))
             {
                 pieceDiff.Center = flatPiece.Center;
                 hasChanges = true;
@@ -13855,7 +13855,7 @@ public static class KitSqlite
                     XAxis = new Vector { X = reader.GetFloat(7), Y = reader.GetFloat(8), Z = reader.GetFloat(9) },
                     YAxis = new Vector { X = reader.GetFloat(10), Y = reader.GetFloat(11), Z = reader.GetFloat(12) }
                 },
-                Center = (reader.IsDBNull(13)) ? null : new Coord { U = reader.GetFloat(13), V = reader.GetFloat(14) },
+                Center = (reader.IsDBNull(13)) ? null : new Coordinate { U = reader.GetFloat(13), V = reader.GetFloat(14) },
                 Scale = reader.IsDBNull(15) ? null : reader.GetFloat(15),
                 MirrorPlane = (reader.IsDBNull(16)) ? null : new Plane
                 {
@@ -15592,7 +15592,7 @@ public static class SemioDiff
             diff.Plane = after.Plane != null ? GetPlaneDiff(before.Plane, after.Plane) : null;
             hasChanges = true;
         }
-        if (!AreCoordsEqual(before.Center, after.Center)) { diff.Center = after.Center; hasChanges = true; }
+        if (!AreCoordinatesEqual(before.Center, after.Center)) { diff.Center = after.Center; hasChanges = true; }
         if (before.Scale != after.Scale) { diff.Scale = after.Scale; hasChanges = true; }
         if (!ArePlanesEqual(before.MirrorPlane, after.MirrorPlane)) { diff.MirrorPlane = after.MirrorPlane; hasChanges = true; }
         if (before.IsHidden != after.IsHidden) { diff.IsHidden = after.IsHidden; hasChanges = true; }
@@ -15614,7 +15614,7 @@ public static class SemioDiff
             && a.YAxis?.X == b.YAxis?.X && a.YAxis?.Y == b.YAxis?.Y && a.YAxis?.Z == b.YAxis?.Z;
     }
 
-    private static bool AreCoordsEqual(Coord? a, Coord? b)
+    private static bool AreCoordinatesEqual(Coordinate? a, Coordinate? b)
     {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;

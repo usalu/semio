@@ -8,11 +8,11 @@
       "expectedCopyAsset": "nakagin-capsule-tower.copy.design.semio.json",
       "pasteTargetAsset": "nakagin-capsule-tower.paste.design.semio.json",
       "expectedPasteDiffAsset": "nakagin-capsule-tower.paste.design.diff.semio.json",
-      "pasteCoord": {
+      "pasteCoordinate": {
         "u": 10,
         "v": 10
       },
-      "expectedPasteWithCoordDiffAsset": "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json",
+      "expectedPasteWithCoordinateDiffAsset": "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json",
       "designFamilies": []
     }
   ]

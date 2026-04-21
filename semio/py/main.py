@@ -586,11 +586,11 @@ class TableEntityNode(TableNode):
 
 # #region 🖥️Weak Entities
 
-# #region 📺Coord
+# #region 📺Coordinate
 # Coordinate primitive for three-dimensional values.
 
 
-class Coord(SRepresentation):
+class Coordinate(SRepresentation):
     """🔵Three-dimensional coordinate with x, y and z values."""
 
     u: float = pydantic.Field()
@@ -603,45 +603,45 @@ class Coord(SRepresentation):
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
 
-class CoordInput(Coord, Input):
-    """🔴Input fields for creating or updating a coord."""
+class CoordinateInput(Coordinate, Input):
+    """🔴Input fields for creating or updating a coordinate."""
 
     pass
 
 
-class CoordContext(Coord, Context):
-    """🟠Context fields for understanding a coord by an LLM."""
+class CoordinateContext(Coordinate, Context):
+    """🟠Context fields for understanding a coordinate by an LLM."""
 
     pass
 
 
-class CoordOutput(Coord, Output):
-    """🟡Output fields returned when fetching a coord."""
+class CoordinateOutput(Coordinate, Output):
+    """🟡Output fields returned when fetching a coordinate."""
 
     pass
 
 
-class CoordPrediction(Coord, Prediction):
-    """🟢Prediction fields for LLM-based coord inference."""
+class CoordinatePrediction(Coordinate, Prediction):
+    """🟢Prediction fields for LLM-based coordinate inference."""
 
     pass
 
 
-class CoordNode(Node):
-    """🟣GraphQL node exposing coord data."""
+class CoordinateNode(Node):
+    """🟣GraphQL node exposing coordinate data."""
 
     class Meta:
-        representation = Coord
+        representation = Coordinate
 
 
-class CoordInputNode(InputNode):
-    """🟤GraphQL input node for coord mutations."""
+class CoordinateInputNode(InputNode):
+    """🟤GraphQL input node for coordinate mutations."""
 
     class Meta:
-        representation = CoordInput
+        representation = CoordinateInput
 
 
-# #endregion 📺Coord
+# #endregion 📺Coordinate
 
 
 # #region ✖️Point
@@ -3343,7 +3343,7 @@ class PiecePlaneField(MaskedField, abc.ABC):
 class PieceCenterField(MaskedField, abc.ABC):
     """🔖Field mixin for the center of a piece."""
 
-    center: typing.Optional[Coord] = pydantic.Field(default=None)
+    center: typing.Optional[Coordinate] = pydantic.Field(default=None)
 
 
 class PieceScaleField(RealField, abc.ABC):
@@ -3400,7 +3400,7 @@ class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceI
     """🔖Input fields for creating or updating a piece."""
 
     plane: typing.Optional[PlaneInput] = pydantic.Field(default=None)
-    center: typing.Optional[CoordInput] = pydantic.Field(default=None)
+    center: typing.Optional[CoordinateInput] = pydantic.Field(default=None)
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
 
@@ -3408,7 +3408,7 @@ class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, Piec
     """🔖Context fields for understanding a piece by an LLM."""
 
     plane: typing.Optional[PlaneContext] = pydantic.Field(default=None)
-    center: typing.Optional[CoordContext] = pydantic.Field(default=None)
+    center: typing.Optional[CoordinateContext] = pydantic.Field(default=None)
     attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
 
@@ -3416,7 +3416,7 @@ class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, Piece
     """🔖Output fields returned when fetching a piece."""
 
     plane: typing.Optional[PlaneOutput] = pydantic.Field(default=None)
-    center: typing.Optional[CoordOutput] = pydantic.Field(default=None)
+    center: typing.Optional[CoordinateOutput] = pydantic.Field(default=None)
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
@@ -3442,13 +3442,13 @@ class Piece(
     connectings: list["Connection"] = pydantic.Field(default_factory=list)
 
     @property
-    def center(self) -> typing.Optional[Coord]:
+    def center(self) -> typing.Optional[Coordinate]:
         if self.centerU is None or self.centerV is None:
             return None
-        return Coord(u=self.centerU, v=self.centerV)
+        return Coordinate(u=self.centerU, v=self.centerV)
 
     @center.setter
-    def center(self, center: typing.Optional[Coord]):
+    def center(self, center: typing.Optional[Coordinate]):
         if center is None:
             self.centerU = None
             self.centerV = None
@@ -3506,7 +3506,7 @@ class Piece(
             pass
         try:
             if obj["center"] is not None:
-                center = Coord.parse(obj["center"])
+                center = Coordinate.parse(obj["center"])
                 entity.center = center
         except KeyError:
             pass
@@ -6329,10 +6329,10 @@ class HashWriter:
 
 
 # #region 🎵Hash Value Types
-def hash_coord(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Coord value."""
+def hash_coordinate(c: dict) -> str:
+    """🔖Computes SHA-256 hash of a Coordinate value."""
     w = HashWriter()
-    w.writeString("Coord")
+    w.writeString("Coordinate")
     w.writeString("u")
     w.writeNumber(c["u"])
     w.writeString("v")
@@ -6960,7 +6960,7 @@ def hash_piece(p: dict) -> str:
         w.writeHashList([hash_attribute(a) for a in attrs])
     if p.get("center") is not None:
         w.writeString("center")
-        w.writeHash(hash_coord(p["center"]))
+        w.writeHash(hash_coordinate(p["center"]))
     if p.get("color") is not None:
         w.writeString("color")
         w.writeString(p["color"])
@@ -7258,9 +7258,9 @@ def _hash_collection_diff_generic(
     return w.digest()
 
 
-def hash_coord_diff(d: dict) -> str:
+def hash_coordinate_diff(d: dict) -> str:
     w = HashWriter()
-    w.writeString("CoordDiff")
+    w.writeString("CoordinateDiff")
     _write_diff_number(w, "u", d)
     _write_diff_number(w, "v", d)
     return w.digest()
@@ -7663,7 +7663,7 @@ def hash_piece_diff(d: dict) -> str:
     w = HashWriter()
     w.writeString("PieceDiff")
     _write_diff_hash(w, "attributes", d, hash_attributes_diff)
-    _write_diff_hash(w, "center", d, hash_coord)
+    _write_diff_hash(w, "center", d, hash_coordinate)
     _write_diff_string(w, "color", d)
     _write_diff_string(w, "description", d)
     _write_diff_id(w, "design", d)
@@ -11052,14 +11052,14 @@ def copyDesignDict(kit: dict, design: dict, pieceGuids: list[str], connectionGui
     return {"pieces": copyPieces, "connections": copyConnections}
 
 
-def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord: typing.Optional[dict] = None) -> dict:
+def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coordinate: typing.Optional[dict] = None) -> dict:
     """📋Pastes a copied design into a target design, returning a DesignDiff dict.
     Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-    Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+    Fixed pieces get -anchor offset applied to center; if coordinate is given, +coordinate offset is also applied.
     Connected pieces with non-external parents are added as-is.
     Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
     the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
-    Coord adjusts connection u/v only for remapped child–stub edges; fully internal clipboard connections keep cloned u/v.
+    Coordinate adjusts connection u/v only for remapped child–stub edges; fully internal clipboard connections keep cloned u/v.
     """
     types = kit.get("types", [])
     ports = kit.get("ports", [])
@@ -11094,7 +11094,7 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
             sourceParentMap[connectingGuid] = (connectedGuid, conn)
 
     # Compute bounding rectangle from flat centers
-    centerCoords: list[dict] = []
+    centerCoordinates: list[dict] = []
     for piece in sourcePieces:
         if piece["guid"] in externalOriginGuids:
             continue
@@ -11107,21 +11107,21 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                     except json.JSONDecodeError, TypeError:
                         pass
         if center is not None:
-            centerCoords.append(center)
+            centerCoordinates.append(center)
 
-    if not centerCoords:
-        centerCoords.append({"u": 0, "v": 0})
+    if not centerCoordinates:
+        centerCoordinates.append({"u": 0, "v": 0})
 
-    minU = min(c.get("u", 0) for c in centerCoords)
-    maxU = max(c.get("u", 0) for c in centerCoords)
-    minV = min(c.get("v", 0) for c in centerCoords)
-    maxV = max(c.get("v", 0) for c in centerCoords)
+    minU = min(c.get("u", 0) for c in centerCoordinates)
+    maxU = max(c.get("u", 0) for c in centerCoordinates)
+    minV = min(c.get("v", 0) for c in centerCoordinates)
+    maxV = max(c.get("v", 0) for c in centerCoordinates)
 
     if anchoring == "middle":
         anchor = {"u": (minU + maxU) / 2, "v": (minV + maxV) / 2}
     elif anchoring == "centroid":
-        n = len(centerCoords)
-        anchor = {"u": sum(c.get("u", 0) for c in centerCoords) / n, "v": sum(c.get("v", 0) for c in centerCoords) / n}
+        n = len(centerCoordinates)
+        anchor = {"u": sum(c.get("u", 0) for c in centerCoordinates) / n, "v": sum(c.get("v", 0) for c in centerCoordinates) / n}
     elif anchoring == "bottomLeft":
         anchor = {"u": minU, "v": minV}
     elif anchoring == "bottomRight":
@@ -11184,12 +11184,12 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
         isConnected = piece["guid"] in sourceParentMap
 
         if isFixed and not isConnected:
-            # Fixed piece: apply -anchor offset, then +coord if given
+            # Fixed piece: apply -anchor offset, then +coordinate if given
             copied = _deepCopy(piece)
             center = copied.get("center") or {"u": 0, "v": 0}
             newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
-            if coord is not None:
-                newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+            if coordinate is not None:
+                newCenter = {"u": newCenter["u"] + coordinate.get("u", 0), "v": newCenter["v"] + coordinate.get("v", 0)}
             copied["center"] = newCenter
             addedPieces.append(copied)
         elif isConnected:
@@ -11235,13 +11235,13 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                 else:
                                     copiedConn["connecting"] = {"piece": {"guid": candidate["guid"]}, "connector": {"guid": matchingConnector["guid"]}}
 
-                                if coord is not None:
+                                if coordinate is not None:
                                     connected_guid = parentConn.get("connected", {}).get("piece", {}).get("guid", "")
                                     connecting_guid = parentConn.get("connecting", {}).get("piece", {}).get("guid", "")
                                     connected_stub = connected_guid in externalOriginGuids
                                     connecting_stub = connecting_guid in externalOriginGuids
                                     conn_matches_parentage = (connecting_guid == piece["guid"] and connected_guid == parentGuid) or (connected_guid == piece["guid"] and connecting_guid == parentGuid)
-                                    # Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+                                    # Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
                                     # internal–internal source edges (neither side a stub) must keep cloned u/v.
                                     if conn_matches_parentage and connected_stub != connecting_stub:
                                         flatParentCenter = None
@@ -11277,8 +11277,8 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                         if flatChildCenter is None and piece.get("center"):
                                             flatChildCenter = piece["center"]
                                         if flatParentCenter is not None and flatChildCenter is not None:
-                                            copiedConn["u"] = flatParentCenter.get("u", 0) - (coord.get("u", 0) + (anchor["u"] - flatChildCenter.get("u", 0)))
-                                            copiedConn["v"] = flatParentCenter.get("v", 0) - (coord.get("v", 0) + (anchor["v"] - flatChildCenter.get("v", 0)))
+                                            copiedConn["u"] = flatParentCenter.get("u", 0) - (coordinate.get("u", 0) + (anchor["u"] - flatChildCenter.get("u", 0)))
+                                            copiedConn["v"] = flatParentCenter.get("v", 0) - (coordinate.get("v", 0) + (anchor["v"] - flatChildCenter.get("v", 0)))
 
                                 addedConnections.append(copiedConn)
                                 break
@@ -11299,8 +11299,8 @@ def pasteDesignDict(kit: dict, source: dict, target: dict, anchoring: str, coord
                                 pass
                     center = copied.get("center") or {"u": 0, "v": 0}
                     newCenter = {"u": center.get("u", 0) - anchor["u"], "v": center.get("v", 0) - anchor["v"]}
-                    if coord is not None:
-                        newCenter = {"u": newCenter["u"] + coord.get("u", 0), "v": newCenter["v"] + coord.get("v", 0)}
+                    if coordinate is not None:
+                        newCenter = {"u": newCenter["u"] + coordinate.get("u", 0), "v": newCenter["v"] + coordinate.get("v", 0)}
                     copied["center"] = newCenter
                     addedPieces.append(copied)
             else:
@@ -17630,7 +17630,7 @@ class TestCopyAndPaste:
             assert hasCenter == expectedCenter, f"Piece {p['guid']}: semio.center attr mismatch"
 
     @pytest.mark.parametrize("case", _cp_cases, ids=[c["name"] for c in _cp_cases])
-    def test_paste_without_coord(self, case):
+    def test_paste_without_coordinate(self, case):
         kit = _test_load_json(case["kit"])
         design = _test_find_design(kit, case["designName"], case.get("designParent"))
         paste_target = _test_load_json(case["pasteTargetAsset"])
@@ -17659,35 +17659,35 @@ class TestCopyAndPaste:
         assert len(paste_conns) == len(expected_paste_conns), f"Paste added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
 
     @pytest.mark.parametrize("case", _cp_cases, ids=[c["name"] for c in _cp_cases])
-    def test_paste_with_coord(self, case):
+    def test_paste_with_coordinate(self, case):
         kit = _test_load_json(case["kit"])
         design = _test_find_design(kit, case["designName"], case.get("designParent"))
         paste_target = _test_load_json(case["pasteTargetAsset"])
         selection = _test_load_json(case["selectionAsset"])
-        expected_pwc = _test_load_json(case["expectedPasteWithCoordDiffAsset"])
-        coord = case["pasteCoord"]
+        expected_pwc = _test_load_json(case["expectedPasteWithCoordinateDiffAsset"])
+        coordinate = case["pasteCoordinate"]
 
         piece_guids = [p["guid"] for p in selection.get("pieces", [])]
         connection_guids = [c["guid"] for c in selection.get("connections", [])]
 
         copy_result = copyDesignDict(kit, design, piece_guids, connection_guids)
-        paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", coord)
+        paste_diff = pasteDesignDict(kit, copy_result, paste_target, "original", coordinate)
 
         # Verify pasted pieces count
         paste_pieces = paste_diff.get("pieces", {}).get("added", [])
         expected_paste_pieces = expected_pwc.get("pieces", {}).get("added", [])
-        assert len(paste_pieces) == len(expected_paste_pieces), f"Paste with coord added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
+        assert len(paste_pieces) == len(expected_paste_pieces), f"Paste with coordinate added pieces count mismatch: {len(paste_pieces)} vs {len(expected_paste_pieces)}"
 
         # Verify pasted connections count
         paste_conns = paste_diff.get("connections", {}).get("added", [])
         expected_paste_conns = expected_pwc.get("connections", {}).get("added", [])
-        assert len(paste_conns) == len(expected_paste_conns), f"Paste with coord added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
+        assert len(paste_conns) == len(expected_paste_conns), f"Paste with coordinate added connections count mismatch: {len(paste_conns)} vs {len(expected_paste_conns)}"
 
-        # Verify centers are offset by coord
+        # Verify centers are offset by coordinate
         expectedPieceMap = {p["guid"]: p for p in expected_paste_pieces}
         for p in paste_pieces:
             ep = expectedPieceMap.get(p["guid"])
-            assert ep is not None, f"Piece {p['guid']} not found in expected paste with coord"
+            assert ep is not None, f"Piece {p['guid']} not found in expected paste with coordinate"
             if p.get("center") and ep.get("center"):
                 assert abs(p["center"]["u"] - ep["center"]["u"]) < 0.001, f"Piece {p['guid']} center.u mismatch: {p['center']['u']} vs {ep['center']['u']}"
                 assert abs(p["center"]["v"] - ep["center"]["v"]) < 0.001, f"Piece {p['guid']} center.v mismatch: {p['center']['v']} vs {ep['center']['v']}"
@@ -18118,7 +18118,7 @@ class TestExportDesignRepresentation:
         point_lists = ifc.by_type("IfcCartesianPointList3D")
 
         assert len(point_lists) == 1
-        coordinates = [tuple(float(value) for value in row) for row in point_lists[0].CoordList]
+        coordinates = [tuple(float(value) for value in row) for row in point_lists[0].CoordinateList]
         assert any(abs(x) < 1e-6 and abs(y) < 1e-6 and z > 0 for x, y, z in coordinates)
         assert any(abs(x) < 1e-6 and y < 0 and abs(z) < 1e-6 for x, y, z in coordinates)
         assert not any(abs(x) < 1e-6 and y > 0 and abs(z) < 1e-6 for x, y, z in coordinates)
@@ -18537,10 +18537,10 @@ class TestHash:
         h2 = hash_attribute_diff(d)
         assert h1 == h2
 
-    def test_coord_diff_deterministic(self):
+    def test_coordinate_diff_deterministic(self):
         d = {"u": 1.0, "v": 2.0}
-        h1 = hash_coord_diff(d)
-        h2 = hash_coord_diff(d)
+        h1 = hash_coordinate_diff(d)
+        h2 = hash_coordinate_diff(d)
         assert h1 == h2
 
 

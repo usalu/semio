@@ -379,7 +379,7 @@ func planesEqual(p1, p2 *Plane, tolerance float64) bool {
 		floatEqual(p1.YAxis.Z, p2.YAxis.Z, tolerance)
 }
 
-func centersEqual(c1, c2 *Coord, tolerance float64) bool {
+func centersEqual(c1, c2 *Coordinate, tolerance float64) bool {
 	if c1 == nil && c2 == nil {
 		return true
 	}
@@ -1356,14 +1356,14 @@ func TestDrag(t *testing.T) {
 		loadJSON(t, "drag/design.semio.json", &design)
 		var pieces Design
 		loadJSON(t, "drag/pieces.semio.json", &pieces)
-		var offset Coord
+		var offset Coordinate
 		loadJSON(t, "drag/offset.semio.json", &offset)
 		type expectedPieceUpdate struct {
 			Piece struct {
 				Guid string `json:"guid"`
 			} `json:"piece"`
 			Diff struct {
-				Center *Coord `json:"center"`
+				Center *Coordinate `json:"center"`
 			} `json:"diff"`
 		}
 		type expectedConnUpdate struct {
@@ -1393,7 +1393,7 @@ func TestDrag(t *testing.T) {
 			if len(computed.Pieces.Updated) != len(expected.Pieces.Updated) {
 				t.Fatalf("Expected %d piece updates, got %d", len(expected.Pieces.Updated), len(computed.Pieces.Updated))
 			}
-			expectedMap := make(map[string]*Coord)
+			expectedMap := make(map[string]*Coordinate)
 			for _, u := range expected.Pieces.Updated {
 				expectedMap[u.Piece.Guid] = u.Diff.Center
 			}
@@ -2007,7 +2007,7 @@ func TestCopyAndPaste(t *testing.T) {
 				}
 			}
 
-			// Test PasteDesign with original anchoring (no coord)
+			// Test PasteDesign with original anchoring (no coordinate)
 			var pasteTargetDesign Design
 			loadJSON(t, "nakagin-capsule-tower.paste.design.semio.json", &pasteTargetDesign)
 			pasteDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", nil)
@@ -2041,39 +2041,39 @@ func TestCopyAndPaste(t *testing.T) {
 				t.Fatalf("Paste added connections count mismatch: got %d, want %d", len(pasteDiff.Connections.Added), len(expectedPaste.Connections.Added))
 			}
 
-			// Test PasteDesign with original anchoring and coord
-			coordVal := Coord{U: 10, V: 10}
-			pasteWithCoordDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", &coordVal)
+			// Test PasteDesign with original anchoring and coordinate
+			coordinateVal := Coordinate{U: 10, V: 10}
+			pasteWithCoordinateDiff := PasteDesign(&kit, copyDesign, pasteTargetDesign, "original", &coordinateVal)
 
-			// Load expected paste with coord diff
-			var expectedPasteWithCoord DesignDiff
-			loadJSON(t, "nakagin-capsule-tower.paste.with-coord.design.diff.semio.json", &expectedPasteWithCoord)
+			// Load expected paste with coordinate diff
+			var expectedPasteWithCoordinate DesignDiff
+			loadJSON(t, "nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json", &expectedPasteWithCoordinate)
 
 			// Verify pasted pieces count
-			if pasteWithCoordDiff.Pieces == nil {
-				t.Fatal("No pieces diff in paste with coord result")
+			if pasteWithCoordinateDiff.Pieces == nil {
+				t.Fatal("No pieces diff in paste with coordinate result")
 			}
-			if len(pasteWithCoordDiff.Pieces.Added) != len(expectedPasteWithCoord.Pieces.Added) {
-				t.Fatalf("Paste with coord added pieces count mismatch: got %d, want %d", len(pasteWithCoordDiff.Pieces.Added), len(expectedPasteWithCoord.Pieces.Added))
+			if len(pasteWithCoordinateDiff.Pieces.Added) != len(expectedPasteWithCoordinate.Pieces.Added) {
+				t.Fatalf("Paste with coordinate added pieces count mismatch: got %d, want %d", len(pasteWithCoordinateDiff.Pieces.Added), len(expectedPasteWithCoordinate.Pieces.Added))
 			}
 
 			// Verify pasted connections count
-			if pasteWithCoordDiff.Connections == nil {
-				t.Fatal("No connections diff in paste with coord result")
+			if pasteWithCoordinateDiff.Connections == nil {
+				t.Fatal("No connections diff in paste with coordinate result")
 			}
-			if len(pasteWithCoordDiff.Connections.Added) != len(expectedPasteWithCoord.Connections.Added) {
-				t.Fatalf("Paste with coord added connections count mismatch: got %d, want %d", len(pasteWithCoordDiff.Connections.Added), len(expectedPasteWithCoord.Connections.Added))
+			if len(pasteWithCoordinateDiff.Connections.Added) != len(expectedPasteWithCoordinate.Connections.Added) {
+				t.Fatalf("Paste with coordinate added connections count mismatch: got %d, want %d", len(pasteWithCoordinateDiff.Connections.Added), len(expectedPasteWithCoordinate.Connections.Added))
 			}
 
-			// Verify centers are offset by coord
+			// Verify centers are offset by coordinate
 			expectedPWCPieceMap := make(map[string]Piece)
-			for _, p := range expectedPasteWithCoord.Pieces.Added {
+			for _, p := range expectedPasteWithCoordinate.Pieces.Added {
 				expectedPWCPieceMap[p.Guid] = p
 			}
-			for _, p := range pasteWithCoordDiff.Pieces.Added {
+			for _, p := range pasteWithCoordinateDiff.Pieces.Added {
 				ep, ok := expectedPWCPieceMap[p.Guid]
 				if !ok {
-					t.Errorf("Unexpected piece %s in paste with coord output", p.Guid)
+					t.Errorf("Unexpected piece %s in paste with coordinate output", p.Guid)
 					continue
 				}
 				if p.Center != nil && ep.Center != nil {
@@ -3167,12 +3167,12 @@ func TestHashKitDiff(t *testing.T) {
 		}
 	})
 
-	t.Run("hashCoordDiff is deterministic", func(t *testing.T) {
+	t.Run("hashCoordinateDiff is deterministic", func(t *testing.T) {
 		u := 1.0
 		v := 2.0
-		d := CoordDiff{U: &u, V: &v}
-		h1 := HashCoordDiff(d)
-		h2 := HashCoordDiff(d)
+		d := CoordinateDiff{U: &u, V: &v}
+		h1 := HashCoordinateDiff(d)
+		h2 := HashCoordinateDiff(d)
 		if h1 != h2 {
 			t.Errorf("expected same hash, got %s and %s", h1, h2)
 		}

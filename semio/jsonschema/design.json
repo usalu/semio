@@ -109,8 +109,8 @@
             "title": "ConnectorId",
             "type": "object"
         },
-        "Coord": {
-            "description": "\ud83d\udfe1Output fields returned when fetching a coord.",
+        "Coordinate": {
+            "description": "\ud83d\udfe1Output fields returned when fetching a coordinate.",
             "properties": {
                 "u": {
                     "title": "U",
@@ -125,7 +125,7 @@
                 "u",
                 "v"
             ],
-            "title": "Coord",
+            "title": "Coordinate",
             "type": "object"
         },
         "DesignId": {
@@ -238,7 +238,7 @@
                 "center": {
                     "anyOf": [
                         {
-                            "$ref": "#/$defs/Coord"
+                            "$ref": "#/$defs/Coordinate"
                         },
                         {
                             "type": "null"

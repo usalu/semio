@@ -164,7 +164,7 @@ input PieceInputNode {
   id_: String = ""
   description: String = ""
   plane: PlaneInputNode = null
-  center: CoordInputNode = null
+  center: CoordinateInputNode = null
   attributes: [AttributeInputNode] = null
   type: TypeIdInputNode
   designPiece: DesignIdInputNode = null
@@ -177,8 +177,8 @@ input PlaneInputNode {
   yAxis: VectorInputNode!
 }
 
-"""🟤GraphQL input node for coord mutations."""
-input CoordInputNode {
+"""🟤GraphQL input node for coordinate mutations."""
+input CoordinateInputNode {
   u: Float!
   v: Float!
 }

@@ -25,7 +25,7 @@ import {
   type Camera,
   type Connection,
   type Connector,
-  type Coord,
+  type Coordinate,
   type DesignDiff,
   type DesignPlain,
   type Design,
@@ -2545,7 +2545,7 @@ const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: D
   return result;
 };
 
-const toSceneVector = (coord: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coord.x, coord.y, coord.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
+const toSceneVector = (coordinate: { x: number; y: number; z: number }): THREE.Vector3 => new THREE.Vector3(coordinate.x, coordinate.y, coordinate.z).applyMatrix4(SEMIO_TO_THREE_BASIS);
 
 const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnapshot => {
   const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
@@ -5906,7 +5906,7 @@ if ((import.meta as any).vitest) {
     xAxis: { x: 1, y: 0, z: 0 },
     yAxis: { x: 0, y: 1, z: 0 },
   } as unknown as Plane;
-  const testCenter = { u: 0, v: 0 } as unknown as Coord;
+  const testCenter = { u: 0, v: 0 } as unknown as Coordinate;
 
   describe("buildKitDataFromKit", () => {
     it("normalizes connector port references into string labels instead of raw guid objects", () => {

@@ -1447,7 +1447,7 @@
                 "title": "Connector",
                 "description": "Output fields returned when fetching a connector."
             },
-            "CoordContext": {
+            "CoordinateContext": {
                 "properties": {
                     "u": {
                         "type": "number",
@@ -1463,10 +1463,10 @@
                     "u",
                     "v"
                 ],
-                "title": "CoordContext",
-                "description": "\ud83d\udfe0Context fields for understanding a coord by an LLM."
+                "title": "CoordinateContext",
+                "description": "\ud83d\udfe0Context fields for understanding a coordinate by an LLM."
             },
-            "CoordInput": {
+            "CoordinateInput": {
                 "properties": {
                     "u": {
                         "type": "number",
@@ -1482,10 +1482,10 @@
                     "u",
                     "v"
                 ],
-                "title": "CoordInput",
-                "description": "\ud83d\udd34Input fields for creating or updating a coord."
+                "title": "CoordinateInput",
+                "description": "\ud83d\udd34Input fields for creating or updating a coordinate."
             },
-            "Coord": {
+            "Coordinate": {
                 "properties": {
                     "u": {
                         "type": "number",
@@ -1501,8 +1501,8 @@
                     "u",
                     "v"
                 ],
-                "title": "Coord",
-                "description": "\ud83d\udfe1Output fields returned when fetching a coord."
+                "title": "Coordinate",
+                "description": "\ud83d\udfe1Output fields returned when fetching a coordinate."
             },
             "DesignContext-Input": {
                 "properties": {
@@ -2759,7 +2759,7 @@
                     "center": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/CoordContext"
+                                "$ref": "#/components/schemas/CoordinateContext"
                             },
                             {
                                 "type": "null"
@@ -2825,7 +2825,7 @@
                     "center": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/CoordContext"
+                                "$ref": "#/components/schemas/CoordinateContext"
                             },
                             {
                                 "type": "null"
@@ -2904,7 +2904,7 @@
                     "center": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/CoordInput"
+                                "$ref": "#/components/schemas/CoordinateInput"
                             },
                             {
                                 "type": "null"
@@ -2970,7 +2970,7 @@
                     "center": {
                         "anyOf": [
                             {
-                                "$ref": "#/components/schemas/Coord"
+                                "$ref": "#/components/schemas/Coordinate"
                             },
                             {
                                 "type": "null"

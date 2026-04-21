@@ -636,97 +636,97 @@ export const getFamilyGuid = (id: FamilyId): Guid => id.guid;
 
 // #region ­ƒûÑ´©ÅWeak Entities
 
-// #region ­ƒô║Coord
-// Coord weak entity types and schemas MUST be defined here.
+// #region ­ƒô║Coordinate
+// Coordinate weak entity types and schemas MUST be defined here.
 
 /**
- * Zod schema for Coord validation.
+ * Zod schema for Coordinate validation.
  **/
-export const CoordSchema = z.object({ u: z.number(), v: z.number() });
+export const CoordinateSchema = z.object({ u: z.number(), v: z.number() });
 /**
- * Type alias for Coord.
+ * Type alias for Coordinate.
  **/
-export type CoordPlain = z.infer<typeof CoordSchema>;
-export class Coord implements CoordPlain {
+export type CoordinatePlain = z.infer<typeof CoordinateSchema>;
+export class Coordinate implements CoordinatePlain {
   u!: number;
   v!: number;
-  constructor(plain: CoordPlain) {
-    Object.assign(this, CoordSchema.parse(plain));
+  constructor(plain: CoordinatePlain) {
+    Object.assign(this, CoordinateSchema.parse(plain));
   }
-  static from(plain: CoordPlain): Coord {
-    return new Coord(plain);
+  static from(plain: CoordinatePlain): Coordinate {
+    return new Coordinate(plain);
   }
-  toPlain(): CoordPlain {
-    return CoordSchema.parse(this as unknown as CoordPlain);
+  toPlain(): CoordinatePlain {
+    return CoordinateSchema.parse(this as unknown as CoordinatePlain);
   }
-  /** ­ƒô║Serialize this coord for transport. */
+  /** ­ƒô║Serialize this coordinate for transport. */
   serialize(): string {
     return JSON.stringify(this.toPlain());
   }
-  /** ­ƒô║Deserialize a coord from transport JSON. */
-  static deserialize(json: string): Coord {
-    return new Coord(CoordSchema.parse(JSON.parse(json)));
+  /** ­ƒô║Deserialize a coordinate from transport JSON. */
+  static deserialize(json: string): Coordinate {
+    return new Coordinate(CoordinateSchema.parse(JSON.parse(json)));
   }
   /** ­ƒô║Compute a coordinate delta from this coordinate to another coordinate. */
-  diffTo(after: Coord): CoordDiff {
+  diffTo(after: Coordinate): CoordinateDiff {
     return { u: after.u - this.u, v: after.v - this.v };
   }
   /** ­ƒô║Build the reverse coordinate delta for an already-applied delta. */
-  inverseDiff(appliedDiff: CoordDiff): CoordDiff {
+  inverseDiff(appliedDiff: CoordinateDiff): CoordinateDiff {
     return { u: this.u - (appliedDiff.u ?? 0), v: this.v - (appliedDiff.v ?? 0) };
   }
   /** ­ƒô║Merge two coordinate deltas. */
-  static mergeDiff(first: CoordDiff, second: CoordDiff): CoordDiff {
+  static mergeDiff(first: CoordinateDiff, second: CoordinateDiff): CoordinateDiff {
     return { u: (first.u ?? 0) + (second.u ?? 0), v: (first.v ?? 0) + (second.v ?? 0) };
   }
   /** ­ƒô║Apply a coordinate delta to this coordinate. */
-  applyDiff(diff: CoordDiff): void {
+  applyDiff(diff: CoordinateDiff): void {
     if (diff.u !== undefined) this.u += diff.u;
     if (diff.v !== undefined) this.v += diff.v;
   }
 }
 /**
- * Serializes Coord for transport.
+ * Serializes Coordinate for transport.
  **/
-export const serializeCoord = (coord: Coord): string => coord.serialize();
+export const serializeCoordinate = (coordinate: Coordinate): string => coordinate.serialize();
 /**
  **/
-export const deserializeCoord = (json: string): Coord => Coord.deserialize(json);
+export const deserializeCoordinate = (json: string): Coordinate => Coordinate.deserialize(json);
 
 /**
- * Zod schema for Coord diff validation.
+ * Zod schema for Coordinate diff validation.
  **/
-export const CoordDiffSchema = CoordSchema.partial();
+export const CoordinateDiffSchema = CoordinateSchema.partial();
 /**
- * Diff type for tracking Coord changes.
+ * Diff type for tracking Coordinate changes.
  **/
-export type CoordDiff = z.infer<typeof CoordDiffSchema>;
+export type CoordinateDiff = z.infer<typeof CoordinateDiffSchema>;
 /**
- * Retrieves the CoordDiff value.
+ * Retrieves the CoordinateDiff value.
  **/
-export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
+export const getCoordinateDiff = (before: Coordinate, after: Coordinate): CoordinateDiff => {
   return before.diffTo(after);
 };
 /**
- * Diff type for tracking inverseCoord changes.
+ * Diff type for tracking inverseCoordinate changes.
  **/
-export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
+export const inverseCoordinateDiff = (original: Coordinate, appliedDiff: CoordinateDiff): CoordinateDiff => {
   return original.inverseDiff(appliedDiff);
 };
 /**
- * Diff type for tracking mergeCoord changes.
+ * Diff type for tracking mergeCoordinate changes.
  **/
-export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
-  return Coord.mergeDiff(diff1, diff2);
+export const mergeCoordinateDiff = (diff1: CoordinateDiff, diff2: CoordinateDiff): CoordinateDiff => {
+  return Coordinate.mergeDiff(diff1, diff2);
 };
 /**
- * Diff type for tracking applyCoord changes.
+ * Diff type for tracking applyCoordinate changes.
  **/
-export const applyCoordDiff = (target: Coord, diff: CoordDiff): void => {
+export const applyCoordinateDiff = (target: Coordinate, diff: CoordinateDiff): void => {
   target.applyDiff(diff);
 };
 
-// #endregion ­ƒô║Coord
+// #endregion ­ƒô║Coordinate
 
 // #region Ô×í´©ÅVec
 // Vec weak entity types and schemas MUST be defined here.
@@ -5090,7 +5090,7 @@ export const PieceSchema = z.object({
   type: TypeIdSchema.optional(),
   design: DesignIdSchema.optional(),
   plane: PlaneSchema.optional(),
-  center: CoordSchema.optional(),
+  center: CoordinateSchema.optional(),
   scale: z.number().optional(),
   mirrorPlane: PlaneSchema.optional(),
   isHidden: z.boolean().optional(),
@@ -5108,7 +5108,7 @@ export class Piece {
   guid!: string;
   name?: string;
   plane?: Plane;
-  center?: Coord;
+  center?: Coordinate;
   scale?: number;
   mirrorPlane?: Plane;
   isHidden?: boolean;
@@ -5161,7 +5161,7 @@ export class Piece {
     const { type: _pt, design: _pd, ...rest } = p;
     Object.assign(this, rest);
     this.plane = p.plane ? new Plane(p.plane) : undefined;
-    this.center = p.center ? new Coord(p.center) : undefined;
+    this.center = p.center ? new Coordinate(p.center) : undefined;
     this.mirrorPlane = p.mirrorPlane ? new Plane(p.mirrorPlane) : undefined;
     this.props = p.props?.map((x) => new Prop(x));
     this.attributes = p.attributes?.map((a) => new Attribute(a));
@@ -5218,7 +5218,7 @@ export class Piece {
   /**
    * Lazy flattened 2D center in host-design space (see {@link flatPlane}; no persist diff).
    */
-  flatCenter(): Coord | undefined {
+  flatCenter(): Coordinate | undefined {
     const design = this.#hostDesign;
     const kit = this.#resolveKit();
     if (!design || !kit) return undefined;
@@ -5345,7 +5345,7 @@ export class Piece {
     if (diff.name !== undefined) this.name = diff.name;
     if (diff.type !== undefined) this.syncTypeFromWire(diff.type);
     if (diff.design !== undefined) this.syncDesignAsPieceFromWire(diff.design);
-    if (diff.center !== undefined) this.center = diff.center instanceof Coord ? diff.center : new Coord(CoordSchema.parse(diff.center as CoordPlain));
+    if (diff.center !== undefined) this.center = diff.center instanceof Coordinate ? diff.center : new Coordinate(CoordinateSchema.parse(diff.center as CoordinatePlain));
     if (diff.scale !== undefined) this.scale = diff.scale;
     if (diff.mirrorPlane !== undefined) this.mirrorPlane = diff.mirrorPlane instanceof Plane ? diff.mirrorPlane : new Plane(PlaneSchema.parse(diff.mirrorPlane as PlanePlain));
     if (diff.isHidden !== undefined) this.isHidden = diff.isHidden;
@@ -6653,19 +6653,19 @@ export class Design {
       return operationErr(flatRes.errors);
     }
     const flatChange = flatRes.diff!;
-    const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coord } } = {};
+    const flatPieceMap: { [guid: string]: { plane?: Plane; center?: Coordinate } } = {};
     for (const piece of this.pieces ?? []) {
       if (piece.plane) flatPieceMap[piece.guid] = { plane: piece.plane, center: piece.center };
     }
     for (const update of flatChange.forward.pieces?.updated ?? []) {
       const existing = flatPieceMap[update.piece.guid] ?? {};
       if (update.diff.plane) existing.plane = update.diff.plane as Plane;
-      if (update.diff.center) existing.center = update.diff.center as Coord;
+      if (update.diff.center) existing.center = update.diff.center as Coordinate;
       flatPieceMap[update.piece.guid] = existing;
     }
 
     const identityPlane = new Plane({ origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } });
-    const zeroCenter = new Coord({ u: 0, v: 0 });
+    const zeroCenter = new Coordinate({ u: 0, v: 0 });
 
     const diff: DesignDiff = {};
 
@@ -6802,9 +6802,9 @@ export class Design {
     return asKitInstance(this.#kit).copyDesignOp(this, pieceGuids, connectionGuids);
   }
 
-  pasteFrom(source: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
+  pasteFrom(source: Design, anchoring: string = "bottomLeft", coordinate?: Coordinate): DesignDiff {
     if (!this.#kit) throw new Error("Design not attached to a KitImpl");
-    return asKitInstance(this.#kit).pasteDesignOp(source, this, anchoring, coord);
+    return asKitInstance(this.#kit).pasteDesignOp(source, this, anchoring, coordinate);
   }
 
   piecesMetadata(): OperationResult<Map<string, PiecePlacementMetadata>> {
@@ -7252,7 +7252,7 @@ export const designWithDiff = (base: Design, diff: DesignDiff): Design => {
       const preserved = { ...applied.toPlain() };
       if (p.plane !== undefined) preserved.plane = PlaneSchema.parse(p.plane as unknown);
       else delete preserved.plane;
-      if (p.center !== undefined) preserved.center = CoordSchema.parse(p.center as unknown);
+      if (p.center !== undefined) preserved.center = CoordinateSchema.parse(p.center as unknown);
       else delete preserved.center;
       preserved.attributes = setStatus(applied.attributes, DiffStatus.Modified);
       return new Piece(preserved);
@@ -7328,7 +7328,7 @@ export const mergeDesigns = (designs: Design[]): DesignDiff => {
 
 /**
  **/
-export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
+export const orientDesign = (plane?: Plane, center?: Coordinate): DesignDiff => {
   if (plane === undefined && center === undefined) {
     return {};
   }
@@ -7448,7 +7448,7 @@ const flattenPlanesDiffer = (a?: Plane, b?: Plane): boolean => {
     Math.abs(a.yAxis.z - b.yAxis.z) >= flattenPlaneCenterTol
   );
 };
-const flattenCentersDiffer = (a?: Coord, b?: Coord): boolean => {
+const flattenCentersDiffer = (a?: Coordinate, b?: Coordinate): boolean => {
   if (a == null && b == null) return false;
   if (a == null || b == null) return true;
   return Math.abs(a.u - b.u) >= flattenPlaneCenterTol || Math.abs(a.v - b.v) >= flattenPlaneCenterTol;
@@ -7624,7 +7624,7 @@ const hashPlaneChain = (parentHash: string, parentConnector: Connector, childCon
   return w.digest();
 };
 
-const hashCenterRoot = (guid: string, center: Coord | undefined): string => {
+const hashCenterRoot = (guid: string, center: Coordinate | undefined): string => {
   const w = new HashWriter();
   if (!center) {
     w.writeString("center.root.identity");
@@ -7656,7 +7656,7 @@ export type FlatMerkleCacheEntry = {
   planeHash: string;
   centerHash: string;
   plane?: Plane;
-  center?: Coord;
+  center?: Coordinate;
   flatPiece?: Piece;
 };
 
@@ -7892,7 +7892,7 @@ export type IncludedDesignInfo = {
   guid: string;
   designGuid: string;
   type: "connected" | "fixed";
-  center?: Coord;
+  center?: Coordinate;
   plane?: Plane;
   externalConnections?: Connection[];
 };
@@ -8206,7 +8206,7 @@ const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnec
  **/
 export const movePiecesInDesign = (kit: KitLike, design: Design, pieces: Design, vector: MoveVector): DesignDiff => asKitInstance(kit).movePiecesInDesignOp(design, pieces, vector);
 
-export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coord): DesignDiff => {
+export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coordinate): DesignDiff => {
   const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
   const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
   for (const guid of fixedGuids) {
@@ -8246,13 +8246,13 @@ export type PasteDesignAnchoringKind = (typeof PASTE_DESIGN_ANCHORING_KINDS)[num
  * ­ƒôïPastes a copied design into a target design, returning a DesignDiff.
  * Specs: Anchoring determines the reference point within the bounding rectangle of the source.
  * External stub parents are remapped to matching target pieces (name + connector) when possibleÔÇöeven if the child
- * has a plane (flattened pp-excl). If rematch is impossible, fall back to center/plane from attributes then anchor/coord.
- * Other pieces with a plane alone get -anchor then +coord on diagram center.
- * Fully internal source connections keep cloned u/v when coord only affects stub-bridge remapping as above.
- * With coord, only the remapped childÔÇôstub parent bridge updates u/v: target matched parentÔÇÖs diagram center minus
- * (coord + (anchor ÔêÆ child flat center)). Descendant internal connections keep deep-cloned u/v.
+ * has a plane (flattened pp-excl). If rematch is impossible, fall back to center/plane from attributes then anchor/coordinate.
+ * Other pieces with a plane alone get -anchor then +coordinate on diagram center.
+ * Fully internal source connections keep cloned u/v when coordinate only affects stub-bridge remapping as above.
+ * With coordinate, only the remapped childÔÇôstub parent bridge updates u/v: target matched parentÔÇÖs diagram center minus
+ * (coordinate + (anchor ÔêÆ child flat center)). Descendant internal connections keep deep-cloned u/v.
  **/
-export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coord);
+export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchoring: string = "bottomLeft", coordinate?: Coordinate): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coordinate);
 
 /**
  * Finds replaceable types and designs for the selected pieces in a design.
@@ -9246,14 +9246,14 @@ export class KitImpl {
           flatDesign.pieces![rootPieceIndex].plane = rootPlane;
 
           if (!flatDesign.pieces![rootPieceIndex].center) {
-            flatDesign.pieces![rootPieceIndex].center = new Coord({ u: 0, v: 0 });
+            flatDesign.pieces![rootPieceIndex].center = new Coordinate({ u: 0, v: 0 });
           }
 
           const cur = pieceMap[rootGuid] ?? updatedRootPiece;
           pieceMap[rootGuid] = new Piece({
             ...PieceSchema.parse(stripNullsJsonClone(cur.toPlain()) as unknown),
             plane: PlaneSchema.parse(rootPlane as unknown),
-            center: CoordSchema.parse(flatDesign.pieces![rootPieceIndex].center as unknown),
+            center: CoordinateSchema.parse(flatDesign.pieces![rootPieceIndex].center as unknown),
           });
         }
       },
@@ -9290,7 +9290,7 @@ export class KitImpl {
         const radius = 2.697;
         const verticalVExtra = 1.0;
         const horizontalScale = 3.0633;
-        const parentCenter = parentPiece.center || new Coord({ u: 0, v: 0 });
+        const parentCenter = parentPiece.center || new Coordinate({ u: 0, v: 0 });
         const connectionU = connection.u ?? 0;
         const connectionV = connection.v ?? 0;
 
@@ -9313,17 +9313,17 @@ export class KitImpl {
           }
         }
 
-        const computedChildCenter = new Coord({
+        const computedChildCenter = new Coordinate({
           u: round(childU),
           v: round(childV),
         });
-        const childCenter: Coord = childPiece.center ?? computedChildCenter;
+        const childCenter: Coordinate = childPiece.center ?? computedChildCenter;
 
         const flatChildPiece: Piece = setAttributes(
           new Piece({
             ...PieceSchema.parse(stripNullsJsonClone(childPiece.toPlain()) as unknown),
             plane: PlaneSchema.parse(childPlane as unknown),
-            center: CoordSchema.parse((childPiece.center ?? computedChildCenter) as unknown),
+            center: CoordinateSchema.parse((childPiece.center ?? computedChildCenter) as unknown),
           }),
           [
             {
@@ -9506,14 +9506,14 @@ export class KitImpl {
 
         let flatPiece: Piece;
         let rootPlane: Plane;
-        let rootCenter: Coord;
+        let rootCenter: Coordinate;
         if (planeMatches && centerMatches && cached?.flatPiece) {
           flatPiece = cached.flatPiece;
           rootPlane = cached.plane ?? flatPiece.plane!;
           rootCenter = cached.center ?? flatPiece.center!;
         } else {
           rootPlane = planeMatches && cached?.plane ? cached.plane : (rootPiece.plane ?? matrixToPlane(new THREE.Matrix4().identity()));
-          rootCenter = centerMatches && cached?.center ? cached.center : (rootPiece.center ?? new Coord({ u: 0, v: 0 }));
+          rootCenter = centerMatches && cached?.center ? cached.center : (rootPiece.center ?? new Coordinate({ u: 0, v: 0 }));
           const mergedRoot = new Piece(
             PieceSchema.parse({
               ...rootPiece.toPlain(),
@@ -9569,7 +9569,7 @@ export class KitImpl {
 
         let flatChildPiece: Piece;
         let childPlane: Plane;
-        let childCenter: Coord;
+        let childCenter: Coordinate;
         if (planeMatches && centerMatches && cached?.flatPiece) {
           flatChildPiece = cached.flatPiece;
           childPlane = cached.plane ?? flatChildPiece.plane!;
@@ -9582,7 +9582,7 @@ export class KitImpl {
             const radius = 2.697;
             const verticalVExtra = 1.0;
             const horizontalScale = 3.0633;
-            const parentFlatCenter = parentPiece.center ?? new Coord({ u: 0, v: 0 });
+            const parentFlatCenter = parentPiece.center ?? new Coordinate({ u: 0, v: 0 });
             const connectionU = connection.u ?? 0;
             const connectionV = connection.v ?? 0;
             let childU: number;
@@ -9601,7 +9601,7 @@ export class KitImpl {
                 childV = parentFlatCenter.v + connectionV * horizontalScale;
               }
             }
-            const computedChildCenter = new Coord({ u: round(childU), v: round(childV) });
+            const computedChildCenter = new Coordinate({ u: round(childU), v: round(childV) });
             childCenter = childPiece.center ?? computedChildCenter;
           }
           const mergedChild = new Piece(
@@ -9848,7 +9848,7 @@ export class KitImpl {
   }
 
   /** @see {@link pasteDesign} */
-  #pasteDesign(source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
+  #pasteDesign(source: Design, target: Design, anchoring: string = "bottomLeft", coordinate?: Coordinate): DesignDiff {
     const typesMap = new Map<string, Type>();
     for (const t of this.types ?? []) typesMap.set(t.guid, t);
     const portsMap = new Map<string, Port>();
@@ -9884,24 +9884,24 @@ export class KitImpl {
       }
     }
 
-    const centerCoords: Coord[] = [];
+    const centerCoordinates: Coordinate[] = [];
     for (const piece of sourcePieces) {
       if (externalOriginGuids.has(piece.guid)) continue;
-      let center: Coord | undefined = piece.center;
+      let center: Coordinate | undefined = piece.center;
       if (!center) {
         const attr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
-        if (attr?.value) center = JSON.parse(attr.value) as Coord;
+        if (attr?.value) center = JSON.parse(attr.value) as Coordinate;
       }
-      if (center) centerCoords.push(center);
+      if (center) centerCoordinates.push(center);
     }
-    if (centerCoords.length === 0) centerCoords.push({ u: 0, v: 0 });
+    if (centerCoordinates.length === 0) centerCoordinates.push({ u: 0, v: 0 });
 
-    const minU = Math.min(...centerCoords.map((c) => c.u));
-    const maxU = Math.max(...centerCoords.map((c) => c.u));
-    const minV = Math.min(...centerCoords.map((c) => c.v));
-    const maxV = Math.max(...centerCoords.map((c) => c.v));
+    const minU = Math.min(...centerCoordinates.map((c) => c.u));
+    const maxU = Math.max(...centerCoordinates.map((c) => c.u));
+    const minV = Math.min(...centerCoordinates.map((c) => c.v));
+    const maxV = Math.max(...centerCoordinates.map((c) => c.v));
 
-    let anchor: Coord;
+    let anchor: Coordinate;
     switch (anchoring) {
       case "original":
         anchor = { u: 0, v: 0 };
@@ -9910,7 +9910,7 @@ export class KitImpl {
         anchor = { u: (minU + maxU) / 2, v: (minV + maxV) / 2 };
         break;
       case "centroid":
-        anchor = { u: centerCoords.reduce((s, c) => s + c.u, 0) / centerCoords.length, v: centerCoords.reduce((s, c) => s + c.v, 0) / centerCoords.length };
+        anchor = { u: centerCoordinates.reduce((s, c) => s + c.u, 0) / centerCoordinates.length, v: centerCoordinates.reduce((s, c) => s + c.v, 0) / centerCoordinates.length };
         break;
       case "bottomLeft":
         anchor = { u: minU, v: minV };
@@ -10021,32 +10021,32 @@ export class KitImpl {
                   copiedConn.connecting = { piece: { guid: candidate.guid }, connector: { guid: matchingConnector.guid } };
                 }
 
-                if (coord) {
+                if (coordinate) {
                   const connectedStub = externalOriginGuids.has(parentConn.connected.piece.guid);
                   const connectingStub = externalOriginGuids.has(parentConn.connecting.piece.guid);
                   const connMatchesParentage =
                     (parentConn.connecting.piece.guid === piece.guid && parentConn.connected.piece.guid === pInfo.parentGuid) || (parentConn.connected.piece.guid === piece.guid && parentConn.connecting.piece.guid === pInfo.parentGuid);
                   if (connMatchesParentage && connectedStub !== connectingStub) {
-                    let flatParentCenter: Coord | undefined;
+                    let flatParentCenter: Coordinate | undefined;
                     if (candidate.center) flatParentCenter = { u: candidate.center.u, v: candidate.center.v };
                     else {
                       const candAttr = (candidate.attributes ?? []).find((a) => a.key === "semio.center");
-                      if (candAttr?.value) flatParentCenter = JSON.parse(candAttr.value) as Coord;
+                      if (candAttr?.value) flatParentCenter = JSON.parse(candAttr.value) as Coordinate;
                     }
                     if (!flatParentCenter) {
                       const epCenterAttr = (externalParent.attributes ?? []).find((a) => a.key === "semio.center");
-                      if (epCenterAttr?.value) flatParentCenter = JSON.parse(epCenterAttr.value) as Coord;
+                      if (epCenterAttr?.value) flatParentCenter = JSON.parse(epCenterAttr.value) as Coordinate;
                       else if (externalParent.center) flatParentCenter = externalParent.center;
                     }
 
-                    let flatChildCenter: Coord | undefined;
+                    let flatChildCenter: Coordinate | undefined;
                     const childCenterAttr = (piece.attributes ?? []).find((a) => a.key === "semio.center");
-                    if (childCenterAttr?.value) flatChildCenter = JSON.parse(childCenterAttr.value) as Coord;
+                    if (childCenterAttr?.value) flatChildCenter = JSON.parse(childCenterAttr.value) as Coordinate;
                     else if (piece.center) flatChildCenter = piece.center;
 
                     if (flatParentCenter && flatChildCenter) {
-                      copiedConn.u = flatParentCenter.u - (coord.u + (anchor.u - flatChildCenter.u));
-                      copiedConn.v = flatParentCenter.v - (coord.v + (anchor.v - flatChildCenter.v));
+                      copiedConn.u = flatParentCenter.u - (coordinate.u + (anchor.u - flatChildCenter.u));
+                      copiedConn.v = flatParentCenter.v - (coordinate.v + (anchor.v - flatChildCenter.v));
                     }
                   }
                 }
@@ -10066,7 +10066,7 @@ export class KitImpl {
           if (centerAttr?.value) copied.center = JSON.parse(centerAttr.value);
           if (planeAttr?.value) copied.plane = JSON.parse(planeAttr.value);
           const c = copied.center ?? { u: 0, v: 0 };
-          copied.center = { u: c.u - anchor.u + (coord?.u ?? 0), v: c.v - anchor.v + (coord?.v ?? 0) };
+          copied.center = { u: c.u - anchor.u + (coordinate?.u ?? 0), v: c.v - anchor.v + (coordinate?.v ?? 0) };
           addedPieces.push(copied);
         }
       } else if (isFixed) {
@@ -10079,12 +10079,12 @@ export class KitImpl {
         } else {
           const centerAttr = (copied.attributes ?? []).find((a) => a.key === "semio.center");
           if (centerAttr?.value) {
-            const parsed = JSON.parse(centerAttr.value) as Coord;
+            const parsed = JSON.parse(centerAttr.value) as Coordinate;
             cu = parsed.u;
             cv = parsed.v;
           }
         }
-        copied.center = { u: cu - anchor.u + (coord?.u ?? 0), v: cv - anchor.v + (coord?.v ?? 0) };
+        copied.center = { u: cu - anchor.u + (coordinate?.u ?? 0), v: cv - anchor.v + (coordinate?.v ?? 0) };
         addedPieces.push(copied);
       } else if (isConnected && pInfo) {
         addedPieces.push(detachPieceForLocalMutation(piece));
@@ -11264,8 +11264,8 @@ export class KitImpl {
     return this.#copyDesignClipboard(design, pieceGuids, connectionGuids);
   }
 
-  pasteDesignOp(source: Design, target: Design, anchoring: string = "bottomLeft", coord?: Coord): DesignDiff {
-    return this.#pasteDesign(source, target, anchoring, coord);
+  pasteDesignOp(source: Design, target: Design, anchoring: string = "bottomLeft", coordinate?: Coordinate): DesignDiff {
+    return this.#pasteDesign(source, target, anchoring, coordinate);
   }
 
   piecesMetadataFor(designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> {
@@ -13138,11 +13138,11 @@ export const formatNumberForHash = (n: number): string => {
 
 // #region ­ƒÄÁHash Value Types
 /**
- * Computes SHA-256 hash of a Coord value.
+ * Computes SHA-256 hash of a Coordinate value.
  **/
-export const hashCoord = (c: Coord): string => {
+export const hashCoordinate = (c: Coordinate): string => {
   const w = new HashWriter();
-  w.writeString("Coord");
+  w.writeString("Coordinate");
   w.writeString("u");
   w.writeNumber(c.u);
   w.writeString("v");
@@ -13943,7 +13943,7 @@ export const hashPiece = (p: Piece): string => {
   }
   if (p.center != null) {
     w.writeString("center");
-    w.writeHash(hashCoord(p.center));
+    w.writeHash(hashCoordinate(p.center));
   }
   if (p.color != null) {
     w.writeString("color");
@@ -14255,9 +14255,9 @@ const hashCollectionDiffGeneric = (tag: string, updateTag: string, entityKeyName
 
 // #region ­ƒÉ╣Hash Diff Value Types
 
-export const hashCoordDiff = (d: CoordDiff): string => {
+export const hashCoordinateDiff = (d: CoordinateDiff): string => {
   const w = new HashWriter();
-  w.writeString("CoordDiff");
+  w.writeString("CoordinateDiff");
   writeNullableNumber(w, "u", d.u);
   writeNullableNumber(w, "v", d.v);
   return w.digest();
@@ -14609,7 +14609,7 @@ export const hashPieceDiff = (d: PieceDiff): string => {
   const w = new HashWriter();
   w.writeString("PieceDiff");
   writeNullableHash(w, "attributes", d.attributes, hashAttributesDiff);
-  writeNullableHash(w, "center", d.center, hashCoord);
+  writeNullableHash(w, "center", d.center, hashCoordinate);
   writeNullableString(w, "color", d.color);
   writeNullableString(w, "description", d.description);
   writeNullableId(w, "design", d.design);
@@ -20318,7 +20318,7 @@ export const sumQualityInDesign = (kit: KitLike, designGuid: string, qualityGuid
  **/
 export type PiecePlacementMetadata = {
   plane: Plane;
-  center: Coord;
+  center: Coordinate;
   fixedPieceId: string;
   parentPieceId: string | null;
   depth: number;
@@ -20592,7 +20592,7 @@ if (shouldRunEmbeddedJsTests) {
     NakaginCapsuleTowerCopyDesign,
     NakaginCapsuleTowerPasteDesignDiff,
     NakaginCapsuleTowerPasteDesign,
-    NakaginCapsuleTowerPasteWithCoordDesignDiff,
+    NakaginCapsuleTowerPasteWithCoordinateDesignDiff,
     NakaginCapsuleTowerDiffDesign,
     NakaginCapsuleTowerWithDiffDesign,
     ValidateKitDiffCases,
@@ -20620,8 +20620,8 @@ if (shouldRunEmbeddedJsTests) {
     expectedCopyAsset: string;
     pasteTargetAsset: string;
     expectedPasteDiffAsset: string;
-    pasteCoord: { u: number; v: number };
-    expectedPasteWithCoordDiffAsset: string;
+    pasteCoordinate: { u: number; v: number };
+    expectedPasteWithCoordinateDiffAsset: string;
   }>;
   const filterKitCasesData = FilterKitCases as any;
 
@@ -22288,7 +22288,7 @@ if (shouldRunEmbeddedJsTests) {
       }
     });
 
-    it("Nakagin Capsule Tower paste without coord", () => {
+    it("Nakagin Capsule Tower paste without coordinate", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
@@ -22318,11 +22318,11 @@ if (shouldRunEmbeddedJsTests) {
       }
     });
 
-    it("Nakagin Capsule Tower paste with coord", () => {
+    it("Nakagin Capsule Tower paste with coordinate", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
-      const expectedDiff = NakaginCapsuleTowerPasteWithCoordDesignDiff as any;
+      const expectedDiff = NakaginCapsuleTowerPasteWithCoordinateDesignDiff as any;
 
       const computedDiff = pasteDesign(kit, source, pasteTarget, "original", { u: 10, v: 10 });
 
@@ -22356,14 +22356,14 @@ if (shouldRunEmbeddedJsTests) {
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
       const source = NakaginCapsuleTowerCopyDesign as unknown as Design;
       for (const kind of PASTE_DESIGN_ANCHORING_KINDS) {
-        const withoutCoord = pasteDesign(kit, source, pasteTarget, kind);
-        expect((withoutCoord.pieces?.added ?? []).length).toBeGreaterThan(0);
-        const withCoord = pasteDesign(kit, source, pasteTarget, kind, { u: 10, v: 10 });
-        expect((withCoord.pieces?.added ?? []).length).toBe((withoutCoord.pieces?.added ?? []).length);
+        const withoutCoordinate = pasteDesign(kit, source, pasteTarget, kind);
+        expect((withoutCoordinate.pieces?.added ?? []).length).toBeGreaterThan(0);
+        const withCoordinate = pasteDesign(kit, source, pasteTarget, kind, { u: 10, v: 10 });
+        expect((withCoordinate.pieces?.added ?? []).length).toBe((withoutCoordinate.pieces?.added ?? []).length);
       }
     });
 
-    it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coord", () => {
+    it("Nakagin t_f5 and br_sl0 internal connection stays identical to clipboard when pasting with coordinate", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
       const flatOp = asKitInstance(kit).flattenDesignMerkle(design.guid);
@@ -22381,10 +22381,10 @@ if (shouldRunEmbeddedJsTests) {
       const copied = copyOp2.diff;
       const srcConn = copied._connections!.find((c) => c.guid === connInternal)!;
       const pasteTarget = NakaginCapsuleTowerPasteDesign as unknown as Design;
-      const withoutCoord = pasteDesign(kit, copied, pasteTarget, "original");
-      const withCoord = pasteDesign(kit, copied, pasteTarget, "original", { u: 10, v: 5 });
-      const connWo = withoutCoord._connections?.added?.find((c) => c.guid === connInternal);
-      const connWi = withCoord._connections?.added?.find((c) => c.guid === connInternal);
+      const withoutCoordinate = pasteDesign(kit, copied, pasteTarget, "original");
+      const withCoordinate = pasteDesign(kit, copied, pasteTarget, "original", { u: 10, v: 5 });
+      const connWo = withoutCoordinate._connections?.added?.find((c) => c.guid === connInternal);
+      const connWi = withCoordinate._connections?.added?.find((c) => c.guid === connInternal);
       expect(connWo).toBeDefined();
       expect(connWi).toBeDefined();
       expect(connWi!.u).toBeCloseTo(srcConn.u ?? 0, 6);
@@ -22427,25 +22427,25 @@ if (shouldRunEmbeddedJsTests) {
       const childBelowT2Conn = "bb5449be-247b-498e-b8c8-309697ddea7b";
       const srcInternal = copied._connections!.find((c) => c.guid === childBelowT2Conn);
       expect(srcInternal).toBeDefined();
-      const coord = { u: 10, v: -3.25 };
-      const diffCoord = pasteDesign(kit, copied, pasteTarget, "original", coord);
-      const remappedCoord = diffCoord._connections?.added?.find((c) => c.guid === t2t1Conn);
-      expect(remappedCoord).toBeDefined();
+      const coordinate = { u: 10, v: -3.25 };
+      const diffCoordinate = pasteDesign(kit, copied, pasteTarget, "original", coordinate);
+      const remappedCoordinate = diffCoordinate._connections?.added?.find((c) => c.guid === t2t1Conn);
+      expect(remappedCoordinate).toBeDefined();
       const t2Piece = copied.pieces!.find((p) => p.guid === t2)!;
       let childU = t2Piece.center?.u ?? 0;
       let childV = t2Piece.center?.v ?? 0;
       const t2cAttr = (t2Piece.attributes ?? []).find((a) => a.key === "semio.center");
       if (t2cAttr?.value) {
-        const j = JSON.parse(t2cAttr.value) as Coord;
+        const j = JSON.parse(t2cAttr.value) as Coordinate;
         childU = j.u;
         childV = j.v;
       }
       const parentU = targetT1!.center?.u ?? 0;
       const parentV = targetT1!.center?.v ?? 0;
       const anchor = { u: 0, v: 0 };
-      expect(remappedCoord!.u).toBeCloseTo(parentU - (coord.u + (anchor.u - childU)), 6);
-      expect(remappedCoord!.v).toBeCloseTo(parentV - (coord.v + (anchor.v - childV)), 6);
-      const internalAfter = diffCoord._connections?.added?.find((c) => c.guid === childBelowT2Conn);
+      expect(remappedCoordinate!.u).toBeCloseTo(parentU - (coordinate.u + (anchor.u - childU)), 6);
+      expect(remappedCoordinate!.v).toBeCloseTo(parentV - (coordinate.v + (anchor.v - childV)), 6);
+      const internalAfter = diffCoordinate._connections?.added?.find((c) => c.guid === childBelowT2Conn);
       expect(internalAfter).toBeDefined();
       expect(internalAfter!.u).toBeCloseTo(srcInternal!.u ?? 0, 6);
       expect(internalAfter!.v).toBeCloseTo(srcInternal!.v ?? 0, 6);
@@ -22514,15 +22514,15 @@ if (shouldRunEmbeddedJsTests) {
       expect(addedRoot.center).toBeDefined();
       expect((diff.connections?.added ?? []).length).toBe(expectedDescConns.size);
 
-      const diffCoord = pasteDesign(kit, copied, pasteTarget, "original", { u: 7, v: -3 });
-      const addedCoord = diffCoord.pieces?.added ?? [];
-      const addedRootCoord = addedCoord.find((p) => p.guid === tF0BC0)!;
-      expect(addedRootCoord.center!.u).toBeCloseTo(root.center!.u + 7, 6);
-      expect(addedRootCoord.center!.v).toBeCloseTo(root.center!.v - 3, 6);
-      const addedConnsCoord = diffCoord._connections?.added ?? [];
+      const diffCoordinate = pasteDesign(kit, copied, pasteTarget, "original", { u: 7, v: -3 });
+      const addedCoordinate = diffCoordinate.pieces?.added ?? [];
+      const addedRootCoordinate = addedCoordinate.find((p) => p.guid === tF0BC0)!;
+      expect(addedRootCoordinate.center!.u).toBeCloseTo(root.center!.u + 7, 6);
+      expect(addedRootCoordinate.center!.v).toBeCloseTo(root.center!.v - 3, 6);
+      const addedConnsCoordinate = diffCoordinate._connections?.added ?? [];
       for (const expConnGuid of expectedDescConns) {
         const sourceConn = copied._connections!.find((c) => c.guid === expConnGuid)!;
-        const targetConn = addedConnsCoord.find((c) => c.guid === expConnGuid)!;
+        const targetConn = addedConnsCoordinate.find((c) => c.guid === expConnGuid)!;
         expect(targetConn).toBeDefined();
         expect(targetConn.u ?? 0).toBeCloseTo(sourceConn.u ?? 0, 6);
         expect(targetConn.v ?? 0).toBeCloseTo(sourceConn.v ?? 0, 6);
@@ -24713,10 +24713,10 @@ if (shouldRunEmbeddedJsTests) {
       expect(h1).toMatch(/^[0-9a-f]{64}$/);
     });
 
-    it("hashCoordDiff is deterministic", () => {
-      const d: CoordDiff = { u: 1.0, v: 2.0 };
-      const h1 = hashCoordDiff(d);
-      const h2 = hashCoordDiff(d);
+    it("hashCoordinateDiff is deterministic", () => {
+      const d: CoordinateDiff = { u: 1.0, v: 2.0 };
+      const h1 = hashCoordinateDiff(d);
+      const h2 = hashCoordinateDiff(d);
       expect(h1).toBe(h2);
       expect(h1).toMatch(/^[0-9a-f]{64}$/);
     });

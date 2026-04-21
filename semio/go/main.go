@@ -424,8 +424,8 @@ type KitId struct {
 // #region 🖥️Weak Entities
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
-// 📺Coord represents a 2D coordinate with U and V components.
-type Coord struct {
+// 📺Coordinate represents a 2D coordinate with U and V components.
+type Coordinate struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
@@ -1434,7 +1434,7 @@ type Piece struct {
 	Type        *TypeId     `json:"type,omitempty"`
 	Design      *DesignId   `json:"design,omitempty"`
 	Plane       *Plane      `json:"plane,omitempty"`
-	Center      *Coord      `json:"center,omitempty"`
+	Center      *Coordinate      `json:"center,omitempty"`
 	Scale       *float64    `json:"scale,omitempty"`
 	MirrorPlane *Plane      `json:"mirrorPlane,omitempty"`
 	Props       []Prop      `json:"props,omitempty"`
@@ -1445,8 +1445,8 @@ type Piece struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
-// 🎯CoordDiff represents a partial update to a 2D coordinate's U or V value.
-type CoordDiff struct {
+// 🎯CoordinateDiff represents a partial update to a 2D coordinate's U or V value.
+type CoordinateDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
@@ -1464,7 +1464,7 @@ type PieceDiff struct {
 	Type        *TypeId         `json:"type,omitempty"`
 	Design      *DesignId       `json:"design,omitempty"`
 	Plane       *PlaneDiff      `json:"plane,omitempty"`
-	Center      *CoordDiff      `json:"center,omitempty"`
+	Center      *CoordinateDiff      `json:"center,omitempty"`
 	Scale       *float64        `json:"scale,omitempty"`
 	MirrorPlane *PlaneDiff      `json:"mirrorPlane,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
@@ -1492,7 +1492,7 @@ type PieceMeta struct {
 	Type        *TypeId   `json:"type,omitempty"`
 	Design      *DesignId `json:"design,omitempty"`
 	Plane       *Plane    `json:"plane,omitempty"`
-	Center      *Coord    `json:"center,omitempty"`
+	Center      *Coordinate    `json:"center,omitempty"`
 	Scale       *float64  `json:"scale,omitempty"`
 	MirrorPlane *Plane    `json:"mirrorPlane,omitempty"`
 	IsHidden    *bool     `json:"isHidden,omitempty"`
@@ -2321,7 +2321,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 		XAxis:  &VectorDiff{X: &one, Y: &zero, Z: &zero},
 		YAxis:  &VectorDiff{X: &zero, Y: &one, Z: &zero},
 	}
-	zeroCenterDiff := &CoordDiff{U: &zero, V: &zero}
+	zeroCenterDiff := &CoordinateDiff{U: &zero, V: &zero}
 
 	var piecesUpdated []struct {
 		Piece PieceId   `json:"piece"`
@@ -2343,7 +2343,7 @@ func DeletePiecesAndConnectionsInDesign(kit *Kit, design Design, pieceGuids []st
 			}
 			if flatPiece.Center != nil {
 				cu, cv := flatPiece.Center.U, flatPiece.Center.V
-				centerDiff = &CoordDiff{U: &cu, V: &cv}
+				centerDiff = &CoordinateDiff{U: &cu, V: &cv}
 			}
 		}
 		piecesUpdated = append(piecesUpdated, struct {
@@ -2736,10 +2736,10 @@ func FormatNumberForHash(n float64) string {
 
 // #region 🎵Hash Value Types
 
-// 📺HashCoord computes SHA-256 hash of a Coord value.
-func HashCoord(c Coord) string {
+// 📺HashCoordinate computes SHA-256 hash of a Coordinate value.
+func HashCoordinate(c Coordinate) string {
 	w := &hashWriter{}
-	w.writeString("Coord")
+	w.writeString("Coordinate")
 	w.writeString("u")
 	w.writeNumber(c.U)
 	w.writeString("v")
@@ -3568,7 +3568,7 @@ func HashPiece(p Piece) string {
 	}
 	if p.Center != nil {
 		w.writeString("center")
-		w.writeHash(HashCoord(*p.Center))
+		w.writeHash(HashCoordinate(*p.Center))
 	}
 	if p.Color != nil {
 		w.writeString("color")
@@ -3977,9 +3977,9 @@ func hashCollectionDiffGeneric(
 // #region ⚗️Hash Diff Entities
 // Hash functions for all diff entity types.
 
-func HashCoordDiff(d CoordDiff) string {
+func HashCoordinateDiff(d CoordinateDiff) string {
 	w := &hashWriter{}
-	w.writeString("CoordDiff")
+	w.writeString("CoordinateDiff")
 	writeOptNumberDiff(w, "u", d.U)
 	writeOptNumberDiff(w, "v", d.V)
 	return w.digest()
@@ -4929,7 +4929,7 @@ func HashPieceDiff(d PieceDiff) string {
 	}
 	if d.Center != nil {
 		w.writeString("center")
-		w.writeHash(HashCoordDiff(*d.Center))
+		w.writeHash(HashCoordinateDiff(*d.Center))
 	}
 	writeOptStringDiff(w, "color", d.Color)
 	writeOptStringDiff(w, "description", d.Description)
@@ -7506,7 +7506,7 @@ func inversePieceDiff(original Piece, appliedDiff PieceDiff) PieceDiff {
 	}
 	if appliedDiff.Center != nil {
 		if original.Center != nil {
-			inverse.Center = &CoordDiff{U: &original.Center.U, V: &original.Center.V}
+			inverse.Center = &CoordinateDiff{U: &original.Center.U, V: &original.Center.V}
 		}
 	}
 	if appliedDiff.Scale != nil {
@@ -8626,7 +8626,7 @@ func getPieceDiff(before, after Piece) PieceDiff {
 	}
 	if (before.Center == nil) != (after.Center == nil) || (before.Center != nil && after.Center != nil && (before.Center.U != after.Center.U || before.Center.V != after.Center.V)) {
 		if after.Center != nil {
-			diff.Center = &CoordDiff{U: &after.Center.U, V: &after.Center.V}
+			diff.Center = &CoordinateDiff{U: &after.Center.U, V: &after.Center.V}
 		}
 	}
 	if (before.MirrorPlane == nil) != (after.MirrorPlane == nil) || (before.MirrorPlane != nil && after.MirrorPlane != nil && !arePlanesEqual(*before.MirrorPlane, *after.MirrorPlane)) {
@@ -9050,7 +9050,7 @@ func arePiecesEqual(a, b Piece) bool {
 	if a.Plane != nil && !arePlanesEqual(*a.Plane, *b.Plane) {
 		return false
 	}
-	if !areCoordsEqual(a.Center, b.Center) {
+	if !areCoordinatesEqual(a.Center, b.Center) {
 		return false
 	}
 	if (a.MirrorPlane == nil) != (b.MirrorPlane == nil) {
@@ -9268,7 +9268,7 @@ func areAuthorsEqual(a, b Author) bool {
 	return true
 }
 
-func areCoordsEqual(a, b *Coord) bool {
+func areCoordinatesEqual(a, b *Coordinate) bool {
 	if a == nil && b == nil {
 		return true
 	}
@@ -10355,7 +10355,7 @@ func applyPieceDiff(item *Piece, diff *PieceDiff) {
 	}
 	if diff.Center != nil {
 		if item.Center == nil {
-			item.Center = &Coord{}
+			item.Center = &Coordinate{}
 		}
 		if diff.Center.U != nil {
 			item.Center.U = *diff.Center.U
@@ -12005,13 +12005,13 @@ func CopyDesign(kit *Kit, design Design, pieceGuids []string, connectionGuids []
 
 // 📋PasteDesign pastes a copied design into a target design, returning a DesignDiff.
 // Specs: Anchoring determines the reference point within the bounding rectangle of the source.
-// Fixed pieces get -anchor offset applied to center; if coord is given, +coord offset is also applied.
+// Fixed pieces get -anchor offset applied to center; if coordinate is given, +coordinate offset is also applied.
 // Connected pieces with non-external parents are added as-is.
 // Connected pieces with external-origin parents: if a matching piece with a matching connector is found in target,
 // the parent connection is remapped; otherwise treated as fixed using semio.center/semio.plane attributes.
-// With coord, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coord + (anchor − child.center));
+// With coordinate, remapped stub-bridge u/v use the target matched parent’s diagram center: parent.center − (coordinate + (anchor − child.center));
 // other internal clipboard connections keep deep-cloned u/v.
-func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord *Coord) DesignDiff {
+func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coordinate *Coordinate) DesignDiff {
 	typesMap := make(map[string]*Type)
 	for i := range kit.Types {
 		typesMap[kit.Types[i].Guid] = &kit.Types[i]
@@ -12059,19 +12059,19 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 	}
 
 	// Compute bounding rectangle from flat centers
-	var centerCoords []Coord
+	var centerCoordinates []Coordinate
 	for _, piece := range source.Pieces {
 		if externalOriginGuids[piece.Guid] {
 			continue
 		}
-		var center *Coord
+		var center *Coordinate
 		if piece.Center != nil {
 			center = piece.Center
 		}
 		if center == nil {
 			for _, attr := range piece.Attributes {
 				if attr.Key == "semio.center" && attr.Value != nil {
-					var c Coord
+					var c Coordinate
 					if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
 						center = &c
 					}
@@ -12079,17 +12079,17 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 			}
 		}
 		if center != nil {
-			centerCoords = append(centerCoords, *center)
+			centerCoordinates = append(centerCoordinates, *center)
 		}
 	}
 
-	if len(centerCoords) == 0 {
-		centerCoords = append(centerCoords, Coord{})
+	if len(centerCoordinates) == 0 {
+		centerCoordinates = append(centerCoordinates, Coordinate{})
 	}
 
-	minU, maxU := centerCoords[0].U, centerCoords[0].U
-	minV, maxV := centerCoords[0].V, centerCoords[0].V
-	for _, c := range centerCoords[1:] {
+	minU, maxU := centerCoordinates[0].U, centerCoordinates[0].U
+	minV, maxV := centerCoordinates[0].V, centerCoordinates[0].V
+	for _, c := range centerCoordinates[1:] {
 		if c.U < minU {
 			minU = c.U
 		}
@@ -12104,28 +12104,28 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 		}
 	}
 
-	var anchor Coord
+	var anchor Coordinate
 	switch anchoring {
 	case "middle":
-		anchor = Coord{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
+		anchor = Coordinate{U: (minU + maxU) / 2, V: (minV + maxV) / 2}
 	case "centroid":
 		sumU, sumV := 0.0, 0.0
-		for _, c := range centerCoords {
+		for _, c := range centerCoordinates {
 			sumU += c.U
 			sumV += c.V
 		}
-		n := float64(len(centerCoords))
-		anchor = Coord{U: sumU / n, V: sumV / n}
+		n := float64(len(centerCoordinates))
+		anchor = Coordinate{U: sumU / n, V: sumV / n}
 	case "bottomLeft":
-		anchor = Coord{U: minU, V: minV}
+		anchor = Coordinate{U: minU, V: minV}
 	case "bottomRight":
-		anchor = Coord{U: maxU, V: minV}
+		anchor = Coordinate{U: maxU, V: minV}
 	case "topLeft":
-		anchor = Coord{U: minU, V: maxV}
+		anchor = Coordinate{U: minU, V: maxV}
 	case "topRight":
-		anchor = Coord{U: maxU, V: maxV}
+		anchor = Coordinate{U: maxU, V: maxV}
 	default: // "original"
-		anchor = Coord{U: 0, V: 0}
+		anchor = Coordinate{U: 0, V: 0}
 	}
 
 	// Build target piece maps for matching
@@ -12209,15 +12209,15 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 		pInfo, isConnected := sourceParentMap[piece.Guid]
 
 		if isFixed && !isConnected {
-			// Fixed piece: apply -anchor offset, then +coord if given
+			// Fixed piece: apply -anchor offset, then +coordinate if given
 			copied := deepClonePiece(piece)
-			center := Coord{}
+			center := Coordinate{}
 			if copied.Center != nil {
 				center = *copied.Center
 			}
-			center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-			if coord != nil {
-				center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+			center = Coordinate{U: center.U - anchor.U, V: center.V - anchor.V}
+			if coordinate != nil {
+				center = Coordinate{U: center.U + coordinate.U, V: center.V + coordinate.V}
 			}
 			copied.Center = &center
 			addedPieces = append(addedPieces, copied)
@@ -12282,15 +12282,15 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 										Connector: &ConnectorId{Guid: matchingConnector.Guid},
 									}
 								}
-								if coord != nil {
+								if coordinate != nil {
 									connectedStub := externalOriginGuids[parentConn.Connected.Piece.Guid]
 									connectingStub := externalOriginGuids[parentConn.Connecting.Piece.Guid]
 									connMatchesParentage := (parentConn.Connecting.Piece.Guid == piece.Guid && parentConn.Connected.Piece.Guid == pInfo.parentGuid) ||
 										(parentConn.Connected.Piece.Guid == piece.Guid && parentConn.Connecting.Piece.Guid == pInfo.parentGuid)
-									// Specs: Coord may shift diagram u/v only for the remapped bridge to a clipboard external stub;
+									// Specs: Coordinate may shift diagram u/v only for the remapped bridge to a clipboard external stub;
 									// internal–internal source edges (neither side a stub) must keep cloned u/v.
 									if connMatchesParentage && connectedStub != connectingStub {
-										flatParentCenter := Coord{}
+										flatParentCenter := Coordinate{}
 										hasParentCenter := false
 										if candidate.Center != nil {
 											flatParentCenter = *candidate.Center
@@ -12320,7 +12320,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 											flatParentCenter = *externalParent.Center
 											hasParentCenter = true
 										}
-										flatChildCenter := Coord{}
+										flatChildCenter := Coordinate{}
 										hasChildCenter := false
 										for _, attr := range piece.Attributes {
 											if attr.Key == "semio.center" && attr.Value != nil {
@@ -12334,8 +12334,8 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 											hasChildCenter = true
 										}
 										if hasParentCenter && hasChildCenter {
-											offsetU := flatParentCenter.U - (coord.U + (anchor.U - flatChildCenter.U))
-											offsetV := flatParentCenter.V - (coord.V + (anchor.V - flatChildCenter.V))
+											offsetU := flatParentCenter.U - (coordinate.U + (anchor.U - flatChildCenter.U))
+											offsetV := flatParentCenter.V - (coordinate.V + (anchor.V - flatChildCenter.V))
 											copiedConn.U = offsetU
 											copiedConn.V = offsetV
 										}
@@ -12353,7 +12353,7 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 					copied := deepClonePiece(piece)
 					for _, attr := range piece.Attributes {
 						if attr.Key == "semio.center" && attr.Value != nil {
-							var c Coord
+							var c Coordinate
 							if err := json.Unmarshal([]byte(*attr.Value), &c); err == nil {
 								copied.Center = &c
 							}
@@ -12365,13 +12365,13 @@ func PasteDesign(kit *Kit, source Design, target Design, anchoring string, coord
 							}
 						}
 					}
-					center := Coord{}
+					center := Coordinate{}
 					if copied.Center != nil {
 						center = *copied.Center
 					}
-					center = Coord{U: center.U - anchor.U, V: center.V - anchor.V}
-					if coord != nil {
-						center = Coord{U: center.U + coord.U, V: center.V + coord.V}
+					center = Coordinate{U: center.U - anchor.U, V: center.V - anchor.V}
+					if coordinate != nil {
+						center = Coordinate{U: center.U + coordinate.U, V: center.V + coordinate.V}
 					}
 					copied.Center = &center
 					addedPieces = append(addedPieces, copied)
@@ -13650,7 +13650,7 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 	// Save original centers before BFS modifies pieces in-place.
 	// pieceMap shares pointers with design.Pieces, so after BFS
 	// piece.Center and pieceMap[guid].Center are the same pointer.
-	originalCenters := make(map[string]*Coord)
+	originalCenters := make(map[string]*Coordinate)
 	for _, p := range design.Pieces {
 		if p.Center != nil {
 			c := *p.Center
@@ -13729,7 +13729,7 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 				radius := 2.697
 				verticalVExtra := 1.0
 				horizontalScale := 3.0633
-				var parentCenter Coord
+				var parentCenter Coordinate
 				if currentPiece.Center != nil {
 					parentCenter = *currentPiece.Center
 				}
@@ -13752,7 +13752,7 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 					}
 				}
 
-				childCenter := &Coord{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
+				childCenter := &Coordinate{U: roundFloat(childU, 6), V: roundFloat(childV, 6)}
 				neighborPiece.Center = childCenter
 				piecePaths[neighbor.neighborGuid] = piecePaths[currentGuid] + "," + neighbor.neighborGuid
 
@@ -13794,7 +13794,7 @@ func FlattenDesignDiff(kit *Kit, designGuid string) DesignDiff {
 		if pieceFromMap.Center != nil {
 			origCenter := originalCenters[piece.Guid]
 			if origCenter == nil || pieceFromMap.Center.U != origCenter.U || pieceFromMap.Center.V != origCenter.V {
-				diff.Center = &CoordDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
+				diff.Center = &CoordinateDiff{U: &pieceFromMap.Center.U, V: &pieceFromMap.Center.V}
 				hasChanges = true
 			}
 		}
@@ -14309,7 +14309,7 @@ func MovePiecesInDesign(kit Kit, design Design, pieces Design, vector MoveVector
 
 // 🔌DragPiecesInDesign computes a DesignDiff that offsets selected piece centers and adjusts orphan connections.
 // 🔗A piece's parent connection is the connection where it is the Connecting (child) piece.
-func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
+func DragPiecesInDesign(design Design, pieces Design, offset Coordinate) DesignDiff {
 	selectedGuids := make(map[string]bool)
 	for _, p := range pieces.Pieces {
 		selectedGuids[p.Guid] = true
@@ -14341,7 +14341,7 @@ func DragPiecesInDesign(design Design, pieces Design, offset Coord) DesignDiff {
 				Diff  PieceDiff `json:"diff"`
 			}{
 				Piece: PieceId{Guid: guid},
-				Diff:  PieceDiff{Center: &CoordDiff{U: &newU, V: &newV}},
+				Diff:  PieceDiff{Center: &CoordinateDiff{U: &newU, V: &newV}},
 			})
 		}
 	}
@@ -14407,7 +14407,7 @@ type FlatMerkleCacheEntry struct {
 	PlaneHash  string `json:"planeHash"`
 	CenterHash string `json:"centerHash"`
 	Plane      *Plane `json:"plane,omitempty"`
-	Center     *Coord `json:"center,omitempty"`
+	Center     *Coordinate `json:"center,omitempty"`
 }
 
 // 🌱hashPlaneRoot computes the root plane hash from only the piece guid and its fixed plane components.
@@ -14459,7 +14459,7 @@ func hashPlaneChain(parentHash string, parentConnector, childConnector Connector
 }
 
 // 🌱hashCenterRoot computes the root center hash from only the piece guid and its fixed center (identity when absent).
-func hashCenterRoot(guid string, center *Coord) string {
+func hashCenterRoot(guid string, center *Coordinate) string {
 	w := &hashWriter{}
 	if center == nil {
 		w.writeString("center.root.identity")
@@ -14670,11 +14670,11 @@ func FlattenDesignCached(kit *Kit, designGuid string, cache map[string]FlatMerkl
 			YAxis:  Vector{X: *pd.Plane.YAxis.X, Y: *pd.Plane.YAxis.Y, Z: *pd.Plane.YAxis.Z},
 		}
 	}
-	extractCenter := func(pd PieceDiff) *Coord {
+	extractCenter := func(pd PieceDiff) *Coordinate {
 		if pd.Center == nil || pd.Center.U == nil || pd.Center.V == nil {
 			return nil
 		}
-		return &Coord{U: *pd.Center.U, V: *pd.Center.V}
+		return &Coordinate{U: *pd.Center.U, V: *pd.Center.V}
 	}
 	nextCache := make(map[string]FlatMerkleCacheEntry, len(newHashes))
 	for guid, hashes := range newHashes {
@@ -15665,7 +15665,7 @@ func geometricInsightsFromMeshData(md *exportMeshData) GeometricInsights {
 	}
 	pos := md.positionBytes
 	idx := md.indexBytes
-	// Semio coords: x = glb.x, y = -glb.x, z = glb.y
+	// Semio coordinates: x = glb.x, y = -glb.x, z = glb.y
 	sxMin, syMin, szMin := math.MaxFloat64, math.MaxFloat64, math.MaxFloat64
 	sxMax, syMax, szMax := -math.MaxFloat64, -math.MaxFloat64, -math.MaxFloat64
 	var sumSx, sumSy, sumSz float64
@@ -16075,7 +16075,7 @@ func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
 			}
 		}
 		if centerU.Valid && centerV.Valid {
-			p.Center = &Coord{U: centerU.Float64, V: centerV.Float64}
+			p.Center = &Coordinate{U: centerU.Float64, V: centerV.Float64}
 		}
 		if scale.Valid {
 			p.Scale = &scale.Float64

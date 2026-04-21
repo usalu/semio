@@ -36,7 +36,7 @@ export { default as MetabolismKitFilteredNakaginCapsuleTower, default as Nakagin
 export { default as NakaginCapsuleTowerMetaDesign } from "./semio/nakagin-capsule-tower.meta.design.semio.json";
 export { default as NakaginCapsuleTowerPasteDesignDiff } from "./semio/nakagin-capsule-tower.paste.design.diff.semio.json";
 export { default as NakaginCapsuleTowerPasteDesign } from "./semio/nakagin-capsule-tower.paste.design.semio.json";
-export { default as NakaginCapsuleTowerPasteWithCoordDesignDiff } from "./semio/nakagin-capsule-tower.paste.with-coord.design.diff.semio.json";
+export { default as NakaginCapsuleTowerPasteWithCoordinateDesignDiff } from "./semio/nakagin-capsule-tower.paste.with-coordinate.design.diff.semio.json";
 export { default as NakaginCapsuleTowerShallowDesign } from "./semio/nakagin-capsule-tower.shallow.design.semio.json";
 export { default as NakaginCapsuleTowerWithDiffDesign } from "./semio/nakagin-capsule-tower.with-diff.design.semio.json";
 export { default as NakaginCapsuleTowerDiffDesign, default as NakginCapsuleTowerDiffDesign } from "./semio/nakgin-capsule-tower.diff.design.semio.json";

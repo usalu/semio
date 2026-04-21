@@ -33,7 +33,7 @@ import {
   Connection,
   ConnectionDiff,
   ConnectionId,
-  Coord,
+  Coordinate,
   createClusteredDesign,
   createFolderKitStore,
   createJsonFileKitStore,
@@ -7732,7 +7732,7 @@ export function useConnections(): Connection[] {
 
 export type PieceMetadata = {
   plane: Plane;
-  center: Coord;
+  center: Coordinate;
   fixedPieceId: string;
   parentPieceId: string | null;
   depth: number;
@@ -7774,7 +7774,7 @@ export function useFlatPiecePlane(id?: Guid): Plane {
   return meta?.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
 }
 
-export function useFlatPieceCenter(id?: Guid): Coord {
+export function useFlatPieceCenter(id?: Guid): Coordinate {
   const meta = usePieceMetadata(id);
   return meta?.center ?? { u: 0, v: 0 };
 }
@@ -25752,7 +25752,7 @@ export enum KitAppWindowKind {
  * Presence state for a Kit app user including cursor and camera.
  **/
 export interface KitAppPresence {
-  cursor?: Coord;
+  cursor?: Coordinate;
   camera?: Camera;
 }
 /**
@@ -27615,9 +27615,9 @@ export enum DesignAppWindowKind {
  * Presence state for a Design app user including cursor, camera, and diagram viewport.
  **/
 export interface DesignAppPresence {
-  cursor?: Coord;
+  cursor?: Coordinate;
   camera?: Camera;
-  diagramCenter?: Coord;
+  diagramCenter?: Coordinate;
   diagramScale?: number;
 }
 /**
@@ -27647,7 +27647,7 @@ export interface DesignAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   activeTool?: ToolKind;
   camera?: Camera;
-  diagramCenter?: Coord;
+  diagramCenter?: Coordinate;
   diagramScale?: number;
   focusedPieceGuid?: Guid | null;
   selectedRepresentationTags?: Record<Guid, string[]>;
@@ -27669,7 +27669,7 @@ export interface DesignAppState {
   presence?: DesignAppPresence;
   others: DesignAppPresenceOther[];
   camera?: Camera;
-  diagramCenter?: Coord;
+  diagramCenter?: Coordinate;
   diagramScale?: number;
   focusedPieceGuid?: Guid;
   currentTransactionStackLength?: number;
@@ -27879,7 +27879,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       },
     };
   },
-  "semio.designApp.setDiagramCenter": (context: DesignAppCommandContext, center: Coord): DesignAppCommandResult => {
+  "semio.designApp.setDiagramCenter": (context: DesignAppCommandContext, center: Coordinate): DesignAppCommandResult => {
     return {
       diff: {
         diagramCenter: center,
@@ -29159,7 +29159,7 @@ export function useDesignAppCamera(): HookResult<Camera | undefined> {
  * Returns a hook result for the Design app diagram center coordinate.
  *MUST provide the current diagram center, a setter, and a canSet flag.
  **/
-export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
+export function useDesignAppDiagramCenter(): HookResult<Coordinate | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -29172,7 +29172,7 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canSetEvent));
   const setter = useMemo(() => {
     if (!canSet) return undefined;
-    return (center: Coord | undefined) => {
+    return (center: Coordinate | undefined) => {
       if (center) {
         actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } });
       }
@@ -30100,7 +30100,7 @@ export function useDesignAppCommands(id?: DesignAppId) {
       setCamera: (_origin: string, camera: Camera) => actor.send({ type: "DESIGN.SET_CAMERA", kitGuid, designGuid, camera }),
       focusPiece: (_origin: string, pieceGuid: Guid) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid }),
       clearFocus: (_origin: string) => actor.send({ type: "DESIGN.FOCUS_PIECE", kitGuid, designGuid, pieceGuid: undefined }),
-      setDiagramCenter: (_origin: string, center: Coord) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } }),
+      setDiagramCenter: (_origin: string, center: Coordinate) => actor.send({ type: "DESIGN.SET_DIAGRAM_CENTER", kitGuid, designGuid, center: { x: center.u, y: center.v } }),
       setDiagramScale: (_origin: string, scale: number) => actor.send({ type: "DESIGN.SET_DIAGRAM_SCALE", kitGuid, designGuid, scale }),
       hoverPiece: (_origin: string, guid: Guid) => {
         const hover: DesignAppHover = { pieces: [guid] };
@@ -30207,7 +30207,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
     selectedRepresentationTags: Record<Guid, string[]>;
-    diagramCenter: Coord | undefined;
+    diagramCenter: Coordinate | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
     activeTool: ToolKind | undefined;
@@ -30432,7 +30432,7 @@ function arePanelVisibilityEqual(a?: PanelVisibility, b?: PanelVisibility): bool
   return a.toolbar === b.toolbar && a.leftSidePanel === b.leftSidePanel && a.rightSidePanel === b.rightSidePanel && a.details === b.details;
 }
 
-function areCoordsEqual(a?: Coord, b?: Coord): boolean {
+function areCoordinatesEqual(a?: Coordinate, b?: Coordinate): boolean {
   if (a === b) return true;
   if (!a || !b) return !a && !b;
   return a.u === b.u && a.v === b.v;
@@ -30457,7 +30457,7 @@ function areDesignSyncStatesEqual(
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
     selectedRepresentationTags: Record<Guid, string[]>;
-    diagramCenter: Coord | undefined;
+    diagramCenter: Coordinate | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
     activeTool: ToolKind | undefined;
@@ -30469,7 +30469,7 @@ function areDesignSyncStatesEqual(
     hover: DesignAppHover | undefined;
     focusedPieceGuid: Guid | undefined;
     selectedRepresentationTags: Record<Guid, string[]>;
-    diagramCenter: Coord | undefined;
+    diagramCenter: Coordinate | undefined;
     diagramScale: number | undefined;
     camera: Camera | undefined;
     activeTool: ToolKind | undefined;
@@ -30484,7 +30484,7 @@ function areDesignSyncStatesEqual(
     areHoverStatesEqual(a.hover, b.hover) &&
     a.focusedPieceGuid === b.focusedPieceGuid &&
     areStringArrayRecordsEqual(a.selectedRepresentationTags, b.selectedRepresentationTags) &&
-    areCoordsEqual(a.diagramCenter, b.diagramCenter) &&
+    areCoordinatesEqual(a.diagramCenter, b.diagramCenter) &&
     a.diagramScale === b.diagramScale &&
     JSON.stringify(a.camera ?? null) === JSON.stringify(b.camera ?? null) &&
     a.activeTool === b.activeTool &&
@@ -31031,7 +31031,7 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
  * Returns the center position of a piece on the canvas.
  *MUST look up the piece metadata for the given GUID and return its center.
  **/
-export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord | undefined {
+export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coordinate | undefined {
   const scope = useDesignAppScope();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
   const pieceScope = usePieceScope();
@@ -34874,7 +34874,7 @@ const HelperLines: React.FC<{
 /**
  * pieceToNode holds the data fields for a pieceToNode record.
  **/
-const pieceToNode = (piece: Piece, type: Type, center: Coord, index: number, selected: boolean = false): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, center: Coordinate, index: number, selected: boolean = false): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.guid}`,
   position: {
@@ -34891,7 +34891,7 @@ const pieceToNode = (piece: Piece, type: Type, center: Coord, index: number, sel
  **/
 /**
  **/
-const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coord, index: number, selected: boolean = false): DesignNode => ({
+const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coordinate, index: number, selected: boolean = false): DesignNode => ({
   type: "design",
   id: `piece-${index}-${piece.guid}`,
   position: {
@@ -35084,7 +35084,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
   const selectedPieces = new Set(selection?.pieces ?? []);
   const selectedConnections = new Set(selection?.connections ?? []);
 
-  const centerMap = new Map<string, Coord>();
+  const centerMap = new Map<string, Coordinate>();
   metadata.forEach((meta, pieceGuid) => {
     if (meta.center) {
       centerMap.set(pieceGuid, meta.center);
@@ -35147,7 +35147,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
   const designNodes = includedDesigns.map((includedDesign, i) => {
     const selected = selectedPieces.has(includedDesign.guid);
     if (includedDesign.type === "connected") {
-      let calculatedCenter: Coord = { u: 0, v: 0 };
+      let calculatedCenter: Coordinate = { u: 0, v: 0 };
       if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
         const connectedPieceIds = new Set<string>();
         includedDesign.externalConnections.forEach((conn) => {
@@ -35158,7 +35158,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
           }
         });
 
-        const connectedPieceCenters: Coord[] = [];
+        const connectedPieceCenters: Coordinate[] = [];
         Array.from(connectedPieceIds).forEach((pieceId) => {
           const center = centerMap.get(pieceId);
           if (center) {
@@ -38907,7 +38907,7 @@ export enum TypeAppWindowKind {
  * Presence state including cursor position and camera.
  **/
 export interface TypeAppPresence {
-  cursor?: Coord;
+  cursor?: Coordinate;
   camera?: Camera;
 }
 /**

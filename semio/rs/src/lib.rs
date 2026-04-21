@@ -1107,7 +1107,7 @@ pub mod connection {
     use crate::connector::ConnectorStore;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
-    use crate::geom::{Coord, Plane};
+    use crate::geom::{Coordinate, Plane};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
     use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
@@ -1222,23 +1222,23 @@ pub mod connection {
     }
 
     /// Port-local anchor for a connector (type space).
-    pub fn connector_anchor_ports(c: &ConnectorStore) -> (Coord, Coord) {
+    pub fn connector_anchor_ports(c: &ConnectorStore) -> (Coordinate, Coordinate) {
         if let Some(w) = &c.port {
             if let Some(p) = w.upgrade() {
                 if let Ok(p) = p.read() {
-                    let pt = p.point.unwrap_or(Coord::ZERO);
-                    let dir = p.direction.unwrap_or(Coord::new(0.0, 0.0, 1.0));
+                    let pt = p.point.unwrap_or(Coordinate::ZERO);
+                    let dir = p.direction.unwrap_or(Coordinate::new(0.0, 0.0, 1.0));
                     let n = dir.length();
                     let d = if n > 1e-10 {
-                        Coord::new(dir.x / n, dir.y / n, dir.z / n)
+                        Coordinate::new(dir.x / n, dir.y / n, dir.z / n)
                     } else {
-                        Coord::new(0.0, 0.0, 1.0)
+                        Coordinate::new(0.0, 0.0, 1.0)
                     };
                     return (pt, d);
                 }
             }
         }
-        (Coord::ZERO, Coord::new(0.0, 0.0, 1.0))
+        (Coordinate::ZERO, Coordinate::new(0.0, 0.0, 1.0))
     }
 
     impl ConnectionStore {
@@ -1481,9 +1481,9 @@ pub mod connection {
         /// UV-style center for child piece (Python BFS `child_center`).
         pub fn compute_child_center_for_flatten(
             &self,
-            parent_center: Coord,
+            parent_center: Coordinate,
             parent_connector: &ConnectorStore,
-        ) -> Coord {
+        ) -> Coordinate {
             let (_, pd) = connector_anchor_ports(parent_connector);
             let connection_u = self.x.unwrap_or(0.0);
             let connection_v = self.y.unwrap_or(0.0);
@@ -1949,7 +1949,7 @@ pub mod design {
     };
     use crate::connector::ConnectorStoreRef;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Camera, Coord, Location, Plane};
+    use crate::geom::{Camera, Coordinate, Location, Plane};
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
@@ -1995,7 +1995,7 @@ pub mod design {
         pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
-        flatten_cache: Cache<HashMap<Guid, (Plane, Coord)>>,
+        flatten_cache: Cache<HashMap<Guid, (Plane, Coordinate)>>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -2713,7 +2713,7 @@ pub mod design {
         }
 
         /// Flattened world-space plane and center per piece guid (BFS, Python `flattenDesignDict`).
-        pub fn flatten_map(&self) -> HashMap<Guid, (Plane, Coord)> {
+        pub fn flatten_map(&self) -> HashMap<Guid, (Plane, Coordinate)> {
             self.flatten_cache.get_or_init(|| {
                 let Some(k) = self.parent_kit.upgrade() else {
                     return self.flatten_identity_only();
@@ -2725,7 +2725,7 @@ pub mod design {
             })
         }
 
-        fn flatten_identity_only(&self) -> HashMap<Guid, (Plane, Coord)> {
+        fn flatten_identity_only(&self) -> HashMap<Guid, (Plane, Coordinate)> {
             let mut m = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
@@ -2737,7 +2737,7 @@ pub mod design {
             m
         }
 
-        fn compute_flatten_with_kit(&self, kit: &KitStore) -> HashMap<Guid, (Plane, Coord)> {
+        fn compute_flatten_with_kit(&self, kit: &KitStore) -> HashMap<Guid, (Plane, Coordinate)> {
             let mut types_by_guid: HashMap<Guid, TypeStoreRef> = HashMap::new();
             for t in &kit.types {
                 if let Ok(tr) = t.read() {
@@ -2782,7 +2782,7 @@ pub mod design {
                 adj.entry(tgt).or_default().push((src, c.clone()));
             }
             let mut piece_planes: HashMap<Guid, Plane> = HashMap::new();
-            let mut centers: HashMap<Guid, Coord> = HashMap::new();
+            let mut centers: HashMap<Guid, Coordinate> = HashMap::new();
             let mut visited: HashSet<Guid> = HashSet::new();
 
             let roots: Vec<Guid> = self
@@ -4398,17 +4398,17 @@ pub(crate) mod flatten_math {
 
     use nalgebra::{Matrix4, Vector3};
 
-    use crate::geom::{Coord, Plane};
+    use crate::geom::{Coordinate, Plane};
 
     pub(crate) const FLATTEN_TOLERANCE: f64 = 1e-5;
 
-    fn v3(c: Coord) -> Vector3<f64> {
+    fn v3(c: Coordinate) -> Vector3<f64> {
         Vector3::new(c.x, c.y, c.z)
     }
 
     #[allow(dead_code)]
-    fn coord(v: Vector3<f64>) -> Coord {
-        Coord::new(v.x, v.y, v.z)
+    fn coordinate(v: Vector3<f64>) -> Coordinate {
+        Coordinate::new(v.x, v.y, v.z)
     }
 
     fn normalize(v: Vector3<f64>) -> Vector3<f64> {
@@ -4446,9 +4446,9 @@ pub(crate) mod flatten_math {
         let oy = m[(1, 3)];
         let oz = m[(2, 3)];
         Plane {
-            origin: Coord::new(ox, oy, oz),
-            x_axis: Coord::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]),
-            y_axis: Coord::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]),
+            origin: Coordinate::new(ox, oy, oz),
+            x_axis: Coordinate::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]),
+            y_axis: Coordinate::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]),
         }
     }
 
@@ -4535,10 +4535,10 @@ pub(crate) mod flatten_math {
     /// `parent_connector` / `child_connector`: local anchor point + direction in type space.
     pub(crate) fn compute_child_plane(
         parent_plane: &Plane,
-        parent_point: Coord,
-        parent_direction: Coord,
-        child_point: Coord,
-        child_direction: Coord,
+        parent_point: Coordinate,
+        parent_direction: Coordinate,
+        child_point: Coordinate,
+        child_direction: Coordinate,
         gap: f64,
         shift: f64,
         rise: f64,
@@ -4634,17 +4634,17 @@ pub(crate) mod flatten_math {
 
     /// UV center for child from parent center and connection u/v (matches Python BFS).
     pub(crate) fn compute_child_center_uv(
-        parent_center: Coord,
+        parent_center: Coordinate,
         connection_u: f64,
         connection_v: f64,
         parent_connector_dir_z: f64,
         parent_t: f64,
-    ) -> Coord {
+    ) -> Coordinate {
         let pu = parent_center.x;
         let pv = parent_center.y;
         if pu.abs() < FLATTEN_TOLERANCE && pv.abs() < FLATTEN_TOLERANCE {
             let angle = 2.0 * std::f64::consts::PI * parent_t;
-            Coord::new(
+            Coordinate::new(
                 round_tol(FLATTEN_RADIUS * angle.sin()),
                 round_tol(FLATTEN_RADIUS * angle.cos()),
                 0.0,
@@ -4662,7 +4662,7 @@ pub(crate) mod flatten_math {
                     pv + connection_v * FLATTEN_HORIZONTAL_SCALE,
                 )
             };
-            Coord::new(round_tol(cu), round_tol(cv), 0.0)
+            Coordinate::new(round_tol(cu), round_tol(cv), 0.0)
         }
     }
 }
@@ -5232,14 +5232,14 @@ pub mod geom {
 
     /// 3D coordinate (right-handed).
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
-    pub struct Coord {
+    pub struct Coordinate {
         pub x: f64,
         pub y: f64,
         pub z: f64,
     }
 
-    impl Coord {
-        pub const ZERO: Coord = Coord {
+    impl Coordinate {
+        pub const ZERO: Coordinate = Coordinate {
             x: 0.0,
             y: 0.0,
             z: 0.0,
@@ -5253,16 +5253,16 @@ pub mod geom {
             w.f64(self.x).f64(self.y).f64(self.z);
         }
 
-        pub fn add(&self, other: &Coord) -> Coord {
-            Coord::new(self.x + other.x, self.y + other.y, self.z + other.z)
+        pub fn add(&self, other: &Coordinate) -> Coordinate {
+            Coordinate::new(self.x + other.x, self.y + other.y, self.z + other.z)
         }
 
-        pub fn sub(&self, other: &Coord) -> Coord {
-            Coord::new(self.x - other.x, self.y - other.y, self.z - other.z)
+        pub fn sub(&self, other: &Coordinate) -> Coordinate {
+            Coordinate::new(self.x - other.x, self.y - other.y, self.z - other.z)
         }
 
-        pub fn scale(&self, s: f64) -> Coord {
-            Coord::new(self.x * s, self.y * s, self.z * s)
+        pub fn scale(&self, s: f64) -> Coordinate {
+            Coordinate::new(self.x * s, self.y * s, self.z * s)
         }
 
         pub fn length(&self) -> f64 {
@@ -5271,13 +5271,13 @@ pub mod geom {
     }
 
     /// 3D unit vector (the type is not enforced at construction time).
-    pub type Vector = Coord;
+    pub type Vector = Coordinate;
 
     /// Oriented plane: origin `p`, x-axis and y-axis directions.
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Plane {
         #[serde(default)]
-        pub origin: Coord,
+        pub origin: Coordinate,
         #[serde(default = "Plane::default_x_axis")]
         pub x_axis: Vector,
         #[serde(default = "Plane::default_y_axis")]
@@ -5294,7 +5294,7 @@ pub mod geom {
 
         pub fn world_xy() -> Self {
             Self {
-                origin: Coord::ZERO,
+                origin: Coordinate::ZERO,
                 x_axis: Self::default_x_axis(),
                 y_axis: Self::default_y_axis(),
             }
@@ -5311,9 +5311,9 @@ pub mod geom {
     #[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct Camera {
         #[serde(default)]
-        pub position: Coord,
+        pub position: Coordinate,
         #[serde(default)]
-        pub target: Coord,
+        pub target: Coordinate,
         #[serde(default = "Camera::default_up")]
         pub up: Vector,
         #[serde(default = "Camera::default_fov")]
@@ -7588,7 +7588,7 @@ pub mod piece {
     use crate::connection::ConnectionStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Coord, Plane};
+    use crate::geom::{Coordinate, Plane};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
@@ -7605,7 +7605,7 @@ pub mod piece {
         pub name: Option<String>,
         pub description: Option<String>,
         pub plane: Option<Plane>,
-        pub center: Option<Coord>,
+        pub center: Option<Coordinate>,
         pub scale: Option<f64>,
         pub mirror_plane: Option<Plane>,
         pub hidden: Option<bool>,
@@ -7620,7 +7620,7 @@ pub mod piece {
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
         flat_plane: Cache<Plane>,
-        flat_center: Cache<Coord>,
+        flat_center: Cache<Coordinate>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -7640,7 +7640,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub center: Option<Coord>,
+        pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(
@@ -7673,7 +7673,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub center: Option<Coord>,
+        pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(
@@ -7710,7 +7710,7 @@ pub mod piece {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub center: Option<Coord>,
+        pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(
@@ -7898,7 +7898,7 @@ pub mod piece {
             ))
         }
 
-        fn computed_flat_center(&self) -> Option<Coord> {
+        fn computed_flat_center(&self) -> Option<Coordinate> {
             let parent_piece_ref = self.parent_piece.as_ref()?.upgrade()?;
             let parent_connection_ref = self.parent_connection.as_ref()?.upgrade()?;
             let parent_piece = parent_piece_ref.read().ok()?;
@@ -7953,7 +7953,7 @@ pub mod piece {
             Ok(())
         }
 
-        pub fn set_center(&mut self, center: Option<Coord>) -> crate::error::SetResult {
+        pub fn set_center(&mut self, center: Option<Coordinate>) -> crate::error::SetResult {
             if self.center == center {
                 return Ok(());
             }
@@ -8120,7 +8120,7 @@ pub mod piece {
         }
 
         /// World-space center from explicit piece placement or cached parent/connection dependencies.
-        pub fn flat_center(&self) -> Coord {
+        pub fn flat_center(&self) -> Coordinate {
             self.flat_center.get_or_init(|| {
                 self.center
                     .or_else(|| self.computed_flat_center())
@@ -8282,7 +8282,7 @@ pub mod port {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::geom::{Coord, Vector};
+    use crate::geom::{Coordinate, Vector};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -8301,7 +8301,7 @@ pub mod port {
         pub mandatory: Option<bool>,
         pub t: Option<f64>,
         pub description: Option<String>,
-        pub point: Option<Coord>,
+        pub point: Option<Coordinate>,
         pub direction: Option<Vector>,
         pub qualities: Vec<QualityStoreRef>,
         pub attributes: Vec<AttributeStore>,
@@ -8335,7 +8335,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coord>,
+        pub point: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
     }
@@ -8360,7 +8360,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coord>,
+        pub point: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -8389,7 +8389,7 @@ pub mod port {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub point: Option<Coord>,
+        pub point: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub direction: Option<Vector>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -8663,7 +8663,7 @@ pub mod port {
             Ok(())
         }
 
-        pub fn set_point(&mut self, v: Option<Coord>) -> crate::error::SetResult {
+        pub fn set_point(&mut self, v: Option<Coordinate>) -> crate::error::SetResult {
             if self.point == v {
                 return Ok(());
             }
@@ -12107,7 +12107,7 @@ mod tests {
         use crate::connection::ConnectionFullDto;
         use crate::connector::ConnectorFullDto;
         use crate::design::{DesignFullDto, DesignStore};
-        use crate::geom::{Coord, Plane};
+        use crate::geom::{Coordinate, Plane};
         use crate::guid::Guid;
         use crate::kit::{KitFullDto, KitStore};
         use crate::piece::{PieceFullDto, PieceIdDto};
@@ -12141,8 +12141,8 @@ mod tests {
                     name: "typ".into(),
                     ports: vec![PortFullDto {
                         guid: port_guid.clone(),
-                        point: Some(Coord::ZERO),
-                        direction: Some(Coord::new(0.0, 0.0, 1.0)),
+                        point: Some(Coordinate::ZERO),
+                        direction: Some(Coordinate::new(0.0, 0.0, 1.0)),
                         ..Default::default()
                     }],
                     connectors: vec![ConnectorFullDto {
@@ -12162,7 +12162,7 @@ mod tests {
                         PieceFullDto {
                             guid: root_guid.clone(),
                             plane: Some(Plane::world_xy()),
-                            center: Some(Coord::new(5.0, 0.0, 0.0)),
+                            center: Some(Coordinate::new(5.0, 0.0, 0.0)),
                             r#type: Some(TypeIdDto {
                                 guid: type_guid.clone(),
                             }),
@@ -12250,9 +12250,9 @@ mod tests {
         #[test]
         fn connected_piece_flat_plane_prefers_explicit_plane() {
             let explicit_plane = Plane {
-                origin: Coord::new(42.0, -3.0, 7.0),
-                x_axis: Coord::new(0.0, 1.0, 0.0),
-                y_axis: Coord::new(-1.0, 0.0, 0.0),
+                origin: Coordinate::new(42.0, -3.0, 7.0),
+                x_axis: Coordinate::new(0.0, 1.0, 0.0),
+                y_axis: Coordinate::new(-1.0, 0.0, 0.0),
             };
             let (kit, design_guid, _, _, leaf_guid) =
                 kit_with_flatten_chain(Some(explicit_plane));
@@ -13163,7 +13163,7 @@ mod tests {
 
         mod design {
             use crate::events::{EntityKind, EntityRef};
-            use crate::geom::{Camera, Coord, Location};
+            use crate::geom::{Camera, Coordinate, Location};
 
             macro_rules! design_meta_test {
                 ($fn:ident, $field:literal, $op:expr) => {
@@ -13222,7 +13222,7 @@ mod tests {
             );
             design_meta_test!(design_set_camera, "camera", |d: &mut crate::DesignStore| {
                 let mut cam = Camera::default();
-                cam.position = Coord::new(0.0, 0.0, 1.0);
+                cam.position = Coordinate::new(0.0, 0.0, 1.0);
                 d.set_camera(Some(cam))
             });
             design_meta_test!(design_set_unit, "unit", |d: &mut crate::DesignStore| {
@@ -13412,7 +13412,7 @@ mod tests {
 
         mod piece {
             use crate::events::{EntityKind, EntityRef};
-            use crate::geom::{Coord, Plane};
+            use crate::geom::{Coordinate, Plane};
 
             macro_rules! piece_geom_test {
                 ($fn:ident, $field:literal, $op:expr) => {
@@ -13443,7 +13443,7 @@ mod tests {
                 p.set_plane(Some(Plane::world_xy()))
             });
             piece_geom_test!(piece_set_center, "center", |p: &mut crate::PieceStore| {
-                p.set_center(Some(Coord::new(1.0, 2.0, 3.0)))
+                p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0)))
             });
             piece_geom_test!(
                 piece_set_mirror_plane,
@@ -13911,7 +13911,7 @@ pub use folder::{
     FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef,
     FolderStoreWeak,
 };
-pub use geom::{Camera, Coord, Location, Plane, Vector};
+pub use geom::{Camera, Coordinate, Location, Plane, Vector};
 pub use group::{
     GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef,
     GroupStoreWeak,
