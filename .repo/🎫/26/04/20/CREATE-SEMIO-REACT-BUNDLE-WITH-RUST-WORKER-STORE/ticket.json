@@ -2,13 +2,14 @@
   "title": "Create Semio React Bundle With Rust Worker Store",
   "status": "closed",
   "description": "Create `semio/react` bundle that exports React hooks backed by a long-lived Rust worker as store. Extend `semio/rs` with async tokio events for granular kit changes. Hooks use KitProvider with backbone support (local/dev/remote) and PieceProvider for scoped piece data access. Hooks: usePieceName, usePieceDescription, usePieceTypeId, usePieceDesignId, usePieceBlueprintId, usePiecePlane, usePieceCenter, usePieceFlatPlane, usePieceFlatCenter, useParentPieceId, useParentConnectionId, useChildPiecesIds, useChildConnectionsIds, useAlternativeTypeIds.",
-  "summary": "Replaced the semio/react runtime hook and provider factories with compile-time explicit provider and hook exports for the full schema surface, added a static schemaHooks registry plus exhaustive property-hook coverage, optimized the embedded full-surface test to avoid timeout, removed the temporary generator artifact, and verified the @semio/react package test suite passes 4/4.",
+  "summary": "Removed the embedded schema manifest, parser-driven schema metadata, schema-derived event-key helpers, and embedded tests from semio/react/index.tsx. Replaced property-event diffing with direct object-key comparison over scanned state so the manual hook surface remains without leaking GraphQL schema text into the bundle. Verified the file has no diagnostics; tests were intentionally not run per request.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1366"
   },
   "goal": "🎯r2603",
   "sessions": [
     "⚪b862a2e9c8de43e58461c59f72e0bf57",
-    "⚪5fbc405afaf74b38b4c93a266f49821f"
+    "⚪5fbc405afaf74b38b4c93a266f49821f",
+    "⚪cf90ec2e9b9f430c9aaf48f52caea461"
   ]
 }

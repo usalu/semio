@@ -16,11 +16,15 @@ Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen theme
 
 1.
 
-Analysieren Sie das Software-Ecosystem One-Click-LCA (https://oneclicklca.com/).
+Analysieren Sie das Software-Ecosystem SOFTWARE (LINK).
 
 2.
 
-Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele,
+Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele, etc.
+
+3.
+
+Finden Sie alle Architektur und Ingenieurbüros, welche dieses Tool verwenden und welche Gebäude mit diesem Tool nachweislich verwendet wurde.
 
 ---
 

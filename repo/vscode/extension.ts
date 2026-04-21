@@ -1926,10 +1926,8 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
     }
   }
 
-  if (lenses.length === 0) {
-    for (const fallback of collectNativeDefinitionFallbackRanges(document)) {
-      addLens(fallback.name, fallback.range);
-    }
+  for (const fallback of collectNativeDefinitionFallbackRanges(document)) {
+    addLens(fallback.name, fallback.range);
   }
 
   return lenses;

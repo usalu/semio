@@ -197,8 +197,7 @@ function isDocumentSymbol(value: vscode.DocumentSymbol | vscode.SymbolInformatio
   return "selectionRange" in value;
 }
 
-function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): string[] {
-  const relativePath = getDocumentRelativePath(document);
+function collectNativeDefinitionFallbackEntries(document: vscode.TextDocument): Array<{ name: string; line: number }> {
   const patternsByLanguage: Partial<Record<string, RegExp[]>> = {
     typescript: [
       /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\b/,
@@ -221,17 +220,17 @@ function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): s
     go: [/^\s*func\s+(?:\([^)]+\)\s*)?([A-Za-z_][\w]*)\b/, /^\s*type\s+([A-Za-z_][\w]*)\b/, /^\s*const\s+([A-Za-z_][\w]*)\b/, /^\s*var\s+([A-Za-z_][\w]*)\b/],
   };
   const patterns = patternsByLanguage[document.languageId] ?? [];
-  const scopes = new Set<string>();
+  const entries: Array<{ name: string; line: number }> = [];
   for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
     const textLine = document.lineAt(lineIndex).text;
     for (const pattern of patterns) {
       const match = pattern.exec(textLine);
       if (!match?.[1]) continue;
-      scopes.add(`${relativePath}§${match[1]}`);
+      entries.push({ name: match[1], line: lineIndex });
       break;
     }
   }
-  return Array.from(scopes);
+  return entries;
 }
 
 async function collectNativeDefinitionScopes(document: vscode.TextDocument): Promise<string[]> {
@@ -263,8 +262,10 @@ async function collectNativeDefinitionScopes(document: vscode.TextDocument): Pro
     }
   }
 
-  if (scopes.length === 0) {
-    return collectNativeDefinitionFallbackScopes(document);
+  for (const fallback of collectNativeDefinitionFallbackEntries(document)) {
+    if (linesSeen.has(fallback.line)) continue;
+    linesSeen.add(fallback.line);
+    scopes.push(`${relativePath}§${fallback.name}`);
   }
 
   return scopes;
@@ -276,11 +277,6 @@ async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[
     .filter((lens) => lens.command?.command === "semio.analyze")
     .map((lens) => String(lens.command?.arguments?.[0] ?? ""))
     .filter((id) => id.length > 0);
-
-  if (document.uri.fsPath.endsWith("/repo/vscode/extension.ts") || document.uri.fsPath.endsWith("/repo/go/events.go")) {
-    const nativeScopeIds = ids.filter((id) => id.includes("§"));
-    console.log("[DEBUG] Analyze lens ids", document.uri.fsPath, "total", ids.length, "native", nativeScopeIds.length, nativeScopeIds.slice(0, 20));
-  }
 
   return ids;
 }
@@ -1918,7 +1914,7 @@ suite("CodeLens Behavior Test Suite", function () {
       },
       {
         label: "Go",
-        paths: ["repo/go/events.go", "go/events.go", "events.go"],
+        paths: ["repo/go/main.go", "go/main.go", "main.go"],
       },
     ];
 
@@ -1948,7 +1944,7 @@ suite("CodeLens Behavior Test Suite", function () {
       },
       {
         label: "Go",
-        paths: ["repo/go/events.go", "go/events.go", "events.go"],
+        paths: ["repo/go/main.go", "go/main.go", "main.go"],
       },
     ];
 
