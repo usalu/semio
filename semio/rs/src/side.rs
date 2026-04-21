@@ -1,19 +1,25 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Weak;
+use std::sync::{Arc, RwLock, Weak};
 
+use crate::connection::ConnectionStoreWeak;
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::piece::PieceStoreWeak;
 use crate::port::PortStoreWeak;
 
+pub type SideStoreRef = Arc<RwLock<SideStore>>;
+pub type SideStoreWeak = Weak<RwLock<SideStore>>;
+
 /// One end of a [`crate::connection::ConnectionStore`].
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct SideStore {
     pub guid: Guid,
     pub piece: PieceStoreWeak,
     pub port: Option<PortStoreWeak>,
     /// Optional "design piece" for designs that include other designs.
     pub design_piece: Option<PieceStoreWeak>,
+    pub parent_connection: Option<ConnectionStoreWeak>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -52,58 +58,46 @@ pub struct SideFullDto {
 }
 
 impl SideStore {
-    pub fn new(piece: PieceStoreWeak) -> Self {
+    pub(crate) fn empty_shell(guid: Guid) -> Self {
         Self {
-            guid: Guid::new_v7(),
-            piece,
-            port: None,
-            design_piece: None,
-        }
-    }
-
-    pub fn with_port(piece: PieceStoreWeak, port: PortStoreWeak) -> Self {
-        Self {
-            guid: Guid::new_v7(),
-            piece,
-            port: Some(port),
-            design_piece: None,
-        }
-    }
-
-    pub fn from_id_dto(d: SideIdDto) -> Self {
-        Self {
-            guid: d.guid,
+            guid,
             piece: Weak::new(),
             port: None,
             design_piece: None,
+            parent_connection: None,
+            hash_cache: Cache::default(),
         }
     }
 
-    pub fn from_metadata_dto(d: SideMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            piece: Weak::new(),
-            port: None,
-            design_piece: None,
+    pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadataDto) {
+        self.guid = d.guid;
+        self.hash_cache.invalidate();
+    }
+
+    pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) {
+        self.piece = piece;
+        self.bubble();
+    }
+
+    pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) {
+        self.port = port;
+        self.bubble();
+    }
+
+    pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) {
+        self.design_piece = design_piece;
+        self.bubble();
+    }
+
+    fn bubble(&mut self) {
+        self.hash_cache.invalidate();
+        if let Some(w) = &self.parent_connection {
+            if let Some(c) = w.upgrade() {
+                if let Ok(c) = c.read() {
+                    c.invalidate_hash();
+                }
+            }
         }
-    }
-
-    pub fn from_shallow_dto(d: SideShallowDto) -> Self {
-        Self::from_metadata_dto(SideMetadataDto {
-            guid: d.guid,
-            piece: d.piece,
-            port: d.port,
-            design_piece: d.design_piece,
-        })
-    }
-
-    pub fn from_full_dto(d: SideFullDto) -> Self {
-        Self::from_metadata_dto(SideMetadataDto {
-            guid: d.guid,
-            piece: d.piece,
-            port: d.port,
-            design_piece: d.design_piece,
-        })
     }
 
     pub fn to_id_dto(&self) -> SideIdDto {
@@ -150,6 +144,18 @@ impl SideStore {
         }
     }
 
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
+    }
+
+    pub fn hash(&self) -> String {
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
+    }
+
     pub fn hash_into(&self, w: &mut HashWriter) {
         w.str(self.guid.as_str());
         if let Some(p) = self.piece.upgrade() {
@@ -177,6 +183,8 @@ impl Default for SideStore {
             piece: Weak::new(),
             port: None,
             design_piece: None,
+            parent_connection: None,
+            hash_cache: Cache::default(),
         }
     }
 }

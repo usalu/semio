@@ -1,10 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
-use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
+use crate::connector::ConnectorStore;
+use crate::flatten_math::{self, compute_child_center_uv};
+use crate::geom::{Coord, Plane};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
-use crate::side::SideStore;
+use crate::hash::{Cache, HashWriter};
+use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
 
 pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
 pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
@@ -13,8 +16,8 @@ pub type ConnectionStoreWeak = Weak<RwLock<ConnectionStore>>;
 #[derive(Debug)]
 pub struct ConnectionStore {
     pub guid: Guid,
-    pub connected: SideStore,
-    pub connecting: SideStore,
+    pub connected: SideStoreRef,
+    pub connecting: SideStoreRef,
     pub gap: Option<f64>,
     pub shift: Option<f64>,
     pub rise: Option<f64>,
@@ -24,9 +27,10 @@ pub struct ConnectionStore {
     pub x: Option<f64>,
     pub y: Option<f64>,
     pub description: Option<String>,
-    pub attributes: Vec<AttributeStore>,
+    pub attributes: Vec<AttributeStoreRef>,
     pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
+    child_plane_matrix: Cache<nalgebra::Matrix4<f64>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -37,8 +41,8 @@ pub struct ConnectionIdDto {
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectionMetadataDto {
     pub guid: Guid,
-    pub connected: crate::side::SideMetadataDto,
-    pub connecting: crate::side::SideMetadataDto,
+    pub connected: SideMetadataDto,
+    pub connecting: SideMetadataDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -62,8 +66,8 @@ pub struct ConnectionMetadataDto {
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectionShallowDto {
     pub guid: Guid,
-    pub connected: crate::side::SideMetadataDto,
-    pub connecting: crate::side::SideMetadataDto,
+    pub connected: SideMetadataDto,
+    pub connecting: SideMetadataDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -89,8 +93,8 @@ pub struct ConnectionShallowDto {
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectionFullDto {
     pub guid: Guid,
-    pub connected: crate::side::SideMetadataDto,
-    pub connecting: crate::side::SideMetadataDto,
+    pub connected: SideMetadataDto,
+    pub connecting: SideMetadataDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub gap: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -113,12 +117,32 @@ pub struct ConnectionFullDto {
     pub attributes: Vec<AttributeFullDto>,
 }
 
+/// Port-local anchor for a connector (type space).
+pub fn connector_anchor_ports(c: &ConnectorStore) -> (Coord, Coord) {
+    if let Some(w) = &c.port {
+        if let Some(p) = w.upgrade() {
+            if let Ok(p) = p.read() {
+                let pt = p.point.unwrap_or(Coord::ZERO);
+                let dir = p.direction.unwrap_or(Coord::new(0.0, 0.0, 1.0));
+                let n = dir.length();
+                let d = if n > 1e-10 {
+                    Coord::new(dir.x / n, dir.y / n, dir.z / n)
+                } else {
+                    Coord::new(0.0, 0.0, 1.0)
+                };
+                return (pt, d);
+            }
+        }
+    }
+    (Coord::ZERO, Coord::new(0.0, 0.0, 1.0))
+}
+
 impl ConnectionStore {
-    pub fn new() -> Self {
+    pub(crate) fn empty_with_sides(guid: Guid, connected: SideStoreRef, connecting: SideStoreRef) -> Self {
         Self {
-            guid: Guid::new_v7(),
-            connected: SideStore::default(),
-            connecting: SideStore::default(),
+            guid,
+            connected,
+            connecting,
             gap: None,
             shift: None,
             rise: None,
@@ -130,86 +154,113 @@ impl ConnectionStore {
             description: None,
             attributes: Vec::new(),
             parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
+            child_plane_matrix: Cache::default(),
         }
     }
 
-    pub fn from_id_dto(d: ConnectionIdDto) -> Self {
-        Self {
-            guid: d.guid,
-            connected: SideStore::default(),
-            connecting: SideStore::default(),
-            gap: None,
-            shift: None,
-            rise: None,
-            rotation: None,
-            turn: None,
-            tilt: None,
-            x: None,
-            y: None,
-            description: None,
-            attributes: Vec::new(),
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
+    pub(crate) fn apply_metadata_fields(&mut self, d: ConnectionMetadataDto) {
+        self.guid = d.guid;
+        self.gap = d.gap;
+        self.shift = d.shift;
+        self.rise = d.rise;
+        self.rotation = d.rotation;
+        self.turn = d.turn;
+        self.tilt = d.tilt;
+        self.x = d.x;
+        self.y = d.y;
+        self.description = d.description;
+        self.hash_cache.invalidate();
+        self.child_plane_matrix.invalidate();
+    }
+
+    pub fn set_gap(&mut self, v: Option<f64>) {
+        self.gap = v;
+        self.bubble();
+    }
+    pub fn set_shift(&mut self, v: Option<f64>) {
+        self.shift = v;
+        self.bubble();
+    }
+    pub fn set_rise(&mut self, v: Option<f64>) {
+        self.rise = v;
+        self.bubble();
+    }
+    pub fn set_rotation(&mut self, v: Option<f64>) {
+        self.rotation = v;
+        self.bubble();
+    }
+    pub fn set_turn(&mut self, v: Option<f64>) {
+        self.turn = v;
+        self.bubble();
+    }
+    pub fn set_tilt(&mut self, v: Option<f64>) {
+        self.tilt = v;
+        self.bubble();
+    }
+    pub fn set_x(&mut self, v: Option<f64>) {
+        self.x = v;
+        self.bubble();
+    }
+    pub fn set_y(&mut self, v: Option<f64>) {
+        self.y = v;
+        self.bubble();
+    }
+    pub fn set_description(&mut self, v: Option<String>) {
+        self.description = v;
+        self.bubble();
+    }
+
+    fn bubble(&mut self) {
+        self.hash_cache.invalidate();
+        self.child_plane_matrix.invalidate();
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(dr) = d.read() {
+                dr.invalidate_hash();
+                dr.invalidate_flatten();
+                dr.invalidate_validation();
+            }
         }
     }
 
-    pub fn from_metadata_dto(d: ConnectionMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            connected: SideStore::from_metadata_dto(d.connected),
-            connecting: SideStore::from_metadata_dto(d.connecting),
-            gap: d.gap,
-            shift: d.shift,
-            rise: d.rise,
-            rotation: d.rotation,
-            turn: d.turn,
-            tilt: d.tilt,
-            x: d.x,
-            y: d.y,
-            description: d.description,
-            attributes: Vec::new(),
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-        }
+    /// World-space child plane from parent plane and connector geometry (Python `computeChildPlaneDict`).
+    pub fn compute_child_plane_for_flatten(
+        &self,
+        parent_plane: &Plane,
+        parent_connector: &ConnectorStore,
+        child_connector: &ConnectorStore,
+    ) -> Plane {
+        let (pp, pd) = connector_anchor_ports(parent_connector);
+        let (cp, cd) = connector_anchor_ports(child_connector);
+        flatten_math::compute_child_plane(
+            parent_plane,
+            pp,
+            pd,
+            cp,
+            cd,
+            self.gap.unwrap_or(0.0),
+            self.shift.unwrap_or(0.0),
+            self.rise.unwrap_or(0.0),
+            self.rotation.unwrap_or(0.0),
+            self.turn.unwrap_or(0.0),
+            self.tilt.unwrap_or(0.0),
+        )
     }
 
-    pub fn from_shallow_dto(d: ConnectionShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(ConnectionMetadataDto {
-            guid: d.guid,
-            connected: d.connected,
-            connecting: d.connecting,
-            gap: d.gap,
-            shift: d.shift,
-            rise: d.rise,
-            rotation: d.rotation,
-            turn: d.turn,
-            tilt: d.tilt,
-            x: d.x,
-            y: d.y,
-            description: d.description,
-        });
-        s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
-        s
-    }
-
-    pub fn from_full_dto(d: ConnectionFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(ConnectionMetadataDto {
-            guid: d.guid,
-            connected: d.connected,
-            connecting: d.connecting,
-            gap: d.gap,
-            shift: d.shift,
-            rise: d.rise,
-            rotation: d.rotation,
-            turn: d.turn,
-            tilt: d.tilt,
-            x: d.x,
-            y: d.y,
-            description: d.description,
-        });
-        s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
-        s
+    /// UV-style center for child piece (Python BFS `child_center`).
+    pub fn compute_child_center_for_flatten(
+        &self,
+        parent_center: Coord,
+        parent_connector: &ConnectorStore,
+    ) -> Coord {
+        let (_, pd) = connector_anchor_ports(parent_connector);
+        let connection_u = self.x.unwrap_or(0.0);
+        let connection_v = self.y.unwrap_or(0.0);
+        let t = match parent_connector.port.as_ref().and_then(|w| w.upgrade()) {
+            Some(p) => p.read().ok().and_then(|g| g.t).unwrap_or(0.0),
+            None => 0.0,
+        };
+        compute_child_center_uv(parent_center, connection_u, connection_v, pd.z, t)
     }
 
     pub fn to_id_dto(&self) -> ConnectionIdDto {
@@ -219,8 +270,8 @@ impl ConnectionStore {
     pub fn to_metadata_dto(&self) -> ConnectionMetadataDto {
         ConnectionMetadataDto {
             guid: self.guid.clone(),
-            connected: self.connected.to_metadata_dto(),
-            connecting: self.connecting.to_metadata_dto(),
+            connected: self.connected.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
+            connecting: self.connecting.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
             gap: self.gap,
             shift: self.shift,
             rise: self.rise,
@@ -248,7 +299,11 @@ impl ConnectionStore {
             x: m.x,
             y: m.y,
             description: m.description,
-            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
         }
     }
 
@@ -267,28 +322,35 @@ impl ConnectionStore {
             x: m.x,
             y: m.y,
             description: m.description,
-            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
+        self.child_plane_matrix.invalidate();
     }
 
     pub fn hash(&self) -> String {
-        self.hash_cache
-            .get_or_init(|| {
-                let mut w = HashWriter::new();
-                self.hash_into(&mut w);
-                w.finalize()
-            })
-            .clone()
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {
         w.tag("connection").str(self.guid.as_str());
-        self.connected.hash_into(w);
-        self.connecting.hash_into(w);
+        if let Ok(s) = self.connected.read() {
+            s.hash_into(w);
+        }
+        if let Ok(s) = self.connecting.read() {
+            s.hash_into(w);
+        }
         w.opt_f64(self.gap)
             .opt_f64(self.shift)
             .opt_f64(self.rise)
@@ -299,13 +361,17 @@ impl ConnectionStore {
             .opt_f64(self.y)
             .opt_str(self.description.as_deref());
         for a in &self.attributes {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
     }
 }
 
 impl Default for ConnectionStore {
     fn default() -> Self {
-        Self::new()
+        let s1 = Arc::new(RwLock::new(SideStore::default()));
+        let s2 = Arc::new(RwLock::new(SideStore::default()));
+        Self::empty_with_sides(crate::guid::Guid::new_v7(), s1, s2)
     }
 }

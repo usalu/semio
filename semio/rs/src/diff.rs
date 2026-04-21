@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::collections::{HashMap, HashSet};
 
 use crate::connection::{ConnectionFullDto, ConnectionIdDto};
-use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
+use crate::design::{DesignFullDto, DesignStore};
 use crate::guid::Guid;
 use crate::piece::{PieceFullDto, PieceIdDto};
 use crate::report::SemioReport;
@@ -39,6 +39,51 @@ pub struct DesignDiff {
     pub removed_connections: Vec<ConnectionIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedConnections")]
     pub modified_connections: Vec<ConnectionFullDto>,
+}
+
+impl DesignDiff {
+    /// Structural delta from `before` snapshot to `after` snapshot (DTO-level).
+    pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
+        let mut diff = DesignDiff::default();
+
+        let bp: HashMap<Guid, &PieceFullDto> = before.pieces.iter().map(|p| (p.guid.clone(), p)).collect();
+        let ap: HashMap<Guid, &PieceFullDto> = after.pieces.iter().map(|p| (p.guid.clone(), p)).collect();
+        let kb: HashSet<Guid> = bp.keys().cloned().collect();
+        let ka: HashSet<Guid> = ap.keys().cloned().collect();
+        for g in kb.difference(&ka) {
+            diff.removed_pieces.push(PieceIdDto { guid: g.clone() });
+        }
+        for g in ka.difference(&kb) {
+            diff.added_pieces.push((*ap[g]).clone());
+        }
+        for g in ka.intersection(&kb) {
+            let b = bp[g];
+            let a = ap[g];
+            if *b != *a {
+                diff.modified_pieces.push((*a).clone());
+            }
+        }
+
+        let bc: HashMap<Guid, &ConnectionFullDto> = before.connections.iter().map(|c| (c.guid.clone(), c)).collect();
+        let ac: HashMap<Guid, &ConnectionFullDto> = after.connections.iter().map(|c| (c.guid.clone(), c)).collect();
+        let kbc: HashSet<Guid> = bc.keys().cloned().collect();
+        let kac: HashSet<Guid> = ac.keys().cloned().collect();
+        for g in kbc.difference(&kac) {
+            diff.removed_connections.push(ConnectionIdDto { guid: g.clone() });
+        }
+        for g in kac.difference(&kbc) {
+            diff.added_connections.push((*ac[g]).clone());
+        }
+        for g in kac.intersection(&kbc) {
+            let b = bc[g];
+            let a = ac[g];
+            if *b != *a {
+                diff.modified_connections.push((*a).clone());
+            }
+        }
+
+        diff
+    }
 }
 
 impl DesignChange {
@@ -147,18 +192,4 @@ impl DesignStore {
             after: Some(before),
         })
     }
-
-    pub fn delete_pieces_and_connections_ref(
-        design: &DesignStoreRef,
-        piece_guids: &[Guid],
-        connection_guids: &[Guid],
-    ) -> SemioReport<DesignChange> {
-        match design.write() {
-            Ok(mut d) => d.delete_change(piece_guids, connection_guids),
-            Err(_) => SemioReport::err("design lock poisoned"),
-        }
-    }
 }
-
-#[allow(dead_code)]
-fn _keep_arc(_: Arc<()>) {}

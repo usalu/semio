@@ -1,18 +1,18 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
-use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore};
-use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
 use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
 use crate::geom::Location;
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
-use crate::prop::{PropFullDto, PropShallowDto, PropStore};
+use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef};
-use crate::tag::{TagFullDto, TagShallowDto, TagStore};
+use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
 
 pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
 pub type TypeStoreWeak = Weak<RwLock<TypeStore>>;
@@ -33,16 +33,16 @@ pub struct TypeStore {
     pub ports: Vec<PortStoreRef>,
     pub connectors: Vec<ConnectorStoreRef>,
     pub representations: Vec<RepresentationStoreRef>,
-    pub authors: Vec<AuthorStore>,
-    pub concepts: Vec<ConceptStore>,
-    pub tags: Vec<TagStore>,
+    pub authors: Vec<AuthorStoreRef>,
+    pub concepts: Vec<ConceptStoreRef>,
+    pub tags: Vec<TagStoreRef>,
     pub qualities: Vec<QualityStoreRef>,
-    pub props: Vec<PropStore>,
-    pub attributes: Vec<AttributeStore>,
+    pub props: Vec<PropStoreRef>,
+    pub attributes: Vec<AttributeStoreRef>,
     pub created: Option<String>,
     pub updated: Option<String>,
     pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -189,12 +189,12 @@ impl TypeStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {
@@ -230,13 +230,19 @@ impl TypeStore {
             }
         }
         for a in &self.authors {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
         for c in &self.concepts {
-            c.hash_into(w);
+            if let Ok(c) = c.read() {
+                c.hash_into(w);
+            }
         }
         for t in &self.tags {
-            t.hash_into(w);
+            if let Ok(t) = t.read() {
+                t.hash_into(w);
+            }
         }
         for q in &self.qualities {
             if let Ok(q) = q.read() {
@@ -244,10 +250,14 @@ impl TypeStore {
             }
         }
         for p in &self.props {
-            p.hash_into(w);
+            if let Ok(p) = p.read() {
+                p.hash_into(w);
+            }
         }
         for a in &self.attributes {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
     }
 
@@ -262,6 +272,23 @@ impl TypeStore {
         self.connectors
             .iter()
             .find(|c| c.read().map(|c| c.guid.as_str() == guid).unwrap_or(false))
+            .cloned()
+    }
+
+    pub fn connector_for_port_guid(&self, port_guid: &Guid) -> Option<ConnectorStoreRef> {
+        self.connectors
+            .iter()
+            .find(|c| {
+                c.read()
+                    .ok()
+                    .and_then(|cr| {
+                        cr.port
+                            .as_ref()
+                            .and_then(|w| w.upgrade())
+                            .and_then(|p| p.read().ok().map(|pr| pr.guid == *port_guid))
+                    })
+                    .unwrap_or(false)
+            })
             .cloned()
     }
 
@@ -296,7 +323,7 @@ impl TypeStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -324,12 +351,17 @@ impl TypeStore {
             created: d.created,
             updated: d.updated,
             parent_kit: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
     /// Hydrate type graph from full DTO (ports, connectors, representations, kit link).
-    pub fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef]) -> TypeStoreRef {
+    /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
+    pub(crate) fn hydrate_from_full_dto(
+        d: TypeFullDto,
+        kit: &Arc<RwLock<crate::kit::KitStore>>,
+        file_refs: &[crate::file::FileStoreRef],
+    ) -> TypeStoreRef {
         let TypeFullDto {
             guid,
             name,
@@ -368,19 +400,34 @@ impl TypeStore {
             ports: Vec::new(),
             connectors: Vec::new(),
             representations: Vec::new(),
-            authors: authors.into_iter().map(AuthorStore::from_full_dto).collect(),
-            concepts: concepts.into_iter().map(ConceptStore::from_full_dto).collect(),
-            tags: tags.into_iter().map(TagStore::from_full_dto).collect(),
+            authors: authors
+                .into_iter()
+                .map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a))))
+                .collect(),
+            concepts: concepts
+                .into_iter()
+                .map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c))))
+                .collect(),
+            tags: tags
+                .into_iter()
+                .map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t))))
+                .collect(),
             qualities: qualities
                 .into_iter()
                 .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
                 .collect(),
-            props: props.into_iter().map(PropStore::from_full_dto).collect(),
-            attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
+            props: props
+                .into_iter()
+                .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
+                .collect(),
+            attributes: attributes
+                .into_iter()
+                .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
+                .collect(),
             created: created.clone(),
             updated: updated.clone(),
             parent_kit: Arc::downgrade(kit),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }));
 
         let port_refs: Vec<PortStoreRef> = ports
@@ -415,6 +462,37 @@ impl TypeStore {
         }
 
         if let Ok(mut t_mut) = t.write() {
+            let tw = Arc::downgrade(&t);
+            for a in &t_mut.authors {
+                if let Ok(mut aw) = a.write() {
+                    aw.parent_type = Some(tw.clone());
+                }
+            }
+            for c in &t_mut.concepts {
+                if let Ok(mut cw) = c.write() {
+                    cw.parent_type = Some(tw.clone());
+                }
+            }
+            for tag in &t_mut.tags {
+                if let Ok(mut tw0) = tag.write() {
+                    tw0.parent_type = Some(tw.clone());
+                }
+            }
+            for q in &t_mut.qualities {
+                if let Ok(mut qw) = q.write() {
+                    qw.parent_type = Some(tw.clone());
+                }
+            }
+            for p in &t_mut.props {
+                if let Ok(mut pw) = p.write() {
+                    pw.parent_type = Some(tw.clone());
+                }
+            }
+            for a in &t_mut.attributes {
+                if let Ok(mut aw) = a.write() {
+                    aw.parent_type = Some(tw.clone());
+                }
+            }
             t_mut.ports = port_refs;
             t_mut.connectors = connector_refs;
             t_mut.representations = rep_refs;
@@ -473,16 +551,28 @@ impl TypeStore {
                 .iter()
                 .filter_map(|r| r.read().ok().map(|r| r.to_shallow_dto()))
                 .collect(),
-            authors: self.authors.iter().map(AuthorStore::to_shallow_dto).collect(),
-            concepts: self.concepts.iter().map(ConceptStore::to_shallow_dto).collect(),
-            tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
+            authors: self
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
+            concepts: self
+                .concepts
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
+                .collect(),
+            tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
             qualities: self
                 .qualities
                 .iter()
                 .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
                 .collect(),
-            props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+            props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
         }
     }
 
@@ -516,16 +606,28 @@ impl TypeStore {
                 .iter()
                 .filter_map(|r| r.read().ok().map(|r| r.to_full_dto()))
                 .collect(),
-            authors: self.authors.iter().map(AuthorStore::to_full_dto).collect(),
-            concepts: self.concepts.iter().map(ConceptStore::to_full_dto).collect(),
-            tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
+            authors: self
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
+            concepts: self
+                .concepts
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
+                .collect(),
+            tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
             qualities: self
                 .qualities
                 .iter()
                 .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
                 .collect(),
-            props: self.props.iter().map(PropStore::to_full_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
         }
     }
 }

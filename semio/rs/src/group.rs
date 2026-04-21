@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::piece::{PieceIdDto, PieceStoreWeak};
 
 pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
@@ -18,7 +18,7 @@ pub struct GroupStore {
     pub icon: Option<String>,
     pub pieces: Vec<PieceStoreWeak>,
     pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -78,7 +78,7 @@ impl GroupStore {
             icon: None,
             pieces: Vec::new(),
             parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -91,7 +91,7 @@ impl GroupStore {
             icon: None,
             pieces: Vec::new(),
             parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -104,7 +104,7 @@ impl GroupStore {
             icon: d.icon,
             pieces: Vec::new(),
             parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -174,8 +174,8 @@ impl GroupStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {

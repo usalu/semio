@@ -5,7 +5,7 @@ mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 } // 🧲Header
 
-use semio::{DesignStore, DesignStoreRef, Guid, KitFullDto, KitStore, KitStoreRef};
+use semio::{DesignStoreRef, Guid, KitFullDto, KitStore, KitStoreRef, SemioReport};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
@@ -78,11 +78,10 @@ fn main() {
             let piece_guids: Vec<Guid> = req.piece_guids.into_iter().map(Guid::from).collect();
             let connection_guids: Vec<Guid> =
                 req.connection_guids.into_iter().map(Guid::from).collect();
-            let report = DesignStore::delete_pieces_and_connections_ref(
-                &design_ref,
-                &piece_guids,
-                &connection_guids,
-            );
+            let report = match design_ref.write() {
+                Ok(mut d) => d.delete_change(&piece_guids, &connection_guids),
+                Err(_) => SemioReport::err("design lock poisoned"),
+            };
             match serde_json::to_value(&report) {
                 Ok(v) => write_ok(v),
                 Err(e) => write_err(format!("marshal delete: {e}")),

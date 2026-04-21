@@ -1,4 +1,37 @@
 use sha2::{Digest, Sha256};
+use std::sync::Mutex;
+
+/// Interior-mutable lazy cache. Enables `invalidate_*(&self)` on entities so
+/// children can bubble invalidation via `parent.read()?.invalidate_hash()`
+/// without acquiring a write lock on the parent.
+#[derive(Debug)]
+pub struct Cache<T> {
+    inner: Mutex<Option<T>>,
+}
+
+impl<T> Default for Cache<T> {
+    fn default() -> Self {
+        Self { inner: Mutex::new(None) }
+    }
+}
+
+impl<T: Clone> Cache<T> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn get_or_init<F: FnOnce() -> T>(&self, f: F) -> T {
+        let mut g = self.inner.lock().expect("cache poisoned");
+        if g.is_none() {
+            *g = Some(f());
+        }
+        g.clone().unwrap()
+    }
+
+    pub fn invalidate(&self) {
+        *self.inner.lock().expect("cache poisoned") = None;
+    }
+}
 
 /// Stable content-hash writer that feeds `sha2::Sha256` with deterministic
 /// string primitives. Used by domain entities to produce their own canonical

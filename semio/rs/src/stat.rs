@@ -1,8 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
+use std::sync::{RwLock, Weak};
 
+use crate::design::DesignStoreWeak;
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
+use crate::kit::KitStoreWeak;
+
+pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
+pub type StatStoreWeak = Weak<RwLock<StatStore>>;
 
 /// Computed/summary stat attached to a design or kit (e.g. piece count).
 #[derive(Debug)]
@@ -12,11 +17,10 @@ pub struct StatStore {
     pub value: String,
     pub unit: Option<String>,
     pub description: Option<String>,
-    hash_cache: OnceLock<String>,
+    pub parent_kit: Option<KitStoreWeak>,
+    pub parent_design: Option<DesignStoreWeak>,
+    hash_cache: Cache<String>,
 }
-
-pub type StatStoreRef = std::sync::Arc<std::sync::RwLock<StatStore>>;
-pub type StatStoreWeak = std::sync::Weak<std::sync::RwLock<StatStore>>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct StatIdDto {
@@ -57,57 +61,73 @@ pub struct StatFullDto {
 }
 
 impl StatStore {
-    pub fn new(key: impl Into<String>, value: impl Into<String>) -> Self {
+    pub(crate) fn empty_shell(guid: Guid) -> Self {
         Self {
-            guid: Guid::new_v7(),
-            key: key.into(),
-            value: value.into(),
-            unit: None,
-            description: None,
-            hash_cache: OnceLock::new(),
-        }
-    }
-
-    pub fn from_id_dto(d: StatIdDto) -> Self {
-        Self {
-            guid: d.guid,
+            guid,
             key: String::new(),
             value: String::new(),
             unit: None,
             description: None,
-            hash_cache: OnceLock::new(),
+            parent_kit: None,
+            parent_design: None,
+            hash_cache: Cache::default(),
         }
     }
 
-    pub fn from_metadata_dto(d: StatMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            key: d.key,
-            value: d.value,
-            unit: d.unit,
-            description: d.description,
-            hash_cache: OnceLock::new(),
+    pub(crate) fn apply_full_dto_fields(&mut self, d: StatFullDto) {
+        self.guid = d.guid;
+        self.key = d.key;
+        self.value = d.value;
+        self.unit = d.unit;
+        self.description = d.description;
+        self.hash_cache.invalidate();
+    }
+
+    pub(crate) fn from_full_dto(d: StatFullDto) -> Self {
+        let mut s = Self::empty_shell(d.guid.clone());
+        s.apply_full_dto_fields(d);
+        s
+    }
+
+    pub fn set_key(&mut self, key: String) {
+        self.key = key;
+        self.bubble();
+    }
+
+    pub fn set_value(&mut self, value: String) {
+        self.value = value;
+        self.bubble();
+    }
+
+    pub fn set_unit(&mut self, unit: Option<String>) {
+        self.unit = unit;
+        self.bubble();
+    }
+
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description;
+        self.bubble();
+    }
+
+    fn bubble(&mut self) {
+        self.hash_cache.invalidate();
+        if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_hash();
+                    k.invalidate_validation();
+                }
+            }
         }
-    }
-
-    pub fn from_shallow_dto(d: StatShallowDto) -> Self {
-        Self::from_metadata_dto(StatMetadataDto {
-            guid: d.guid,
-            key: d.key,
-            value: d.value,
-            unit: d.unit,
-            description: d.description,
-        })
-    }
-
-    pub fn from_full_dto(d: StatFullDto) -> Self {
-        Self::from_metadata_dto(StatMetadataDto {
-            guid: d.guid,
-            key: d.key,
-            value: d.value,
-            unit: d.unit,
-            description: d.description,
-        })
+        if let Some(w) = &self.parent_design {
+            if let Some(d) = w.upgrade() {
+                if let Ok(d) = d.read() {
+                    d.invalidate_hash();
+                    d.invalidate_flatten();
+                    d.invalidate_validation();
+                }
+            }
+        }
     }
 
     pub fn to_id_dto(&self) -> StatIdDto {
@@ -146,18 +166,16 @@ impl StatStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {
-        self.hash_cache
-            .get_or_init(|| {
-                let mut w = HashWriter::new();
-                self.hash_into(&mut w);
-                w.finalize()
-            })
-            .clone()
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {

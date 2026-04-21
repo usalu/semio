@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
+use std::sync::{RwLock, Weak};
 
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
+use crate::quality::QualityStoreWeak;
+
+pub type BenchmarkStoreRef = std::sync::Arc<RwLock<BenchmarkStore>>;
+pub type BenchmarkStoreWeak = Weak<RwLock<BenchmarkStore>>;
 
 /// Numeric range benchmark used to qualify quality measurements.
 #[derive(Debug)]
@@ -13,11 +17,9 @@ pub struct BenchmarkStore {
     pub max: Option<f64>,
     pub min_excluded: Option<bool>,
     pub max_excluded: Option<bool>,
-    hash_cache: OnceLock<String>,
+    pub parent_quality: Option<QualityStoreWeak>,
+    hash_cache: Cache<String>,
 }
-
-pub type BenchmarkStoreRef = std::sync::Arc<std::sync::RwLock<BenchmarkStore>>;
-pub type BenchmarkStoreWeak = std::sync::Weak<std::sync::RwLock<BenchmarkStore>>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct BenchmarkIdDto {
@@ -67,50 +69,63 @@ pub struct BenchmarkFullDto {
 }
 
 impl BenchmarkStore {
-    pub fn from_id_dto(d: BenchmarkIdDto) -> Self {
+    pub(crate) fn empty_shell(guid: Guid) -> Self {
         Self {
-            guid: d.guid,
+            guid,
             name: String::new(),
             min: None,
             max: None,
             min_excluded: None,
             max_excluded: None,
-            hash_cache: OnceLock::new(),
+            parent_quality: None,
+            hash_cache: Cache::default(),
         }
     }
 
-    pub fn from_metadata_dto(d: BenchmarkMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            name: d.name,
-            min: d.min,
-            max: d.max,
-            min_excluded: d.min_excluded,
-            max_excluded: d.max_excluded,
-            hash_cache: OnceLock::new(),
+    pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadataDto) {
+        self.guid = d.guid;
+        self.name = d.name;
+        self.min = d.min;
+        self.max = d.max;
+        self.min_excluded = d.min_excluded;
+        self.max_excluded = d.max_excluded;
+        self.hash_cache.invalidate();
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+        self.bubble();
+    }
+
+    pub fn set_min(&mut self, min: Option<f64>) {
+        self.min = min;
+        self.bubble();
+    }
+
+    pub fn set_max(&mut self, max: Option<f64>) {
+        self.max = max;
+        self.bubble();
+    }
+
+    pub fn set_min_excluded(&mut self, v: Option<bool>) {
+        self.min_excluded = v;
+        self.bubble();
+    }
+
+    pub fn set_max_excluded(&mut self, v: Option<bool>) {
+        self.max_excluded = v;
+        self.bubble();
+    }
+
+    fn bubble(&mut self) {
+        self.hash_cache.invalidate();
+        if let Some(w) = &self.parent_quality {
+            if let Some(q) = w.upgrade() {
+                if let Ok(q) = q.read() {
+                    q.invalidate_hash();
+                }
+            }
         }
-    }
-
-    pub fn from_shallow_dto(d: BenchmarkShallowDto) -> Self {
-        Self::from_metadata_dto(BenchmarkMetadataDto {
-            guid: d.guid,
-            name: d.name,
-            min: d.min,
-            max: d.max,
-            min_excluded: d.min_excluded,
-            max_excluded: d.max_excluded,
-        })
-    }
-
-    pub fn from_full_dto(d: BenchmarkFullDto) -> Self {
-        Self::from_metadata_dto(BenchmarkMetadataDto {
-            guid: d.guid,
-            name: d.name,
-            min: d.min,
-            max: d.max,
-            min_excluded: d.min_excluded,
-            max_excluded: d.max_excluded,
-        })
     }
 
     pub fn to_id_dto(&self) -> BenchmarkIdDto {
@@ -152,18 +167,16 @@ impl BenchmarkStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {
-        self.hash_cache
-            .get_or_init(|| {
-                let mut w = HashWriter::new();
-                self.hash_into(&mut w);
-                w.finalize()
-            })
-            .clone()
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {

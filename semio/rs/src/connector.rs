@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::port::{PortIdDto, PortStoreWeak};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
@@ -21,7 +21,7 @@ pub struct ConnectorStore {
     pub attributes: Vec<AttributeStore>,
     /// Back-reference to the owning type.
     pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -77,7 +77,7 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -90,7 +90,7 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -103,7 +103,7 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -185,8 +185,8 @@ impl ConnectorStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {

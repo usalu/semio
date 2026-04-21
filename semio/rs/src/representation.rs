@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::file::{FileIdDto, FileStoreWeak};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 use crate::tag::{TagFullDto, TagShallowDto, TagStore};
 
@@ -22,7 +22,7 @@ pub struct RepresentationStore {
     pub qualities: Vec<QualityStoreRef>,
     pub attributes: Vec<AttributeStore>,
     pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -83,7 +83,7 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -97,7 +97,7 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -111,7 +111,7 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -197,8 +197,8 @@ impl RepresentationStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {

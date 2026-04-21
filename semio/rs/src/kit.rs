@@ -1,23 +1,24 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::{Arc, OnceLock, RwLock};
+use std::sync::{Arc, RwLock, Weak};
 
-use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore};
-use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
 use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
 use crate::error::{Result, SemioError};
 use crate::file::{FileFullDto, FileStore, FileStoreRef};
 use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
-use crate::prop::{PropFullDto, PropShallowDto, PropStore};
+use crate::hash::{Cache, HashWriter};
+use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 use crate::report::{SemioReport, ValidationResult};
-use crate::tag::{TagFullDto, TagShallowDto, TagStore};
+use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
 use crate::typ::{TypeFullDto, TypeStore, TypeStoreRef};
 
 pub type KitStoreRef = Arc<RwLock<KitStore>>;
+pub type KitStoreWeak = Weak<RwLock<KitStore>>;
 
 /// Root aggregate: a kit owns all components of the system.
 #[derive(Debug)]
@@ -39,13 +40,14 @@ pub struct KitStore {
     pub designs: Vec<DesignStoreRef>,
     pub files: Vec<FileStoreRef>,
     pub folders: Vec<FolderStoreRef>,
-    pub authors: Vec<AuthorStore>,
-    pub concepts: Vec<ConceptStore>,
-    pub tags: Vec<TagStore>,
+    pub authors: Vec<AuthorStoreRef>,
+    pub concepts: Vec<ConceptStoreRef>,
+    pub tags: Vec<TagStoreRef>,
     pub qualities: Vec<QualityStoreRef>,
-    pub props: Vec<PropStore>,
-    pub attributes: Vec<AttributeStore>,
-    hash_cache: OnceLock<String>,
+    pub props: Vec<PropStoreRef>,
+    pub attributes: Vec<AttributeStoreRef>,
+    hash_cache: Cache<String>,
+    validation_cache: Cache<ValidationResult>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -203,12 +205,89 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
+            validation_cache: Cache::default(),
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
+    }
+
+    pub fn invalidate_validation(&self) {
+        self.validation_cache.invalidate();
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        self.description = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_icon(&mut self, v: Option<String>) {
+        self.icon = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_image(&mut self, v: Option<String>) {
+        self.image = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_preview(&mut self, v: Option<String>) {
+        self.preview = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_version(&mut self, v: Option<String>) {
+        self.version = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_remote(&mut self, v: Option<String>) {
+        self.remote = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_homepage(&mut self, v: Option<String>) {
+        self.homepage = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_license(&mut self, v: Option<String>) {
+        self.license = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_uri(&mut self, v: Option<String>) {
+        self.uri = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_created(&mut self, v: Option<String>) {
+        self.created = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_updated(&mut self, v: Option<String>) {
+        self.updated = v;
+        self.invalidate_hash();
+        self.invalidate_validation();
     }
 
     pub fn hash(&self) -> String {
@@ -249,13 +328,19 @@ impl KitStore {
             }
         }
         for a in &self.authors {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
         for c in &self.concepts {
-            c.hash_into(w);
+            if let Ok(c) = c.read() {
+                c.hash_into(w);
+            }
         }
         for t in &self.tags {
-            t.hash_into(w);
+            if let Ok(t) = t.read() {
+                t.hash_into(w);
+            }
         }
         for q in &self.qualities {
             if let Ok(q) = q.read() {
@@ -263,10 +348,14 @@ impl KitStore {
             }
         }
         for p in &self.props {
-            p.hash_into(w);
+            if let Ok(p) = p.read() {
+                p.hash_into(w);
+            }
         }
         for a in &self.attributes {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
     }
 
@@ -277,19 +366,11 @@ impl KitStore {
             .cloned()
     }
 
-    pub fn semio_type_mut(&self, guid: &str) -> Option<TypeStoreRef> {
-        self.semio_type(guid)
-    }
-
     pub fn design(&self, guid: &str) -> Option<DesignStoreRef> {
         self.designs
             .iter()
             .find(|d| d.read().map(|d| d.guid.as_str() == guid).unwrap_or(false))
             .cloned()
-    }
-
-    pub fn design_mut(&self, guid: &str) -> Option<DesignStoreRef> {
-        self.design(guid)
     }
 
     pub fn file(&self, guid: &str) -> Option<FileStoreRef> {
@@ -325,14 +406,85 @@ impl KitStore {
         Ok(report)
     }
 
+    /// Apply a structural [`crate::diff::DesignDiff`] to the named design (mutable kit).
+    pub fn apply_design_diff(&mut self, design_guid: &str, diff: &crate::diff::DesignDiff) -> Result<()> {
+        let dref = self
+            .design(design_guid)
+            .ok_or_else(|| SemioError::NotFound { kind: "Design", guid: Guid::from(design_guid) })?;
+        let type_index: HashMap<Guid, TypeStoreRef> = self
+            .types
+            .iter()
+            .filter_map(|t| t.read().ok().map(|r| (r.guid.clone(), t.clone())))
+            .collect();
+        let dw = Arc::downgrade(&dref);
+        dref.write()
+            .map_err(|_| SemioError::LockPoisoned("design"))?
+            .apply_diff(diff, &type_index, dw)?;
+        self.invalidate_hash();
+        self.invalidate_validation();
+        Ok(())
+    }
+
     pub fn validate(&self) -> ValidationResult {
+        self.validation_cache.get_or_init(|| self.compute_validation())
+    }
+
+    fn compute_validation(&self) -> ValidationResult {
         let mut result = ValidationResult::valid();
         if self.name.trim().is_empty() {
             result.is_valid = false;
             result.errors.push("kit.name must not be empty".into());
         }
+
+        let mut guids: Vec<String> = Vec::new();
+        guids.push(self.guid.as_str().to_string());
+
+        for t in &self.types {
+            if let Ok(t) = t.read() {
+                if t.name.trim().is_empty() {
+                    result.is_valid = false;
+                    result.errors.push(format!("type {} has empty name", t.guid));
+                }
+                guids.push(t.guid.as_str().to_string());
+                for p in &t.ports {
+                    if let Ok(p) = p.read() {
+                        guids.push(p.guid.as_str().to_string());
+                    }
+                }
+                for c in &t.connectors {
+                    if let Ok(c) = c.read() {
+                        guids.push(c.guid.as_str().to_string());
+                    }
+                }
+                for r in &t.representations {
+                    if let Ok(r) = r.read() {
+                        if r.url.trim().is_empty() {
+                            result.is_valid = false;
+                            result.errors.push(format!("representation {} has empty url", r.guid));
+                        }
+                        guids.push(r.guid.as_str().to_string());
+                    }
+                }
+            }
+        }
+
+        for f in &self.files {
+            if let Ok(f) = f.read() {
+                if f.url.trim().is_empty() {
+                    result.is_valid = false;
+                    result.errors.push(format!("file {} has empty url", f.guid));
+                }
+                guids.push(f.guid.as_str().to_string());
+            }
+        }
+
         for d in &self.designs {
             if let Ok(d) = d.read() {
+                if d.name.trim().is_empty() {
+                    result.is_valid = false;
+                    result.errors.push(format!("design {} has empty name", d.guid));
+                }
+                guids.push(d.guid.as_str().to_string());
                 for p in &d.pieces {
                     if let Ok(p) = p.read() {
                         if p.type_ref.as_ref().and_then(|t| t.upgrade()).is_none() {
@@ -341,10 +493,57 @@ impl KitStore {
                                 .errors
                                 .push(format!("piece {} has no valid type reference", p.guid));
                         }
+                        guids.push(p.guid.as_str().to_string());
+                    }
+                }
+                for c in &d.connections {
+                    if let Ok(conn) = c.read() {
+                        guids.push(conn.guid.as_str().to_string());
+                        if let Ok(s0) = conn.connected.read() {
+                            if s0.piece.upgrade().is_none() {
+                                result.is_valid = false;
+                                result.errors.push(format!(
+                                    "connection {} connected side has no piece",
+                                    conn.guid
+                                ));
+                            }
+                        }
+                        if let Ok(s1) = conn.connecting.read() {
+                            if s1.piece.upgrade().is_none() {
+                                result.is_valid = false;
+                                result.errors.push(format!(
+                                    "connection {} connecting side has no piece",
+                                    conn.guid
+                                ));
+                            }
+                        }
                     }
                 }
             }
         }
+
+        guids.sort();
+        for w in guids.windows(2) {
+            if w[0] == w[1] {
+                result.is_valid = false;
+                result.errors.push(format!("duplicate guid: {}", w[0]));
+                break;
+            }
+        }
+
+        // Simple cycle heuristic: in each design, if there are more connections than pieces, flag.
+        for d in &self.designs {
+            if let Ok(d) = d.read() {
+                if d.connections.len() > d.pieces.len() && !d.pieces.is_empty() {
+                    result.is_valid = false;
+                    result.warnings.push(format!(
+                        "design {} has more connections than pieces (possible cycle or bad graph)",
+                        d.guid
+                    ));
+                }
+            }
+        }
+
         result
     }
 
@@ -377,7 +576,8 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
+            validation_cache: Cache::default(),
         }
     }
 
@@ -406,7 +606,8 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
+            validation_cache: Cache::default(),
         }
     }
 
@@ -456,17 +657,67 @@ impl KitStore {
             designs: Vec::new(),
             files: Vec::new(),
             folders: Vec::new(),
-            authors: authors.into_iter().map(AuthorStore::from_full_dto).collect(),
-            concepts: concepts.into_iter().map(ConceptStore::from_full_dto).collect(),
-            tags: tags.into_iter().map(TagStore::from_full_dto).collect(),
+            authors: authors
+                .into_iter()
+                .map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a))))
+                .collect(),
+            concepts: concepts
+                .into_iter()
+                .map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c))))
+                .collect(),
+            tags: tags
+                .into_iter()
+                .map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t))))
+                .collect(),
             qualities: qualities
                 .into_iter()
                 .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
                 .collect(),
-            props: props.into_iter().map(PropStore::from_full_dto).collect(),
-            attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
-            hash_cache: OnceLock::new(),
+            props: props
+                .into_iter()
+                .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
+                .collect(),
+            attributes: attributes
+                .into_iter()
+                .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
+                .collect(),
+            hash_cache: Cache::default(),
+            validation_cache: Cache::default(),
         }));
+
+        let kw = Arc::downgrade(&kit);
+        if let Ok(k) = kit.write() {
+            for a in &k.authors {
+                if let Ok(mut aw) = a.write() {
+                    aw.parent_kit = Some(kw.clone());
+                }
+            }
+            for c in &k.concepts {
+                if let Ok(mut cw) = c.write() {
+                    cw.parent_kit = Some(kw.clone());
+                }
+            }
+            for t in &k.tags {
+                if let Ok(mut tw) = t.write() {
+                    tw.parent_kit = Some(kw.clone());
+                }
+            }
+            for q in &k.qualities {
+                if let Ok(mut qw) = q.write() {
+                    qw.parent_kit = Some(kw.clone());
+                }
+            }
+            for p in &k.props {
+                if let Ok(mut pw) = p.write() {
+                    pw.parent_kit = Some(kw.clone());
+                }
+            }
+            for a in &k.attributes {
+                if let Ok(mut aw) = a.write() {
+                    aw.parent_kit = Some(kw.clone());
+                }
+            }
+        }
 
         let file_refs: Vec<FileStoreRef> = files
             .into_iter()
@@ -565,16 +816,28 @@ impl KitStore {
                 .iter()
                 .filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto()))
                 .collect(),
-            authors: self.authors.iter().map(AuthorStore::to_shallow_dto).collect(),
-            concepts: self.concepts.iter().map(ConceptStore::to_shallow_dto).collect(),
-            tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
+            authors: self
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
+            concepts: self
+                .concepts
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
+                .collect(),
+            tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
             qualities: self
                 .qualities
                 .iter()
                 .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
                 .collect(),
-            props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+            props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
         }
     }
 
@@ -614,16 +877,28 @@ impl KitStore {
                 .iter()
                 .filter_map(|f| f.read().ok().map(|f| f.to_full_dto()))
                 .collect(),
-            authors: self.authors.iter().map(AuthorStore::to_full_dto).collect(),
-            concepts: self.concepts.iter().map(ConceptStore::to_full_dto).collect(),
-            tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
+            authors: self
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
+            concepts: self
+                .concepts
+                .iter()
+                .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
+                .collect(),
+            tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
             qualities: self
                 .qualities
                 .iter()
                 .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
                 .collect(),
-            props: self.props.iter().map(PropStore::to_full_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
         }
     }
 }

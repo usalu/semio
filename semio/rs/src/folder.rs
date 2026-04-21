@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 
 pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
 pub type FolderStoreWeak = Weak<RwLock<FolderStore>>;
@@ -13,7 +13,7 @@ pub struct FolderStore {
     pub guid: Guid,
     pub path: String,
     pub description: Option<String>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -51,7 +51,7 @@ impl FolderStore {
             guid: Guid::new_v7(),
             path: path.into(),
             description: None,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -60,7 +60,7 @@ impl FolderStore {
             guid: d.guid,
             path: String::new(),
             description: None,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -69,7 +69,7 @@ impl FolderStore {
             guid: d.guid,
             path: d.path,
             description: d.description,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -119,8 +119,8 @@ impl FolderStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {

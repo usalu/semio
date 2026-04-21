@@ -1,8 +1,14 @@
 use serde::{Deserialize, Serialize};
-use std::sync::OnceLock;
+use std::sync::{RwLock, Weak};
 
+use crate::design::DesignStoreWeak;
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
+use crate::kit::KitStoreWeak;
+use crate::typ::TypeStoreWeak;
+
+pub type ConceptStoreRef = std::sync::Arc<RwLock<ConceptStore>>;
+pub type ConceptStoreWeak = Weak<RwLock<ConceptStore>>;
 
 /// Conceptual / semantic label grouping types and designs.
 #[derive(Debug)]
@@ -11,11 +17,11 @@ pub struct ConceptStore {
     pub name: String,
     pub description: Option<String>,
     pub order: Option<i64>,
-    hash_cache: OnceLock<String>,
+    pub parent_kit: Option<KitStoreWeak>,
+    pub parent_design: Option<DesignStoreWeak>,
+    pub parent_type: Option<TypeStoreWeak>,
+    hash_cache: Cache<String>,
 }
-
-pub type ConceptStoreRef = std::sync::Arc<std::sync::RwLock<ConceptStore>>;
-pub type ConceptStoreWeak = std::sync::Weak<std::sync::RwLock<ConceptStore>>;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConceptIdDto {
@@ -53,52 +59,74 @@ pub struct ConceptFullDto {
 }
 
 impl ConceptStore {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub(crate) fn empty_shell(guid: Guid) -> Self {
         Self {
-            guid: Guid::new_v7(),
-            name: name.into(),
-            description: None,
-            order: None,
-            hash_cache: OnceLock::new(),
-        }
-    }
-
-    pub fn from_id_dto(d: ConceptIdDto) -> Self {
-        Self {
-            guid: d.guid,
+            guid,
             name: String::new(),
             description: None,
             order: None,
-            hash_cache: OnceLock::new(),
+            parent_kit: None,
+            parent_design: None,
+            parent_type: None,
+            hash_cache: Cache::default(),
         }
     }
 
-    pub fn from_metadata_dto(d: ConceptMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            name: d.name,
-            description: d.description,
-            order: d.order,
-            hash_cache: OnceLock::new(),
+    pub(crate) fn apply_full_dto_fields(&mut self, d: ConceptFullDto) {
+        self.guid = d.guid;
+        self.name = d.name;
+        self.description = d.description;
+        self.order = d.order;
+        self.hash_cache.invalidate();
+    }
+
+    pub(crate) fn from_full_dto(d: ConceptFullDto) -> Self {
+        let mut s = Self::empty_shell(d.guid.clone());
+        s.apply_full_dto_fields(d);
+        s
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+        self.bubble();
+    }
+
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description;
+        self.bubble();
+    }
+
+    pub fn set_order(&mut self, order: Option<i64>) {
+        self.order = order;
+        self.bubble();
+    }
+
+    fn bubble(&mut self) {
+        self.hash_cache.invalidate();
+        if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_hash();
+                    k.invalidate_validation();
+                }
+            }
         }
-    }
-
-    pub fn from_shallow_dto(d: ConceptShallowDto) -> Self {
-        Self::from_metadata_dto(ConceptMetadataDto {
-            guid: d.guid,
-            name: d.name,
-            description: d.description,
-            order: d.order,
-        })
-    }
-
-    pub fn from_full_dto(d: ConceptFullDto) -> Self {
-        Self::from_metadata_dto(ConceptMetadataDto {
-            guid: d.guid,
-            name: d.name,
-            description: d.description,
-            order: d.order,
-        })
+        if let Some(w) = &self.parent_design {
+            if let Some(d) = w.upgrade() {
+                if let Ok(d) = d.read() {
+                    d.invalidate_hash();
+                    d.invalidate_flatten();
+                    d.invalidate_validation();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_type {
+            if let Some(t) = w.upgrade() {
+                if let Ok(t) = t.read() {
+                    t.invalidate_hash();
+                }
+            }
+        }
     }
 
     pub fn to_id_dto(&self) -> ConceptIdDto {
@@ -134,18 +162,16 @@ impl ConceptStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {
-        self.hash_cache
-            .get_or_init(|| {
-                let mut w = HashWriter::new();
-                self.hash_into(&mut w);
-                w.finalize()
-            })
-            .clone()
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {

@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::collections::HashMap;
+use std::sync::{Arc, RwLock, Weak};
 
-use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
 use crate::design::DesignStoreWeak;
 use crate::geom::{Coord, Plane};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
-use crate::prop::{PropFullDto, PropShallowDto, PropStore};
-use crate::typ::{TypeIdDto, TypeStoreWeak};
+use crate::hash::{Cache, HashWriter};
+use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
+use crate::typ::{TypeIdDto, TypeStoreRef, TypeStoreWeak};
 
 pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
 pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
@@ -26,13 +27,13 @@ pub struct PieceStore {
     pub hidden: Option<bool>,
     pub locked: Option<bool>,
     pub color: Option<String>,
-    pub props: Vec<PropStore>,
-    pub attributes: Vec<AttributeStore>,
+    pub props: Vec<PropStoreRef>,
+    pub attributes: Vec<AttributeStoreRef>,
     pub type_ref: Option<TypeStoreWeak>,
     pub parent_design: DesignStoreWeak,
-    hash_cache: OnceLock<String>,
-    flat_plane: OnceLock<Plane>,
-    flat_center: OnceLock<Coord>,
+    hash_cache: Cache<String>,
+    flat_plane: Cache<Plane>,
+    flat_center: Cache<Coord>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -153,131 +154,210 @@ impl PieceStore {
             attributes: Vec::new(),
             type_ref: None,
             parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-            flat_plane: OnceLock::new(),
-            flat_center: OnceLock::new(),
+            hash_cache: Cache::default(),
+            flat_plane: Cache::default(),
+            flat_center: Cache::default(),
         }
     }
 
-    pub fn invalidate_pose_caches(&mut self) {
-        self.flat_plane = OnceLock::new();
-        self.flat_center = OnceLock::new();
+    pub(crate) fn empty_shell(guid: Guid) -> Self {
+        Self {
+            guid,
+            id: None,
+            name: None,
+            description: None,
+            plane: None,
+            center: None,
+            scale: None,
+            mirror_plane: None,
+            hidden: None,
+            locked: None,
+            color: None,
+            props: Vec::new(),
+            attributes: Vec::new(),
+            type_ref: None,
+            parent_design: Weak::new(),
+            hash_cache: Cache::default(),
+            flat_plane: Cache::default(),
+            flat_center: Cache::default(),
+        }
     }
 
-    fn bubble_pose_invalidation_to_design(&self) {
-        if let Some(d) = self.parent_design.upgrade() {
-            if let Ok(mut dw) = d.write() {
-                dw.invalidate_piece_pose_caches();
+    pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
+        self.guid = d.guid;
+        self.id = d.id;
+        self.name = d.name;
+        self.description = d.description;
+        self.plane = d.plane;
+        self.center = d.center;
+        self.scale = d.scale;
+        self.mirror_plane = d.mirror_plane;
+        self.hidden = d.hidden;
+        self.locked = d.locked;
+        self.color = d.color;
+        self.hash_cache.invalidate();
+        self.flat_plane.invalidate();
+        self.flat_center.invalidate();
+    }
+
+    pub(crate) fn apply_full_dto(
+        &mut self,
+        d: PieceFullDto,
+        design_weak: DesignStoreWeak,
+        type_index: &HashMap<Guid, TypeStoreRef>,
+    ) {
+        self.apply_metadata_fields(PieceMetadataDto {
+            guid: d.guid,
+            id: d.id,
+            name: d.name,
+            description: d.description,
+            plane: d.plane,
+            center: d.center,
+            scale: d.scale,
+            mirror_plane: d.mirror_plane,
+            hidden: d.hidden,
+            locked: d.locked,
+            color: d.color,
+            r#type: d.r#type.clone(),
+            design: d.design.clone(),
+        });
+        if let Some(tid) = d.r#type.as_ref().map(|t| t.guid.clone()) {
+            if let Some(tr) = type_index.get(&tid) {
+                self.type_ref = Some(Arc::downgrade(tr));
             }
         }
+        self.parent_design = design_weak;
+        self.props = d
+            .props
+            .into_iter()
+            .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
+            .collect();
+        self.attributes = d
+            .attributes
+            .into_iter()
+            .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
+            .collect();
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
-        self.invalidate_pose_caches();
+    pub fn invalidate_flat_pose(&self) {
+        self.flat_plane.invalidate();
+        self.flat_center.invalidate();
+    }
+
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
+        self.invalidate_flat_pose();
+    }
+
+    fn bubble_design_flatten(&self) {
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(d) = d.read() {
+                d.invalidate_flatten();
+            }
+        }
     }
 
     pub fn set_plane(&mut self, plane: Option<Plane>) {
         self.plane = plane;
-        self.invalidate_hash();
-        self.bubble_pose_invalidation_to_design();
+        self.hash_cache.invalidate();
+        self.invalidate_flat_pose();
+        self.bubble_design_flatten();
     }
 
     pub fn set_center(&mut self, center: Option<Coord>) {
         self.center = center;
-        self.invalidate_hash();
-        self.bubble_pose_invalidation_to_design();
+        self.hash_cache.invalidate();
+        self.invalidate_flat_pose();
+        self.bubble_design_flatten();
     }
 
     pub fn set_color(&mut self, color: Option<String>) {
         self.color = color;
-        self.invalidate_hash();
+        self.hash_cache.invalidate();
     }
 
-    pub fn set_type(&mut self, type_ref: Option<TypeStoreWeak>) {
+    pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) {
         self.type_ref = type_ref;
-        self.invalidate_hash();
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
     }
 
-    /// World-space plane for this piece (identity layout; connection propagation is incremental).
+    pub fn set_id(&mut self, id: Option<String>) {
+        self.id = id;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_name(&mut self, name: Option<String>) {
+        self.name = name;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_description(&mut self, description: Option<String>) {
+        self.description = description;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_scale(&mut self, scale: Option<f64>) {
+        self.scale = scale;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_mirror_plane(&mut self, mirror_plane: Option<Plane>) {
+        self.mirror_plane = mirror_plane;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_hidden(&mut self, hidden: Option<bool>) {
+        self.hidden = hidden;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    pub fn set_locked(&mut self, locked: Option<bool>) {
+        self.locked = locked;
+        self.hash_cache.invalidate();
+        self.bubble_design_flatten();
+    }
+
+    /// World-space plane from design flatten cache.
     pub fn flat_plane(&self) -> Plane {
-        *self.flat_plane.get_or_init(|| {
-            let mut plane = self.plane.unwrap_or_else(Plane::world_xy);
-            if let Some(design) = self.parent_design.upgrade() {
-                if let Ok(d) = design.read() {
-                    for c in &d.connections {
-                        if let Ok(conn) = c.read() {
-                            let touches = |side: &crate::side::SideStore| -> bool {
-                                side.piece
-                                    .upgrade()
-                                    .and_then(|p| p.read().ok().map(|p| p.guid == self.guid))
-                                    .unwrap_or(false)
-                            };
-                            if touches(&conn.connected) || touches(&conn.connecting) {
-                                let other = if touches(&conn.connected) {
-                                    &conn.connecting
-                                } else {
-                                    &conn.connected
-                                };
-                                if let Some(op) = other.piece.upgrade() {
-                                    if let Ok(op_read) = op.read() {
-                                        let other_plane = op_read.plane.unwrap_or_else(Plane::world_xy);
-                                        plane = other_plane;
-                                    }
-                                }
-                                break;
-                            }
-                        }
+        self.flat_plane.get_or_init(|| {
+            if let Some(d) = self.parent_design.upgrade() {
+                if let Ok(d) = d.read() {
+                    if let Some((pl, _)) = d.flatten_map().get(&self.guid) {
+                        return *pl;
                     }
                 }
             }
-            plane
+            self.plane.unwrap_or_else(Plane::world_xy)
         })
     }
 
-    /// World-space center for this piece (identity layout; connection propagation is incremental).
+    /// World-space center from design flatten cache.
     pub fn flat_center(&self) -> Coord {
-        *self.flat_center.get_or_init(|| {
-            let mut center = self.center.unwrap_or_default();
-            if let Some(design) = self.parent_design.upgrade() {
-                if let Ok(d) = design.read() {
-                    for c in &d.connections {
-                        if let Ok(conn) = c.read() {
-                            let touches = |side: &crate::side::SideStore| -> bool {
-                                side.piece
-                                    .upgrade()
-                                    .and_then(|p| p.read().ok().map(|p| p.guid == self.guid))
-                                    .unwrap_or(false)
-                            };
-                            if touches(&conn.connected) || touches(&conn.connecting) {
-                                let other = if touches(&conn.connected) {
-                                    &conn.connecting
-                                } else {
-                                    &conn.connected
-                                };
-                                if let Some(op) = other.piece.upgrade() {
-                                    if let Ok(op_read) = op.read() {
-                                        center = op_read.center.unwrap_or_default();
-                                    }
-                                }
-                                break;
-                            }
-                        }
+        self.flat_center.get_or_init(|| {
+            if let Some(d) = self.parent_design.upgrade() {
+                if let Ok(d) = d.read() {
+                    if let Some((_, ce)) = d.flatten_map().get(&self.guid) {
+                        return *ce;
                     }
                 }
             }
-            center
+            self.center.unwrap_or_default()
         })
     }
 
     pub fn hash(&self) -> String {
-        self.hash_cache
-            .get_or_init(|| {
-                let mut w = HashWriter::new();
-                self.hash_into(&mut w);
-                w.finalize()
-            })
-            .clone()
+        self.hash_cache.get_or_init(|| {
+            let mut w = HashWriter::new();
+            self.hash_into(&mut w);
+            w.finalize()
+        })
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {
@@ -298,104 +378,20 @@ impl PieceStore {
         }
         w.opt_bool(self.hidden).opt_bool(self.locked).opt_str(self.color.as_deref());
         for p in &self.props {
-            p.hash_into(w);
+            if let Ok(p) = p.read() {
+                p.hash_into(w);
+            }
         }
         for a in &self.attributes {
-            a.hash_into(w);
+            if let Ok(a) = a.read() {
+                a.hash_into(w);
+            }
         }
         if let Some(t) = self.type_ref.as_ref().and_then(|t| t.upgrade()) {
             if let Ok(t) = t.read() {
                 w.str(t.guid.as_str());
             }
         }
-    }
-
-    pub fn from_id_dto(d: PieceIdDto) -> Self {
-        Self {
-            guid: d.guid,
-            id: None,
-            name: None,
-            description: None,
-            plane: None,
-            center: None,
-            scale: None,
-            mirror_plane: None,
-            hidden: None,
-            locked: None,
-            color: None,
-            props: Vec::new(),
-            attributes: Vec::new(),
-            type_ref: None,
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-            flat_plane: OnceLock::new(),
-            flat_center: OnceLock::new(),
-        }
-    }
-
-    pub fn from_metadata_dto(d: PieceMetadataDto) -> Self {
-        Self {
-            guid: d.guid,
-            id: d.id,
-            name: d.name,
-            description: d.description,
-            plane: d.plane,
-            center: d.center,
-            scale: d.scale,
-            mirror_plane: d.mirror_plane,
-            hidden: d.hidden,
-            locked: d.locked,
-            color: d.color,
-            props: Vec::new(),
-            attributes: Vec::new(),
-            type_ref: None,
-            parent_design: Weak::new(),
-            hash_cache: OnceLock::new(),
-            flat_plane: OnceLock::new(),
-            flat_center: OnceLock::new(),
-        }
-    }
-
-    pub fn from_shallow_dto(d: PieceShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(PieceMetadataDto {
-            guid: d.guid,
-            id: d.id,
-            name: d.name,
-            description: d.description,
-            plane: d.plane,
-            center: d.center,
-            scale: d.scale,
-            mirror_plane: d.mirror_plane,
-            hidden: d.hidden,
-            locked: d.locked,
-            color: d.color,
-            r#type: d.r#type,
-            design: d.design,
-        });
-        s.props = d.props.into_iter().map(PropStore::from_shallow_dto).collect();
-        s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
-        s
-    }
-
-    pub fn from_full_dto(d: PieceFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(PieceMetadataDto {
-            guid: d.guid,
-            id: d.id,
-            name: d.name,
-            description: d.description,
-            plane: d.plane,
-            center: d.center,
-            scale: d.scale,
-            mirror_plane: d.mirror_plane,
-            hidden: d.hidden,
-            locked: d.locked,
-            color: d.color,
-            r#type: d.r#type,
-            design: d.design,
-        });
-        s.props = d.props.into_iter().map(PropStore::from_full_dto).collect();
-        s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
-        s
     }
 
     pub fn to_id_dto(&self) -> PieceIdDto {
@@ -445,8 +441,16 @@ impl PieceStore {
             color: m.color,
             r#type: m.r#type,
             design: m.design,
-            props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
+            props: self
+                .props
+                .iter()
+                .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
+                .collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
+                .collect(),
         }
     }
 
@@ -466,8 +470,16 @@ impl PieceStore {
             color: m.color,
             r#type: m.r#type,
             design: m.design,
-            props: self.props.iter().map(PropStore::to_full_dto).collect(),
-            attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
+            props: self
+                .props
+                .iter()
+                .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
+                .collect(),
+            attributes: self
+                .attributes
+                .iter()
+                .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
+                .collect(),
         }
     }
 }

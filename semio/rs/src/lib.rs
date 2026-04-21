@@ -2,7 +2,7 @@
 //!
 //! Every aggregate owns its children through `Arc<RwLock<T>>`; children hold
 //! `Weak<RwLock<T>>` back-references to their parents. Content-addressable
-//! hashes are computed lazily through `OnceLock` fingerprints on each entity.
+//! hashes are computed lazily through interior-mutable `Cache` on each entity.
 //! GUIDs exist only as stable identity at serialization boundaries and in
 //! DTO resolvers; the in-memory graph walks pointers.
 
@@ -17,6 +17,7 @@ pub mod connector;
 pub mod design;
 pub mod diff;
 pub mod error;
+pub(crate) mod flatten_math;
 pub mod file;
 pub mod folder;
 pub mod geom;
@@ -37,6 +38,9 @@ pub mod side;
 pub mod stat;
 pub mod tag;
 pub mod typ;
+
+#[cfg(test)]
+mod tests;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
@@ -78,9 +82,9 @@ pub use group::{
     GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak,
 };
 pub use guid::Guid;
-pub use hash::HashWriter;
+pub use hash::{Cache, HashWriter};
 pub use kit::{
-    KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef,
+    KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak,
 };
 pub use layer::{
     LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak,
@@ -102,7 +106,9 @@ pub use representation::{
     RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak,
 };
 pub use session::KitGraphSession;
-pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore};
+pub use side::{
+    SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak,
+};
 pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
 pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
 pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};

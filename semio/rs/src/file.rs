@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock, Weak};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 
 pub type FileStoreRef = Arc<RwLock<FileStore>>;
 pub type FileStoreWeak = Weak<RwLock<FileStore>>;
@@ -18,7 +18,7 @@ pub struct FileStore {
     pub description: Option<String>,
     pub created: Option<String>,
     pub updated: Option<String>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -91,7 +91,7 @@ impl FileStore {
             description: None,
             created: None,
             updated: None,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -105,7 +105,7 @@ impl FileStore {
             description: None,
             created: None,
             updated: None,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -119,7 +119,7 @@ impl FileStore {
             description: d.description,
             created: d.created,
             updated: d.updated,
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -194,8 +194,8 @@ impl FileStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {

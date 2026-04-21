@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, OnceLock, RwLock};
+use std::sync::{Arc, RwLock};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
 use crate::geom::{Coord, Vector};
 use crate::guid::Guid;
-use crate::hash::HashWriter;
+use crate::hash::{Cache, HashWriter};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
 pub type PortStoreRef = Arc<RwLock<PortStore>>;
@@ -24,7 +24,7 @@ pub struct PortStore {
     pub direction: Option<Vector>,
     pub qualities: Vec<QualityStoreRef>,
     pub attributes: Vec<AttributeStore>,
-    hash_cache: OnceLock<String>,
+    hash_cache: Cache<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -117,7 +117,7 @@ impl PortStore {
             direction: None,
             qualities: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -134,7 +134,7 @@ impl PortStore {
             direction: None,
             qualities: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -151,7 +151,7 @@ impl PortStore {
             direction: d.direction,
             qualities: Vec::new(),
             attributes: Vec::new(),
-            hash_cache: OnceLock::new(),
+            hash_cache: Cache::default(),
         }
     }
 
@@ -257,8 +257,8 @@ impl PortStore {
         }
     }
 
-    pub fn invalidate_hash(&mut self) {
-        self.hash_cache = OnceLock::new();
+    pub fn invalidate_hash(&self) {
+        self.hash_cache.invalidate();
     }
 
     pub fn hash(&self) -> String {
