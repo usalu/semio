@@ -1,0 +1,573 @@
+{
+  "id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+  "uri": "repo://session/229dfebe-efcc-4c93-b545-aa41e8393780",
+  "client": "copilot-chat",
+  "second": "2026-04-21T05:22:33Z",
+  "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+  "contributor": "unknown",
+  "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+  "events": [
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:22:33Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:22:32.505Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal fec30d5a-6e25-402d-8db5-0e84a60a0978 notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\n\n\n[... PREVIOUS OUTPUT TRUNCATED ...]\n\ne '{ guid: string; name: string; types: never[]; designs: never[]; }' is not assignable to parameter of type 'KitImpl'.\n  Type '{ guid: string; name: string; types: never[]; designs: never[]; }' is missing the following properties from type 'KitImpl': createdAt, updatedAt, ops, transactions, and 157 more.\n\n58801         await store.createKit({ guid: remoteGuid, name: \"Session Kit\", types: [], designs: [] }, \"remote\", { kind: \"remote\", url: \"http://127.0.0.1:9\" });\n                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../sketchpad/index.tsx:58802:31 - error TS2345: Argument of type '{ guid: string; name: string; types: never[]; designs: never[]; }' is not assignable to parameter of type 'KitImpl'.\n  Type '{ guid: string; name: string; types: never[]; designs: never[]; }' is missing the following properties from type 'KitImpl': createdAt, updatedAt, ops, transactions, and 157 more.\n\n58802         await store.createKit({ guid: localGuid, name: \"Folder Kit\", types: [], designs: [] }, \"folder\", { kind: \"folder\", path: \"/tmp/metabolism\" });    \n                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../sketchpad/index.tsx:58818:49 - error TS7031: Binding element 'page' implicitly has an 'any' type.\n\n58818     test(\"Settings Panel In All Apps\", async ({ page }) =\u003e {\n                                                      ~~~~\n\n../ui/index.tsx:217:15 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n217     parent: d.parent ? { guid: d.parent.guid } : undefined,\n                  ~~~~~~\n\n../ui/index.tsx:217:34 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n217     parent: d.parent ? { guid: d.parent.guid } : undefined,\n                                     ~~~~~~\n\n../ui/index.tsx:227:15 - error TS2339: Property 'parent' does not exist on type 'Type'.\n\n227     parent: t.parent ? { guid: t.parent.guid } : undefined,\n                  ~~~~~~\n\n../ui/index.tsx:227:34 - error TS2339: Property 'parent' does not exist on type 'Type'.\n\n227     parent: t.parent ? { guid: t.parent.guid } : undefined,\n                                     ~~~~~~\n\n../ui/index.tsx:229:41 - error TS2339: Property 'ports' does not exist on type 'KitImpl'.\n\n229   const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) =\u003e ({\n                                            ~~~~~\n\n../ui/index.tsx:3960:36 - error TS2307: Cannot find module '@representationcontextprotocol/ext-apps' or its corresponding type declarations.\n\n3960 import type { App as McpApp } from \"@representationcontextprotocol/ext-apps\";\n                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../ui/index.tsx:3961:42 - error TS2307: Cannot find module '@representationcontextprotocol/ext-apps/react' or its corresponding type declarations.\n\n3961 import { useApp, useDocumentTheme } from \"@representationcontextprotocol/ext-apps/react\";\n                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../ui/index.tsx:4576:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n4576     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:4587:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n4587       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:4867:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n4867     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:4869:24 - error TS7006: Parameter 'params' implicitly has an 'any' type.\n\n4869       a.ontoolinput = (params) =\u003e {\n                            ~~~~~~\n\n../ui/index.tsx:4873:31 - error TS7006: Parameter 'params' implicitly has an 'any' type.\n\n4873       a.ontoolinputpartial = (params) =\u003e {\n                                   ~~~~~~\n\n../ui/index.tsx:4882:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n4882       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:5078:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n5078     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:5083:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n5083       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:5230:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n5230     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:5235:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n5235       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:6008:95 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n6008       const design = (kit.designs ?? []).find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent) as Design | undefined;\n                                                                                \n                   ~~~~~~\n\n\nFound 648 errors in 3 files.\n\nErrors  Files\n     1  ../assets/index.ts:166\n   629  ../sketchpad/index.tsx:46\n    18  ../ui/index.tsx:217\nnpm error Lifecycle script `build` failed with error:\nnpm error code 2\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c tsc --noEmit\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/js run test\n\n\u003e @semio/js@0.1.0 test\n\u003e cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run\n\n\n RUN  v4.0.17 C:/git/semio/semio/js\n\n ❯  semio  index.ts (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio  index.ts [ index.ts ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:30:47\n   Duration  9.97s (transform 4.37s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\js\nnpm error workspace @semio/js@0.1.0\nnpm error location C:\\git\\semio\\semio\\js\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Startup Error ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nError: Projects definition references a non-existing file or a directory: C:/git/semio/semio/react/semio/js/vite.config.ts\n    at resolveTestProjectConfigs (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:10510:11)\n    at resolveProjects (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:10326:70)\n    at Vitest.resolveProjects (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:12348:36)\n    at Vitest._setServer (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:12227:31)\n    at BasicMinimalPluginContext.handler (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13158:6)\n    at _createServer (file:///C:/git/semio/node_modules/vite/dist/node/chunks/config.js:25603:86)\n    at createViteServer (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:9870:17)\n    at createVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13186:17)\n    at prepareVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13548:14)\n    at startVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13494:14)\n\n\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:32:13\n   Duration  9.72s (transform 4.58s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:34:12\n   Duration  8.68s (transform 4.11s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:34:43\n   Duration  8.37s (transform 3.93s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nReferenceError: ExportDesignRepresentationCases is not defined\n ❯ ../js/index.ts:22485:26\n    22483|\n    22484|   describe(\"ExportDesignRepresentation\", () =\u003e {\n    22485|     const exportCases = (ExportDesignRepresentationCases as any).cases…\n       |                          ^\n    22486|     const exportCase = exportCases[0];\n    22487|     const kit = asKitInstance(MetabolismKit as unknown as KitImpl);  \n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:37:16\n   Duration  12.79s (transform 4.11s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 27867759ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  4016ms\n     ✓ updates piece fields through direct hooks  4268ms\n     × generates schema property events from snapshots 27857869ms\n     ✓ exposes dynamic schema hook namespace  1603ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:37:58\n   Duration  27871.98s (transform 2.42s, setup 0ms, import 4.01s, tests 27867.76s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:22:35Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:22:32.505Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal fec30d5a-6e25-402d-8db5-0e84a60a0978 notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\n\n\n[... PREVIOUS OUTPUT TRUNCATED ...]\n\ne '{ guid: string; name: string; types: never[]; designs: never[]; }' is not assignable to parameter of type 'KitImpl'.\n  Type '{ guid: string; name: string; types: never[]; designs: never[]; }' is missing the following properties from type 'KitImpl': createdAt, updatedAt, ops, transactions, and 157 more.\n\n58801         await store.createKit({ guid: remoteGuid, name: \"Session Kit\", types: [], designs: [] }, \"remote\", { kind: \"remote\", url: \"http://127.0.0.1:9\" });\n                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../sketchpad/index.tsx:58802:31 - error TS2345: Argument of type '{ guid: string; name: string; types: never[]; designs: never[]; }' is not assignable to parameter of type 'KitImpl'.\n  Type '{ guid: string; name: string; types: never[]; designs: never[]; }' is missing the following properties from type 'KitImpl': createdAt, updatedAt, ops, transactions, and 157 more.\n\n58802         await store.createKit({ guid: localGuid, name: \"Folder Kit\", types: [], designs: [] }, \"folder\", { kind: \"folder\", path: \"/tmp/metabolism\" });    \n                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../sketchpad/index.tsx:58818:49 - error TS7031: Binding element 'page' implicitly has an 'any' type.\n\n58818     test(\"Settings Panel In All Apps\", async ({ page }) =\u003e {\n                                                      ~~~~\n\n../ui/index.tsx:217:15 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n217     parent: d.parent ? { guid: d.parent.guid } : undefined,\n                  ~~~~~~\n\n../ui/index.tsx:217:34 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n217     parent: d.parent ? { guid: d.parent.guid } : undefined,\n                                     ~~~~~~\n\n../ui/index.tsx:227:15 - error TS2339: Property 'parent' does not exist on type 'Type'.\n\n227     parent: t.parent ? { guid: t.parent.guid } : undefined,\n                  ~~~~~~\n\n../ui/index.tsx:227:34 - error TS2339: Property 'parent' does not exist on type 'Type'.\n\n227     parent: t.parent ? { guid: t.parent.guid } : undefined,\n                                     ~~~~~~\n\n../ui/index.tsx:229:41 - error TS2339: Property 'ports' does not exist on type 'KitImpl'.\n\n229   const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) =\u003e ({\n                                            ~~~~~\n\n../ui/index.tsx:3960:36 - error TS2307: Cannot find module '@representationcontextprotocol/ext-apps' or its corresponding type declarations.\n\n3960 import type { App as McpApp } from \"@representationcontextprotocol/ext-apps\";\n                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../ui/index.tsx:3961:42 - error TS2307: Cannot find module '@representationcontextprotocol/ext-apps/react' or its corresponding type declarations.\n\n3961 import { useApp, useDocumentTheme } from \"@representationcontextprotocol/ext-apps/react\";\n                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n../ui/index.tsx:4576:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n4576     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:4587:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n4587       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:4867:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n4867     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:4869:24 - error TS7006: Parameter 'params' implicitly has an 'any' type.\n\n4869       a.ontoolinput = (params) =\u003e {\n                            ~~~~~~\n\n../ui/index.tsx:4873:31 - error TS7006: Parameter 'params' implicitly has an 'any' type.\n\n4873       a.ontoolinputpartial = (params) =\u003e {\n                                   ~~~~~~\n\n../ui/index.tsx:4882:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n4882       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:5078:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n5078     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:5083:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n5083       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:5230:20 - error TS7006: Parameter 'a' implicitly has an 'any' type.\n\n5230     onAppCreated: (a) =\u003e {\n                        ~\n\n../ui/index.tsx:5235:25 - error TS7006: Parameter 'result' implicitly has an 'any' type.\n\n5235       a.ontoolresult = (result) =\u003e {\n                             ~~~~~~\n\n../ui/index.tsx:6008:95 - error TS2339: Property 'parent' does not exist on type 'Design'.\n\n6008       const design = (kit.designs ?? []).find((d) =\u003e d.name === \"Nakagin Capsule Tower\" \u0026\u0026 !d.parent) as Design | undefined;\n                                                                                \n                   ~~~~~~\n\n\nFound 648 errors in 3 files.\n\nErrors  Files\n     1  ../assets/index.ts:166\n   629  ../sketchpad/index.tsx:46\n    18  ../ui/index.tsx:217\nnpm error Lifecycle script `build` failed with error:\nnpm error code 2\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c tsc --noEmit\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/js run test\n\n\u003e @semio/js@0.1.0 test\n\u003e cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run\n\n\n RUN  v4.0.17 C:/git/semio/semio/js\n\n ❯  semio  index.ts (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio  index.ts [ index.ts ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:30:47\n   Duration  9.97s (transform 4.37s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\js\nnpm error workspace @semio/js@0.1.0\nnpm error location C:\\git\\semio\\semio\\js\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_JS_RUN_EMBEDDED_TESTS=1 vitest run\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\n\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Startup Error ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\nError: Projects definition references a non-existing file or a directory: C:/git/semio/semio/react/semio/js/vite.config.ts\n    at resolveTestProjectConfigs (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:10510:11)\n    at resolveProjects (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:10326:70)\n    at Vitest.resolveProjects (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:12348:36)\n    at Vitest._setServer (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:12227:31)\n    at BasicMinimalPluginContext.handler (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13158:6)\n    at _createServer (file:///C:/git/semio/node_modules/vite/dist/node/chunks/config.js:25603:86)\n    at createViteServer (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:9870:17)\n    at createVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13186:17)\n    at prepareVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13548:14)\n    at startVitest (file:///C:/git/semio/node_modules/vitest/dist/chunks/cli-api.Cx2DW4Bc.js:13494:14)\n\n\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:32:13\n   Duration  9.72s (transform 4.58s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:34:12\n   Duration  8.68s (transform 4.11s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nError: Cannot find package '@representationcontextprotocol/ext-apps/react' imported from 'C:/git/semio/semio/ui/index.tsx'\n ❯ ../ui/index.tsx:3961:1\n    3959|\n    3960| import type { App as McpApp } from \"@representationcontextprotocol/ext…\n    3961| import { useApp, useDocumentTheme } from \"@representationcontextprotoc…\n       | ^\n    3962|\n    3963| // #region 🔗McpApp Types\n ❯ ../sketchpad/index.tsx:124:1\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:34:43\n   Duration  8.37s (transform 3.93s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (0 test)\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx [ index.tsx ]\nReferenceError: ExportDesignRepresentationCases is not defined\n ❯ ../js/index.ts:22485:26\n    22483|\n    22484|   describe(\"ExportDesignRepresentation\", () =\u003e {\n    22485|     const exportCases = (ExportDesignRepresentationCases as any).cases…\n       |                          ^\n    22486|     const exportCase = exportCases[0];\n    22487|     const kit = asKitInstance(MetabolismKit as unknown as KitImpl);  \n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  23:37:16\n   Duration  12.79s (transform 4.11s, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 vitest run --config vite.config.ts index.tsx\nPS C:\\git\\semio\\semio\\js\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 27867759ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  4016ms\n     ✓ updates piece fields through direct hooks  4268ms\n     × generates schema property events from snapshots 27857869ms\n     ✓ exposes dynamic schema hook namespace  1603ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:37:58\n   Duration  27871.98s (transform 2.42s, setup 0ms, import 4.01s, tests 27867.76s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:23:10Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:23:10.364Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:23:12Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:23:10.364Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:32:46Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:32:45.685Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 597f06ea-91d2-4b58-b4f3-16bde15888eb notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 28289077ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  4346ms\n     ✓ updates piece fields through direct hooks  4508ms\n     × generates schema property events from snapshots 28278795ms\n     ✓ exposes dynamic schema hook namespace  1426ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298| \n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {\n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:41:09\n   Duration  28293.62s (transform 2.41s, setup 0ms, import 4.33s, tests 28289.08s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:32:47Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:32:45.685Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 597f06ea-91d2-4b58-b4f3-16bde15888eb notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 28289077ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  4346ms\n     ✓ updates piece fields through direct hooks  4508ms\n     × generates schema property events from snapshots 28278795ms\n     ✓ exposes dynamic schema hook namespace  1426ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298| \n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {\n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:41:09\n   Duration  28293.62s (transform 2.41s, setup 0ms, import 4.33s, tests 28289.08s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:33:08Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:33:08.027Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:33:09Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:33:08.027Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:40:36Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:40:35.332Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal bf3e90c4-062c-45dc-86fc-4b7da62f852c notification: command completed with exit code 0. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"generates schema property events from snapshots\"\ncross-env: The term 'cross-env' is not recognized as a name of a cmdlet, function, script file, or executable program.\nCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.\nPS C:\\git\\semio\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"exposes dynamic schema hook namespace\"\ncross-env: The term 'cross-env' is not recognized as a name of a cmdlet, function, script file, or executable program.\nCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.\nPS C:\\git\\semio\u003e ^C\nPS C:\\git\\semio\u003e $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"generates schema property events from snapshots\"\n\n RUN  v4.0.17 C:/git/semio\n\nNo test files found, exiting with code 1\n\nfilter: semio/react/index.tsx\ninclude: index.tsx\nexclude:  **/node_modules/**, **/dist/**, **/.storybook/**\n\nPS C:\\git\\semio\u003e $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"exposes dynamic schema hook namespace\"\n\n RUN  v4.0.17 C:/git/semio\n\nNo test files found, exiting with code 1\n\nfilter: semio/react/index.tsx\ninclude: index.tsx\nexclude:  **/node_modules/**, **/dist/**, **/.storybook/**\n\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"generates schema property events from snapshots\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed | 3 skipped) 28223444ms\n   ❯ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     × generates schema property events from snapshots 28223442ms\n     ↓ exposes dynamic schema hook namespace\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 skipped (4)\n   Start at  23:50:04\n   Duration  28228.59s (transform 2.94s, setup 0ms, import 4.91s, tests 28223.44s, environment 0ms)\n\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:40:37Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:40:35.332Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal bf3e90c4-062c-45dc-86fc-4b7da62f852c notification: command completed with exit code 0. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"generates schema property events from snapshots\"\ncross-env: The term 'cross-env' is not recognized as a name of a cmdlet, function, script file, or executable program.\nCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.\nPS C:\\git\\semio\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"exposes dynamic schema hook namespace\"\ncross-env: The term 'cross-env' is not recognized as a name of a cmdlet, function, script file, or executable program.\nCheck the spelling of the name, or if a path was included, verify that the path is correct and try again.\nPS C:\\git\\semio\u003e ^C\nPS C:\\git\\semio\u003e $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"generates schema property events from snapshots\"\n\n RUN  v4.0.17 C:/git/semio\n\nNo test files found, exiting with code 1\n\nfilter: semio/react/index.tsx\ninclude: index.tsx\nexclude:  **/node_modules/**, **/dist/**, **/.storybook/**\n\nPS C:\\git\\semio\u003e $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config semio/react/vite.config.ts semio/react/index.tsx -t \"exposes dynamic schema hook namespace\"\n\n RUN  v4.0.17 C:/git/semio\n\nNo test files found, exiting with code 1\n\nfilter: semio/react/index.tsx\ninclude: index.tsx\nexclude:  **/node_modules/**, **/dist/**, **/.storybook/**\n\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"generates schema property events from snapshots\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed | 3 skipped) 28223444ms\n   ❯ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     × generates schema property events from snapshots 28223442ms\n     ↓ exposes dynamic schema hook namespace\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 skipped (4)\n   Start at  23:50:04\n   Duration  28228.59s (transform 2.94s, setup 0ms, import 4.91s, tests 28223.44s, environment 0ms)\n\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:40:58Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:40:57.642Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:40:59Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:40:57.642Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:41:38Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:37.752Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 9a83ef5f-927a-45aa-8574-1e2aa90be414 notification: command completed with exit code 0. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"generates schema property events from snapshots\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed | 3 skipped) 27938954ms\n   ❯ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     × generates schema property events from snapshots 27938953ms\n     ↓ exposes dynamic schema hook namespace\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298| \n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {\n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 skipped (4)\n   Start at  23:55:52\n   Duration  27943.47s (transform 2.48s, setup 0ms, import 4.18s, tests 27938.95s, environment 0ms)\n\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:41:39Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:37.752Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 9a83ef5f-927a-45aa-8574-1e2aa90be414 notification: command completed with exit code 0. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"generates schema property events from snapshots\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed | 3 skipped) 27938954ms\n   ❯ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     × generates schema property events from snapshots 27938953ms\n     ↓ exposes dynamic schema hook namespace\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298| \n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {\n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 skipped (4)\n   Start at  23:55:52\n   Duration  27943.47s (transform 2.48s, setup 0ms, import 4.18s, tests 27938.95s, environment 0ms)\n\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:41:50Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:50.437Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:41:52Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:50.437Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:41:56Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:56.323Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 5c6a2ed8-9e7f-43a6-92d6-3d6f191c545e notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"exposes dynamic schema hook namespace\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ✓  semio-react  index.tsx (4 tests | 3 skipped) 1710ms\n   ✓ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     ↓ generates schema property events from snapshots\n     ✓ exposes dynamic schema hook namespace  1709ms\n\n Test Files  1 passed (1)\n      Tests  1 passed | 3 skipped (4)\n   Start at  23:52:27\n   Duration  6.20s (transform 2.64s, setup 0ms, import 4.35s, tests 1.71s, environment 0ms)\n\nPS C:\\git\\semio\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 28118399ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  5265ms\n     ✓ updates piece fields through direct hooks  6006ms\n     × generates schema property events from snapshots 28105828ms\n     ✓ exposes dynamic schema hook namespace  1298ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:53:11\n   Duration  28122.91s (transform 2.57s, setup 0ms, import 4.29s, tests 28118.40s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.prompt.submitting",
+        "second": "2026-04-21T05:41:57Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:41:56.323Z",
+          "hook_event_name": "UserPromptSubmit",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "prompt": "[Terminal 5c6a2ed8-9e7f-43a6-92d6-3d6f191c545e notification: command completed with exit code 1. Use send_to_terminal to send another command or kill_terminal to stop it.]\nTerminal output:\nPS C:\\git\\semio\u003e Push-Location semio/react; $env:SEMIO_REACT_RUN_EMBEDDED_TESTS='1'; $env:SEMIO_JS_RUN_EMBEDDED_TESTS='0'; npx vitest run --config vite.config.ts index.tsx -t \"exposes dynamic schema hook namespace\"; Pop-Location\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ✓  semio-react  index.tsx (4 tests | 3 skipped) 1710ms\n   ✓ @semio/react (4)\n     ↓ exposes triad hooks for kit fields\n     ↓ updates piece fields through direct hooks\n     ↓ generates schema property events from snapshots\n     ✓ exposes dynamic schema hook namespace  1709ms\n\n Test Files  1 passed (1)\n      Tests  1 passed | 3 skipped (4)\n   Start at  23:52:27\n   Duration  6.20s (transform 2.64s, setup 0ms, import 4.35s, tests 1.71s, environment 0ms)\n\nPS C:\\git\\semio\u003e npm --workspace @semio/react run test\n\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ❯  semio-react  index.tsx (4 tests | 1 failed) 28118399ms\n   ❯ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  5265ms\n     ✓ updates piece fields through direct hooks  6006ms\n     × generates schema property events from snapshots 28105828ms\n     ✓ exposes dynamic schema hook namespace  1298ms\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n FAIL   semio-react  index.tsx \u003e @semio/react \u003e generates schema property events from snapshots\nError: Test timed out in 30000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ index.tsx:1299:3\n    1297|   });\n    1298|\n    1299|   it(\"generates schema property events from snapshots\", () =\u003e {       \n       |   ^\n    1300|    const before = { guid: \"kit-event\", name: \"Initial Kit\", release: \"…\n    1301|    const after = { ...before, name: \"Evented Kit\" } as any;\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n\n Test Files  1 failed (1)\n      Tests  1 failed | 3 passed (4)\n   Start at  23:53:11\n   Duration  28122.91s (transform 2.57s, setup 0ms, import 4.29s, tests 28118.40s, environment 0ms)\n\nnpm error Lifecycle script `test` failed with error:\nnpm error code 1\nnpm error path C:\\git\\semio\\semio\\react\nnpm error workspace @semio/react@0.1.0\nnpm error location C:\\git\\semio\\semio\\react\nnpm error command failed\nnpm error command C:\\WINDOWS\\system32\\cmd.exe /d /s /c cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-04-21T05:42:06Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:05.840Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "npm --workspace @semio/react run test",
+            "explanation": "Run the current semio/react embedded test suite to verify the present workspace state",
+            "goal": "Confirm current @semio/react test status",
+            "mode": "sync",
+            "timeout": 120000
+          },
+          "tool_use_id": "call_LyOKl2DrWWh8wWNVCAtHrNjh__vscode-1776699985221",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.starting",
+        "second": "2026-04-21T05:42:07Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:05.840Z",
+          "hook_event_name": "PreToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "npm --workspace @semio/react run test",
+            "explanation": "Run the current semio/react embedded test suite to verify the present workspace state",
+            "goal": "Confirm current @semio/react test status",
+            "mode": "sync",
+            "timeout": 120000
+          },
+          "tool_use_id": "call_LyOKl2DrWWh8wWNVCAtHrNjh__vscode-1776699985221",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-04-21T05:42:25Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:24.520Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "npm --workspace @semio/react run test",
+            "explanation": "Run the current semio/react embedded test suite to verify the present workspace state",
+            "goal": "Confirm current @semio/react test status",
+            "mode": "sync",
+            "timeout": 120000
+          },
+          "tool_response": "\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ✓  semio-react  index.tsx (4 tests) 9667ms\n   ✓ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  3874ms\n     ✓ updates piece fields through direct hooks  3802ms\n     ✓ generates schema property events from snapshots  655ms\n     ✓ exposes dynamic schema hook namespace  1334ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  07:42:11\n   Duration  13.26s (transform 2.06s, setup 0ms, import 3.46s, tests 9.67s, environment 0ms)",
+          "tool_use_id": "call_LyOKl2DrWWh8wWNVCAtHrNjh__vscode-1776699985221",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.tool.terminal.ended",
+        "second": "2026-04-21T05:42:26Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:24.520Z",
+          "hook_event_name": "PostToolUse",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "tool_name": "run_in_terminal",
+          "tool_input": {
+            "command": "npm --workspace @semio/react run test",
+            "explanation": "Run the current semio/react embedded test suite to verify the present workspace state",
+            "goal": "Confirm current @semio/react test status",
+            "mode": "sync",
+            "timeout": 120000
+          },
+          "tool_response": "\n\u003e @semio/react@0.1.0 test\n\u003e cross-env SEMIO_REACT_RUN_EMBEDDED_TESTS=1 SEMIO_JS_RUN_EMBEDDED_TESTS=0 vitest run --config vite.config.ts index.tsx\n\n\n RUN  v4.0.17 C:/git/semio/semio/react\n\n ✓  semio-react  index.tsx (4 tests) 9667ms\n   ✓ @semio/react (4)\n     ✓ exposes triad hooks for kit fields  3874ms\n     ✓ updates piece fields through direct hooks  3802ms\n     ✓ generates schema property events from snapshots  655ms\n     ✓ exposes dynamic schema hook namespace  1334ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  07:42:11\n   Duration  13.26s (transform 2.06s, setup 0ms, import 3.46s, tests 9.67s, environment 0ms)",
+          "tool_use_id": "call_LyOKl2DrWWh8wWNVCAtHrNjh__vscode-1776699985221",
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:42:32Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:32.338Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "f13d8e39678cf7ce51680d09a20840f76d43b093",
+        "client": "copilot-chat",
+        "contributor": "unknown",
+        "kind": "agent.ended",
+        "second": "2026-04-21T05:42:33Z",
+        "session": "229dfebe-efcc-4c93-b545-aa41e8393780",
+        "transcript": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl"
+      },
+      "native": {
+        "event": {
+          "timestamp": "2026-04-21T05:42:32.338Z",
+          "hook_event_name": "Stop",
+          "session_id": "229dfebe-efcc-4c93-b545-aa41e8393780",
+          "transcript_path": "c:\\Users\\Ueli\\AppData\\Roaming\\Code\\User\\workspaceStorage\\f5d1c7321cc6df2a33010b109977f2aa\\GitHub.copilot-chat\\transcripts\\229dfebe-efcc-4c93-b545-aa41e8393780.jsonl",
+          "stop_hook_active": false,
+          "cwd": "c:\\git\\semio"
+        }
+      },
+      "response": {}
+    }
+  ]
+}
