@@ -34,14 +34,20 @@ pub struct PropMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PropShallowDto {
-    #[serde(flatten)]
-    pub meta: PropMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PropFullDto {
-    #[serde(flatten)]
-    pub meta: PropMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
 }
 
 impl PropStore {
@@ -76,11 +82,21 @@ impl PropStore {
     }
 
     pub fn from_shallow_dto(d: PropShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(PropMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+        })
     }
 
     pub fn from_full_dto(d: PropFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(PropMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+        })
     }
 
     pub fn to_id_dto(&self) -> PropIdDto {
@@ -97,11 +113,23 @@ impl PropStore {
     }
 
     pub fn to_shallow_dto(&self) -> PropShallowDto {
-        PropShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        PropShallowDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+        }
     }
 
     pub fn to_full_dto(&self) -> PropFullDto {
-        PropFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        PropFullDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

@@ -46,14 +46,38 @@ pub struct FileMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct FileShallowDto {
-    #[serde(flatten)]
-    pub meta: FileMetadataDto,
+    pub guid: Guid,
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mime: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct FileFullDto {
-    #[serde(flatten)]
-    pub meta: FileMetadataDto,
+    pub guid: Guid,
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mime: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
 }
 
 impl FileStore {
@@ -100,11 +124,29 @@ impl FileStore {
     }
 
     pub fn from_shallow_dto(d: FileShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(FileMetadataDto {
+            guid: d.guid,
+            url: d.url,
+            mime: d.mime,
+            size: d.size,
+            hash: d.hash,
+            description: d.description,
+            created: d.created,
+            updated: d.updated,
+        })
     }
 
     pub fn from_full_dto(d: FileFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(FileMetadataDto {
+            guid: d.guid,
+            url: d.url,
+            mime: d.mime,
+            size: d.size,
+            hash: d.hash,
+            description: d.description,
+            created: d.created,
+            updated: d.updated,
+        })
     }
 
     pub fn to_id_dto(&self) -> FileIdDto {
@@ -125,11 +167,31 @@ impl FileStore {
     }
 
     pub fn to_shallow_dto(&self) -> FileShallowDto {
-        FileShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        FileShallowDto {
+            guid: m.guid,
+            url: m.url,
+            mime: m.mime,
+            size: m.size,
+            hash: m.hash,
+            description: m.description,
+            created: m.created,
+            updated: m.updated,
+        }
     }
 
     pub fn to_full_dto(&self) -> FileFullDto {
-        FileFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        FileFullDto {
+            guid: m.guid,
+            url: m.url,
+            mime: m.mime,
+            size: m.size,
+            hash: m.hash,
+            description: m.description,
+            created: m.created,
+            updated: m.updated,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

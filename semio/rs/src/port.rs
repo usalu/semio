@@ -55,8 +55,23 @@ pub struct PortMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PortShallowDto {
-    #[serde(flatten)]
-    pub meta: PortMetadataDto,
+    pub guid: Guid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
+    pub compatible_families: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mandatory: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub t: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direction: Option<Vector>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub qualities: Vec<QualityShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -65,8 +80,23 @@ pub struct PortShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PortFullDto {
-    #[serde(flatten)]
-    pub meta: PortMetadataDto,
+    pub guid: Guid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub family: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
+    pub compatible_families: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mandatory: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub t: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub point: Option<Coord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direction: Option<Vector>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub qualities: Vec<QualityFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -126,7 +156,17 @@ impl PortStore {
     }
 
     pub fn from_shallow_dto(d: PortShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(PortMetadataDto {
+            guid: d.guid,
+            id: d.id,
+            family: d.family,
+            compatible_families: d.compatible_families,
+            mandatory: d.mandatory,
+            t: d.t,
+            description: d.description,
+            point: d.point,
+            direction: d.direction,
+        });
         s.qualities = d
             .qualities
             .into_iter()
@@ -137,7 +177,17 @@ impl PortStore {
     }
 
     pub fn from_full_dto(d: PortFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(PortMetadataDto {
+            guid: d.guid,
+            id: d.id,
+            family: d.family,
+            compatible_families: d.compatible_families,
+            mandatory: d.mandatory,
+            t: d.t,
+            description: d.description,
+            point: d.point,
+            direction: d.direction,
+        });
         s.qualities = d
             .qualities
             .into_iter()
@@ -166,8 +216,17 @@ impl PortStore {
     }
 
     pub fn to_shallow_dto(&self) -> PortShallowDto {
+        let m = self.to_metadata_dto();
         PortShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            id: m.id,
+            family: m.family,
+            compatible_families: m.compatible_families,
+            mandatory: m.mandatory,
+            t: m.t,
+            description: m.description,
+            point: m.point,
+            direction: m.direction,
             qualities: self
                 .qualities
                 .iter()
@@ -178,8 +237,17 @@ impl PortStore {
     }
 
     pub fn to_full_dto(&self) -> PortFullDto {
+        let m = self.to_metadata_dto();
         PortFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            id: m.id,
+            family: m.family,
+            compatible_families: m.compatible_families,
+            mandatory: m.mandatory,
+            t: m.t,
+            description: m.description,
+            point: m.point,
+            direction: m.direction,
             qualities: self
                 .qualities
                 .iter()

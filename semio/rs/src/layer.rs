@@ -44,14 +44,34 @@ pub struct LayerMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct LayerShallowDto {
-    #[serde(flatten)]
-    pub meta: LayerMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct LayerFullDto {
-    #[serde(flatten)]
-    pub meta: LayerMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
 }
 
 impl LayerStore {
@@ -98,11 +118,27 @@ impl LayerStore {
     }
 
     pub fn from_shallow_dto(d: LayerShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(LayerMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            order: d.order,
+            visible: d.visible,
+            locked: d.locked,
+        })
     }
 
     pub fn from_full_dto(d: LayerFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(LayerMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            order: d.order,
+            visible: d.visible,
+            locked: d.locked,
+        })
     }
 
     pub fn to_id_dto(&self) -> LayerIdDto {
@@ -122,11 +158,29 @@ impl LayerStore {
     }
 
     pub fn to_shallow_dto(&self) -> LayerShallowDto {
-        LayerShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        LayerShallowDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            color: m.color,
+            order: m.order,
+            visible: m.visible,
+            locked: m.locked,
+        }
     }
 
     pub fn to_full_dto(&self) -> LayerFullDto {
-        LayerFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        LayerFullDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            color: m.color,
+            order: m.order,
+            visible: m.visible,
+            locked: m.locked,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

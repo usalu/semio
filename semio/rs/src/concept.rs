@@ -34,14 +34,22 @@ pub struct ConceptMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConceptShallowDto {
-    #[serde(flatten)]
-    pub meta: ConceptMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConceptFullDto {
-    #[serde(flatten)]
-    pub meta: ConceptMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
 }
 
 impl ConceptStore {
@@ -76,11 +84,21 @@ impl ConceptStore {
     }
 
     pub fn from_shallow_dto(d: ConceptShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(ConceptMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            order: d.order,
+        })
     }
 
     pub fn from_full_dto(d: ConceptFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(ConceptMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            order: d.order,
+        })
     }
 
     pub fn to_id_dto(&self) -> ConceptIdDto {
@@ -97,11 +115,23 @@ impl ConceptStore {
     }
 
     pub fn to_shallow_dto(&self) -> ConceptShallowDto {
-        ConceptShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        ConceptShallowDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            order: m.order,
+        }
     }
 
     pub fn to_full_dto(&self) -> ConceptFullDto {
-        ConceptFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        ConceptFullDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            order: m.order,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

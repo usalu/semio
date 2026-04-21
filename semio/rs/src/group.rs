@@ -42,14 +42,30 @@ pub struct GroupMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct GroupShallowDto {
-    #[serde(flatten)]
-    pub meta: GroupMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pieces: Vec<PieceIdDto>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct GroupFullDto {
-    #[serde(flatten)]
-    pub meta: GroupMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub pieces: Vec<PieceIdDto>,
 }
 
 impl GroupStore {
@@ -93,11 +109,25 @@ impl GroupStore {
     }
 
     pub fn from_shallow_dto(d: GroupShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(GroupMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            icon: d.icon,
+            pieces: d.pieces,
+        })
     }
 
     pub fn from_full_dto(d: GroupFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(GroupMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            description: d.description,
+            color: d.color,
+            icon: d.icon,
+            pieces: d.pieces,
+        })
     }
 
     pub fn to_id_dto(&self) -> GroupIdDto {
@@ -121,11 +151,27 @@ impl GroupStore {
     }
 
     pub fn to_shallow_dto(&self) -> GroupShallowDto {
-        GroupShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        GroupShallowDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            color: m.color,
+            icon: m.icon,
+            pieces: m.pieces,
+        }
     }
 
     pub fn to_full_dto(&self) -> GroupFullDto {
-        GroupFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        GroupFullDto {
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            color: m.color,
+            icon: m.icon,
+            pieces: m.pieces,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

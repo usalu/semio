@@ -99,11 +99,11 @@ impl DesignStore {
         let forward = DesignDiff {
             removed_pieces: removed_pieces
                 .iter()
-                .map(|p| PieceIdDto { guid: p.meta.guid.clone() })
+                .map(|p| PieceIdDto { guid: p.guid.clone() })
                 .collect(),
             removed_connections: removed_connections
                 .iter()
-                .map(|c| ConnectionIdDto { guid: c.meta.guid.clone() })
+                .map(|c| ConnectionIdDto { guid: c.guid.clone() })
                 .collect(),
             ..DesignDiff::default()
         };
@@ -125,8 +125,8 @@ impl DesignStore {
         for piece in &self.pieces {
             if let Ok(p) = piece.read() {
                 let mut dto = p.to_full_dto();
-                dto.meta.plane = Some(p.flat_plane());
-                dto.meta.center = Some(p.flat_center());
+                dto.plane = Some(p.flat_plane());
+                dto.center = Some(p.flat_center());
                 modified_pieces.push(dto);
             }
         }
@@ -134,7 +134,7 @@ impl DesignStore {
         let backward_mod: Vec<PieceFullDto> = before
             .pieces
             .iter()
-            .filter(|p| modified_pieces.iter().any(|m| m.meta.guid == p.meta.guid))
+            .filter(|p| modified_pieces.iter().any(|m| m.guid == p.guid))
             .cloned()
             .collect();
         let backward = DesignDiff { modified_pieces: backward_mod, ..DesignDiff::default() };

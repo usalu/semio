@@ -1888,16 +1888,17 @@ function collectNativeDefinitionFallbackRanges(document: vscode.TextDocument): A
 async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
   const relativePath = getDocumentRelativePath(document);
   if (!relativePath) return [];
-  const shouldDebug = document.uri.fsPath.endsWith("/repo/vscode/extension.ts") || document.uri.fsPath.endsWith("/repo/go/events.go");
   const symbols = (await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>("vscode.executeDocumentSymbolProvider", document.uri)) ?? [];
-  const scopes = new Map<string, vscode.CodeLens>();
+  const lenses: vscode.CodeLens[] = [];
+  const linesSeen = new Set<number>();
 
   const addLens = (name: string, range: vscode.Range): void => {
     if (!name) return;
+    const line = range.start.line;
+    if (linesSeen.has(line)) return;
+    linesSeen.add(line);
     const scope = buildNativeDefinitionScope(relativePath, name);
-    if (scopes.has(scope)) return;
-    scopes.set(
-      scope,
+    lenses.push(
       new vscode.CodeLens(range, {
         title: "Analyze",
         command: "semio.analyze",
@@ -1925,13 +1926,13 @@ async function collectNativeDefinitionCodeLenses(document: vscode.TextDocument, 
     }
   }
 
-  if (scopes.size == 0) {
+  if (lenses.length === 0) {
     for (const fallback of collectNativeDefinitionFallbackRanges(document)) {
       addLens(fallback.name, fallback.range);
     }
   }
 
-  return Array.from(scopes.values());
+  return lenses;
 }
 
 /**

@@ -42,8 +42,12 @@ pub struct RepresentationMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct RepresentationShallowDto {
-    #[serde(flatten)]
-    pub meta: RepresentationMetadataDto,
+    pub guid: Guid,
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<FileIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<TagShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -54,8 +58,12 @@ pub struct RepresentationShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct RepresentationFullDto {
-    #[serde(flatten)]
-    pub meta: RepresentationMetadataDto,
+    pub guid: Guid,
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file: Option<FileIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<TagFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -108,7 +116,12 @@ impl RepresentationStore {
     }
 
     pub fn from_shallow_dto(d: RepresentationShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
+            guid: d.guid,
+            url: d.url,
+            description: d.description,
+            file: d.file,
+        });
         s.tags = d.tags.into_iter().map(TagStore::from_shallow_dto).collect();
         s.qualities = d
             .qualities
@@ -120,7 +133,12 @@ impl RepresentationStore {
     }
 
     pub fn from_full_dto(d: RepresentationFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
+            guid: d.guid,
+            url: d.url,
+            description: d.description,
+            file: d.file,
+        });
         s.tags = d.tags.into_iter().map(TagStore::from_full_dto).collect();
         s.qualities = d
             .qualities
@@ -146,8 +164,12 @@ impl RepresentationStore {
     }
 
     pub fn to_shallow_dto(&self) -> RepresentationShallowDto {
+        let m = self.to_metadata_dto();
         RepresentationShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            url: m.url,
+            description: m.description,
+            file: m.file,
             tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
             qualities: self
                 .qualities
@@ -159,8 +181,12 @@ impl RepresentationStore {
     }
 
     pub fn to_full_dto(&self) -> RepresentationFullDto {
+        let m = self.to_metadata_dto();
         RepresentationFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            url: m.url,
+            description: m.description,
+            file: m.file,
             tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
             qualities: self
                 .qualities

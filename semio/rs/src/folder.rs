@@ -31,14 +31,18 @@ pub struct FolderMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct FolderShallowDto {
-    #[serde(flatten)]
-    pub meta: FolderMetadataDto,
+    pub guid: Guid,
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct FolderFullDto {
-    #[serde(flatten)]
-    pub meta: FolderMetadataDto,
+    pub guid: Guid,
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 impl FolderStore {
@@ -70,11 +74,19 @@ impl FolderStore {
     }
 
     pub fn from_shallow_dto(d: FolderShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(FolderMetadataDto {
+            guid: d.guid,
+            path: d.path,
+            description: d.description,
+        })
     }
 
     pub fn from_full_dto(d: FolderFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(FolderMetadataDto {
+            guid: d.guid,
+            path: d.path,
+            description: d.description,
+        })
     }
 
     pub fn to_id_dto(&self) -> FolderIdDto {
@@ -90,11 +102,21 @@ impl FolderStore {
     }
 
     pub fn to_shallow_dto(&self) -> FolderShallowDto {
-        FolderShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        FolderShallowDto {
+            guid: m.guid,
+            path: m.path,
+            description: m.description,
+        }
     }
 
     pub fn to_full_dto(&self) -> FolderFullDto {
-        FolderFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        FolderFullDto {
+            guid: m.guid,
+            path: m.path,
+            description: m.description,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

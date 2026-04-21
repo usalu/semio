@@ -41,8 +41,12 @@ pub struct ConnectorMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectorShallowDto {
-    #[serde(flatten)]
-    pub meta: ConnectorMetadataDto,
+    pub guid: Guid,
+    pub code: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<PortIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub qualities: Vec<QualityShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -51,8 +55,12 @@ pub struct ConnectorShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectorFullDto {
-    #[serde(flatten)]
-    pub meta: ConnectorMetadataDto,
+    pub guid: Guid,
+    pub code: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<PortIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub qualities: Vec<QualityFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -100,7 +108,12 @@ impl ConnectorStore {
     }
 
     pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
+            guid: d.guid,
+            code: d.code,
+            description: d.description,
+            port: d.port,
+        });
         s.qualities = d
             .qualities
             .into_iter()
@@ -111,7 +124,12 @@ impl ConnectorStore {
     }
 
     pub fn from_full_dto(d: ConnectorFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
+            guid: d.guid,
+            code: d.code,
+            description: d.description,
+            port: d.port,
+        });
         s.qualities = d
             .qualities
             .into_iter()
@@ -136,8 +154,12 @@ impl ConnectorStore {
     }
 
     pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
+        let m = self.to_metadata_dto();
         ConnectorShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            code: m.code,
+            description: m.description,
+            port: m.port,
             qualities: self
                 .qualities
                 .iter()
@@ -148,8 +170,12 @@ impl ConnectorStore {
     }
 
     pub fn to_full_dto(&self) -> ConnectorFullDto {
+        let m = self.to_metadata_dto();
         ConnectorFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            code: m.code,
+            description: m.description,
+            port: m.port,
             qualities: self
                 .qualities
                 .iter()

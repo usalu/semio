@@ -237,15 +237,19 @@ function collectNativeDefinitionFallbackScopes(document: vscode.TextDocument): s
 async function collectNativeDefinitionScopes(document: vscode.TextDocument): Promise<string[]> {
   const relativePath = getDocumentRelativePath(document);
   const symbols = (await vscode.commands.executeCommand<Array<vscode.DocumentSymbol | vscode.SymbolInformation>>("vscode.executeDocumentSymbolProvider", document.uri)) ?? [];
-  const scopes = new Set<string>();
+  const scopes: string[] = [];
+  const linesSeen = new Set<number>();
 
-  const addScope = (name: string, kind: vscode.SymbolKind): void => {
+  const addScope = (name: string, kind: vscode.SymbolKind, range: vscode.Range): void => {
     if (!name || !NATIVE_DEFINITION_SYMBOL_KINDS.has(kind)) return;
-    scopes.add(`${relativePath}§${name}`);
+    const line = range.start.line;
+    if (linesSeen.has(line)) return;
+    linesSeen.add(line);
+    scopes.push(`${relativePath}§${name}`);
   };
 
   const visitDocumentSymbol = (symbol: vscode.DocumentSymbol): void => {
-    addScope(symbol.name, symbol.kind);
+    addScope(symbol.name, symbol.kind, symbol.selectionRange);
     for (const child of symbol.children) {
       visitDocumentSymbol(child);
     }
@@ -255,15 +259,15 @@ async function collectNativeDefinitionScopes(document: vscode.TextDocument): Pro
     if (isDocumentSymbol(symbol)) {
       visitDocumentSymbol(symbol);
     } else {
-      addScope(symbol.name, symbol.kind);
+      addScope(symbol.name, symbol.kind, symbol.location.range);
     }
   }
 
-  if (scopes.size === 0) {
+  if (scopes.length === 0) {
     return collectNativeDefinitionFallbackScopes(document);
   }
 
-  return Array.from(scopes);
+  return scopes;
 }
 
 async function getAnalyzeLensIds(document: vscode.TextDocument): Promise<string[]> {

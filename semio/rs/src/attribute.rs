@@ -33,14 +33,20 @@ pub struct AttributeMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct AttributeShallowDto {
-    #[serde(flatten)]
-    pub meta: AttributeMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct AttributeFullDto {
-    #[serde(flatten)]
-    pub meta: AttributeMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
 }
 
 impl AttributeStore {
@@ -75,11 +81,21 @@ impl AttributeStore {
     }
 
     pub fn from_shallow_dto(d: AttributeShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(AttributeMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            definition: d.definition,
+        })
     }
 
     pub fn from_full_dto(d: AttributeFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(AttributeMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            definition: d.definition,
+        })
     }
 
     pub fn to_id_dto(&self) -> AttributeIdDto {
@@ -96,11 +112,23 @@ impl AttributeStore {
     }
 
     pub fn to_shallow_dto(&self) -> AttributeShallowDto {
-        AttributeShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        AttributeShallowDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            definition: m.definition,
+        }
     }
 
     pub fn to_full_dto(&self) -> AttributeFullDto {
-        AttributeFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        AttributeFullDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            definition: m.definition,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

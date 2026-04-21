@@ -14,6 +14,16 @@ Erstellen Sie einen Baum von Themen, nur Namen keine Beschreibung zu allen theme
 
 ---
 
+1.
+
+Analysieren Sie das Software-Ecosystem One-Click-LCA (https://oneclicklca.com/).
+
+2.
+
+Finden Sie alle Quellen zu Features, Handbücher, Tutorials, Videos, Beispiele,
+
+---
+
 Erstellen Sie einen Bericht mit den
 
 ---

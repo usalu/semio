@@ -78,8 +78,28 @@ pub struct TypeMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct TypeShallowDto {
-    #[serde(flatten)]
-    pub meta: TypeMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stock: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual")]
+    pub virtual_: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ports: Vec<PortShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -102,8 +122,28 @@ pub struct TypeShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct TypeFullDto {
-    #[serde(flatten)]
-    pub meta: TypeMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stock: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual")]
+    pub virtual_: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub ports: Vec<PortFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -291,7 +331,18 @@ impl TypeStore {
     /// Hydrate type graph from full DTO (ports, connectors, representations, kit link).
     pub fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef]) -> TypeStoreRef {
         let TypeFullDto {
-            meta,
+            guid,
+            name,
+            description,
+            icon,
+            image,
+            variant,
+            stock,
+            virtual_,
+            unit,
+            location,
+            created,
+            updated,
             ports,
             connectors,
             representations,
@@ -304,16 +355,16 @@ impl TypeStore {
         } = d;
 
         let t = Arc::new(RwLock::new(TypeStore {
-            guid: meta.guid.clone(),
-            name: meta.name.clone(),
-            description: meta.description.clone(),
-            icon: meta.icon.clone(),
-            image: meta.image.clone(),
-            variant: meta.variant.clone(),
-            stock: meta.stock,
-            virtual_: meta.virtual_,
-            unit: meta.unit.clone(),
-            location: meta.location,
+            guid: guid.clone(),
+            name: name.clone(),
+            description: description.clone(),
+            icon: icon.clone(),
+            image: image.clone(),
+            variant: variant.clone(),
+            stock,
+            virtual_,
+            unit: unit.clone(),
+            location,
             ports: Vec::new(),
             connectors: Vec::new(),
             representations: Vec::new(),
@@ -326,8 +377,8 @@ impl TypeStore {
                 .collect(),
             props: props.into_iter().map(PropStore::from_full_dto).collect(),
             attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
-            created: meta.created.clone(),
-            updated: meta.updated.clone(),
+            created: created.clone(),
+            updated: updated.clone(),
             parent_kit: Arc::downgrade(kit),
             hash_cache: OnceLock::new(),
         }));
@@ -339,7 +390,7 @@ impl TypeStore {
 
         let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
         for cdto in connectors {
-            let port_guid = cdto.meta.port.as_ref().map(|p| p.guid.clone());
+            let port_guid = cdto.port.as_ref().map(|p| p.guid.clone());
             let mut c = ConnectorStore::from_full_dto(cdto);
             c.parent_type = Arc::downgrade(&t);
             if let Some(pg) = port_guid {
@@ -352,7 +403,7 @@ impl TypeStore {
 
         let mut rep_refs: Vec<RepresentationStoreRef> = Vec::with_capacity(representations.len());
         for rdto in representations {
-            let file_guid = rdto.meta.file.as_ref().map(|f| f.guid.clone());
+            let file_guid = rdto.file.as_ref().map(|f| f.guid.clone());
             let mut r = RepresentationStore::from_full_dto(rdto);
             r.parent_type = Arc::downgrade(&t);
             if let Some(fg) = file_guid {
@@ -393,8 +444,20 @@ impl TypeStore {
     }
 
     pub fn to_shallow_dto(&self) -> TypeShallowDto {
+        let m = self.to_metadata_dto();
         TypeShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            variant: m.variant,
+            stock: m.stock,
+            virtual_: m.virtual_,
+            unit: m.unit,
+            location: m.location,
+            created: m.created,
+            updated: m.updated,
             ports: self
                 .ports
                 .iter()
@@ -424,8 +487,20 @@ impl TypeStore {
     }
 
     pub fn to_full_dto(&self) -> TypeFullDto {
+        let m = self.to_metadata_dto();
         TypeFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            variant: m.variant,
+            stock: m.stock,
+            virtual_: m.virtual_,
+            unit: m.unit,
+            location: m.location,
+            created: m.created,
+            updated: m.updated,
             ports: self
                 .ports
                 .iter()

@@ -33,14 +33,22 @@ pub struct SideMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct SideShallowDto {
-    #[serde(flatten)]
-    pub meta: SideMetadataDto,
+    pub guid: Guid,
+    pub piece: crate::piece::PieceIdDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<crate::port::PortIdDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
+    pub design_piece: Option<crate::piece::PieceIdDto>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct SideFullDto {
-    #[serde(flatten)]
-    pub meta: SideMetadataDto,
+    pub guid: Guid,
+    pub piece: crate::piece::PieceIdDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port: Option<crate::port::PortIdDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
+    pub design_piece: Option<crate::piece::PieceIdDto>,
 }
 
 impl SideStore {
@@ -81,11 +89,21 @@ impl SideStore {
     }
 
     pub fn from_shallow_dto(d: SideShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(SideMetadataDto {
+            guid: d.guid,
+            piece: d.piece,
+            port: d.port,
+            design_piece: d.design_piece,
+        })
     }
 
     pub fn from_full_dto(d: SideFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(SideMetadataDto {
+            guid: d.guid,
+            piece: d.piece,
+            port: d.port,
+            design_piece: d.design_piece,
+        })
     }
 
     pub fn to_id_dto(&self) -> SideIdDto {
@@ -113,11 +131,23 @@ impl SideStore {
     }
 
     pub fn to_shallow_dto(&self) -> SideShallowDto {
-        SideShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        SideShallowDto {
+            guid: m.guid,
+            piece: m.piece,
+            port: m.port,
+            design_piece: m.design_piece,
+        }
     }
 
     pub fn to_full_dto(&self) -> SideFullDto {
-        SideFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        SideFullDto {
+            guid: m.guid,
+            piece: m.piece,
+            port: m.port,
+            design_piece: m.design_piece,
+        }
     }
 
     pub fn hash_into(&self, w: &mut HashWriter) {

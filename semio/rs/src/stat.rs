@@ -36,14 +36,24 @@ pub struct StatMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct StatShallowDto {
-    #[serde(flatten)]
-    pub meta: StatMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct StatFullDto {
-    #[serde(flatten)]
-    pub meta: StatMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    pub value: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 impl StatStore {
@@ -81,11 +91,23 @@ impl StatStore {
     }
 
     pub fn from_shallow_dto(d: StatShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(StatMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+            description: d.description,
+        })
     }
 
     pub fn from_full_dto(d: StatFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(StatMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+            description: d.description,
+        })
     }
 
     pub fn to_id_dto(&self) -> StatIdDto {
@@ -103,11 +125,25 @@ impl StatStore {
     }
 
     pub fn to_shallow_dto(&self) -> StatShallowDto {
-        StatShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        StatShallowDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+            description: m.description,
+        }
     }
 
     pub fn to_full_dto(&self) -> StatFullDto {
-        StatFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        StatFullDto {
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+            description: m.description,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

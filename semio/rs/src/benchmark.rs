@@ -40,14 +40,30 @@ pub struct BenchmarkMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct BenchmarkShallowDto {
-    #[serde(flatten)]
-    pub meta: BenchmarkMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
+    pub min_excluded: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
+    pub max_excluded: Option<bool>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct BenchmarkFullDto {
-    #[serde(flatten)]
-    pub meta: BenchmarkMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
+    pub min_excluded: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
+    pub max_excluded: Option<bool>,
 }
 
 impl BenchmarkStore {
@@ -76,11 +92,25 @@ impl BenchmarkStore {
     }
 
     pub fn from_shallow_dto(d: BenchmarkShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(BenchmarkMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            min: d.min,
+            max: d.max,
+            min_excluded: d.min_excluded,
+            max_excluded: d.max_excluded,
+        })
     }
 
     pub fn from_full_dto(d: BenchmarkFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(BenchmarkMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            min: d.min,
+            max: d.max,
+            min_excluded: d.min_excluded,
+            max_excluded: d.max_excluded,
+        })
     }
 
     pub fn to_id_dto(&self) -> BenchmarkIdDto {
@@ -99,11 +129,27 @@ impl BenchmarkStore {
     }
 
     pub fn to_shallow_dto(&self) -> BenchmarkShallowDto {
-        BenchmarkShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        BenchmarkShallowDto {
+            guid: m.guid,
+            name: m.name,
+            min: m.min,
+            max: m.max,
+            min_excluded: m.min_excluded,
+            max_excluded: m.max_excluded,
+        }
     }
 
     pub fn to_full_dto(&self) -> BenchmarkFullDto {
-        BenchmarkFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        BenchmarkFullDto {
+            guid: m.guid,
+            name: m.name,
+            min: m.min,
+            max: m.max,
+            min_excluded: m.min_excluded,
+            max_excluded: m.max_excluded,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

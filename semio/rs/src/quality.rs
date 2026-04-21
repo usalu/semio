@@ -42,16 +42,32 @@ pub struct QualityMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct QualityShallowDto {
-    #[serde(flatten)]
-    pub meta: QualityMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub benchmarks: Vec<BenchmarkMetadataDto>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct QualityFullDto {
-    #[serde(flatten)]
-    pub meta: QualityMetadataDto,
+    pub guid: Guid,
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub definition: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub benchmarks: Vec<BenchmarkFullDto>,
 }
@@ -97,13 +113,27 @@ impl QualityStore {
     }
 
     pub fn from_shallow_dto(d: QualityShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(QualityMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+            definition: d.definition,
+            description: d.description,
+        });
         s.benchmarks = d.benchmarks.into_iter().map(BenchmarkStore::from_metadata_dto).collect();
         s
     }
 
     pub fn from_full_dto(d: QualityFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(QualityMetadataDto {
+            guid: d.guid,
+            key: d.key,
+            value: d.value,
+            unit: d.unit,
+            definition: d.definition,
+            description: d.description,
+        });
         s.benchmarks = d.benchmarks.into_iter().map(BenchmarkStore::from_full_dto).collect();
         s
     }
@@ -124,15 +154,27 @@ impl QualityStore {
     }
 
     pub fn to_shallow_dto(&self) -> QualityShallowDto {
+        let m = self.to_metadata_dto();
         QualityShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+            definition: m.definition,
+            description: m.description,
             benchmarks: self.benchmarks.iter().map(BenchmarkStore::to_metadata_dto).collect(),
         }
     }
 
     pub fn to_full_dto(&self) -> QualityFullDto {
+        let m = self.to_metadata_dto();
         QualityFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            key: m.key,
+            value: m.value,
+            unit: m.unit,
+            definition: m.definition,
+            description: m.description,
             benchmarks: self.benchmarks.iter().map(BenchmarkStore::to_full_dto).collect(),
         }
     }

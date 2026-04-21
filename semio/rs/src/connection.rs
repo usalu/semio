@@ -61,16 +61,54 @@ pub struct ConnectionMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectionShallowDto {
-    #[serde(flatten)]
-    pub meta: ConnectionMetadataDto,
+    pub guid: Guid,
+    pub connected: crate::side::SideMetadataDto,
+    pub connecting: crate::side::SideMetadataDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gap: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rise: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turn: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tilt: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attributes: Vec<AttributeShallowDto>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct ConnectionFullDto {
-    #[serde(flatten)]
-    pub meta: ConnectionMetadataDto,
+    pub guid: Guid,
+    pub connected: crate::side::SideMetadataDto,
+    pub connecting: crate::side::SideMetadataDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub gap: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shift: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rise: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rotation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub turn: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tilt: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub x: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub y: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub attributes: Vec<AttributeFullDto>,
 }
@@ -137,13 +175,39 @@ impl ConnectionStore {
     }
 
     pub fn from_shallow_dto(d: ConnectionShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(ConnectionMetadataDto {
+            guid: d.guid,
+            connected: d.connected,
+            connecting: d.connecting,
+            gap: d.gap,
+            shift: d.shift,
+            rise: d.rise,
+            rotation: d.rotation,
+            turn: d.turn,
+            tilt: d.tilt,
+            x: d.x,
+            y: d.y,
+            description: d.description,
+        });
         s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
         s
     }
 
     pub fn from_full_dto(d: ConnectionFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(ConnectionMetadataDto {
+            guid: d.guid,
+            connected: d.connected,
+            connecting: d.connecting,
+            gap: d.gap,
+            shift: d.shift,
+            rise: d.rise,
+            rotation: d.rotation,
+            turn: d.turn,
+            tilt: d.tilt,
+            x: d.x,
+            y: d.y,
+            description: d.description,
+        });
         s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
         s
     }
@@ -170,15 +234,39 @@ impl ConnectionStore {
     }
 
     pub fn to_shallow_dto(&self) -> ConnectionShallowDto {
+        let m = self.to_metadata_dto();
         ConnectionShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            connected: m.connected,
+            connecting: m.connecting,
+            gap: m.gap,
+            shift: m.shift,
+            rise: m.rise,
+            rotation: m.rotation,
+            turn: m.turn,
+            tilt: m.tilt,
+            x: m.x,
+            y: m.y,
+            description: m.description,
             attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
         }
     }
 
     pub fn to_full_dto(&self) -> ConnectionFullDto {
+        let m = self.to_metadata_dto();
         ConnectionFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            connected: m.connected,
+            connecting: m.connecting,
+            gap: m.gap,
+            shift: m.shift,
+            rise: m.rise,
+            rotation: m.rotation,
+            turn: m.turn,
+            tilt: m.tilt,
+            x: m.x,
+            y: m.y,
+            description: m.description,
             attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
         }
     }

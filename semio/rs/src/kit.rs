@@ -83,8 +83,30 @@ pub struct KitMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct KitShallowDto {
-    #[serde(flatten)]
-    pub meta: KitMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub homepage: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uri: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub types: Vec<crate::typ::TypeShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -109,8 +131,30 @@ pub struct KitShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct KitFullDto {
-    #[serde(flatten)]
-    pub meta: KitMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preview: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub homepage: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub license: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub uri: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub types: Vec<TypeFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -369,7 +413,19 @@ impl KitStore {
     /// Hydrate the full kit graph from a [`KitFullDto`].
     pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
         let KitFullDto {
-            meta,
+            guid,
+            name,
+            description,
+            icon,
+            image,
+            preview,
+            version,
+            remote,
+            homepage,
+            license,
+            uri,
+            created,
+            updated,
             types,
             designs,
             files,
@@ -383,19 +439,19 @@ impl KitStore {
         } = d;
 
         let kit = Arc::new(RwLock::new(KitStore {
-            guid: meta.guid.clone(),
-            name: meta.name.clone(),
-            description: meta.description.clone(),
-            icon: meta.icon.clone(),
-            image: meta.image.clone(),
-            preview: meta.preview.clone(),
-            version: meta.version.clone(),
-            remote: meta.remote.clone(),
-            homepage: meta.homepage.clone(),
-            license: meta.license.clone(),
-            uri: meta.uri.clone(),
-            created: meta.created.clone(),
-            updated: meta.updated.clone(),
+            guid: guid.clone(),
+            name: name.clone(),
+            description: description.clone(),
+            icon: icon.clone(),
+            image: image.clone(),
+            preview: preview.clone(),
+            version: version.clone(),
+            remote: remote.clone(),
+            homepage: homepage.clone(),
+            license: license.clone(),
+            uri: uri.clone(),
+            created: created.clone(),
+            updated: updated.clone(),
             types: Vec::new(),
             designs: Vec::new(),
             files: Vec::new(),
@@ -474,8 +530,21 @@ impl KitStore {
     }
 
     pub fn to_shallow_dto(&self) -> KitShallowDto {
+        let m = self.to_metadata_dto();
         KitShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            preview: m.preview,
+            version: m.version,
+            remote: m.remote,
+            homepage: m.homepage,
+            license: m.license,
+            uri: m.uri,
+            created: m.created,
+            updated: m.updated,
             types: self
                 .types
                 .iter()
@@ -510,8 +579,21 @@ impl KitStore {
     }
 
     pub fn to_full_dto(&self) -> KitFullDto {
+        let m = self.to_metadata_dto();
         KitFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            preview: m.preview,
+            version: m.version,
+            remote: m.remote,
+            homepage: m.homepage,
+            license: m.license,
+            uri: m.uri,
+            created: m.created,
+            updated: m.updated,
             types: self
                 .types
                 .iter()

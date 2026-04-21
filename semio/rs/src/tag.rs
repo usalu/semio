@@ -31,14 +31,18 @@ pub struct TagMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct TagShallowDto {
-    #[serde(flatten)]
-    pub meta: TagMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct TagFullDto {
-    #[serde(flatten)]
-    pub meta: TagMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub order: Option<i64>,
 }
 
 impl TagStore {
@@ -70,11 +74,19 @@ impl TagStore {
     }
 
     pub fn from_shallow_dto(d: TagShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(TagMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            order: d.order,
+        })
     }
 
     pub fn from_full_dto(d: TagFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(TagMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            order: d.order,
+        })
     }
 
     pub fn to_id_dto(&self) -> TagIdDto {
@@ -90,11 +102,21 @@ impl TagStore {
     }
 
     pub fn to_shallow_dto(&self) -> TagShallowDto {
-        TagShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        TagShallowDto {
+            guid: m.guid,
+            name: m.name,
+            order: m.order,
+        }
     }
 
     pub fn to_full_dto(&self) -> TagFullDto {
-        TagFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        TagFullDto {
+            guid: m.guid,
+            name: m.name,
+            order: m.order,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

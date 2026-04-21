@@ -36,14 +36,24 @@ pub struct AuthorMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct AuthorShallowDto {
-    #[serde(flatten)]
-    pub meta: AuthorMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    pub email: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rank: Option<i64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct AuthorFullDto {
-    #[serde(flatten)]
-    pub meta: AuthorMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    pub email: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rank: Option<i64>,
 }
 
 impl AuthorStore {
@@ -81,11 +91,23 @@ impl AuthorStore {
     }
 
     pub fn from_shallow_dto(d: AuthorShallowDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(AuthorMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            email: d.email,
+            role: d.role,
+            rank: d.rank,
+        })
     }
 
     pub fn from_full_dto(d: AuthorFullDto) -> Self {
-        Self::from_metadata_dto(d.meta)
+        Self::from_metadata_dto(AuthorMetadataDto {
+            guid: d.guid,
+            name: d.name,
+            email: d.email,
+            role: d.role,
+            rank: d.rank,
+        })
     }
 
     pub fn to_id_dto(&self) -> AuthorIdDto {
@@ -103,11 +125,25 @@ impl AuthorStore {
     }
 
     pub fn to_shallow_dto(&self) -> AuthorShallowDto {
-        AuthorShallowDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        AuthorShallowDto {
+            guid: m.guid,
+            name: m.name,
+            email: m.email,
+            role: m.role,
+            rank: m.rank,
+        }
     }
 
     pub fn to_full_dto(&self) -> AuthorFullDto {
-        AuthorFullDto { meta: self.to_metadata_dto() }
+        let m = self.to_metadata_dto();
+        AuthorFullDto {
+            guid: m.guid,
+            name: m.name,
+            email: m.email,
+            role: m.role,
+            rank: m.rank,
+        }
     }
 
     pub fn invalidate_hash(&mut self) {

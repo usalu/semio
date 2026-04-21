@@ -86,8 +86,30 @@ pub struct DesignMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct DesignShallowDto {
-    #[serde(flatten)]
-    pub meta: DesignMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub view: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Camera>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kit: Option<crate::kit::KitIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub pieces: Vec<PieceShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -114,8 +136,30 @@ pub struct DesignShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct DesignFullDto {
-    #[serde(flatten)]
-    pub meta: DesignMetadataDto,
+    pub guid: Guid,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub image: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub view: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub location: Option<Location>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Camera>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updated: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kit: Option<crate::kit::KitIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub pieces: Vec<PieceFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -365,7 +409,19 @@ impl DesignStore {
     /// Build a fully hydrated design from `DesignFullDto`, wiring graph pointers.
     pub fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Guid, TypeStoreRef>) -> DesignStoreRef {
         let DesignFullDto {
-            meta,
+            guid,
+            name,
+            description,
+            icon,
+            image,
+            variant,
+            view,
+            location,
+            camera,
+            unit,
+            created,
+            updated,
+            kit: _,
             pieces,
             connections,
             layers,
@@ -380,16 +436,16 @@ impl DesignStore {
         } = d;
 
         let design = Arc::new(RwLock::new(DesignStore {
-            guid: meta.guid.clone(),
-            name: meta.name.clone(),
-            description: meta.description.clone(),
-            icon: meta.icon.clone(),
-            image: meta.image.clone(),
-            variant: meta.variant.clone(),
-            view: meta.view.clone(),
-            location: meta.location,
-            camera: meta.camera,
-            unit: meta.unit.clone(),
+            guid: guid.clone(),
+            name: name.clone(),
+            description: description.clone(),
+            icon: icon.clone(),
+            image: image.clone(),
+            variant: variant.clone(),
+            view: view.clone(),
+            location,
+            camera,
+            unit: unit.clone(),
             pieces: Vec::new(),
             connections: Vec::new(),
             layers: Vec::new(),
@@ -404,8 +460,8 @@ impl DesignStore {
             props: props.into_iter().map(PropStore::from_full_dto).collect(),
             attributes: attributes.into_iter().map(AttributeStore::from_full_dto).collect(),
             stats: stats.into_iter().map(StatStore::from_full_dto).collect(),
-            created: meta.created.clone(),
-            updated: meta.updated.clone(),
+            created: created.clone(),
+            updated: updated.clone(),
             parent_kit: Weak::new(),
             hash_cache: OnceLock::new(),
         }));
@@ -413,7 +469,7 @@ impl DesignStore {
         let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
         let mut piece_refs: Vec<PieceStoreRef> = Vec::new();
         for pdto in pieces {
-            let type_guid = pdto.meta.r#type.as_ref().map(|t| t.guid.clone());
+            let type_guid = pdto.r#type.as_ref().map(|t| t.guid.clone());
             let mut piece = PieceStore::from_full_dto(pdto);
             piece.parent_design = Arc::downgrade(&design);
             if let Some(tg) = type_guid {
@@ -429,8 +485,8 @@ impl DesignStore {
 
         let mut connection_refs: Vec<ConnectionStoreRef> = Vec::with_capacity(connections.len());
         for cdto in connections {
-            let connected_meta = cdto.meta.connected.clone();
-            let connecting_meta = cdto.meta.connecting.clone();
+            let connected_meta = cdto.connected.clone();
+            let connecting_meta = cdto.connecting.clone();
             let mut c = ConnectionStore::from_full_dto(cdto);
             c.parent_design = Arc::downgrade(&design);
             if let Some(p) = piece_index.get(&connected_meta.piece.guid) {
@@ -486,7 +542,7 @@ impl DesignStore {
         let group_refs: Vec<GroupStoreRef> = groups
             .into_iter()
             .map(|g| {
-                let pids: Vec<Guid> = g.meta.pieces.iter().map(|p| p.guid.clone()).collect();
+                let pids: Vec<Guid> = g.pieces.iter().map(|p| p.guid.clone()).collect();
                 let mut group = GroupStore::from_full_dto(g);
                 group.parent_design = Arc::downgrade(&design);
                 for pid in pids {
@@ -534,8 +590,21 @@ impl DesignStore {
     }
 
     pub fn to_shallow_dto(&self) -> DesignShallowDto {
+        let m = self.to_metadata_dto();
         DesignShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            variant: m.variant,
+            view: m.view,
+            location: m.location,
+            camera: m.camera,
+            unit: m.unit,
+            created: m.created,
+            updated: m.updated,
+            kit: m.kit,
             pieces: self
                 .pieces
                 .iter()
@@ -571,8 +640,21 @@ impl DesignStore {
     }
 
     pub fn to_full_dto(&self) -> DesignFullDto {
+        let m = self.to_metadata_dto();
         DesignFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            name: m.name,
+            description: m.description,
+            icon: m.icon,
+            image: m.image,
+            variant: m.variant,
+            view: m.view,
+            location: m.location,
+            camera: m.camera,
+            unit: m.unit,
+            created: m.created,
+            updated: m.updated,
+            kit: m.kit,
             pieces: self
                 .pieces
                 .iter()

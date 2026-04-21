@@ -1,0 +1,12 @@
+{
+  "title": "Dedupe Analyze Code Lens Per Line",
+  "status": "open",
+  "description": "The \"Analyze\" CodeLens in the VSCode extension renders multiple times above a single physical line when that line contains multiple top-level declarators (e.g. `export const a = ..., b = ..., c = ...;`). Every top-level definition should show one Analyze lens for all supported languages, but a single line must not produce multiple stacked lenses. Fix `collectNativeDefinitionCodeLenses` in `repo/vscode/extension.ts` to dedupe by line instead of by scope.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1369"
+  },
+  "goal": "🎯reporepovscodeextension",
+  "sessions": [
+    "⚪676136b047834c0e8526cac0695aaa95"
+  ]
+}

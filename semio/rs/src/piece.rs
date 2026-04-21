@@ -71,8 +71,31 @@ pub struct PieceMetadataDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PieceShallowDto {
-    #[serde(flatten)]
-    pub meta: PieceMetadataDto,
+    pub guid: Guid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plane: Option<Plane>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub center: Option<Coord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
+    pub mirror_plane: Option<Plane>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hidden: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
+    pub r#type: Option<TypeIdDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design: Option<crate::design::DesignIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub props: Vec<PropShallowDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -81,8 +104,31 @@ pub struct PieceShallowDto {
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct PieceFullDto {
-    #[serde(flatten)]
-    pub meta: PieceMetadataDto,
+    pub guid: Guid,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plane: Option<Plane>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub center: Option<Coord>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
+    pub mirror_plane: Option<Plane>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hidden: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none", rename = "type")]
+    pub r#type: Option<TypeIdDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub design: Option<crate::design::DesignIdDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub props: Vec<PropFullDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -311,14 +357,42 @@ impl PieceStore {
     }
 
     pub fn from_shallow_dto(d: PieceShallowDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(PieceMetadataDto {
+            guid: d.guid,
+            id: d.id,
+            name: d.name,
+            description: d.description,
+            plane: d.plane,
+            center: d.center,
+            scale: d.scale,
+            mirror_plane: d.mirror_plane,
+            hidden: d.hidden,
+            locked: d.locked,
+            color: d.color,
+            r#type: d.r#type,
+            design: d.design,
+        });
         s.props = d.props.into_iter().map(PropStore::from_shallow_dto).collect();
         s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
         s
     }
 
     pub fn from_full_dto(d: PieceFullDto) -> Self {
-        let mut s = Self::from_metadata_dto(d.meta);
+        let mut s = Self::from_metadata_dto(PieceMetadataDto {
+            guid: d.guid,
+            id: d.id,
+            name: d.name,
+            description: d.description,
+            plane: d.plane,
+            center: d.center,
+            scale: d.scale,
+            mirror_plane: d.mirror_plane,
+            hidden: d.hidden,
+            locked: d.locked,
+            color: d.color,
+            r#type: d.r#type,
+            design: d.design,
+        });
         s.props = d.props.into_iter().map(PropStore::from_full_dto).collect();
         s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
         s
@@ -356,16 +430,42 @@ impl PieceStore {
     }
 
     pub fn to_shallow_dto(&self) -> PieceShallowDto {
+        let m = self.to_metadata_dto();
         PieceShallowDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            id: m.id,
+            name: m.name,
+            description: m.description,
+            plane: m.plane,
+            center: m.center,
+            scale: m.scale,
+            mirror_plane: m.mirror_plane,
+            hidden: m.hidden,
+            locked: m.locked,
+            color: m.color,
+            r#type: m.r#type,
+            design: m.design,
             props: self.props.iter().map(PropStore::to_shallow_dto).collect(),
             attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
         }
     }
 
     pub fn to_full_dto(&self) -> PieceFullDto {
+        let m = self.to_metadata_dto();
         PieceFullDto {
-            meta: self.to_metadata_dto(),
+            guid: m.guid,
+            id: m.id,
+            name: m.name,
+            description: m.description,
+            plane: m.plane,
+            center: m.center,
+            scale: m.scale,
+            mirror_plane: m.mirror_plane,
+            hidden: m.hidden,
+            locked: m.locked,
+            color: m.color,
+            r#type: m.r#type,
+            design: m.design,
             props: self.props.iter().map(PropStore::to_full_dto).collect(),
             attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
         }
