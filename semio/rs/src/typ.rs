@@ -2,10 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+use crate::geom::Location;
 use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
 use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
 use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
-use crate::geom::Location;
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
@@ -42,6 +43,7 @@ pub struct TypeStore {
     pub created: Option<String>,
     pub updated: Option<String>,
     pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -189,12 +191,181 @@ impl TypeStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
 
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Type, self.guid.clone())
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(k) = self.parent_kit.upgrade() {
+            if let Ok(kr) = k.read() {
+                kr.invalidate_hash();
+            }
+        }
+    }
+
+    pub fn invalidate_validation(&self) {
+        if let Some(k) = self.parent_kit.upgrade() {
+            if let Ok(kr) = k.read() {
+                kr.invalidate_validation();
+            }
+        }
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
+        self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_icon(&mut self, v: Option<String>) {
+        if self.icon == v {
+            return;
+        }
+        self.icon = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "icon",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_image(&mut self, v: Option<String>) {
+        if self.image == v {
+            return;
+        }
+        self.image = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "image",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_variant(&mut self, v: Option<String>) {
+        if self.variant == v {
+            return;
+        }
+        self.variant = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "variant",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_stock(&mut self, v: Option<i64>) {
+        if self.stock == v {
+            return;
+        }
+        self.stock = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "stock",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_virtual(&mut self, v: Option<bool>) {
+        if self.virtual_ == v {
+            return;
+        }
+        self.virtual_ = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "virtual",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_unit(&mut self, v: Option<String>) {
+        if self.unit == v {
+            return;
+        }
+        self.unit = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "unit",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_location(&mut self, v: Option<Location>) {
+        if self.location == v {
+            return;
+        }
+        self.location = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "location",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_created(&mut self, v: Option<String>) {
+        if self.created == v {
+            return;
+        }
+        self.created = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "created",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
+    }
+
+    pub fn set_updated(&mut self, v: Option<String>) {
+        if self.updated == v {
+            return;
+        }
+        self.updated = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "updated",
+        });
+        self.invalidate_hash();
+        self.invalidate_validation();
     }
 
     pub fn hash(&self) -> String {
@@ -323,6 +494,7 @@ impl TypeStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -351,6 +523,7 @@ impl TypeStore {
             created: d.created,
             updated: d.updated,
             parent_kit: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -427,12 +600,18 @@ impl TypeStore {
             created: created.clone(),
             updated: updated.clone(),
             parent_kit: Arc::downgrade(kit),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }));
 
+        let tw_pre = Arc::downgrade(&t);
         let port_refs: Vec<PortStoreRef> = ports
             .into_iter()
-            .map(|p| Arc::new(RwLock::new(PortStore::from_full_dto(p))))
+            .map(|p| {
+                let mut port = PortStore::from_full_dto(p);
+                port.parent_type = tw_pre.clone();
+                Arc::new(RwLock::new(port))
+            })
             .collect();
 
         let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::connector::ConnectorStore;
 use crate::flatten_math::{self, compute_child_center_uv};
 use crate::geom::{Coord, Plane};
@@ -29,6 +30,7 @@ pub struct ConnectionStore {
     pub description: Option<String>,
     pub attributes: Vec<AttributeStoreRef>,
     pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
     child_plane_matrix: Cache<nalgebra::Matrix4<f64>>,
 }
@@ -154,8 +156,34 @@ impl ConnectionStore {
             description: None,
             attributes: Vec::new(),
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
             child_plane_matrix: Cache::default(),
+        }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Connection, self.guid.clone())
+    }
+
+    /// Invalidate this connection and all design-level aggregates (flatten, validation).
+    pub(crate) fn notify_aggregate_change(&self) {
+        self.hash_cache.invalidate();
+        self.child_plane_matrix.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(dr) = d.read() {
+                dr.invalidate_hash();
+                dr.invalidate_flatten();
+                dr.invalidate_validation();
+            }
         }
     }
 
@@ -175,52 +203,107 @@ impl ConnectionStore {
     }
 
     pub fn set_gap(&mut self, v: Option<f64>) {
+        if self.gap == v {
+            return;
+        }
         self.gap = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "gap",
+        });
         self.bubble();
     }
     pub fn set_shift(&mut self, v: Option<f64>) {
+        if self.shift == v {
+            return;
+        }
         self.shift = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "shift",
+        });
         self.bubble();
     }
     pub fn set_rise(&mut self, v: Option<f64>) {
+        if self.rise == v {
+            return;
+        }
         self.rise = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "rise",
+        });
         self.bubble();
     }
     pub fn set_rotation(&mut self, v: Option<f64>) {
+        if self.rotation == v {
+            return;
+        }
         self.rotation = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "rotation",
+        });
         self.bubble();
     }
     pub fn set_turn(&mut self, v: Option<f64>) {
+        if self.turn == v {
+            return;
+        }
         self.turn = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "turn",
+        });
         self.bubble();
     }
     pub fn set_tilt(&mut self, v: Option<f64>) {
+        if self.tilt == v {
+            return;
+        }
         self.tilt = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "tilt",
+        });
         self.bubble();
     }
     pub fn set_x(&mut self, v: Option<f64>) {
+        if self.x == v {
+            return;
+        }
         self.x = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "x",
+        });
         self.bubble();
     }
     pub fn set_y(&mut self, v: Option<f64>) {
+        if self.y == v {
+            return;
+        }
         self.y = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "y",
+        });
         self.bubble();
     }
     pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
         self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
-        self.hash_cache.invalidate();
-        self.child_plane_matrix.invalidate();
-        if let Some(d) = self.parent_design.upgrade() {
-            if let Ok(dr) = d.read() {
-                dr.invalidate_hash();
-                dr.invalidate_flatten();
-                dr.invalidate_validation();
-            }
-        }
+        self.notify_aggregate_change();
     }
 
     /// World-space child plane from parent plane and connector geometry (Python `computeChildPlaneDict`).
@@ -333,6 +416,9 @@ impl ConnectionStore {
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
         self.child_plane_matrix.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
     }
 
     pub fn hash(&self) -> String {

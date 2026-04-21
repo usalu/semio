@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 
@@ -18,6 +19,7 @@ pub struct LayerStore {
     pub visible: Option<bool>,
     pub locked: Option<bool>,
     pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -85,6 +87,7 @@ impl LayerStore {
             visible: None,
             locked: None,
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -99,6 +102,7 @@ impl LayerStore {
             visible: None,
             locked: None,
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -113,6 +117,7 @@ impl LayerStore {
             visible: d.visible,
             locked: d.locked,
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -183,8 +188,97 @@ impl LayerStore {
         }
     }
 
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Layer, self.guid.clone())
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
+        self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_color(&mut self, v: Option<String>) {
+        if self.color == v {
+            return;
+        }
+        self.color = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "color",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_order(&mut self, v: Option<i64>) {
+        if self.order == v {
+            return;
+        }
+        self.order = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "order",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_visible(&mut self, v: Option<bool>) {
+        if self.visible == v {
+            return;
+        }
+        self.visible = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "visible",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_locked(&mut self, v: Option<bool>) {
+        if self.locked == v {
+            return;
+        }
+        self.locked = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "locked",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(dr) = d.read() {
+                dr.invalidate_hash();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

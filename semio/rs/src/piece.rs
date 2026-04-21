@@ -4,6 +4,7 @@ use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
 use crate::design::DesignStoreWeak;
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::geom::{Coord, Plane};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
@@ -31,6 +32,7 @@ pub struct PieceStore {
     pub attributes: Vec<AttributeStoreRef>,
     pub type_ref: Option<TypeStoreWeak>,
     pub parent_design: DesignStoreWeak,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
     flat_plane: Cache<Plane>,
     flat_center: Cache<Coord>,
@@ -154,6 +156,7 @@ impl PieceStore {
             attributes: Vec::new(),
             type_ref: None,
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
             flat_plane: Cache::default(),
             flat_center: Cache::default(),
@@ -177,10 +180,20 @@ impl PieceStore {
             attributes: Vec::new(),
             type_ref: None,
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
             flat_plane: Cache::default(),
             flat_center: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Piece, self.guid.clone())
     }
 
     pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
@@ -247,6 +260,14 @@ impl PieceStore {
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
         self.invalidate_flat_pose();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(dr) = d.read() {
+                dr.invalidate_hash();
+            }
+        }
     }
 
     fn bubble_design_flatten(&self) {
@@ -258,69 +279,141 @@ impl PieceStore {
     }
 
     pub fn set_plane(&mut self, plane: Option<Plane>) {
+        if self.plane == plane {
+            return;
+        }
         self.plane = plane;
-        self.hash_cache.invalidate();
-        self.invalidate_flat_pose();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "plane",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_center(&mut self, center: Option<Coord>) {
+        if self.center == center {
+            return;
+        }
         self.center = center;
-        self.hash_cache.invalidate();
-        self.invalidate_flat_pose();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "center",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_color(&mut self, color: Option<String>) {
+        if self.color == color {
+            return;
+        }
         self.color = color;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "color",
+        });
+        self.invalidate_hash();
     }
 
     pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) {
         self.type_ref = type_ref;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "type",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_id(&mut self, id: Option<String>) {
+        if self.id == id {
+            return;
+        }
         self.id = id;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "id",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_name(&mut self, name: Option<String>) {
+        if self.name == name {
+            return;
+        }
         self.name = name;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_description(&mut self, description: Option<String>) {
+        if self.description == description {
+            return;
+        }
         self.description = description;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_scale(&mut self, scale: Option<f64>) {
+        if self.scale == scale {
+            return;
+        }
         self.scale = scale;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "scale",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_mirror_plane(&mut self, mirror_plane: Option<Plane>) {
+        if self.mirror_plane == mirror_plane {
+            return;
+        }
         self.mirror_plane = mirror_plane;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "mirrorPlane",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_hidden(&mut self, hidden: Option<bool>) {
+        if self.hidden == hidden {
+            return;
+        }
         self.hidden = hidden;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "hidden",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 
     pub fn set_locked(&mut self, locked: Option<bool>) {
+        if self.locked == locked {
+            return;
+        }
         self.locked = locked;
-        self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "locked",
+        });
+        self.invalidate_hash();
         self.bubble_design_flatten();
     }
 

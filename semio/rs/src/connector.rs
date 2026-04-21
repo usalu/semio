@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::port::{PortIdDto, PortStoreWeak};
@@ -21,6 +22,7 @@ pub struct ConnectorStore {
     pub attributes: Vec<AttributeStore>,
     /// Back-reference to the owning type.
     pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -77,8 +79,18 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Connector, self.guid.clone())
     }
 
     pub fn from_id_dto(d: ConnectorIdDto) -> Self {
@@ -90,6 +102,7 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -103,6 +116,7 @@ impl ConnectorStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -185,8 +199,49 @@ impl ConnectorStore {
         }
     }
 
+    pub fn set_code(&mut self, code: String) {
+        if self.code == code {
+            return;
+        }
+        self.code = code;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "code",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) {
+        self.port = port;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "port",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(t) = self.parent_type.upgrade() {
+            if let Ok(tr) = t.read() {
+                tr.invalidate_hash();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

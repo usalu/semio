@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::connection::{ConnectionFullDto, ConnectionIdDto};
 use crate::design::{DesignFullDto, DesignStore};
+use crate::events::{EntityKind, EntityRef, KitEvent};
 use crate::guid::Guid;
 use crate::piece::{PieceFullDto, PieceIdDto};
 use crate::report::SemioReport;
@@ -127,6 +128,13 @@ impl DesignStore {
             }
         }
 
+        let parent = self.entity_ref();
+        for cg in connection_guids {
+            self.emit_ev(KitEvent::ChildRemoved {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, cg.clone()),
+            });
+        }
         self.connections.retain(|c| {
             c.read()
                 .map(|c| !connection_guids.iter().any(|g| *g == c.guid))

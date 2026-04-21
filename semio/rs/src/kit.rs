@@ -2,11 +2,15 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock, Weak};
 
+use async_broadcast::Receiver;
+
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
 use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
 use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
 use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
 use crate::error::{Result, SemioError};
+use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
+use crate::event_wire;
 use crate::file::{FileFullDto, FileStore, FileStoreRef};
 use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
 use crate::guid::Guid;
@@ -46,6 +50,8 @@ pub struct KitStore {
     pub qualities: Vec<QualityStoreRef>,
     pub props: Vec<PropStoreRef>,
     pub attributes: Vec<AttributeStoreRef>,
+    /// Broadcast bus for graph change notifications (kit holds strong ref).
+    pub(crate) event_bus: Arc<EventBus>,
     hash_cache: Cache<String>,
     validation_cache: Cache<ValidationResult>,
 }
@@ -205,87 +211,190 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
+            event_bus: EventBus::new(4096),
             hash_cache: Cache::default(),
             validation_cache: Cache::default(),
         }
     }
 
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        self.event_bus.emit(ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Kit, self.guid.clone())
+    }
+
+    /// Subscribe to all [`KitEvent`]s for this kit (MPMC broadcast).
+    pub fn subscribe(&self) -> Receiver<KitEvent> {
+        self.event_bus.subscribe()
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
     }
 
     pub fn invalidate_validation(&self) {
         self.validation_cache.invalidate();
+        self.emit_ev(KitEvent::ValidationInvalidated);
     }
 
     pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
         self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
         self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_icon(&mut self, v: Option<String>) {
+        if self.icon == v {
+            return;
+        }
         self.icon = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "icon",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_image(&mut self, v: Option<String>) {
+        if self.image == v {
+            return;
+        }
         self.image = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "image",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_preview(&mut self, v: Option<String>) {
+        if self.preview == v {
+            return;
+        }
         self.preview = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "preview",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_version(&mut self, v: Option<String>) {
+        if self.version == v {
+            return;
+        }
         self.version = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "version",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_remote(&mut self, v: Option<String>) {
+        if self.remote == v {
+            return;
+        }
         self.remote = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "remote",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_homepage(&mut self, v: Option<String>) {
+        if self.homepage == v {
+            return;
+        }
         self.homepage = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "homepage",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_license(&mut self, v: Option<String>) {
+        if self.license == v {
+            return;
+        }
         self.license = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "license",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_uri(&mut self, v: Option<String>) {
+        if self.uri == v {
+            return;
+        }
         self.uri = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "uri",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_created(&mut self, v: Option<String>) {
+        if self.created == v {
+            return;
+        }
         self.created = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "created",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
 
     pub fn set_updated(&mut self, v: Option<String>) {
+        if self.updated == v {
+            return;
+        }
         self.updated = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "updated",
+        });
         self.invalidate_hash();
         self.invalidate_validation();
     }
@@ -576,6 +685,7 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
+            event_bus: EventBus::new(4096),
             hash_cache: Cache::default(),
             validation_cache: Cache::default(),
         }
@@ -606,6 +716,7 @@ impl KitStore {
             qualities: Vec::new(),
             props: Vec::new(),
             attributes: Vec::new(),
+            event_bus: EventBus::new(4096),
             hash_cache: Cache::default(),
             validation_cache: Cache::default(),
         }
@@ -681,6 +792,7 @@ impl KitStore {
                 .into_iter()
                 .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
                 .collect(),
+            event_bus: EventBus::new(4096),
             hash_cache: Cache::default(),
             validation_cache: Cache::default(),
         }));
@@ -750,11 +862,23 @@ impl KitStore {
             .collect();
 
         if let Ok(mut k) = kit.write() {
+            let kw = Arc::downgrade(&kit);
+            for f in &file_refs {
+                if let Ok(mut fw) = f.write() {
+                    fw.parent_kit = Some(kw.clone());
+                }
+            }
+            for f in &folder_refs {
+                if let Ok(mut fw) = f.write() {
+                    fw.parent_kit = Some(kw.clone());
+                }
+            }
             k.types = type_refs;
             k.designs = design_refs;
             k.files = file_refs;
             k.folders = folder_refs;
         }
+        event_wire::wire_graph_bus(&kit);
         kit
     }
 

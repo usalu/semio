@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::file::{FileIdDto, FileStoreWeak};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
@@ -22,6 +23,7 @@ pub struct RepresentationStore {
     pub qualities: Vec<QualityStoreRef>,
     pub attributes: Vec<AttributeStore>,
     pub parent_type: Weak<RwLock<crate::typ::TypeStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -83,8 +85,18 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Representation, self.guid.clone())
     }
 
     pub fn from_id_dto(d: RepresentationIdDto) -> Self {
@@ -97,6 +109,7 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -111,6 +124,7 @@ impl RepresentationStore {
             qualities: Vec::new(),
             attributes: Vec::new(),
             parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -197,8 +211,40 @@ impl RepresentationStore {
         }
     }
 
+    pub fn set_url(&mut self, url: String) {
+        if self.url == url {
+            return;
+        }
+        self.url = url;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "url",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(t) = self.parent_type.upgrade() {
+            if let Ok(tr) = t.read() {
+                tr.invalidate_hash();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

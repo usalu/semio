@@ -1,11 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, Weak};
 
 use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::geom::{Coord, Vector};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
+use crate::typ::TypeStoreWeak;
 
 pub type PortStoreRef = Arc<RwLock<PortStore>>;
 pub type PortStoreWeak = std::sync::Weak<RwLock<PortStore>>;
@@ -24,6 +26,8 @@ pub struct PortStore {
     pub direction: Option<Vector>,
     pub qualities: Vec<QualityStoreRef>,
     pub attributes: Vec<AttributeStore>,
+    pub parent_type: TypeStoreWeak,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -117,8 +121,19 @@ impl PortStore {
             direction: None,
             qualities: Vec::new(),
             attributes: Vec::new(),
+            parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Port, self.guid.clone())
     }
 
     pub fn from_id_dto(d: PortIdDto) -> Self {
@@ -134,6 +149,8 @@ impl PortStore {
             direction: None,
             qualities: Vec::new(),
             attributes: Vec::new(),
+            parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -151,6 +168,8 @@ impl PortStore {
             direction: d.direction,
             qualities: Vec::new(),
             attributes: Vec::new(),
+            parent_type: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -257,8 +276,112 @@ impl PortStore {
         }
     }
 
+    pub fn set_id(&mut self, v: Option<String>) {
+        if self.id == v {
+            return;
+        }
+        self.id = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "id",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_family(&mut self, v: Option<String>) {
+        if self.family == v {
+            return;
+        }
+        self.family = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "family",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_compatible_families(&mut self, v: Vec<String>) {
+        if self.compatible_families == v {
+            return;
+        }
+        self.compatible_families = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "compatibleFamilies",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_mandatory(&mut self, v: Option<bool>) {
+        if self.mandatory == v {
+            return;
+        }
+        self.mandatory = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "mandatory",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_t(&mut self, v: Option<f64>) {
+        if self.t == v {
+            return;
+        }
+        self.t = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "t",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_point(&mut self, v: Option<Coord>) {
+        if self.point == v {
+            return;
+        }
+        self.point = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "point",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_direction(&mut self, v: Option<Vector>) {
+        if self.direction == v {
+            return;
+        }
+        self.direction = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "direction",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(t) = self.parent_type.upgrade() {
+            if let Ok(tr) = t.read() {
+                tr.invalidate_hash();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

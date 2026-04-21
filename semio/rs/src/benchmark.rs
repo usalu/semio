@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{RwLock, Weak};
 
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::quality::QualityStoreWeak;
@@ -18,6 +19,7 @@ pub struct BenchmarkStore {
     pub min_excluded: Option<bool>,
     pub max_excluded: Option<bool>,
     pub parent_quality: Option<QualityStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -78,8 +80,18 @@ impl BenchmarkStore {
             min_excluded: None,
             max_excluded: None,
             parent_quality: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Benchmark, self.guid.clone())
     }
 
     pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadataDto) {
@@ -93,32 +105,70 @@ impl BenchmarkStore {
     }
 
     pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
         self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
         self.bubble();
     }
 
     pub fn set_min(&mut self, min: Option<f64>) {
+        if self.min == min {
+            return;
+        }
         self.min = min;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "min",
+        });
         self.bubble();
     }
 
     pub fn set_max(&mut self, max: Option<f64>) {
+        if self.max == max {
+            return;
+        }
         self.max = max;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "max",
+        });
         self.bubble();
     }
 
     pub fn set_min_excluded(&mut self, v: Option<bool>) {
+        if self.min_excluded == v {
+            return;
+        }
         self.min_excluded = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "minExcluded",
+        });
         self.bubble();
     }
 
     pub fn set_max_excluded(&mut self, v: Option<bool>) {
+        if self.max_excluded == v {
+            return;
+        }
         self.max_excluded = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "maxExcluded",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
         if let Some(w) = &self.parent_quality {
             if let Some(q) = w.upgrade() {
                 if let Ok(q) = q.read() {

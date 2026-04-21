@@ -17,6 +17,8 @@ pub mod connector;
 pub mod design;
 pub mod diff;
 pub mod error;
+pub mod events;
+pub(crate) mod event_wire;
 pub(crate) mod flatten_math;
 pub mod file;
 pub mod folder;
@@ -41,6 +43,8 @@ pub mod typ;
 
 #[cfg(test)]
 mod tests;
+
+mod async_kit;
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm;
@@ -73,6 +77,7 @@ pub use design::{
 };
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError};
+pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
 pub use folder::{
     FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak,

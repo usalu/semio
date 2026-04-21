@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{RwLock, Weak};
 
 use crate::design::DesignStoreWeak;
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::kit::KitStoreWeak;
@@ -21,6 +22,7 @@ pub struct AuthorStore {
     pub parent_kit: Option<KitStoreWeak>,
     pub parent_design: Option<DesignStoreWeak>,
     pub parent_type: Option<TypeStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -73,8 +75,18 @@ impl AuthorStore {
             parent_kit: None,
             parent_design: None,
             parent_type: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Author, self.guid.clone())
     }
 
     pub(crate) fn apply_full_dto_fields(&mut self, d: AuthorFullDto) {
@@ -93,32 +105,62 @@ impl AuthorStore {
     }
 
     pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
         self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
         self.bubble();
     }
 
     pub fn set_email(&mut self, email: String) {
+        if self.email == email {
+            return;
+        }
         self.email = email;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "email",
+        });
         self.bubble();
     }
 
     pub fn set_role(&mut self, role: Option<String>) {
+        if self.role == role {
+            return;
+        }
         self.role = role;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "role",
+        });
         self.bubble();
     }
 
     pub fn set_rank(&mut self, rank: Option<i64>) {
+        if self.rank == rank {
+            return;
+        }
         self.rank = rank;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "rank",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
         if let Some(w) = &self.parent_kit {
             if let Some(k) = w.upgrade() {
                 if let Ok(k) = k.read() {
                     k.invalidate_hash();
-                    k.invalidate_validation();
                 }
             }
         }
@@ -128,6 +170,12 @@ impl AuthorStore {
                     d.invalidate_hash();
                     d.invalidate_flatten();
                     d.invalidate_validation();
+                }
+            }
+        } else if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_validation();
                 }
             }
         }

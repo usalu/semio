@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::connector::ConnectorStoreWeak;
 use crate::design::DesignStoreWeak;
 use crate::guid::Guid;
@@ -30,6 +31,7 @@ pub struct QualityStore {
     pub parent_port: Option<PortStoreWeak>,
     pub parent_connector: Option<ConnectorStoreWeak>,
     pub parent_representation: Option<RepresentationStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -100,8 +102,18 @@ impl QualityStore {
             parent_port: None,
             parent_connector: None,
             parent_representation: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Quality, self.guid.clone())
     }
 
     pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadataDto) {
@@ -115,77 +127,67 @@ impl QualityStore {
     }
 
     pub fn set_key(&mut self, key: String) {
+        if self.key == key {
+            return;
+        }
         self.key = key;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "key",
+        });
         self.bubble();
     }
 
     pub fn set_value(&mut self, value: Option<String>) {
+        if self.value == value {
+            return;
+        }
         self.value = value;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "value",
+        });
         self.bubble();
     }
 
     pub fn set_unit(&mut self, unit: Option<String>) {
+        if self.unit == unit {
+            return;
+        }
         self.unit = unit;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "unit",
+        });
         self.bubble();
     }
 
     pub fn set_definition(&mut self, definition: Option<String>) {
+        if self.definition == definition {
+            return;
+        }
         self.definition = definition;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "definition",
+        });
         self.bubble();
     }
 
     pub fn set_description(&mut self, description: Option<String>) {
+        if self.description == description {
+            return;
+        }
         self.description = description;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
-        self.hash_cache.invalidate();
-        if let Some(w) = &self.parent_kit {
-            if let Some(k) = w.upgrade() {
-                if let Ok(k) = k.read() {
-                    k.invalidate_hash();
-                    k.invalidate_validation();
-                }
-            }
-        }
-        if let Some(w) = &self.parent_design {
-            if let Some(d) = w.upgrade() {
-                if let Ok(d) = d.read() {
-                    d.invalidate_hash();
-                    d.invalidate_flatten();
-                    d.invalidate_validation();
-                }
-            }
-        }
-        if let Some(w) = &self.parent_type {
-            if let Some(t) = w.upgrade() {
-                if let Ok(t) = t.read() {
-                    t.invalidate_hash();
-                }
-            }
-        }
-        if let Some(w) = &self.parent_port {
-            if let Some(p) = w.upgrade() {
-                if let Ok(p) = p.read() {
-                    p.invalidate_hash();
-                }
-            }
-        }
-        if let Some(w) = &self.parent_connector {
-            if let Some(c) = w.upgrade() {
-                if let Ok(c) = c.read() {
-                    c.invalidate_hash();
-                }
-            }
-        }
-        if let Some(w) = &self.parent_representation {
-            if let Some(r) = w.upgrade() {
-                if let Ok(r) = r.read() {
-                    r.invalidate_hash();
-                }
-            }
-        }
+        self.invalidate_hash();
     }
 
     pub(crate) fn from_shallow_dto(d: QualityShallowDto) -> Self {
@@ -298,6 +300,59 @@ impl QualityStore {
 
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_hash();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_design {
+            if let Some(d) = w.upgrade() {
+                if let Ok(d) = d.read() {
+                    d.invalidate_hash();
+                    d.invalidate_flatten();
+                    d.invalidate_validation();
+                }
+            }
+        } else if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_validation();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_type {
+            if let Some(t) = w.upgrade() {
+                if let Ok(t) = t.read() {
+                    t.invalidate_hash();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_port {
+            if let Some(p) = w.upgrade() {
+                if let Ok(p) = p.read() {
+                    p.invalidate_hash();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_connector {
+            if let Some(c) = w.upgrade() {
+                if let Ok(c) = c.read() {
+                    c.invalidate_hash();
+                }
+            }
+        }
+        if let Some(w) = &self.parent_representation {
+            if let Some(r) = w.upgrade() {
+                if let Ok(r) = r.read() {
+                    r.invalidate_hash();
+                }
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

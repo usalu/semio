@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::piece::{PieceIdDto, PieceStoreWeak};
@@ -18,6 +19,7 @@ pub struct GroupStore {
     pub icon: Option<String>,
     pub pieces: Vec<PieceStoreWeak>,
     pub parent_design: Weak<RwLock<crate::design::DesignStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -78,6 +80,7 @@ impl GroupStore {
             icon: None,
             pieces: Vec::new(),
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -91,6 +94,7 @@ impl GroupStore {
             icon: None,
             pieces: Vec::new(),
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -104,6 +108,7 @@ impl GroupStore {
             icon: d.icon,
             pieces: Vec::new(),
             parent_design: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -174,8 +179,82 @@ impl GroupStore {
         }
     }
 
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Group, self.guid.clone())
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
+        self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_color(&mut self, v: Option<String>) {
+        if self.color == v {
+            return;
+        }
+        self.color = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "color",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_icon(&mut self, v: Option<String>) {
+        if self.icon == v {
+            return;
+        }
+        self.icon = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "icon",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) {
+        self.pieces = pieces;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "pieces",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(d) = self.parent_design.upgrade() {
+            if let Ok(dr) = d.read() {
+                dr.invalidate_hash();
+            }
+        }
     }
 
     pub fn hash(&self) -> String {

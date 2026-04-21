@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{RwLock, Weak};
 
 use crate::design::DesignStoreWeak;
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::kit::KitStoreWeak;
@@ -19,6 +20,7 @@ pub struct StatStore {
     pub description: Option<String>,
     pub parent_kit: Option<KitStoreWeak>,
     pub parent_design: Option<DesignStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -70,8 +72,18 @@ impl StatStore {
             description: None,
             parent_kit: None,
             parent_design: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Stat, self.guid.clone())
     }
 
     pub(crate) fn apply_full_dto_fields(&mut self, d: StatFullDto) {
@@ -90,32 +102,62 @@ impl StatStore {
     }
 
     pub fn set_key(&mut self, key: String) {
+        if self.key == key {
+            return;
+        }
         self.key = key;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "key",
+        });
         self.bubble();
     }
 
     pub fn set_value(&mut self, value: String) {
+        if self.value == value {
+            return;
+        }
         self.value = value;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "value",
+        });
         self.bubble();
     }
 
     pub fn set_unit(&mut self, unit: Option<String>) {
+        if self.unit == unit {
+            return;
+        }
         self.unit = unit;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "unit",
+        });
         self.bubble();
     }
 
     pub fn set_description(&mut self, description: Option<String>) {
+        if self.description == description {
+            return;
+        }
         self.description = description;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
         if let Some(w) = &self.parent_kit {
             if let Some(k) = w.upgrade() {
                 if let Ok(k) = k.read() {
                     k.invalidate_hash();
-                    k.invalidate_validation();
                 }
             }
         }
@@ -125,6 +167,12 @@ impl StatStore {
                     d.invalidate_hash();
                     d.invalidate_flatten();
                     d.invalidate_validation();
+                }
+            }
+        } else if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(k) = k.read() {
+                    k.invalidate_validation();
                 }
             }
         }

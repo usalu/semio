@@ -44,28 +44,15 @@ fn main() {
         }
     };
     let kit_ref: KitStoreRef = KitStore::from_full_dto(req.kit);
-    let design_ref: DesignStoreRef = {
-        let guard = match kit_ref.read() {
-            Ok(g) => g,
-            Err(_) => {
-                write_err("kit lock poisoned".into());
-                return;
-            }
-        };
-        match guard.design(&req.design_guid) {
-            Some(d) => d,
-            None => {
-                write_err(format!("design {} not found", req.design_guid));
-                return;
-            }
-        }
-    };
     match req.op.as_str() {
         "flatten" => {
-            let report = match design_ref.read() {
-                Ok(d) => d.flatten_change(),
-                Err(_) => {
-                    write_err("design lock poisoned".into());
+            let report = match futures_lite::future::block_on(semio::KitStore::flatten_design_async(
+                &kit_ref,
+                &req.design_guid,
+            )) {
+                Ok(r) => r,
+                Err(e) => {
+                    write_err(e.to_string());
                     return;
                 }
             };
@@ -75,6 +62,22 @@ fn main() {
             }
         }
         "delete" => {
+            let design_ref: DesignStoreRef = {
+                let guard = match kit_ref.read() {
+                    Ok(g) => g,
+                    Err(_) => {
+                        write_err("kit lock poisoned".into());
+                        return;
+                    }
+                };
+                match guard.design(&req.design_guid) {
+                    Some(d) => d,
+                    None => {
+                        write_err(format!("design {} not found", req.design_guid));
+                        return;
+                    }
+                }
+            };
             let piece_guids: Vec<Guid> = req.piece_guids.into_iter().map(Guid::from).collect();
             let connection_guids: Vec<Guid> =
                 req.connection_guids.into_iter().map(Guid::from).collect();

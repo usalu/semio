@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
 use crate::connection::ConnectionStoreWeak;
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
 use crate::piece::PieceStoreWeak;
@@ -19,6 +20,7 @@ pub struct SideStore {
     /// Optional "design piece" for designs that include other designs.
     pub design_piece: Option<PieceStoreWeak>,
     pub parent_connection: Option<ConnectionStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -65,8 +67,18 @@ impl SideStore {
             port: None,
             design_piece: None,
             parent_connection: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Side, self.guid.clone())
     }
 
     pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadataDto) {
@@ -76,25 +88,40 @@ impl SideStore {
 
     pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) {
         self.piece = piece;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "piece",
+        });
         self.bubble();
     }
 
     pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) {
         self.port = port;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "port",
+        });
         self.bubble();
     }
 
     pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) {
         self.design_piece = design_piece;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "designPiece",
+        });
         self.bubble();
     }
 
     fn bubble(&mut self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
         if let Some(w) = &self.parent_connection {
             if let Some(c) = w.upgrade() {
                 if let Ok(c) = c.read() {
-                    c.invalidate_hash();
+                    c.notify_aggregate_change();
                 }
             }
         }
@@ -184,6 +211,7 @@ impl Default for SideStore {
             port: None,
             design_piece: None,
             parent_connection: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }

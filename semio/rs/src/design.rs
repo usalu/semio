@@ -9,6 +9,7 @@ use crate::connection::{
     ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef,
 };
 use crate::connector::ConnectorStoreRef;
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::geom::{Camera, Coord, Location, Plane};
 use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
 use crate::guid::Guid;
@@ -53,6 +54,7 @@ pub struct DesignStore {
     pub created: Option<String>,
     pub updated: Option<String>,
     pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
     flatten_cache: Cache<HashMap<Guid, (Plane, Coord)>>,
 }
@@ -310,6 +312,7 @@ impl DesignStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
             flatten_cache: Cache::default(),
         }
@@ -341,9 +344,19 @@ impl DesignStore {
             created: None,
             updated: None,
             parent_kit: Weak::new(),
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
             flatten_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::Design, self.guid.clone())
     }
 
     pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadataDto) {
@@ -364,15 +377,50 @@ impl DesignStore {
     }
 
     pub fn invalidate_hash(&self) {
+        self.invalidate_hash_local();
+        if let Some(k) = self.parent_kit.upgrade() {
+            if let Ok(kr) = k.read() {
+                kr.invalidate_hash();
+            }
+        }
+    }
+
+    /// Like [`Self::invalidate_hash`] but does not bubble to the parent kit (avoids deadlock when
+    /// the kit already holds its write lock, e.g. during [`KitStore::apply_design_diff`]).
+    pub(crate) fn invalidate_hash_local(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
     }
 
     pub fn invalidate_flatten(&self) {
+        let design_guid = self.guid.clone();
+        let mut piece_guids: Vec<Guid> = self
+            .pieces
+            .iter()
+            .filter_map(|p| p.read().ok().map(|pr| pr.guid.clone()))
+            .collect();
+        piece_guids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
         self.flatten_cache.invalidate();
+        self.emit_ev(KitEvent::FlattenInvalidated {
+            design: design_guid,
+            pieces: piece_guids.clone(),
+        });
         for p in &self.pieces {
             if let Ok(pr) = p.read() {
                 pr.invalidate_flat_pose();
             }
+        }
+        for gid in &piece_guids {
+            self.emit_ev(KitEvent::DerivedChanged {
+                entity: EntityRef::new(EntityKind::Piece, gid.clone()),
+                field: "flat_plane",
+            });
+            self.emit_ev(KitEvent::DerivedChanged {
+                entity: EntityRef::new(EntityKind::Piece, gid.clone()),
+                field: "flat_center",
+            });
         }
     }
 
@@ -394,69 +442,189 @@ impl DesignStore {
     }
 
     pub fn set_name(&mut self, name: String) {
+        if self.name == name {
+            return;
+        }
         self.name = name;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "name",
+        });
         self.hash_cache.invalidate();
-        self.flatten_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
         self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_icon(&mut self, v: Option<String>) {
+        if self.icon == v {
+            return;
+        }
         self.icon = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "icon",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_image(&mut self, v: Option<String>) {
+        if self.image == v {
+            return;
+        }
         self.image = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "image",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_variant(&mut self, v: Option<String>) {
+        if self.variant == v {
+            return;
+        }
         self.variant = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "variant",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_view(&mut self, v: Option<String>) {
+        if self.view == v {
+            return;
+        }
         self.view = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "view",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_location(&mut self, v: Option<Location>) {
+        if self.location == v {
+            return;
+        }
         self.location = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "location",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_camera(&mut self, v: Option<Camera>) {
+        if self.camera == v {
+            return;
+        }
         self.camera = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "camera",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_unit(&mut self, v: Option<String>) {
+        if self.unit == v {
+            return;
+        }
         self.unit = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "unit",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_created(&mut self, v: Option<String>) {
+        if self.created == v {
+            return;
+        }
         self.created = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "created",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
     pub fn set_updated(&mut self, v: Option<String>) {
+        if self.updated == v {
+            return;
+        }
         self.updated = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "updated",
+        });
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        self.invalidate_flatten();
         self.bubble_to_kit();
     }
 
@@ -707,7 +875,21 @@ impl DesignStore {
             .cloned()
     }
 
+    /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
+    /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
+    /// validation invalidation (see [`KitStore::apply_design_diff`]).
     pub fn delete_pieces(&mut self, piece_guids: &[Guid]) -> usize {
+        self.delete_pieces_inner(piece_guids, true)
+    }
+
+    pub(crate) fn delete_pieces_inner(&mut self, piece_guids: &[Guid], invalidate: bool) -> usize {
+        let parent = self.entity_ref();
+        for g in piece_guids {
+            self.emit_ev(KitEvent::ChildRemoved {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Piece, g.clone()),
+            });
+        }
         let before = self.pieces.len();
         self.pieces.retain(|p| {
             p.read()
@@ -731,9 +913,11 @@ impl DesignStore {
                 true
             }
         });
-        self.hash_cache.invalidate();
-        self.flatten_cache.invalidate();
-        self.invalidate_validation();
+        if invalidate {
+            self.invalidate_hash();
+            self.invalidate_flatten();
+            self.invalidate_validation();
+        }
         before - self.pieces.len()
     }
 
@@ -747,19 +931,30 @@ impl DesignStore {
         type_index: &HashMap<Guid, TypeStoreRef>,
         design_weak: DesignStoreWeak,
     ) -> crate::error::Result<()> {
+        let parent = self.entity_ref();
+        for id in &diff.removed_connections {
+            self.emit_ev(KitEvent::ChildRemoved {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, id.guid.clone()),
+            });
+        }
         for id in &diff.removed_connections {
             self.connections
                 .retain(|c| c.read().map(|c| c.guid != id.guid).unwrap_or(true));
         }
         let removed_piece_guids: Vec<Guid> = diff.removed_pieces.iter().map(|p| p.guid.clone()).collect();
         if !removed_piece_guids.is_empty() {
-            self.delete_pieces(&removed_piece_guids);
+            self.delete_pieces_inner(&removed_piece_guids, false);
         }
         for p in &diff.added_pieces {
             let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.guid.clone())));
             if let Ok(mut pw) = pref.write() {
                 pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
             }
+            self.emit_ev(KitEvent::ChildAdded {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Piece, p.guid.clone()),
+            });
             self.pieces.push(pref);
         }
         for p in &diff.modified_pieces {
@@ -778,15 +973,28 @@ impl DesignStore {
         for c in &diff.added_connections {
             self.connections
                 .push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+            self.emit_ev(KitEvent::ChildAdded {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+            });
         }
         for c in &diff.modified_connections {
+            self.emit_ev(KitEvent::ChildRemoved {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+            });
             self.connections.retain(|x| x.read().map(|x| x.guid != c.guid).unwrap_or(true));
             self.connections
                 .push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+            self.emit_ev(KitEvent::ChildAdded {
+                parent: parent.clone(),
+                child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+            });
         }
-        self.hash_cache.invalidate();
-        self.flatten_cache.invalidate();
-        self.invalidate_validation();
+        // Do not bubble hash/validation to kit here: [`KitStore::apply_design_diff`] may hold the
+        // kit write lock. Flatten events are design-local.
+        self.invalidate_hash_local();
+        self.invalidate_flatten();
         Ok(())
     }
 

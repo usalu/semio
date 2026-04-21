@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock, Weak};
 
+use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
 use crate::guid::Guid;
 use crate::hash::{Cache, HashWriter};
+use crate::kit::KitStoreWeak;
 
 pub type FileStoreRef = Arc<RwLock<FileStore>>;
 pub type FileStoreWeak = Weak<RwLock<FileStore>>;
@@ -18,6 +20,8 @@ pub struct FileStore {
     pub description: Option<String>,
     pub created: Option<String>,
     pub updated: Option<String>,
+    pub parent_kit: Option<KitStoreWeak>,
+    pub(crate) event_bus: Weak<EventBus>,
     hash_cache: Cache<String>,
 }
 
@@ -91,8 +95,19 @@ impl FileStore {
             description: None,
             created: None,
             updated: None,
+            parent_kit: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
+    }
+
+    #[inline]
+    fn emit_ev(&self, ev: KitEvent) {
+        emit_weak(&self.event_bus, ev);
+    }
+
+    fn entity_ref(&self) -> EntityRef {
+        EntityRef::new(EntityKind::File, self.guid.clone())
     }
 
     pub fn from_id_dto(d: FileIdDto) -> Self {
@@ -105,6 +120,8 @@ impl FileStore {
             description: None,
             created: None,
             updated: None,
+            parent_kit: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -119,6 +136,8 @@ impl FileStore {
             description: d.description,
             created: d.created,
             updated: d.updated,
+            parent_kit: None,
+            event_bus: Weak::new(),
             hash_cache: Cache::default(),
         }
     }
@@ -194,8 +213,103 @@ impl FileStore {
         }
     }
 
+    pub fn set_url(&mut self, url: String) {
+        if self.url == url {
+            return;
+        }
+        self.url = url;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "url",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_mime(&mut self, v: Option<String>) {
+        if self.mime == v {
+            return;
+        }
+        self.mime = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "mime",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_size(&mut self, v: Option<i64>) {
+        if self.size == v {
+            return;
+        }
+        self.size = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "size",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_hash(&mut self, v: Option<String>) {
+        if self.hash == v {
+            return;
+        }
+        self.hash = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "hash",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_description(&mut self, v: Option<String>) {
+        if self.description == v {
+            return;
+        }
+        self.description = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "description",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_created(&mut self, v: Option<String>) {
+        if self.created == v {
+            return;
+        }
+        self.created = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "created",
+        });
+        self.invalidate_hash();
+    }
+
+    pub fn set_updated(&mut self, v: Option<String>) {
+        if self.updated == v {
+            return;
+        }
+        self.updated = v;
+        self.emit_ev(KitEvent::FieldChanged {
+            entity: self.entity_ref(),
+            field: "updated",
+        });
+        self.invalidate_hash();
+    }
+
     pub fn invalidate_hash(&self) {
         self.hash_cache.invalidate();
+        self.emit_ev(KitEvent::HashInvalidated {
+            entity: self.entity_ref(),
+        });
+        if let Some(w) = &self.parent_kit {
+            if let Some(k) = w.upgrade() {
+                if let Ok(kr) = k.read() {
+                    kr.invalidate_hash();
+                    kr.invalidate_validation();
+                }
+            }
+        }
     }
 
     pub fn hash(&self) -> String {
