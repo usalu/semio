@@ -361,9 +361,9 @@
         "Folder": {
             "description": "Output fields returned when fetching a folder.",
             "properties": {
-                "guid": {
+                "id": {
                     "maxLength": 128,
-                    "title": "Guid",
+                    "title": "Id",
                     "type": "string"
                 },
                 "name": {
@@ -435,7 +435,7 @@
                 }
             },
             "required": [
-                "guid",
+                "id",
                 "name",
                 "createdAt",
                 "updatedAt"

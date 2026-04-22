@@ -149,19 +149,19 @@
                 }
             }
         },
-        "/api/app/files/{file_guid}": {
+        "/api/app/files/{file_id}": {
             "get": {
                 "summary": "App File",
-                "description": "Serve a kit file blob by guid. Used by MCP app iframes to load 3D representations.",
-                "operationId": "app_file_app_files__file_guid__get",
+                "description": "Serve a kit file blob by id. Used by MCP app iframes to load 3D representations.",
+                "operationId": "app_file_app_files__file_id__get",
                 "parameters": [
                     {
-                        "name": "file_guid",
+                        "name": "file_id",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "title": "File Guid"
+                            "title": "File Id"
                         }
                     }
                 ],
@@ -1958,10 +1958,10 @@
             },
             "FolderInput": {
                 "properties": {
-                    "guid": {
+                    "id": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Guid"
+                        "title": "Id"
                     },
                     "name": {
                         "type": "string",
@@ -2030,7 +2030,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "guid",
+                    "id",
                     "name",
                     "createdAt",
                     "updatedAt"
@@ -2040,10 +2040,10 @@
             },
             "Folder": {
                 "properties": {
-                    "guid": {
+                    "id": {
                         "type": "string",
                         "maxLength": 128,
-                        "title": "Guid"
+                        "title": "Id"
                     },
                     "name": {
                         "type": "string",
@@ -2112,7 +2112,7 @@
                 },
                 "type": "object",
                 "required": [
-                    "guid",
+                    "id",
                     "name",
                     "createdAt",
                     "updatedAt"
@@ -2680,24 +2680,24 @@
                         "type": "object",
                         "title": "Design"
                     },
-                    "designGuid": {
+                    "designId": {
                         "type": "string",
-                        "title": "Designguid"
+                        "title": "Designid"
                     },
-                    "pieceGuids": {
+                    "pieceIds": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Pieceguids",
+                        "title": "Pieceids",
                         "default": []
                     },
-                    "connectionGuids": {
+                    "connectionIds": {
                         "items": {
                             "type": "string"
                         },
                         "type": "array",
-                        "title": "Connectionguids",
+                        "title": "Connectionids",
                         "default": []
                     }
                 },
@@ -2707,7 +2707,7 @@
                     "operation",
                     "kit",
                     "design",
-                    "designGuid"
+                    "designId"
                 ],
                 "title": "NativeAlgorithmExecuteBody",
                 "description": "\ud83d\udd3aRequest body for POST /api/native-algorithms/execute.\n    "

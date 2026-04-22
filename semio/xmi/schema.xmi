@@ -106,11 +106,11 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         <ownedLiteral xmi:type="uml:EnumerationLiteral" xmi:id="enum_QualityKind_Connector" name="Connector"/>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Attribute" name="Attribute">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_guid_upper" value="1"/>
-          <ownedComment xmi:id="cls_Attribute_guid_comment" body="Runtime/persistence GUID; implementations typically cap this at 128 chars.">
-            <annotatedElement xmi:idref="cls_Attribute_guid"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Attribute_id_upper" value="1"/>
+          <ownedComment xmi:id="cls_Attribute_id_comment" body="Runtime/persistence ID; implementations typically cap this at 128 chars.">
+            <annotatedElement xmi:idref="cls_Attribute_id"/>
           </ownedComment>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Attribute_key" name="key" type="pt_String">
@@ -137,9 +137,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Tag" name="Tag">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Tag_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Tag_name_lower" value="1"/>
@@ -159,9 +159,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Concept" name="Concept">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Concept_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Concept_name_lower" value="1"/>
@@ -181,9 +181,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Author" name="Author">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Author_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Author_name_lower" value="1"/>
@@ -199,9 +199,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Folder" name="Folder">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Folder_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Folder_name_lower" value="1"/>
@@ -253,9 +253,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_File" name="File">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_File_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_File_name_lower" value="1"/>
@@ -301,11 +301,11 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Benchmark" name="Benchmark">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_guid_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_guid_upper" value="1"/>
-          <ownedComment xmi:id="cls_Benchmark_guid_comment" body="Optional in the conceptual representation.">
-            <annotatedElement xmi:idref="cls_Benchmark_guid"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_id_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Benchmark_id_upper" value="1"/>
+          <ownedComment xmi:id="cls_Benchmark_id_comment" body="Optional in the conceptual representation.">
+            <annotatedElement xmi:idref="cls_Benchmark_id"/>
           </ownedComment>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Benchmark_name" name="name" type="pt_String">
@@ -355,9 +355,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Quality" name="Quality">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Quality_key" name="key" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Quality_key_lower" value="1"/>
@@ -446,9 +446,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Port" name="Port">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Port_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Port_name_lower" value="1"/>
@@ -484,9 +484,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Prop" name="Prop">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_guid_lower" value="0"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_id_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Prop_qualityKey" name="qualityKey" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Prop_qualityKey_lower" value="1"/>
@@ -509,9 +509,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Representation" name="Representation">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Representation_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Representation_name_lower" value="0"/>
@@ -553,9 +553,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Connector" name="Connector">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connector_id" name="id" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connector_id_lower" value="1"/>
@@ -650,14 +650,14 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
           <constrainedElement xmi:idref="cls_Connector"/>
           <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Connector_CompatiblePortsDistinct_spec">
             <language>OCL</language>
-            <body>self.compatiblePorts-&gt;isUnique(guid)</body>
+            <body>self.compatiblePorts-&gt;isUnique(id)</body>
           </specification>
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Type" name="Type">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Type_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Type_name_lower" value="1"/>
@@ -834,9 +834,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Layer" name="Layer">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Layer_path" name="path" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Layer_path_lower" value="1"/>
@@ -887,9 +887,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Group" name="Group">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Group_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Group_name_lower" value="0"/>
@@ -924,9 +924,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Piece" name="Piece">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Piece_id" name="id" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Piece_id_lower" value="1"/>
@@ -1027,9 +1027,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedAttribute>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Connection" name="Connection">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Connection_connected" name="connected" type="cls_Side" aggregation="composite">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Connection_connected_lower" value="1"/>
@@ -1116,9 +1116,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Stat" name="Stat">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Stat_qualityKey" name="qualityKey" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Stat_qualityKey_lower" value="1"/>
@@ -1159,9 +1159,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Design" name="Design">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Design_name" name="name" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Design_name_lower" value="1"/>
@@ -1372,9 +1372,9 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
         </ownedRule>
       </packagedElement>
       <packagedElement xmi:type="uml:Class" xmi:id="cls_Kit" name="Kit">
-        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_guid" name="guid" type="pt_String">
-          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_guid_lower" value="1"/>
-          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_guid_upper" value="1"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_id" name="id" type="pt_String">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_id_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_id_upper" value="1"/>
         </ownedAttribute>
         <ownedAttribute xmi:type="uml:Property" xmi:id="cls_Kit_uri" name="uri" type="pt_String">
           <lowerValue xmi:type="uml:LiteralInteger" xmi:id="cls_Kit_uri_lower" value="1"/>
@@ -1478,23 +1478,23 @@ let cz : Real = self.xAxis.x*self.yAxis.y - self.xAxis.y*self.yAxis.x in
             <body>self.name.size() &gt; 0</body>
           </specification>
         </ownedRule>
-        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Kit_UniqueGuidsInValidationScope" name="UniqueGuidsInValidationScope">
+        <ownedRule xmi:type="uml:Constraint" xmi:id="cls_Kit_UniqueIdsInValidationScope" name="UniqueIdsInValidationScope">
           <constrainedElement xmi:idref="cls_Kit"/>
-          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Kit_UniqueGuidsInValidationScope_spec">
+          <specification xmi:type="uml:OpaqueExpression" xmi:id="cls_Kit_UniqueIdsInValidationScope_spec">
             <language>OCL</language>
             <body>let gs : Bag(String) =
-  Bag{self.guid}
-    -&gt;union(self.types-&gt;collect(t | t.guid))
-    -&gt;union(self.types-&gt;collect(t | t.representations-&gt;collect(m | m.guid))-&gt;flatten())
-    -&gt;union(self.types-&gt;collect(t | t.connectors-&gt;collect(c | c.guid))-&gt;flatten())
-    -&gt;union(self.designs-&gt;collect(d | d.guid))
-    -&gt;union(self.designs-&gt;collect(d | d.pieces-&gt;collect(p | p.guid))-&gt;flatten())
-    -&gt;union(self.designs-&gt;collect(d | d.connections-&gt;collect(c | c.guid))-&gt;flatten())
-    -&gt;union(self.designs-&gt;collect(d | d.stats-&gt;collect(s | s.guid))-&gt;flatten())
-    -&gt;union(self.qualities-&gt;collect(q | q.guid))
-    -&gt;union(self.files-&gt;collect(f | f.guid))
-    -&gt;union(self.folders-&gt;collect(f | f.guid))
-    -&gt;union(self.ports-&gt;collect(p | p.guid))
+  Bag{self.id}
+    -&gt;union(self.types-&gt;collect(t | t.id))
+    -&gt;union(self.types-&gt;collect(t | t.representations-&gt;collect(m | m.id))-&gt;flatten())
+    -&gt;union(self.types-&gt;collect(t | t.connectors-&gt;collect(c | c.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.id))
+    -&gt;union(self.designs-&gt;collect(d | d.pieces-&gt;collect(p | p.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.connections-&gt;collect(c | c.id))-&gt;flatten())
+    -&gt;union(self.designs-&gt;collect(d | d.stats-&gt;collect(s | s.id))-&gt;flatten())
+    -&gt;union(self.qualities-&gt;collect(q | q.id))
+    -&gt;union(self.files-&gt;collect(f | f.id))
+    -&gt;union(self.folders-&gt;collect(f | f.id))
+    -&gt;union(self.ports-&gt;collect(p | p.id))
 in gs-&gt;asSet()-&gt;size() = gs-&gt;size()</body>
           </specification>
         </ownedRule>

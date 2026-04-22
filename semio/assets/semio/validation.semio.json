@@ -1,14 +1,14 @@
 {
   "problems": [
     {
-      "constraintId": "guid-unique",
-      "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". Entity GUIDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).",
+      "constraintId": "id-unique",
+      "message": "Duplicate ID \"019ab664-3333-3333-3333-333333333333\". Entity IDs are immutable; resolve by removing or replacing the duplicate entity (first occurrence kept).",
       "location": {
         "entityKind": "Connection",
-        "entityGuid": "019ab664-3333-3333-3333-333333333333",
-        "field": "guid"
+        "entityId": "019ab664-3333-3333-3333-333333333333",
+        "field": "id"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-3333-3333-3333-333333333333"
       ],
       "fixes": []
@@ -18,10 +18,10 @@
       "message": "Duplicate type name \"Duplicate Type Name\".",
       "location": {
         "entityKind": "Type",
-        "entityGuid": "019ab664-2222-2222-2222-222222222222",
+        "entityId": "019ab664-2222-2222-2222-222222222222",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-1111-1111-1111-111111111111",
         "019ab664-2222-2222-2222-222222222222"
       ],
@@ -33,7 +33,7 @@
               "updated": [
                 {
                   "type": {
-                    "guid": "019ab664-2222-2222-2222-222222222222"
+                    "id": "019ab664-2222-2222-2222-222222222222"
                   },
                   "diff": {
                     "name": "Duplicate Type Name 2"
@@ -50,10 +50,10 @@
       "message": "Duplicate design name \"Duplicate Design Name\".",
       "location": {
         "entityKind": "Design",
-        "entityGuid": "019ab664-6666-6666-6666-666666666666",
+        "entityId": "019ab664-6666-6666-6666-666666666666",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-3333-3333-3333-333333333333",
         "019ab664-6666-6666-6666-666666666666"
       ],
@@ -65,7 +65,7 @@
               "updated": [
                 {
                   "design": {
-                    "guid": "019ab664-6666-6666-6666-666666666666"
+                    "id": "019ab664-6666-6666-6666-666666666666"
                   },
                   "diff": {
                     "name": "Duplicate Design Name 2"
@@ -82,10 +82,10 @@
       "message": "Duplicate piece name \"Duplicate Piece Name\" inside design \"Duplicate Design Name\".",
       "location": {
         "entityKind": "Piece",
-        "entityGuid": "019ab664-5555-5555-5555-555555555555",
+        "entityId": "019ab664-5555-5555-5555-555555555555",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-4444-4444-4444-444444444444",
         "019ab664-5555-5555-5555-555555555555"
       ],
@@ -97,14 +97,14 @@
               "updated": [
                 {
                   "design": {
-                    "guid": "019ab664-3333-3333-3333-333333333333"
+                    "id": "019ab664-3333-3333-3333-333333333333"
                   },
                   "diff": {
                     "pieces": {
                       "updated": [
                         {
                           "piece": {
-                            "guid": "019ab664-5555-5555-5555-555555555555"
+                            "id": "019ab664-5555-5555-5555-555555555555"
                           },
                           "diff": {
                             "name": "Duplicate Piece Name 2"
@@ -125,10 +125,10 @@
       "message": "Duplicate quality name \"Duplicate Quality Name\".",
       "location": {
         "entityKind": "Quality",
-        "entityGuid": "019ab664-8888-8888-8888-888888888888",
+        "entityId": "019ab664-8888-8888-8888-888888888888",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-7777-7777-7777-777777777777",
         "019ab664-8888-8888-8888-888888888888"
       ],
@@ -140,7 +140,7 @@
               "updated": [
                 {
                   "quality": {
-                    "guid": "019ab664-8888-8888-8888-888888888888"
+                    "id": "019ab664-8888-8888-8888-888888888888"
                   },
                   "diff": {
                     "name": "Duplicate Quality Name 2"
@@ -157,10 +157,10 @@
       "message": "Duplicate file name \"duplicate-file.txt\".",
       "location": {
         "entityKind": "File",
-        "entityGuid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
+        "entityId": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-BBBB-BBBB-BBBB-BBBBBBBB0000",
         "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
       ],
@@ -172,7 +172,7 @@
               "updated": [
                 {
                   "file": {
-                    "guid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
+                    "id": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000"
                   },
                   "diff": {
                     "name": "duplicate-file.txt 2"
@@ -189,10 +189,10 @@
       "message": "Duplicate folder name \"duplicate-folder\" among siblings.",
       "location": {
         "entityKind": "Folder",
-        "entityGuid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
+        "entityId": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-DDDD-DDDD-DDDD-DDDDDDDD0000",
         "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
       ],
@@ -204,7 +204,7 @@
               "updated": [
                 {
                   "folder": {
-                    "guid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
+                    "id": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000"
                   },
                   "diff": {
                     "name": "duplicate-folder 2"
@@ -221,10 +221,10 @@
       "message": "Duplicate connector name \"Duplicate Connector Name\" inside type \"Duplicate Type Name\".",
       "location": {
         "entityKind": "Connector",
-        "entityGuid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
+        "entityId": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
         "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
       ],
@@ -236,14 +236,14 @@
               "updated": [
                 {
                   "type": {
-                    "guid": "019ab664-1111-1111-1111-111111111111"
+                    "id": "019ab664-1111-1111-1111-111111111111"
                   },
                   "diff": {
                     "connectors": {
                       "updated": [
                         {
                           "connector": {
-                            "guid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
+                            "id": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB"
                           },
                           "diff": {
                             "name": "Duplicate Connector Name 2"
@@ -264,10 +264,10 @@
       "message": "Duplicate representation name \"Duplicate Representation Name\" inside type \"Duplicate Type Name\".",
       "location": {
         "entityKind": "Representation",
-        "entityGuid": "019ab664-1111-1111-1111-111111110002",
+        "entityId": "019ab664-1111-1111-1111-111111110002",
         "field": "name"
       },
-      "relatedGuids": [
+      "relatedIds": [
         "019ab664-1111-1111-1111-111111110001",
         "019ab664-1111-1111-1111-111111110002"
       ],
@@ -279,14 +279,14 @@
               "updated": [
                 {
                   "type": {
-                    "guid": "019ab664-1111-1111-1111-111111111111"
+                    "id": "019ab664-1111-1111-1111-111111111111"
                   },
                   "diff": {
                     "representations": {
                       "updated": [
                         {
                           "representation": {
-                            "guid": "019ab664-1111-1111-1111-111111110002"
+                            "id": "019ab664-1111-1111-1111-111111110002"
                           },
                           "diff": {
                             "name": "Duplicate Representation Name 2"
@@ -307,7 +307,7 @@
       "message": "Duplicate layer path \"Duplicate.Layer.Path\" inside design \"Duplicate Design Name\".",
       "location": {
         "entityKind": "Layer",
-        "entityGuid": "019ab664-3333-3333-3333-333333330002",
+        "entityId": "019ab664-3333-3333-3333-333333330002",
         "field": "path"
       },
       "fixes": [
@@ -318,14 +318,14 @@
               "updated": [
                 {
                   "design": {
-                    "guid": "019ab664-3333-3333-3333-333333333333"
+                    "id": "019ab664-3333-3333-3333-333333333333"
                   },
                   "diff": {
                     "layers": {
                       "updated": [
                         {
                           "layer": {
-                            "guid": "019ab664-3333-3333-3333-333333330002"
+                            "id": "019ab664-3333-3333-3333-333333330002"
                           },
                           "diff": {
                             "path": "Duplicate.Layer.Path 2"

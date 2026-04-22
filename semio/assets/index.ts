@@ -103,20 +103,20 @@ export const MetabolismKitAttributes = (MetabolismKitData as { attributes?: unkn
 export const MetabolismKitNakaginCapsuleTowerDesigns = MetabolismKitDesigns.filter((design) => design.name === "Nakagin Capsule Tower") ?? [];
 
 /**
- * Builds guid and name lookup maps from an item array
+ * Builds id and name lookup maps from an item array
  *
- * Callers MUST provide an array of objects with optional guid and name fields
+ * Callers MUST provide an array of objects with optional id and name fields
  * buildLookup holds the data fields for a buildLookup record.
  **/
 const buildLookup = (items: any[] = []) => {
-  const byGuid: Record<string, any> = {};
+  const byId: Record<string, any> = {};
   const byName: Record<string, any> = {};
   items.forEach((item) => {
     if (!item) return;
-    if (item.guid) byGuid[item.guid] = item;
+    if (item.id) byId[item.id] = item;
     if (item.name) byName[item.name] = item;
   });
-  return { byGuid, byName };
+  return { byId, byName };
 };
 
 /**
@@ -124,34 +124,34 @@ const buildLookup = (items: any[] = []) => {
  **/
 const typeLookup = buildLookup(MetabolismKitTypes);
 /**
- * Design lookup maps by guid and name
+ * Design lookup maps by id and name
  **/
 const designLookup = buildLookup(MetabolismKitDesigns);
 /**
- * Family lookup maps by guid and name
+ * Family lookup maps by id and name
  **/
 const familyLookup = buildLookup(MetabolismKitFamilies);
 
 /**
- * Metabolism kit types indexed by guid
+ * Metabolism kit types indexed by id
  **/
-export const MetabolismKitTypesByGuid = typeLookup.byGuid;
+export const MetabolismKitTypesById = typeLookup.byId;
 /**
  * Metabolism kit types indexed by name
  **/
 export const MetabolismKitTypesByName = typeLookup.byName;
 /**
- * Metabolism kit designs indexed by guid
+ * Metabolism kit designs indexed by id
  **/
-export const MetabolismKitDesignsByGuid = designLookup.byGuid;
+export const MetabolismKitDesignsById = designLookup.byId;
 /**
  * Metabolism kit designs indexed by name
  **/
 export const MetabolismKitDesignsByName = designLookup.byName;
 /**
- * Metabolism kit families indexed by guid
+ * Metabolism kit families indexed by id
  **/
-export const MetabolismKitFamiliesByGuid = familyLookup.byGuid;
+export const MetabolismKitFamiliesById = familyLookup.byId;
 /**
  * Metabolism kit families indexed by name
  **/
@@ -163,7 +163,7 @@ const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "N
 /**
  * nakaginCapsuleTowerFlatDesign holds the data fields for a nakaginCapsuleTowerFlatDesign record.
  **/
-const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);
+const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.id === nakaginCapsuleTowerDesign?.id);
 /**
  * Nakagin Capsule Tower Flat variant piece data with plane and center
  **/

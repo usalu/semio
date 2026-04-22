@@ -56,9 +56,9 @@ function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: str
             operation?: "flatten" | "delete";
             kit?: unknown;
             design?: unknown;
-            designGuid?: string;
-            pieceGuids?: unknown;
-            connectionGuids?: unknown;
+            designId?: string;
+            pieceIds?: unknown;
+            connectionIds?: unknown;
           };
 
           const language = body.language ?? "python";
@@ -68,15 +68,15 @@ function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: str
             op: operation,
             kit: body.kit ?? {},
             design: body.design ?? {},
-            designGuid: body.designGuid ?? "",
-            pieceGuids: Array.isArray(body.pieceGuids) ? body.pieceGuids : [],
-            connectionGuids: Array.isArray(body.connectionGuids) ? body.connectionGuids : [],
+            designId: body.designId ?? "",
+            pieceIds: Array.isArray(body.pieceIds) ? body.pieceIds : [],
+            connectionIds: Array.isArray(body.connectionIds) ? body.connectionIds : [],
           };
 
           let result: unknown;
           if (operation === "flatten") {
             const { asKitInstance } = await import("@semio/js");
-            result = asKitInstance(bridgePayload.kit as any).runFlattenDesign(bridgePayload.designGuid);
+            result = asKitInstance(bridgePayload.kit as any).runFlattenDesign(bridgePayload.designId);
           } else if (language === "python") {
             const py = spawnSync(
               "uv",
@@ -91,9 +91,9 @@ function createNativeAlgorithmsProxyPlugin(options: { readonly repoRootPath: str
                   "op=body.get('op')",
                   "kit=body.get('kit') or {}",
                   "design=body.get('design') or {}",
-                  "dg=body.get('designGuid') or ''",
-                  "pg=body.get('pieceGuids') or []",
-                  "cg=body.get('connectionGuids') or []",
+                  "dg=body.get('designId') or ''",
+                  "pg=body.get('pieceIds') or []",
+                  "cg=body.get('connectionIds') or []",
                   "if op=='delete':",
                   "    out=main.deletePiecesAndConnectionsInDesignDict(kit,design,pg,cg)",
                   "else:",

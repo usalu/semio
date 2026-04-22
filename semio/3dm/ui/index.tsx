@@ -163,7 +163,7 @@ export const importApi = {
     importRepresentation: (params: {
         kitName: string;
         typeName: string;
-        representationGuid: string;
+        representationId: string;
         fileUrl: string;
         tags: string[];
     }) => callBridge<{ layerPath: string; objectCount: number }>("import", "importRepresentation", params),
@@ -196,28 +196,28 @@ function buildTree(kits: Kit[]): TreeNode {
         label: "Kits",
         kind: "kits",
         children: kits.map((kit) => ({
-            id: `kit-${kit.guid}`,
+            id: `kit-${kit.id}`,
             label: kit.name,
             kind: "kit" as const,
             data: kit,
             children: [
                 {
-                    id: `kit-${kit.guid}-types`,
+                    id: `kit-${kit.id}-types`,
                     label: "Types",
                     kind: "types" as const,
                     children: (kit.types ?? []).map((type) => ({
-                        id: `type-${type.guid}`,
+                        id: `type-${type.id}`,
                         label: type.name,
                         kind: "type" as const,
                         data: type,
                         children: [
                             {
-                                id: `type-${type.guid}-representations`,
+                                id: `type-${type.id}-representations`,
                                 label: "Representations",
                                 kind: "representations" as const,
                                 children: (type.representations ?? []).map((representation) => ({
-                                    id: `representation-${representation.guid}`,
-                                    label: representation.name ?? representation.guid.substring(0, 8),
+                                    id: `representation-${representation.id}`,
+                                    label: representation.name ?? representation.id.substring(0, 8),
                                     kind: "representation" as const,
                                     data: { representation, type, kit },
                                 })),
@@ -226,11 +226,11 @@ function buildTree(kits: Kit[]): TreeNode {
                     })),
                 },
                 {
-                    id: `kit-${kit.guid}-designs`,
+                    id: `kit-${kit.id}-designs`,
                     label: "Designs",
                     kind: "designs" as const,
                     children: (kit.designs ?? []).map((design) => ({
-                        id: `design-${design.guid}`,
+                        id: `design-${design.id}`,
                         label: design.name,
                         kind: "design" as const,
                         data: design,
@@ -319,7 +319,7 @@ export function RhinoPanel() {
             const blob = await response.blob();
             const kitLoaded = await Kit.importFromSource(blob);
             setKits((prev) => {
-              const existing = prev.findIndex((k) => k.guid === kitLoaded.guid);
+              const existing = prev.findIndex((k) => k.id === kitLoaded.id);
               if (existing >= 0) {
                 const next = [...prev];
                 next[existing] = kitLoaded;
@@ -338,16 +338,16 @@ export function RhinoPanel() {
     const handleImportRepresentation = useCallback(async (data: { representation: Representation; type: SemioType; kit: Kit }) => {
         const { representation, type, kit } = data;
         try {
-            const file = kit.files?.find((f) => f.guid === representation.file.guid);
+            const file = kit.files?.find((f) => f.id === representation.file.id);
             const fileUrl = file?.url ?? "";
             const tagNames = (representation.tags ?? []).map((t) => {
-                const tag = kit.tags?.find((kt) => kt.guid === t.guid);
+                const tag = kit.tags?.find((kt) => kt.id === t.id);
                 return tag?.value ?? "";
             });
             await importApi.importRepresentation({
                 kitName: kit.name,
                 typeName: type.name,
-                representationGuid: representation.guid,
+                representationId: representation.id,
                 fileUrl,
                 tags: tagNames,
             });

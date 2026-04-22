@@ -16,8 +16,8 @@ import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "delete-input", kind: WindowKind.SELECTION_INPUT, label: "Input" },
@@ -29,8 +29,8 @@ function DeleteFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
-  const [selectedConnectionGuids, setSelectedConnectionGuids] = React.useState<string[]>([]);
+  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([]);
+  const [selectedConnectionIds, setSelectedConnectionIds] = React.useState<string[]>([]);
   const [designDiff, setDesignDiff] = React.useState<DesignDiff | undefined>(undefined);
 
   React.useEffect(() => {
@@ -38,14 +38,14 @@ function DeleteFrame() {
     setFlatInputDesign(null);
     setDesignDiff(undefined);
     void (async () => {
-      const flat = await nativeFlatDesign(kit, rawDesign.guid, language);
+      const flat = await nativeFlatDesign(kit, rawDesign.id, language);
       if (cancelled) return;
       setFlatInputDesign(flat);
-      setSelectedPieceGuids((prev) => {
-        const pieceGuids = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.guid));
-        const filtered = prev.filter((g) => pieceGuids.has(g));
+      setSelectedPieceIds((prev) => {
+        const pieceIds = new Set<string>((rawDesign?.pieces ?? []).map((p: any) => p.id));
+        const filtered = prev.filter((g) => pieceIds.has(g));
         if (filtered.length > 0) return filtered;
-        return (rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid);
+        return (rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.id);
       });
     })();
     return () => {
@@ -57,18 +57,18 @@ function DeleteFrame() {
     if (!flatInputDesign) return;
     let cancelled = false;
     void (async () => {
-      if (selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0) {
+      if (selectedPieceIds.length === 0 && selectedConnectionIds.length === 0) {
         if (!cancelled) setDesignDiff(undefined);
         return;
       }
       setDesignDiff(undefined);
-      const diffRes = await nativeDeletePieces(kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, language);
+      const diffRes = await nativeDeletePieces(kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, language);
       if (!cancelled) setDesignDiff(diffRes.ok ? diffRes.diff : undefined);
     })();
     return () => {
       cancelled = true;
     };
-  }, [kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, language]);
+  }, [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, language]);
 
   const outputDesign = React.useMemo(() => {
     if (!flatInputDesign) return rawDesign as Design;
@@ -84,22 +84,22 @@ function DeleteFrame() {
     () => ({
       kit,
       design: (flatInputDesign ?? rawDesign) as Design,
-      selectedPieceGuids,
-      onSelectedPieceGuidsChange: setSelectedPieceGuids,
-      selectedConnectionGuids,
-      onSelectedConnectionGuidsChange: setSelectedConnectionGuids,
+      selectedPieceIds,
+      onSelectedPieceIdsChange: setSelectedPieceIds,
+      selectedConnectionIds,
+      onSelectedConnectionIdsChange: setSelectedConnectionIds,
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: outputDesign as Design,
       error: !flatInputDesign
         ? `Loading delete preview (${language})…`
-        : selectedPieceGuids.length === 0 && selectedConnectionGuids.length === 0
+        : selectedPieceIds.length === 0 && selectedConnectionIds.length === 0
           ? "Select at least one piece or connection to delete."
           : !designDiff
             ? `Loading delete result (${language})…`
             : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceGuids, selectedConnectionGuids, designDiff, outputDesign, language],
+    [kit, flatInputDesign, selectedPieceIds, selectedConnectionIds, designDiff, outputDesign, language],
   );
 
   return <AlgorithmApp id="delete" label="Delete" windows={WINDOWS} context={context} className="h-full w-full" />;

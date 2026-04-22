@@ -3,7 +3,7 @@
 //! Every aggregate owns its children through `Arc<RwLock<T>>`; children hold
 //! `Weak<RwLock<T>>` back-references to their parents. Content-addressable
 //! hashes are computed lazily through interior-mutable `Cache` on each entity.
-//! GUIDs exist only as stable identity at serialization boundaries and in
+//! IDs exist only as stable identity at serialization boundaries and in
 //! DTO resolvers; the in-memory graph walks pointers.
 
 #![allow(clippy::new_without_default)]
@@ -14,7 +14,7 @@ pub mod attribute {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -31,7 +31,7 @@ pub mod attribute {
     /// A name/value pair attached to pretty much any domain entity.
     #[derive(Debug)]
     pub struct AttributeStore {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         pub definition: Option<String>,
@@ -49,12 +49,12 @@ pub mod attribute {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AttributeIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AttributeMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -63,7 +63,7 @@ pub mod attribute {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AttributeShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -72,7 +72,7 @@ pub mod attribute {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AttributeFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -80,9 +80,9 @@ pub mod attribute {
     }
 
     impl AttributeStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 key: String::new(),
                 value: String::new(),
                 definition: None,
@@ -105,11 +105,11 @@ pub mod attribute {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Attribute, self.guid.clone())
+            EntityRef::new(EntityKind::Attribute, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: AttributeFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.key = d.key;
             self.value = d.value;
             self.definition = d.definition;
@@ -117,7 +117,7 @@ pub mod attribute {
         }
 
         pub(crate) fn from_shallow_dto(d: AttributeShallowDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.key = d.key;
             s.value = d.value;
             s.definition = d.definition;
@@ -126,7 +126,7 @@ pub mod attribute {
         }
 
         pub(crate) fn from_full_dto(d: AttributeFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -259,13 +259,13 @@ pub mod attribute {
 
         pub fn to_id_dto(&self) -> AttributeIdDto {
             AttributeIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> AttributeMetadataDto {
             AttributeMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 key: self.key.clone(),
                 value: self.value.clone(),
                 definition: self.definition.clone(),
@@ -275,7 +275,7 @@ pub mod attribute {
         pub fn to_shallow_dto(&self) -> AttributeShallowDto {
             let m = self.to_metadata_dto();
             AttributeShallowDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 definition: m.definition,
@@ -285,7 +285,7 @@ pub mod attribute {
         pub fn to_full_dto(&self) -> AttributeFullDto {
             let m = self.to_metadata_dto();
             AttributeFullDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 definition: m.definition,
@@ -306,7 +306,7 @@ pub mod attribute {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("attr")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.key)
                 .str(&self.value)
                 .opt_str(self.definition.as_deref());
@@ -320,7 +320,7 @@ pub mod author {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -331,7 +331,7 @@ pub mod author {
     /// A human author attached to a design, type, or kit.
     #[derive(Debug)]
     pub struct AuthorStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub email: String,
         pub role: Option<String>,
@@ -345,12 +345,12 @@ pub mod author {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub email: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -361,7 +361,7 @@ pub mod author {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub email: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -372,7 +372,7 @@ pub mod author {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub email: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -382,9 +382,9 @@ pub mod author {
     }
 
     impl AuthorStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 name: String::new(),
                 email: String::new(),
                 role: None,
@@ -403,11 +403,11 @@ pub mod author {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Author, self.guid.clone())
+            EntityRef::new(EntityKind::Author, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: AuthorFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.name = d.name;
             self.email = d.email;
             self.role = d.role;
@@ -416,7 +416,7 @@ pub mod author {
         }
 
         pub(crate) fn from_full_dto(d: AuthorFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -528,13 +528,13 @@ pub mod author {
 
         pub fn to_id_dto(&self) -> AuthorIdDto {
             AuthorIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> AuthorMetadataDto {
             AuthorMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 email: self.email.clone(),
                 role: self.role.clone(),
@@ -545,7 +545,7 @@ pub mod author {
         pub fn to_shallow_dto(&self) -> AuthorShallowDto {
             let m = self.to_metadata_dto();
             AuthorShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 email: m.email,
                 role: m.role,
@@ -556,7 +556,7 @@ pub mod author {
         pub fn to_full_dto(&self) -> AuthorFullDto {
             let m = self.to_metadata_dto();
             AuthorFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 email: m.email,
                 role: m.role,
@@ -578,7 +578,7 @@ pub mod author {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("author")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .str(&self.email)
                 .opt_str(self.role.as_deref());
@@ -594,7 +594,7 @@ pub mod benchmark {
     use std::sync::{RwLock, Weak};
 
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::quality::QualityStoreWeak;
 
@@ -604,7 +604,7 @@ pub mod benchmark {
     /// Numeric range benchmark used to qualify quality measurements.
     #[derive(Debug)]
     pub struct BenchmarkStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub min: Option<f64>,
         pub max: Option<f64>,
@@ -617,12 +617,12 @@ pub mod benchmark {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct BenchmarkIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct BenchmarkMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub min: Option<f64>,
@@ -644,7 +644,7 @@ pub mod benchmark {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct BenchmarkShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub min: Option<f64>,
@@ -666,7 +666,7 @@ pub mod benchmark {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct BenchmarkFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub min: Option<f64>,
@@ -687,9 +687,9 @@ pub mod benchmark {
     }
 
     impl BenchmarkStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 name: String::new(),
                 min: None,
                 max: None,
@@ -707,11 +707,11 @@ pub mod benchmark {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Benchmark, self.guid.clone())
+            EntityRef::new(EntityKind::Benchmark, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_dto(&mut self, d: BenchmarkMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.name = d.name;
             self.min = d.min;
             self.max = d.max;
@@ -801,13 +801,13 @@ pub mod benchmark {
 
         pub fn to_id_dto(&self) -> BenchmarkIdDto {
             BenchmarkIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> BenchmarkMetadataDto {
             BenchmarkMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 min: self.min,
                 max: self.max,
@@ -819,7 +819,7 @@ pub mod benchmark {
         pub fn to_shallow_dto(&self) -> BenchmarkShallowDto {
             let m = self.to_metadata_dto();
             BenchmarkShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 min: m.min,
                 max: m.max,
@@ -831,7 +831,7 @@ pub mod benchmark {
         pub fn to_full_dto(&self) -> BenchmarkFullDto {
             let m = self.to_metadata_dto();
             BenchmarkFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 min: m.min,
                 max: m.max,
@@ -854,7 +854,7 @@ pub mod benchmark {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("benchmark")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_f64(self.min)
                 .opt_f64(self.max)
@@ -870,7 +870,7 @@ pub mod concept {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -881,7 +881,7 @@ pub mod concept {
     /// Conceptual / semantic label grouping types and designs.
     #[derive(Debug)]
     pub struct ConceptStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub order: Option<i64>,
@@ -894,12 +894,12 @@ pub mod concept {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -909,7 +909,7 @@ pub mod concept {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -919,7 +919,7 @@ pub mod concept {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -928,9 +928,9 @@ pub mod concept {
     }
 
     impl ConceptStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 name: String::new(),
                 description: None,
                 order: None,
@@ -948,11 +948,11 @@ pub mod concept {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Concept, self.guid.clone())
+            EntityRef::new(EntityKind::Concept, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: ConceptFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.name = d.name;
             self.description = d.description;
             self.order = d.order;
@@ -960,7 +960,7 @@ pub mod concept {
         }
 
         pub(crate) fn from_full_dto(d: ConceptFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -1042,13 +1042,13 @@ pub mod concept {
 
         pub fn to_id_dto(&self) -> ConceptIdDto {
             ConceptIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> ConceptMetadataDto {
             ConceptMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 order: self.order,
@@ -1058,7 +1058,7 @@ pub mod concept {
         pub fn to_shallow_dto(&self) -> ConceptShallowDto {
             let m = self.to_metadata_dto();
             ConceptShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 order: m.order,
@@ -1068,7 +1068,7 @@ pub mod concept {
         pub fn to_full_dto(&self) -> ConceptFullDto {
             let m = self.to_metadata_dto();
             ConceptFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 order: m.order,
@@ -1089,7 +1089,7 @@ pub mod concept {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("concept")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref());
             if let Some(o) = self.order {
@@ -1108,7 +1108,7 @@ pub mod connection {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
 
@@ -1118,7 +1118,7 @@ pub mod connection {
     /// Join between two [`crate::piece::PieceStore`] instances.
     #[derive(Debug)]
     pub struct ConnectionStore {
-        pub guid: Guid,
+        pub id: Id,
         pub connected: SideStoreRef,
         pub connecting: SideStoreRef,
         pub gap: Option<f64>,
@@ -1139,12 +1139,12 @@ pub mod connection {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectionIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectionMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub connected: SideMetadataDto,
         pub connecting: SideMetadataDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1169,7 +1169,7 @@ pub mod connection {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectionShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub connected: SideMetadataDto,
         pub connecting: SideMetadataDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1196,7 +1196,7 @@ pub mod connection {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectionFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub connected: SideMetadataDto,
         pub connecting: SideMetadataDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1243,12 +1243,12 @@ pub mod connection {
 
     impl ConnectionStore {
         pub(crate) fn empty_with_sides(
-            guid: Guid,
+            id: Id,
             connected: SideStoreRef,
             connecting: SideStoreRef,
         ) -> Self {
             Self {
-                guid,
+                id,
                 connected,
                 connecting,
                 gap: None,
@@ -1274,7 +1274,7 @@ pub mod connection {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connection, self.guid.clone())
+            EntityRef::new(EntityKind::Connection, self.id.clone())
         }
 
         /// Invalidate this connection and all design-level aggregates (flatten, validation).
@@ -1295,23 +1295,23 @@ pub mod connection {
 
         pub(crate) fn flatten_parent_and_child_sides(
             &self,
-            child_guid: &Guid,
+            child_id: &Id,
         ) -> Option<(SideStoreRef, SideStoreRef)> {
-            let connected_guid = self.connected.read().ok().and_then(|side| {
+            let connected_id = self.connected.read().ok().and_then(|side| {
                 side.piece
                     .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
             });
-            let connecting_guid = self.connecting.read().ok().and_then(|side| {
+            let connecting_id = self.connecting.read().ok().and_then(|side| {
                 side.piece
                     .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
             });
-            match (connected_guid, connecting_guid) {
-                (Some(_), Some(connecting_guid)) if &connecting_guid == child_guid => {
+            match (connected_id, connecting_id) {
+                (Some(_), Some(connecting_id)) if &connecting_id == child_id => {
                     Some((self.connected.clone(), self.connecting.clone()))
                 }
-                (Some(connected_guid), Some(_)) if &connected_guid == child_guid => {
+                (Some(connected_id), Some(_)) if &connected_id == child_id => {
                     Some((self.connecting.clone(), self.connected.clone()))
                 }
                 _ => None,
@@ -1319,7 +1319,7 @@ pub mod connection {
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: ConnectionMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.gap = d.gap;
             self.shift = d.shift;
             self.rise = d.rise;
@@ -1488,13 +1488,13 @@ pub mod connection {
 
         pub fn to_id_dto(&self) -> ConnectionIdDto {
             ConnectionIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> ConnectionMetadataDto {
             ConnectionMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 connected: self
                     .connected
                     .read()
@@ -1520,7 +1520,7 @@ pub mod connection {
         pub fn to_shallow_dto(&self) -> ConnectionShallowDto {
             let m = self.to_metadata_dto();
             ConnectionShallowDto {
-                guid: m.guid,
+                id: m.id,
                 connected: m.connected,
                 connecting: m.connecting,
                 gap: m.gap,
@@ -1543,7 +1543,7 @@ pub mod connection {
         pub fn to_full_dto(&self) -> ConnectionFullDto {
             let m = self.to_metadata_dto();
             ConnectionFullDto {
-                guid: m.guid,
+                id: m.id,
                 connected: m.connected,
                 connecting: m.connecting,
                 gap: m.gap,
@@ -1580,7 +1580,7 @@ pub mod connection {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("connection").str(self.guid.as_str());
+            w.tag("connection").str(self.id.as_str());
             if let Ok(s) = self.connected.read() {
                 s.hash_into(w);
             }
@@ -1608,7 +1608,7 @@ pub mod connection {
         fn default() -> Self {
             let s1 = Arc::new(RwLock::new(SideStore::default()));
             let s2 = Arc::new(RwLock::new(SideStore::default()));
-            Self::empty_with_sides(crate::guid::Guid::new_v7(), s1, s2)
+            Self::empty_with_sides(crate::id::Id::new_v7(), s1, s2)
         }
     }
 }
@@ -1619,7 +1619,7 @@ pub mod connector {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::port::{PortIdDto, PortStoreWeak};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -1630,7 +1630,7 @@ pub mod connector {
     /// A named socket on a [`crate::typ::TypeStore`] that references a concrete port.
     #[derive(Debug)]
     pub struct ConnectorStore {
-        pub guid: Guid,
+        pub id: Id,
         pub code: String,
         pub description: Option<String>,
         pub port: Option<PortStoreWeak>,
@@ -1644,12 +1644,12 @@ pub mod connector {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -1659,7 +1659,7 @@ pub mod connector {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -1673,7 +1673,7 @@ pub mod connector {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -1688,7 +1688,7 @@ pub mod connector {
     impl ConnectorStore {
         pub fn new(code: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 code: code.into(),
                 description: None,
                 port: None,
@@ -1706,12 +1706,12 @@ pub mod connector {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Connector, self.guid.clone())
+            EntityRef::new(EntityKind::Connector, self.id.clone())
         }
 
         pub fn from_id_dto(d: ConnectorIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 code: String::new(),
                 description: None,
                 port: None,
@@ -1725,7 +1725,7 @@ pub mod connector {
 
         pub fn from_metadata_dto(d: ConnectorMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 code: d.code,
                 description: d.description,
                 port: None,
@@ -1739,7 +1739,7 @@ pub mod connector {
 
         pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 code: d.code,
                 description: d.description,
                 port: d.port,
@@ -1759,7 +1759,7 @@ pub mod connector {
 
         pub fn from_full_dto(d: ConnectorFullDto) -> Self {
             let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 code: d.code,
                 description: d.description,
                 port: d.port,
@@ -1779,7 +1779,7 @@ pub mod connector {
 
         pub fn to_id_dto(&self) -> ConnectorIdDto {
             ConnectorIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
@@ -1790,7 +1790,7 @@ pub mod connector {
                 .and_then(|p| p.upgrade())
                 .and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
             ConnectorMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 code: self.code.clone(),
                 description: self.description.clone(),
                 port,
@@ -1800,7 +1800,7 @@ pub mod connector {
         pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
             let m = self.to_metadata_dto();
             ConnectorShallowDto {
-                guid: m.guid,
+                id: m.id,
                 code: m.code,
                 description: m.description,
                 port: m.port,
@@ -1820,7 +1820,7 @@ pub mod connector {
         pub fn to_full_dto(&self) -> ConnectorFullDto {
             let m = self.to_metadata_dto();
             ConnectorFullDto {
-                guid: m.guid,
+                id: m.id,
                 code: m.code,
                 description: m.description,
                 port: m.port,
@@ -1905,12 +1905,12 @@ pub mod connector {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("connector")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.code)
                 .opt_str(self.description.as_deref());
             if let Some(port) = self.port.as_ref().and_then(|p| p.upgrade()) {
                 if let Ok(port) = port.read() {
-                    w.str(port.guid.as_str());
+                    w.str(port.id.as_str());
                 }
             }
             for q in &self.qualities {
@@ -1943,7 +1943,7 @@ pub mod design {
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Camera, Coordinate, Location, Plane};
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStore;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
@@ -1962,7 +1962,7 @@ pub mod design {
     /// A placed/composed design: a scene of pieces joined by connections.
     #[derive(Debug)]
     pub struct DesignStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
@@ -1988,17 +1988,17 @@ pub mod design {
         pub parent_kit: Weak<RwLock<crate::kit::KitStore>>,
         pub(crate) event_bus: Weak<EventBus>,
         hash_cache: Cache<String>,
-        flatten_cache: Cache<HashMap<Guid, (Plane, Coordinate)>>,
+        flatten_cache: Cache<HashMap<Id, (Plane, Coordinate)>>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct DesignIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct DesignMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -2026,7 +2026,7 @@ pub mod design {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct DesignShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -2076,7 +2076,7 @@ pub mod design {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct DesignFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -2131,7 +2131,7 @@ pub mod design {
         if let Some(pw) = &side.port {
             if let Some(p) = pw.upgrade() {
                 if let Ok(pr) = p.read() {
-                    return typ.connector_for_port_guid(&pr.guid);
+                    return typ.connector_for_port_id(&pr.id);
                 }
             }
         }
@@ -2140,26 +2140,26 @@ pub mod design {
 
     fn connection_from_full_dto(
         cdto: ConnectionFullDto,
-        piece_index: &HashMap<Guid, PieceStoreRef>,
+        piece_index: &HashMap<Id, PieceStoreRef>,
         design_weak: DesignStoreWeak,
     ) -> ConnectionStoreRef {
         let s1 = Arc::new(RwLock::new(SideStore::empty_shell(
-            cdto.connected.guid.clone(),
+            cdto.connected.id.clone(),
         )));
         let s2 = Arc::new(RwLock::new(SideStore::empty_shell(
-            cdto.connecting.guid.clone(),
+            cdto.connecting.id.clone(),
         )));
         wire_side_from_dto(&cdto.connected, &s1, piece_index);
         wire_side_from_dto(&cdto.connecting, &s2, piece_index);
         let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(
-            cdto.guid.clone(),
+            cdto.id.clone(),
             s1.clone(),
             s2.clone(),
         )));
         {
             let mut cw = conn.write().expect("connection write");
             cw.apply_metadata_fields(ConnectionMetadataDto {
-                guid: cdto.guid.clone(),
+                id: cdto.id.clone(),
                 connected: cdto.connected.clone(),
                 connecting: cdto.connecting.clone(),
                 gap: cdto.gap,
@@ -2191,11 +2191,11 @@ pub mod design {
     fn wire_side_from_dto(
         meta: &crate::side::SideMetadataDto,
         side_ref: &SideStoreRef,
-        piece_index: &HashMap<Guid, PieceStoreRef>,
+        piece_index: &HashMap<Id, PieceStoreRef>,
     ) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
-            if let Some(pref) = piece_index.get(&meta.piece.guid) {
+            if let Some(pref) = piece_index.get(&meta.piece.id) {
                 let _ = w.set_piece_weak(Arc::downgrade(pref));
                 if let Some(port_id) = &meta.port {
                     if let Ok(pc) = pref.read() {
@@ -2204,7 +2204,7 @@ pub mod design {
                                 if let Ok(tr) = t.read() {
                                     for pr in &tr.ports {
                                         if let Ok(prr) = pr.read() {
-                                            if prr.guid == port_id.guid {
+                                            if prr.id == port_id.id {
                                                 let _ = w.set_port_weak(Some(Arc::downgrade(pr)));
                                                 break;
                                             }
@@ -2216,7 +2216,7 @@ pub mod design {
                     }
                 }
                 if let Some(dp) = &meta.design_piece {
-                    if let Some(dpref) = piece_index.get(&dp.guid) {
+                    if let Some(dpref) = piece_index.get(&dp.id) {
                         let _ = w.set_design_piece_weak(Some(Arc::downgrade(dpref)));
                     }
                 }
@@ -2227,7 +2227,7 @@ pub mod design {
     impl DesignStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: name.into(),
                 description: None,
                 icon: None,
@@ -2257,9 +2257,9 @@ pub mod design {
             }
         }
 
-        pub(crate) fn empty_shell(guid: Guid, name: String) -> Self {
+        pub(crate) fn empty_shell(id: Id, name: String) -> Self {
             Self {
-                guid,
+                id,
                 name,
                 description: None,
                 icon: None,
@@ -2296,10 +2296,10 @@ pub mod design {
 
         // #region 🔖FlattenParentage
         pub(crate) fn rewire_piece_flatten_parents(&self) {
-            let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for piece in &self.pieces {
                 if let Ok(pr) = piece.read() {
-                    piece_index.insert(pr.guid.clone(), piece.clone());
+                    piece_index.insert(pr.id.clone(), piece.clone());
                 }
             }
 
@@ -2313,47 +2313,47 @@ pub mod design {
                 return;
             }
 
-            let mut adjacency: HashMap<Guid, Vec<(Guid, ConnectionStoreRef)>> = HashMap::new();
+            let mut adjacency: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
             for connection in &self.connections {
                 let Ok(connection_read) = connection.read() else {
                     continue;
                 };
-                let connected_guid = connection_read.connected.read().ok().and_then(|side| {
+                let connected_id = connection_read.connected.read().ok().and_then(|side| {
                     side.piece
                         .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
                 });
-                let connecting_guid = connection_read.connecting.read().ok().and_then(|side| {
+                let connecting_id = connection_read.connecting.read().ok().and_then(|side| {
                     side.piece
                         .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
                 });
-                let (Some(connected_guid), Some(connecting_guid)) =
-                    (connected_guid, connecting_guid)
+                let (Some(connected_id), Some(connecting_id)) =
+                    (connected_id, connecting_id)
                 else {
                     continue;
                 };
-                if !piece_index.contains_key(&connected_guid)
-                    || !piece_index.contains_key(&connecting_guid)
+                if !piece_index.contains_key(&connected_id)
+                    || !piece_index.contains_key(&connecting_id)
                 {
                     continue;
                 }
                 adjacency
-                    .entry(connected_guid.clone())
+                    .entry(connected_id.clone())
                     .or_default()
-                    .push((connecting_guid.clone(), connection.clone()));
+                    .push((connecting_id.clone(), connection.clone()));
                 adjacency
-                    .entry(connecting_guid)
+                    .entry(connecting_id)
                     .or_default()
-                    .push((connected_guid, connection.clone()));
+                    .push((connected_id, connection.clone()));
             }
 
-            let roots: Vec<Guid> = self
+            let roots: Vec<Id> = self
                 .pieces
                 .iter()
-                .filter_map(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                .filter_map(|piece| piece.read().ok().map(|piece| piece.id.clone()))
                 .collect();
-            let mut visited: HashSet<Guid> = HashSet::new();
+            let mut visited: HashSet<Id> = HashSet::new();
             for root in roots {
                 if !visited.insert(root.clone()) {
                     continue;
@@ -2361,13 +2361,13 @@ pub mod design {
                 let mut queue = VecDeque::new();
                 queue.push_back(root.clone());
                 while let Some(current) = queue.pop_front() {
-                    for (child_guid, connection_ref) in
+                    for (child_id, connection_ref) in
                         adjacency.get(&current).cloned().unwrap_or_default()
                     {
-                        if !visited.insert(child_guid.clone()) {
+                        if !visited.insert(child_id.clone()) {
                             continue;
                         }
-                        let Some(child_ref) = piece_index.get(&child_guid) else {
+                        let Some(child_ref) = piece_index.get(&child_id) else {
                             continue;
                         };
                         let Some(parent_ref) = piece_index.get(&current) else {
@@ -2379,7 +2379,7 @@ pub mod design {
                                 Some(Arc::downgrade(&connection_ref)),
                             );
                         }
-                        queue.push_back(child_guid);
+                        queue.push_back(child_id);
                     }
                 }
             }
@@ -2387,11 +2387,11 @@ pub mod design {
         // #endregion
 
         pub(crate) fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Design, self.guid.clone())
+            EntityRef::new(EntityKind::Design, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: DesignMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.name = d.name;
             self.description = d.description;
             self.icon = d.icon;
@@ -2428,35 +2428,35 @@ pub mod design {
         /// Invalidate flatten caches and emit flatten + derived events for all pieces in this design.
         ///
         /// When a [`crate::piece::PieceStore`] mutator bubbles here, it **holds that piece's write
-        /// lock**; pass its guid so we can still list it in `FlattenInvalidated` without blocking on
+        /// lock**; pass its id so we can still list it in `FlattenInvalidated` without blocking on
         /// `read()` (which would deadlock).
         pub fn invalidate_flatten(&self) {
             self.invalidate_flatten_with_locked_piece(None);
         }
 
-        pub(crate) fn invalidate_flatten_with_locked_piece(&self, locked_piece: Option<Guid>) {
-            let design_guid = self.guid.clone();
-            let mut piece_guids: Vec<Guid> = self
+        pub(crate) fn invalidate_flatten_with_locked_piece(&self, locked_piece: Option<Id>) {
+            let design_id = self.id.clone();
+            let mut piece_ids: Vec<Id> = self
                 .pieces
                 .iter()
                 .filter_map(|p| match p.try_read() {
-                    Ok(pr) => Some(pr.guid.clone()),
+                    Ok(pr) => Some(pr.id.clone()),
                     Err(_) => locked_piece.clone(),
                 })
                 .collect();
-            piece_guids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
-            piece_guids.dedup();
+            piece_ids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
+            piece_ids.dedup();
             self.flatten_cache.invalidate();
             self.emit_ev(KitEvent::FlattenInvalidated {
-                design: design_guid,
-                pieces: piece_guids.clone(),
+                design: design_id,
+                pieces: piece_ids.clone(),
             });
             for p in &self.pieces {
                 if let Ok(pr) = p.try_read() {
                     pr.invalidate_flat_pose();
                 }
             }
-            for gid in &piece_guids {
+            for gid in &piece_ids {
                 self.emit_ev(KitEvent::DerivedChanged {
                     entity: EntityRef::new(EntityKind::Piece, gid.clone()),
                     field: "flat_plane",
@@ -2697,8 +2697,8 @@ pub mod design {
             Ok(())
         }
 
-        /// Flattened world-space plane and center per piece guid (BFS, Python `flattenDesignDict`).
-        pub fn flatten_map(&self) -> HashMap<Guid, (Plane, Coordinate)> {
+        /// Flattened world-space plane and center per piece id (BFS, Python `flattenDesignDict`).
+        pub fn flatten_map(&self) -> HashMap<Id, (Plane, Coordinate)> {
             self.flatten_cache.get_or_init(|| {
                 let Some(k) = self.parent_kit.upgrade() else {
                     return self.flatten_identity_only();
@@ -2710,35 +2710,35 @@ pub mod design {
             })
         }
 
-        fn flatten_identity_only(&self) -> HashMap<Guid, (Plane, Coordinate)> {
+        fn flatten_identity_only(&self) -> HashMap<Id, (Plane, Coordinate)> {
             let mut m = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
                     let pl = pr.plane.unwrap_or_else(Plane::world_xy);
                     let ce = pr.center.unwrap_or_default();
-                    m.insert(pr.guid.clone(), (pl, ce));
+                    m.insert(pr.id.clone(), (pl, ce));
                 }
             }
             m
         }
 
-        fn compute_flatten_with_kit(&self, kit: &KitStore) -> HashMap<Guid, (Plane, Coordinate)> {
-            let mut types_by_guid: HashMap<Guid, TypeStoreRef> = HashMap::new();
+        fn compute_flatten_with_kit(&self, kit: &KitStore) -> HashMap<Id, (Plane, Coordinate)> {
+            let mut types_by_id: HashMap<Id, TypeStoreRef> = HashMap::new();
             for t in &kit.types {
                 if let Ok(tr) = t.read() {
-                    types_by_guid.insert(tr.guid.clone(), t.clone());
+                    types_by_id.insert(tr.id.clone(), t.clone());
                 }
             }
-            let mut piece_map: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            let mut piece_map: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
-                    piece_map.insert(pr.guid.clone(), p.clone());
+                    piece_map.insert(pr.id.clone(), p.clone());
                 }
             }
             if piece_map.is_empty() {
                 return HashMap::new();
             }
-            let mut adj: HashMap<Guid, Vec<(Guid, ConnectionStoreRef)>> = HashMap::new();
+            let mut adj: HashMap<Id, Vec<(Id, ConnectionStoreRef)>> = HashMap::new();
             for c in &self.connections {
                 let Ok(conn) = c.read() else { continue };
                 let Ok(s0) = conn.connected.read() else {
@@ -2750,11 +2750,11 @@ pub mod design {
                 let g0 = s0
                     .piece
                     .upgrade()
-                    .and_then(|p| p.read().ok().map(|x| x.guid.clone()));
+                    .and_then(|p| p.read().ok().map(|x| x.id.clone()));
                 let g1 = s1
                     .piece
                     .upgrade()
-                    .and_then(|p| p.read().ok().map(|x| x.guid.clone()));
+                    .and_then(|p| p.read().ok().map(|x| x.id.clone()));
                 let (Some(src), Some(tgt)) = (g0, g1) else {
                     continue;
                 };
@@ -2766,14 +2766,14 @@ pub mod design {
                     .push((tgt.clone(), c.clone()));
                 adj.entry(tgt).or_default().push((src, c.clone()));
             }
-            let mut piece_planes: HashMap<Guid, Plane> = HashMap::new();
-            let mut centers: HashMap<Guid, Coordinate> = HashMap::new();
-            let mut visited: HashSet<Guid> = HashSet::new();
+            let mut piece_planes: HashMap<Id, Plane> = HashMap::new();
+            let mut centers: HashMap<Id, Coordinate> = HashMap::new();
+            let mut visited: HashSet<Id> = HashSet::new();
 
-            let roots: Vec<Guid> = self
+            let roots: Vec<Id> = self
                 .pieces
                 .iter()
-                .filter_map(|p| p.read().ok().map(|pr| pr.guid.clone()))
+                .filter_map(|p| p.read().ok().map(|pr| pr.id.clone()))
                 .collect();
             for root in roots {
                 if visited.contains(&root) {
@@ -2819,11 +2819,11 @@ pub mod design {
                             let g0 = s0
                                 .piece
                                 .upgrade()
-                                .and_then(|p| p.read().ok().map(|x| x.guid.clone()));
+                                .and_then(|p| p.read().ok().map(|x| x.id.clone()));
                             let g1 = s1
                                 .piece
                                 .upgrade()
-                                .and_then(|p| p.read().ok().map(|x| x.guid.clone()));
+                                .and_then(|p| p.read().ok().map(|x| x.id.clone()));
                             let (Some(a), Some(b)) = (g0, g1) else {
                                 continue;
                             };
@@ -2844,23 +2844,23 @@ pub mod design {
                         let Ok(child_piece) = child_pref.read() else {
                             continue;
                         };
-                        let parent_type_guid = current_piece
+                        let parent_type_id = current_piece
                             .type_ref
                             .as_ref()
                             .and_then(|w| w.upgrade())
-                            .and_then(|t| t.read().ok().map(|t| t.guid.clone()));
-                        let child_type_guid = child_piece
+                            .and_then(|t| t.read().ok().map(|t| t.id.clone()));
+                        let child_type_id = child_piece
                             .type_ref
                             .as_ref()
                             .and_then(|w| w.upgrade())
-                            .and_then(|t| t.read().ok().map(|t| t.guid.clone()));
-                        let (Some(ptg), Some(ctg)) = (parent_type_guid, child_type_guid) else {
+                            .and_then(|t| t.read().ok().map(|t| t.id.clone()));
+                        let (Some(ptg), Some(ctg)) = (parent_type_id, child_type_id) else {
                             continue;
                         };
-                        let Some(parent_type) = types_by_guid.get(&ptg) else {
+                        let Some(parent_type) = types_by_id.get(&ptg) else {
                             continue;
                         };
-                        let Some(child_type) = types_by_guid.get(&ctg) else {
+                        let Some(child_type) = types_by_id.get(&ctg) else {
                             continue;
                         };
                         let Ok(pt) = parent_type.read() else { continue };
@@ -2901,7 +2901,7 @@ pub mod design {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("design")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref())
                 .opt_str(self.variant.as_deref())
@@ -2964,40 +2964,40 @@ pub mod design {
             }
         }
 
-        pub fn piece(&self, guid: &str) -> Option<PieceStoreRef> {
+        pub fn piece(&self, id: &str) -> Option<PieceStoreRef> {
             self.pieces
                 .iter()
-                .find(|p| p.read().map(|p| p.guid.as_str() == guid).unwrap_or(false))
+                .find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn connection(&self, guid: &str) -> Option<ConnectionStoreRef> {
+        pub fn connection(&self, id: &str) -> Option<ConnectionStoreRef> {
             self.connections
                 .iter()
-                .find(|c| c.read().map(|c| c.guid.as_str() == guid).unwrap_or(false))
+                .find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn layer(&self, guid: &str) -> Option<LayerStoreRef> {
+        pub fn layer(&self, id: &str) -> Option<LayerStoreRef> {
             self.layers
                 .iter()
-                .find(|l| l.read().map(|l| l.guid.as_str() == guid).unwrap_or(false))
+                .find(|l| l.read().map(|l| l.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn group(&self, guid: &str) -> Option<GroupStoreRef> {
+        pub fn group(&self, id: &str) -> Option<GroupStoreRef> {
             self.groups
                 .iter()
-                .find(|g| g.read().map(|g| g.guid.as_str() == guid).unwrap_or(false))
+                .find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
         // #region 🔁PieceAlternatives
-        fn side_piece_guid(side: &SideStoreRef) -> Option<Guid> {
+        fn side_piece_id(side: &SideStoreRef) -> Option<Id> {
             side.read().ok().and_then(|side| {
                 side.piece
                     .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
             })
         }
 
@@ -3025,30 +3025,30 @@ pub mod design {
 
         fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
             let candidate_design = candidate_design.read().ok()?;
-            let mut consumed_by_piece_port: HashMap<(Guid, Guid), usize> = HashMap::new();
+            let mut consumed_by_piece_port: HashMap<(Id, Id), usize> = HashMap::new();
             for connection in &candidate_design.connections {
                 let connection = connection.read().ok()?;
                 for side in [&connection.connected, &connection.connecting] {
-                    let piece_guid = Self::side_piece_guid(side)?;
-                    let port_guid = Self::side_port_ref(side)
-                        .and_then(|port| port.read().ok().map(|port| port.guid.clone()))?;
-                    *consumed_by_piece_port.entry((piece_guid, port_guid)).or_default() += 1;
+                    let piece_id = Self::side_piece_id(side)?;
+                    let port_id = Self::side_port_ref(side)
+                        .and_then(|port| port.read().ok().map(|port| port.id.clone()))?;
+                    *consumed_by_piece_port.entry((piece_id, port_id)).or_default() += 1;
                 }
             }
 
             let mut available_ports = Vec::new();
             for piece in &candidate_design.pieces {
                 let piece = piece.read().ok()?;
-                let piece_guid = piece.guid.clone();
+                let piece_id = piece.id.clone();
                 let type_ref = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade())?;
                 drop(piece);
 
                 let mut piece_ports = Self::candidate_type_available_ports(&type_ref)?;
                 piece_ports.retain(|port| {
-                    let Some(port_guid) = port.read().ok().map(|port| port.guid.clone()) else {
+                    let Some(port_id) = port.read().ok().map(|port| port.id.clone()) else {
                         return false;
                     };
-                    let consumed = consumed_by_piece_port.entry((piece_guid.clone(), port_guid)).or_default();
+                    let consumed = consumed_by_piece_port.entry((piece_id.clone(), port_id)).or_default();
                     if *consumed == 0 {
                         return true;
                     }
@@ -3071,7 +3071,7 @@ pub mod design {
             let Ok(required_port) = required_port.read() else {
                 return false;
             };
-            if candidate_port.guid == required_port.guid {
+            if candidate_port.id == required_port.id {
                 return true;
             }
             let Some(candidate_family) = candidate_port.family.as_deref() else {
@@ -3153,7 +3153,7 @@ pub mod design {
 
         fn boundary_requirement_ports(
             &self,
-            selected_piece_guids: &HashSet<Guid>,
+            selected_piece_ids: &HashSet<Id>,
         ) -> Vec<Option<PortStoreRef>> {
             let mut required_ports = Vec::new();
             for connection in &self.connections {
@@ -3161,11 +3161,11 @@ pub mod design {
                     required_ports.push(None);
                     continue;
                 };
-                let connected_selected = Self::side_piece_guid(&connection.connected)
-                    .map(|guid| selected_piece_guids.contains(&guid))
+                let connected_selected = Self::side_piece_id(&connection.connected)
+                    .map(|id| selected_piece_ids.contains(&id))
                     .unwrap_or(false);
-                let connecting_selected = Self::side_piece_guid(&connection.connecting)
-                    .map(|guid| selected_piece_guids.contains(&guid))
+                let connecting_selected = Self::side_piece_id(&connection.connecting)
+                    .map(|id| selected_piece_ids.contains(&id))
                     .unwrap_or(false);
                 if connected_selected == connecting_selected {
                     continue;
@@ -3180,8 +3180,8 @@ pub mod design {
             required_ports
         }
 
-        fn own_requirement_ports_for_piece(&self, piece_guid: &Guid) -> Vec<Option<PortStoreRef>> {
-            let Some(piece_ref) = self.piece(piece_guid.as_str()) else {
+        fn own_requirement_ports_for_piece(&self, piece_id: &Id) -> Vec<Option<PortStoreRef>> {
+            let Some(piece_ref) = self.piece(piece_id.as_str()) else {
                 return vec![None];
             };
             let Ok(piece) = piece_ref.read() else {
@@ -3206,7 +3206,7 @@ pub mod design {
         /// 🔁Returns replacement kinds and designs for a piece selection while preserving connector-valid boundaries.
         pub(crate) fn replaceable_catalog_candidates(
             &self,
-            selection_piece_guids: &[Guid],
+            selection_piece_ids: &[Id],
         ) -> PieceAlternatives {
             let Some(parent_kit) = self.parent_kit.upgrade() else {
                 return PieceAlternatives::default();
@@ -3215,16 +3215,16 @@ pub mod design {
                 return PieceAlternatives::default();
             };
 
-            let selected_piece_guids: HashSet<Guid> = selection_piece_guids.iter().cloned().collect();
-            let mut required_ports = self.boundary_requirement_ports(&selected_piece_guids);
+            let selected_piece_ids: HashSet<Id> = selection_piece_ids.iter().cloned().collect();
+            let mut required_ports = self.boundary_requirement_ports(&selected_piece_ids);
             if required_ports.is_empty() {
-                for piece_guid in selection_piece_guids {
-                    required_ports.extend(self.own_requirement_ports_for_piece(piece_guid));
+                for piece_id in selection_piece_ids {
+                    required_ports.extend(self.own_requirement_ports_for_piece(piece_id));
                 }
             }
 
             let mut alternatives = PieceAlternatives::default();
-            if selection_piece_guids.is_empty() {
+            if selection_piece_ids.is_empty() {
                 alternatives.types = parent_kit
                     .types
                     .iter()
@@ -3271,17 +3271,17 @@ pub mod design {
         /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
         /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
         /// validation invalidation (see [`KitStore::apply_design_diff`]).
-        pub fn delete_pieces(&mut self, piece_guids: &[Guid]) -> usize {
-            self.delete_pieces_inner(piece_guids, true)
+        pub fn delete_pieces(&mut self, piece_ids: &[Id]) -> usize {
+            self.delete_pieces_inner(piece_ids, true)
         }
 
         pub(crate) fn delete_pieces_inner(
             &mut self,
-            piece_guids: &[Guid],
+            piece_ids: &[Id],
             invalidate: bool,
         ) -> usize {
             let parent = self.entity_ref();
-            for g in piece_guids {
+            for g in piece_ids {
                 self.emit_ev(KitEvent::ChildRemoved {
                     parent: parent.clone(),
                     child: EntityRef::new(EntityKind::Piece, g.clone()),
@@ -3290,7 +3290,7 @@ pub mod design {
             let before = self.pieces.len();
             self.pieces.retain(|p| {
                 p.read()
-                    .map(|p| !piece_guids.iter().any(|g| *g == p.guid))
+                    .map(|p| !piece_ids.iter().any(|g| *g == p.id))
                     .unwrap_or(true)
             });
             self.connections.retain(|c| {
@@ -3300,7 +3300,7 @@ pub mod design {
                             .ok()
                             .and_then(|side| {
                                 side.piece.upgrade().and_then(|p| {
-                                    p.read().ok().map(|p| piece_guids.contains(&p.guid))
+                                    p.read().ok().map(|p| piece_ids.contains(&p.id))
                                 })
                             })
                             .unwrap_or(false)
@@ -3326,47 +3326,47 @@ pub mod design {
         pub fn apply_diff(
             &mut self,
             diff: &crate::diff::DesignDiff,
-            type_index: &HashMap<Guid, TypeStoreRef>,
+            type_index: &HashMap<Id, TypeStoreRef>,
             design_weak: DesignStoreWeak,
         ) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             for id in &diff.removed_connections {
                 self.emit_ev(KitEvent::ChildRemoved {
                     parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, id.guid.clone()),
+                    child: EntityRef::new(EntityKind::Connection, id.id.clone()),
                 });
             }
             for id in &diff.removed_connections {
                 self.connections
-                    .retain(|c| c.read().map(|c| c.guid != id.guid).unwrap_or(true));
+                    .retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
             }
-            let removed_piece_guids: Vec<Guid> =
-                diff.removed_pieces.iter().map(|p| p.guid.clone()).collect();
-            if !removed_piece_guids.is_empty() {
-                self.delete_pieces_inner(&removed_piece_guids, false);
+            let removed_piece_ids: Vec<Id> =
+                diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
+            if !removed_piece_ids.is_empty() {
+                self.delete_pieces_inner(&removed_piece_ids, false);
             }
             for p in &diff.added_pieces {
-                let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.guid.clone())));
+                let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.id.clone())));
                 if let Ok(mut pw) = pref.write() {
                     pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
                 }
                 self.emit_ev(KitEvent::ChildAdded {
                     parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Piece, p.guid.clone()),
+                    child: EntityRef::new(EntityKind::Piece, p.id.clone()),
                 });
                 self.pieces.push(pref);
             }
             for p in &diff.modified_pieces {
-                if let Some(pref) = self.piece(p.guid.as_str()) {
+                if let Some(pref) = self.piece(p.id.as_str()) {
                     if let Ok(mut pw) = pref.write() {
                         pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
                     }
                 }
             }
-            let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
-                    piece_index.insert(pr.guid.clone(), p.clone());
+                    piece_index.insert(pr.id.clone(), p.clone());
                 }
             }
             for c in &diff.added_connections {
@@ -3377,16 +3377,16 @@ pub mod design {
                 ));
                 self.emit_ev(KitEvent::ChildAdded {
                     parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
                 });
             }
             for c in &diff.modified_connections {
                 self.emit_ev(KitEvent::ChildRemoved {
                     parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
                 });
                 self.connections
-                    .retain(|x| x.read().map(|x| x.guid != c.guid).unwrap_or(true));
+                    .retain(|x| x.read().map(|x| x.id != c.id).unwrap_or(true));
                 self.connections.push(connection_from_full_dto(
                     c.clone(),
                     &piece_index,
@@ -3394,7 +3394,7 @@ pub mod design {
                 ));
                 self.emit_ev(KitEvent::ChildAdded {
                     parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.guid.clone()),
+                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
                 });
             }
             self.rewire_piece_flatten_parents();
@@ -3421,12 +3421,12 @@ pub mod design {
             change: &crate::diff::DesignChange,
         ) -> crate::report::ValidationResult {
             let mut r = crate::report::ValidationResult::valid();
-            if change.before.as_ref().map(|b| b.guid.clone())
-                != change.after.as_ref().map(|a| a.guid.clone())
+            if change.before.as_ref().map(|b| b.id.clone())
+                != change.after.as_ref().map(|a| a.id.clone())
             {
                 r.is_valid = false;
                 r.errors.push(
-                    "DesignChange before/after snapshots must refer to the same design guid".into(),
+                    "DesignChange before/after snapshots must refer to the same design id".into(),
                 );
             }
             r
@@ -3434,18 +3434,18 @@ pub mod design {
 
         pub fn to_id_dto(&self) -> DesignIdDto {
             DesignIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> DesignMetadataDto {
             let kit = self.parent_kit.upgrade().and_then(|k| {
                 k.read().ok().map(|k| crate::kit::KitIdDto {
-                    guid: k.guid.clone(),
+                    id: k.id.clone(),
                 })
             });
             DesignMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 icon: self.icon.clone(),
@@ -3464,7 +3464,7 @@ pub mod design {
         pub fn to_shallow_dto(&self) -> DesignShallowDto {
             let m = self.to_metadata_dto();
             DesignShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -3538,7 +3538,7 @@ pub mod design {
         pub fn to_full_dto(&self) -> DesignFullDto {
             let m = self.to_metadata_dto();
             DesignFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -3613,10 +3613,10 @@ pub mod design {
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct designs in host code.
         pub(crate) fn hydrate_from_full_dto(
             d: DesignFullDto,
-            type_index: &HashMap<Guid, TypeStoreRef>,
+            type_index: &HashMap<Id, TypeStoreRef>,
         ) -> DesignStoreRef {
             let DesignFullDto {
-                guid,
+                id,
                 name,
                 description,
                 icon,
@@ -3643,13 +3643,13 @@ pub mod design {
             } = d;
 
             let design = Arc::new(RwLock::new(DesignStore::empty_shell(
-                guid.clone(),
+                id.clone(),
                 name.clone(),
             )));
             {
                 let mut dw = design.write().expect("design write");
                 dw.apply_metadata_fields(DesignMetadataDto {
-                    guid,
+                    id,
                     name,
                     description,
                     icon,
@@ -3667,23 +3667,23 @@ pub mod design {
 
             let dw = Arc::downgrade(&design);
 
-            let piece_guids: Vec<Guid> = piece_dtos.iter().map(|p| p.guid.clone()).collect();
-            let mut piece_index: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            let piece_ids: Vec<Id> = piece_dtos.iter().map(|p| p.id.clone()).collect();
+            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for pd in &piece_dtos {
                 piece_index.insert(
-                    pd.guid.clone(),
-                    Arc::new(RwLock::new(PieceStore::empty_shell(pd.guid.clone()))),
+                    pd.id.clone(),
+                    Arc::new(RwLock::new(PieceStore::empty_shell(pd.id.clone()))),
                 );
             }
             for pdto in piece_dtos {
-                if let Some(p) = piece_index.get(&pdto.guid) {
+                if let Some(p) = piece_index.get(&pdto.id) {
                     if let Ok(mut pw) = p.write() {
                         pw.apply_full_dto(pdto, dw.clone(), type_index);
                     }
                 }
             }
 
-            let pieces_ordered: Vec<PieceStoreRef> = piece_guids
+            let pieces_ordered: Vec<PieceStoreRef> = piece_ids
                 .into_iter()
                 .filter_map(|g| piece_index.remove(&g))
                 .collect();
@@ -3769,10 +3769,10 @@ pub mod design {
                 })
                 .collect();
 
-            let mut piece_index_ordered: HashMap<Guid, PieceStoreRef> = HashMap::new();
+            let mut piece_index_ordered: HashMap<Id, PieceStoreRef> = HashMap::new();
             for p in &pieces_ordered {
                 if let Ok(pr) = p.read() {
-                    piece_index_ordered.insert(pr.guid.clone(), p.clone());
+                    piece_index_ordered.insert(pr.id.clone(), p.clone());
                 }
             }
 
@@ -3812,7 +3812,7 @@ pub mod diff {
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
     use crate::design::{DesignFullDto, DesignStore};
     use crate::events::{EntityKind, EntityRef, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::piece::{PieceFullDto, PieceIdDto};
     use crate::report::SemioReport;
 
@@ -3875,14 +3875,14 @@ pub mod diff {
         pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
             let mut diff = DesignDiff::default();
 
-            let bp: HashMap<Guid, &PieceFullDto> =
-                before.pieces.iter().map(|p| (p.guid.clone(), p)).collect();
-            let ap: HashMap<Guid, &PieceFullDto> =
-                after.pieces.iter().map(|p| (p.guid.clone(), p)).collect();
-            let kb: HashSet<Guid> = bp.keys().cloned().collect();
-            let ka: HashSet<Guid> = ap.keys().cloned().collect();
+            let bp: HashMap<Id, &PieceFullDto> =
+                before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let ap: HashMap<Id, &PieceFullDto> =
+                after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let kb: HashSet<Id> = bp.keys().cloned().collect();
+            let ka: HashSet<Id> = ap.keys().cloned().collect();
             for g in kb.difference(&ka) {
-                diff.removed_pieces.push(PieceIdDto { guid: g.clone() });
+                diff.removed_pieces.push(PieceIdDto { id: g.clone() });
             }
             for g in ka.difference(&kb) {
                 diff.added_pieces.push((*ap[g]).clone());
@@ -3895,21 +3895,21 @@ pub mod diff {
                 }
             }
 
-            let bc: HashMap<Guid, &ConnectionFullDto> = before
+            let bc: HashMap<Id, &ConnectionFullDto> = before
                 .connections
                 .iter()
-                .map(|c| (c.guid.clone(), c))
+                .map(|c| (c.id.clone(), c))
                 .collect();
-            let ac: HashMap<Guid, &ConnectionFullDto> = after
+            let ac: HashMap<Id, &ConnectionFullDto> = after
                 .connections
                 .iter()
-                .map(|c| (c.guid.clone(), c))
+                .map(|c| (c.id.clone(), c))
                 .collect();
-            let kbc: HashSet<Guid> = bc.keys().cloned().collect();
-            let kac: HashSet<Guid> = ac.keys().cloned().collect();
+            let kbc: HashSet<Id> = bc.keys().cloned().collect();
+            let kac: HashSet<Id> = ac.keys().cloned().collect();
             for g in kbc.difference(&kac) {
                 diff.removed_connections
-                    .push(ConnectionIdDto { guid: g.clone() });
+                    .push(ConnectionIdDto { id: g.clone() });
             }
             for g in kac.difference(&kbc) {
                 diff.added_connections.push((*ac[g]).clone());
@@ -3945,21 +3945,21 @@ pub mod diff {
     impl DesignStore {
         pub fn delete_change(
             &mut self,
-            piece_guids: &[Guid],
-            connection_guids: &[Guid],
+            piece_ids: &[Id],
+            connection_ids: &[Id],
         ) -> SemioReport<DesignChange> {
             let before = self.to_full_dto();
 
             let mut removed_pieces: Vec<PieceFullDto> = Vec::new();
             let mut removed_connections: Vec<ConnectionFullDto> = Vec::new();
-            for pg in piece_guids {
+            for pg in piece_ids {
                 if let Some(p) = self.piece(pg.as_str()) {
                     if let Ok(p) = p.read() {
                         removed_pieces.push(p.to_full_dto());
                     }
                 }
             }
-            for cg in connection_guids {
+            for cg in connection_ids {
                 if let Some(c) = self.connection(cg.as_str()) {
                     if let Ok(c) = c.read() {
                         removed_connections.push(c.to_full_dto());
@@ -3968,7 +3968,7 @@ pub mod diff {
             }
 
             let parent = self.entity_ref();
-            for cg in connection_guids {
+            for cg in connection_ids {
                 self.emit_ev(KitEvent::ChildRemoved {
                     parent: parent.clone(),
                     child: EntityRef::new(EntityKind::Connection, cg.clone()),
@@ -3976,11 +3976,11 @@ pub mod diff {
             }
             self.connections.retain(|c| {
                 c.read()
-                    .map(|c| !connection_guids.iter().any(|g| *g == c.guid))
+                    .map(|c| !connection_ids.iter().any(|g| *g == c.id))
                     .unwrap_or(true)
             });
             self.rewire_piece_flatten_parents();
-            let _deleted = self.delete_pieces(piece_guids);
+            let _deleted = self.delete_pieces(piece_ids);
 
             let after = self.to_full_dto();
 
@@ -3993,13 +3993,13 @@ pub mod diff {
                 removed_pieces: removed_pieces
                     .iter()
                     .map(|p| PieceIdDto {
-                        guid: p.guid.clone(),
+                        id: p.id.clone(),
                     })
                     .collect(),
                 removed_connections: removed_connections
                     .iter()
                     .map(|c| ConnectionIdDto {
-                        guid: c.guid.clone(),
+                        id: c.id.clone(),
                     })
                     .collect(),
                 ..DesignDiff::default()
@@ -4034,7 +4034,7 @@ pub mod diff {
             let backward_mod: Vec<PieceFullDto> = before
                 .pieces
                 .iter()
-                .filter(|p| modified_pieces.iter().any(|m| m.guid == p.guid))
+                .filter(|p| modified_pieces.iter().any(|m| m.id == p.id))
                 .cloned()
                 .collect();
             let backward = DesignDiff {
@@ -4057,7 +4057,7 @@ pub mod error {
     use serde::{Deserialize, Serialize};
     use thiserror::Error;
 
-    use crate::guid::Guid;
+    use crate::id::Id;
 
     /// 🧾 User-visible / wire rejection for a single field write (WASM + hooks).
     #[derive(Error, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4071,8 +4071,8 @@ pub mod error {
         InvalidUrl(String),
         #[error("invalid value: {0}")]
         InvalidValue(String),
-        #[error("duplicate guid: {0}")]
-        DuplicateGuid(String),
+        #[error("duplicate id: {0}")]
+        DuplicateId(String),
         #[error("not found: {0}")]
         NotFound(String),
         #[error("cyclic reference: {0}")]
@@ -4095,8 +4095,8 @@ pub mod error {
 
     #[derive(Error, Debug)]
     pub enum SemioError {
-        #[error("entity not found: {kind} '{guid}'")]
-        NotFound { kind: &'static str, guid: Guid },
+        #[error("entity not found: {kind} '{id}'")]
+        NotFound { kind: &'static str, id: Id },
 
         #[error("invalid operation: {0}")]
         InvalidOperation(String),
@@ -4263,7 +4263,7 @@ pub mod events {
 
     use async_broadcast::{broadcast, InactiveReceiver, Receiver, Sender};
 
-    use crate::guid::Guid;
+    use crate::id::Id;
 
     /// Entity discriminator for [`KitEvent`].
     #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
@@ -4295,12 +4295,12 @@ pub mod events {
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub struct EntityRef {
         pub kind: EntityKind,
-        pub guid: Guid,
+        pub id: Id,
     }
 
     impl EntityRef {
-        pub const fn new(kind: EntityKind, guid: Guid) -> Self {
-            Self { kind, guid }
+        pub const fn new(kind: EntityKind, id: Id) -> Self {
+            Self { kind, id }
         }
     }
 
@@ -4323,8 +4323,8 @@ pub mod events {
             entity: EntityRef,
         },
         FlattenInvalidated {
-            design: Guid,
-            pieces: Vec<Guid>,
+            design: Id,
+            pieces: Vec<Id>,
         },
         ValidationInvalidated,
         DerivedChanged {
@@ -4986,7 +4986,7 @@ pub mod file {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
 
@@ -4996,7 +4996,7 @@ pub mod file {
     /// External resource referenced by a kit (3D model, texture, etc.).
     #[derive(Debug)]
     pub struct FileStore {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         pub mime: Option<String>,
         pub size: Option<i64>,
@@ -5011,12 +5011,12 @@ pub mod file {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FileIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FileMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mime: Option<String>,
@@ -5034,7 +5034,7 @@ pub mod file {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FileShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mime: Option<String>,
@@ -5052,7 +5052,7 @@ pub mod file {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FileFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mime: Option<String>,
@@ -5071,7 +5071,7 @@ pub mod file {
     impl FileStore {
         pub fn new(url: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 url: url.into(),
                 mime: None,
                 size: None,
@@ -5091,12 +5091,12 @@ pub mod file {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::File, self.guid.clone())
+            EntityRef::new(EntityKind::File, self.id.clone())
         }
 
         pub fn from_id_dto(d: FileIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 url: String::new(),
                 mime: None,
                 size: None,
@@ -5112,7 +5112,7 @@ pub mod file {
 
         pub fn from_metadata_dto(d: FileMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 mime: d.mime,
                 size: d.size,
@@ -5128,7 +5128,7 @@ pub mod file {
 
         pub fn from_shallow_dto(d: FileShallowDto) -> Self {
             Self::from_metadata_dto(FileMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 mime: d.mime,
                 size: d.size,
@@ -5141,7 +5141,7 @@ pub mod file {
 
         pub fn from_full_dto(d: FileFullDto) -> Self {
             Self::from_metadata_dto(FileMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 mime: d.mime,
                 size: d.size,
@@ -5154,13 +5154,13 @@ pub mod file {
 
         pub fn to_id_dto(&self) -> FileIdDto {
             FileIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> FileMetadataDto {
             FileMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 url: self.url.clone(),
                 mime: self.mime.clone(),
                 size: self.size,
@@ -5174,7 +5174,7 @@ pub mod file {
         pub fn to_shallow_dto(&self) -> FileShallowDto {
             let m = self.to_metadata_dto();
             FileShallowDto {
-                guid: m.guid,
+                id: m.id,
                 url: m.url,
                 mime: m.mime,
                 size: m.size,
@@ -5188,7 +5188,7 @@ pub mod file {
         pub fn to_full_dto(&self) -> FileFullDto {
             let m = self.to_metadata_dto();
             FileFullDto {
-                guid: m.guid,
+                id: m.id,
                 url: m.url,
                 mime: m.mime,
                 size: m.size,
@@ -5325,7 +5325,7 @@ pub mod file {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("file")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.url)
                 .opt_str(self.mime.as_deref())
                 .opt_str(self.hash.as_deref());
@@ -5341,7 +5341,7 @@ pub mod folder {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
 
@@ -5351,7 +5351,7 @@ pub mod folder {
     /// Logical folder grouping files inside a kit.
     #[derive(Debug)]
     pub struct FolderStore {
-        pub guid: Guid,
+        pub id: Id,
         pub path: String,
         pub description: Option<String>,
         pub parent_kit: Option<KitStoreWeak>,
@@ -5361,12 +5361,12 @@ pub mod folder {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5374,7 +5374,7 @@ pub mod folder {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5382,7 +5382,7 @@ pub mod folder {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5391,7 +5391,7 @@ pub mod folder {
     impl FolderStore {
         pub fn new(path: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 path: path.into(),
                 description: None,
                 parent_kit: None,
@@ -5406,12 +5406,12 @@ pub mod folder {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Folder, self.guid.clone())
+            EntityRef::new(EntityKind::Folder, self.id.clone())
         }
 
         pub fn from_id_dto(d: FolderIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 path: String::new(),
                 description: None,
                 parent_kit: None,
@@ -5422,7 +5422,7 @@ pub mod folder {
 
         pub fn from_metadata_dto(d: FolderMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 path: d.path,
                 description: d.description,
                 parent_kit: None,
@@ -5433,7 +5433,7 @@ pub mod folder {
 
         pub fn from_shallow_dto(d: FolderShallowDto) -> Self {
             Self::from_metadata_dto(FolderMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 path: d.path,
                 description: d.description,
             })
@@ -5441,7 +5441,7 @@ pub mod folder {
 
         pub fn from_full_dto(d: FolderFullDto) -> Self {
             Self::from_metadata_dto(FolderMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 path: d.path,
                 description: d.description,
             })
@@ -5449,13 +5449,13 @@ pub mod folder {
 
         pub fn to_id_dto(&self) -> FolderIdDto {
             FolderIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> FolderMetadataDto {
             FolderMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 path: self.path.clone(),
                 description: self.description.clone(),
             }
@@ -5464,7 +5464,7 @@ pub mod folder {
         pub fn to_shallow_dto(&self) -> FolderShallowDto {
             let m = self.to_metadata_dto();
             FolderShallowDto {
-                guid: m.guid,
+                id: m.id,
                 path: m.path,
                 description: m.description,
             }
@@ -5473,7 +5473,7 @@ pub mod folder {
         pub fn to_full_dto(&self) -> FolderFullDto {
             let m = self.to_metadata_dto();
             FolderFullDto {
-                guid: m.guid,
+                id: m.id,
                 path: m.path,
                 description: m.description,
             }
@@ -5532,7 +5532,7 @@ pub mod folder {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("folder")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.path)
                 .opt_str(self.description.as_deref());
         }
@@ -5666,7 +5666,7 @@ pub mod group {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::piece::{PieceIdDto, PieceStoreWeak};
 
@@ -5676,7 +5676,7 @@ pub mod group {
     /// User-defined group of pieces inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct GroupStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub color: Option<String>,
@@ -5689,12 +5689,12 @@ pub mod group {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct GroupIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct GroupMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5708,7 +5708,7 @@ pub mod group {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct GroupShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5722,7 +5722,7 @@ pub mod group {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct GroupFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5737,7 +5737,7 @@ pub mod group {
     impl GroupStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: name.into(),
                 description: None,
                 color: None,
@@ -5751,7 +5751,7 @@ pub mod group {
 
         pub fn from_id_dto(d: GroupIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: String::new(),
                 description: None,
                 color: None,
@@ -5765,7 +5765,7 @@ pub mod group {
 
         pub fn from_metadata_dto(d: GroupMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -5779,7 +5779,7 @@ pub mod group {
 
         pub fn from_shallow_dto(d: GroupShallowDto) -> Self {
             Self::from_metadata_dto(GroupMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -5790,7 +5790,7 @@ pub mod group {
 
         pub fn from_full_dto(d: GroupFullDto) -> Self {
             Self::from_metadata_dto(GroupMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -5801,13 +5801,13 @@ pub mod group {
 
         pub fn to_id_dto(&self) -> GroupIdDto {
             GroupIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> GroupMetadataDto {
             GroupMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 color: self.color.clone(),
@@ -5824,7 +5824,7 @@ pub mod group {
         pub fn to_shallow_dto(&self) -> GroupShallowDto {
             let m = self.to_metadata_dto();
             GroupShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 color: m.color,
@@ -5836,7 +5836,7 @@ pub mod group {
         pub fn to_full_dto(&self) -> GroupFullDto {
             let m = self.to_metadata_dto();
             GroupFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 color: m.color,
@@ -5851,7 +5851,7 @@ pub mod group {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Group, self.guid.clone())
+            EntityRef::new(EntityKind::Group, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -5940,7 +5940,7 @@ pub mod group {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("group")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref())
                 .opt_str(self.color.as_deref())
@@ -5948,7 +5948,7 @@ pub mod group {
             for p in &self.pieces {
                 if let Some(p) = p.upgrade() {
                     if let Ok(p) = p.read() {
-                        w.str(p.guid.as_str());
+                        w.str(p.id.as_str());
                     }
                 }
             }
@@ -5956,7 +5956,7 @@ pub mod group {
     }
 }
 
-pub mod guid {
+pub mod id {
     use serde::{Deserialize, Serialize};
     use std::borrow::Borrow;
     use std::fmt;
@@ -5968,10 +5968,10 @@ pub mod guid {
         Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord,
     )]
     #[serde(transparent)]
-    pub struct Guid(String);
+    pub struct Id(String);
 
-    impl Guid {
-        /// Produces a fresh UUIDv7 (monotonic) wrapped as a `Guid`.
+    impl Id {
+        /// Produces a fresh UUIDv7 (monotonic) wrapped as a `Id`.
         pub fn new_v7() -> Self {
             Self(uuid::Uuid::now_v7().to_string())
         }
@@ -5981,62 +5981,62 @@ pub mod guid {
             &self.0
         }
 
-        /// Consume the [`Guid`], returning the inner [`String`].
+        /// Consume the [`Id`], returning the inner [`String`].
         pub fn into_string(self) -> String {
             self.0
         }
     }
 
-    impl fmt::Display for Guid {
+    impl fmt::Display for Id {
         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             f.write_str(&self.0)
         }
     }
 
-    impl Deref for Guid {
+    impl Deref for Id {
         type Target = str;
         fn deref(&self) -> &str {
             &self.0
         }
     }
 
-    impl AsRef<str> for Guid {
+    impl AsRef<str> for Id {
         fn as_ref(&self) -> &str {
             &self.0
         }
     }
 
-    impl Borrow<str> for Guid {
+    impl Borrow<str> for Id {
         fn borrow(&self) -> &str {
             &self.0
         }
     }
 
-    impl From<String> for Guid {
+    impl From<String> for Id {
         fn from(s: String) -> Self {
             Self(s)
         }
     }
 
-    impl From<&str> for Guid {
+    impl From<&str> for Id {
         fn from(s: &str) -> Self {
             Self(s.to_owned())
         }
     }
 
-    impl From<Guid> for String {
-        fn from(g: Guid) -> Self {
+    impl From<Id> for String {
+        fn from(g: Id) -> Self {
             g.0
         }
     }
 
-    impl PartialEq<str> for Guid {
+    impl PartialEq<str> for Id {
         fn eq(&self, other: &str) -> bool {
             self.0 == other
         }
     }
 
-    impl PartialEq<&str> for Guid {
+    impl PartialEq<&str> for Id {
         fn eq(&self, other: &&str) -> bool {
             self.0 == *other
         }
@@ -6189,7 +6189,7 @@ pub mod kit {
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
@@ -6211,7 +6211,7 @@ pub mod kit {
     /// Root aggregate: a kit owns all components of the system.
     #[derive(Debug)]
     pub struct KitStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
@@ -6251,12 +6251,12 @@ pub mod kit {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct KitIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct KitMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6284,7 +6284,7 @@ pub mod kit {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct KitShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6332,7 +6332,7 @@ pub mod kit {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct KitFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6393,7 +6393,7 @@ pub mod kit {
     impl KitStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: name.into(),
                 description: None,
                 icon: None,
@@ -6435,7 +6435,7 @@ pub mod kit {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Kit, self.guid.clone())
+            EntityRef::new(EntityKind::Kit, self.id.clone())
         }
 
         /// Subscribe to all [`KitEvent`]s for this kit (MPMC broadcast).
@@ -6665,7 +6665,7 @@ pub mod kit {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("kit")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref())
                 .opt_str(self.version.as_deref())
@@ -6722,51 +6722,51 @@ pub mod kit {
             }
         }
 
-        pub fn semio_type(&self, guid: &str) -> Option<TypeStoreRef> {
+        pub fn semio_type(&self, id: &str) -> Option<TypeStoreRef> {
             self.types
                 .iter()
-                .find(|t| t.read().map(|t| t.guid.as_str() == guid).unwrap_or(false))
+                .find(|t| t.read().map(|t| t.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn design(&self, guid: &str) -> Option<DesignStoreRef> {
+        pub fn design(&self, id: &str) -> Option<DesignStoreRef> {
             self.designs
                 .iter()
-                .find(|d| d.read().map(|d| d.guid.as_str() == guid).unwrap_or(false))
+                .find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn file(&self, guid: &str) -> Option<FileStoreRef> {
+        pub fn file(&self, id: &str) -> Option<FileStoreRef> {
             self.files
                 .iter()
-                .find(|f| f.read().map(|f| f.guid.as_str() == guid).unwrap_or(false))
+                .find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn folder(&self, guid: &str) -> Option<FolderStoreRef> {
+        pub fn folder(&self, id: &str) -> Option<FolderStoreRef> {
             self.folders
                 .iter()
-                .find(|f| f.read().map(|f| f.guid.as_str() == guid).unwrap_or(false))
+                .find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn quality(&self, guid: &str) -> Option<QualityStoreRef> {
+        pub fn quality(&self, id: &str) -> Option<QualityStoreRef> {
             self.qualities
                 .iter()
-                .find(|q| q.read().map(|q| q.guid.as_str() == guid).unwrap_or(false))
+                .find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        /// Flatten a design by guid: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
+        /// Flatten a design by id: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
         pub fn flatten_design(
             &self,
-            design_guid: &str,
+            design_id: &str,
         ) -> Result<SemioReport<crate::diff::DesignChange>> {
             let d = self
-                .design(design_guid)
+                .design(design_id)
                 .ok_or_else(|| SemioError::NotFound {
                     kind: "Design",
-                    guid: Guid::from(design_guid),
+                    id: Id::from(design_id),
                 })?;
             let report = match d.read() {
                 Ok(dr) => dr.flatten_change(),
@@ -6778,19 +6778,19 @@ pub mod kit {
         /// Apply a structural [`crate::diff::DesignDiff`] to the named design (mutable kit).
         pub fn apply_design_diff(
             &mut self,
-            design_guid: &str,
+            design_id: &str,
             diff: &crate::diff::DesignDiff,
         ) -> Result<()> {
             let dref = self
-                .design(design_guid)
+                .design(design_id)
                 .ok_or_else(|| SemioError::NotFound {
                     kind: "Design",
-                    guid: Guid::from(design_guid),
+                    id: Id::from(design_id),
                 })?;
-            let type_index: HashMap<Guid, TypeStoreRef> = self
+            let type_index: HashMap<Id, TypeStoreRef> = self
                 .types
                 .iter()
-                .filter_map(|t| t.read().ok().map(|r| (r.guid.clone(), t.clone())))
+                .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
                 .collect();
             let dw = Arc::downgrade(&dref);
             dref.write()
@@ -6833,11 +6833,11 @@ pub mod kit {
         pub fn set_field_rpc(
             kit: &KitStoreRef,
             entity_kind: EntityKind,
-            guid: &str,
+            id: &str,
             field: &str,
             value: serde_json::Value,
         ) -> SetResult {
-            let guid = guid.to_string();
+            let id = id.to_string();
             let field = field.to_string();
             Self::with_undo(kit, || {
                 match entity_kind {
@@ -6845,8 +6845,8 @@ pub mod kit {
                         let mut g = kit
                             .write()
                             .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        if g.guid.as_str() != guid {
-                            return Err(SetError::NotFound(format!("kit {guid}")));
+                        if g.id.as_str() != id {
+                            return Err(SetError::NotFound(format!("kit {id}")));
                         }
                         match field.as_str() {
                             "name" => {
@@ -6864,8 +6864,8 @@ pub mod kit {
                             let g = kit
                                 .read()
                                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                            g.design(guid.as_str())
-                                .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?
+                            g.design(id.as_str())
+                                .ok_or_else(|| SetError::NotFound(format!("design {id}")))?
                         };
                         let mut dw = d
                             .write()
@@ -6886,8 +6886,8 @@ pub mod kit {
                             let g = kit
                                 .read()
                                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                            g.semio_type(guid.as_str())
-                                .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?
+                            g.semio_type(id.as_str())
+                                .ok_or_else(|| SetError::NotFound(format!("type {id}")))?
                         };
                         let mut tw = t
                             .write()
@@ -6911,13 +6911,13 @@ pub mod kit {
                             let mut found: Option<PieceStoreRef> = None;
                             for d in &g.designs {
                                 if let Ok(dr) = d.read() {
-                                    if let Some(p) = dr.piece(guid.as_str()) {
+                                    if let Some(p) = dr.piece(id.as_str()) {
                                         found = Some(p);
                                         break;
                                     }
                                 }
                             }
-                            found.ok_or_else(|| SetError::NotFound(format!("piece {guid}")))?
+                            found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
                         };
                         let mut pw = pref
                             .write()
@@ -6949,7 +6949,7 @@ pub mod kit {
         pub fn get_field_rpc(
             kit: &KitStoreRef,
             entity_kind: EntityKind,
-            guid: &str,
+            id: &str,
             field: &str,
         ) -> std::result::Result<serde_json::Value, SetError> {
             let g = kit
@@ -6957,8 +6957,8 @@ pub mod kit {
                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
                 EntityKind::Kit => {
-                    if g.guid.as_str() != guid {
-                        return Err(SetError::NotFound(format!("kit {guid}")));
+                    if g.id.as_str() != id {
+                        return Err(SetError::NotFound(format!("kit {id}")));
                     }
                     match field {
                         "name" => Ok(serde_json::json!(g.name)),
@@ -6970,7 +6970,7 @@ pub mod kit {
                 EntityKind::Piece => {
                     for d in &g.designs {
                         if let Ok(dr) = d.read() {
-                            if let Some(p) = dr.piece(guid) {
+                            if let Some(p) = dr.piece(id) {
                                 if let Ok(pr) = p.read() {
                                     return match field {
                                         "name" => Ok(serde_json::to_value(&pr.name).unwrap()),
@@ -6983,12 +6983,12 @@ pub mod kit {
                             }
                         }
                     }
-                    Err(SetError::NotFound(format!("piece {guid}")))
+                    Err(SetError::NotFound(format!("piece {id}")))
                 }
                 EntityKind::Design => {
                     let d = g
-                        .design(guid)
-                        .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?;
+                        .design(id)
+                        .ok_or_else(|| SetError::NotFound(format!("design {id}")))?;
                     let dr = d
                         .read()
                         .map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -7001,8 +7001,8 @@ pub mod kit {
                 }
                 EntityKind::Type => {
                     let t = g
-                        .semio_type(guid)
-                        .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?;
+                        .semio_type(id)
+                        .ok_or_else(|| SetError::NotFound(format!("type {id}")))?;
                     let tr = t
                         .read()
                         .map_err(|_| SetError::LockPoisoned("type".into()))?;
@@ -7021,8 +7021,8 @@ pub mod kit {
 
         fn map_semio_err(e: SemioError) -> SetError {
             match e {
-                SemioError::NotFound { kind, guid } => {
-                    SetError::NotFound(format!("{} {}", kind, guid.as_str()))
+                SemioError::NotFound { kind, id } => {
+                    SetError::NotFound(format!("{} {}", kind, id.as_str()))
                 }
                 SemioError::LockPoisoned(s) => SetError::LockPoisoned(s.to_string()),
                 SemioError::InvalidOperation(m) => SetError::Internal(m),
@@ -7302,10 +7302,10 @@ pub mod kit {
         /// Apply a structural design diff through the same path as [`KitStore::apply_design_diff`], returning [`SetResult`].
         pub fn apply_design_diff_rpc(
             kit: &KitStoreRef,
-            design_guid: &str,
+            design_id: &str,
             diff: serde_json::Value,
         ) -> SetResult {
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             let diff: DesignDiff =
                 serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
             Self::with_undo(kit, || {
@@ -7321,11 +7321,11 @@ pub mod kit {
         pub fn add_child_rpc(
             kit: &KitStoreRef,
             parent_kind: EntityKind,
-            parent_guid: &str,
+            parent_id: &str,
             child_kind: EntityKind,
             dto: serde_json::Value,
         ) -> SetResult {
-            let pg = parent_guid.to_string();
+            let pg = parent_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto)
@@ -7350,18 +7350,18 @@ pub mod kit {
         pub fn remove_child_rpc(
             kit: &KitStoreRef,
             parent_kind: EntityKind,
-            parent_guid: &str,
+            parent_id: &str,
             child_kind: EntityKind,
-            child_guid: &str,
+            child_id: &str,
         ) -> SetResult {
-            let pg = parent_guid.to_string();
-            let cg = child_guid.to_string();
+            let pg = parent_id.to_string();
+            let cg = child_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => {
                     Self::with_undo(kit, || {
                         let mut diff = DesignDiff::default();
                         diff.removed_pieces.push(PieceIdDto {
-                            guid: Guid::from(cg.as_str()),
+                            id: Id::from(cg.as_str()),
                         });
                         let mut g = kit
                             .write()
@@ -7388,8 +7388,8 @@ pub mod kit {
                 result.errors.push("kit.name must not be empty".into());
             }
 
-            let mut guids: Vec<String> = Vec::new();
-            guids.push(self.guid.as_str().to_string());
+            let mut ids: Vec<String> = Vec::new();
+            ids.push(self.id.as_str().to_string());
 
             for t in &self.types {
                 if let Ok(t) = t.read() {
@@ -7397,17 +7397,17 @@ pub mod kit {
                         result.is_valid = false;
                         result
                             .errors
-                            .push(format!("type {} has empty name", t.guid));
+                            .push(format!("type {} has empty name", t.id));
                     }
-                    guids.push(t.guid.as_str().to_string());
+                    ids.push(t.id.as_str().to_string());
                     for p in &t.ports {
                         if let Ok(p) = p.read() {
-                            guids.push(p.guid.as_str().to_string());
+                            ids.push(p.id.as_str().to_string());
                         }
                     }
                     for c in &t.connectors {
                         if let Ok(c) = c.read() {
-                            guids.push(c.guid.as_str().to_string());
+                            ids.push(c.id.as_str().to_string());
                         }
                     }
                     for r in &t.representations {
@@ -7416,9 +7416,9 @@ pub mod kit {
                                 result.is_valid = false;
                                 result
                                     .errors
-                                    .push(format!("representation {} has empty url", r.guid));
+                                    .push(format!("representation {} has empty url", r.id));
                             }
-                            guids.push(r.guid.as_str().to_string());
+                            ids.push(r.id.as_str().to_string());
                         }
                     }
                 }
@@ -7428,9 +7428,9 @@ pub mod kit {
                 if let Ok(f) = f.read() {
                     if f.url.trim().is_empty() {
                         result.is_valid = false;
-                        result.errors.push(format!("file {} has empty url", f.guid));
+                        result.errors.push(format!("file {} has empty url", f.id));
                     }
-                    guids.push(f.guid.as_str().to_string());
+                    ids.push(f.id.as_str().to_string());
                 }
             }
 
@@ -7440,29 +7440,29 @@ pub mod kit {
                         result.is_valid = false;
                         result
                             .errors
-                            .push(format!("design {} has empty name", d.guid));
+                            .push(format!("design {} has empty name", d.id));
                     }
-                    guids.push(d.guid.as_str().to_string());
+                    ids.push(d.id.as_str().to_string());
                     for p in &d.pieces {
                         if let Ok(p) = p.read() {
                             if p.type_ref.as_ref().and_then(|t| t.upgrade()).is_none() {
                                 result.is_valid = false;
                                 result
                                     .errors
-                                    .push(format!("piece {} has no valid type reference", p.guid));
+                                    .push(format!("piece {} has no valid type reference", p.id));
                             }
-                            guids.push(p.guid.as_str().to_string());
+                            ids.push(p.id.as_str().to_string());
                         }
                     }
                     for c in &d.connections {
                         if let Ok(conn) = c.read() {
-                            guids.push(conn.guid.as_str().to_string());
+                            ids.push(conn.id.as_str().to_string());
                             if let Ok(s0) = conn.connected.read() {
                                 if s0.piece.upgrade().is_none() {
                                     result.is_valid = false;
                                     result.errors.push(format!(
                                         "connection {} connected side has no piece",
-                                        conn.guid
+                                        conn.id
                                     ));
                                 }
                             }
@@ -7471,7 +7471,7 @@ pub mod kit {
                                     result.is_valid = false;
                                     result.errors.push(format!(
                                         "connection {} connecting side has no piece",
-                                        conn.guid
+                                        conn.id
                                     ));
                                 }
                             }
@@ -7480,11 +7480,11 @@ pub mod kit {
                 }
             }
 
-            guids.sort();
-            for w in guids.windows(2) {
+            ids.sort();
+            for w in ids.windows(2) {
                 if w[0] == w[1] {
                     result.is_valid = false;
-                    result.errors.push(format!("duplicate guid: {}", w[0]));
+                    result.errors.push(format!("duplicate id: {}", w[0]));
                     break;
                 }
             }
@@ -7496,7 +7496,7 @@ pub mod kit {
                         result.is_valid = false;
                         result.warnings.push(format!(
                         "design {} has more connections than pieces (possible cycle or bad graph)",
-                        d.guid
+                        d.id
                     ));
                     }
                 }
@@ -7511,7 +7511,7 @@ pub mod kit {
 
         pub fn from_id_dto(d: KitIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: String::new(),
                 description: None,
                 icon: None,
@@ -7547,7 +7547,7 @@ pub mod kit {
 
         pub fn from_metadata_dto(d: KitMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 icon: d.icon,
@@ -7584,7 +7584,7 @@ pub mod kit {
         /// Hydrate the full kit graph from a [`KitFullDto`].
         pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
             let KitFullDto {
-                guid,
+                id,
                 name,
                 description,
                 icon,
@@ -7610,7 +7610,7 @@ pub mod kit {
             } = d;
 
             let kit = Arc::new(RwLock::new(KitStore {
-                guid: guid.clone(),
+                id: id.clone(),
                 name: name.clone(),
                 description: description.clone(),
                 icon: icon.clone(),
@@ -7705,11 +7705,11 @@ pub mod kit {
                 .collect();
 
             let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
-            let mut type_index: HashMap<Guid, TypeStoreRef> = HashMap::new();
+            let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
             for tdto in types {
                 let t = TypeStore::hydrate_from_full_dto(tdto, &kit, &file_refs);
                 if let Ok(tr) = t.read() {
-                    type_index.insert(tr.guid.clone(), t.clone());
+                    type_index.insert(tr.id.clone(), t.clone());
                 }
                 type_refs.push(t);
             }
@@ -7748,13 +7748,13 @@ pub mod kit {
 
         pub fn to_id_dto(&self) -> KitIdDto {
             KitIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> KitMetadataDto {
             KitMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 icon: self.icon.clone(),
@@ -7773,7 +7773,7 @@ pub mod kit {
         pub fn to_shallow_dto(&self) -> KitShallowDto {
             let m = self.to_metadata_dto();
             KitShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -7842,7 +7842,7 @@ pub mod kit {
         pub fn to_full_dto(&self) -> KitFullDto {
             let m = self.to_metadata_dto();
             KitFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -7908,10 +7908,10 @@ pub mod kit {
             }
         }
 
-        fn domain_type_index(kit: &KitStore) -> HashMap<Guid, TypeStoreRef> {
+        fn domain_type_index(kit: &KitStore) -> HashMap<Id, TypeStoreRef> {
             kit.types
                 .iter()
-                .filter_map(|t| t.read().ok().map(|r| (r.guid.clone(), t.clone())))
+                .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
                 .collect()
         }
 
@@ -7921,10 +7921,10 @@ pub mod kit {
                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.designs.iter().any(|d| {
                 d.read()
-                    .map(|r| r.guid.as_str() == dto.guid.as_str())
+                    .map(|r| r.id.as_str() == dto.id.as_str())
                     .unwrap_or(false)
             }) {
-                return Err(SetError::DuplicateGuid(format!("design {}", dto.guid)));
+                return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
             let design = DesignStore::hydrate_from_full_dto(dto, &idx);
@@ -7944,11 +7944,11 @@ pub mod kit {
 
         pub fn cluster_pieces(
             kit: &KitStoreRef,
-            design_guid: &str,
-            piece_guids: Vec<String>,
+            design_id: &str,
+            piece_ids: Vec<String>,
             cluster_name: String,
         ) -> SetResult {
-            if piece_guids.is_empty() {
+            if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue(
                     "no piece IDs provided for clustering".into(),
                 ));
@@ -7958,19 +7958,19 @@ pub mod kit {
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let d = g
-                    .design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                    .design(design_id)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
                 let dr = d
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
                 dr.to_full_dto()
             };
 
-            let cluster_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+            let cluster_set: HashSet<&str> = piece_ids.iter().map(|s| s.as_str()).collect();
             let clustered_pieces: Vec<PieceFullDto> = parent_dto
                 .pieces
                 .iter()
-                .filter(|p| cluster_set.contains(p.guid.as_str()))
+                .filter(|p| cluster_set.contains(p.id.as_str()))
                 .cloned()
                 .collect();
             if clustered_pieces.is_empty() {
@@ -7983,8 +7983,8 @@ pub mod kit {
                 .connections
                 .iter()
                 .filter(|c| {
-                    cluster_set.contains(c.connected.piece.guid.as_str())
-                        && cluster_set.contains(c.connecting.piece.guid.as_str())
+                    cluster_set.contains(c.connected.piece.id.as_str())
+                        && cluster_set.contains(c.connecting.piece.id.as_str())
                 })
                 .cloned()
                 .collect();
@@ -7993,16 +7993,16 @@ pub mod kit {
                 .connections
                 .iter()
                 .filter(|c| {
-                    let a = cluster_set.contains(c.connected.piece.guid.as_str());
-                    let b = cluster_set.contains(c.connecting.piece.guid.as_str());
+                    let a = cluster_set.contains(c.connected.piece.id.as_str());
+                    let b = cluster_set.contains(c.connecting.piece.id.as_str());
                     a != b
                 })
                 .cloned()
                 .collect();
 
-            let new_guid = Guid::new_v7();
+            let new_id = Id::new_v7();
             let clustered_dto = DesignFullDto {
-                guid: new_guid.clone(),
+                id: new_id.clone(),
                 name: cluster_name,
                 description: Some(format!(
                     "Clustered design with {} pieces",
@@ -8017,15 +8017,15 @@ pub mod kit {
 
             let mut added_connections: Vec<ConnectionFullDto> = Vec::new();
             for mut c in external_connections {
-                let connected_in = cluster_set.contains(c.connected.piece.guid.as_str());
-                let connecting_in = cluster_set.contains(c.connecting.piece.guid.as_str());
+                let connected_in = cluster_set.contains(c.connected.piece.id.as_str());
+                let connecting_in = cluster_set.contains(c.connecting.piece.id.as_str());
                 if connected_in {
                     c.connected.design_piece = Some(PieceIdDto {
-                        guid: new_guid.clone(),
+                        id: new_id.clone(),
                     });
                 } else if connecting_in {
                     c.connecting.design_piece = Some(PieceIdDto {
-                        guid: new_guid.clone(),
+                        id: new_id.clone(),
                     });
                 }
                 added_connections.push(c);
@@ -8035,19 +8035,19 @@ pub mod kit {
                 .connections
                 .iter()
                 .filter(|c| {
-                    cluster_set.contains(c.connected.piece.guid.as_str())
-                        || cluster_set.contains(c.connecting.piece.guid.as_str())
+                    cluster_set.contains(c.connected.piece.id.as_str())
+                        || cluster_set.contains(c.connecting.piece.id.as_str())
                 })
                 .map(|c| ConnectionIdDto {
-                    guid: c.guid.clone(),
+                    id: c.id.clone(),
                 })
                 .collect();
 
-            let removed_pieces: Vec<PieceIdDto> = piece_guids
+            let removed_pieces: Vec<PieceIdDto> = piece_ids
                 .iter()
                 .filter(|g| cluster_set.contains(g.as_str()))
                 .map(|g| PieceIdDto {
-                    guid: Guid::from(g.as_str()),
+                    id: Id::from(g.as_str()),
                 })
                 .collect();
 
@@ -8058,7 +8058,7 @@ pub mod kit {
                 ..Default::default()
             };
 
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 Self::insert_design_ref(kit, clustered_dto)?;
                 let mut g = kit
@@ -8086,15 +8086,15 @@ pub mod kit {
 
         pub fn drag_pieces(
             kit: &KitStoreRef,
-            design_guid: &str,
-            piece_guids: Vec<String>,
+            design_id: &str,
+            piece_ids: Vec<String>,
             du: f64,
             dv: f64,
         ) -> SetResult {
-            if piece_guids.is_empty() {
+            if piece_ids.is_empty() {
                 return Ok(());
             }
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
                     let g = kit
@@ -8109,15 +8109,15 @@ pub mod kit {
                     (dr.to_full_dto(), d.clone())
                 };
 
-                let selected: HashSet<String> = piece_guids.clone().into_iter().collect();
+                let selected: HashSet<String> = piece_ids.clone().into_iter().collect();
                 let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
                 for c in &dto.connections {
-                    let child = c.connecting.piece.guid.to_string();
-                    let parent = c.connected.piece.guid.to_string();
-                    parent_map.insert(child, (c.guid.to_string(), parent));
+                    let child = c.connecting.piece.id.to_string();
+                    let parent = c.connected.piece.id.to_string();
+                    parent_map.insert(child, (c.id.to_string(), parent));
                 }
 
-                let fixed_guids: Vec<String> = selected
+                let fixed_ids: Vec<String> = selected
                     .iter()
                     .filter(|g| !parent_map.contains_key(*g))
                     .cloned()
@@ -8126,7 +8126,7 @@ pub mod kit {
                 let design_read = design_ref
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                for g in &fixed_guids {
+                for g in &fixed_ids {
                     if let Some(piece) = design_read.piece(g.as_str()) {
                         piece
                             .write()
@@ -8136,7 +8136,7 @@ pub mod kit {
                 }
 
                 for g in &selected {
-                    if fixed_guids.iter().any(|x| x == g) {
+                    if fixed_ids.iter().any(|x| x == g) {
                         continue;
                     }
                     if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
@@ -8155,17 +8155,17 @@ pub mod kit {
 
         pub fn move_pieces(
             kit: &KitStoreRef,
-            design_guid: &str,
-            piece_guids: Vec<String>,
+            design_id: &str,
+            piece_ids: Vec<String>,
             gap: f64,
             shift: f64,
             rise: f64,
         ) -> SetResult {
-            if piece_guids.is_empty() {
+            if piece_ids.is_empty() {
                 return Ok(());
             }
-            let dg = design_guid.to_string();
-            let piece_guids = piece_guids;
+            let dg = design_id.to_string();
+            let piece_ids = piece_ids;
             Self::with_undo(kit, || {
                 let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
                     let g = kit
@@ -8180,12 +8180,12 @@ pub mod kit {
                     (dr.to_full_dto(), d.clone())
                 };
 
-                let selected: HashSet<String> = piece_guids.iter().cloned().collect();
+                let selected: HashSet<String> = piece_ids.iter().cloned().collect();
                 let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
                 for c in &dto.connections {
                     parent_map.insert(
-                        c.connecting.piece.guid.to_string(),
-                        (c.guid.to_string(), c.connected.piece.guid.to_string()),
+                        c.connecting.piece.id.to_string(),
+                        (c.id.to_string(), c.connected.piece.id.to_string()),
                     );
                 }
 
@@ -8209,13 +8209,13 @@ pub mod kit {
 
         pub fn fix_pieces(
             kit: &KitStoreRef,
-            design_guid: &str,
+            design_id: &str,
             piece_ids: Vec<String>,
         ) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 let design_ref = {
                     let g = kit
@@ -8246,15 +8246,15 @@ pub mod kit {
 
         pub fn delete_connection_in_design(
             kit: &KitStoreRef,
-            design_guid: &str,
-            connection_guid: &str,
+            design_id: &str,
+            connection_id: &str,
         ) -> SetResult {
-            let dg = design_guid.to_string();
-            let cg = connection_guid.to_string();
+            let dg = design_id.to_string();
+            let cg = connection_id.to_string();
             Self::with_undo(kit, || {
                 let diff = DesignDiff {
                     removed_connections: vec![ConnectionIdDto {
-                        guid: Guid::from(cg.as_str()),
+                        id: Id::from(cg.as_str()),
                     }],
                     ..Default::default()
                 };
@@ -8266,8 +8266,8 @@ pub mod kit {
             })
         }
 
-        pub fn flatten_design_apply(kit: &KitStoreRef, design_guid: &str) -> SetResult {
-            let dg = design_guid.to_string();
+        pub fn flatten_design_apply(kit: &KitStoreRef, design_id: &str) -> SetResult {
+            let dg = design_id.to_string();
             let forward = {
                 let g = kit
                     .read()
@@ -8292,38 +8292,38 @@ pub mod kit {
             })
         }
 
-        fn design_dto_by_guid(kit: &KitStore, guid: &str) -> Option<DesignFullDto> {
-            kit.design(guid)
+        fn design_dto_by_id(kit: &KitStore, id: &str) -> Option<DesignFullDto> {
+            kit.design(id)
                 .and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
         }
 
         fn domain_connection_key(c: &ConnectionFullDto) -> String {
             format!(
                 "{}|{}|{}|{}",
-                c.guid,
-                c.connected.piece.guid,
-                c.connecting.piece.guid,
+                c.id,
+                c.connected.piece.id,
+                c.connecting.piece.id,
                 c.connected
                     .port
                     .as_ref()
-                    .map(|p| p.guid.to_string())
+                    .map(|p| p.id.to_string())
                     .unwrap_or_default()
             )
         }
 
-        fn strip_design_piece_guid(c: &ConnectionFullDto, nested: &str) -> ConnectionFullDto {
+        fn strip_design_piece_id(c: &ConnectionFullDto, nested: &str) -> ConnectionFullDto {
             let mut o = c.clone();
             if o.connected
                 .design_piece
                 .as_ref()
-                .is_some_and(|d| d.guid.as_str() == nested)
+                .is_some_and(|d| d.id.as_str() == nested)
             {
                 o.connected.design_piece = None;
             }
             if o.connecting
                 .design_piece
                 .as_ref()
-                .is_some_and(|d| d.guid.as_str() == nested)
+                .is_some_and(|d| d.id.as_str() == nested)
             {
                 o.connecting.design_piece = None;
             }
@@ -8338,26 +8338,26 @@ pub mod kit {
                 let mut s: HashSet<String> = HashSet::new();
                 for c in &design.connections {
                     if let Some(dp) = &c.connected.design_piece {
-                        s.insert(dp.guid.to_string());
+                        s.insert(dp.id.to_string());
                     }
                     if let Some(dp) = &c.connecting.design_piece {
-                        s.insert(dp.guid.to_string());
+                        s.insert(dp.id.to_string());
                     }
                 }
                 s.into_iter().collect()
             };
 
             for nid in nested_ids {
-                let Some(child) = Self::design_dto_by_guid(kit, &nid) else {
+                let Some(child) = Self::design_dto_by_id(kit, &nid) else {
                     continue;
                 };
                 let expanded = Self::expand_nested_design_pieces_in_dto(kit, child)?;
                 let existing: HashSet<String> =
-                    design.pieces.iter().map(|p| p.guid.to_string()).collect();
+                    design.pieces.iter().map(|p| p.id.to_string()).collect();
                 let add_p: Vec<PieceFullDto> = expanded
                     .pieces
                     .into_iter()
-                    .filter(|p| !existing.contains(p.guid.as_str()))
+                    .filter(|p| !existing.contains(p.id.as_str()))
                     .collect();
                 let keys: HashSet<String> = design
                     .connections
@@ -8373,7 +8373,7 @@ pub mod kit {
                 let mut new_conns: Vec<ConnectionFullDto> = design
                     .connections
                     .iter()
-                    .map(|c| Self::strip_design_piece_guid(c, &nid))
+                    .map(|c| Self::strip_design_piece_id(c, &nid))
                     .collect();
                 new_conns.extend(add_c);
                 design.connections = new_conns;
@@ -8383,11 +8383,11 @@ pub mod kit {
 
         pub fn expand_nested_design(
             kit: &KitStoreRef,
-            parent_design_guid: &str,
-            nested_design_guid: &str,
+            parent_design_id: &str,
+            nested_design_id: &str,
         ) -> SetResult {
-            let pg = parent_design_guid.to_string();
-            let ng = nested_design_guid.to_string();
+            let pg = parent_design_id.to_string();
+            let ng = nested_design_id.to_string();
             Self::with_undo(kit, || {
                 let before: DesignFullDto = {
                     let g = kit
@@ -8425,12 +8425,12 @@ pub mod kit {
                 let existing_piece: HashSet<String> = before
                     .pieces
                     .iter()
-                    .map(|p| p.guid.to_string())
+                    .map(|p| p.id.to_string())
                     .collect();
                 let add_pieces: Vec<PieceFullDto> = expanded_child
                     .pieces
                     .into_iter()
-                    .filter(|p| !existing_piece.contains(p.guid.as_str()))
+                    .filter(|p| !existing_piece.contains(p.id.as_str()))
                     .collect();
 
                 let existing_conn_key: HashSet<String> = before
@@ -8449,7 +8449,7 @@ pub mod kit {
                 let mut conns: Vec<ConnectionFullDto> = after
                     .connections
                     .iter()
-                    .map(|c| Self::strip_design_piece_guid(c, ng.as_str()))
+                    .map(|c| Self::strip_design_piece_id(c, ng.as_str()))
                     .collect();
                 conns.extend(add_connections);
                 after.connections = conns;
@@ -8465,13 +8465,13 @@ pub mod kit {
 
         pub fn change_piece_type(
             kit: &KitStoreRef,
-            design_guid: &str,
-            piece_guid: &str,
-            new_type_guid: &str,
+            design_id: &str,
+            piece_id: &str,
+            new_type_id: &str,
         ) -> SetResult {
-            let dg = design_guid.to_string();
-            let piece_guid = piece_guid.to_string();
-            let ntg = new_type_guid.to_string();
+            let dg = design_id.to_string();
+            let piece_id = piece_id.to_string();
+            let ntg = new_type_id.to_string();
             Self::with_undo(kit, || {
                 let p: PieceFullDto = {
                     let g = kit
@@ -8487,12 +8487,12 @@ pub mod kit {
                     dto
                         .pieces
                         .into_iter()
-                        .find(|p| p.guid.as_str() == piece_guid.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("piece {piece_guid}")))?
+                        .find(|p| p.id.as_str() == piece_id.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("piece {piece_id}")))?
                 };
                 let mut np = p;
                 np.r#type = Some(TypeIdDto {
-                    guid: Guid::from(ntg.as_str()),
+                    id: Id::from(ntg.as_str()),
                 });
                 let diff = DesignDiff {
                     modified_pieces: vec![np],
@@ -8508,7 +8508,7 @@ pub mod kit {
 
         pub fn paste_design_selection(
             _kit: &KitStoreRef,
-            _design_guid: &str,
+            _design_id: &str,
             _selection_json: serde_json::Value,
             _plane: Option<Plane>,
         ) -> SetResult {
@@ -8519,8 +8519,8 @@ pub mod kit {
 
         pub fn create_hanging_pieces(
             _kit: &KitStoreRef,
-            _design_guid: &str,
-            _type_guids: Vec<String>,
+            _design_id: &str,
+            _type_ids: Vec<String>,
             _plane: Plane,
         ) -> SetResult {
             Err(SetError::InvalidValue(
@@ -8530,7 +8530,7 @@ pub mod kit {
 
         pub fn create_connected_piece(
             _kit: &KitStoreRef,
-            _design_guid: &str,
+            _design_id: &str,
             _parent_piece: &str,
             _parent_port: &str,
             _child_type: &str,
@@ -8543,8 +8543,8 @@ pub mod kit {
 
         pub fn create_fixed_piece(
             _kit: &KitStoreRef,
-            _design_guid: &str,
-            _type_guid: &str,
+            _design_id: &str,
+            _type_id: &str,
             _plane: Plane,
         ) -> SetResult {
             Err(SetError::InvalidValue(
@@ -8554,18 +8554,18 @@ pub mod kit {
 
         pub fn get_pieces_metadata_json(
             &self,
-            design_guid: &str,
+            design_id: &str,
         ) -> std::result::Result<serde_json::Value, SetError> {
             let d = self
-                .design(design_guid)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                .design(design_id)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d
                 .read()
                 .map_err(|_| SetError::LockPoisoned("design".into()))?;
             let flat = dr.flatten_map();
 
-            let mut parent_of: HashMap<Guid, Guid> = HashMap::new();
-            let mut is_child: HashSet<Guid> = HashSet::new();
+            let mut parent_of: HashMap<Id, Id> = HashMap::new();
+            let mut is_child: HashSet<Id> = HashSet::new();
             for c in &dr.connections {
                 let Ok(conn) = c.read() else { continue };
                 let Ok(s0) = conn.connected.read() else {
@@ -8577,14 +8577,14 @@ pub mod kit {
                 let Some(pg0) = s0
                     .piece
                     .upgrade()
-                    .and_then(|p| p.read().ok().map(|r| r.guid.clone()))
+                    .and_then(|p| p.read().ok().map(|r| r.id.clone()))
                 else {
                     continue;
                 };
                 let Some(pg1) = s1
                     .piece
                     .upgrade()
-                    .and_then(|p| p.read().ok().map(|r| r.guid.clone()))
+                    .and_then(|p| p.read().ok().map(|r| r.id.clone()))
                 else {
                     continue;
                 };
@@ -8592,17 +8592,17 @@ pub mod kit {
                 is_child.insert(pg1);
             }
 
-            let mut depth: HashMap<Guid, i32> = HashMap::new();
-            let mut roots: Vec<Guid> = Vec::new();
+            let mut depth: HashMap<Id, i32> = HashMap::new();
+            let mut roots: Vec<Id> = Vec::new();
             for p in &dr.pieces {
                 if let Ok(pr) = p.read() {
-                    if !is_child.contains(&pr.guid) {
-                        roots.push(pr.guid.clone());
+                    if !is_child.contains(&pr.id) {
+                        roots.push(pr.id.clone());
                     }
                 }
             }
-            let mut q: VecDeque<(Guid, i32)> = VecDeque::new();
-            let mut seen_d: HashSet<Guid> = HashSet::new();
+            let mut q: VecDeque<(Id, i32)> = VecDeque::new();
+            let mut seen_d: HashSet<Id> = HashSet::new();
             for r in roots {
                 q.push_back((r, 0));
             }
@@ -8613,8 +8613,8 @@ pub mod kit {
                 depth.insert(gid.clone(), dpt);
                 for p in &dr.pieces {
                     if let Ok(pr) = p.read() {
-                        if parent_of.get(&pr.guid) == Some(&gid) {
-                            q.push_back((pr.guid.clone(), dpt + 1));
+                        if parent_of.get(&pr.id) == Some(&gid) {
+                            q.push_back((pr.id.clone(), dpt + 1));
                         }
                     }
                 }
@@ -8623,22 +8623,22 @@ pub mod kit {
             let mut out: HashMap<String, PiecePlacementMetadataJson> = HashMap::new();
             for p in &dr.pieces {
                 if let Ok(pr) = p.read() {
-                    let guid_s = pr.guid.to_string();
+                    let id_s = pr.id.to_string();
                     let (plane, center) = flat
-                        .get(&pr.guid)
+                        .get(&pr.id)
                         .cloned()
                         .unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
-                    let parent_piece_id = parent_of.get(&pr.guid).map(|g| g.to_string());
-                    let dpt = *depth.get(&pr.guid).unwrap_or(&0);
+                    let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
+                    let dpt = *depth.get(&pr.id).unwrap_or(&0);
                     out.insert(
-                        guid_s.clone(),
+                        id_s.clone(),
                         PiecePlacementMetadataJson {
                             plane,
                             center,
-                            fixed_piece_id: guid_s.clone(),
+                            fixed_piece_id: id_s.clone(),
                             parent_piece_id,
                             depth: dpt,
-                            path: vec![guid_s],
+                            path: vec![id_s],
                         },
                     );
                 }
@@ -8680,11 +8680,11 @@ pub mod kit {
 
         pub fn get_pieces_json(
             &self,
-            design_guid: &str,
+            design_id: &str,
         ) -> std::result::Result<serde_json::Value, SetError> {
             let d = self
-                .design(design_guid)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                .design(design_id)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d
                 .read()
                 .map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -8698,11 +8698,11 @@ pub mod kit {
 
         pub fn get_connections_json(
             &self,
-            design_guid: &str,
+            design_id: &str,
         ) -> std::result::Result<serde_json::Value, SetError> {
             let d = self
-                .design(design_guid)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                .design(design_id)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
             let dr = d
                 .read()
                 .map_err(|_| SetError::LockPoisoned("design".into()))?;
@@ -8721,7 +8721,7 @@ pub mod layer {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
 
     pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
@@ -8730,7 +8730,7 @@ pub mod layer {
     /// Visual layer inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct LayerStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub color: Option<String>,
@@ -8744,12 +8744,12 @@ pub mod layer {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -8765,7 +8765,7 @@ pub mod layer {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -8781,7 +8781,7 @@ pub mod layer {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -8798,7 +8798,7 @@ pub mod layer {
     impl LayerStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: name.into(),
                 description: None,
                 color: None,
@@ -8813,7 +8813,7 @@ pub mod layer {
 
         pub fn from_id_dto(d: LayerIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: String::new(),
                 description: None,
                 color: None,
@@ -8828,7 +8828,7 @@ pub mod layer {
 
         pub fn from_metadata_dto(d: LayerMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -8843,7 +8843,7 @@ pub mod layer {
 
         pub fn from_shallow_dto(d: LayerShallowDto) -> Self {
             Self::from_metadata_dto(LayerMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -8855,7 +8855,7 @@ pub mod layer {
 
         pub fn from_full_dto(d: LayerFullDto) -> Self {
             Self::from_metadata_dto(LayerMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 color: d.color,
@@ -8867,13 +8867,13 @@ pub mod layer {
 
         pub fn to_id_dto(&self) -> LayerIdDto {
             LayerIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> LayerMetadataDto {
             LayerMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 color: self.color.clone(),
@@ -8886,7 +8886,7 @@ pub mod layer {
         pub fn to_shallow_dto(&self) -> LayerShallowDto {
             let m = self.to_metadata_dto();
             LayerShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 color: m.color,
@@ -8899,7 +8899,7 @@ pub mod layer {
         pub fn to_full_dto(&self) -> LayerFullDto {
             let m = self.to_metadata_dto();
             LayerFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 color: m.color,
@@ -8915,7 +8915,7 @@ pub mod layer {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Layer, self.guid.clone())
+            EntityRef::new(EntityKind::Layer, self.id.clone())
         }
 
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
@@ -9020,7 +9020,7 @@ pub mod layer {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("layer")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref())
                 .opt_str(self.color.as_deref());
@@ -9045,7 +9045,7 @@ pub mod piece {
     use crate::error::{SetError, SetResult};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::typ::{TypeIdDto, TypeStoreRef, TypeStoreWeak};
@@ -9063,7 +9063,7 @@ pub mod piece {
     /// Placed instance of a [`crate::typ::TypeStore`] inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct PieceStore {
-        pub guid: Guid,
+        pub id: Id,
         pub id: Option<String>,
         pub name: Option<String>,
         pub description: Option<String>,
@@ -9088,12 +9088,12 @@ pub mod piece {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9126,7 +9126,7 @@ pub mod piece {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9163,7 +9163,7 @@ pub mod piece {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceFullDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9201,7 +9201,7 @@ pub mod piece {
     impl PieceStore {
         pub fn new() -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 id: None,
                 name: None,
                 description: None,
@@ -9225,9 +9225,9 @@ pub mod piece {
             }
         }
 
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 id: None,
                 name: None,
                 description: None,
@@ -9257,11 +9257,11 @@ pub mod piece {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Piece, self.guid.clone())
+            EntityRef::new(EntityKind::Piece, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
@@ -9281,10 +9281,10 @@ pub mod piece {
             &mut self,
             d: PieceFullDto,
             design_weak: DesignStoreWeak,
-            type_index: &HashMap<Guid, TypeStoreRef>,
+            type_index: &HashMap<Id, TypeStoreRef>,
         ) {
             self.apply_metadata_fields(PieceMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 id: d.id,
                 name: d.name,
                 description: d.description,
@@ -9299,7 +9299,7 @@ pub mod piece {
                 design: d.design.clone(),
             });
             self.type_ref = None;
-            if let Some(tid) = d.r#type.as_ref().map(|t| t.guid.clone()) {
+            if let Some(tid) = d.r#type.as_ref().map(|t| t.id.clone()) {
                 if let Some(tr) = type_index.get(&tid) {
                     self.type_ref = Some(Arc::downgrade(tr));
                 }
@@ -9342,7 +9342,7 @@ pub mod piece {
             let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
             let parent_connection = parent_connection_ref.read().ok()?;
             let (parent_side_ref, child_side_ref) =
-                parent_connection.flatten_parent_and_child_sides(&self.guid)?;
+                parent_connection.flatten_parent_and_child_sides(&self.id)?;
             let parent_side = parent_side_ref.read().ok()?;
             let child_side = child_side_ref.read().ok()?;
             let child_type_ref = self.type_ref.as_ref()?.upgrade()?;
@@ -9369,7 +9369,7 @@ pub mod piece {
             let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
             let parent_connection = parent_connection_ref.read().ok()?;
             let (parent_side_ref, _) =
-                parent_connection.flatten_parent_and_child_sides(&self.guid)?;
+                parent_connection.flatten_parent_and_child_sides(&self.id)?;
             let parent_side = parent_side_ref.read().ok()?;
             let parent_type = parent_type_ref.read().ok()?;
             let parent_connector =
@@ -9397,7 +9397,7 @@ pub mod piece {
         fn bubble_design_flatten(&self) {
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(d) = d.read() {
-                    d.invalidate_flatten_with_locked_piece(Some(self.guid.clone()));
+                    d.invalidate_flatten_with_locked_piece(Some(self.id.clone()));
                 }
             }
         }
@@ -9613,7 +9613,7 @@ pub mod piece {
             let Ok(design) = design_ref.read() else {
                 return PieceAlternatives::default();
             };
-            design.replaceable_catalog_candidates(std::slice::from_ref(&self.guid))
+            design.replaceable_catalog_candidates(std::slice::from_ref(&self.id))
         }
 
         /// 🔁Returns connector-valid replacement kinds for this piece inside its host design.
@@ -9662,11 +9662,11 @@ pub mod piece {
             y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
         }
 
-        fn piece_guid_from_side(side: &crate::side::SideStoreRef) -> Option<Guid> {
+        fn piece_id_from_side(side: &crate::side::SideStoreRef) -> Option<Id> {
             side.read().ok().and_then(|side| {
                 side.piece
                     .upgrade()
-                    .and_then(|piece| piece.try_read().ok().map(|piece| piece.guid.clone()))
+                    .and_then(|piece| piece.try_read().ok().map(|piece| piece.id.clone()))
             })
         }
 
@@ -9684,7 +9684,7 @@ pub mod piece {
 
         fn connection_connected_matches_self(
             connection: &crate::connection::ConnectionStoreRef,
-            self_guid: &Guid,
+            self_id: &Id,
         ) -> bool {
             let Some(connected) = connection
                 .read()
@@ -9693,8 +9693,8 @@ pub mod piece {
             else {
                 return false;
             };
-            match Self::piece_guid_from_side(&connected) {
-                Some(guid) => guid == *self_guid,
+            match Self::piece_id_from_side(&connected) {
+                Some(id) => id == *self_id,
                 None => true,
             }
         }
@@ -9868,21 +9868,21 @@ pub mod piece {
             let Ok(design_read) = design.read() else {
                 return;
             };
-            let mut queue = VecDeque::from([self.guid.clone()]);
-            let mut visited: HashSet<Guid> = HashSet::new();
-            while let Some(parent_guid) = queue.pop_front() {
-                if !visited.insert(parent_guid.clone()) {
+            let mut queue = VecDeque::from([self.id.clone()]);
+            let mut visited: HashSet<Id> = HashSet::new();
+            while let Some(parent_id) = queue.pop_front() {
+                if !visited.insert(parent_id.clone()) {
                     continue;
                 }
                 for connection in &design_read.connections {
-                    let Some(connected_guid) = connection
+                    let Some(connected_id) = connection
                         .read()
                         .ok()
-                        .and_then(|connection| Self::piece_guid_from_side(&connection.connected))
+                        .and_then(|connection| Self::piece_id_from_side(&connection.connected))
                     else {
                         continue;
                     };
-                    if connected_guid != parent_guid {
+                    if connected_id != parent_id {
                         continue;
                     }
                     let Some(child_ref) = Self::connection_child_piece(connection) else {
@@ -9890,7 +9890,7 @@ pub mod piece {
                     };
                     if let Ok(child) = child_ref.read() {
                         child.flat_center.invalidate();
-                        queue.push_back(child.guid.clone());
+                        queue.push_back(child.id.clone());
                     };
                 }
             }
@@ -9904,21 +9904,21 @@ pub mod piece {
             let Ok(design_read) = design.read() else {
                 return;
             };
-            let mut queue = VecDeque::from([self.guid.clone()]);
-            let mut visited: HashSet<Guid> = HashSet::new();
-            while let Some(parent_guid) = queue.pop_front() {
-                if !visited.insert(parent_guid.clone()) {
+            let mut queue = VecDeque::from([self.id.clone()]);
+            let mut visited: HashSet<Id> = HashSet::new();
+            while let Some(parent_id) = queue.pop_front() {
+                if !visited.insert(parent_id.clone()) {
                     continue;
                 }
                 for connection in &design_read.connections {
-                    let Some(connected_guid) = connection
+                    let Some(connected_id) = connection
                         .read()
                         .ok()
-                        .and_then(|connection| Self::piece_guid_from_side(&connection.connected))
+                        .and_then(|connection| Self::piece_id_from_side(&connection.connected))
                     else {
                         continue;
                     };
-                    if connected_guid != parent_guid {
+                    if connected_id != parent_id {
                         continue;
                     }
                     let Some(child_ref) = Self::connection_child_piece(connection) else {
@@ -9926,7 +9926,7 @@ pub mod piece {
                     };
                     if let Ok(child) = child_ref.read() {
                         child.flat_plane.invalidate();
-                        queue.push_back(child.guid.clone());
+                        queue.push_back(child.id.clone());
                     };
                 }
             }
@@ -9974,7 +9974,7 @@ pub mod piece {
         /// parent and child connections that made those poses implicit.
         pub fn fix(&mut self) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
-            let parent_connection_guid = self
+            let parent_connection_id = self
                 .parent_connection
                 .as_ref()
                 .and_then(|connection| connection.upgrade())
@@ -9982,7 +9982,7 @@ pub mod piece {
                     connection
                         .read()
                         .ok()
-                        .map(|connection| connection.guid.clone())
+                        .map(|connection| connection.id.clone())
                 });
 
             self.plane = Some(flat_plane);
@@ -10003,14 +10003,14 @@ pub mod piece {
                 .connections
                 .iter()
                 .filter(|connection| {
-                    Self::connection_connected_matches_self(connection, &self.guid)
+                    Self::connection_connected_matches_self(connection, &self.id)
                 })
                 .cloned()
                 .collect();
 
-            let mut removed_connection_guids: HashSet<Guid> = HashSet::new();
-            if let Some(guid) = parent_connection_guid {
-                removed_connection_guids.insert(guid);
+            let mut removed_connection_ids: HashSet<Id> = HashSet::new();
+            if let Some(id) = parent_connection_id {
+                removed_connection_ids.insert(id);
             }
             for connection in &child_connections {
                 if let Some(child_ref) = Self::connection_child_piece(connection) {
@@ -10030,27 +10030,27 @@ pub mod piece {
                     }
                 }
                 if let Ok(connection_read) = connection.read() {
-                    removed_connection_guids.insert(connection_read.guid.clone());
+                    removed_connection_ids.insert(connection_read.id.clone());
                 }
             }
 
-            if removed_connection_guids.is_empty() {
+            if removed_connection_ids.is_empty() {
                 return Ok(());
             }
-            for guid in &removed_connection_guids {
+            for id in &removed_connection_ids {
                 design.emit_ev(KitEvent::ChildRemoved {
                     parent: design_entity.clone(),
-                    child: EntityRef::new(EntityKind::Connection, guid.clone()),
+                    child: EntityRef::new(EntityKind::Connection, id.clone()),
                 });
             }
             design.connections.retain(|connection| {
                 connection
                     .read()
-                    .map(|connection| !removed_connection_guids.contains(&connection.guid))
+                    .map(|connection| !removed_connection_ids.contains(&connection.id))
                     .unwrap_or(true)
             });
             design.invalidate_hash();
-            design.invalidate_flatten_with_locked_piece(Some(self.guid.clone()));
+            design.invalidate_flatten_with_locked_piece(Some(self.id.clone()));
             design.invalidate_validation();
             Ok(())
         }
@@ -10066,7 +10066,7 @@ pub mod piece {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("piece")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .opt_str(self.id.as_deref())
                 .opt_str(self.name.as_deref())
                 .opt_str(self.description.as_deref());
@@ -10095,14 +10095,14 @@ pub mod piece {
             }
             if let Some(t) = self.type_ref.as_ref().and_then(|t| t.upgrade()) {
                 if let Ok(t) = t.read() {
-                    w.str(t.guid.as_str());
+                    w.str(t.id.as_str());
                 }
             }
         }
 
         pub fn to_id_dto(&self) -> PieceIdDto {
             PieceIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
@@ -10113,16 +10113,16 @@ pub mod piece {
                 .and_then(|t| t.upgrade())
                 .and_then(|t| {
                     t.read().ok().map(|t| TypeIdDto {
-                        guid: t.guid.clone(),
+                        id: t.id.clone(),
                     })
                 });
             let design = self.parent_design.upgrade().and_then(|d| {
                 d.read().ok().map(|d| crate::design::DesignIdDto {
-                    guid: d.guid.clone(),
+                    id: d.id.clone(),
                 })
             });
             PieceMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
@@ -10141,7 +10141,7 @@ pub mod piece {
         pub fn to_shallow_dto(&self) -> PieceShallowDto {
             let m = self.to_metadata_dto();
             PieceShallowDto {
-                guid: m.guid,
+                id: m.id,
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -10170,7 +10170,7 @@ pub mod piece {
         pub fn to_full_dto(&self) -> PieceFullDto {
             let m = self.to_metadata_dto();
             PieceFullDto {
-                guid: m.guid,
+                id: m.id,
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -10211,7 +10211,7 @@ pub mod port {
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Vector};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::typ::TypeStoreWeak;
@@ -10222,7 +10222,7 @@ pub mod port {
     /// Connection anchor on a [`crate::typ::TypeStore`].
     #[derive(Debug)]
     pub struct PortStore {
-        pub guid: Guid,
+        pub id: Id,
         pub id: Option<String>,
         pub family: Option<String>,
         pub compatible_families: Vec<String>,
@@ -10240,12 +10240,12 @@ pub mod port {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10270,7 +10270,7 @@ pub mod port {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10299,7 +10299,7 @@ pub mod port {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortFullDto {
-        pub guid: Guid,
+        pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10329,7 +10329,7 @@ pub mod port {
     impl PortStore {
         pub fn new() -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 id: None,
                 family: None,
                 compatible_families: Vec::new(),
@@ -10352,12 +10352,12 @@ pub mod port {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Port, self.guid.clone())
+            EntityRef::new(EntityKind::Port, self.id.clone())
         }
 
         pub fn from_id_dto(d: PortIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 id: None,
                 family: None,
                 compatible_families: Vec::new(),
@@ -10376,7 +10376,7 @@ pub mod port {
 
         pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
@@ -10395,7 +10395,7 @@ pub mod port {
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
@@ -10420,7 +10420,7 @@ pub mod port {
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
@@ -10445,13 +10445,13 @@ pub mod port {
 
         pub fn to_id_dto(&self) -> PortIdDto {
             PortIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> PortMetadataDto {
             PortMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 id: self.id.clone(),
                 family: self.family.clone(),
                 compatible_families: self.compatible_families.clone(),
@@ -10466,7 +10466,7 @@ pub mod port {
         pub fn to_shallow_dto(&self) -> PortShallowDto {
             let m = self.to_metadata_dto();
             PortShallowDto {
-                guid: m.guid,
+                id: m.id,
                 id: m.id,
                 family: m.family,
                 compatible_families: m.compatible_families,
@@ -10491,7 +10491,7 @@ pub mod port {
         pub fn to_full_dto(&self) -> PortFullDto {
             let m = self.to_metadata_dto();
             PortFullDto {
-                guid: m.guid,
+                id: m.id,
                 id: m.id,
                 family: m.family,
                 compatible_families: m.compatible_families,
@@ -10641,7 +10641,7 @@ pub mod port {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("port")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .opt_str(self.id.as_deref())
                 .opt_str(self.family.as_deref());
             for f in &self.compatible_families {
@@ -10678,7 +10678,7 @@ pub mod prop {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::piece::PieceStoreWeak;
@@ -10691,7 +10691,7 @@ pub mod prop {
     /// meaning in the domain, attributes are auxiliary metadata).
     #[derive(Debug)]
     pub struct PropStore {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
@@ -10705,12 +10705,12 @@ pub mod prop {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10719,7 +10719,7 @@ pub mod prop {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10728,7 +10728,7 @@ pub mod prop {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -10736,9 +10736,9 @@ pub mod prop {
     }
 
     impl PropStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 key: String::new(),
                 value: String::new(),
                 unit: None,
@@ -10757,11 +10757,11 @@ pub mod prop {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Prop, self.guid.clone())
+            EntityRef::new(EntityKind::Prop, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: PropFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.key = d.key;
             self.value = d.value;
             self.unit = d.unit;
@@ -10769,7 +10769,7 @@ pub mod prop {
         }
 
         pub(crate) fn from_full_dto(d: PropFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -10858,13 +10858,13 @@ pub mod prop {
 
         pub fn to_id_dto(&self) -> PropIdDto {
             PropIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> PropMetadataDto {
             PropMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 key: self.key.clone(),
                 value: self.value.clone(),
                 unit: self.unit.clone(),
@@ -10874,7 +10874,7 @@ pub mod prop {
         pub fn to_shallow_dto(&self) -> PropShallowDto {
             let m = self.to_metadata_dto();
             PropShallowDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -10884,7 +10884,7 @@ pub mod prop {
         pub fn to_full_dto(&self) -> PropFullDto {
             let m = self.to_metadata_dto();
             PropFullDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -10905,7 +10905,7 @@ pub mod prop {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("prop")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.key)
                 .str(&self.value)
                 .opt_str(self.unit.as_deref());
@@ -10923,7 +10923,7 @@ pub mod quality {
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::port::PortStoreWeak;
@@ -10936,7 +10936,7 @@ pub mod quality {
     /// Measurable/named quality that can be attached to ports, types, designs, etc.
     #[derive(Debug)]
     pub struct QualityStore {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: Option<String>,
         pub unit: Option<String>,
@@ -10955,12 +10955,12 @@ pub mod quality {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct QualityIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct QualityMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
@@ -10974,7 +10974,7 @@ pub mod quality {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct QualityShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
@@ -10990,7 +10990,7 @@ pub mod quality {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct QualityFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub value: Option<String>,
@@ -11005,9 +11005,9 @@ pub mod quality {
     }
 
     impl QualityStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 key: String::new(),
                 value: None,
                 unit: None,
@@ -11031,11 +11031,11 @@ pub mod quality {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Quality, self.guid.clone())
+            EntityRef::new(EntityKind::Quality, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_fields(&mut self, d: QualityMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.key = d.key;
             self.value = d.value;
             self.unit = d.unit;
@@ -11114,9 +11114,9 @@ pub mod quality {
         }
 
         pub(crate) fn from_shallow_dto(d: QualityShallowDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_metadata_fields(QualityMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 key: d.key,
                 value: d.value,
                 unit: d.unit,
@@ -11127,7 +11127,7 @@ pub mod quality {
                 .benchmarks
                 .into_iter()
                 .map(|b| {
-                    let mut bs = BenchmarkStore::empty_shell(b.guid.clone());
+                    let mut bs = BenchmarkStore::empty_shell(b.id.clone());
                     bs.apply_metadata_dto(b);
                     Arc::new(RwLock::new(bs))
                 })
@@ -11137,7 +11137,7 @@ pub mod quality {
 
         pub(crate) fn from_full_dto(d: QualityFullDto) -> Self {
             let QualityFullDto {
-                guid,
+                id,
                 key,
                 value,
                 unit,
@@ -11145,9 +11145,9 @@ pub mod quality {
                 description,
                 benchmarks,
             } = d;
-            let mut s = Self::empty_shell(guid.clone());
+            let mut s = Self::empty_shell(id.clone());
             s.apply_metadata_fields(QualityMetadataDto {
-                guid,
+                id,
                 key,
                 value,
                 unit,
@@ -11157,9 +11157,9 @@ pub mod quality {
             s.benchmarks = benchmarks
                 .into_iter()
                 .map(|b| {
-                    let mut bs = BenchmarkStore::empty_shell(b.guid.clone());
+                    let mut bs = BenchmarkStore::empty_shell(b.id.clone());
                     bs.apply_metadata_dto(BenchmarkMetadataDto {
-                        guid: b.guid,
+                        id: b.id,
                         name: b.name,
                         min: b.min,
                         max: b.max,
@@ -11174,13 +11174,13 @@ pub mod quality {
 
         pub fn to_id_dto(&self) -> QualityIdDto {
             QualityIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> QualityMetadataDto {
             QualityMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 key: self.key.clone(),
                 value: self.value.clone(),
                 unit: self.unit.clone(),
@@ -11192,7 +11192,7 @@ pub mod quality {
         pub fn to_shallow_dto(&self) -> QualityShallowDto {
             let m = self.to_metadata_dto();
             QualityShallowDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -11209,7 +11209,7 @@ pub mod quality {
         pub fn to_full_dto(&self) -> QualityFullDto {
             let m = self.to_metadata_dto();
             QualityFullDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -11290,7 +11290,7 @@ pub mod quality {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("quality")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.key)
                 .opt_str(self.value.as_deref())
                 .opt_str(self.unit.as_deref())
@@ -11413,7 +11413,7 @@ pub mod representation {
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileIdDto, FileStoreWeak};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::tag::{TagFullDto, TagShallowDto, TagStore};
@@ -11424,7 +11424,7 @@ pub mod representation {
     /// Rendering / geometric representation of a [`crate::typ::TypeStore`].
     #[derive(Debug)]
     pub struct RepresentationStore {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         pub description: Option<String>,
         pub tags: Vec<TagStore>,
@@ -11438,12 +11438,12 @@ pub mod representation {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -11453,7 +11453,7 @@ pub mod representation {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -11469,7 +11469,7 @@ pub mod representation {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -11486,7 +11486,7 @@ pub mod representation {
     impl RepresentationStore {
         pub fn new(url: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 url: url.into(),
                 description: None,
                 tags: Vec::new(),
@@ -11505,12 +11505,12 @@ pub mod representation {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Representation, self.guid.clone())
+            EntityRef::new(EntityKind::Representation, self.id.clone())
         }
 
         pub fn from_id_dto(d: RepresentationIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 url: String::new(),
                 description: None,
                 tags: Vec::new(),
@@ -11525,7 +11525,7 @@ pub mod representation {
 
         pub fn from_metadata_dto(d: RepresentationMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 description: d.description,
                 tags: Vec::new(),
@@ -11540,7 +11540,7 @@ pub mod representation {
 
         pub fn from_shallow_dto(d: RepresentationShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 description: d.description,
                 file: d.file,
@@ -11561,7 +11561,7 @@ pub mod representation {
 
         pub fn from_full_dto(d: RepresentationFullDto) -> Self {
             let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
-                guid: d.guid,
+                id: d.id,
                 url: d.url,
                 description: d.description,
                 file: d.file,
@@ -11582,7 +11582,7 @@ pub mod representation {
 
         pub fn to_id_dto(&self) -> RepresentationIdDto {
             RepresentationIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
@@ -11593,7 +11593,7 @@ pub mod representation {
                 .and_then(|f| f.upgrade())
                 .and_then(|f| f.read().ok().map(|f| f.to_id_dto()));
             RepresentationMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 url: self.url.clone(),
                 description: self.description.clone(),
                 file,
@@ -11603,7 +11603,7 @@ pub mod representation {
         pub fn to_shallow_dto(&self) -> RepresentationShallowDto {
             let m = self.to_metadata_dto();
             RepresentationShallowDto {
-                guid: m.guid,
+                id: m.id,
                 url: m.url,
                 description: m.description,
                 file: m.file,
@@ -11624,7 +11624,7 @@ pub mod representation {
         pub fn to_full_dto(&self) -> RepresentationFullDto {
             let m = self.to_metadata_dto();
             RepresentationFullDto {
-                guid: m.guid,
+                id: m.id,
                 url: m.url,
                 description: m.description,
                 file: m.file,
@@ -11700,7 +11700,7 @@ pub mod representation {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("representation")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.url)
                 .opt_str(self.description.as_deref());
             for t in &self.tags {
@@ -11708,7 +11708,7 @@ pub mod representation {
             }
             if let Some(file) = self.file.as_ref().and_then(|f| f.upgrade()) {
                 if let Ok(file) = file.read() {
-                    w.str(file.guid.as_str());
+                    w.str(file.id.as_str());
                 }
             }
             for q in &self.qualities {
@@ -11829,7 +11829,7 @@ pub mod side {
 
     use crate::connection::ConnectionStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::piece::PieceStoreWeak;
     use crate::port::PortStoreWeak;
@@ -11840,7 +11840,7 @@ pub mod side {
     /// One end of a [`crate::connection::ConnectionStore`].
     #[derive(Debug)]
     pub struct SideStore {
-        pub guid: Guid,
+        pub id: Id,
         pub piece: PieceStoreWeak,
         pub port: Option<PortStoreWeak>,
         /// Optional "design piece" for designs that include other designs.
@@ -11852,12 +11852,12 @@ pub mod side {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct SideIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct SideMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
@@ -11871,7 +11871,7 @@ pub mod side {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct SideShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
@@ -11885,7 +11885,7 @@ pub mod side {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct SideFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
@@ -11898,9 +11898,9 @@ pub mod side {
     }
 
     impl SideStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 piece: Weak::new(),
                 port: None,
                 design_piece: None,
@@ -11916,11 +11916,11 @@ pub mod side {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Side, self.guid.clone())
+            EntityRef::new(EntityKind::Side, self.id.clone())
         }
 
         pub(crate) fn apply_metadata_dto(&mut self, d: SideMetadataDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.hash_cache.invalidate();
         }
 
@@ -11973,15 +11973,15 @@ pub mod side {
 
         pub fn to_id_dto(&self) -> SideIdDto {
             SideIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> SideMetadataDto {
-            let piece_guid = self
+            let piece_id = self
                 .piece
                 .upgrade()
-                .and_then(|p| p.read().ok().map(|p| p.guid.clone()))
+                .and_then(|p| p.read().ok().map(|p| p.id.clone()))
                 .unwrap_or_default();
             let port = self
                 .port
@@ -11994,8 +11994,8 @@ pub mod side {
                 .and_then(|p| p.upgrade())
                 .and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
             SideMetadataDto {
-                guid: self.guid.clone(),
-                piece: crate::piece::PieceIdDto { guid: piece_guid },
+                id: self.id.clone(),
+                piece: crate::piece::PieceIdDto { id: piece_id },
                 port,
                 design_piece,
             }
@@ -12004,7 +12004,7 @@ pub mod side {
         pub fn to_shallow_dto(&self) -> SideShallowDto {
             let m = self.to_metadata_dto();
             SideShallowDto {
-                guid: m.guid,
+                id: m.id,
                 piece: m.piece,
                 port: m.port,
                 design_piece: m.design_piece,
@@ -12014,7 +12014,7 @@ pub mod side {
         pub fn to_full_dto(&self) -> SideFullDto {
             let m = self.to_metadata_dto();
             SideFullDto {
-                guid: m.guid,
+                id: m.id,
                 piece: m.piece,
                 port: m.port,
                 design_piece: m.design_piece,
@@ -12034,20 +12034,20 @@ pub mod side {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.str(self.guid.as_str());
+            w.str(self.id.as_str());
             if let Some(p) = self.piece.upgrade() {
                 if let Ok(p) = p.read() {
-                    w.str(p.guid.as_str());
+                    w.str(p.id.as_str());
                 }
             }
             if let Some(p) = self.port.as_ref().and_then(|p| p.upgrade()) {
                 if let Ok(p) = p.read() {
-                    w.str(p.guid.as_str());
+                    w.str(p.id.as_str());
                 }
             }
             if let Some(p) = self.design_piece.as_ref().and_then(|p| p.upgrade()) {
                 if let Ok(p) = p.read() {
-                    w.str(p.guid.as_str());
+                    w.str(p.id.as_str());
                 }
             }
         }
@@ -12056,7 +12056,7 @@ pub mod side {
     impl Default for SideStore {
         fn default() -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 piece: Weak::new(),
                 port: None,
                 design_piece: None,
@@ -12074,7 +12074,7 @@ pub mod stat {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
 
@@ -12084,7 +12084,7 @@ pub mod stat {
     /// Computed/summary stat attached to a design or kit (e.g. piece count).
     #[derive(Debug)]
     pub struct StatStore {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         pub unit: Option<String>,
@@ -12097,12 +12097,12 @@ pub mod stat {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct StatIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct StatMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -12113,7 +12113,7 @@ pub mod stat {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct StatShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -12124,7 +12124,7 @@ pub mod stat {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct StatFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -12134,9 +12134,9 @@ pub mod stat {
     }
 
     impl StatStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 key: String::new(),
                 value: String::new(),
                 unit: None,
@@ -12154,11 +12154,11 @@ pub mod stat {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Stat, self.guid.clone())
+            EntityRef::new(EntityKind::Stat, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: StatFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.key = d.key;
             self.value = d.value;
             self.unit = d.unit;
@@ -12167,7 +12167,7 @@ pub mod stat {
         }
 
         pub(crate) fn from_full_dto(d: StatFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -12255,13 +12255,13 @@ pub mod stat {
 
         pub fn to_id_dto(&self) -> StatIdDto {
             StatIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> StatMetadataDto {
             StatMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 key: self.key.clone(),
                 value: self.value.clone(),
                 unit: self.unit.clone(),
@@ -12272,7 +12272,7 @@ pub mod stat {
         pub fn to_shallow_dto(&self) -> StatShallowDto {
             let m = self.to_metadata_dto();
             StatShallowDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -12283,7 +12283,7 @@ pub mod stat {
         pub fn to_full_dto(&self) -> StatFullDto {
             let m = self.to_metadata_dto();
             StatFullDto {
-                guid: m.guid,
+                id: m.id,
                 key: m.key,
                 value: m.value,
                 unit: m.unit,
@@ -12305,7 +12305,7 @@ pub mod stat {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("stat")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.key)
                 .str(&self.value)
                 .opt_str(self.unit.as_deref())
@@ -12320,7 +12320,7 @@ pub mod tag {
 
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -12331,7 +12331,7 @@ pub mod tag {
     /// Freely choosable label used for filtering/grouping in the UI.
     #[derive(Debug)]
     pub struct TagStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub order: Option<i64>,
         pub parent_kit: Option<KitStoreWeak>,
@@ -12343,12 +12343,12 @@ pub mod tag {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub order: Option<i64>,
@@ -12356,7 +12356,7 @@ pub mod tag {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub order: Option<i64>,
@@ -12364,16 +12364,16 @@ pub mod tag {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub order: Option<i64>,
     }
 
     impl TagStore {
-        pub(crate) fn empty_shell(guid: Guid) -> Self {
+        pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
-                guid,
+                id,
                 name: String::new(),
                 order: None,
                 parent_kit: None,
@@ -12390,18 +12390,18 @@ pub mod tag {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Tag, self.guid.clone())
+            EntityRef::new(EntityKind::Tag, self.id.clone())
         }
 
         pub(crate) fn apply_full_dto_fields(&mut self, d: TagFullDto) {
-            self.guid = d.guid;
+            self.id = d.id;
             self.name = d.name;
             self.order = d.order;
             self.hash_cache.invalidate();
         }
 
         pub(crate) fn from_shallow_dto(d: TagShallowDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.name = d.name;
             s.order = d.order;
             s.hash_cache.invalidate();
@@ -12409,7 +12409,7 @@ pub mod tag {
         }
 
         pub(crate) fn from_full_dto(d: TagFullDto) -> Self {
-            let mut s = Self::empty_shell(d.guid.clone());
+            let mut s = Self::empty_shell(d.id.clone());
             s.apply_full_dto_fields(d);
             s
         }
@@ -12478,13 +12478,13 @@ pub mod tag {
 
         pub fn to_id_dto(&self) -> TagIdDto {
             TagIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> TagMetadataDto {
             TagMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 order: self.order,
             }
@@ -12493,7 +12493,7 @@ pub mod tag {
         pub fn to_shallow_dto(&self) -> TagShallowDto {
             let m = self.to_metadata_dto();
             TagShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 order: m.order,
             }
@@ -12502,7 +12502,7 @@ pub mod tag {
         pub fn to_full_dto(&self) -> TagFullDto {
             let m = self.to_metadata_dto();
             TagFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 order: m.order,
             }
@@ -12521,7 +12521,7 @@ pub mod tag {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("tag").str(self.guid.as_str()).str(&self.name);
+            w.tag("tag").str(self.id.as_str()).str(&self.name);
             if let Some(o) = self.order {
                 w.f64(o as f64);
             }
@@ -12543,7 +12543,7 @@ pub mod typ {
     };
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::Location;
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
     use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
@@ -12560,7 +12560,7 @@ pub mod typ {
     /// Reusable component definition: a type.
     #[derive(Debug)]
     pub struct TypeStore {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         pub description: Option<String>,
         pub icon: Option<String>,
@@ -12588,12 +12588,12 @@ pub mod typ {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TypeIdDto {
-        pub guid: Guid,
+        pub id: Id,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TypeMetadataDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12619,7 +12619,7 @@ pub mod typ {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TypeShallowDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12663,7 +12663,7 @@ pub mod typ {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TypeFullDto {
-        pub guid: Guid,
+        pub id: Id,
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12708,7 +12708,7 @@ pub mod typ {
     impl TypeStore {
         pub fn new(name: impl Into<String>) -> Self {
             Self {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: name.into(),
                 description: None,
                 icon: None,
@@ -12741,7 +12741,7 @@ pub mod typ {
         }
 
         fn entity_ref(&self) -> EntityRef {
-            EntityRef::new(EntityKind::Type, self.guid.clone())
+            EntityRef::new(EntityKind::Type, self.id.clone())
         }
 
         pub fn invalidate_hash(&self) {
@@ -12944,7 +12944,7 @@ pub mod typ {
 
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("type")
-                .str(self.guid.as_str())
+                .str(self.id.as_str())
                 .str(&self.name)
                 .opt_str(self.description.as_deref())
                 .opt_str(self.variant.as_deref())
@@ -12996,21 +12996,21 @@ pub mod typ {
             }
         }
 
-        pub fn port(&self, guid: &str) -> Option<PortStoreRef> {
+        pub fn port(&self, id: &str) -> Option<PortStoreRef> {
             self.ports
                 .iter()
-                .find(|p| p.read().map(|p| p.guid.as_str() == guid).unwrap_or(false))
+                .find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn connector(&self, guid: &str) -> Option<ConnectorStoreRef> {
+        pub fn connector(&self, id: &str) -> Option<ConnectorStoreRef> {
             self.connectors
                 .iter()
-                .find(|c| c.read().map(|c| c.guid.as_str() == guid).unwrap_or(false))
+                .find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
-        pub fn connector_for_port_guid(&self, port_guid: &Guid) -> Option<ConnectorStoreRef> {
+        pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
             self.connectors
                 .iter()
                 .find(|c| {
@@ -13020,23 +13020,23 @@ pub mod typ {
                             cr.port
                                 .as_ref()
                                 .and_then(|w| w.upgrade())
-                                .and_then(|p| p.read().ok().map(|pr| pr.guid == *port_guid))
+                                .and_then(|p| p.read().ok().map(|pr| pr.id == *port_id))
                         })
                         .unwrap_or(false)
                 })
                 .cloned()
         }
 
-        pub fn representation(&self, guid: &str) -> Option<RepresentationStoreRef> {
+        pub fn representation(&self, id: &str) -> Option<RepresentationStoreRef> {
             self.representations
                 .iter()
-                .find(|r| r.read().map(|r| r.guid.as_str() == guid).unwrap_or(false))
+                .find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false))
                 .cloned()
         }
 
         pub fn from_id_dto(d: TypeIdDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: String::new(),
                 description: None,
                 icon: None,
@@ -13065,7 +13065,7 @@ pub mod typ {
 
         pub fn from_metadata_dto(d: TypeMetadataDto) -> Self {
             Self {
-                guid: d.guid,
+                id: d.id,
                 name: d.name,
                 description: d.description,
                 icon: d.icon,
@@ -13100,7 +13100,7 @@ pub mod typ {
             file_refs: &[crate::file::FileStoreRef],
         ) -> TypeStoreRef {
             let TypeFullDto {
-                guid,
+                id,
                 name,
                 description,
                 icon,
@@ -13124,7 +13124,7 @@ pub mod typ {
             } = d;
 
             let t = Arc::new(RwLock::new(TypeStore {
-                guid: guid.clone(),
+                id: id.clone(),
                 name: name.clone(),
                 description: description.clone(),
                 icon: icon.clone(),
@@ -13180,13 +13180,13 @@ pub mod typ {
 
             let mut connector_refs: Vec<ConnectorStoreRef> = Vec::with_capacity(connectors.len());
             for cdto in connectors {
-                let port_guid = cdto.port.as_ref().map(|p| p.guid.clone());
+                let port_id = cdto.port.as_ref().map(|p| p.id.clone());
                 let mut c = ConnectorStore::from_full_dto(cdto);
                 c.parent_type = Arc::downgrade(&t);
-                if let Some(pg) = port_guid {
+                if let Some(pg) = port_id {
                     if let Some(pref) = port_refs
                         .iter()
-                        .find(|p| p.read().map(|p| p.guid == pg).unwrap_or(false))
+                        .find(|p| p.read().map(|p| p.id == pg).unwrap_or(false))
                     {
                         c.port = Some(Arc::downgrade(pref));
                     }
@@ -13197,13 +13197,13 @@ pub mod typ {
             let mut rep_refs: Vec<RepresentationStoreRef> =
                 Vec::with_capacity(representations.len());
             for rdto in representations {
-                let file_guid = rdto.file.as_ref().map(|f| f.guid.clone());
+                let file_id = rdto.file.as_ref().map(|f| f.id.clone());
                 let mut r = RepresentationStore::from_full_dto(rdto);
                 r.parent_type = Arc::downgrade(&t);
-                if let Some(fg) = file_guid {
+                if let Some(fg) = file_id {
                     if let Some(fref) = file_refs
                         .iter()
-                        .find(|f| f.read().map(|f| f.guid == fg).unwrap_or(false))
+                        .find(|f| f.read().map(|f| f.id == fg).unwrap_or(false))
                     {
                         r.file = Some(Arc::downgrade(fref));
                     }
@@ -13252,13 +13252,13 @@ pub mod typ {
 
         pub fn to_id_dto(&self) -> TypeIdDto {
             TypeIdDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
             }
         }
 
         pub fn to_metadata_dto(&self) -> TypeMetadataDto {
             TypeMetadataDto {
-                guid: self.guid.clone(),
+                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 icon: self.icon.clone(),
@@ -13276,7 +13276,7 @@ pub mod typ {
         pub fn to_shallow_dto(&self) -> TypeShallowDto {
             let m = self.to_metadata_dto();
             TypeShallowDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -13339,7 +13339,7 @@ pub mod typ {
         pub fn to_full_dto(&self) -> TypeFullDto {
             let m = self.to_metadata_dto();
             TypeFullDto {
-                guid: m.guid,
+                id: m.id,
                 name: m.name,
                 description: m.description,
                 icon: m.icon,
@@ -13539,22 +13539,22 @@ mod async_kit {
 
         pub async fn apply_design_diff_async(
             this: &KitStoreRef,
-            design_guid: &str,
+            design_id: &str,
             diff: &DesignDiff,
         ) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.apply_design_diff(design_guid, diff)
+                g.apply_design_diff(design_id, diff)
             })();
             ready(r).await
         }
 
         pub async fn flatten_design_async(
             this: &KitStoreRef,
-            design_guid: &str,
+            design_id: &str,
         ) -> Result<SemioReport<DesignChange>> {
             let r = match this.read() {
-                Ok(g) => g.flatten_design(design_guid),
+                Ok(g) => g.flatten_design(design_id),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
             };
             ready(r).await
@@ -13632,7 +13632,7 @@ pub mod io {
         use crate::folder::FolderFullDto;
         use crate::geom::{Camera, Coordinate, Location, Plane};
         use crate::group::GroupFullDto;
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
         use crate::layer::LayerFullDto;
         use crate::piece::PieceFullDto;
@@ -13651,18 +13651,18 @@ pub mod io {
 
         #[derive(Clone, Copy, Default)]
         struct ScopeRefs<'a> {
-            kit: Option<&'a Guid>,
-            typ: Option<&'a Guid>,
-            design: Option<&'a Guid>,
-            port: Option<&'a Guid>,
-            connector: Option<&'a Guid>,
-            representation: Option<&'a Guid>,
-            piece: Option<&'a Guid>,
-            connection: Option<&'a Guid>,
+            kit: Option<&'a Id>,
+            typ: Option<&'a Id>,
+            design: Option<&'a Id>,
+            port: Option<&'a Id>,
+            connector: Option<&'a Id>,
+            representation: Option<&'a Id>,
+            piece: Option<&'a Id>,
+            connection: Option<&'a Id>,
         }
 
-        fn guid_ref(value: Option<&Guid>) -> Option<&str> {
-            value.map(Guid::as_str)
+        fn id_ref(value: Option<&Id>) -> Option<&str> {
+            value.map(Id::as_str)
         }
 
         fn opt_bool_to_int(value: Option<bool>) -> Option<i64> {
@@ -13875,18 +13875,18 @@ pub mod io {
             scope: ScopeRefs<'_>,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO author (guid, ordinal, name, email, role, rank, kit_guid, type_guid, design_guid)
+                "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                 params![
-                    author.guid.as_str(),
+                    author.id.as_str(),
                     ordinal as i64,
                     author.name,
                     author.email,
                     author.role,
                     author.rank,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
                 ],
             )?;
             Ok(())
@@ -13899,17 +13899,17 @@ pub mod io {
             scope: ScopeRefs<'_>,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO concept (guid, ordinal, name, description, order_index, kit_guid, type_guid, design_guid)
+                "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 params![
-                    concept.guid.as_str(),
+                    concept.id.as_str(),
                     ordinal as i64,
                     concept.name,
                     concept.description,
                     concept.order,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
                 ],
             )?;
             Ok(())
@@ -13922,17 +13922,17 @@ pub mod io {
             scope: ScopeRefs<'_>,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO tag (guid, ordinal, name, order_index, kit_guid, type_guid, design_guid, representation_guid)
+                "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 params![
-                    tag.guid.as_str(),
+                    tag.id.as_str(),
                     ordinal as i64,
                     tag.name,
                     tag.order,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
-                    guid_ref(scope.representation),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
+                    id_ref(scope.representation),
                 ],
             )?;
             Ok(())
@@ -13940,22 +13940,22 @@ pub mod io {
 
         fn insert_benchmarks(
             tx: &Transaction<'_>,
-            quality_guid: &Guid,
+            quality_id: &Id,
             benchmarks: &[BenchmarkFullDto],
         ) -> Result<()> {
             for (ordinal, benchmark) in benchmarks.iter().enumerate() {
                 tx.execute(
-                    "INSERT INTO benchmark (guid, ordinal, name, min_value, max_value, min_excluded, max_excluded, quality_guid)
+                    "INSERT INTO benchmark (id, ordinal, name, min_value, max_value, min_excluded, max_excluded, quality_id)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                     params![
-                        benchmark.guid.as_str(),
+                        benchmark.id.as_str(),
                         ordinal as i64,
                         benchmark.name,
                         benchmark.min,
                         benchmark.max,
                         opt_bool_to_int(benchmark.min_excluded),
                         opt_bool_to_int(benchmark.max_excluded),
-                        quality_guid.as_str(),
+                        quality_id.as_str(),
                     ],
                 )?;
             }
@@ -13970,26 +13970,26 @@ pub mod io {
         ) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
-                    guid, ordinal, key, value, unit, definition, description,
-                    kit_guid, type_guid, design_guid, port_guid, connector_guid, representation_guid
+                    id, ordinal, key, value, unit, definition, description,
+                    kit_id, type_id, design_id, port_id, connector_id, representation_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                 params![
-                    quality.guid.as_str(),
+                    quality.id.as_str(),
                     ordinal as i64,
                     quality.key,
                     quality.value,
                     quality.unit,
                     quality.definition,
                     quality.description,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
-                    guid_ref(scope.port),
-                    guid_ref(scope.connector),
-                    guid_ref(scope.representation),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
+                    id_ref(scope.port),
+                    id_ref(scope.connector),
+                    id_ref(scope.representation),
                 ],
             )?;
-            insert_benchmarks(tx, &quality.guid, &quality.benchmarks)
+            insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
         fn insert_prop(
@@ -13999,18 +13999,18 @@ pub mod io {
             scope: ScopeRefs<'_>,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO prop (guid, ordinal, key, value, unit, kit_guid, type_guid, design_guid, piece_guid)
+                "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                 params![
-                    prop.guid.as_str(),
+                    prop.id.as_str(),
                     ordinal as i64,
                     prop.key,
                     prop.value,
                     prop.unit,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
-                    guid_ref(scope.piece),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
+                    id_ref(scope.piece),
                 ],
             )?;
             Ok(())
@@ -14024,24 +14024,24 @@ pub mod io {
         ) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
-                    guid, ordinal, key, value, definition,
-                    kit_guid, type_guid, design_guid, piece_guid, port_guid,
-                    connector_guid, representation_guid, connection_guid
+                    id, ordinal, key, value, definition,
+                    kit_id, type_id, design_id, piece_id, port_id,
+                    connector_id, representation_id, connection_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                 params![
-                    attribute.guid.as_str(),
+                    attribute.id.as_str(),
                     ordinal as i64,
                     attribute.key,
                     attribute.value,
                     attribute.definition,
-                    guid_ref(scope.kit),
-                    guid_ref(scope.typ),
-                    guid_ref(scope.design),
-                    guid_ref(scope.piece),
-                    guid_ref(scope.port),
-                    guid_ref(scope.connector),
-                    guid_ref(scope.representation),
-                    guid_ref(scope.connection),
+                    id_ref(scope.kit),
+                    id_ref(scope.typ),
+                    id_ref(scope.design),
+                    id_ref(scope.piece),
+                    id_ref(scope.port),
+                    id_ref(scope.connector),
+                    id_ref(scope.representation),
+                    id_ref(scope.connection),
                 ],
             )?;
             Ok(())
@@ -14049,7 +14049,7 @@ pub mod io {
 
         fn insert_port(
             tx: &Transaction<'_>,
-            type_guid: &Guid,
+            type_id: &Id,
             port: &PortFullDto,
             ordinal: usize,
         ) -> Result<()> {
@@ -14057,11 +14057,11 @@ pub mod io {
             let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
             tx.execute(
                 "INSERT INTO port (
-                    guid, ordinal, id, family, mandatory, t, description,
-                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_guid
+                    id, ordinal, id, family, mandatory, t, description,
+                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
                 params![
-                    port.guid.as_str(),
+                    port.id.as_str(),
                     ordinal as i64,
                     port.id,
                     port.family,
@@ -14074,13 +14074,13 @@ pub mod io {
                     dir_x,
                     dir_y,
                     dir_z,
-                    type_guid.as_str(),
+                    type_id.as_str(),
                 ],
             )?;
             for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
                 tx.execute(
-                    "INSERT INTO port_compatible_family (port_guid, ordinal, family) VALUES (?1, ?2, ?3)",
-                    params![port.guid.as_str(), compatible_ordinal as i64, family],
+                    "INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)",
+                    params![port.id.as_str(), compatible_ordinal as i64, family],
                 )?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
@@ -14089,7 +14089,7 @@ pub mod io {
                     quality,
                     quality_ordinal,
                     ScopeRefs {
-                        port: Some(&port.guid),
+                        port: Some(&port.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14100,7 +14100,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        port: Some(&port.guid),
+                        port: Some(&port.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14110,20 +14110,20 @@ pub mod io {
 
         fn insert_connector(
             tx: &Transaction<'_>,
-            type_guid: &Guid,
+            type_id: &Id,
             connector: &ConnectorFullDto,
             ordinal: usize,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO connector (guid, ordinal, code, description, port_guid, type_guid)
+                "INSERT INTO connector (id, ordinal, code, description, port_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 params![
-                    connector.guid.as_str(),
+                    connector.id.as_str(),
                     ordinal as i64,
                     connector.code,
                     connector.description,
-                    connector.port.as_ref().map(|port| port.guid.as_str()),
-                    type_guid.as_str(),
+                    connector.port.as_ref().map(|port| port.id.as_str()),
+                    type_id.as_str(),
                 ],
             )?;
             for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
@@ -14132,7 +14132,7 @@ pub mod io {
                     quality,
                     quality_ordinal,
                     ScopeRefs {
-                        connector: Some(&connector.guid),
+                        connector: Some(&connector.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14143,7 +14143,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        connector: Some(&connector.guid),
+                        connector: Some(&connector.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14153,20 +14153,20 @@ pub mod io {
 
         fn insert_representation(
             tx: &Transaction<'_>,
-            type_guid: &Guid,
+            type_id: &Id,
             representation: &RepresentationFullDto,
             ordinal: usize,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO representation (guid, ordinal, url, description, file_guid, type_guid)
+                "INSERT INTO representation (id, ordinal, url, description, file_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 params![
-                    representation.guid.as_str(),
+                    representation.id.as_str(),
                     ordinal as i64,
                     representation.url,
                     representation.description,
-                    representation.file.as_ref().map(|file| file.guid.as_str()),
-                    type_guid.as_str(),
+                    representation.file.as_ref().map(|file| file.id.as_str()),
+                    type_id.as_str(),
                 ],
             )?;
             for (tag_ordinal, tag) in representation.tags.iter().enumerate() {
@@ -14175,7 +14175,7 @@ pub mod io {
                     tag,
                     tag_ordinal,
                     ScopeRefs {
-                        representation: Some(&representation.guid),
+                        representation: Some(&representation.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14186,7 +14186,7 @@ pub mod io {
                     quality,
                     quality_ordinal,
                     ScopeRefs {
-                        representation: Some(&representation.guid),
+                        representation: Some(&representation.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14197,7 +14197,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        representation: Some(&representation.guid),
+                        representation: Some(&representation.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14207,18 +14207,18 @@ pub mod io {
 
         fn insert_type(
             tx: &Transaction<'_>,
-            kit_guid: &Guid,
+            kit_id: &Id,
             typ: &TypeFullDto,
             ordinal: usize,
         ) -> Result<()> {
             let (location_x, location_y) = location_parts(typ.location.as_ref());
             tx.execute(
                 "INSERT INTO \"type\" (
-                    guid, ordinal, name, description, icon, image, variant,
-                    stock, virtual, unit, location_x, location_y, created_at, updated_at, kit_guid
+                    id, ordinal, name, description, icon, image, variant,
+                    stock, virtual, unit, location_x, location_y, created_at, updated_at, kit_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
                 params![
-                    typ.guid.as_str(),
+                    typ.id.as_str(),
                     ordinal as i64,
                     typ.name,
                     typ.description,
@@ -14232,17 +14232,17 @@ pub mod io {
                     location_y,
                     typ.created,
                     typ.updated,
-                    kit_guid.as_str(),
+                    kit_id.as_str(),
                 ],
             )?;
             for (port_ordinal, port) in typ.ports.iter().enumerate() {
-                insert_port(tx, &typ.guid, port, port_ordinal)?;
+                insert_port(tx, &typ.id, port, port_ordinal)?;
             }
             for (connector_ordinal, connector) in typ.connectors.iter().enumerate() {
-                insert_connector(tx, &typ.guid, connector, connector_ordinal)?;
+                insert_connector(tx, &typ.id, connector, connector_ordinal)?;
             }
             for (representation_ordinal, representation) in typ.representations.iter().enumerate() {
-                insert_representation(tx, &typ.guid, representation, representation_ordinal)?;
+                insert_representation(tx, &typ.id, representation, representation_ordinal)?;
             }
             for (author_ordinal, author) in typ.authors.iter().enumerate() {
                 insert_author(
@@ -14250,7 +14250,7 @@ pub mod io {
                     author,
                     author_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14261,7 +14261,7 @@ pub mod io {
                     concept,
                     concept_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14272,7 +14272,7 @@ pub mod io {
                     tag,
                     tag_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14283,7 +14283,7 @@ pub mod io {
                     quality,
                     quality_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14294,7 +14294,7 @@ pub mod io {
                     prop,
                     prop_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14305,7 +14305,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        typ: Some(&typ.guid),
+                        typ: Some(&typ.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14315,15 +14315,15 @@ pub mod io {
 
         fn insert_layer(
             tx: &Transaction<'_>,
-            design_guid: &Guid,
+            design_id: &Id,
             layer: &LayerFullDto,
             ordinal: usize,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO layer (guid, ordinal, name, description, color, order_index, visible, locked, design_guid)
+                "INSERT INTO layer (id, ordinal, name, description, color, order_index, visible, locked, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
                 params![
-                    layer.guid.as_str(),
+                    layer.id.as_str(),
                     ordinal as i64,
                     layer.name,
                     layer.description,
@@ -14331,7 +14331,7 @@ pub mod io {
                     layer.order,
                     opt_bool_to_int(layer.visible),
                     opt_bool_to_int(layer.locked),
-                    design_guid.as_str(),
+                    design_id.as_str(),
                 ],
             )?;
             Ok(())
@@ -14339,7 +14339,7 @@ pub mod io {
 
         fn insert_piece(
             tx: &Transaction<'_>,
-            design_guid: &Guid,
+            design_id: &Id,
             piece: &PieceFullDto,
             ordinal: usize,
         ) -> Result<()> {
@@ -14368,7 +14368,7 @@ pub mod io {
             ) = plane_parts(piece.mirror_plane.as_ref());
             tx.execute(
                 "INSERT INTO piece (
-                    guid, ordinal, id, name, description,
+                    id, ordinal, id, name, description,
                     plane_origin_x, plane_origin_y, plane_origin_z,
                     plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
                     plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
@@ -14376,7 +14376,7 @@ pub mod io {
                     mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
                     mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
                     mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
-                    hidden, locked, color, type_guid, design_ref_guid, design_guid
+                    hidden, locked, color, type_id, design_ref_id, design_id
                  ) VALUES (
                     ?1, ?2, ?3, ?4, ?5,
                     ?6, ?7, ?8,
@@ -14389,7 +14389,7 @@ pub mod io {
                     ?28, ?29, ?30, ?31, ?32, ?33
                  )",
                 params![
-                    piece.guid.as_str(),
+                    piece.id.as_str(),
                     ordinal as i64,
                     piece.id,
                     piece.name,
@@ -14419,9 +14419,9 @@ pub mod io {
                     opt_bool_to_int(piece.hidden),
                     opt_bool_to_int(piece.locked),
                     piece.color,
-                    piece.r#type.as_ref().map(|typ| typ.guid.as_str()),
-                    piece.design.as_ref().map(|design| design.guid.as_str()),
-                    design_guid.as_str(),
+                    piece.r#type.as_ref().map(|typ| typ.id.as_str()),
+                    piece.design.as_ref().map(|design| design.id.as_str()),
+                    design_id.as_str(),
                 ],
             )?;
             for (prop_ordinal, prop) in piece.props.iter().enumerate() {
@@ -14430,7 +14430,7 @@ pub mod io {
                     prop,
                     prop_ordinal,
                     ScopeRefs {
-                        piece: Some(&piece.guid),
+                        piece: Some(&piece.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14441,7 +14441,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        piece: Some(&piece.guid),
+                        piece: Some(&piece.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14451,29 +14451,29 @@ pub mod io {
 
         fn insert_group(
             tx: &Transaction<'_>,
-            design_guid: &Guid,
+            design_id: &Id,
             group: &GroupFullDto,
             ordinal: usize,
         ) -> Result<()> {
             tx.execute(
-                "INSERT INTO \"group\" (guid, ordinal, name, description, color, icon, design_guid)
+                "INSERT INTO \"group\" (id, ordinal, name, description, color, icon, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                 params![
-                    group.guid.as_str(),
+                    group.id.as_str(),
                     ordinal as i64,
                     group.name,
                     group.description,
                     group.color,
                     group.icon,
-                    design_guid.as_str(),
+                    design_id.as_str(),
                 ],
             )?;
             for (piece_ordinal, piece) in group.pieces.iter().enumerate() {
                 tx.execute(
-                    "INSERT INTO group_piece (group_guid, piece_guid, ordinal) VALUES (?1, ?2, ?3)",
+                    "INSERT INTO group_piece (group_id, piece_id, ordinal) VALUES (?1, ?2, ?3)",
                     params![
-                        group.guid.as_str(),
-                        piece.guid.as_str(),
+                        group.id.as_str(),
+                        piece.id.as_str(),
                         piece_ordinal as i64
                     ],
                 )?;
@@ -14483,16 +14483,16 @@ pub mod io {
 
         fn insert_connection(
             tx: &Transaction<'_>,
-            design_guid: &Guid,
+            design_id: &Id,
             connection: &ConnectionFullDto,
             ordinal: usize,
         ) -> Result<()> {
             tx.execute(
                 "INSERT INTO connection (
-                    guid, ordinal,
-                    connected_side_guid, connected_piece_guid, connected_port_guid, connected_design_piece_guid,
-                    connecting_side_guid, connecting_piece_guid, connecting_port_guid, connecting_design_piece_guid,
-                    gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid
+                    id, ordinal,
+                    connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+                    connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
+                    gap, shift, rise, rotation, turn, tilt, x, y, description, design_id
                  ) VALUES (
                     ?1, ?2,
                     ?3, ?4, ?5, ?6,
@@ -14500,24 +14500,24 @@ pub mod io {
                     ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20
                  )",
                 params![
-                    connection.guid.as_str(),
+                    connection.id.as_str(),
                     ordinal as i64,
-                    connection.connected.guid.as_str(),
-                    connection.connected.piece.guid.as_str(),
-                    connection.connected.port.as_ref().map(|port| port.guid.as_str()),
+                    connection.connected.id.as_str(),
+                    connection.connected.piece.id.as_str(),
+                    connection.connected.port.as_ref().map(|port| port.id.as_str()),
                     connection
                         .connected
                         .design_piece
                         .as_ref()
-                        .map(|piece| piece.guid.as_str()),
-                    connection.connecting.guid.as_str(),
-                    connection.connecting.piece.guid.as_str(),
-                    connection.connecting.port.as_ref().map(|port| port.guid.as_str()),
+                        .map(|piece| piece.id.as_str()),
+                    connection.connecting.id.as_str(),
+                    connection.connecting.piece.id.as_str(),
+                    connection.connecting.port.as_ref().map(|port| port.id.as_str()),
                     connection
                         .connecting
                         .design_piece
                         .as_ref()
-                        .map(|piece| piece.guid.as_str()),
+                        .map(|piece| piece.id.as_str()),
                     connection.gap,
                     connection.shift,
                     connection.rise,
@@ -14527,7 +14527,7 @@ pub mod io {
                     connection.x,
                     connection.y,
                     connection.description,
-                    design_guid.as_str(),
+                    design_id.as_str(),
                 ],
             )?;
             for (attribute_ordinal, attribute) in connection.attributes.iter().enumerate() {
@@ -14536,7 +14536,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        connection: Some(&connection.guid),
+                        connection: Some(&connection.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14546,7 +14546,7 @@ pub mod io {
 
         fn insert_design(
             tx: &Transaction<'_>,
-            kit_guid: &Guid,
+            kit_id: &Id,
             design: &DesignFullDto,
             ordinal: usize,
         ) -> Result<()> {
@@ -14565,12 +14565,12 @@ pub mod io {
             ) = camera_parts(design.camera.as_ref());
             tx.execute(
                 "INSERT INTO design (
-                    guid, ordinal, name, description, icon, image, variant, view,
+                    id, ordinal, name, description, icon, image, variant, view,
                     location_x, location_y,
                     camera_position_x, camera_position_y, camera_position_z,
                     camera_target_x, camera_target_y, camera_target_z,
                     camera_up_x, camera_up_y, camera_up_z, camera_fov,
-                    unit, created_at, updated_at, kit_guid
+                    unit, created_at, updated_at, kit_id
                  ) VALUES (
                     ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8,
                     ?9, ?10,
@@ -14580,7 +14580,7 @@ pub mod io {
                     ?21, ?22, ?23, ?24
                  )",
                 params![
-                    design.guid.as_str(),
+                    design.id.as_str(),
                     ordinal as i64,
                     design.name,
                     design.description,
@@ -14603,33 +14603,33 @@ pub mod io {
                     design.unit,
                     design.created,
                     design.updated,
-                    kit_guid.as_str(),
+                    kit_id.as_str(),
                 ],
             )?;
             for (layer_ordinal, layer) in design.layers.iter().enumerate() {
-                insert_layer(tx, &design.guid, layer, layer_ordinal)?;
+                insert_layer(tx, &design.id, layer, layer_ordinal)?;
             }
             for (piece_ordinal, piece) in design.pieces.iter().enumerate() {
-                insert_piece(tx, &design.guid, piece, piece_ordinal)?;
+                insert_piece(tx, &design.id, piece, piece_ordinal)?;
             }
             for (group_ordinal, group) in design.groups.iter().enumerate() {
-                insert_group(tx, &design.guid, group, group_ordinal)?;
+                insert_group(tx, &design.id, group, group_ordinal)?;
             }
             for (connection_ordinal, connection) in design.connections.iter().enumerate() {
-                insert_connection(tx, &design.guid, connection, connection_ordinal)?;
+                insert_connection(tx, &design.id, connection, connection_ordinal)?;
             }
             for (stat_ordinal, stat) in design.stats.iter().enumerate() {
                 tx.execute(
-                    "INSERT INTO stat (guid, ordinal, key, value, unit, description, design_guid)
+                    "INSERT INTO stat (id, ordinal, key, value, unit, description, design_id)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
                     params![
-                        stat.guid.as_str(),
+                        stat.id.as_str(),
                         stat_ordinal as i64,
                         stat.key,
                         stat.value,
                         stat.unit,
                         stat.description,
-                        design.guid.as_str(),
+                        design.id.as_str(),
                     ],
                 )?;
             }
@@ -14639,7 +14639,7 @@ pub mod io {
                     author,
                     author_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14650,7 +14650,7 @@ pub mod io {
                     concept,
                     concept_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14661,7 +14661,7 @@ pub mod io {
                     tag,
                     tag_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14672,7 +14672,7 @@ pub mod io {
                     quality,
                     quality_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14683,7 +14683,7 @@ pub mod io {
                     prop,
                     prop_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14694,7 +14694,7 @@ pub mod io {
                     attribute,
                     attribute_ordinal,
                     ScopeRefs {
-                        design: Some(&design.guid),
+                        design: Some(&design.id),
                         ..ScopeRefs::default()
                     },
                 )?;
@@ -14705,17 +14705,17 @@ pub mod io {
         fn load_authors_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<AuthorFullDto>> {
             let sql = format!(
-                "SELECT guid, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(AuthorFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     email: row.get(2)?,
                     role: row.get(3)?,
@@ -14728,17 +14728,17 @@ pub mod io {
         fn load_concepts_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<ConceptFullDto>> {
             let sql = format!(
-                "SELECT guid, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(ConceptFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     description: row.get(2)?,
                     order: row.get(3)?,
@@ -14750,17 +14750,17 @@ pub mod io {
         fn load_tags_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<TagFullDto>> {
             let sql = format!(
-                "SELECT guid, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(TagFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     order: row.get(2)?,
                 });
@@ -14770,17 +14770,17 @@ pub mod io {
 
         fn load_benchmarks(
             conn: &SqlConnection,
-            quality_guid: &Guid,
+            quality_id: &Id,
         ) -> Result<Vec<BenchmarkFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, min_value, max_value, min_excluded, max_excluded
-                 FROM benchmark WHERE quality_guid = ?1 ORDER BY ordinal",
+                "SELECT id, name, min_value, max_value, min_excluded, max_excluded
+                 FROM benchmark WHERE quality_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([quality_guid.as_str()])?;
+            let mut rows = stmt.query([quality_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(BenchmarkFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     min: row.get(2)?,
                     max: row.get(3)?,
@@ -14794,24 +14794,24 @@ pub mod io {
         fn load_qualities_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<QualityFullDto>> {
             let sql = format!(
-                "SELECT guid, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let quality_guid = Guid::from(row.get::<_, String>(0)?);
+                let quality_id = Id::from(row.get::<_, String>(0)?);
                 values.push(QualityFullDto {
-                    guid: quality_guid.clone(),
+                    id: quality_id.clone(),
                     key: row.get(1)?,
                     value: row.get(2)?,
                     unit: row.get(3)?,
                     definition: row.get(4)?,
                     description: row.get(5)?,
-                    benchmarks: load_benchmarks(conn, &quality_guid)?,
+                    benchmarks: load_benchmarks(conn, &quality_id)?,
                 });
             }
             Ok(values)
@@ -14820,17 +14820,17 @@ pub mod io {
         fn load_props_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<PropFullDto>> {
             let sql = format!(
-                "SELECT guid, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(PropFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     key: row.get(1)?,
                     value: row.get(2)?,
                     unit: row.get(3)?,
@@ -14842,17 +14842,17 @@ pub mod io {
         fn load_attributes_for_scope(
             conn: &SqlConnection,
             column: &str,
-            guid: &Guid,
+            id: &Id,
         ) -> Result<Vec<AttributeFullDto>> {
             let sql = format!(
-                "SELECT guid, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal"
+                "SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal"
             );
             let mut stmt = conn.prepare(&sql)?;
-            let mut rows = stmt.query([guid.as_str()])?;
+            let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(AttributeFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     key: row.get(1)?,
                     value: row.get(2)?,
                     definition: row.get(3)?,
@@ -14861,26 +14861,26 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_ports(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<PortFullDto>> {
+        fn load_ports(conn: &SqlConnection, type_id: &Id) -> Result<Vec<PortFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, id, family, mandatory, t, description,
+                "SELECT id, id, family, mandatory, t, description,
                         point_x, point_y, point_z, direction_x, direction_y, direction_z
-                 FROM port WHERE type_guid = ?1 ORDER BY ordinal",
+                 FROM port WHERE type_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
+                let id = Id::from(row.get::<_, String>(0)?);
                 let mut compatibility_stmt = conn.prepare(
-                    "SELECT family FROM port_compatible_family WHERE port_guid = ?1 ORDER BY ordinal",
+                    "SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal",
                 )?;
-                let mut compatibility_rows = compatibility_stmt.query([guid.as_str()])?;
+                let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
                 let mut compatible_families = Vec::new();
                 while let Some(compatibility_row) = compatibility_rows.next()? {
                     compatible_families.push(compatibility_row.get(0)?);
                 }
                 values.push(PortFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     id: row.get(1)?,
                     family: row.get(2)?,
                     compatible_families,
@@ -14889,8 +14889,8 @@ pub mod io {
                     description: row.get(5)?,
                     point: coordinate_from_parts(row.get(6)?, row.get(7)?, row.get(8)?),
                     direction: coordinate_from_parts(row.get(9)?, row.get(10)?, row.get(11)?),
-                    qualities: load_qualities_for_scope(conn, "port_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "port_guid", &guid)?,
+                    qualities: load_qualities_for_scope(conn, "port_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "port_id", &id)?,
                 });
             }
             Ok(values)
@@ -14898,25 +14898,25 @@ pub mod io {
 
         fn load_connectors(
             conn: &SqlConnection,
-            type_guid: &Guid,
+            type_id: &Id,
         ) -> Result<Vec<ConnectorFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, code, description, port_guid FROM connector WHERE type_guid = ?1 ORDER BY ordinal",
+                "SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
-                let port_guid: Option<String> = row.get(3)?;
+                let id = Id::from(row.get::<_, String>(0)?);
+                let port_id: Option<String> = row.get(3)?;
                 values.push(ConnectorFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: port_guid.map(|value| PortIdDto {
-                        guid: Guid::from(value),
+                    port: port_id.map(|value| PortIdDto {
+                        id: Id::from(value),
                     }),
-                    qualities: load_qualities_for_scope(conn, "connector_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "connector_guid", &guid)?,
+                    qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
                 });
             }
             Ok(values)
@@ -14924,42 +14924,42 @@ pub mod io {
 
         fn load_representations(
             conn: &SqlConnection,
-            type_guid: &Guid,
+            type_id: &Id,
         ) -> Result<Vec<RepresentationFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, url, description, file_guid FROM representation WHERE type_guid = ?1 ORDER BY ordinal",
+                "SELECT id, url, description, file_id FROM representation WHERE type_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
-                let file_guid: Option<String> = row.get(3)?;
+                let id = Id::from(row.get::<_, String>(0)?);
+                let file_id: Option<String> = row.get(3)?;
                 values.push(RepresentationFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     url: row.get(1)?,
                     description: row.get(2)?,
-                    file: file_guid.map(|value| FileIdDto {
-                        guid: Guid::from(value),
+                    file: file_id.map(|value| FileIdDto {
+                        id: Id::from(value),
                     }),
-                    tags: load_tags_for_scope(conn, "representation_guid", &guid)?,
-                    qualities: load_qualities_for_scope(conn, "representation_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "representation_guid", &guid)?,
+                    tags: load_tags_for_scope(conn, "representation_id", &id)?,
+                    qualities: load_qualities_for_scope(conn, "representation_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "representation_id", &id)?,
                 });
             }
             Ok(values)
         }
 
-        fn load_types(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<TypeFullDto>> {
+        fn load_types(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<TypeFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, description, icon, image, variant, stock, virtual, unit, location_x, location_y, created_at, updated_at
-                 FROM \"type\" WHERE kit_guid = ?1 ORDER BY ordinal",
+                "SELECT id, name, description, icon, image, variant, stock, virtual, unit, location_x, location_y, created_at, updated_at
+                 FROM \"type\" WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
+                let id = Id::from(row.get::<_, String>(0)?);
                 values.push(TypeFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
                     icon: row.get(3)?,
@@ -14971,30 +14971,30 @@ pub mod io {
                     location: location_from_parts(row.get(9)?, row.get(10)?),
                     created: row.get(11)?,
                     updated: row.get(12)?,
-                    ports: load_ports(conn, &guid)?,
-                    connectors: load_connectors(conn, &guid)?,
-                    representations: load_representations(conn, &guid)?,
-                    authors: load_authors_for_scope(conn, "type_guid", &guid)?,
-                    concepts: load_concepts_for_scope(conn, "type_guid", &guid)?,
-                    tags: load_tags_for_scope(conn, "type_guid", &guid)?,
-                    qualities: load_qualities_for_scope(conn, "type_guid", &guid)?,
-                    props: load_props_for_scope(conn, "type_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "type_guid", &guid)?,
+                    ports: load_ports(conn, &id)?,
+                    connectors: load_connectors(conn, &id)?,
+                    representations: load_representations(conn, &id)?,
+                    authors: load_authors_for_scope(conn, "type_id", &id)?,
+                    concepts: load_concepts_for_scope(conn, "type_id", &id)?,
+                    tags: load_tags_for_scope(conn, "type_id", &id)?,
+                    qualities: load_qualities_for_scope(conn, "type_id", &id)?,
+                    props: load_props_for_scope(conn, "type_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "type_id", &id)?,
                 });
             }
             Ok(values)
         }
 
-        fn load_layers(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<LayerFullDto>> {
+        fn load_layers(conn: &SqlConnection, design_id: &Id) -> Result<Vec<LayerFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, description, color, order_index, visible, locked
-                 FROM layer WHERE design_guid = ?1 ORDER BY ordinal",
+                "SELECT id, name, description, color, order_index, visible, locked
+                 FROM layer WHERE design_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(LayerFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     name: row.get(1)?,
                     description: row.get(2)?,
                     color: row.get(3)?,
@@ -15006,9 +15006,9 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_pieces(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<PieceFullDto>> {
+        fn load_pieces(conn: &SqlConnection, design_id: &Id) -> Result<Vec<PieceFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, id, name, description,
+                "SELECT id, id, name, description,
                         plane_origin_x, plane_origin_y, plane_origin_z,
                         plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
                         plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
@@ -15016,17 +15016,17 @@ pub mod io {
                         mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
                         mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
                         mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
-                        hidden, locked, color, type_guid, design_ref_guid
-                 FROM piece WHERE design_guid = ?1 ORDER BY ordinal",
+                        hidden, locked, color, type_id, design_ref_id
+                 FROM piece WHERE design_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
-                let type_guid: Option<String> = row.get(29)?;
-                let design_ref_guid: Option<String> = row.get(30)?;
+                let id = Id::from(row.get::<_, String>(0)?);
+                let type_id: Option<String> = row.get(29)?;
+                let design_ref_id: Option<String> = row.get(30)?;
                 values.push(PieceFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     id: row.get(1)?,
                     name: row.get(2)?,
                     description: row.get(3)?,
@@ -15057,39 +15057,39 @@ pub mod io {
                     hidden: opt_int_to_bool(row.get(26)?),
                     locked: opt_int_to_bool(row.get(27)?),
                     color: row.get(28)?,
-                    r#type: type_guid.map(|value| crate::typ::TypeIdDto {
-                        guid: Guid::from(value),
+                    r#type: type_id.map(|value| crate::typ::TypeIdDto {
+                        id: Id::from(value),
                     }),
-                    design: design_ref_guid.map(|value| crate::design::DesignIdDto {
-                        guid: Guid::from(value),
+                    design: design_ref_id.map(|value| crate::design::DesignIdDto {
+                        id: Id::from(value),
                     }),
-                    props: load_props_for_scope(conn, "piece_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "piece_guid", &guid)?,
+                    props: load_props_for_scope(conn, "piece_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "piece_id", &id)?,
                 });
             }
             Ok(values)
         }
 
-        fn load_groups(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<GroupFullDto>> {
+        fn load_groups(conn: &SqlConnection, design_id: &Id) -> Result<Vec<GroupFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, description, color, icon FROM \"group\" WHERE design_guid = ?1 ORDER BY ordinal",
+                "SELECT id, name, description, color, icon FROM \"group\" WHERE design_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
+                let id = Id::from(row.get::<_, String>(0)?);
                 let mut piece_stmt = conn.prepare(
-                    "SELECT piece_guid FROM group_piece WHERE group_guid = ?1 ORDER BY ordinal",
+                    "SELECT piece_id FROM group_piece WHERE group_id = ?1 ORDER BY ordinal",
                 )?;
-                let mut piece_rows = piece_stmt.query([guid.as_str()])?;
+                let mut piece_rows = piece_stmt.query([id.as_str()])?;
                 let mut pieces = Vec::new();
                 while let Some(piece_row) = piece_rows.next()? {
                     pieces.push(crate::piece::PieceIdDto {
-                        guid: Guid::from(piece_row.get::<_, String>(0)?),
+                        id: Id::from(piece_row.get::<_, String>(0)?),
                     });
                 }
                 values.push(GroupFullDto {
-                    guid,
+                    id,
                     name: row.get(1)?,
                     description: row.get(2)?,
                     color: row.get(3)?,
@@ -15102,50 +15102,50 @@ pub mod io {
 
         fn load_connections(
             conn: &SqlConnection,
-            design_guid: &Guid,
+            design_id: &Id,
         ) -> Result<Vec<ConnectionFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid,
-                        connected_side_guid, connected_piece_guid, connected_port_guid, connected_design_piece_guid,
-                        connecting_side_guid, connecting_piece_guid, connecting_port_guid, connecting_design_piece_guid,
+                "SELECT id,
+                        connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
+                        connecting_side_id, connecting_piece_id, connecting_port_id, connecting_design_piece_id,
                         gap, shift, rise, rotation, turn, tilt, x, y, description
-                 FROM connection WHERE design_guid = ?1 ORDER BY ordinal",
+                 FROM connection WHERE design_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
-                let connected_port_guid: Option<String> = row.get(3)?;
-                let connected_design_piece_guid: Option<String> = row.get(4)?;
-                let connecting_port_guid: Option<String> = row.get(7)?;
-                let connecting_design_piece_guid: Option<String> = row.get(8)?;
+                let id = Id::from(row.get::<_, String>(0)?);
+                let connected_port_id: Option<String> = row.get(3)?;
+                let connected_design_piece_id: Option<String> = row.get(4)?;
+                let connecting_port_id: Option<String> = row.get(7)?;
+                let connecting_design_piece_id: Option<String> = row.get(8)?;
                 values.push(ConnectionFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     connected: SideMetadataDto {
-                        guid: Guid::from(row.get::<_, String>(1)?),
+                        id: Id::from(row.get::<_, String>(1)?),
                         piece: crate::piece::PieceIdDto {
-                            guid: Guid::from(row.get::<_, String>(2)?),
+                            id: Id::from(row.get::<_, String>(2)?),
                         },
-                        port: connected_port_guid.map(|value| PortIdDto {
-                            guid: Guid::from(value),
+                        port: connected_port_id.map(|value| PortIdDto {
+                            id: Id::from(value),
                         }),
-                        design_piece: connected_design_piece_guid.map(|value| {
+                        design_piece: connected_design_piece_id.map(|value| {
                             crate::piece::PieceIdDto {
-                                guid: Guid::from(value),
+                                id: Id::from(value),
                             }
                         }),
                     },
                     connecting: SideMetadataDto {
-                        guid: Guid::from(row.get::<_, String>(5)?),
+                        id: Id::from(row.get::<_, String>(5)?),
                         piece: crate::piece::PieceIdDto {
-                            guid: Guid::from(row.get::<_, String>(6)?),
+                            id: Id::from(row.get::<_, String>(6)?),
                         },
-                        port: connecting_port_guid.map(|value| PortIdDto {
-                            guid: Guid::from(value),
+                        port: connecting_port_id.map(|value| PortIdDto {
+                            id: Id::from(value),
                         }),
-                        design_piece: connecting_design_piece_guid.map(|value| {
+                        design_piece: connecting_design_piece_id.map(|value| {
                             crate::piece::PieceIdDto {
-                                guid: Guid::from(value),
+                                id: Id::from(value),
                             }
                         }),
                     },
@@ -15158,21 +15158,21 @@ pub mod io {
                     x: row.get(15)?,
                     y: row.get(16)?,
                     description: row.get(17)?,
-                    attributes: load_attributes_for_scope(conn, "connection_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "connection_id", &id)?,
                 });
             }
             Ok(values)
         }
 
-        fn load_stats(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<StatFullDto>> {
+        fn load_stats(conn: &SqlConnection, design_id: &Id) -> Result<Vec<StatFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, key, value, unit, description FROM stat WHERE design_guid = ?1 ORDER BY ordinal",
+                "SELECT id, key, value, unit, description FROM stat WHERE design_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(StatFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     key: row.get(1)?,
                     value: row.get(2)?,
                     unit: row.get(3)?,
@@ -15182,22 +15182,22 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_designs(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<DesignFullDto>> {
+        fn load_designs(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<DesignFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, description, icon, image, variant, view,
+                "SELECT id, name, description, icon, image, variant, view,
                         location_x, location_y,
                         camera_position_x, camera_position_y, camera_position_z,
                         camera_target_x, camera_target_y, camera_target_z,
                         camera_up_x, camera_up_y, camera_up_z, camera_fov,
                         unit, created_at, updated_at
-                 FROM design WHERE kit_guid = ?1 ORDER BY ordinal",
+                 FROM design WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                let guid = Guid::from(row.get::<_, String>(0)?);
+                let id = Id::from(row.get::<_, String>(0)?);
                 values.push(DesignFullDto {
-                    guid: guid.clone(),
+                    id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
                     icon: row.get(3)?,
@@ -15221,34 +15221,34 @@ pub mod io {
                     created: row.get(20)?,
                     updated: row.get(21)?,
                     kit: Some(crate::kit::KitIdDto {
-                        guid: kit_guid.clone(),
+                        id: kit_id.clone(),
                     }),
-                    pieces: load_pieces(conn, &guid)?,
-                    connections: load_connections(conn, &guid)?,
-                    layers: load_layers(conn, &guid)?,
-                    groups: load_groups(conn, &guid)?,
-                    authors: load_authors_for_scope(conn, "design_guid", &guid)?,
-                    concepts: load_concepts_for_scope(conn, "design_guid", &guid)?,
-                    tags: load_tags_for_scope(conn, "design_guid", &guid)?,
-                    qualities: load_qualities_for_scope(conn, "design_guid", &guid)?,
-                    props: load_props_for_scope(conn, "design_guid", &guid)?,
-                    attributes: load_attributes_for_scope(conn, "design_guid", &guid)?,
-                    stats: load_stats(conn, &guid)?,
+                    pieces: load_pieces(conn, &id)?,
+                    connections: load_connections(conn, &id)?,
+                    layers: load_layers(conn, &id)?,
+                    groups: load_groups(conn, &id)?,
+                    authors: load_authors_for_scope(conn, "design_id", &id)?,
+                    concepts: load_concepts_for_scope(conn, "design_id", &id)?,
+                    tags: load_tags_for_scope(conn, "design_id", &id)?,
+                    qualities: load_qualities_for_scope(conn, "design_id", &id)?,
+                    props: load_props_for_scope(conn, "design_id", &id)?,
+                    attributes: load_attributes_for_scope(conn, "design_id", &id)?,
+                    stats: load_stats(conn, &id)?,
                 });
             }
             Ok(values)
         }
 
-        fn load_files(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<FileFullDto>> {
+        fn load_files(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FileFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, url, mime, size, hash, description, created_at, updated_at
-                 FROM file WHERE kit_guid = ?1 ORDER BY ordinal",
+                "SELECT id, url, mime, size, hash, description, created_at, updated_at
+                 FROM file WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(FileFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     url: row.get(1)?,
                     mime: row.get(2)?,
                     size: row.get(3)?,
@@ -15261,15 +15261,15 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_folders(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<FolderFullDto>> {
+        fn load_folders(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FolderFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT guid, path, description FROM folder WHERE kit_guid = ?1 ORDER BY ordinal",
+                "SELECT id, path, description FROM folder WHERE kit_id = ?1 ORDER BY ordinal",
             )?;
-            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 values.push(FolderFullDto {
-                    guid: Guid::from(row.get::<_, String>(0)?),
+                    id: Id::from(row.get::<_, String>(0)?),
                     path: row.get(1)?,
                     description: row.get(2)?,
                 });
@@ -15279,16 +15279,16 @@ pub mod io {
 
         fn load_kit_dto(conn: &SqlConnection) -> Result<KitFullDto> {
             let mut stmt = conn.prepare(
-                "SELECT guid, name, description, icon, image, preview, version, remote, homepage, license, uri, created_at, updated_at
+                "SELECT id, name, description, icon, image, preview, version, remote, homepage, license, uri, created_at, updated_at
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
             let row = rows
                 .next()?
                 .expect("kit row must exist in sqlite persistence");
-            let guid = Guid::from(row.get::<_, String>(0)?);
+            let id = Id::from(row.get::<_, String>(0)?);
             Ok(KitFullDto {
-                guid: guid.clone(),
+                id: id.clone(),
                 name: row.get(1)?,
                 description: row.get(2)?,
                 icon: row.get(3)?,
@@ -15301,16 +15301,16 @@ pub mod io {
                 uri: row.get(10)?,
                 created: row.get(11)?,
                 updated: row.get(12)?,
-                types: load_types(conn, &guid)?,
-                designs: load_designs(conn, &guid)?,
-                files: load_files(conn, &guid)?,
-                folders: load_folders(conn, &guid)?,
-                authors: load_authors_for_scope(conn, "kit_guid", &guid)?,
-                concepts: load_concepts_for_scope(conn, "kit_guid", &guid)?,
-                tags: load_tags_for_scope(conn, "kit_guid", &guid)?,
-                qualities: load_qualities_for_scope(conn, "kit_guid", &guid)?,
-                props: load_props_for_scope(conn, "kit_guid", &guid)?,
-                attributes: load_attributes_for_scope(conn, "kit_guid", &guid)?,
+                types: load_types(conn, &id)?,
+                designs: load_designs(conn, &id)?,
+                files: load_files(conn, &id)?,
+                folders: load_folders(conn, &id)?,
+                authors: load_authors_for_scope(conn, "kit_id", &id)?,
+                concepts: load_concepts_for_scope(conn, "kit_id", &id)?,
+                tags: load_tags_for_scope(conn, "kit_id", &id)?,
+                qualities: load_qualities_for_scope(conn, "kit_id", &id)?,
+                props: load_props_for_scope(conn, "kit_id", &id)?,
+                attributes: load_attributes_for_scope(conn, "kit_id", &id)?,
             })
         }
 
@@ -15329,11 +15329,11 @@ pub mod io {
                 )?;
                 tx.execute(
                     "INSERT INTO kit (
-                        guid, name, description, icon, image, preview, version,
+                        id, name, description, icon, image, preview, version,
                         remote, homepage, license, uri, created_at, updated_at
                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                     params![
-                        dto.guid.as_str(),
+                        dto.id.as_str(),
                         dto.name,
                         dto.description,
                         dto.icon,
@@ -15351,16 +15351,16 @@ pub mod io {
 
                 for (ordinal, folder) in dto.folders.iter().enumerate() {
                     tx.execute(
-                        "INSERT INTO folder (guid, ordinal, path, description, kit_guid) VALUES (?1, ?2, ?3, ?4, ?5)",
-                        params![folder.guid.as_str(), ordinal as i64, folder.path, folder.description, dto.guid.as_str()],
+                        "INSERT INTO folder (id, ordinal, path, description, kit_id) VALUES (?1, ?2, ?3, ?4, ?5)",
+                        params![folder.id.as_str(), ordinal as i64, folder.path, folder.description, dto.id.as_str()],
                     )?;
                 }
                 for (ordinal, file) in dto.files.iter().enumerate() {
                     tx.execute(
-                        "INSERT INTO file (guid, ordinal, url, mime, size, hash, description, created_at, updated_at, kit_guid)
+                        "INSERT INTO file (id, ordinal, url, mime, size, hash, description, created_at, updated_at, kit_id)
                          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
                         params![
-                            file.guid.as_str(),
+                            file.id.as_str(),
                             ordinal as i64,
                             file.url,
                             file.mime,
@@ -15369,15 +15369,15 @@ pub mod io {
                             file.description,
                             file.created,
                             file.updated,
-                            dto.guid.as_str(),
+                            dto.id.as_str(),
                         ],
                     )?;
                 }
                 for (ordinal, typ) in dto.types.iter().enumerate() {
-                    insert_type(&tx, &dto.guid, typ, ordinal)?;
+                    insert_type(&tx, &dto.id, typ, ordinal)?;
                 }
                 for (ordinal, design) in dto.designs.iter().enumerate() {
-                    insert_design(&tx, &dto.guid, design, ordinal)?;
+                    insert_design(&tx, &dto.id, design, ordinal)?;
                 }
                 for (ordinal, author) in dto.authors.iter().enumerate() {
                     insert_author(
@@ -15385,7 +15385,7 @@ pub mod io {
                         author,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15396,7 +15396,7 @@ pub mod io {
                         concept,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15407,7 +15407,7 @@ pub mod io {
                         tag,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15418,7 +15418,7 @@ pub mod io {
                         quality,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15429,7 +15429,7 @@ pub mod io {
                         prop,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15440,7 +15440,7 @@ pub mod io {
                         attribute,
                         ordinal,
                         ScopeRefs {
-                            kit: Some(&dto.guid),
+                            kit: Some(&dto.id),
                             ..ScopeRefs::default()
                         },
                     )?;
@@ -15595,7 +15595,7 @@ pub mod io {
                 .and_then(OsStr::to_str)
                 .map(|value| value.to_ascii_lowercase())
                 .unwrap_or_else(|| extension_from_mime(file.mime.as_deref()).to_string());
-            PathBuf::from("files").join(format!("{}.{}", file.guid, ext))
+            PathBuf::from("files").join(format!("{}.{}", file.id, ext))
         }
 
         fn externalize_files(dto: &mut KitFullDto, folder_path: &Path) -> Result<()> {
@@ -15855,7 +15855,7 @@ pub mod wasm {
     use wasm_bindgen_futures::future_to_promise;
 
     use crate::error::SetError;
-    use crate::guid::Guid;
+    use crate::id::Id;
     use crate::kit::{KitStore, KitStoreRef};
 
     fn js_settle_set(r: crate::error::SetResult) -> Result<JsValue, JsValue> {
@@ -15870,9 +15870,9 @@ pub mod wasm {
         }
     }
 
-    #[wasm_bindgen(js_name = generateGuid)]
-    pub fn wasm_generate_guid() -> String {
-        Guid::new_v7().into_string()
+    #[wasm_bindgen(js_name = generateId)]
+    pub fn wasm_generate_id() -> String {
+        Id::new_v7().into_string()
     }
 
     #[wasm_bindgen(js_name = kitFromJson)]
@@ -15939,13 +15939,13 @@ pub mod wasm {
     }
 
     #[wasm_bindgen(js_name = flattenDesign)]
-    pub fn wasm_flatten_design(kit: JsValue, design_guid: &str) -> js_sys::Promise {
-        let design_guid = design_guid.to_string();
+    pub fn wasm_flatten_design(kit: JsValue, design_id: &str) -> js_sys::Promise {
+        let design_id = design_id.to_string();
         future_to_promise(async move {
             let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit)
                 .map_err(|e| JsValue::from_str(&e.to_string()))?;
             let k = KitStore::from_full_dto(dto);
-            match KitStore::flatten_design_async(&k, &design_guid).await {
+            match KitStore::flatten_design_async(&k, &design_id).await {
                 Ok(rep) => serde_wasm_bindgen::to_value(&rep)
                     .map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
@@ -15994,10 +15994,10 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = getField)]
-        pub fn get_field(&self, kind: &str, guid: &str, field: &str) -> Result<JsValue, JsValue> {
+        pub fn get_field(&self, kind: &str, id: &str, field: &str) -> Result<JsValue, JsValue> {
             let ek =
                 KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let v = KitStore::get_field_rpc(&self.inner, ek, guid, field)
+            let v = KitStore::get_field_rpc(&self.inner, ek, id, field)
                 .map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
         }
@@ -16006,13 +16006,13 @@ pub mod wasm {
         pub fn set_field(
             &self,
             kind: &str,
-            guid: &str,
+            id: &str,
             field: &str,
             value: JsValue,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
             let kind = kind.to_string();
-            let guid = guid.to_string();
+            let id = id.to_string();
             let field = field.to_string();
             future_to_promise(async move {
                 let ek = match KitStore::parse_entity_kind(&kind) {
@@ -16025,7 +16025,7 @@ pub mod wasm {
                         return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
                     }
                 };
-                js_settle_set(KitStore::set_field_rpc(&inner, ek, &guid, &field, val))
+                js_settle_set(KitStore::set_field_rpc(&inner, ek, &id, &field, val))
             })
         }
 
@@ -16033,13 +16033,13 @@ pub mod wasm {
         pub fn add_child(
             &self,
             parent_kind: &str,
-            parent_guid: &str,
+            parent_id: &str,
             child_kind: &str,
             dto: JsValue,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
             let pk = parent_kind.to_string();
-            let pg = parent_guid.to_string();
+            let pg = parent_id.to_string();
             let ck = child_kind.to_string();
             future_to_promise(async move {
                 let pk = match KitStore::parse_entity_kind(&pk) {
@@ -16064,15 +16064,15 @@ pub mod wasm {
         pub fn remove_child(
             &self,
             parent_kind: &str,
-            parent_guid: &str,
+            parent_id: &str,
             child_kind: &str,
-            child_guid: &str,
+            child_id: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
             let pk = parent_kind.to_string();
-            let pg = parent_guid.to_string();
+            let pg = parent_id.to_string();
             let ck = child_kind.to_string();
-            let cg = child_guid.to_string();
+            let cg = child_id.to_string();
             future_to_promise(async move {
                 let pk = match KitStore::parse_entity_kind(&pk) {
                     Ok(v) => v,
@@ -16087,9 +16087,9 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = applyDesignDiff)]
-        pub fn apply_design_diff(&self, design_guid: &str, diff: JsValue) -> js_sys::Promise {
+        pub fn apply_design_diff(&self, design_id: &str, diff: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
                 let diff: serde_json::Value = match serde_wasm_bindgen::from_value(diff) {
                     Ok(v) => v,
@@ -16104,70 +16104,70 @@ pub mod wasm {
         #[wasm_bindgen(js_name = clusterPieces)]
         pub fn cluster_pieces(
             &self,
-            design_guid: &str,
-            piece_guids: JsValue,
+            design_id: &str,
+            piece_ids: JsValue,
             cluster_name: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             let cn = cluster_name.to_string();
             future_to_promise(async move {
-                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
-                    .map_err(|e| JsValue::from_str(&format!("clusterPieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::cluster_pieces(&inner, &dg, guids, cn))
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
+                    .map_err(|e| JsValue::from_str(&format!("clusterPieces piece_ids: {e}")))?;
+                js_settle_set(KitStore::cluster_pieces(&inner, &dg, ids, cn))
             })
         }
 
         #[wasm_bindgen(js_name = dragPieces)]
         pub fn drag_pieces(
             &self,
-            design_guid: &str,
-            piece_guids: JsValue,
+            design_id: &str,
+            piece_ids: JsValue,
             du: f64,
             dv: f64,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
-                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
-                    .map_err(|e| JsValue::from_str(&format!("dragPieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::drag_pieces(&inner, &dg, guids, du, dv))
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
+                    .map_err(|e| JsValue::from_str(&format!("dragPieces piece_ids: {e}")))?;
+                js_settle_set(KitStore::drag_pieces(&inner, &dg, ids, du, dv))
             })
         }
 
         #[wasm_bindgen(js_name = movePieces)]
         pub fn move_pieces(
             &self,
-            design_guid: &str,
-            piece_guids: JsValue,
+            design_id: &str,
+            piece_ids: JsValue,
             gap: f64,
             shift: f64,
             rise: f64,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
-                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
-                    .map_err(|e| JsValue::from_str(&format!("movePieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::move_pieces(&inner, &dg, guids, gap, shift, rise))
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
+                    .map_err(|e| JsValue::from_str(&format!("movePieces piece_ids: {e}")))?;
+                js_settle_set(KitStore::move_pieces(&inner, &dg, ids, gap, shift, rise))
             })
         }
 
         #[wasm_bindgen(js_name = fixPieces)]
-        pub fn fix_pieces(&self, design_guid: &str, piece_guids: JsValue) -> js_sys::Promise {
+        pub fn fix_pieces(&self, design_id: &str, piece_ids: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
-                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
-                    .map_err(|e| JsValue::from_str(&format!("fixPieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::fix_pieces(&inner, &dg, guids))
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
+                    .map_err(|e| JsValue::from_str(&format!("fixPieces piece_ids: {e}")))?;
+                js_settle_set(KitStore::fix_pieces(&inner, &dg, ids))
             })
         }
 
         #[wasm_bindgen(js_name = flattenDesign)]
-        pub fn flatten_design_bind(&self, design_guid: &str) -> js_sys::Promise {
+        pub fn flatten_design_bind(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(
                 async move { js_settle_set(KitStore::flatten_design_apply(&inner, &dg)) },
             )
@@ -16176,12 +16176,12 @@ pub mod wasm {
         #[wasm_bindgen(js_name = expandDesign)]
         pub fn expand_design_bind(
             &self,
-            parent_design_guid: &str,
-            nested_design_guid: &str,
+            parent_design_id: &str,
+            nested_design_id: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let pg = parent_design_guid.to_string();
-            let ng = nested_design_guid.to_string();
+            let pg = parent_design_id.to_string();
+            let ng = nested_design_id.to_string();
             future_to_promise(async move {
                 js_settle_set(KitStore::expand_nested_design(&inner, &pg, &ng))
             })
@@ -16190,12 +16190,12 @@ pub mod wasm {
         #[wasm_bindgen(js_name = deleteConnection)]
         pub fn delete_connection(
             &self,
-            design_guid: &str,
-            connection_guid: &str,
+            design_id: &str,
+            connection_id: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
-            let cg = connection_guid.to_string();
+            let dg = design_id.to_string();
+            let cg = connection_id.to_string();
             future_to_promise(async move {
                 js_settle_set(KitStore::delete_connection_in_design(&inner, &dg, &cg))
             })
@@ -16204,14 +16204,14 @@ pub mod wasm {
         #[wasm_bindgen(js_name = changePieceType)]
         pub fn change_piece_type(
             &self,
-            design_guid: &str,
-            piece_guid: &str,
-            new_type_guid: &str,
+            design_id: &str,
+            piece_id: &str,
+            new_type_id: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
-            let pg = piece_guid.to_string();
-            let tg = new_type_guid.to_string();
+            let dg = design_id.to_string();
+            let pg = piece_id.to_string();
+            let tg = new_type_id.to_string();
             future_to_promise(async move {
                 js_settle_set(KitStore::change_piece_type(&inner, &dg, &pg, &tg))
             })
@@ -16220,12 +16220,12 @@ pub mod wasm {
         #[wasm_bindgen(js_name = pasteDesignSelection)]
         pub fn paste_design_selection(
             &self,
-            design_guid: &str,
+            design_id: &str,
             selection: JsValue,
             plane: JsValue,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
                 let sel: serde_json::Value =
                     serde_wasm_bindgen::from_value(selection).map_err(|e| {
@@ -16245,15 +16245,15 @@ pub mod wasm {
         #[wasm_bindgen(js_name = createHangingPieces)]
         pub fn create_hanging_pieces(
             &self,
-            design_guid: &str,
-            type_guids: JsValue,
+            design_id: &str,
+            type_ids: JsValue,
             plane: JsValue,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
-                let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_guids).map_err(|e| {
-                    JsValue::from_str(&format!("createHangingPieces type_guids: {e}"))
+                let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_ids).map_err(|e| {
+                    JsValue::from_str(&format!("createHangingPieces type_ids: {e}"))
                 })?;
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
                     .map_err(|e| JsValue::from_str(&format!("createHangingPieces plane: {e}")))?;
@@ -16264,14 +16264,14 @@ pub mod wasm {
         #[wasm_bindgen(js_name = createConnectedPiece)]
         pub fn create_connected_piece(
             &self,
-            design_guid: &str,
+            design_id: &str,
             parent_piece: &str,
             parent_port: &str,
             child_type: &str,
             child_port: &str,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             let pp = parent_piece.to_string();
             let pport = parent_port.to_string();
             let ct = child_type.to_string();
@@ -16286,13 +16286,13 @@ pub mod wasm {
         #[wasm_bindgen(js_name = createFixedPiece)]
         pub fn create_fixed_piece(
             &self,
-            design_guid: &str,
-            type_guid: &str,
+            design_id: &str,
+            type_id: &str,
             plane: JsValue,
         ) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
-            let tg = type_guid.to_string();
+            let dg = design_id.to_string();
+            let tg = type_id.to_string();
             future_to_promise(async move {
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
                     .map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
@@ -16341,9 +16341,9 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = getPiecesMetadata)]
-        pub fn get_pieces_metadata(&self, design_guid: &str) -> js_sys::Promise {
+        pub fn get_pieces_metadata(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
                 let v = inner
                     .read()
@@ -16355,9 +16355,9 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = getPieces)]
-        pub fn get_pieces_wasm(&self, design_guid: &str) -> js_sys::Promise {
+        pub fn get_pieces_wasm(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
                 let v = inner
                     .read()
@@ -16369,9 +16369,9 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = getConnections)]
-        pub fn get_connections_wasm(&self, design_guid: &str) -> js_sys::Promise {
+        pub fn get_connections_wasm(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
-            let dg = design_guid.to_string();
+            let dg = design_id.to_string();
             future_to_promise(async move {
                 let v = inner
                     .read()
@@ -16508,7 +16508,7 @@ mod tests {
         use crate::connector::ConnectorFullDto;
         use crate::design::{DesignFullDto, DesignStore};
         use crate::geom::{Coordinate, Plane};
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore};
         use crate::piece::{PieceFullDto, PieceIdDto};
         use crate::port::{PortFullDto, PortIdDto};
@@ -16517,116 +16517,116 @@ mod tests {
 
         fn kit_with_flatten_chain(
             leaf_plane: Option<Plane>,
-        ) -> (crate::kit::KitStoreRef, Guid, Guid, Guid, Guid) {
-            let kit_guid = Guid::new_v7();
-            let type_guid = Guid::new_v7();
-            let port_guid = Guid::new_v7();
-            let connector_guid = Guid::new_v7();
-            let design_guid = Guid::new_v7();
-            let root_guid = Guid::new_v7();
-            let middle_guid = Guid::new_v7();
-            let leaf_guid = Guid::new_v7();
-            let root_side_guid = Guid::new_v7();
-            let middle_ab_side_guid = Guid::new_v7();
-            let middle_bc_side_guid = Guid::new_v7();
-            let leaf_side_guid = Guid::new_v7();
-            let ab_guid = Guid::new_v7();
-            let bc_guid = Guid::new_v7();
+        ) -> (crate::kit::KitStoreRef, Id, Id, Id, Id) {
+            let kit_id = Id::new_v7();
+            let type_id = Id::new_v7();
+            let port_id = Id::new_v7();
+            let connector_id = Id::new_v7();
+            let design_id = Id::new_v7();
+            let root_id = Id::new_v7();
+            let middle_id = Id::new_v7();
+            let leaf_id = Id::new_v7();
+            let root_side_id = Id::new_v7();
+            let middle_ab_side_id = Id::new_v7();
+            let middle_bc_side_id = Id::new_v7();
+            let leaf_side_id = Id::new_v7();
+            let ab_id = Id::new_v7();
+            let bc_id = Id::new_v7();
 
             let kit = KitStore::from_full_dto(KitFullDto {
-                guid: kit_guid,
+                id: kit_id,
                 name: "kit".into(),
                 types: vec![TypeFullDto {
-                    guid: type_guid.clone(),
+                    id: type_id.clone(),
                     name: "typ".into(),
                     ports: vec![PortFullDto {
-                        guid: port_guid.clone(),
+                        id: port_id.clone(),
                         point: Some(Coordinate::ZERO),
                         direction: Some(Coordinate::new(0.0, 0.0, 1.0)),
                         ..Default::default()
                     }],
                     connectors: vec![ConnectorFullDto {
-                        guid: connector_guid,
+                        id: connector_id,
                         code: "C".into(),
                         port: Some(PortIdDto {
-                            guid: port_guid.clone(),
+                            id: port_id.clone(),
                         }),
                         ..Default::default()
                     }],
                     ..Default::default()
                 }],
                 designs: vec![DesignFullDto {
-                    guid: design_guid.clone(),
+                    id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
                         PieceFullDto {
-                            guid: root_guid.clone(),
+                            id: root_id.clone(),
                             plane: Some(Plane::world_xy()),
                             center: Some(Coordinate::new(5.0, 0.0, 0.0)),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         },
                         PieceFullDto {
-                            guid: middle_guid.clone(),
+                            id: middle_id.clone(),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         },
                         PieceFullDto {
-                            guid: leaf_guid.clone(),
+                            id: leaf_id.clone(),
                             plane: leaf_plane,
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         },
                     ],
                     connections: vec![
                         ConnectionFullDto {
-                            guid: ab_guid,
+                            id: ab_id,
                             connected: SideMetadataDto {
-                                guid: root_side_guid,
+                                id: root_side_id,
                                 piece: PieceIdDto {
-                                    guid: root_guid.clone(),
+                                    id: root_id.clone(),
                                 },
                                 port: Some(PortIdDto {
-                                    guid: port_guid.clone(),
+                                    id: port_id.clone(),
                                 }),
                                 design_piece: None,
                             },
                             connecting: SideMetadataDto {
-                                guid: middle_ab_side_guid,
+                                id: middle_ab_side_id,
                                 piece: PieceIdDto {
-                                    guid: middle_guid.clone(),
+                                    id: middle_id.clone(),
                                 },
                                 port: Some(PortIdDto {
-                                    guid: port_guid.clone(),
+                                    id: port_id.clone(),
                                 }),
                                 design_piece: None,
                             },
                             ..Default::default()
                         },
                         ConnectionFullDto {
-                            guid: bc_guid,
+                            id: bc_id,
                             connected: SideMetadataDto {
-                                guid: middle_bc_side_guid,
+                                id: middle_bc_side_id,
                                 piece: PieceIdDto {
-                                    guid: middle_guid.clone(),
+                                    id: middle_id.clone(),
                                 },
                                 port: Some(PortIdDto {
-                                    guid: port_guid.clone(),
+                                    id: port_id.clone(),
                                 }),
                                 design_piece: None,
                             },
                             connecting: SideMetadataDto {
-                                guid: leaf_side_guid,
+                                id: leaf_side_id,
                                 piece: PieceIdDto {
-                                    guid: leaf_guid.clone(),
+                                    id: leaf_id.clone(),
                                 },
-                                port: Some(PortIdDto { guid: port_guid }),
+                                port: Some(PortIdDto { id: port_id }),
                                 design_piece: None,
                             },
                             ..Default::default()
@@ -16637,7 +16637,7 @@ mod tests {
                 ..Default::default()
             });
 
-            (kit, design_guid, root_guid, middle_guid, leaf_guid)
+            (kit, design_id, root_id, middle_id, leaf_id)
         }
 
         #[test]
@@ -16654,12 +16654,12 @@ mod tests {
                 x_axis: Coordinate::new(0.0, 1.0, 0.0),
                 y_axis: Coordinate::new(-1.0, 0.0, 0.0),
             };
-            let (kit, design_guid, _, _, leaf_guid) = kit_with_flatten_chain(Some(explicit_plane));
+            let (kit, design_id, _, _, leaf_id) = kit_with_flatten_chain(Some(explicit_plane));
             let leaf = {
                 let kit_read = kit.read().expect("kit read");
-                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design = kit_read.design(design_id.as_str()).expect("design");
                 let design_read = design.read().expect("design read");
-                design_read.piece(leaf_guid.as_str()).expect("leaf").clone()
+                design_read.piece(leaf_id.as_str()).expect("leaf").clone()
             };
 
             assert_eq!(leaf.read().expect("leaf read").flat_plane(), explicit_plane);
@@ -16667,12 +16667,12 @@ mod tests {
 
         #[test]
         fn delete_piece_rewires_flatten_parent_refs() {
-            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+            let (kit, design_id, root_id, middle_id, leaf_id) =
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
                 kit_read
-                    .design(design_guid.as_str())
+                    .design(design_id.as_str())
                     .expect("design")
                     .clone()
             };
@@ -16680,39 +16680,39 @@ mod tests {
             {
                 let design_read = design.read().expect("design read");
                 let middle = design_read
-                    .piece(middle_guid.as_str())
+                    .piece(middle_id.as_str())
                     .expect("middle")
                     .clone();
-                let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+                let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
                 let middle_parent = middle
                     .read()
                     .expect("middle read")
                     .parent_piece
                     .as_ref()
                     .and_then(|parent| parent.upgrade())
-                    .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
+                    .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
                 let leaf_parent = leaf
                     .read()
                     .expect("leaf read")
                     .parent_piece
                     .as_ref()
                     .and_then(|parent| parent.upgrade())
-                    .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
-                assert_eq!(middle_parent, Some(root_guid.clone()));
-                assert_eq!(leaf_parent, Some(middle_guid.clone()));
+                    .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
+                assert_eq!(middle_parent, Some(root_id.clone()));
+                assert_eq!(leaf_parent, Some(middle_id.clone()));
             }
 
             design
                 .write()
                 .expect("design write")
-                .delete_pieces(&[root_guid.clone()]);
+                .delete_pieces(&[root_id.clone()]);
 
             let design_read = design.read().expect("design read after delete");
             let middle = design_read
-                .piece(middle_guid.as_str())
+                .piece(middle_id.as_str())
                 .expect("middle")
                 .clone();
-            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+            let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
             let middle_read = middle.read().expect("middle read after delete");
             let leaf_read = leaf.read().expect("leaf read after delete");
             assert!(middle_read.parent_piece.is_none());
@@ -16722,35 +16722,35 @@ mod tests {
                 .parent_piece
                 .as_ref()
                 .and_then(|parent| parent.upgrade())
-                .and_then(|parent| parent.read().ok().map(|parent| parent.guid.clone()));
-            assert_eq!(leaf_parent, Some(middle_guid));
+                .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
+            assert_eq!(leaf_parent, Some(middle_id));
             assert!(leaf_read.parent_connection.is_some());
         }
 
         #[test]
         fn piece_path_walks_from_fixed_piece_to_self() {
-            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+            let (kit, design_id, root_id, middle_id, leaf_id) =
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
                 kit_read
-                    .design(design_guid.as_str())
+                    .design(design_id.as_str())
                     .expect("design")
                     .clone()
             };
             let design_read = design.read().expect("design read");
-            let root = design_read.piece(root_guid.as_str()).expect("root").clone();
+            let root = design_read.piece(root_id.as_str()).expect("root").clone();
             let middle = design_read
-                .piece(middle_guid.as_str())
+                .piece(middle_id.as_str())
                 .expect("middle")
                 .clone();
-            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+            let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let root_path = root.read().expect("root read").path();
             assert_eq!(
                 root_path,
                 vec![PieceIdDto {
-                    guid: root_guid.clone(),
+                    id: root_id.clone(),
                 }]
             );
 
@@ -16759,10 +16759,10 @@ mod tests {
                 middle_path,
                 vec![
                     PieceIdDto {
-                        guid: root_guid.clone(),
+                        id: root_id.clone(),
                     },
                     PieceIdDto {
-                        guid: middle_guid.clone(),
+                        id: middle_id.clone(),
                     },
                 ]
             );
@@ -16771,21 +16771,21 @@ mod tests {
             assert_eq!(
                 leaf_path,
                 vec![
-                    PieceIdDto { guid: root_guid },
-                    PieceIdDto { guid: middle_guid },
-                    PieceIdDto { guid: leaf_guid },
+                    PieceIdDto { id: root_id },
+                    PieceIdDto { id: middle_id },
+                    PieceIdDto { id: leaf_id },
                 ]
             );
         }
 
         #[test]
         fn piece_path_after_parent_detach_starts_at_self() {
-            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+            let (kit, design_id, root_id, middle_id, leaf_id) =
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
                 kit_read
-                    .design(design_guid.as_str())
+                    .design(design_id.as_str())
                     .expect("design")
                     .clone()
             };
@@ -16793,20 +16793,20 @@ mod tests {
             design
                 .write()
                 .expect("design write")
-                .delete_pieces(&[root_guid]);
+                .delete_pieces(&[root_id]);
 
             let design_read = design.read().expect("design read after delete");
             let middle = design_read
-                .piece(middle_guid.as_str())
+                .piece(middle_id.as_str())
                 .expect("middle")
                 .clone();
-            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+            let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let middle_path = middle.read().expect("middle read").path();
             assert_eq!(
                 middle_path,
                 vec![PieceIdDto {
-                    guid: middle_guid.clone(),
+                    id: middle_id.clone(),
                 }]
             );
 
@@ -16814,25 +16814,25 @@ mod tests {
             assert_eq!(
                 leaf_path,
                 vec![
-                    PieceIdDto { guid: middle_guid },
-                    PieceIdDto { guid: leaf_guid },
+                    PieceIdDto { id: middle_id },
+                    PieceIdDto { id: leaf_id },
                 ]
             );
         }
 
         #[test]
         fn piece_drag_invalidates_descendant_center_cache() {
-            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let (kit, design_id, _, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let (middle, leaf) = {
                 let kit_read = kit.read().expect("kit read");
-                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design = kit_read.design(design_id.as_str()).expect("design");
                 let design_read = design.read().expect("design read");
                 (
                     design_read
-                        .piece(middle_guid.as_str())
+                        .piece(middle_id.as_str())
                         .expect("middle")
                         .clone(),
-                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
                 )
             };
             let before = leaf.read().expect("leaf read before").flat_center();
@@ -16850,17 +16850,17 @@ mod tests {
 
         #[test]
         fn piece_move_invalidates_descendant_plane_cache() {
-            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let (kit, design_id, _, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let (middle, leaf) = {
                 let kit_read = kit.read().expect("kit read");
-                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design = kit_read.design(design_id.as_str()).expect("design");
                 let design_read = design.read().expect("design read");
                 (
                     design_read
-                        .piece(middle_guid.as_str())
+                        .piece(middle_id.as_str())
                         .expect("middle")
                         .clone(),
-                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
                 )
             };
             let before = leaf.read().expect("leaf read before").flat_plane();
@@ -16877,11 +16877,11 @@ mod tests {
 
         #[test]
         fn piece_fix_preserves_flat_pose_and_detaches_parent_and_children() {
-            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let (kit, design_id, _, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
                 kit_read
-                    .design(design_guid.as_str())
+                    .design(design_id.as_str())
                     .expect("design")
                     .clone()
             };
@@ -16889,19 +16889,19 @@ mod tests {
                 let design_read = design.read().expect("design read");
                 (
                     design_read
-                        .piece(middle_guid.as_str())
+                        .piece(middle_id.as_str())
                         .expect("middle")
                         .clone(),
-                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
                 )
             };
             let flat_map = design.read().expect("design read for flat map").flatten_map();
             let (middle_plane, middle_center) = flat_map
-                .get(&middle_guid)
+                .get(&middle_id)
                 .copied()
                 .expect("middle flat pose");
             let (leaf_plane, leaf_center) =
-                flat_map.get(&leaf_guid).copied().expect("leaf flat pose");
+                flat_map.get(&leaf_id).copied().expect("leaf flat pose");
 
             middle
                 .write()
@@ -16956,7 +16956,7 @@ mod tests {
         #[test]
         fn author_setter_invalidates_local_hash() {
             let mut a = AuthorStore::from_full_dto(crate::author::AuthorFullDto {
-                guid: crate::Guid::new_v7(),
+                id: crate::Id::new_v7(),
                 name: "n".into(),
                 email: "e".into(),
                 role: None,
@@ -16981,7 +16981,7 @@ mod tests {
         use crate::connector::ConnectorFullDto;
         use crate::design::DesignFullDto;
         use crate::geom::{Coordinate, Vector};
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
         use crate::piece::{PieceFullDto, PieceIdDto};
         use crate::port::{PortFullDto, PortIdDto};
@@ -16999,8 +16999,8 @@ mod tests {
         #[serde(rename_all = "camelCase")]
         struct SyntheticCase {
             name: String,
-            design_guid: String,
-            piece_guids: Vec<String>,
+            design_id: String,
+            piece_ids: Vec<String>,
             #[serde(default)]
             expected_contains_types: Vec<String>,
             #[serde(default)]
@@ -17030,38 +17030,38 @@ mod tests {
             serde_json::from_str(&load_asset_text(name)).expect("parse typed asset")
         }
 
-        fn synthetic_replaceable_kit() -> (KitStoreRef, HashMap<&'static str, Guid>) {
-            let port_l = Guid::from("port-L");
-            let port_l_compatible = Guid::from("port-L-compatible");
-            let port_g = Guid::from("port-G");
+        fn synthetic_replaceable_kit() -> (KitStoreRef, HashMap<&'static str, Id>) {
+            let port_l = Id::from("port-L");
+            let port_l_compatible = Id::from("port-L-compatible");
+            let port_g = Id::from("port-G");
 
-            let selected_external_lg = Guid::from("selected-external-lg");
-            let selected_isolated_lg = Guid::from("selected-isolated-lg");
-            let selected_external_ll = Guid::from("selected-external-ll");
-            let neighbor_l = Guid::from("neighbor-l");
-            let neighbor_g = Guid::from("neighbor-g");
-            let candidate_l = Guid::from("candidate-l");
-            let candidate_lg = Guid::from("candidate-lg");
-            let candidate_ll = Guid::from("candidate-ll");
-            let connectorless = Guid::from("candidate-empty");
+            let selected_external_lg = Id::from("selected-external-lg");
+            let selected_isolated_lg = Id::from("selected-isolated-lg");
+            let selected_external_ll = Id::from("selected-external-ll");
+            let neighbor_l = Id::from("neighbor-l");
+            let neighbor_g = Id::from("neighbor-g");
+            let candidate_l = Id::from("candidate-l");
+            let candidate_lg = Id::from("candidate-lg");
+            let candidate_ll = Id::from("candidate-ll");
+            let connectorless = Id::from("candidate-empty");
 
-            let root_design = Guid::from("root-design");
-            let candidate_design_free_lg = Guid::from("candidate-design-free-lg");
-            let candidate_design_consumed_lg = Guid::from("candidate-design-consumed-lg");
-            let candidate_design_empty = Guid::from("candidate-design-empty");
+            let root_design = Id::from("root-design");
+            let candidate_design_free_lg = Id::from("candidate-design-free-lg");
+            let candidate_design_consumed_lg = Id::from("candidate-design-consumed-lg");
+            let candidate_design_empty = Id::from("candidate-design-empty");
 
-            let piece_external_lg = Guid::from("piece-external-lg");
-            let piece_isolated_lg = Guid::from("piece-isolated-lg");
-            let piece_external_ll = Guid::from("piece-external-ll");
-            let piece_neighbor_l = Guid::from("piece-neighbor-l");
-            let piece_neighbor_g = Guid::from("piece-neighbor-g");
-            let piece_candidate_free_lg = Guid::from("piece-candidate-free-lg");
-            let piece_candidate_consumed_lg = Guid::from("piece-candidate-consumed-lg");
-            let piece_candidate_consumed_neighbor = Guid::from("piece-candidate-consumed-neighbor");
-            let piece_candidate_empty = Guid::from("piece-candidate-empty");
+            let piece_external_lg = Id::from("piece-external-lg");
+            let piece_isolated_lg = Id::from("piece-isolated-lg");
+            let piece_external_ll = Id::from("piece-external-ll");
+            let piece_neighbor_l = Id::from("piece-neighbor-l");
+            let piece_neighbor_g = Id::from("piece-neighbor-g");
+            let piece_candidate_free_lg = Id::from("piece-candidate-free-lg");
+            let piece_candidate_consumed_lg = Id::from("piece-candidate-consumed-lg");
+            let piece_candidate_consumed_neighbor = Id::from("piece-candidate-consumed-neighbor");
+            let piece_candidate_empty = Id::from("piece-candidate-empty");
 
-            let make_port = |guid: Guid, family: &str, compatible_families: Vec<&str>| PortFullDto {
-                guid,
+            let make_port = |id: Id, family: &str, compatible_families: Vec<&str>| PortFullDto {
+                id,
                 family: Some(family.to_string()),
                 compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
                 point: Some(Coordinate::ZERO),
@@ -17069,18 +17069,18 @@ mod tests {
                 ..Default::default()
             };
 
-            let make_connector = |guid: &str, code: &str, port_guid: &Guid| ConnectorFullDto {
-                guid: Guid::from(guid),
+            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto {
+                id: Id::from(id),
                 code: code.to_string(),
-                port: Some(PortIdDto { guid: port_guid.clone() }),
+                port: Some(PortIdDto { id: port_id.clone() }),
                 ..Default::default()
             };
 
-            let make_type = |guid: Guid,
+            let make_type = |id: Id,
                              name: &str,
                              ports: Vec<PortFullDto>,
                              connectors: Vec<ConnectorFullDto>| TypeFullDto {
-                guid,
+                id,
                 name: name.to_string(),
                 ports,
                 connectors,
@@ -17088,7 +17088,7 @@ mod tests {
             };
 
             let dto = KitFullDto {
-                guid: Guid::from("synthetic-kit"),
+                id: Id::from("synthetic-kit"),
                 name: "synthetic-kit".to_string(),
                 types: vec![
                     make_type(
@@ -17167,101 +17167,101 @@ mod tests {
                 ],
                 designs: vec![
                     DesignFullDto {
-                        guid: root_design.clone(),
+                        id: root_design.clone(),
                         name: "root-design".to_string(),
                         pieces: vec![
                             PieceFullDto {
-                                guid: piece_external_lg.clone(),
+                                id: piece_external_lg.clone(),
                                 name: Some("piece-external-lg".to_string()),
-                                r#type: Some(TypeIdDto { guid: selected_external_lg.clone() }),
+                                r#type: Some(TypeIdDto { id: selected_external_lg.clone() }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_isolated_lg.clone(),
+                                id: piece_isolated_lg.clone(),
                                 name: Some("piece-isolated-lg".to_string()),
-                                r#type: Some(TypeIdDto { guid: selected_isolated_lg.clone() }),
+                                r#type: Some(TypeIdDto { id: selected_isolated_lg.clone() }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_external_ll.clone(),
+                                id: piece_external_ll.clone(),
                                 name: Some("piece-external-ll".to_string()),
-                                r#type: Some(TypeIdDto { guid: selected_external_ll.clone() }),
+                                r#type: Some(TypeIdDto { id: selected_external_ll.clone() }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_neighbor_l.clone(),
+                                id: piece_neighbor_l.clone(),
                                 name: Some("piece-neighbor-l".to_string()),
-                                r#type: Some(TypeIdDto { guid: neighbor_l.clone() }),
+                                r#type: Some(TypeIdDto { id: neighbor_l.clone() }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_neighbor_g.clone(),
+                                id: piece_neighbor_g.clone(),
                                 name: Some("piece-neighbor-g".to_string()),
-                                r#type: Some(TypeIdDto { guid: neighbor_g.clone() }),
+                                r#type: Some(TypeIdDto { id: neighbor_g.clone() }),
                                 ..Default::default()
                             },
                         ],
                         connections: vec![
                             ConnectionFullDto {
-                                guid: Guid::from("root-lg-left"),
+                                id: Id::from("root-lg-left"),
                                 connected: SideMetadataDto {
-                                    guid: Guid::from("root-lg-left-selected"),
-                                    piece: PieceIdDto { guid: piece_external_lg.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-lg-left-selected"),
+                                    piece: PieceIdDto { id: piece_external_lg.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
-                                    guid: Guid::from("root-lg-left-neighbor"),
-                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-lg-left-neighbor"),
+                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
-                                guid: Guid::from("root-lg-gable"),
+                                id: Id::from("root-lg-gable"),
                                 connected: SideMetadataDto {
-                                    guid: Guid::from("root-lg-gable-selected"),
-                                    piece: PieceIdDto { guid: piece_external_lg.clone() },
-                                    port: Some(PortIdDto { guid: port_g.clone() }),
+                                    id: Id::from("root-lg-gable-selected"),
+                                    piece: PieceIdDto { id: piece_external_lg.clone() },
+                                    port: Some(PortIdDto { id: port_g.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
-                                    guid: Guid::from("root-lg-gable-neighbor"),
-                                    piece: PieceIdDto { guid: piece_neighbor_g.clone() },
-                                    port: Some(PortIdDto { guid: port_g.clone() }),
+                                    id: Id::from("root-lg-gable-neighbor"),
+                                    piece: PieceIdDto { id: piece_neighbor_g.clone() },
+                                    port: Some(PortIdDto { id: port_g.clone() }),
                                     design_piece: None,
                                 },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
-                                guid: Guid::from("root-ll-left-0"),
+                                id: Id::from("root-ll-left-0"),
                                 connected: SideMetadataDto {
-                                    guid: Guid::from("root-ll-left-0-selected"),
-                                    piece: PieceIdDto { guid: piece_external_ll.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-ll-left-0-selected"),
+                                    piece: PieceIdDto { id: piece_external_ll.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
-                                    guid: Guid::from("root-ll-left-0-neighbor"),
-                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-ll-left-0-neighbor"),
+                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
-                                guid: Guid::from("root-ll-left-1"),
+                                id: Id::from("root-ll-left-1"),
                                 connected: SideMetadataDto {
-                                    guid: Guid::from("root-ll-left-1-selected"),
-                                    piece: PieceIdDto { guid: piece_external_ll.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-ll-left-1-selected"),
+                                    piece: PieceIdDto { id: piece_external_ll.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
-                                    guid: Guid::from("root-ll-left-1-neighbor"),
-                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
-                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    id: Id::from("root-ll-left-1-neighbor"),
+                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 ..Default::default()
@@ -17270,45 +17270,45 @@ mod tests {
                         ..Default::default()
                     },
                     DesignFullDto {
-                        guid: candidate_design_free_lg.clone(),
+                        id: candidate_design_free_lg.clone(),
                         name: "candidate-design-free-lg".to_string(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_candidate_free_lg.clone(),
+                            id: piece_candidate_free_lg.clone(),
                             name: Some("piece-candidate-free-lg".to_string()),
-                            r#type: Some(TypeIdDto { guid: candidate_lg.clone() }),
+                            r#type: Some(TypeIdDto { id: candidate_lg.clone() }),
                             ..Default::default()
                         }],
                         ..Default::default()
                     },
                     DesignFullDto {
-                        guid: candidate_design_consumed_lg.clone(),
+                        id: candidate_design_consumed_lg.clone(),
                         name: "candidate-design-consumed-lg".to_string(),
                         pieces: vec![
                             PieceFullDto {
-                                guid: piece_candidate_consumed_lg.clone(),
+                                id: piece_candidate_consumed_lg.clone(),
                                 name: Some("piece-candidate-consumed-lg".to_string()),
-                                r#type: Some(TypeIdDto { guid: candidate_lg.clone() }),
+                                r#type: Some(TypeIdDto { id: candidate_lg.clone() }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_candidate_consumed_neighbor.clone(),
+                                id: piece_candidate_consumed_neighbor.clone(),
                                 name: Some("piece-candidate-consumed-neighbor".to_string()),
-                                r#type: Some(TypeIdDto { guid: neighbor_l.clone() }),
+                                r#type: Some(TypeIdDto { id: neighbor_l.clone() }),
                                 ..Default::default()
                             },
                         ],
                         connections: vec![ConnectionFullDto {
-                            guid: Guid::from("candidate-consumed-lg-left"),
+                            id: Id::from("candidate-consumed-lg-left"),
                             connected: SideMetadataDto {
-                                guid: Guid::from("candidate-consumed-lg-left-primary"),
-                                piece: PieceIdDto { guid: piece_candidate_consumed_lg.clone() },
-                                port: Some(PortIdDto { guid: port_l_compatible.clone() }),
+                                id: Id::from("candidate-consumed-lg-left-primary"),
+                                piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() },
+                                port: Some(PortIdDto { id: port_l_compatible.clone() }),
                                 design_piece: None,
                             },
                             connecting: SideMetadataDto {
-                                guid: Guid::from("candidate-consumed-lg-left-neighbor"),
-                                piece: PieceIdDto { guid: piece_candidate_consumed_neighbor.clone() },
-                                port: Some(PortIdDto { guid: port_l.clone() }),
+                                id: Id::from("candidate-consumed-lg-left-neighbor"),
+                                piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() },
+                                port: Some(PortIdDto { id: port_l.clone() }),
                                 design_piece: None,
                             },
                             ..Default::default()
@@ -17316,12 +17316,12 @@ mod tests {
                         ..Default::default()
                     },
                     DesignFullDto {
-                        guid: candidate_design_empty.clone(),
+                        id: candidate_design_empty.clone(),
                         name: "candidate-design-empty".to_string(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_candidate_empty.clone(),
+                            id: piece_candidate_empty.clone(),
                             name: Some("piece-candidate-empty".to_string()),
-                            r#type: Some(TypeIdDto { guid: connectorless.clone() }),
+                            r#type: Some(TypeIdDto { id: connectorless.clone() }),
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -17348,8 +17348,8 @@ mod tests {
             )
         }
 
-        fn contains_guid<T>(items: &[T], expected_guid: &str, guid_of: impl Fn(&T) -> Guid) -> bool {
-            items.iter().any(|item| guid_of(item).as_str() == expected_guid)
+        fn contains_id<T>(items: &[T], expected_id: &str, id_of: impl Fn(&T) -> Id) -> bool {
+            items.iter().any(|item| id_of(item).as_str() == expected_id)
         }
 
         #[test]
@@ -17371,21 +17371,21 @@ mod tests {
             };
 
             let alternatives = piece.read().expect("piece read").alternatives();
-            assert!(contains_guid(&alternatives.types, "candidate-lg", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(contains_id(&alternatives.types, "candidate-lg", |item| {
+                item.read().expect("type read").id.clone()
             }));
-            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").id.clone()
             }));
-            assert!(contains_guid(
+            assert!(contains_id(
                 &alternatives.designs,
                 "candidate-design-free-lg",
-                |item| item.read().expect("design read").guid.clone()
+                |item| item.read().expect("design read").id.clone()
             ));
-            assert!(!contains_guid(
+            assert!(!contains_id(
                 &alternatives.designs,
                 "candidate-design-consumed-lg",
-                |item| item.read().expect("design read").guid.clone()
+                |item| item.read().expect("design read").id.clone()
             ));
         }
 
@@ -17404,11 +17404,11 @@ mod tests {
                 .read()
                 .expect("design read")
                 .replaceable_catalog_candidates(&[ids["piece-external-ll"].clone()]);
-            assert!(contains_guid(&alternatives.types, "candidate-ll", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(contains_id(&alternatives.types, "candidate-ll", |item| {
+                item.read().expect("type read").id.clone()
             }));
-            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").id.clone()
             }));
         }
 
@@ -17427,14 +17427,14 @@ mod tests {
                 .read()
                 .expect("design read")
                 .replaceable_catalog_candidates(&[ids["piece-isolated-lg"].clone()]);
-            assert!(contains_guid(&alternatives.types, "selected-isolated-lg", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(contains_id(&alternatives.types, "selected-isolated-lg", |item| {
+                item.read().expect("type read").id.clone()
             }));
-            assert!(contains_guid(&alternatives.types, "candidate-lg", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(contains_id(&alternatives.types, "candidate-lg", |item| {
+                item.read().expect("type read").id.clone()
             }));
-            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").guid.clone()
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").id.clone()
             }));
         }
 
@@ -17453,19 +17453,19 @@ mod tests {
                 .read()
                 .expect("design read")
                 .replaceable_catalog_candidates(&[]);
-            let type_guids: Vec<Guid> = alternatives
+            let type_ids: Vec<Id> = alternatives
                 .types
                 .iter()
-                .map(|item| item.read().expect("type read").guid.clone())
+                .map(|item| item.read().expect("type read").id.clone())
                 .collect();
-            let design_guids: Vec<Guid> = alternatives
+            let design_ids: Vec<Id> = alternatives
                 .designs
                 .iter()
-                .map(|item| item.read().expect("design read").guid.clone())
+                .map(|item| item.read().expect("design read").id.clone())
                 .collect();
 
-            assert_eq!(type_guids, vec![ids["candidate-empty"].clone()]);
-            assert_eq!(design_guids, vec![ids["candidate-design-empty"].clone()]);
+            assert_eq!(type_ids, vec![ids["candidate-empty"].clone()]);
+            assert_eq!(design_ids, vec![ids["candidate-design-empty"].clone()]);
         }
 
         #[test]
@@ -17479,39 +17479,39 @@ mod tests {
                 let design = {
                     let kit_read = kit.read().expect("kit read");
                     kit_read
-                        .design(&case.design_guid)
+                        .design(&case.design_id)
                         .or_else(|| kit_read.design(ids["root-design"].as_str()))
                         .expect("synthetic design")
                         .clone()
                 };
-                let selected_piece_guids: Vec<Guid> = case
-                    .piece_guids
+                let selected_piece_ids: Vec<Id> = case
+                    .piece_ids
                     .iter()
-                    .map(|piece_guid| Guid::from(piece_guid.as_str()))
+                    .map(|piece_id| Id::from(piece_id.as_str()))
                     .collect();
                 let alternatives = design
                     .read()
                     .expect("design read")
-                    .replaceable_catalog_candidates(&selected_piece_guids);
+                    .replaceable_catalog_candidates(&selected_piece_ids);
 
                 for expected in &case.expected_contains_types {
-                    assert!(contains_guid(&alternatives.types, expected, |item| {
-                        item.read().expect("type read").guid.clone()
+                    assert!(contains_id(&alternatives.types, expected, |item| {
+                        item.read().expect("type read").id.clone()
                     }), "{} should include type {}", case.name, expected);
                 }
                 for forbidden in &case.expected_not_contains_types {
-                    assert!(!contains_guid(&alternatives.types, forbidden, |item| {
-                        item.read().expect("type read").guid.clone()
+                    assert!(!contains_id(&alternatives.types, forbidden, |item| {
+                        item.read().expect("type read").id.clone()
                     }), "{} should exclude type {}", case.name, forbidden);
                 }
                 for expected in &case.expected_contains_designs {
-                    assert!(contains_guid(&alternatives.designs, expected, |item| {
-                        item.read().expect("design read").guid.clone()
+                    assert!(contains_id(&alternatives.designs, expected, |item| {
+                        item.read().expect("design read").id.clone()
                     }), "{} should include design {}", case.name, expected);
                 }
                 for forbidden in &case.expected_not_contains_designs {
-                    assert!(!contains_guid(&alternatives.designs, forbidden, |item| {
-                        item.read().expect("design read").guid.clone()
+                    assert!(!contains_id(&alternatives.designs, forbidden, |item| {
+                        item.read().expect("design read").id.clone()
                     }), "{} should exclude design {}", case.name, forbidden);
                 }
             }
@@ -17552,7 +17552,7 @@ mod tests {
         use tempfile::tempdir;
 
         use crate::design::DesignFullDto;
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore};
         use crate::piece::PieceFullDto;
         use crate::port::PortFullDto;
@@ -17560,16 +17560,16 @@ mod tests {
 
         #[test]
         fn sqlite_schema_roundtrip() {
-            let type_guid = Guid::new_v7();
-            let piece_guid = Guid::new_v7();
+            let type_id = Id::new_v7();
+            let piece_id = Id::new_v7();
             let kit = KitStore::from_full_dto(KitFullDto {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: "sqlite-roundtrip".into(),
                 types: vec![TypeFullDto {
-                    guid: type_guid.clone(),
+                    id: type_id.clone(),
                     name: "Wall".into(),
                     ports: vec![PortFullDto {
-                        guid: Guid::new_v7(),
+                        id: Id::new_v7(),
                         id: Some("top".into()),
                         family: Some("stack".into()),
                         compatible_families: vec!["stack".into()],
@@ -17578,11 +17578,11 @@ mod tests {
                     ..Default::default()
                 }],
                 designs: vec![DesignFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "Plan".into(),
                     pieces: vec![PieceFullDto {
-                        guid: piece_guid,
-                        r#type: Some(crate::typ::TypeIdDto { guid: type_guid }),
+                        id: piece_id,
+                        r#type: Some(crate::typ::TypeIdDto { id: type_id }),
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -17625,24 +17625,24 @@ mod tests {
 
         use crate::file::FileFullDto;
         use crate::folder::FolderFullDto;
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore};
 
         #[test]
         fn local_folder_roundtrip_externalizes_and_rehydrates_assets() {
-            let file_guid = Guid::new_v7();
-            let folder_guid = Guid::new_v7();
+            let file_id = Id::new_v7();
+            let folder_id = Id::new_v7();
             let dto = KitFullDto {
-                guid: Guid::new_v7(),
+                id: Id::new_v7(),
                 name: "local-folder-roundtrip".into(),
                 files: vec![FileFullDto {
-                    guid: file_guid.clone(),
+                    id: file_id.clone(),
                     url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(),
                     mime: Some("text/plain".into()),
                     ..Default::default()
                 }],
                 folders: vec![FolderFullDto {
-                    guid: folder_guid,
+                    id: folder_id,
                     path: "assets/docs".into(),
                     ..Default::default()
                 }],
@@ -17665,7 +17665,7 @@ mod tests {
                 .clone();
             assert_eq!(
                 persisted_file_url,
-                format!("files/{file_guid}.txt"),
+                format!("files/{file_id}.txt"),
                 "local snapshot stores a regular relative file path"
             );
             assert!(
@@ -17701,7 +17701,7 @@ mod tests {
 
         use serde_json::Value;
 
-        use crate::guid::Guid;
+        use crate::id::Id;
         use crate::io::remote::RemoteKitSession;
         use crate::kit::KitStore;
 
@@ -17774,8 +17774,8 @@ mod tests {
         fn remote_session_roundtrip_over_http_snapshot_api() {
             let listener = TcpListener::bind("127.0.0.1:0").expect("bind mock hub");
             let hub_url = format!("http://{}", listener.local_addr().expect("local addr"));
-            let session_id = Guid::new_v7().into_string();
-            let owner_token = Guid::new_v7().into_string();
+            let session_id = Id::new_v7().into_string();
+            let owner_token = Id::new_v7().into_string();
             let expected_session_id = session_id.clone();
             let expected_owner_token = owner_token.clone();
             let persisted_kit = Arc::new(Mutex::new(Value::Null));
@@ -17800,7 +17800,7 @@ mod tests {
                             "200 OK",
                             &serde_json::json!({
                                 "session_id": session_id,
-                                "kit_id": kit["guid"],
+                                "kit_id": kit["id"],
                                 "owner_token": owner_token,
                             }),
                         );
@@ -17905,7 +17905,7 @@ mod tests {
             use crate::events::{EntityKind, EntityRef, KitEvent};
             use crate::file::FileFullDto;
             use crate::group::GroupFullDto;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore, KitStoreRef};
             use crate::layer::LayerFullDto;
             use crate::piece::{PieceFullDto, PieceIdDto};
@@ -17923,32 +17923,32 @@ mod tests {
             }
 
             pub fn kit_entity_ref(kit: &KitStoreRef) -> EntityRef {
-                let g = kit.read().expect("kit read").guid.clone();
+                let g = kit.read().expect("kit read").id.clone();
                 EntityRef::new(EntityKind::Kit, g)
             }
 
             /// Minimal kit with one type, one design, one piece (valid type ref).
-            pub fn kit_with_piece() -> (KitStoreRef, Guid, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let design_guid = Guid::new_v7();
-                let piece_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_piece() -> (KitStoreRef, Id, Id, Id) {
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_id = Id::new_v7();
+                let kit_id = Id::new_v7();
 
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     designs: vec![DesignFullDto {
-                        guid: design_guid.clone(),
+                        id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_guid.clone(),
+                            id: piece_id.clone(),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         }],
@@ -17957,36 +17957,36 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, type_guid, design_guid, piece_guid)
+                (kit, type_id, design_id, piece_id)
             }
 
             /// One design with a layer and one piece (piece required for valid design content).
-            pub fn kit_with_layer() -> (KitStoreRef, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let design_guid = Guid::new_v7();
-                let piece_guid = Guid::new_v7();
-                let layer_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_layer() -> (KitStoreRef, Id, Id) {
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_id = Id::new_v7();
+                let layer_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     designs: vec![DesignFullDto {
-                        guid: design_guid.clone(),
+                        id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_guid.clone(),
+                            id: piece_id.clone(),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         }],
                         layers: vec![LayerFullDto {
-                            guid: layer_guid.clone(),
+                            id: layer_id.clone(),
                             name: "L".into(),
                             ..Default::default()
                         }],
@@ -17995,39 +17995,39 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, design_guid, layer_guid)
+                (kit, design_id, layer_id)
             }
 
             /// Design with one group referencing the single piece.
-            pub fn kit_with_group() -> (KitStoreRef, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let design_guid = Guid::new_v7();
-                let piece_guid = Guid::new_v7();
-                let group_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_group() -> (KitStoreRef, Id, Id) {
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_id = Id::new_v7();
+                let group_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     designs: vec![DesignFullDto {
-                        guid: design_guid.clone(),
+                        id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_guid.clone(),
+                            id: piece_id.clone(),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         }],
                         groups: vec![GroupFullDto {
-                            guid: group_guid.clone(),
+                            id: group_id.clone(),
                             name: "G".into(),
                             pieces: vec![PieceIdDto {
-                                guid: piece_guid.clone(),
+                                id: piece_id.clone(),
                             }],
                             ..Default::default()
                         }],
@@ -18036,29 +18036,29 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, design_guid, group_guid)
+                (kit, design_id, group_id)
             }
 
-            pub fn kit_with_type_connector() -> (KitStoreRef, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let port_guid = Guid::new_v7();
-                let conn_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_type_connector() -> (KitStoreRef, Id, Id) {
+                let type_id = Id::new_v7();
+                let port_id = Id::new_v7();
+                let conn_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ports: vec![PortFullDto {
-                            guid: port_guid.clone(),
+                            id: port_id.clone(),
                             ..Default::default()
                         }],
                         connectors: vec![ConnectorFullDto {
-                            guid: conn_guid.clone(),
+                            id: conn_id.clone(),
                             code: "C".into(),
                             port: Some(PortIdDto {
-                                guid: port_guid.clone(),
+                                id: port_id.clone(),
                             }),
                             ..Default::default()
                         }],
@@ -18067,38 +18067,38 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, type_guid, conn_guid)
+                (kit, type_id, conn_id)
             }
 
             /// Kit with one type containing one port (for port setter tests).
-            pub fn kit_with_type_only() -> (KitStoreRef, Guid) {
-                let type_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_type_only() -> (KitStoreRef, Id) {
+                let type_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
-                (KitStore::from_full_dto(dto), type_guid)
+                (KitStore::from_full_dto(dto), type_id)
             }
 
-            pub fn kit_with_port() -> (KitStoreRef, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let port_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_port() -> (KitStoreRef, Id, Id) {
+                let type_id = Id::new_v7();
+                let port_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ports: vec![PortFullDto {
-                            guid: port_guid.clone(),
+                            id: port_id.clone(),
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -18106,78 +18106,78 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, type_guid, port_guid)
+                (kit, type_id, port_id)
             }
 
-            pub fn kit_with_file() -> (KitStoreRef, Guid) {
-                let file_guid = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_file() -> (KitStoreRef, Id) {
+                let file_id = Id::new_v7();
+                let kit_id = Id::new_v7();
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     files: vec![FileFullDto {
-                        guid: file_guid.clone(),
+                        id: file_id.clone(),
                         url: "https://example.com/f".into(),
                         ..Default::default()
                     }],
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, file_guid)
+                (kit, file_id)
             }
 
             /// One design, two pieces, one connection (for connection / side tests).
-            pub fn kit_with_connection() -> (KitStoreRef, Guid, Guid, Guid, Guid, Guid) {
-                let type_guid = Guid::new_v7();
-                let design_guid = Guid::new_v7();
-                let piece_a = Guid::new_v7();
-                let piece_b = Guid::new_v7();
-                let conn_guid = Guid::new_v7();
-                let side_a = Guid::new_v7();
-                let side_b = Guid::new_v7();
-                let kit_guid = Guid::new_v7();
+            pub fn kit_with_connection() -> (KitStoreRef, Id, Id, Id, Id, Id) {
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_a = Id::new_v7();
+                let piece_b = Id::new_v7();
+                let conn_id = Id::new_v7();
+                let side_a = Id::new_v7();
+                let side_b = Id::new_v7();
+                let kit_id = Id::new_v7();
 
                 let dto = KitFullDto {
-                    guid: kit_guid,
+                    id: kit_id,
                     name: "kit".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     designs: vec![DesignFullDto {
-                        guid: design_guid.clone(),
+                        id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![
                             PieceFullDto {
-                                guid: piece_a.clone(),
+                                id: piece_a.clone(),
                                 r#type: Some(TypeIdDto {
-                                    guid: type_guid.clone(),
+                                    id: type_id.clone(),
                                 }),
                                 ..Default::default()
                             },
                             PieceFullDto {
-                                guid: piece_b.clone(),
+                                id: piece_b.clone(),
                                 r#type: Some(TypeIdDto {
-                                    guid: type_guid.clone(),
+                                    id: type_id.clone(),
                                 }),
                                 ..Default::default()
                             },
                         ],
                         connections: vec![ConnectionFullDto {
-                            guid: conn_guid.clone(),
+                            id: conn_id.clone(),
                             connected: SideMetadataDto {
-                                guid: side_a,
+                                id: side_a,
                                 piece: PieceIdDto {
-                                    guid: piece_a.clone(),
+                                    id: piece_a.clone(),
                                 },
                                 port: None,
                                 design_piece: None,
                             },
                             connecting: SideMetadataDto {
-                                guid: side_b,
+                                id: side_b,
                                 piece: PieceIdDto {
-                                    guid: piece_b.clone(),
+                                    id: piece_b.clone(),
                                 },
                                 port: None,
                                 design_piece: None,
@@ -18189,7 +18189,7 @@ mod tests {
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
-                (kit, type_guid, design_guid, piece_a, piece_b, conn_guid)
+                (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
             /// Design metadata change with a single piece: field change, design hash, flatten+derived, kit hash, validation.
@@ -18197,7 +18197,7 @@ mod tests {
                 evs: &[KitEvent],
                 design_er: EntityRef,
                 kit_er: EntityRef,
-                piece_g: &Guid,
+                piece_g: &Id,
                 field: &'static str,
             ) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
@@ -18215,7 +18215,7 @@ mod tests {
                     matches!(
                         &evs[2],
                         KitEvent::FlattenInvalidated { design, pieces }
-                            if *design == design_er.guid && pieces.len() == 1 && pieces[0] == *piece_g
+                            if *design == design_er.id && pieces.len() == 1 && pieces[0] == *piece_g
                     ),
                     "ev2 {:?}",
                     evs.get(2)
@@ -18223,7 +18223,7 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[3],
-                        KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.guid == *piece_g
+                        KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g
                     ),
                     "ev3 {:?}",
                     evs.get(3)
@@ -18231,7 +18231,7 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[4],
-                        KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.guid == *piece_g
+                        KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g
                     ),
                     "ev4 {:?}",
                     evs.get(4)
@@ -18253,7 +18253,7 @@ mod tests {
                 piece_er: EntityRef,
                 design_er: EntityRef,
                 kit_er: EntityRef,
-                piece_g: &Guid,
+                piece_g: &Id,
                 field: &'static str,
             ) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
@@ -18270,15 +18270,15 @@ mod tests {
                     matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er)
                 );
                 assert!(
-                    matches!(&evs[4], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.guid && pieces.contains(piece_g)),
+                    matches!(&evs[4], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)),
                     "ev4 {:?}",
                     evs.get(4)
                 );
                 assert!(
-                    matches!(&evs[5], KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.guid == *piece_g)
+                    matches!(&evs[5], KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g)
                 );
                 assert!(
-                    matches!(&evs[6], KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.guid == *piece_g)
+                    matches!(&evs[6], KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g)
                 );
             }
 
@@ -18356,17 +18356,17 @@ mod tests {
         mod attribute {
             use crate::attribute::AttributeFullDto;
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
             #[test]
             fn attribute_set_value_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     attributes: vec![AttributeFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         key: "k".into(),
                         value: "v".into(),
                         definition: None,
@@ -18389,17 +18389,17 @@ mod tests {
         mod author {
             use crate::author::AuthorFullDto;
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
             #[test]
             fn author_set_email_emits() {
-                let ag = Guid::new_v7();
+                let ag = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     authors: vec![AuthorFullDto {
-                        guid: ag.clone(),
+                        id: ag.clone(),
                         name: "n".into(),
                         email: "e@x".into(),
                         role: None,
@@ -18466,7 +18466,7 @@ mod tests {
         mod benchmark {
             use crate::benchmark::BenchmarkFullDto;
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::port::PortFullDto;
             use crate::quality::QualityFullDto;
@@ -18474,23 +18474,23 @@ mod tests {
 
             #[test]
             fn benchmark_set_min_emits() {
-                let tg = Guid::new_v7();
-                let pg = Guid::new_v7();
-                let qg = Guid::new_v7();
-                let bg = Guid::new_v7();
+                let tg = Id::new_v7();
+                let pg = Id::new_v7();
+                let qg = Id::new_v7();
+                let bg = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     types: vec![TypeFullDto {
-                        guid: tg.clone(),
+                        id: tg.clone(),
                         name: "t".into(),
                         ports: vec![PortFullDto {
-                            guid: pg.clone(),
+                            id: pg.clone(),
                             qualities: vec![QualityFullDto {
-                                guid: qg.clone(),
+                                id: qg.clone(),
                                 key: "qk".into(),
                                 benchmarks: vec![BenchmarkFullDto {
-                                    guid: bg.clone(),
+                                    id: bg.clone(),
                                     name: "bn".into(),
                                     ..Default::default()
                                 }],
@@ -18524,17 +18524,17 @@ mod tests {
         mod concept {
             use crate::concept::ConceptFullDto;
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
             #[test]
             fn concept_set_name_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     concepts: vec![ConceptFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         name: "c".into(),
                         description: None,
                         order: None,
@@ -18584,18 +18584,18 @@ mod tests {
         mod diff_apply {
             use crate::diff::DesignDiff;
             use crate::events::{EntityKind, EntityRef, KitEvent};
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::piece::PieceFullDto;
             use crate::typ::TypeIdDto;
 
             #[test]
             fn apply_design_diff_add_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
-                let new_piece = Guid::new_v7();
+                let new_piece = Id::new_v7();
                 let diff = DesignDiff {
                     added_pieces: vec![PieceFullDto {
-                        guid: new_piece.clone(),
-                        r#type: Some(TypeIdDto { guid: tg.clone() }),
+                        id: new_piece.clone(),
+                        r#type: Some(TypeIdDto { id: tg.clone() }),
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -18736,17 +18736,17 @@ mod tests {
         mod folder {
             use crate::events::KitEvent;
             use crate::folder::FolderFullDto;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
             #[test]
             fn folder_set_description_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     folders: vec![FolderFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         path: "/p".into(),
                         description: None,
                     }],
@@ -18989,11 +18989,11 @@ mod tests {
 
             #[test]
             fn port_set_family_emits_field_changed() {
-                let (kit, type_guid, port_g) = super::common::kit_with_port();
+                let (kit, type_id, port_g) = super::common::kit_with_port();
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
                     let kr = kit.read().unwrap();
-                    let t = kr.semio_type(type_guid.as_str()).unwrap();
+                    let t = kr.semio_type(type_id.as_str()).unwrap();
                     let tr = t.read().unwrap();
                     tr.port(port_g.as_str()).unwrap().clone()
                 };
@@ -19011,18 +19011,18 @@ mod tests {
 
         mod prop {
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::prop::PropFullDto;
 
             #[test]
             fn prop_set_unit_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     props: vec![PropFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         key: "k".into(),
                         value: "v".into(),
                         unit: None,
@@ -19044,18 +19044,18 @@ mod tests {
 
         mod quality {
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::quality::QualityFullDto;
 
             #[test]
             fn quality_set_key_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     qualities: vec![QualityFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         key: "k1".into(),
                         ..Default::default()
                     }],
@@ -19077,31 +19077,31 @@ mod tests {
         mod representation {
             use crate::events::KitEvent;
             use crate::file::{FileFullDto, FileIdDto};
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::representation::RepresentationFullDto;
             use crate::typ::TypeFullDto;
 
             #[test]
             fn representation_set_url_emits() {
-                let fg = Guid::new_v7();
-                let rg = Guid::new_v7();
-                let tg = Guid::new_v7();
+                let fg = Id::new_v7();
+                let rg = Id::new_v7();
+                let tg = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     files: vec![FileFullDto {
-                        guid: fg.clone(),
+                        id: fg.clone(),
                         url: "https://f".into(),
                         ..Default::default()
                     }],
                     types: vec![TypeFullDto {
-                        guid: tg.clone(),
+                        id: tg.clone(),
                         name: "t".into(),
                         representations: vec![RepresentationFullDto {
-                            guid: rg.clone(),
+                            id: rg.clone(),
                             url: "https://r".into(),
-                            file: Some(FileIdDto { guid: fg.clone() }),
+                            file: Some(FileIdDto { id: fg.clone() }),
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -19163,7 +19163,7 @@ mod tests {
         mod stat {
             use crate::design::DesignFullDto;
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::piece::PieceFullDto;
             use crate::stat::StatFullDto;
@@ -19171,30 +19171,30 @@ mod tests {
 
             #[test]
             fn stat_set_description_emits() {
-                let type_guid = Guid::new_v7();
-                let design_guid = Guid::new_v7();
-                let piece_guid = Guid::new_v7();
-                let stat_guid = Guid::new_v7();
+                let type_id = Id::new_v7();
+                let design_id = Id::new_v7();
+                let piece_id = Id::new_v7();
+                let stat_id = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     types: vec![TypeFullDto {
-                        guid: type_guid.clone(),
+                        id: type_id.clone(),
                         name: "typ".into(),
                         ..Default::default()
                     }],
                     designs: vec![DesignFullDto {
-                        guid: design_guid.clone(),
+                        id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![PieceFullDto {
-                            guid: piece_guid.clone(),
+                            id: piece_id.clone(),
                             r#type: Some(TypeIdDto {
-                                guid: type_guid.clone(),
+                                id: type_id.clone(),
                             }),
                             ..Default::default()
                         }],
                         stats: vec![StatFullDto {
-                            guid: stat_guid.clone(),
+                            id: stat_id.clone(),
                             key: "sk".into(),
                             value: "sv".into(),
                             description: None,
@@ -19225,18 +19225,18 @@ mod tests {
 
         mod tag {
             use crate::events::KitEvent;
-            use crate::guid::Guid;
+            use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::tag::TagFullDto;
 
             #[test]
             fn tag_set_order_emits() {
-                let g = Guid::new_v7();
+                let g = Id::new_v7();
                 let kit = KitStore::from_full_dto(KitFullDto {
-                    guid: Guid::new_v7(),
+                    id: Id::new_v7(),
                     name: "k".into(),
                     tags: vec![TagFullDto {
-                        guid: g.clone(),
+                        id: g.clone(),
                         name: "t".into(),
                         order: None,
                     }],
@@ -19378,7 +19378,7 @@ pub use group::{
     GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef,
     GroupStoreWeak,
 };
-pub use guid::Guid;
+pub use id::Id;
 pub use hash::{Cache, HashWriter};
 pub use kit::{
     KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak,

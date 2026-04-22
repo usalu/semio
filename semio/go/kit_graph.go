@@ -54,7 +54,7 @@ func kitStripRuntime(k *Kit) Kit {
 		return Kit{}
 	}
 	return Kit{
-		Guid:        k.Guid,
+		Id:        k.Id,
 		Name:        k.Name,
 		Version:     k.Version,
 		Types:       k.Types,
@@ -173,7 +173,7 @@ func (k *Kit) StartTransaction() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	id := Guid()
+	id := Id()
 	k.openTransactions[id] = &kitOpenTransaction{startKit: start, steps: nil, redo: nil}
 	return id, nil
 }

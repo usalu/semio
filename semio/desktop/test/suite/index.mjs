@@ -103,14 +103,14 @@ export async function run(ctx) {
         if (!store) return null;
         for (const s of store.kitShallows()) {
           if (s.name !== "Metabolism") continue;
-          const kit = store.kit(s.guid).snapshot().kit;
+          const kit = store.kit(s.id).snapshot().kit;
           const files = kit.files ?? [];
           if (
             files.length > 200 &&
             typeof files[0]?.blob === "string" &&
             files[0].blob.startsWith("data:representation/")
           ) {
-            return { guid: s.guid, fileCount: files.length, hasRepresentationBlob: true };
+            return { id: s.id, fileCount: files.length, hasRepresentationBlob: true };
           }
         }
         return null;

@@ -5,7 +5,7 @@ mod header { // 🧲Header
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 } // 🧲Header
 
-use semio::{DesignStoreRef, Guid, KitFullDto, KitStore, KitStoreRef, SemioReport};
+use semio::{DesignStoreRef, Id, KitFullDto, KitStore, KitStoreRef, SemioReport};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 
@@ -14,11 +14,11 @@ use std::io::Read;
 struct BridgeRequest {
     op: String,
     kit: KitFullDto,
-    design_guid: String,
+    design_id: String,
     #[serde(default)]
-    piece_guids: Vec<String>,
+    piece_ids: Vec<String>,
     #[serde(default)]
-    connection_guids: Vec<String>,
+    connection_ids: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -48,7 +48,7 @@ fn main() {
         "flatten" => {
             let report = match futures_lite::future::block_on(semio::KitStore::flatten_design_async(
                 &kit_ref,
-                &req.design_guid,
+                &req.design_id,
             )) {
                 Ok(r) => r,
                 Err(e) => {
@@ -70,19 +70,19 @@ fn main() {
                         return;
                     }
                 };
-                match guard.design(&req.design_guid) {
+                match guard.design(&req.design_id) {
                     Some(d) => d,
                     None => {
-                        write_err(format!("design {} not found", req.design_guid));
+                        write_err(format!("design {} not found", req.design_id));
                         return;
                     }
                 }
             };
-            let piece_guids: Vec<Guid> = req.piece_guids.into_iter().map(Guid::from).collect();
-            let connection_guids: Vec<Guid> =
-                req.connection_guids.into_iter().map(Guid::from).collect();
+            let piece_ids: Vec<Id> = req.piece_ids.into_iter().map(Id::from).collect();
+            let connection_ids: Vec<Id> =
+                req.connection_ids.into_iter().map(Id::from).collect();
             let report = match design_ref.write() {
-                Ok(mut d) => d.delete_change(&piece_guids, &connection_guids),
+                Ok(mut d) => d.delete_change(&piece_ids, &connection_ids),
                 Err(_) => SemioReport::err("design lock poisoned"),
             };
             match serde_json::to_value(&report) {

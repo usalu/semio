@@ -19,15 +19,15 @@ const storyKind: SemioKind = {
   representations: (rawKind.representations ?? []).slice(0, 1),
 } as SemioKind;
 
-const usedFileGuids = new Set((storyKind.representations ?? []).map((representation) => representation.file?.guid).filter(Boolean));
+const usedFileIds = new Set((storyKind.representations ?? []).map((representation) => representation.file?.id).filter(Boolean));
 const minimalKit: Kit = {
-  guid: (metabolismKit as any).guid,
+  id: (metabolismKit as any).id,
   name: (metabolismKit as any).name,
   types: [storyKind],
-  files: (metabolismKit.files ?? []).filter((file: any) => usedFileGuids.has(file.guid)),
+  files: (metabolismKit.files ?? []).filter((file: any) => usedFileIds.has(file.id)),
 } as Kit;
 
-const firstConnectorGuid = (storyKind.connectors ?? [])[0]?.guid ?? "";
+const firstConnectorId = (storyKind.connectors ?? [])[0]?.id ?? "";
 
 // #endregion 🖥️Data
 
@@ -50,9 +50,9 @@ export const Default: Story = {
   args: {
     type: storyKind,
     kit: minimalKit,
-    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+    defaultSelection: { connectorIds: firstConnectorId ? [firstConnectorId] : [] },
     title: "Type",
-    onConnectorClick: (connector: Connector) => console.info("Connector clicked", connector.guid),
+    onConnectorClick: (connector: Connector) => console.info("Connector clicked", connector.id),
   },
   render: (args) => frame(<TypeView {...args} />),
 };
@@ -62,7 +62,7 @@ export const ConnectorsOnly: Story = {
     type: storyKind,
     showRepresentation: false,
     title: "Connectors Only",
-    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+    defaultSelection: { connectorIds: firstConnectorId ? [firstConnectorId] : [] },
   },
   render: (args) => frame(<TypeView {...args} />),
 };
@@ -81,7 +81,7 @@ export const Selection: Story = {
   args: {
     type: storyKind,
     kit: minimalKit,
-    defaultSelection: { connectorGuids: firstConnectorGuid ? [firstConnectorGuid] : [] },
+    defaultSelection: { connectorIds: firstConnectorId ? [firstConnectorId] : [] },
     hoverEnabled: true,
     title: "Selection",
   },

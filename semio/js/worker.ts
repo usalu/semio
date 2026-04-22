@@ -23,85 +23,85 @@ const api = {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     return handle.snapshot();
   },
-  getField(kind: string, guid: string, field: string) {
+  getField(kind: string, id: string, field: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return handle.getField(kind, guid, field);
+    return handle.getField(kind, id, field);
   },
-  setField(kind: string, guid: string, field: string, value: unknown) {
+  setField(kind: string, id: string, field: string, value: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.setField(kind, guid, field, value)));
+    return settle(Promise.resolve(handle.setField(kind, id, field, value)));
   },
-  addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown) {
+  addChild(parentKind: string, parentId: string, childKind: string, dto: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.addChild(parentKind, parentGuid, childKind, dto)));
+    return settle(Promise.resolve(handle.addChild(parentKind, parentId, childKind, dto)));
   },
-  removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string) {
+  removeChild(parentKind: string, parentId: string, childKind: string, childId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.removeChild(parentKind, parentGuid, childKind, childGuid)));
+    return settle(Promise.resolve(handle.removeChild(parentKind, parentId, childKind, childId)));
   },
-  applyDesignDiff(designGuid: string, diff: unknown) {
+  applyDesignDiff(designId: string, diff: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.applyDesignDiff(designGuid, diff)));
+    return settle(Promise.resolve(handle.applyDesignDiff(designId, diff)));
   },
-  clusterPieces(designGuid: string, pieceGuids: string[], clusterName: string) {
+  clusterPieces(designId: string, pieceIds: string[], clusterName: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.clusterPieces(designGuid, pieceGuids, clusterName)));
+    return settle(Promise.resolve(handle.clusterPieces(designId, pieceIds, clusterName)));
   },
-  dragPieces(designGuid: string, pieceGuids: string[], du: number, dv: number) {
+  dragPieces(designId: string, pieceIds: string[], du: number, dv: number) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.dragPieces(designGuid, pieceGuids, du, dv)));
+    return settle(Promise.resolve(handle.dragPieces(designId, pieceIds, du, dv)));
   },
-  movePieces(designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number) {
+  movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.movePieces(designGuid, pieceGuids, gap, shift, rise)));
+    return settle(Promise.resolve(handle.movePieces(designId, pieceIds, gap, shift, rise)));
   },
-  fixPieces(designGuid: string, pieceGuids: string[]) {
+  fixPieces(designId: string, pieceIds: string[]) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.fixPieces(designGuid, pieceGuids)));
+    return settle(Promise.resolve(handle.fixPieces(designId, pieceIds)));
   },
-  flattenDesign(designGuid: string) {
+  flattenDesign(designId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.flattenDesign(designGuid)));
+    return settle(Promise.resolve(handle.flattenDesign(designId)));
   },
-  expandDesign(parentDesignGuid: string, nestedDesignGuid: string) {
+  expandDesign(parentDesignId: string, nestedDesignId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.expandDesign(parentDesignGuid, nestedDesignGuid)));
+    return settle(Promise.resolve(handle.expandDesign(parentDesignId, nestedDesignId)));
   },
-  deleteConnection(designGuid: string, connectionGuid: string) {
+  deleteConnection(designId: string, connectionId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.deleteConnection(designGuid, connectionGuid)));
+    return settle(Promise.resolve(handle.deleteConnection(designId, connectionId)));
   },
-  changePieceType(designGuid: string, pieceGuid: string, newTypeGuid: string) {
+  changePieceType(designId: string, pieceId: string, newTypeId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.changePieceType(designGuid, pieceGuid, newTypeGuid)));
+    return settle(Promise.resolve(handle.changePieceType(designId, pieceId, newTypeId)));
   },
-  pasteDesignSelection(designGuid: string, selection: unknown, plane: unknown) {
+  pasteDesignSelection(designId: string, selection: unknown, plane: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.pasteDesignSelection(designGuid, selection, plane)));
+    return settle(Promise.resolve(handle.pasteDesignSelection(designId, selection, plane)));
   },
-  createHangingPieces(designGuid: string, typeGuids: string[], plane: unknown) {
+  createHangingPieces(designId: string, typeIds: string[], plane: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.createHangingPieces(designGuid, typeGuids, plane)));
+    return settle(Promise.resolve(handle.createHangingPieces(designId, typeIds, plane)));
   },
-  createConnectedPiece(designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string) {
+  createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.createConnectedPiece(designGuid, parentPiece, parentPort, childType, childPort)));
+    return settle(Promise.resolve(handle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort)));
   },
-  createFixedPiece(designGuid: string, typeGuid: string, plane: unknown) {
+  createFixedPiece(designId: string, typeId: string, plane: unknown) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.createFixedPiece(designGuid, typeGuid, plane)));
+    return settle(Promise.resolve(handle.createFixedPiece(designId, typeId, plane)));
   },
-  getPiecesMetadata(designGuid: string) {
+  getPiecesMetadata(designId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.getPiecesMetadata(designGuid)));
+    return settle(Promise.resolve(handle.getPiecesMetadata(designId)));
   },
-  getPieces(designGuid: string) {
+  getPieces(designId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.getPieces(designGuid)));
+    return settle(Promise.resolve(handle.getPieces(designId)));
   },
-  getConnections(designGuid: string) {
+  getConnections(designId: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.getConnections(designGuid)));
+    return settle(Promise.resolve(handle.getConnections(designId)));
   },
   getDesigns() {
     if (!handle) throw new Error("KitStoreHandle not initialized");

@@ -228,7 +228,7 @@ input ConnectorIdInputNode {
 
 """🔖GraphQL input node for folder mutations."""
 input FolderInputNode {
-  guid: String!
+  id: String!
   name: String!
   parent: String = null
   description: String = ""

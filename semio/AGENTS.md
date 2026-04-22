@@ -112,7 +112,7 @@ erDiagram
 
     tags {
         int id PK
-        string guid
+        string id
         string name
         string description
         string icon
@@ -121,7 +121,7 @@ erDiagram
 
     concepts {
         int id PK
-        string guid
+        string id
         string name
         string description
         string icon
@@ -130,7 +130,7 @@ erDiagram
 
     representations {
         int id PK
-        string guid
+        string id
         string name
         string description
         int file_id FK
@@ -394,13 +394,13 @@ REST and GraphQL-friendly JSON:
 
 ```
 kit : !Kit{
-    guid: !String
+    id: !String
     description !String
     name : !String
     types : *Type[
         name : !String
         representations : +Representation[
-            guid : !String
+            id : !String
             name : ?String
             tags : *TagId[] // references to kit-level tags
             file : !FileId // reference to kit-level file
@@ -454,21 +454,21 @@ kit : !Kit{
         updated : !String // date
     ]
     tags : *Tag[
-        guid : !String
+        id : !String
         name : !String
         description : ?String
         icon : ?String
         attributes : *Attribute[]
     ]
     concepts : *Concept[
-        guid : !String
+        id : !String
         name : !String
         description : ?String
         icon : ?String
         attributes : *Attribute[]
     ]
     files : *File[
-        guid : !String
+        id : !String
         path : !String
         remoteUrl : ?String
         description : ?String
@@ -2305,9 +2305,9 @@ X \rightharpoonup Y := \text{partial functions},
 \top := \text{present without explicit value}.
 $$
 
-### Guid
+### Id
 
-A guid is an immutable uuid-v7 string of the creation timestamp.
+A id is an immutable uuid-v7 string of the creation timestamp.
 
 ### Coordinate
 
@@ -2627,7 +2627,7 @@ $$
 ### 💾 Representation
 
 $$
-m = (guid, name, tags, file, description, attributes).
+m = (id, name, tags, file, description, attributes).
 $$
 
 $$
@@ -2657,7 +2657,7 @@ $$
 ### 🏷️ Tag
 
 $$
-t = (guid, name, description, icon, attributes).
+t = (id, name, description, icon, attributes).
 $$
 
 ### ◳ Plane
@@ -2718,7 +2718,7 @@ $$
 ### 🏷️ Concept
 
 $$
-c = (guid, name, description, icon, attributes).
+c = (id, name, description, icon, attributes).
 $$
 
 ### 👤 Author

@@ -15,7 +15,7 @@ bundle:
 
 ## 🧮 Algorithms
 
-- **Cluster**: Clusters multiple selected pieces into a single design-guid designPiece.
+- **Cluster**: Clusters multiple selected pieces into a single design-id designPiece.
 - **Copy/Paste**: Copies selected pieces and connections into a clipboard design, then pastes them onto a target design.
 - **Delete**: Removes selected pieces from a design.
 - **Drag**: Offsets center for all fixed pieces (pieces with center and plane) by drag offset (piece diff). If a selected piece is a descendant of another selected piece then it is ignored. Otherwise adds the drag offset to the parent connection (connection diff).

@@ -19,9 +19,9 @@ type bridgeRequest struct {
 	Op              string          `json:"op"`
 	Kit             json.RawMessage `json:"kit"`
 	Design          json.RawMessage `json:"design"`
-	DesignGuid      string          `json:"designGuid"`
-	PieceGuids      []string        `json:"pieceGuids"`
-	ConnectionGuids []string        `json:"connectionGuids"`
+	DesignId      string          `json:"designId"`
+	PieceIds      []string        `json:"pieceIds"`
+	ConnectionIds []string        `json:"connectionIds"`
 }
 
 type bridgeResponse struct {
@@ -49,7 +49,7 @@ func main() {
 
 	switch req.Op {
 	case "flatten":
-		rep := semio.FlattenDesign(&kit, req.DesignGuid)
+		rep := semio.FlattenDesign(&kit, req.DesignId)
 		out, err := json.Marshal(rep)
 		if err != nil {
 			writeErr("marshal flatten: " + err.Error())
@@ -62,7 +62,7 @@ func main() {
 			writeErr("parse design: " + err.Error())
 			return
 		}
-		rep := semio.DeletePiecesAndConnectionsInDesign(&kit, design, req.PieceGuids, req.ConnectionGuids)
+		rep := semio.DeletePiecesAndConnectionsInDesign(&kit, design, req.PieceIds, req.ConnectionIds)
 		out, err := json.Marshal(rep)
 		if err != nil {
 			writeErr("marshal delete: " + err.Error())

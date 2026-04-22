@@ -22,7 +22,7 @@ through `Arc<RwLock<T>>`; every child keeps a `Weak<RwLock<T>>` back-reference
 to its parent. Derived data (content-addressable hashes, flatten caches) lives
 in `OnceLock` fields invalidated by the owning entity's setters.
 
-- Primitives: [`guid`](src/guid.rs), [`hash`](src/hash.rs), [`error`](src/error.rs), [`report`](src/report.rs), [`geom`](src/geom.rs).
+- Primitives: [`id`](src/id.rs), [`hash`](src/hash.rs), [`error`](src/error.rs), [`report`](src/report.rs), [`geom`](src/geom.rs).
 - Value objects: [`attribute`](src/attribute.rs), [`prop`](src/prop.rs), [`benchmark`](src/benchmark.rs), [`stat`](src/stat.rs), [`tag`](src/tag.rs), [`concept`](src/concept.rs), [`author`](src/author.rs).
 - Kit-scoped entities: [`file`](src/file.rs), [`folder`](src/folder.rs), [`quality`](src/quality.rs).
 - Type-scoped children: [`port`](src/port.rs), [`connector`](src/connector.rs), [`representation`](src/representation.rs).
@@ -50,5 +50,5 @@ Kit  ─┬─> Type  ─┬─> Port
 ```
 
 Every solid arrow is an `Arc<RwLock<T>>`; every back-reference (drawn from a
-child to its parent) is a `Weak<RwLock<T>>`. GUIDs appear only on `*Dto`
+child to its parent) is a `Weak<RwLock<T>>`. IDs appear only on `*Dto`
 structs and as keys in the kit-level resolver during `Kit::from_dto`.

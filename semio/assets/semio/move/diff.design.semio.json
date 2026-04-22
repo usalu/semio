@@ -2,7 +2,7 @@
   "pieces": {
     "updated": [
       {
-        "piece": { "guid": "e2faf536-dbe0-49e2-97b2-965e57acd512" },
+        "piece": { "id": "e2faf536-dbe0-49e2-97b2-965e57acd512" },
         "diff": {
           "plane": {
             "origin": { "x": 6.5, "y": 9.7, "z": -7.500000000000001 },
@@ -12,7 +12,7 @@
         }
       },
       {
-        "piece": { "guid": "3910be91-289e-493b-9f4c-7ef4ac75603e" },
+        "piece": { "id": "3910be91-289e-493b-9f4c-7ef4ac75603e" },
         "diff": {
           "plane": {
             "origin": { "x": -1, "y": 2, "z": 0 },
@@ -26,7 +26,7 @@
   "connections": {
     "updated": [
       {
-        "connection": { "guid": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac" },
+        "connection": { "id": "b9c2feb0-4c1d-4cf0-adc6-c5bf4cd1beac" },
         "diff": { "shift": -1, "rise": -2 }
       }
     ]

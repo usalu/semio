@@ -15,8 +15,8 @@ import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "flatten-input", kind: WindowKind.DESIGN_INPUT, label: "Input" },
@@ -38,9 +38,9 @@ function FlattenFrame() {
     setFlattenDiff(undefined);
     void (async () => {
       const [flatResult, flattenedResult, flattenResult] = await Promise.all([
-        nativeFlatDesign(kit, rawDesign.guid, language),
-        nativeFlattenedDesign(kit, rawDesign.guid, language),
-        nativeFlattenDesign(kit, rawDesign.guid, language),
+        nativeFlatDesign(kit, rawDesign.id, language),
+        nativeFlattenedDesign(kit, rawDesign.id, language),
+        nativeFlattenDesign(kit, rawDesign.id, language),
       ]);
       if (cancelled) return;
       setFlatDesign(flatResult);
@@ -56,7 +56,7 @@ function FlattenFrame() {
     () => ({
       kit,
       design: (flatDesign ?? rawDesign) as Design,
-      selectedPieceGuids: [],
+      selectedPieceIds: [],
       designDiff: flattenDiff,
       diffDesign: (flatDesign ?? rawDesign) as Design,
       outputDesign: (flattenedDesign ?? flatDesign ?? rawDesign) as Design,

@@ -15,8 +15,8 @@ import { useAlgorithmLanguage } from "../withLanguage";
 
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
 
-const nakaginCapsuleTowerDesignGuid = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
-const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.guid === nakaginCapsuleTowerDesignGuid) as any;
+const nakaginCapsuleTowerDesignId = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
+const rawDesign = (metabolismKit.designs ?? []).find((d: any) => d.id === nakaginCapsuleTowerDesignId) as any;
 
 const WINDOWS: AlgorithmWindowDef[] = [
   { id: "cluster-input", kind: WindowKind.PIECES_SELECTION_INPUT, label: "Input" },
@@ -28,15 +28,15 @@ function ClusterFrame() {
   const language = useAlgorithmLanguage() as NativeAlgorithmLanguage;
   const kit = metabolismKit as any;
   const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
-  const [selectedPieceGuids, setSelectedPieceGuids] = React.useState<string[]>([]);
+  const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const flat = await nativeFlatDesign(kit, rawDesign.guid, language);
+      const flat = await nativeFlatDesign(kit, rawDesign.id, language);
       if (cancelled) return;
       setFlatInputDesign(flat);
-      setSelectedPieceGuids((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.guid));
+      setSelectedPieceIds((rawDesign?.pieces ?? []).slice(0, 3).map((piece: any) => piece.id));
     })();
     return () => {
       cancelled = true;
@@ -45,29 +45,29 @@ function ClusterFrame() {
 
   const designDiff = React.useMemo(
     () =>
-      selectedPieceGuids.length < 2
+      selectedPieceIds.length < 2
         ? undefined
         : {
             pieces: {
-              added: [{ guid: `storybook-group-${selectedPieceGuids.length}`, name: `Storybook group (${selectedPieceGuids.length})` }],
-              updated: selectedPieceGuids.map((guid) => ({ piece: { guid }, diff: {} })),
+              added: [{ id: `storybook-group-${selectedPieceIds.length}`, name: `Storybook group (${selectedPieceIds.length})` }],
+              updated: selectedPieceIds.map((id) => ({ piece: { id }, diff: {} })),
             },
           },
-    [selectedPieceGuids],
+    [selectedPieceIds],
   );
 
   const context: AlgorithmContextValue = React.useMemo(
     () => ({
       kit,
       design: (flatInputDesign ?? rawDesign) as Design,
-      selectedPieceGuids,
-      onSelectedPieceGuidsChange: setSelectedPieceGuids,
+      selectedPieceIds,
+      onSelectedPieceIdsChange: setSelectedPieceIds,
       designDiff,
       diffDesign: (flatInputDesign ?? rawDesign) as Design,
       outputDesign: (flatInputDesign ?? rawDesign) as Design,
-      error: !flatInputDesign ? `Loading cluster preview (${language})…` : selectedPieceGuids.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
+      error: !flatInputDesign ? `Loading cluster preview (${language})…` : selectedPieceIds.length < 2 ? "Select at least 2 pieces to cluster." : undefined,
     }),
-    [kit, flatInputDesign, selectedPieceGuids, designDiff, language],
+    [kit, flatInputDesign, selectedPieceIds, designDiff, language],
   );
 
   return <AlgorithmApp id="cluster" label="Cluster" windows={WINDOWS} context={context} className="h-full w-full" />;

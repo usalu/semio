@@ -15,25 +15,25 @@ import nakaginDiff from "../../../assets/semio/nakgin-capsule-tower.diff.design.
 // #region 🖥️Data
 
 const kit = Kit.ensure(metabolismKit as unknown as Kit);
-const rawDesign = (metabolismKit.designs ?? []).find((d) => d.guid === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
-const flatOp = kit.runFlattenDesign(rawDesign.guid);
+const rawDesign = (metabolismKit.designs ?? []).find((d) => d.id === "9a890dd4-0a9c-48ac-920a-9e62666465ef")! as DesignType;
+const flatOp = kit.runFlattenDesign(rawDesign.id);
 if (!flatOp.ok) throw new Error(flatOp.errors.map((e) => e.message).join("; "));
 const flattenChange = flatOp.diff;
 const nakaginDesign = new Design(JSON.parse(JSON.stringify(rawDesign)) as DesignPlain, kit);
 nakaginDesign.applyDiff({ pieces: flattenChange.forward.pieces });
-const firstPieceGuid = (nakaginDesign.pieces ?? [])[0]?.guid ?? "";
+const firstPieceId = (nakaginDesign.pieces ?? [])[0]?.id ?? "";
 const designDiff = nakaginDiff as any;
 
 // 🏗️Build minimal kit with only types and files referenced by the design.
-const usedTypeGuids = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.guid).filter(Boolean));
+const usedTypeIds = new Set((nakaginDesign.pieces ?? []).map((p) => p.type?.id).filter(Boolean));
 const minimalTypes = (metabolismKit.types ?? [])
-  .filter((t: any) => usedTypeGuids.has(t.guid))
+  .filter((t: any) => usedTypeIds.has(t.id))
   .map((t: any) => {
     const representations = (t.representations ?? []).slice(0, 1);
     return { ...t, representations };
   });
-const usedFileGuids = new Set(minimalTypes.flatMap((t: any) => (t.representations ?? []).map((m: any) => m.file?.guid).filter(Boolean)));
-const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileGuids.has(f.guid));
+const usedFileIds = new Set(minimalTypes.flatMap((t: any) => (t.representations ?? []).map((m: any) => m.file?.id).filter(Boolean)));
+const minimalFiles = (metabolismKit.files ?? []).filter((f: any) => usedFileIds.has(f.id));
 const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 
 // #endregion 🖥️Data
@@ -58,10 +58,10 @@ export const Default: Story = {
     design: nakaginDesign,
     kit: minimalKit,
     designDiff,
-    defaultSelection: { pieceGuids: [firstPieceGuid] },
+    defaultSelection: { pieceIds: [firstPieceId] },
     title: "Scene",
-    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
-    onConnectionClick: (connection: Connection) => console.info("Connection clicked", connection.guid),
+    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.id),
+    onConnectionClick: (connection: Connection) => console.info("Connection clicked", connection.id),
   },
   render: (args) => frame(<Scene {...args} />),
 };
@@ -82,10 +82,10 @@ export const Selection: Story = {
   args: {
     design: nakaginDesign,
     kit: minimalKit,
-    defaultSelection: { pieceGuids: [firstPieceGuid] },
+    defaultSelection: { pieceIds: [firstPieceId] },
     diffEnabled: false,
     title: "Selection",
-    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.guid),
+    onPieceClick: (piece: Piece) => console.info("Piece clicked", piece.id),
   },
   render: (args) => frame(<Scene {...args} />),
 };

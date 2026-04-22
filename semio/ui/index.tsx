@@ -97,7 +97,7 @@ export type KitGroupKind = "design" | "type" | "port" | "connector";
 
 /** Kit-level {@link Port} rows (from {@link Kit.ports}), not type {@link Connector}s. */
 export interface KitPortArtifact {
-  guid: string;
+  id: string;
   name: string;
   description?: string;
   icon?: string;
@@ -106,8 +106,8 @@ export interface KitPortArtifact {
 
 /** Flattened type {@link Connector} rows for browsing (nested under kinds in the hierarchy). */
 export interface KitConnectorArtifact {
-  guid: string;
-  typeGuid: string;
+  id: string;
+  typeId: string;
   id?: string;
   port?: string;
   name?: string;
@@ -116,16 +116,16 @@ export interface KitConnectorArtifact {
   maxChildren?: number;
 }
 
-export interface KitDesignData extends Pick<Design, "guid" | "name" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
-  parent?: { guid: string };
+export interface KitDesignData extends Pick<Design, "id" | "name" | "description" | "createdAt" | "updatedAt" | "unit" | "icon" | "image"> {
+  parent?: { id: string };
 }
 
-export interface KitKindData extends Pick<SemioKind, "guid" | "name" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
-  parent?: { guid: string };
+export interface KitKindData extends Pick<SemioKind, "id" | "name" | "description" | "createdAt" | "updatedAt" | "icon" | "image"> {
+  parent?: { id: string };
 }
 
 export interface KitData {
-  guid?: string;
+  id?: string;
   name?: string;
   description?: string;
   version?: string;
@@ -146,10 +146,10 @@ export interface KitData {
 }
 
 export interface KitSelection {
-  designGuids?: string[];
-  typeGuids?: string[];
-  portGuids?: string[];
-  connectorGuids?: string[];
+  designIds?: string[];
+  typeIds?: string[];
+  portIds?: string[];
+  connectorIds?: string[];
 }
 
 export interface KitProps {
@@ -181,15 +181,15 @@ export interface KitProps {
 }
 
 const normalizeKitSelection = (selection?: KitSelection): KitSelection => ({
-  designGuids: selection?.designGuids ?? [],
-  typeGuids: selection?.typeGuids ?? [],
-  portGuids: selection?.portGuids ?? [],
-  connectorGuids: selection?.connectorGuids ?? [],
+  designIds: selection?.designIds ?? [],
+  typeIds: selection?.typeIds ?? [],
+  portIds: selection?.portIds ?? [],
+  connectorIds: selection?.connectorIds ?? [],
 });
 
-const getReferenceGuid = (value: unknown): string | undefined => {
+const getReferenceId = (value: unknown): string | undefined => {
   if (typeof value === "string") return value;
-  if (value && typeof value === "object" && "guid" in value && typeof value.guid === "string") return value.guid;
+  if (value && typeof value === "object" && "id" in value && typeof value.id === "string") return value.id;
   return undefined;
 };
 
@@ -198,7 +198,7 @@ const getReferenceLabel = (value: unknown): string | undefined => {
   if (value && typeof value === "object") {
     if ("name" in value && typeof value.name === "string" && value.name.length > 0) return value.name;
     if ("id" in value && typeof value.id === "string" && value.id.length > 0) return value.id;
-    if ("guid" in value && typeof value.guid === "string" && value.guid.length > 0) return value.guid;
+    if ("id" in value && typeof value.id === "string" && value.id.length > 0) return value.id;
   }
   return undefined;
 };
@@ -206,7 +206,7 @@ const getReferenceLabel = (value: unknown): string | undefined => {
 const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   if (!kit) return {};
   const designs = (kit.designs ?? []).map((d) => ({
-    guid: d.guid,
+    id: d.id,
     name: d.name,
     description: d.description,
     createdAt: d.createdAt,
@@ -214,20 +214,20 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     unit: d.unit,
     icon: d.icon,
     image: d.image,
-    parent: d.parent ? { guid: d.parent.guid } : undefined,
+    parent: d.parent ? { id: d.parent.id } : undefined,
   }));
   const types = (kit.types ?? []).map((t) => ({
-    guid: t.guid,
+    id: t.id,
     name: t.name,
     description: t.description,
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
     icon: t.icon,
     image: t.image,
-    parent: t.parent ? { guid: t.parent.guid } : undefined,
+    parent: t.parent ? { id: t.parent.id } : undefined,
   }));
   const ports: KitPortArtifact[] = (kit.ports ?? []).map((p: SemioPort) => ({
-    guid: p.guid,
+    id: p.id,
     name: p.name,
     description: p.description,
     icon: p.icon,
@@ -235,10 +235,10 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
   }));
   const connectors: KitConnectorArtifact[] = (kit.types ?? []).flatMap((t) =>
     (t.connectors ?? []).map((c) => ({
-      guid: c.guid,
-      typeGuid: t.guid,
+      id: c.id,
+      typeId: t.id,
       id: c.name,
-      port: getReferenceGuid(c.port),
+      port: getReferenceId(c.port),
       name: c.name || getReferenceLabel(c.port) || "connector",
       description: c.description,
       mandatory: c.mandatory,
@@ -246,7 +246,7 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     })),
   );
   return {
-    guid: kit.guid,
+    id: kit.id,
     name: kit.name,
     description: kit.description,
     version: kit.version,
@@ -272,7 +272,7 @@ export interface KitHierarchyNode {
   kind: KitHierarchyNodeKind;
   label: string;
   parentKey?: string;
-  guid?: string;
+  id?: string;
   groupKind?: KitGroupKind;
   href?: string;
   summary?: string;
@@ -331,7 +331,7 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
 
   const kitMetadata: Array<{ label: string; value: string }> = [];
   addKitMetaEntry(kitMetadata, "Name", data.name);
-  addKitMetaEntry(kitMetadata, "Guid", data.guid);
+  addKitMetaEntry(kitMetadata, "Id", data.id);
   addKitMetaEntry(kitMetadata, "Description", data.description);
   addKitMetaEntry(kitMetadata, "Version", data.version);
   addKitMetaEntry(kitMetadata, "License", data.license);
@@ -344,7 +344,7 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     kind: "kit",
     label: data.name?.trim() || "Unnamed Kit",
     parentKey: rootKey,
-    guid: data.guid,
+    id: data.id,
     href: getKitArtifactHref(data),
     summary: data.description || "Kit metadata.",
     metadata: kitMetadata,
@@ -386,23 +386,23 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     });
   }
 
-  const kindKeyByGuid = new Map<string, string>();
+  const kindKeyById = new Map<string, string>();
   (data.types ?? []).forEach((kind) => {
     const metadata: Array<{ label: string; value: string }> = [];
     addKitMetaEntry(metadata, "Kind", "Type");
     addKitMetaEntry(metadata, "Name", kind.name);
-    addKitMetaEntry(metadata, "Guid", kind.guid);
+    addKitMetaEntry(metadata, "Id", kind.id);
     addKitMetaEntry(metadata, "Description", kind.description);
     addKitMetaEntry(metadata, "Created", kind.createdAt);
     addKitMetaEntry(metadata, "Updated", kind.updatedAt);
-    const key = `kind:${kind.guid}`;
-    kindKeyByGuid.set(kind.guid, key);
+    const key = `kind:${kind.id}`;
+    kindKeyById.set(kind.id, key);
     registerNode({
       key,
       kind: "kind",
-      label: kind.name || kind.guid,
-      parentKey: kind.parent?.guid ? `kind:${kind.parent.guid}` : kindGroupKey,
-      guid: kind.guid,
+      label: kind.name || kind.id,
+      parentKey: kind.parent?.id ? `kind:${kind.parent.id}` : kindGroupKey,
+      id: kind.id,
       groupKind: "type",
       href: getKitArtifactHref(kind),
       summary: kind.description || "Type artifact.",
@@ -414,17 +414,17 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
     const metadata: Array<{ label: string; value: string }> = [];
     addKitMetaEntry(metadata, "Kind", "Design");
     addKitMetaEntry(metadata, "Name", design.name);
-    addKitMetaEntry(metadata, "Guid", design.guid);
+    addKitMetaEntry(metadata, "Id", design.id);
     addKitMetaEntry(metadata, "Description", design.description);
     addKitMetaEntry(metadata, "Unit", design.unit);
     addKitMetaEntry(metadata, "Created", design.createdAt);
     addKitMetaEntry(metadata, "Updated", design.updatedAt);
     registerNode({
-      key: `design:${design.guid}`,
+      key: `design:${design.id}`,
       kind: "design",
-      label: design.name || design.guid,
-      parentKey: design.parent?.guid ? `design:${design.parent.guid}` : designGroupKey,
-      guid: design.guid,
+      label: design.name || design.id,
+      parentKey: design.parent?.id ? `design:${design.parent.id}` : designGroupKey,
+      id: design.id,
       groupKind: "design",
       href: getKitArtifactHref(design),
       summary: design.description || "Design artifact.",
@@ -437,14 +437,14 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
       const metadata: Array<{ label: string; value: string }> = [];
       addKitMetaEntry(metadata, "Kind", "Port");
       addKitMetaEntry(metadata, "Name", port.name);
-      addKitMetaEntry(metadata, "Guid", port.guid);
+      addKitMetaEntry(metadata, "Id", port.id);
       addKitMetaEntry(metadata, "Description", port.description);
       registerNode({
-        key: `port:${port.guid}`,
+        key: `port:${port.id}`,
         kind: "port",
-        label: port.name || port.guid,
+        label: port.name || port.id,
         parentKey: kitPortsGroupKey,
-        guid: port.guid,
+        id: port.id,
         groupKind: "port",
         href: port.icon,
         summary: port.description || "Port definition.",
@@ -459,19 +459,19 @@ const buildKitHierarchy = (data: KitData, options: { designDataEnabled: boolean;
       const metadata: Array<{ label: string; value: string }> = [];
       addKitMetaEntry(metadata, "Kind", "Connector");
       addKitMetaEntry(metadata, "Name", connector.name);
-      addKitMetaEntry(metadata, "Guid", connector.guid);
+      addKitMetaEntry(metadata, "Id", connector.id);
       addKitMetaEntry(metadata, "Connector Id", connector.id);
       addKitMetaEntry(metadata, "Port", connector.port);
       addKitMetaEntry(metadata, "Description", connector.description);
       addKitMetaEntry(metadata, "Mandatory", connector.mandatory === undefined ? undefined : String(connector.mandatory));
-      const parentKey = kindKeyByGuid.get(connector.typeGuid) ?? orphanConnectorGroupKey;
+      const parentKey = kindKeyById.get(connector.typeId) ?? orphanConnectorGroupKey;
       if (parentKey === orphanConnectorGroupKey) orphanConnectorCount += 1;
       registerNode({
-        key: `connector:${connector.guid}`,
+        key: `connector:${connector.id}`,
         kind: "connector",
-        label: connector.name || connector.guid,
+        label: connector.name || connector.id,
         parentKey,
-        guid: connector.guid,
+        id: connector.id,
         groupKind: "connector",
         summary: connector.description || "Connector on a kind.",
         metadata,
@@ -520,21 +520,21 @@ const getKitChildNodes = (hierarchy: KitHierarchy, node: KitHierarchyNode): KitH
 };
 
 const getKitNodeSelection = (node: KitHierarchyNode): KitSelection => {
-  if (node.kind === "design") return { designGuids: node.guid ? [node.guid] : [], typeGuids: [], portGuids: [], connectorGuids: [] };
-  if (node.kind === "kind") return { designGuids: [], typeGuids: node.guid ? [node.guid] : [], portGuids: [], connectorGuids: [] };
-  if (node.kind === "port") return { designGuids: [], typeGuids: [], portGuids: node.guid ? [node.guid] : [], connectorGuids: [] };
-  if (node.kind === "connector") return { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: node.guid ? [node.guid] : [] };
-  return { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] };
+  if (node.kind === "design") return { designIds: node.id ? [node.id] : [], typeIds: [], portIds: [], connectorIds: [] };
+  if (node.kind === "kind") return { designIds: [], typeIds: node.id ? [node.id] : [], portIds: [], connectorIds: [] };
+  if (node.kind === "port") return { designIds: [], typeIds: [], portIds: node.id ? [node.id] : [], connectorIds: [] };
+  if (node.kind === "connector") return { designIds: [], typeIds: [], portIds: [], connectorIds: node.id ? [node.id] : [] };
+  return { designIds: [], typeIds: [], portIds: [], connectorIds: [] };
 };
 
 const getSelectedKitNodeKey = (hierarchy: KitHierarchy, selection: KitSelection): string | undefined => {
-  const selectedConnector = selection.connectorGuids?.[0];
+  const selectedConnector = selection.connectorIds?.[0];
   if (selectedConnector && hierarchy.nodesByKey.has(`connector:${selectedConnector}`)) return `connector:${selectedConnector}`;
-  const selectedPort = selection.portGuids?.[0];
+  const selectedPort = selection.portIds?.[0];
   if (selectedPort && hierarchy.nodesByKey.has(`port:${selectedPort}`)) return `port:${selectedPort}`;
-  const selectedKind = selection.typeGuids?.[0];
+  const selectedKind = selection.typeIds?.[0];
   if (selectedKind && hierarchy.nodesByKey.has(`kind:${selectedKind}`)) return `kind:${selectedKind}`;
-  const selectedDesign = selection.designGuids?.[0];
+  const selectedDesign = selection.designIds?.[0];
   if (selectedDesign && hierarchy.nodesByKey.has(`design:${selectedDesign}`)) return `design:${selectedDesign}`;
   return undefined;
 };
@@ -551,7 +551,7 @@ const getDefaultKitNodeKey = (hierarchy: KitHierarchy): string => {
 };
 
 const getReadableKitMetaLabel = (label: string, value: string): string => {
-  if (label === "Guid") return "ID";
+  if (label === "Id") return "ID";
   if (label === "Connector Id") return "Connector";
   if (label === "Mandatory") return value === "true" ? "Required" : "Optional";
   if (label === "Created") return "Created";
@@ -604,7 +604,7 @@ const getKitMetaDisplay = (entry: { label: string; value: string }): { text: str
 const getVisibleKitMetadata = (node: KitHierarchyNode): Array<{ label: string; value: string }> =>
   node.metadata.filter((entry) => {
     if (entry.label === "Kind") return false;
-    if (entry.label === "Guid") return false;
+    if (entry.label === "Id") return false;
     if (entry.label === "Connector Id") return false;
     if (entry.label === "Unit") return false;
     if (entry.label === "Name" && entry.value === node.label) return false;
@@ -629,7 +629,7 @@ const getKitTitle = (data: KitData, fallbackTitle: string): string => {
 
 const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
   ({
-    guid: d.guid,
+    id: d.id,
     name: d.name,
     description: d.description,
     createdAt: d.createdAt,
@@ -643,7 +643,7 @@ const kitDesignDataToShellDesign = (d: KitDesignData): Design =>
 
 const kitKindDataToShellKind = (k: KitKindData): SemioKind =>
   ({
-    guid: k.guid,
+    id: k.id,
     name: k.name,
     description: k.description,
     createdAt: k.createdAt,
@@ -699,13 +699,13 @@ export const SemioKit: React.FC<KitProps> = ({
   const effectiveConnectors = connectorDataEnabled ? (effectiveData.connectors ?? []) : [];
 
   const setNextSelection = React.useCallback(
-    (next: { designGuids?: string[]; typeGuids?: string[]; portGuids?: string[]; connectorGuids?: string[] }) => {
+    (next: { designIds?: string[]; typeIds?: string[]; portIds?: string[]; connectorIds?: string[] }) => {
       if (!effectiveSelectionEnabled) return;
       setResolvedSelection({
-        designGuids: designSelectionEnabled ? (next.designGuids ?? []) : [],
-        typeGuids: typeSelectionEnabled ? (next.typeGuids ?? []) : [],
-        portGuids: portSelectionEnabled ? (next.portGuids ?? []) : [],
-        connectorGuids: connectorSelectionEnabled ? (next.connectorGuids ?? []) : [],
+        designIds: designSelectionEnabled ? (next.designIds ?? []) : [],
+        typeIds: typeSelectionEnabled ? (next.typeIds ?? []) : [],
+        portIds: portSelectionEnabled ? (next.portIds ?? []) : [],
+        connectorIds: connectorSelectionEnabled ? (next.connectorIds ?? []) : [],
       });
     },
     [connectorSelectionEnabled, designSelectionEnabled, effectiveSelectionEnabled, portSelectionEnabled, setResolvedSelection, typeSelectionEnabled],
@@ -754,7 +754,7 @@ export const SemioKit: React.FC<KitProps> = ({
   const selectedNodeKey = React.useMemo(() => getSelectedKitNodeKey(hierarchy, resolvedSelection), [hierarchy, resolvedSelection]);
   const [focusedNodeKey, setFocusedNodeKey] = React.useState<string>(() => selectedNodeKey ?? getDefaultKitNodeKey(hierarchy));
 
-  const kitBrowseScopeKey = effectiveData.guid ?? kit?.guid ?? effectiveData.name ?? "__semio-kit__";
+  const kitBrowseScopeKey = effectiveData.id ?? kit?.id ?? effectiveData.name ?? "__semio-kit__";
 
   const [browse, setBrowse] = React.useState<{ stack: string[]; index: number }>(() => ({
     stack: [selectedNodeKey ?? getDefaultKitNodeKey(hierarchy)],
@@ -841,57 +841,57 @@ export const SemioKit: React.FC<KitProps> = ({
 
   const onKitPieceDoubleClick = React.useCallback(
     (piece: Piece) => {
-      const nestedDesignGuid = piece.design?.guid;
-      if (nestedDesignGuid && hierarchy.nodesByKey.has(`design:${nestedDesignGuid}`)) {
-        browsePush(`design:${nestedDesignGuid}`);
+      const nestedDesignId = piece.design?.id;
+      if (nestedDesignId && hierarchy.nodesByKey.has(`design:${nestedDesignId}`)) {
+        browsePush(`design:${nestedDesignId}`);
         return;
       }
-      const kindGuid = piece.type?.guid;
-      if (kindGuid && hierarchy.nodesByKey.has(`kind:${kindGuid}`)) {
-        browsePush(`kind:${kindGuid}`);
+      const kindId = piece.type?.id;
+      if (kindId && hierarchy.nodesByKey.has(`kind:${kindId}`)) {
+        browsePush(`kind:${kindId}`);
       }
     },
     [browsePush, hierarchy.nodesByKey],
   );
 
   const artifactDesign: Design | null = React.useMemo(() => {
-    if (focusedNode.kind !== "design" || !focusedNode.guid) return null;
-    const full = kit?.designs?.find((d) => d.guid === focusedNode.guid);
+    if (focusedNode.kind !== "design" || !focusedNode.id) return null;
+    const full = kit?.designs?.find((d) => d.id === focusedNode.id);
     if (full) return full;
-    const shell = effectiveDesigns.find((d) => d.guid === focusedNode.guid);
+    const shell = effectiveDesigns.find((d) => d.id === focusedNode.id);
     return shell ? kitDesignDataToShellDesign(shell) : null;
-  }, [effectiveDesigns, focusedNode.guid, focusedNode.kind, kit?.designs]);
+  }, [effectiveDesigns, focusedNode.id, focusedNode.kind, kit?.designs]);
 
   const artifactPreviewDesign = React.useMemo(() => (artifactDesign ? resolveKitArtifactDesignForPreview(artifactDesign, kit) : null), [artifactDesign, kit]);
 
   const artifactKind: SemioKind | null = React.useMemo(() => {
-    if (focusedNode.kind !== "kind" || !focusedNode.guid) return null;
-    const full = kit?.types?.find((t) => t.guid === focusedNode.guid);
+    if (focusedNode.kind !== "kind" || !focusedNode.id) return null;
+    const full = kit?.types?.find((t) => t.id === focusedNode.id);
     if (full) return full;
-    const shell = effectiveTypes.find((t) => t.guid === focusedNode.guid);
+    const shell = effectiveTypes.find((t) => t.id === focusedNode.id);
     return shell ? kitKindDataToShellKind(shell) : null;
-  }, [effectiveTypes, focusedNode.guid, focusedNode.kind, kit?.types]);
+  }, [effectiveTypes, focusedNode.id, focusedNode.kind, kit?.types]);
 
   const connectorParentKindNode = React.useMemo(() => {
     if (focusedNode.kind !== "connector" || !focusedNode.parentKey) return null;
     const parent = hierarchy.nodesByKey.get(focusedNode.parentKey);
-    if (parent?.kind !== "kind" || !parent.guid) return null;
+    if (parent?.kind !== "kind" || !parent.id) return null;
     return parent;
   }, [focusedNode, hierarchy.nodesByKey]);
 
   const connectorHostKind: SemioKind | null = React.useMemo(() => {
-    if (!connectorParentKindNode?.guid) return null;
-    const full = kit?.types?.find((t) => t.guid === connectorParentKindNode.guid);
+    if (!connectorParentKindNode?.id) return null;
+    const full = kit?.types?.find((t) => t.id === connectorParentKindNode.id);
     if (full) return full;
-    const shell = effectiveTypes.find((t) => t.guid === connectorParentKindNode.guid);
+    const shell = effectiveTypes.find((t) => t.id === connectorParentKindNode.id);
     return shell ? kitKindDataToShellKind(shell) : null;
-  }, [connectorParentKindNode?.guid, effectiveTypes, kit?.types]);
+  }, [connectorParentKindNode?.id, effectiveTypes, kit?.types]);
 
   const breadcrumbItems = React.useMemo(() => {
     const rootOptions = (hierarchy.childKeysByParentKey.get("kit:root") ?? [])
       .map((key) => hierarchy.nodesByKey.get(key))
       .filter((node): node is KitHierarchyNode => Boolean(node))
-      .map((node) => ({ label: node.label, href: node.key, id: node.guid }));
+      .map((node) => ({ label: node.label, href: node.key, id: node.id }));
 
     return [
       {
@@ -900,7 +900,7 @@ export const SemioKit: React.FC<KitProps> = ({
         onNavigate: browsePush,
       },
       ...path.map((node) => ({
-        id: node.guid,
+        id: node.id,
         content: (
           <button
             type="button"
@@ -917,7 +917,7 @@ export const SemioKit: React.FC<KitProps> = ({
             {node.label}
           </button>
         ),
-        options: getKitChildNodes(hierarchy, node).map((child) => ({ label: child.label, href: child.key, id: child.guid })),
+        options: getKitChildNodes(hierarchy, node).map((child) => ({ label: child.label, href: child.key, id: child.id })),
         onNavigate: browsePush,
       })),
     ];
@@ -1039,7 +1039,7 @@ export const SemioKit: React.FC<KitProps> = ({
               type={connectorHostKind}
               kit={kit}
               title={connectorHostKind.name ?? connectorParentKindNode?.label ?? "Type"}
-              defaultSelection={{ connectorGuids: focusedNode.guid ? [focusedNode.guid] : [] }}
+              defaultSelection={{ connectorIds: focusedNode.id ? [focusedNode.id] : [] }}
               selectionEnabled={true}
               connectorSelectionEnabled={false}
             />
@@ -1159,13 +1159,13 @@ const getDiffStatusFromAttributes = (attributes: Attribute[] | undefined): Diagr
 };
 
 export interface DiagramSelection {
-  pieceGuids?: string[];
-  connectionGuids?: string[];
+  pieceIds?: string[];
+  connectionIds?: string[];
 }
 
 export interface DiagramHover {
-  pieceGuid?: string | null;
-  connectionGuid?: string | null;
+  pieceId?: string | null;
+  connectionId?: string | null;
 }
 
 export interface DiagramPan {
@@ -1216,7 +1216,7 @@ export interface SemioDiagramProps {
 }
 
 interface DiagramPoint {
-  guid: string;
+  id: string;
   piece: Piece;
   u: number;
   v: number;
@@ -1224,7 +1224,7 @@ interface DiagramPoint {
 }
 
 interface DiagramLine {
-  guid: string;
+  id: string;
   connection: Connection;
   source: DiagramPoint;
   target: DiagramPoint;
@@ -1278,8 +1278,8 @@ const SEMIO_SELECTION_BOUNDS_STROKE_OPACITY = 0.55;
 
 const computeDiagramSelectionOverlayRect = (
   snapshot: DiagramSnapshot,
-  selectedPieceGuids: Set<string>,
-  selectedConnectionGuids: Set<string>,
+  selectedPieceIds: Set<string>,
+  selectedConnectionIds: Set<string>,
   toPixelX: (u: number) => number,
   toPixelY: (diagramY: number) => number,
   piecePadPx: number,
@@ -1288,18 +1288,18 @@ const computeDiagramSelectionOverlayRect = (
   const xs: number[] = [];
   const ys: number[] = [];
   for (const point of snapshot.points) {
-    if (!selectedPieceGuids.has(point.guid)) continue;
+    if (!selectedPieceIds.has(point.id)) continue;
     xs.push(toPixelX(point.u));
     ys.push(toPixelY(-point.v));
   }
   for (const line of snapshot.lines) {
-    if (!selectedConnectionGuids.has(line.guid)) continue;
+    if (!selectedConnectionIds.has(line.id)) continue;
     xs.push(toPixelX(line.source.u), toPixelX(line.target.u));
     ys.push(toPixelY(-line.source.v), toPixelY(-line.target.v));
   }
   if (xs.length === 0) return null;
-  const hasPieceSelection = snapshot.points.some((p) => selectedPieceGuids.has(p.guid));
-  const hasConnectionSelection = snapshot.lines.some((l) => selectedConnectionGuids.has(l.guid));
+  const hasPieceSelection = snapshot.points.some((p) => selectedPieceIds.has(p.id));
+  const hasConnectionSelection = snapshot.lines.some((l) => selectedConnectionIds.has(l.id));
   const pad = hasPieceSelection && hasConnectionSelection ? Math.max(piecePadPx, connectionPadPx) : hasPieceSelection ? piecePadPx : connectionPadPx;
   const minX = Math.min(...xs) - pad;
   const maxX = Math.max(...xs) + pad;
@@ -1314,7 +1314,7 @@ const computeDiagramSelectionOverlayRect = (
 const centersFromLayoutDiff = (layoutDiff?: DesignDiff): Map<string, { u: number; v: number }> => {
   const m = new Map<string, { u: number; v: number }>();
   for (const u of layoutDiff?.pieces?.updated ?? []) {
-    const g = u.piece?.guid;
+    const g = u.piece?.id;
     const c = u.diff?.center;
     if (g && c && typeof c.u === "number" && typeof c.v === "number") m.set(g, { u: c.u, v: c.v });
   }
@@ -1340,26 +1340,26 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   const merged = designDiff ? DesignEntity.previewWithDiff(design, designDiff) : design;
   const layoutGeometry = designDiff ? cloneDesignApplyDiff(design, designDiff) : design;
   const layoutCenters = centersFromLayoutDiff(layoutDiff);
-  const geometryCentersByGuid = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { guid: string } => typeof p.guid === "string" && p.guid.length > 0).map((p) => [p.guid, p.center] as const));
+  const geometryCentersById = new Map((layoutGeometry.pieces ?? []).filter((p): p is Piece & { id: string } => typeof p.id === "string" && p.id.length > 0).map((p) => [p.id, p.center] as const));
 
   const pointMap = new Map<string, DiagramPoint>();
   (merged.pieces ?? []).forEach((piece: Piece) => {
-    if (!piece.guid) return;
-    const center = geometryCentersByGuid.get(piece.guid) ?? piece.center ?? layoutCenters.get(piece.guid);
+    if (!piece.id) return;
+    const center = geometryCentersById.get(piece.id) ?? piece.center ?? layoutCenters.get(piece.id);
     if (!center) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
-    pointMap.set(piece.guid, { guid: piece.guid, piece, u: center.u, v: center.v, status });
+    pointMap.set(piece.id, { id: piece.id, piece, u: center.u, v: center.v, status });
   });
 
-  const pointsByGuid = new Map(Array.from(pointMap.values()).map((point) => [point.guid, point]));
+  const pointsById = new Map(Array.from(pointMap.values()).map((point) => [point.id, point]));
   const lineMap = new Map<string, DiagramLine>();
   snapshotDesignConnections(merged).forEach((connection) => {
-    if (!connection.guid) return;
-    const source = pointsByGuid.get(connection.connected.piece.guid);
-    const target = pointsByGuid.get(connection.connecting.piece.guid);
+    if (!connection.id) return;
+    const source = pointsById.get(connection.connected.piece.id);
+    const target = pointsById.get(connection.connecting.piece.id);
     if (!source || !target) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
-    lineMap.set(connection.guid, { guid: connection.guid, connection, source, target, status });
+    lineMap.set(connection.id, { id: connection.id, connection, source, target, status });
   });
 
   // One-hop propagation: a connection whose endpoint piece has non-default status becomes "modified".
@@ -1367,8 +1367,8 @@ const buildDiagramSnapshot = (design: Design, padding: number, designDiff?: Desi
   if (designDiff) {
     for (const line of lineMap.values()) {
       if (line.status === "default") {
-        const src = pointMap.get(line.connection.connected.piece.guid);
-        const tgt = pointMap.get(line.connection.connecting.piece.guid);
+        const src = pointMap.get(line.connection.connected.piece.id);
+        const tgt = pointMap.get(line.connection.connecting.piece.id);
         if ((src && src.status !== "default") || (tgt && tgt.status !== "default")) {
           (line as { status: DiagramEntityStatus }).status = "modified";
         }
@@ -1405,7 +1405,7 @@ const buildDiagramBounds = (points: Array<{ u: number; v: number }>): DiagramBou
   };
 };
 
-const isSelected = (guid: string, guidSet: Set<string>): boolean => guidSet.has(guid);
+const isSelected = (id: string, idSet: Set<string>): boolean => idSet.has(id);
 
 const useElementSize = <T extends HTMLElement>() => {
   const ref = React.useRef<T | null>(null);
@@ -1430,13 +1430,13 @@ const useElementSize = <T extends HTMLElement>() => {
 };
 
 const normalizeSelection = (selection?: DiagramSelection): DiagramSelection => ({
-  pieceGuids: selection?.pieceGuids ?? [],
-  connectionGuids: selection?.connectionGuids ?? [],
+  pieceIds: selection?.pieceIds ?? [],
+  connectionIds: selection?.connectionIds ?? [],
 });
 
 const normalizeHover = (hover?: DiagramHover): DiagramHover => ({
-  pieceGuid: hover?.pieceGuid ?? null,
-  connectionGuid: hover?.connectionGuid ?? null,
+  pieceId: hover?.pieceId ?? null,
+  connectionId: hover?.connectionId ?? null,
 });
 
 export const SemioDiagram: React.FC<SemioDiagramProps> = ({
@@ -1489,10 +1489,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const [resolvedPan, setResolvedPan, isPanControlled] = useInteractiveControllableValue(pan, defaultPan ?? { x: 0, y: 0 }, onPanChange);
   const [resolvedZoom, setResolvedZoom, isZoomControlled] = useInteractiveControllableValue(zoom, defaultZoom ?? DEFAULT_DIAGRAM_ZOOM, onZoomChange);
   const snapshot = React.useMemo(() => buildDiagramSnapshot(design, padding, effectiveDiffEnabled ? resolvedDesignDiff : undefined, layoutDiff), [design, effectiveDiffEnabled, layoutDiff, padding, resolvedDesignDiff]);
-  const selectedPieceGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.pieceGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.pieceGuids]);
-  const selectedConnectionGuids = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.connectionGuids ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.connectionGuids]);
-  const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
-  const hoveredConnectionGuid = effectiveConnectionHoverEnabled ? (resolvedHover.connectionGuid ?? null) : null;
+  const selectedPieceIds = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.pieceIds ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.pieceIds]);
+  const selectedConnectionIds = React.useMemo(() => new Set(effectiveSelectionEnabled ? (resolvedSelection.connectionIds ?? []) : []), [effectiveSelectionEnabled, resolvedSelection.connectionIds]);
+  const hoveredPieceId = effectivePieceHoverEnabled ? (resolvedHover.pieceId ?? null) : null;
+  const hoveredConnectionId = effectiveConnectionHoverEnabled ? (resolvedHover.connectionId ?? null) : null;
   const { ref, size } = useElementSize<HTMLDivElement>();
   useDesignClipboard(ref, design, effectiveDiffEnabled ? resolvedDesignDiff : undefined, resolvedSelection);
   const panPointerIdRef = React.useRef<number | null>(null);
@@ -1562,8 +1562,8 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
     const vpY = (y: number) => centerY + resolvedPan.y + resolvedZoom * (y - centerY);
     const toPxX = (u: number) => vpX(offsetX + (u - snapshot.minU) * scale);
     const toPxY = (diagramY: number) => vpY(offsetY + (diagramY - snapshot.minY) * scale);
-    return computeDiagramSelectionOverlayRect(snapshot, selectedPieceGuids, selectedConnectionGuids, toPxX, toPxY, piecePadPx, connectionPadPx);
-  }, [centerX, centerY, effectiveSelectionEnabled, offsetX, offsetY, resolvedPan.x, resolvedPan.y, resolvedZoom, scale, selectedConnectionGuids, selectedPieceGuids, snapshot, pieceRadius, strokeWidth]);
+    return computeDiagramSelectionOverlayRect(snapshot, selectedPieceIds, selectedConnectionIds, toPxX, toPxY, piecePadPx, connectionPadPx);
+  }, [centerX, centerY, effectiveSelectionEnabled, offsetX, offsetY, resolvedPan.x, resolvedPan.y, resolvedZoom, scale, selectedConnectionIds, selectedPieceIds, snapshot, pieceRadius, strokeWidth]);
 
   const fittedPanX = fittedViewport.pan.x;
   const fittedPanY = fittedViewport.pan.y;
@@ -1638,31 +1638,31 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   const clearSelection = React.useCallback(() => {
     if (!effectiveSelectionEnabled) return;
     setResolvedSelection({
-      pieceGuids: [],
-      connectionGuids: [],
+      pieceIds: [],
+      connectionIds: [],
     });
   }, [effectiveSelectionEnabled, setResolvedSelection]);
 
   const setHoveredPiece = React.useCallback(
-    (pieceGuid: string | null) => {
+    (pieceId: string | null) => {
       if (!effectivePieceHoverEnabled) return;
       setResolvedHover({
-        pieceGuid,
-        connectionGuid: resolvedHover.connectionGuid ?? null,
+        pieceId,
+        connectionId: resolvedHover.connectionId ?? null,
       });
     },
-    [effectivePieceHoverEnabled, resolvedHover.connectionGuid, setResolvedHover],
+    [effectivePieceHoverEnabled, resolvedHover.connectionId, setResolvedHover],
   );
 
   const setHoveredConnection = React.useCallback(
-    (connectionGuid: string | null) => {
+    (connectionId: string | null) => {
       if (!effectiveConnectionHoverEnabled) return;
       setResolvedHover({
-        pieceGuid: resolvedHover.pieceGuid ?? null,
-        connectionGuid,
+        pieceId: resolvedHover.pieceId ?? null,
+        connectionId,
       });
     },
-    [effectiveConnectionHoverEnabled, resolvedHover.pieceGuid, setResolvedHover],
+    [effectiveConnectionHoverEnabled, resolvedHover.pieceId, setResolvedHover],
   );
 
   const handleSvgClick = React.useCallback(
@@ -1716,37 +1716,37 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
   );
 
   const selectPiece = React.useCallback(
-    (pieceGuid: string) => {
+    (pieceId: string) => {
       if (!effectivePieceSelectionEnabled) return;
-      const nextPieceGuids = new Set(resolvedSelection.pieceGuids ?? []);
-      if (nextPieceGuids.has(pieceGuid)) {
-        nextPieceGuids.delete(pieceGuid);
+      const nextPieceIds = new Set(resolvedSelection.pieceIds ?? []);
+      if (nextPieceIds.has(pieceId)) {
+        nextPieceIds.delete(pieceId);
       } else {
-        nextPieceGuids.add(pieceGuid);
+        nextPieceIds.add(pieceId);
       }
       setResolvedSelection({
-        pieceGuids: Array.from(nextPieceGuids),
-        connectionGuids: resolvedSelection.connectionGuids ?? [],
+        pieceIds: Array.from(nextPieceIds),
+        connectionIds: resolvedSelection.connectionIds ?? [],
       });
     },
-    [effectivePieceSelectionEnabled, resolvedSelection.connectionGuids, resolvedSelection.pieceGuids, setResolvedSelection],
+    [effectivePieceSelectionEnabled, resolvedSelection.connectionIds, resolvedSelection.pieceIds, setResolvedSelection],
   );
 
   const selectConnection = React.useCallback(
-    (connectionGuid: string) => {
+    (connectionId: string) => {
       if (!effectiveConnectionSelectionEnabled) return;
-      const nextConnectionGuids = new Set(resolvedSelection.connectionGuids ?? []);
-      if (nextConnectionGuids.has(connectionGuid)) {
-        nextConnectionGuids.delete(connectionGuid);
+      const nextConnectionIds = new Set(resolvedSelection.connectionIds ?? []);
+      if (nextConnectionIds.has(connectionId)) {
+        nextConnectionIds.delete(connectionId);
       } else {
-        nextConnectionGuids.add(connectionGuid);
+        nextConnectionIds.add(connectionId);
       }
       setResolvedSelection({
-        pieceGuids: resolvedSelection.pieceGuids ?? [],
-        connectionGuids: Array.from(nextConnectionGuids),
+        pieceIds: resolvedSelection.pieceIds ?? [],
+        connectionIds: Array.from(nextConnectionIds),
       });
     },
-    [effectiveConnectionSelectionEnabled, resolvedSelection.connectionGuids, resolvedSelection.pieceGuids, setResolvedSelection],
+    [effectiveConnectionSelectionEnabled, resolvedSelection.connectionIds, resolvedSelection.pieceIds, setResolvedSelection],
   );
 
   const { x: originOx, y: originOy } = resolveSemioDiagramOriginPixels(toPixelX, toPixelY);
@@ -1802,16 +1802,16 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
           </g>
         ) : null}
         {snapshot.lines.map((line) => {
-          const selected = isSelected(line.guid, selectedConnectionGuids);
-          const hovered = hoveredConnectionGuid === line.guid;
+          const selected = isSelected(line.id, selectedConnectionIds);
+          const hovered = hoveredConnectionId === line.id;
           return (
             <line
-              key={line.guid}
+              key={line.id}
               onClick={
                 onConnectionClick || effectiveConnectionSelectionEnabled
                   ? (event) => {
                       event.stopPropagation();
-                      selectConnection(line.guid);
+                      selectConnection(line.id);
                       onConnectionClick?.(line.connection);
                     }
                   : undefined
@@ -1822,8 +1822,8 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
               strokeOpacity={selected || hovered ? 1 : line.status === "default" ? 0.45 : 0.8}
               strokeWidth={(selected ? strokeWidth + 1.5 : hovered ? strokeWidth + 0.75 : strokeWidth) * resolvedZoom}
               style={{ cursor: onConnectionClick || effectiveConnectionSelectionEnabled ? "pointer" : "default" }}
-              onPointerEnter={effectiveConnectionHoverEnabled ? () => setHoveredConnection(line.guid) : undefined}
-              onPointerLeave={effectiveConnectionHoverEnabled ? () => setHoveredConnection((resolvedHover.connectionGuid ?? null) === line.guid ? null : (resolvedHover.connectionGuid ?? null)) : undefined}
+              onPointerEnter={effectiveConnectionHoverEnabled ? () => setHoveredConnection(line.id) : undefined}
+              onPointerLeave={effectiveConnectionHoverEnabled ? () => setHoveredConnection((resolvedHover.connectionId ?? null) === line.id ? null : (resolvedHover.connectionId ?? null)) : undefined}
               x1={toPixelX(line.source.u)}
               x2={toPixelX(line.target.u)}
               y1={toPixelY(-line.source.v)}
@@ -1832,12 +1832,12 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
           );
         })}
         {snapshot.points.map((point) => {
-          const selected = isSelected(point.guid, selectedPieceGuids);
-          const hovered = hoveredPieceGuid === point.guid;
+          const selected = isSelected(point.id, selectedPieceIds);
+          const hovered = hoveredPieceId === point.id;
           const pieceInteractive = Boolean(onPieceClick || onPieceDoubleClick || effectivePieceSelectionEnabled);
           return (
             <circle
-              key={point.guid}
+              key={point.id}
               cx={toPixelX(point.u)}
               cy={toPixelY(-point.v)}
               fill={getEntityStatusColor(point.status)}
@@ -1845,7 +1845,7 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
                 onPieceClick || effectivePieceSelectionEnabled
                   ? (event) => {
                       event.stopPropagation();
-                      selectPiece(point.guid);
+                      selectPiece(point.id);
                       onPieceClick?.(point.piece);
                     }
                   : undefined
@@ -1859,8 +1859,8 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
                     }
                   : undefined
               }
-              onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.guid) : undefined}
-              onPointerLeave={effectivePieceHoverEnabled ? () => setHoveredPiece((resolvedHover.pieceGuid ?? null) === point.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
+              onPointerEnter={effectivePieceHoverEnabled ? () => setHoveredPiece(point.id) : undefined}
+              onPointerLeave={effectivePieceHoverEnabled ? () => setHoveredPiece((resolvedHover.pieceId ?? null) === point.id ? null : (resolvedHover.pieceId ?? null)) : undefined}
               r={(selected ? pieceRadius + DIAGRAM_PIECE_SELECTED_RADIUS_EXTRA : hovered ? pieceRadius + DIAGRAM_PIECE_HOVER_RADIUS_EXTRA : pieceRadius) * pxPerDiagramUnit}
               stroke={selected || hovered ? getInteractiveEntityColor(point.status, selected, hovered) : "none"}
               strokeWidth={selected ? Math.max(1, 0.1 * pxPerDiagramUnit) : hovered ? Math.max(1, 0.06 * pxPerDiagramUnit) : 0}
@@ -1882,10 +1882,10 @@ export const SemioDiagram: React.FC<SemioDiagramProps> = ({
  *
  * Specs:
  * - Connection selection is always disabled (no connection hover/click selection state).
- * - Selection callbacks only return `pieceGuids`.
+ * - Selection callbacks only return `pieceIds`.
  */
 export interface PieceSelectionState {
-  pieceGuids?: string[];
+  pieceIds?: string[];
 }
 
 export interface PieceSelectionProps extends Omit<SemioDiagramProps, "pieceSelectionEnabled" | "connectionSelectionEnabled" | "onConnectionClick" | "selection" | "defaultSelection" | "onSelectionChange"> {
@@ -1895,8 +1895,8 @@ export interface PieceSelectionProps extends Omit<SemioDiagramProps, "pieceSelec
 }
 
 export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defaultSelection, onSelectionChange, ...rest }) => {
-  const mappedSelection = selection ? { pieceGuids: selection.pieceGuids ?? [], connectionGuids: [] } : undefined;
-  const mappedDefaultSelection = defaultSelection ? { pieceGuids: defaultSelection.pieceGuids ?? [], connectionGuids: [] } : undefined;
+  const mappedSelection = selection ? { pieceIds: selection.pieceIds ?? [], connectionIds: [] } : undefined;
+  const mappedDefaultSelection = defaultSelection ? { pieceIds: defaultSelection.pieceIds ?? [], connectionIds: [] } : undefined;
 
   return (
     <SemioDiagram
@@ -1908,7 +1908,7 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-              onSelectionChange({ pieceGuids: next.pieceGuids ?? [] });
+              onSelectionChange({ pieceIds: next.pieceIds ?? [] });
             }
           : undefined
       }
@@ -1922,7 +1922,7 @@ export const PieceSelection: React.FC<PieceSelectionProps> = ({ selection, defau
 // Constrained Diagram wrapper that only supports selecting connections.
 
 export interface ConnectionSelectionState {
-  connectionGuids?: string[];
+  connectionIds?: string[];
 }
 
 export interface ConnectionSelectionProps extends Omit<SemioDiagramProps, "pieceSelectionEnabled" | "connectionSelectionEnabled" | "onPieceClick" | "selection" | "defaultSelection" | "onSelectionChange"> {
@@ -1932,8 +1932,8 @@ export interface ConnectionSelectionProps extends Omit<SemioDiagramProps, "piece
 }
 
 export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ selection, defaultSelection, onSelectionChange, ...rest }) => {
-  const mappedSelection = selection ? { pieceGuids: [], connectionGuids: selection.connectionGuids ?? [] } : undefined;
-  const mappedDefaultSelection = defaultSelection ? { pieceGuids: [], connectionGuids: defaultSelection.connectionGuids ?? [] } : undefined;
+  const mappedSelection = selection ? { pieceIds: [], connectionIds: selection.connectionIds ?? [] } : undefined;
+  const mappedDefaultSelection = defaultSelection ? { pieceIds: [], connectionIds: defaultSelection.connectionIds ?? [] } : undefined;
 
   return (
     <SemioDiagram
@@ -1945,7 +1945,7 @@ export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ select
       onSelectionChange={
         onSelectionChange
           ? (next) => {
-              onSelectionChange({ connectionGuids: next.connectionGuids ?? [] });
+              onSelectionChange({ connectionIds: next.connectionIds ?? [] });
             }
           : undefined
       }
@@ -1961,8 +1961,8 @@ export const ConnectionSelection: React.FC<ConnectionSelectionProps> = ({ select
  * 🔌DiagramSelection is a constrained Diagram wrapper that supports selecting both pieces and connections.
  */
 export interface DiagramSelectionState {
-  pieceGuids?: string[];
-  connectionGuids?: string[];
+  pieceIds?: string[];
+  connectionIds?: string[];
 }
 
 export interface DiagramSelectionProps extends Omit<SemioDiagramProps, "pieceSelectionEnabled" | "connectionSelectionEnabled" | "selection" | "defaultSelection" | "onSelectionChange"> {
@@ -1972,8 +1972,8 @@ export interface DiagramSelectionProps extends Omit<SemioDiagramProps, "pieceSel
 }
 
 export const DiagramSelection: React.FC<DiagramSelectionProps> = ({ selection, defaultSelection, onSelectionChange, ...rest }) => {
-  const mappedSelection = selection ? { pieceGuids: selection.pieceGuids ?? [], connectionGuids: selection.connectionGuids ?? [] } : undefined;
-  const mappedDefaultSelection = defaultSelection ? { pieceGuids: defaultSelection.pieceGuids ?? [], connectionGuids: defaultSelection.connectionGuids ?? [] } : undefined;
+  const mappedSelection = selection ? { pieceIds: selection.pieceIds ?? [], connectionIds: selection.connectionIds ?? [] } : undefined;
+  const mappedDefaultSelection = defaultSelection ? { pieceIds: defaultSelection.pieceIds ?? [], connectionIds: defaultSelection.connectionIds ?? [] } : undefined;
 
   return <SemioDiagram {...rest} pieceSelectionEnabled={true} connectionSelectionEnabled={true} selection={mappedSelection} defaultSelection={mappedDefaultSelection} onSelectionChange={onSelectionChange} />;
 };
@@ -1994,9 +1994,9 @@ export interface DesignClipboardData {
 }
 
 export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff | undefined, selection: DiagramSelection | undefined): DesignClipboardData => {
-  const selectedPieceGuids = new Set(selection?.pieceGuids ?? []);
-  const selectedConnectionGuids = new Set(selection?.connectionGuids ?? []);
-  const hasSelection = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
+  const selectedPieceIds = new Set(selection?.pieceIds ?? []);
+  const selectedConnectionIds = new Set(selection?.connectionIds ?? []);
+  const hasSelection = selectedPieceIds.size > 0 || selectedConnectionIds.size > 0;
   const hasDiff = designDiff !== undefined;
 
   if (!hasDiff && !hasSelection) {
@@ -2006,8 +2006,8 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
 
   if (!hasDiff && hasSelection) {
     // 🔌No diff, selection present: copy selected pieces and connections
-    const pieces = (design.pieces ?? []).filter((p) => selectedPieceGuids.has(p.guid));
-    const connections = snapshotDesignConnections(design).filter((c) => selectedConnectionGuids.has(c.guid));
+    const pieces = (design.pieces ?? []).filter((p) => selectedPieceIds.has(p.id));
+    const connections = snapshotDesignConnections(design).filter((c) => selectedConnectionIds.has(c.id));
     return {
       design: {
         ...design,
@@ -2026,16 +2026,16 @@ export const buildDesignClipboardData = (design: Design, designDiff: DesignDiff 
   const filteredDiff: DesignDiff = { ...designDiff };
   if (designDiff!.pieces) {
     filteredDiff.pieces = {
-      added: (designDiff!.pieces.added ?? []).filter((p) => selectedPieceGuids.has(p.guid)),
-      removed: (designDiff!.pieces.removed ?? []).filter((p) => selectedPieceGuids.has(p.guid)),
-      updated: (designDiff!.pieces.updated ?? []).filter((u) => selectedPieceGuids.has(u.piece.guid)),
+      added: (designDiff!.pieces.added ?? []).filter((p) => selectedPieceIds.has(p.id)),
+      removed: (designDiff!.pieces.removed ?? []).filter((p) => selectedPieceIds.has(p.id)),
+      updated: (designDiff!.pieces.updated ?? []).filter((u) => selectedPieceIds.has(u.piece.id)),
     };
   }
   if (designDiff!.connections) {
     filteredDiff.connections = {
-      added: (designDiff!.connections.added ?? []).filter((c) => selectedConnectionGuids.has(c.guid)),
-      removed: (designDiff!.connections.removed ?? []).filter((c) => selectedConnectionGuids.has(c.guid)),
-      updated: (designDiff!.connections.updated ?? []).filter((u) => selectedConnectionGuids.has(u.connection.guid)),
+      added: (designDiff!.connections.added ?? []).filter((c) => selectedConnectionIds.has(c.id)),
+      removed: (designDiff!.connections.removed ?? []).filter((c) => selectedConnectionIds.has(c.id)),
+      updated: (designDiff!.connections.updated ?? []).filter((u) => selectedConnectionIds.has(u.connection.id)),
     };
   }
   return { design, designDiff: filteredDiff };
@@ -2513,21 +2513,21 @@ export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; he
 };
 
 const buildScenePieceAssets = (kit: Kit, pieces: Array<{ piece: Piece; status: DiagramEntityStatus }>): ScenePieceAsset[] => {
-  const kindsByGuid = new Map((kit.types ?? []).map((kind) => [kind.guid, kind] as const));
-  const filesByGuid = new Map((kit.files ?? []).map((file) => [file.guid, file] as const));
+  const kindsById = new Map((kit.types ?? []).map((kind) => [kind.id, kind] as const));
+  const filesById = new Map((kit.files ?? []).map((file) => [file.id, file] as const));
   const withPlaneAndCenter = pieces.filter(({ piece }) => piece.plane && piece.center);
   const result = withPlaneAndCenter.map(({ piece, status }) => {
-    const kindGuid = piece.type?.guid;
-    let kind = kindGuid ? kindsByGuid.get(kindGuid) : undefined;
+    const kindId = piece.type?.id;
+    let kind = kindId ? kindsById.get(kindId) : undefined;
     if (!kind && (piece.type as any)?.name) {
       kind = kit.types?.find((candidateKind) => candidateKind.name === (piece.type as any).name);
     }
     let file: SemioFile | undefined;
     let selectedRepresentation = kind?.representations?.length ? Type.pickBestRepresentation(kind.representations ?? [], []) : undefined;
-    if (selectedRepresentation?.file?.guid) file = filesByGuid.get(selectedRepresentation.file.guid);
+    if (selectedRepresentation?.file?.id) file = filesById.get(selectedRepresentation.file.id);
     if (!isSceneGltfSource(getSceneFileSource(file), file?.name) && kind?.representations?.length) {
       for (const m of kind.representations) {
-        const f = m.file?.guid ? filesByGuid.get(m.file.guid) : undefined;
+        const f = m.file?.id ? filesById.get(m.file.id) : undefined;
         if (f && isSceneGltfSource(getSceneFileSource(f), f.name)) {
           selectedRepresentation = m;
           file = f;
@@ -2552,25 +2552,25 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
 
   const pieceMap = new Map<string, ScenePieceAsset>();
   (merged.pieces ?? []).forEach((piece: Piece) => {
-    if (!piece.guid) return;
+    if (!piece.id) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(piece.attributes) : "default";
-    const existing = pieceMap.get(piece.guid);
+    const existing = pieceMap.get(piece.id);
     const resolvedPiece = (
       piece.plane && piece.center ? piece : existing?.piece?.plane && existing?.piece?.center ? { ...piece, plane: existing.piece.plane, center: existing.piece.center } : piece
     ) as Piece;
     if (!resolvedPiece.plane || !resolvedPiece.center) return;
-    pieceMap.set(piece.guid, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
+    pieceMap.set(piece.id, { piece: resolvedPiece, status: existing ? (status !== "default" ? status : existing.status) : status });
   });
 
-  const piecesByGuid = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.guid, asset.piece] as const));
+  const piecesById = new Map(Array.from(pieceMap.values()).map((asset) => [asset.piece.id, asset.piece] as const));
   const connectionMap = new Map<string, SceneConnectionAsset>();
   snapshotDesignConnections(merged).forEach((connection) => {
-    if (!connection.guid) return;
-    const sourcePiece = piecesByGuid.get(connection.connected.piece.guid);
-    const targetPiece = piecesByGuid.get(connection.connecting.piece.guid);
+    if (!connection.id) return;
+    const sourcePiece = piecesById.get(connection.connected.piece.id);
+    const targetPiece = piecesById.get(connection.connecting.piece.id);
     if (!sourcePiece?.plane || !targetPiece?.plane || !sourcePiece?.center || !targetPiece?.center) return;
     const status: DiagramEntityStatus = designDiff ? getDiffStatusFromAttributes(connection.attributes) : "default";
-    connectionMap.set(connection.guid, { connection, sourcePiece, targetPiece, status });
+    connectionMap.set(connection.id, { connection, sourcePiece, targetPiece, status });
   });
 
   // One-hop propagation: a modified connection colors its child (connecting) piece.
@@ -2578,8 +2578,8 @@ const buildSceneSnapshot = (design: Design, designDiff?: DesignDiff): SceneSnaps
   if (designDiff) {
     for (const connAsset of connectionMap.values()) {
       if (connAsset.status !== "default") {
-        const childGuid = connAsset.connection.connecting.piece.guid;
-        const childAsset = pieceMap.get(childGuid);
+        const childId = connAsset.connection.connecting.piece.id;
+        const childAsset = pieceMap.get(childId);
         if (childAsset && childAsset.status === "default") {
           childAsset.status = "modified";
         }
@@ -2601,7 +2601,7 @@ const toScenePieceMatrix = (plane: Plane): THREE.Matrix4 => {
 // Specs: Union of {@link THREE.Box3.setFromObject} on registered roots — pieces use transform groups that wrap GLTF or placeholders; connections use cylinder meshes. Excludes abstract planes/connectors.
 // Summary: World AABB for selected rendered scene objects only.
 
-const computeSceneSelectionUnionBox = (rootsByGuid: Map<string, THREE.Object3D>, selectedPieceGuids: Set<string>, selectedConnectionGuids: Set<string>): THREE.Box3 | null => {
+const computeSceneSelectionUnionBox = (rootsById: Map<string, THREE.Object3D>, selectedPieceIds: Set<string>, selectedConnectionIds: Set<string>): THREE.Box3 | null => {
   const box = new THREE.Box3();
   let any = false;
   const unionObject = (obj: THREE.Object3D) => {
@@ -2614,12 +2614,12 @@ const computeSceneSelectionUnionBox = (rootsByGuid: Map<string, THREE.Object3D>,
       box.union(b);
     }
   };
-  for (const guid of selectedPieceGuids) {
-    const obj = rootsByGuid.get(guid);
+  for (const id of selectedPieceIds) {
+    const obj = rootsById.get(id);
     if (obj) unionObject(obj);
   }
-  for (const guid of selectedConnectionGuids) {
-    const obj = rootsByGuid.get(guid);
+  for (const id of selectedConnectionIds) {
+    const obj = rootsById.get(id);
     if (obj) unionObject(obj);
   }
   if (!any) return null;
@@ -2629,12 +2629,12 @@ const computeSceneSelectionUnionBox = (rootsByGuid: Map<string, THREE.Object3D>,
 
 // #region 🎯SceneSelectionBounds
 
-// Specs: Registry maps piece/connection guids to Object3D roots; hull updates under demand frameloop via invalidate + useFrame.
+// Specs: Registry maps piece/connection ids to Object3D roots; hull updates under demand frameloop via invalidate + useFrame.
 // Summary: Provider and representation-driven selection overlay mesh.
 
 type SceneRepresentationBoundsRegistryValue = {
-  registerBoundsRoot: (guid: string, root: THREE.Object3D) => void;
-  unregisterBoundsRoot: (guid: string) => void;
+  registerBoundsRoot: (id: string, root: THREE.Object3D) => void;
+  unregisterBoundsRoot: (id: string) => void;
   rootsRef: React.MutableRefObject<Map<string, THREE.Object3D>>;
 };
 
@@ -2644,11 +2644,11 @@ const SceneRepresentationBoundsRegistryProvider: React.FC<{ children: React.Reac
   const rootsRef = React.useRef(new Map<string, THREE.Object3D>());
   const value = React.useMemo<SceneRepresentationBoundsRegistryValue>(
     () => ({
-      registerBoundsRoot: (guid: string, root: THREE.Object3D) => {
-        rootsRef.current.set(guid, root);
+      registerBoundsRoot: (id: string, root: THREE.Object3D) => {
+        rootsRef.current.set(id, root);
       },
-      unregisterBoundsRoot: (guid: string) => {
-        rootsRef.current.delete(guid);
+      unregisterBoundsRoot: (id: string) => {
+        rootsRef.current.delete(id);
       },
       rootsRef,
     }),
@@ -2658,9 +2658,9 @@ const SceneRepresentationBoundsRegistryProvider: React.FC<{ children: React.Reac
 };
 
 const SceneSelectionBoundsFromRepresentations: React.FC<{
-  selectedPieceGuids: Set<string>;
-  selectedConnectionGuids: Set<string>;
-}> = ({ selectedPieceGuids, selectedConnectionGuids }) => {
+  selectedPieceIds: Set<string>;
+  selectedConnectionIds: Set<string>;
+}> = ({ selectedPieceIds, selectedConnectionIds }) => {
   const registry = React.useContext(SceneRepresentationBoundsRegistryContext);
   const { invalidate } = useThree();
   const groupRef = React.useRef<THREE.Group>(null);
@@ -2674,8 +2674,8 @@ const SceneSelectionBoundsFromRepresentations: React.FC<{
     return () => observer.disconnect();
   }, []);
 
-  const selectionNonEmpty = selectedPieceGuids.size > 0 || selectedConnectionGuids.size > 0;
-  const selectionKey = React.useMemo(() => `${Array.from(selectedPieceGuids).sort().join(",")}|${Array.from(selectedConnectionGuids).sort().join(",")}`, [selectedPieceGuids, selectedConnectionGuids]);
+  const selectionNonEmpty = selectedPieceIds.size > 0 || selectedConnectionIds.size > 0;
+  const selectionKey = React.useMemo(() => `${Array.from(selectedPieceIds).sort().join(",")}|${Array.from(selectedConnectionIds).sort().join(",")}`, [selectedPieceIds, selectedConnectionIds]);
 
   React.useLayoutEffect(() => {
     if (!selectionNonEmpty) return;
@@ -2687,7 +2687,7 @@ const SceneSelectionBoundsFromRepresentations: React.FC<{
       if (groupRef.current) groupRef.current.visible = false;
       return;
     }
-    const computed = computeSceneSelectionUnionBox(registry.rootsRef.current, selectedPieceGuids, selectedConnectionGuids);
+    const computed = computeSceneSelectionUnionBox(registry.rootsRef.current, selectedPieceIds, selectedConnectionIds);
     if (!computed || computed.isEmpty()) {
       if (groupRef.current) groupRef.current.visible = false;
       return;
@@ -2893,11 +2893,11 @@ const ScenePiece: React.FC<ScenePieceProps> = ({ piece, status, representationNa
   const canRenderRepresentation = isSceneGltfSource(representationSource, representationName);
 
   React.useLayoutEffect(() => {
-    if (!boundsRegistry || !piece.guid) return;
+    if (!boundsRegistry || !piece.id) return;
     const n = pieceBoundsRootRef.current;
-    if (n) boundsRegistry.registerBoundsRoot(piece.guid, n);
-    return () => boundsRegistry.unregisterBoundsRoot(piece.guid);
-  }, [boundsRegistry, piece.guid, matrix, canRenderRepresentation, representationSource]);
+    if (n) boundsRegistry.registerBoundsRoot(piece.id, n);
+    return () => boundsRegistry.unregisterBoundsRoot(piece.id);
+  }, [boundsRegistry, piece.id, matrix, canRenderRepresentation, representationSource]);
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
@@ -2984,11 +2984,11 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
   const radius = isSelected ? 0.14 : isHovered ? 0.11 : 0.08;
 
   React.useLayoutEffect(() => {
-    if (!boundsRegistry || !connection.guid) return;
+    if (!boundsRegistry || !connection.id) return;
     const n = connectionMeshRef.current;
-    if (n) boundsRegistry.registerBoundsRoot(connection.guid, n);
-    return () => boundsRegistry.unregisterBoundsRoot(connection.guid);
-  }, [boundsRegistry, connection.guid, transform, radius]);
+    if (n) boundsRegistry.registerBoundsRoot(connection.id, n);
+    return () => boundsRegistry.unregisterBoundsRoot(connection.id);
+  }, [boundsRegistry, connection.id, transform, radius]);
 
   const handleClick = onClick
     ? (event: { stopPropagation: () => void }) => {
@@ -3012,7 +3012,7 @@ const SceneConnection: React.FC<SceneConnectionProps> = ({ connection, sourcePie
     : undefined;
 
   return (
-    <mesh ref={connectionMeshRef} name={connection.guid} position={transform.midpoint} quaternion={transform.quaternion} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+    <mesh ref={connectionMeshRef} name={connection.id} position={transform.midpoint} quaternion={transform.quaternion} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <cylinderGeometry args={[radius, radius, transform.length, 12]} />
       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.45 : isHovered ? 0.2 : 0.05} transparent={status === "removed"} opacity={status === "removed" ? 0.35 : 1} />
     </mesh>
@@ -3147,7 +3147,7 @@ const SceneAutoFit: React.FC<{ zoomTarget: ZoomTarget; snapshot: SceneSnapshot }
   const bounds = useBounds();
   const fittedRef = React.useRef(false);
   const snapshotKey = React.useMemo(
-    () => `${zoomTarget}|${snapshot.pieces.map((a) => `${a.piece.guid}:${a.status}`).join(";")}|c:${snapshot.connections.length}|p:${snapshot.pieces.length}`,
+    () => `${zoomTarget}|${snapshot.pieces.map((a) => `${a.piece.id}:${a.status}`).join(";")}|c:${snapshot.connections.length}|p:${snapshot.pieces.length}`,
     [snapshot.connections.length, snapshot.pieces, zoomTarget],
   );
   React.useEffect(() => {
@@ -3287,73 +3287,73 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
   const effectiveConnectionHoverEnabled = hoverEnabled && connectionHoverEnabled && (effectiveConnectionSelectionEnabled || !!onConnectionClick);
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeHover(defaultHover), onHoverChange);
-  const selectedPieceGuids = React.useMemo(() => new Set(resolvedSelection.pieceGuids ?? []), [resolvedSelection.pieceGuids]);
-  const selectedConnectionGuids = React.useMemo(() => new Set(resolvedSelection.connectionGuids ?? []), [resolvedSelection.connectionGuids]);
-  const hoveredPieceGuid = effectivePieceHoverEnabled ? (resolvedHover.pieceGuid ?? null) : null;
-  const hoveredConnectionGuid = effectiveConnectionHoverEnabled ? (resolvedHover.connectionGuid ?? null) : null;
+  const selectedPieceIds = React.useMemo(() => new Set(resolvedSelection.pieceIds ?? []), [resolvedSelection.pieceIds]);
+  const selectedConnectionIds = React.useMemo(() => new Set(resolvedSelection.connectionIds ?? []), [resolvedSelection.connectionIds]);
+  const hoveredPieceId = effectivePieceHoverEnabled ? (resolvedHover.pieceId ?? null) : null;
+  const hoveredConnectionId = effectiveConnectionHoverEnabled ? (resolvedHover.connectionId ?? null) : null;
 
   const handleSelectPiece = React.useCallback(
-    (pieceGuid: string) => {
+    (pieceId: string) => {
       if (!effectivePieceSelectionEnabled) return;
-      const nextGuids = new Set(resolvedSelection.pieceGuids ?? []);
-      if (nextGuids.has(pieceGuid)) {
-        nextGuids.delete(pieceGuid);
+      const nextIds = new Set(resolvedSelection.pieceIds ?? []);
+      if (nextIds.has(pieceId)) {
+        nextIds.delete(pieceId);
       } else {
-        nextGuids.add(pieceGuid);
+        nextIds.add(pieceId);
       }
       setResolvedSelection({
-        pieceGuids: Array.from(nextGuids),
-        connectionGuids: resolvedSelection.connectionGuids ?? [],
+        pieceIds: Array.from(nextIds),
+        connectionIds: resolvedSelection.connectionIds ?? [],
       });
     },
-    [effectivePieceSelectionEnabled, resolvedSelection.connectionGuids, resolvedSelection.pieceGuids, setResolvedSelection],
+    [effectivePieceSelectionEnabled, resolvedSelection.connectionIds, resolvedSelection.pieceIds, setResolvedSelection],
   );
 
   const handleSelectConnection = React.useCallback(
-    (connectionGuid: string) => {
+    (connectionId: string) => {
       if (!effectiveConnectionSelectionEnabled) return;
-      const nextGuids = new Set(resolvedSelection.connectionGuids ?? []);
-      if (nextGuids.has(connectionGuid)) {
-        nextGuids.delete(connectionGuid);
+      const nextIds = new Set(resolvedSelection.connectionIds ?? []);
+      if (nextIds.has(connectionId)) {
+        nextIds.delete(connectionId);
       } else {
-        nextGuids.add(connectionGuid);
+        nextIds.add(connectionId);
       }
       setResolvedSelection({
-        pieceGuids: resolvedSelection.pieceGuids ?? [],
-        connectionGuids: Array.from(nextGuids),
+        pieceIds: resolvedSelection.pieceIds ?? [],
+        connectionIds: Array.from(nextIds),
       });
     },
-    [effectiveConnectionSelectionEnabled, resolvedSelection.connectionGuids, resolvedSelection.pieceGuids, setResolvedSelection],
+    [effectiveConnectionSelectionEnabled, resolvedSelection.connectionIds, resolvedSelection.pieceIds, setResolvedSelection],
   );
 
   const handleHoverPiece = React.useCallback(
-    (pieceGuid: string | null) => {
+    (pieceId: string | null) => {
       if (!effectivePieceHoverEnabled) return;
       setResolvedHover({
-        pieceGuid,
-        connectionGuid: resolvedHover.connectionGuid ?? null,
+        pieceId,
+        connectionId: resolvedHover.connectionId ?? null,
       });
     },
-    [effectivePieceHoverEnabled, resolvedHover.connectionGuid, setResolvedHover],
+    [effectivePieceHoverEnabled, resolvedHover.connectionId, setResolvedHover],
   );
 
   const handleHoverConnection = React.useCallback(
-    (connectionGuid: string | null) => {
+    (connectionId: string | null) => {
       if (!effectiveConnectionHoverEnabled) return;
       setResolvedHover({
-        pieceGuid: resolvedHover.pieceGuid ?? null,
-        connectionGuid,
+        pieceId: resolvedHover.pieceId ?? null,
+        connectionId,
       });
     },
-    [effectiveConnectionHoverEnabled, resolvedHover.pieceGuid, setResolvedHover],
+    [effectiveConnectionHoverEnabled, resolvedHover.pieceId, setResolvedHover],
   );
 
   const clearSelection = React.useCallback(() => {
     if (!selectionEnabled) return;
-    setResolvedSelection({ pieceGuids: [], connectionGuids: [] });
+    setResolvedSelection({ pieceIds: [], connectionIds: [] });
   }, [selectionEnabled, setResolvedSelection]);
 
-  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ guid: "", name: "", types: [], files: [] } as unknown as Kit), snapshot.pieces), [kit, snapshot.pieces]);
+  const pieceAssets = React.useMemo(() => buildScenePieceAssets(kit ?? ({ id: "", name: "", types: [], files: [] } as unknown as Kit), snapshot.pieces), [kit, snapshot.pieces]);
 
   const gizmoSnappedRef = React.useRef(false);
   const handleAxisClick = React.useCallback(
@@ -3384,47 +3384,47 @@ export const SemioScene: React.FC<SemioSceneProps> = ({
             onAxisClick={onProjectionChange ? handleAxisClick : undefined}
             onOrbitEnd={onProjectionChange ? handleOrbitEnd : undefined}
           >
-            <SceneSelectionBoundsFromRepresentations selectedConnectionGuids={selectedConnectionGuids} selectedPieceGuids={selectedPieceGuids} />
+            <SceneSelectionBoundsFromRepresentations selectedConnectionIds={selectedConnectionIds} selectedPieceIds={selectedPieceIds} />
             {snapshot.connections.map(({ connection, sourcePiece, targetPiece, status }) => (
               <SceneConnection
-                key={connection.guid}
+                key={connection.id}
                 connection={connection}
                 sourcePiece={sourcePiece}
                 targetPiece={targetPiece}
                 status={status}
-                isSelected={selectedConnectionGuids.has(connection.guid)}
-                isHovered={hoveredConnectionGuid === connection.guid}
+                isSelected={selectedConnectionIds.has(connection.id)}
+                isHovered={hoveredConnectionId === connection.id}
                 onClick={
                   effectiveConnectionSelectionEnabled || onConnectionClick
                     ? () => {
-                        handleSelectConnection(connection.guid);
+                        handleSelectConnection(connection.id);
                         onConnectionClick?.(connection);
                       }
                     : undefined
                 }
-                onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.guid) : undefined}
-                onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionGuid ?? null) === connection.guid ? null : (resolvedHover.connectionGuid ?? null)) : undefined}
+                onPointerEnter={effectiveConnectionHoverEnabled ? () => handleHoverConnection(connection.id) : undefined}
+                onPointerLeave={effectiveConnectionHoverEnabled ? () => handleHoverConnection((resolvedHover.connectionId ?? null) === connection.id ? null : (resolvedHover.connectionId ?? null)) : undefined}
               />
             ))}
             {pieceAssets.map(({ piece, status, representationName, representationSource }) => (
               <ScenePiece
-                key={piece.guid}
+                key={piece.id}
                 piece={piece}
                 status={status}
                 representationName={representationName}
                 representationSource={representationSource}
-                isSelected={selectedPieceGuids.has(piece.guid)}
-                isHovered={hoveredPieceGuid === piece.guid}
+                isSelected={selectedPieceIds.has(piece.id)}
+                isHovered={hoveredPieceId === piece.id}
                 onClick={
                   effectivePieceSelectionEnabled || onPieceClick
                     ? () => {
-                        handleSelectPiece(piece.guid);
+                        handleSelectPiece(piece.id);
                         onPieceClick?.(piece);
                       }
                     : undefined
                 }
-                onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.guid) : undefined}
-                onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceGuid ?? null) === piece.guid ? null : (resolvedHover.pieceGuid ?? null)) : undefined}
+                onPointerEnter={effectivePieceHoverEnabled ? () => handleHoverPiece(piece.id) : undefined}
+                onPointerLeave={effectivePieceHoverEnabled ? () => handleHoverPiece((resolvedHover.pieceId ?? null) === piece.id ? null : (resolvedHover.pieceId ?? null)) : undefined}
               />
             ))}
           </SceneInnerContent>
@@ -3454,11 +3454,11 @@ export const SemioRepresentation: React.FC<SemioRepresentationProps> = (props) =
 // Summary: Single-kind 3D scene with representation preview and interactive connectors.
 
 export interface TypeSelection {
-  connectorGuids?: string[];
+  connectorIds?: string[];
 }
 
 export interface TypeHover {
-  connectorGuid?: string | null;
+  connectorId?: string | null;
 }
 
 export interface SemioTypeProps {
@@ -3497,24 +3497,24 @@ const TYPE_ZOOM_ORIGIN = new THREE.Vector3(0, 0, 0);
 const TYPE_ZOOM_PADDING = 0.35;
 
 const normalizeTypeSelection = (selection?: TypeSelection): TypeSelection => ({
-  connectorGuids: selection?.connectorGuids ?? [],
+  connectorIds: selection?.connectorIds ?? [],
 });
 
 const normalizeTypeHover = (hover?: TypeHover): TypeHover => ({
-  connectorGuid: hover?.connectorGuid ?? null,
+  connectorId: hover?.connectorId ?? null,
 });
 
 const buildTypeRepresentationAsset = (kind: SemioKind, kit?: Kit): TypeRepresentationAsset => {
   const representations = kind.representations ?? [];
   if (representations.length === 0) return {};
 
-  const filesByGuid = new Map((kit?.files ?? []).map((file) => [file.guid, file] as const));
+  const filesById = new Map((kit?.files ?? []).map((file) => [file.id, file] as const));
 
   let selectedRepresentation = Type.pickBestRepresentation(representations, []);
-  let file = selectedRepresentation?.file?.guid ? filesByGuid.get(selectedRepresentation.file.guid) : undefined;
+  let file = selectedRepresentation?.file?.id ? filesById.get(selectedRepresentation.file.id) : undefined;
   if (!isSceneGltfSource(getSceneFileSource(file), file?.name)) {
     for (const candidateRepresentation of representations) {
-      const candidateFile = candidateRepresentation.file?.guid ? filesByGuid.get(candidateRepresentation.file.guid) : undefined;
+      const candidateFile = candidateRepresentation.file?.id ? filesById.get(candidateRepresentation.file.id) : undefined;
       if (candidateFile && isSceneGltfSource(getSceneFileSource(candidateFile), candidateFile.name)) {
         selectedRepresentation = candidateRepresentation;
         file = candidateFile;
@@ -3560,7 +3560,7 @@ const TypeSceneAutoFit: React.FC<{ kind: SemioKind }> = ({ kind }) => {
 
   React.useEffect(() => {
     fittedRef.current = false;
-  }, [kind.guid]);
+  }, [kind.id]);
 
   React.useEffect(() => {
     if (fittedRef.current) return;
@@ -3620,7 +3620,7 @@ const TypeConnectorVisual: React.FC<TypeConnectorVisualProps> = ({ connector, is
     : undefined;
 
   return (
-    <group name={connector.guid} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+    <group name={connector.id} onClick={handleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <mesh position={start.toArray() as [number, number, number]}>
         <sphereGeometry args={[rootRadius, 24, 24]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isSelected ? 0.4 : isHovered ? 0.2 : 0.08} />
@@ -3674,8 +3674,8 @@ export const SemioType: React.FC<SemioTypeProps> = ({
 }) => {
   const [resolvedSelection, setResolvedSelection] = useInteractiveControllableValue(selection, normalizeTypeSelection(defaultSelection), onSelectionChange);
   const [resolvedHover, setResolvedHover] = useInteractiveControllableValue(hover, normalizeTypeHover(defaultHover), onHoverChange);
-  const selectedConnectorGuids = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.connectorGuids ?? []) : []), [resolvedSelection.connectorGuids, selectionEnabled]);
-  const hoveredConnectorGuid = hoverEnabled && connectorHoverEnabled ? (resolvedHover.connectorGuid ?? null) : null;
+  const selectedConnectorIds = React.useMemo(() => new Set(selectionEnabled ? (resolvedSelection.connectorIds ?? []) : []), [resolvedSelection.connectorIds, selectionEnabled]);
+  const hoveredConnectorId = hoverEnabled && connectorHoverEnabled ? (resolvedHover.connectorId ?? null) : null;
   const effectiveConnectorSelectionEnabled = selectionEnabled && connectorSelectionEnabled;
   const effectiveConnectorHoverEnabled = hoverEnabled && connectorHoverEnabled && (effectiveConnectorSelectionEnabled || !!onConnectorClick);
   const representationAsset = React.useMemo(() => buildTypeRepresentationAsset(kind, kit), [kind, kit]);
@@ -3683,27 +3683,27 @@ export const SemioType: React.FC<SemioTypeProps> = ({
 
   const clearSelection = React.useCallback(() => {
     if (!selectionEnabled) return;
-    setResolvedSelection({ connectorGuids: [] });
+    setResolvedSelection({ connectorIds: [] });
   }, [selectionEnabled, setResolvedSelection]);
 
   const handleSelectConnector = React.useCallback(
-    (connectorGuid: string) => {
+    (connectorId: string) => {
       if (!effectiveConnectorSelectionEnabled) return;
-      const nextConnectorGuids = new Set(resolvedSelection.connectorGuids ?? []);
-      if (nextConnectorGuids.has(connectorGuid)) {
-        nextConnectorGuids.delete(connectorGuid);
+      const nextConnectorIds = new Set(resolvedSelection.connectorIds ?? []);
+      if (nextConnectorIds.has(connectorId)) {
+        nextConnectorIds.delete(connectorId);
       } else {
-        nextConnectorGuids.add(connectorGuid);
+        nextConnectorIds.add(connectorId);
       }
-      setResolvedSelection({ connectorGuids: Array.from(nextConnectorGuids) });
+      setResolvedSelection({ connectorIds: Array.from(nextConnectorIds) });
     },
-    [effectiveConnectorSelectionEnabled, resolvedSelection.connectorGuids, setResolvedSelection],
+    [effectiveConnectorSelectionEnabled, resolvedSelection.connectorIds, setResolvedSelection],
   );
 
   const handleHoverConnector = React.useCallback(
-    (connectorGuid: string | null) => {
+    (connectorId: string | null) => {
       if (!effectiveConnectorHoverEnabled) return;
-      setResolvedHover({ connectorGuid });
+      setResolvedHover({ connectorId });
     },
     [effectiveConnectorHoverEnabled, setResolvedHover],
   );
@@ -3748,20 +3748,20 @@ export const SemioType: React.FC<SemioTypeProps> = ({
           {showConnectors &&
             (kind.connectors ?? []).map((connector) => (
               <TypeConnectorVisual
-                key={connector.guid}
+                key={connector.id}
                 connector={connector}
-                isSelected={selectedConnectorGuids.has(connector.guid)}
-                isHovered={hoveredConnectorGuid === connector.guid}
+                isSelected={selectedConnectorIds.has(connector.id)}
+                isHovered={hoveredConnectorId === connector.id}
                 onClick={
                   effectiveConnectorSelectionEnabled || onConnectorClick
                     ? () => {
-                        handleSelectConnector(connector.guid);
+                        handleSelectConnector(connector.id);
                         onConnectorClick?.(connector);
                       }
                     : undefined
                 }
-                onPointerEnter={effectiveConnectorHoverEnabled ? () => handleHoverConnector(connector.guid) : undefined}
-                onPointerLeave={effectiveConnectorHoverEnabled ? () => handleHoverConnector((resolvedHover.connectorGuid ?? null) === connector.guid ? null : (resolvedHover.connectorGuid ?? null)) : undefined}
+                onPointerEnter={effectiveConnectorHoverEnabled ? () => handleHoverConnector(connector.id) : undefined}
+                onPointerLeave={effectiveConnectorHoverEnabled ? () => handleHoverConnector((resolvedHover.connectorId ?? null) === connector.id ? null : (resolvedHover.connectorId ?? null)) : undefined}
               />
             ))}
         </SceneInnerContent>
@@ -3963,7 +3963,7 @@ import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
 // #region 🔗McpApp Types
 
 interface McpDiagramPoint {
-  guid: string;
+  id: string;
   id: string;
   u: number;
   v: number;
@@ -3971,7 +3971,7 @@ interface McpDiagramPoint {
 }
 
 interface McpDiagramLine {
-  guid: string;
+  id: string;
   sourceU: number;
   sourceV: number;
   targetU: number;
@@ -4010,12 +4010,12 @@ const isEmptyKitArtifactsData = (ka: unknown): boolean => {
   if (typeof ka !== "object" || Array.isArray(ka)) return true;
   const o = ka as Record<string, unknown>;
   const name = typeof o.name === "string" ? o.name.trim() : "";
-  const guid = typeof o.guid === "string" ? o.guid.trim() : "";
+  const id = typeof o.id === "string" ? o.id.trim() : "";
   const d = Array.isArray(o.designs) ? o.designs.length : 0;
   const t = Array.isArray(o.types) ? o.types.length : 0;
   const kp = Array.isArray(o.ports) ? o.ports.length : 0;
   const c = Array.isArray(o.connectors) ? o.connectors.length : 0;
-  return name.length === 0 && guid.length === 0 && d === 0 && t === 0 && kp === 0 && c === 0;
+  return name.length === 0 && id.length === 0 && d === 0 && t === 0 && kp === 0 && c === 0;
 };
 
 /**
@@ -4068,7 +4068,7 @@ const mcpDesignRichness = (p: McpDiagramPayload): number => {
 
 /**
  * Count pieces that have both plane and center — required for {@link SemioDesign} to show the 3D scene panel.
- * Strips often keep piece guids for diagram but drop nested plane data; hosts then merge a high piece-count shell that loses the scene.
+ * Strips often keep piece ids for diagram but drop nested plane data; hosts then merge a high piece-count shell that loses the scene.
  **/
 const mcpSceneGeometryRichness = (p: McpDiagramPayload): number => {
   const d = p.design;
@@ -4101,7 +4101,7 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
   if (ka) {
     s += (ka.designs?.length ?? 0) * 10 + (ka.types?.length ?? 0) * 10 + (ka.ports?.length ?? 0) + (ka.connectors?.length ?? 0);
     if (typeof ka.name === "string" && ka.name.trim().length > 0) s += 50;
-    if (typeof ka.guid === "string" && ka.guid.trim().length > 0) s += 10;
+    if (typeof ka.id === "string" && ka.id.trim().length > 0) s += 10;
   }
   if (p.mode === "show-design" || p.mode === "show-scene") s += 400;
   if (p.design) s += 300;
@@ -4118,10 +4118,10 @@ const scoreMcpDiagramPayload = (p: McpDiagramPayload): number => {
  * - Only diagram/selection modes may fall back to SemioKit when the diagram is empty.
  * - Never fall back to SemioKit for show-design/show-scene intents — those should render Design/Scene or a loading shell.
  **/
-const canDisplayKitArtifactsFallback = (mode: string | undefined, hasDiagram: boolean, designGuid: string | undefined): boolean => {
+const canDisplayKitArtifactsFallback = (mode: string | undefined, hasDiagram: boolean, designId: string | undefined): boolean => {
   if (hasDiagram) return false;
   /** Stale kit payloads score high; merged `design` may still leave `mode` as show-diagram — never show Kit when we have a design to render. */
-  if (designGuid) return false;
+  if (designId) return false;
   return mode === "show-diagram" || mode === "show-diagram-diff" || mode === "select-pieces" || mode === "select-connections" || mode === "select-pieces-and-connections";
 };
 
@@ -4153,8 +4153,8 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
       merged = { ...merged, points: c.points, lines: Array.isArray(c.lines) ? c.lines : (merged.lines ?? []) };
     }
   }
-  /** Best-scoring candidate is often a stale kit shell (`show-diagram`); another channel may carry `show-design` + same design guid. */
-  const dg = merged.design && typeof merged.design === "object" ? (merged.design as { guid?: string }).guid : undefined;
+  /** Best-scoring candidate is often a stale kit shell (`show-diagram`); another channel may carry `show-design` + same design id. */
+  const dg = merged.design && typeof merged.design === "object" ? (merged.design as { id?: string }).id : undefined;
   if (typeof dg === "string" && dg.length > 0) {
     // MCP intent mapping: an explicit `show-scene` request must win over `show-design`,
     // 📦otherwise the host can accidentally keep diagram-mode / design-mode payloads.
@@ -4163,7 +4163,7 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
     let pickedPri = 999;
     for (const c of candidates) {
       if (!c?.mode || !c.design || typeof c.design !== "object") continue;
-      const cg = (c.design as { guid?: string }).guid;
+      const cg = (c.design as { id?: string }).id;
       if (cg !== dg) continue;
       if (!_DESIGN_INTENT_MODES_FOR_MERGE.has(c.mode)) continue;
       const pr = priority[c.mode] ?? 99;
@@ -4174,14 +4174,14 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
     }
     if (picked) merged = { ...merged, mode: picked };
   }
-  const dg2 = merged.design && typeof merged.design === "object" ? (merged.design as { guid?: string }).guid : undefined;
+  const dg2 = merged.design && typeof merged.design === "object" ? (merged.design as { id?: string }).id : undefined;
   if (typeof dg2 === "string" && dg2.length > 0) {
     const surfPri: Record<string, number> = { scene: 1, design: 2, diagram: 3 };
     let pickedSurf: McpDiagramPayload["surface"] | undefined;
     let pickedSurfPri = 999;
     for (const c of candidates) {
       if (!c?.surface || !c.design || typeof c.design !== "object") continue;
-      const cg = (c.design as { guid?: string }).guid;
+      const cg = (c.design as { id?: string }).id;
       if (cg !== dg2) continue;
       if (c.surface !== "design" && c.surface !== "scene" && c.surface !== "diagram") continue;
       const pr = surfPri[c.surface] ?? 99;
@@ -4192,14 +4192,14 @@ const mergeRichestDesignFromCandidates = (candidates: Array<McpDiagramPayload | 
     }
     if (pickedSurf) merged = { ...merged, surface: pickedSurf };
   }
-  const dgPick = merged.design && typeof merged.design === "object" ? (merged.design as { guid?: string }).guid : undefined;
+  const dgPick = merged.design && typeof merged.design === "object" ? (merged.design as { id?: string }).id : undefined;
   if (typeof dgPick === "string" && dgPick.length > 0) {
     const initialSceneGeom = mcpSceneGeometryRichness({ ...merged, design: merged.design as Design });
     let bestDesignForGeom = merged.design as Design;
     let bestGeom = initialSceneGeom;
     for (const c of candidates) {
       if (!c?.design || typeof c.design !== "object") continue;
-      if ((c.design as { guid?: string }).guid !== dgPick) continue;
+      if ((c.design as { id?: string }).id !== dgPick) continue;
       const g = mcpSceneGeometryRichness({ ...merged, design: c.design as Design });
       if (g > bestGeom) {
         bestGeom = g;
@@ -4431,15 +4431,15 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
       : isDiff && design && p.designDiff
         ? cloneDesignApplyDiff(design, p.designDiff)
         : undefined;
-  const designGuid = design && typeof design === "object" && "guid" in design && typeof (design as { guid?: unknown }).guid === "string" ? (design as { guid: string }).guid : undefined;
+  const designId = design && typeof design === "object" && "id" in design && typeof (design as { id?: unknown }).id === "string" ? (design as { id: string }).id : undefined;
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
-    guid: "__mcp__",
-    pieces: p.points.map((pt) => ({ guid: pt.guid, id: pt.id, center: { u: pt.u, v: pt.v } })),
+    id: "__mcp__",
+    pieces: p.points.map((pt) => ({ id: pt.id, id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: p.lines.map((l) => ({
-      guid: l.guid,
-      connected: { piece: { guid: p.points.find((q) => q.u === l.sourceU && q.v === l.sourceV)?.guid ?? "" } },
-      connecting: { piece: { guid: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
+      id: l.id,
+      connected: { piece: { id: p.points.find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
+      connecting: { piece: { id: p.points.find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
     })),
   } as unknown as Design;
   // Prefer JS-flattened design (correct BFS placement centers) over raw Python-enriched design, over points fallback.
@@ -4448,7 +4448,7 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
   const candidateDesign = (designFlat ?? design) as Design | undefined;
   const candidateHasCenters = candidateDesign?.pieces?.some((pc) => pc.center) ?? false;
   const diagramDesign = (candidateHasCenters ? candidateDesign! : hasDiagramPoints ? fallbackDesign : (candidateDesign ?? fallbackDesign)) as Design;
-  const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designGuid));
+  const forKitFallback = surface === "diagram" && Boolean(p.kitArtifacts && canDisplayKitArtifactsFallback(p.mode, hasDiagramPoints, designId));
   return {
     surface,
     design,
@@ -4464,13 +4464,13 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
 /**
  * 🧠Per-design merkle cache for {@link mcpFlattenDesignForSemioSurface} so repeated MCP viewer refetches (which often send slightly-updated kit shells with the same geometry) reuse the cached plane/center for pieces whose merkle inputs are unchanged.
  */
-const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceGuid: string]: FlatMerkleCacheEntry }> = new Map();
+const mcpFlattenMerkleCacheByDesign: Map<string, { [pieceId: string]: FlatMerkleCacheEntry }> = new Map();
 
 /**
  * 🔶Storybook's Design flow flattens a kit-backed design so pieces carry `plane+center`.
  * MCP viewers often receive a `kit` shell without the referenced `design` entry, even though
  * `payload.design` is present. In that case we augment `kit.designs` with the provided design
- * so {@link Kit.flattenDesignCachedOp} can locate it by guid. Uses a module-level per-designGuid cache to
+ * so {@link Kit.flattenDesignCachedOp} can locate it by id. Uses a module-level per-designId cache to
  * incrementally reuse unchanged piece placements across refetches.
  *
  * Exported for unit tests to cover the "MCP kit missing design entry" scenario.
@@ -4483,18 +4483,18 @@ export function mcpFlattenDesignForSemioSurface(design: Design, kit: Kit | undef
 
   const merged = design;
   if (diff) merged.applyDiff(diff);
-  if (!merged?.guid) return merged;
+  if (!merged?.id) return merged;
 
   try {
     const kitDesigns = (kit.designs ?? []) as Design[];
     const kitForFlatten: Kit = {
       ...kit,
-      designs: [...kitDesigns.filter((d) => d?.guid !== merged.guid), merged],
+      designs: [...kitDesigns.filter((d) => d?.id !== merged.id), merged],
     } as Kit;
 
-    const prev = mcpFlattenMerkleCacheByDesign.get(merged.guid);
-    const { result, cache } = Kit.ensure(kitForFlatten).flattenDesignCachedOp(merged.guid, prev);
-    mcpFlattenMerkleCacheByDesign.set(merged.guid, cache);
+    const prev = mcpFlattenMerkleCacheByDesign.get(merged.id);
+    const { result, cache } = Kit.ensure(kitForFlatten).flattenDesignCachedOp(merged.id, prev);
+    mcpFlattenMerkleCacheByDesign.set(merged.id, cache);
     if (!result.ok) return merged;
     const piecesDiff = result.diff?.forward?.pieces;
     if (!piecesDiff) return merged;
@@ -4509,7 +4509,7 @@ export const McpDesignViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
   const [selectedPieces, setSelectedPieces] = React.useState<Set<string>>(new Set());
   const [selectedConnections, setSelectedConnections] = React.useState<Set<string>>(new Set());
-  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designIds: [], typeIds: [], portIds: [], connectorIds: [] });
   const appRef = React.useRef<McpApp | null>(null);
   const tryRefetchRef = React.useRef<() => void>(() => {});
   const lastDiagramPayloadScoreRef = React.useRef<number>(-1);
@@ -4548,7 +4548,7 @@ export const McpDesignViewer: React.FC = () => {
       lastDiagramPayloadScoreRef.current = s;
       setSelectedPieces(new Set());
       setSelectedConnections(new Set());
-      setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+      setKitSelection({ designIds: [], typeIds: [], portIds: [], connectorIds: [] });
     }
   }, [payload]);
 
@@ -4633,7 +4633,7 @@ export const McpDesignViewer: React.FC = () => {
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (appRef.current) {
       appRef.current.updateRepresentationContext({
-        content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }],
+        content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceIds: Array.from(pieces), connectionIds: Array.from(connections) } }) }],
       });
     }
   }, []);
@@ -4646,10 +4646,10 @@ export const McpDesignViewer: React.FC = () => {
           type: "text" as const,
           text: JSON.stringify({
             kitArtifactSelectionChange: {
-              designGuids: next.designGuids ?? [],
-              typeGuids: next.typeGuids ?? [],
-              portGuids: next.portGuids ?? [],
-              connectorGuids: next.connectorGuids ?? [],
+              designIds: next.designIds ?? [],
+              typeIds: next.typeIds ?? [],
+              portIds: next.portIds ?? [],
+              connectorIds: next.connectorIds ?? [],
             },
           }),
         },
@@ -4696,12 +4696,12 @@ export const McpDesignViewer: React.FC = () => {
     pieceSelectionEnabled,
     connectionSelectionEnabled,
     selection: {
-      pieceGuids: Array.from(selectedPieces),
-      connectionGuids: Array.from(selectedConnections),
+      pieceIds: Array.from(selectedPieces),
+      connectionIds: Array.from(selectedConnections),
     },
     onSelectionChange: (next: DiagramSelection) => {
-      const nextPieces = new Set(next.pieceGuids ?? []);
-      const nextConns = new Set(next.connectionGuids ?? []);
+      const nextPieces = new Set(next.pieceIds ?? []);
+      const nextConns = new Set(next.connectionIds ?? []);
       setSelectedPieces(nextPieces);
       setSelectedConnections(nextConns);
       sendSelectionUpdate(nextPieces, nextConns);
@@ -4765,7 +4765,7 @@ export const McpDesignViewer: React.FC = () => {
  **/
 export const McpKitViewer: React.FC = () => {
   const [payload, setPayload] = React.useState<McpDiagramPayload | null>(null);
-  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+  const [kitSelection, setKitSelection] = React.useState<KitSelection>({ designIds: [], typeIds: [], portIds: [], connectorIds: [] });
   const appRef = React.useRef<McpApp | null>(null);
   const toolInputArgsRef = React.useRef<Record<string, unknown> | null>(null);
   const gotPayloadRef = React.useRef(false);
@@ -4818,14 +4818,14 @@ export const McpKitViewer: React.FC = () => {
     if (!payload?.kitArtifacts || !isKitViewerPayloadSufficient(payload)) return;
     const key = JSON.stringify({
       n: payload.kitArtifacts.name,
-      g: payload.kitArtifacts.guid,
+      g: payload.kitArtifacts.id,
       d: payload.kitArtifacts.designs?.length,
       t: payload.kitArtifacts.types?.length,
       u: payload.fetchUrl,
     });
     if (key === prevKitResetKeyRef.current) return;
     prevKitResetKeyRef.current = key;
-    setKitSelection({ designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] });
+    setKitSelection({ designIds: [], typeIds: [], portIds: [], connectorIds: [] });
   }, [payload]);
 
   const tryRefetchKitFromServer = React.useCallback(async () => {
@@ -4930,10 +4930,10 @@ export const McpKitViewer: React.FC = () => {
           type: "text" as const,
           text: JSON.stringify({
             kitArtifactSelectionChange: {
-              designGuids: next.designGuids ?? [],
-              typeGuids: next.typeGuids ?? [],
-              portGuids: next.portGuids ?? [],
-              connectorGuids: next.connectorGuids ?? [],
+              designIds: next.designIds ?? [],
+              typeIds: next.typeIds ?? [],
+              portIds: next.portIds ?? [],
+              connectorIds: next.connectorIds ?? [],
             },
           }),
         },
@@ -5280,7 +5280,7 @@ export const McpDiagramViewer: React.FC = () => {
 
   const sendSelectionUpdate = React.useCallback((pieces: Set<string>, connections: Set<string>) => {
     if (!appRef.current) return;
-    appRef.current.updateRepresentationContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceGuids: Array.from(pieces), connectionGuids: Array.from(connections) } }) }] });
+    appRef.current.updateRepresentationContext({ content: [{ type: "text" as const, text: JSON.stringify({ selectionChange: { pieceIds: Array.from(pieces), connectionIds: Array.from(connections) } }) }] });
   }, []);
 
   const shellStyle: React.CSSProperties = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)", background: "var(--base)" };
@@ -5309,12 +5309,12 @@ export const McpDiagramViewer: React.FC = () => {
   const designFlat = design && kit ? mcpFlattenDesignForSemioSurface(design, kit, "diagram", isDiff ? payload.designDiff : undefined) : design;
   const hasDiagramPoints = (payload.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
-    guid: "__mcp__",
-    pieces: (payload.points ?? []).map((pt) => ({ guid: pt.guid, id: pt.id, center: { u: pt.u, v: pt.v } })),
+    id: "__mcp__",
+    pieces: (payload.points ?? []).map((pt) => ({ id: pt.id, id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: (payload.lines ?? []).map((l) => ({
-      guid: l.guid,
-      connected: { piece: { guid: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.guid ?? "" } },
-      connecting: { piece: { guid: (payload.points ?? []).find((q) => q.u === l.targetU && q.v === l.targetV)?.guid ?? "" } },
+      id: l.id,
+      connected: { piece: { id: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
+      connecting: { piece: { id: (payload.points ?? []).find((q) => q.u === l.targetU && q.v === l.targetV)?.id ?? "" } },
     })),
   } as unknown as Design;
   const candidateDesign = (designFlat ?? design) as Design | undefined;
@@ -5332,10 +5332,10 @@ export const McpDiagramViewer: React.FC = () => {
         selectionEnabled={selectionEnabled}
         pieceSelectionEnabled={pieceSelectionEnabled}
         connectionSelectionEnabled={connectionSelectionEnabled}
-        selection={{ pieceGuids: Array.from(selectedPieces), connectionGuids: Array.from(selectedConnections) }}
+        selection={{ pieceIds: Array.from(selectedPieces), connectionIds: Array.from(selectedConnections) }}
         onSelectionChange={(next) => {
-          const nextPieces = new Set(next.pieceGuids ?? []);
-          const nextConns = new Set(next.connectionGuids ?? []);
+          const nextPieces = new Set(next.pieceIds ?? []);
+          const nextConns = new Set(next.connectionIds ?? []);
           setSelectedPieces(nextPieces);
           setSelectedConnections(nextConns);
           sendSelectionUpdate(nextPieces, nextConns);
@@ -5415,9 +5415,9 @@ if ((import.meta as any).vitest) {
     });
 
     it("parses structuredContent object (hosts that omit text content)", () => {
-      const inner = { points: [], lines: [], kitArtifacts: { name: "S", designs: [{ guid: "d1", name: "D" }], types: [], ports: [], connectors: [] } };
+      const inner = { points: [], lines: [], kitArtifacts: { name: "S", designs: [{ id: "d1", name: "D" }], types: [], ports: [], connectors: [] } };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
-      expect(r?.kitArtifacts?.designs?.[0]?.guid).toBe("d1");
+      expect(r?.kitArtifacts?.designs?.[0]?.id).toBe("d1");
     });
 
     it("parses structuredContent JSON string", () => {
@@ -5454,8 +5454,8 @@ if ((import.meta as any).vitest) {
         kitArtifacts: {
           name: "Metabolism",
           version: "1",
-          designs: [{ guid: "d1", name: "D", variant: "", view: "" }],
-          types: [{ guid: "t1", name: "T", variant: "" }],
+          designs: [{ id: "d1", name: "D", variant: "", view: "" }],
+          types: [{ id: "t1", name: "T", variant: "" }],
           ports: [],
           connectors: [],
         },
@@ -5477,7 +5477,7 @@ if ((import.meta as any).vitest) {
         kitArtifacts: {
           name: "Metabolism",
           version: "1",
-          designs: new Array(12).fill(null).map((_, i) => ({ guid: `d${i}`, name: "", variant: "", view: "" })),
+          designs: new Array(12).fill(null).map((_, i) => ({ id: `d${i}`, name: "", variant: "", view: "" })),
           types: [],
           ports: [],
           connectors: [],
@@ -5489,15 +5489,15 @@ if ((import.meta as any).vitest) {
         points: [],
         lines: [],
         capabilities: { pieceSelection: false, connectionSelection: false },
-        kitArtifacts: { name: "Metabolism", designs: [{ guid: "dg1", name: "D", variant: "", view: "" }], types: [], ports: [], connectors: [] },
-        design: { guid: "dg1", pieces: [{ guid: "p1" }], connections: [] },
+        kitArtifacts: { name: "Metabolism", designs: [{ id: "dg1", name: "D", variant: "", view: "" }], types: [], ports: [], connectors: [] },
+        design: { id: "dg1", pieces: [{ id: "p1" }], connections: [] },
         kit: { name: "Metabolism", designs: [], types: [] },
       };
       const r = parseDiagramPayloadFromToolResult({
         structuredContent: stripped,
         content: [{ type: "text", text: JSON.stringify(full) }],
       });
-      expect(r?.design?.guid).toBe("dg1");
+      expect(r?.design?.id).toBe("dg1");
       expect(r?.mode).toBe("show-design");
       expect(r?.surface).toBe("design");
     });
@@ -5516,8 +5516,8 @@ if ((import.meta as any).vitest) {
         capabilities: { pieceSelection: false, connectionSelection: false },
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: {
-          guid: "dg1",
-          pieces: new Array(40).fill(null).map((_, i) => ({ guid: `s${i}`, center: { u: 0, v: 0 } })),
+          id: "dg1",
+          pieces: new Array(40).fill(null).map((_, i) => ({ id: `s${i}`, center: { u: 0, v: 0 } })),
           connections: [],
         },
         kit: { name: "K", designs: [], types: [] },
@@ -5530,9 +5530,9 @@ if ((import.meta as any).vitest) {
         capabilities: { pieceSelection: false, connectionSelection: false },
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design: {
-          guid: "dg1",
+          id: "dg1",
           pieces: new Array(3).fill(null).map((_, i) => ({
-            guid: `f${i}`,
+            id: `f${i}`,
             plane,
             center: { u: 0, v: 0 },
           })),
@@ -5563,22 +5563,22 @@ if ((import.meta as any).vitest) {
         mode: "show-scene",
         capabilities: { pieceSelection: true, connectionSelection: false },
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
-        design: { guid: "dg", pieces: [], connections: [] },
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+        design: { id: "dg", pieces: [], connections: [] },
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] },
       };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
       expect(r?.mode).toBe("show-scene");
-      expect(r?.design?.guid).toBe("dg");
-      expect(r?.kit?.guid).toBe("kg");
+      expect(r?.design?.id).toBe("dg");
+      expect(r?.kit?.id).toBe("kg");
     });
 
     it("preserves designDiff for diff modes", () => {
-      const diff = { pieces: { added: [{ guid: "pa" }], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
+      const diff = { pieces: { added: [{ id: "pa" }], removed: [], updated: [] }, connections: { added: [], removed: [], updated: [] } };
       const inner = {
         points: [],
         lines: [],
         mode: "show-diff",
-        design: { guid: "dg", pieces: [], connections: [] },
+        design: { id: "dg", pieces: [], connections: [] },
         designDiff: diff,
       };
       const r = parseDiagramPayloadFromToolResult({ structuredContent: inner });
@@ -5593,12 +5593,12 @@ if ((import.meta as any).vitest) {
         mode: "show-scene",
         capabilities: {},
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
-        design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] },
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+        design: { id: "dg", pieces: [{ id: "p0" }], connections: [] },
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] },
       };
       const full = {
         ...stripped,
-        design: { guid: "dg", pieces: Array.from({ length: 30 }, (_, i) => ({ guid: `p${i}` })), connections: [] },
+        design: { id: "dg", pieces: Array.from({ length: 30 }, (_, i) => ({ id: `p${i}` })), connections: [] },
       };
       const r = parseDiagramPayloadFromToolResult({
         structuredContent: stripped,
@@ -5612,12 +5612,12 @@ if ((import.meta as any).vitest) {
         points: [],
         lines: [],
         mode: "show-design",
-        design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] },
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] },
+        design: { id: "dg", pieces: [{ id: "p0" }], connections: [] },
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] },
       };
       const full = {
         ...stub,
-        design: { guid: "dg", pieces: Array.from({ length: 20 }, (_, i) => ({ guid: `p${i}` })), connections: [] },
+        design: { id: "dg", pieces: Array.from({ length: 20 }, (_, i) => ({ id: `p${i}` })), connections: [] },
       };
       const r = parseDiagramPayloadFromToolResult({
         content: [
@@ -5702,8 +5702,8 @@ if ((import.meta as any).vitest) {
         lines: [],
         capabilities: {},
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
-        design: { guid: "dg", pieces: [{ guid: "p0" }], connections: [] } as unknown as Design,
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
+        design: { id: "dg", pieces: [{ id: "p0" }], connections: [] } as unknown as Design,
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       } as McpDiagramPayload);
       expect(vm.surface).toBe("design");
     });
@@ -5712,11 +5712,11 @@ if ((import.meta as any).vitest) {
       const vm = mcpMapPayloadToDesignViewerViewRepresentation({
         mode: "show-diagram",
         points: [
-          { guid: "p1", id: "p1", u: 0, v: 0, status: "default" },
-          { guid: "p2", id: "p2", u: 3, v: 0, status: "default" },
+          { id: "p1", id: "p1", u: 0, v: 0, status: "default" },
+          { id: "p2", id: "p2", u: 3, v: 0, status: "default" },
         ],
-        lines: [{ guid: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
-        design: { guid: "dg", pieces: [{ guid: "p1" }, { guid: "p2" }], connections: [] } as unknown as Design,
+        lines: [{ id: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
+        design: { id: "dg", pieces: [{ id: "p1" }, { id: "p2" }], connections: [] } as unknown as Design,
       } as McpDiagramPayload);
       expect(vm.diagramDesign.pieces?.length).toBe(2);
       expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 0, v: 0 });
@@ -5728,14 +5728,14 @@ if ((import.meta as any).vitest) {
         mode: "show-diagram",
         points: [],
         lines: [],
-        design: { guid: "dg", pieces: [{ guid: "p1", center: { u: 1, v: 2 } }], connections: [] } as unknown as Design,
+        design: { id: "dg", pieces: [{ id: "p1", center: { u: 1, v: 2 } }], connections: [] } as unknown as Design,
       } as McpDiagramPayload);
       expect(vm.diagramDesign.pieces?.[0]?.center).toEqual({ u: 1, v: 2 });
     });
   });
 
   describe("mergeRichestDesignFromCandidates", () => {
-    it("prefers show-scene over show-design when both refer to the same design guid", () => {
+    it("prefers show-scene over show-design when both refer to the same design id", () => {
       const plane = {
         origin: { x: 0, y: 0, z: 0 },
         xAxis: { x: 1, y: 0, z: 0 },
@@ -5743,13 +5743,13 @@ if ((import.meta as any).vitest) {
       } as unknown as Plane;
 
       const design = {
-        guid: "dg",
-        pieces: [{ guid: "p0", plane, center: { u: 0, v: 0 } }],
+        id: "dg",
+        pieces: [{ id: "p0", plane, center: { u: 0, v: 0 } }],
         connections: [],
       } as unknown as Design;
 
       const mkPoint = (i: number): McpDiagramPayload["points"][number] => ({
-        guid: `p${i}`,
+        id: `p${i}`,
         id: `p${i}`,
         u: i,
         v: i,
@@ -5757,7 +5757,7 @@ if ((import.meta as any).vitest) {
       });
 
       const mkLine = (i: number): McpDiagramPayload["lines"][number] => ({
-        guid: `c${i}`,
+        id: `c${i}`,
         sourceU: 0,
         sourceV: 0,
         targetU: 0,
@@ -5782,7 +5782,7 @@ if ((import.meta as any).vitest) {
         capabilities: {},
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design,
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       };
 
       const showScene: McpDiagramPayload = {
@@ -5793,7 +5793,7 @@ if ((import.meta as any).vitest) {
         capabilities: {},
         kitArtifacts: { name: "K", designs: [], types: [], ports: [], connectors: [] },
         design,
-        kit: { guid: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
+        kit: { id: "kg", name: "Kit", version: "1", types: [], designs: [] } as unknown as Kit,
       };
 
       const merged = mergeRichestDesignFromCandidates([showDiagram, showDesign, showScene], showDiagram);
@@ -5804,7 +5804,7 @@ if ((import.meta as any).vitest) {
     it("pulls richer kitArtifacts from another candidate when the scored-best shell omitted kit body", () => {
       const diagramHeavy: McpDiagramPayload = {
         mode: "show-diagram",
-        points: [{ guid: "p", id: "p", u: 0, v: 0, status: "default" }],
+        points: [{ id: "p", id: "p", u: 0, v: 0, status: "default" }],
         lines: [],
         capabilities: {},
       };
@@ -5812,19 +5812,19 @@ if ((import.meta as any).vitest) {
         points: [],
         lines: [],
         capabilities: {},
-        kitArtifacts: { name: "MergedKit", designs: [{ guid: "d1", name: "D" }], types: [], ports: [], connectors: [] },
+        kitArtifacts: { name: "MergedKit", designs: [{ id: "d1", name: "D" }], types: [], ports: [], connectors: [] },
       };
       const merged = mergeRichestDesignFromCandidates([diagramHeavy, withKit], diagramHeavy);
       expect(merged?.kitArtifacts?.name).toBe("MergedKit");
-      expect(merged?.kitArtifacts?.designs?.[0]?.guid).toBe("d1");
+      expect(merged?.kitArtifacts?.designs?.[0]?.id).toBe("d1");
     });
   });
 
   describe("mcpFlattenDesignForSemioSurface", () => {
     it("adds plane+center even when kit omits the design entry", () => {
       const design = {
-        guid: "dg-1",
-        pieces: [{ guid: "p-1" }],
+        id: "dg-1",
+        pieces: [{ id: "p-1" }],
         connections: [],
       } as unknown as Design;
 
@@ -5843,8 +5843,8 @@ if ((import.meta as any).vitest) {
 
     it("flattens the diffed design instead of flattening first and applying the diff later", () => {
       const design = {
-        guid: "dg-1",
-        pieces: [{ guid: "p-1" }],
+        id: "dg-1",
+        pieces: [{ id: "p-1" }],
         connections: [],
       } as unknown as Design;
 
@@ -5856,7 +5856,7 @@ if ((import.meta as any).vitest) {
 
       const flattened = mcpFlattenDesignForSemioSurface(design, kit, "diagram", {
         pieces: {
-          updated: [{ piece: { guid: "p-1" }, diff: { center: { u: 12, v: -4 } } }],
+          updated: [{ piece: { id: "p-1" }, diff: { center: { u: 12, v: -4 } } }],
         },
       } as unknown as DesignDiff);
 
@@ -5909,24 +5909,24 @@ if ((import.meta as any).vitest) {
   const testCenter = { u: 0, v: 0 } as unknown as Coordinate;
 
   describe("buildKitDataFromKit", () => {
-    it("normalizes connector port references into string labels instead of raw guid objects", () => {
+    it("normalizes connector port references into string labels instead of raw id objects", () => {
       const data = buildKitDataFromKit({
-        guid: "kit-guid",
+        id: "kit-id",
         name: "Kit",
         version: "1",
         types: [
           {
-            guid: "kind-guid",
+            id: "kind-id",
             name: "Kind",
             connectors: [
               {
-                guid: "connector-guid",
+                id: "connector-id",
                 name: "",
-                port: { guid: "port-guid" },
+                port: { id: "port-id" },
               },
               {
-                guid: "named-connector-guid",
-                port: { guid: "named-port-guid", name: "Named Port" },
+                id: "named-connector-id",
+                port: { id: "named-port-id", name: "Named Port" },
               },
             ],
           },
@@ -5935,19 +5935,19 @@ if ((import.meta as any).vitest) {
 
       expect(data.connectors).toEqual([
         {
-          guid: "connector-guid",
-          typeGuid: "kind-guid",
+          id: "connector-id",
+          typeId: "kind-id",
           id: "",
-          port: "port-guid",
-          name: "port-guid",
+          port: "port-id",
+          name: "port-id",
           description: undefined,
           mandatory: undefined,
         },
         {
-          guid: "named-connector-guid",
-          typeGuid: "kind-guid",
+          id: "named-connector-id",
+          typeId: "kind-id",
           id: undefined,
-          port: "named-port-guid",
+          port: "named-port-id",
           name: "Named Port",
           description: undefined,
           mandatory: undefined,
@@ -5958,39 +5958,39 @@ if ((import.meta as any).vitest) {
 
     it("returns shallow kit kinds without requiring connector expansion", () => {
       const data = buildKitDataFromKit({
-        guid: "kit-guid",
+        id: "kit-id",
         name: "Kit",
         version: "1",
-        types: [{ guid: "kind-guid", name: "Kind" }],
-        designs: [{ guid: "design-guid", name: "Design" }],
+        types: [{ id: "kind-id", name: "Kind" }],
+        designs: [{ id: "design-id", name: "Design" }],
       } as unknown as Kit);
 
-      expect(data.types).toEqual([{ guid: "kind-guid", name: "Kind" }]);
-      expect(data.designs).toEqual([{ guid: "design-guid", name: "Design" }]);
+      expect(data.types).toEqual([{ id: "kind-id", name: "Kind" }]);
+      expect(data.designs).toEqual([{ id: "design-id", name: "Design" }]);
       expect(data.ports).toEqual([]);
       expect(data.connectors).toEqual([]);
     });
 
     it("maps kit-level ports separately from type connectors", () => {
       const data = buildKitDataFromKit({
-        guid: "kit-guid",
+        id: "kit-id",
         name: "Kit",
         version: "1",
-        ports: [{ guid: "port-entity", name: "P1", description: "d" }],
+        ports: [{ id: "port-entity", name: "P1", description: "d" }],
         types: [
           {
-            guid: "kind-guid",
+            id: "kind-id",
             name: "Kind",
-            connectors: [{ guid: "conn-1", name: "C1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 } }],
+            connectors: [{ id: "conn-1", name: "C1", t: 0, point: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 } }],
           },
         ],
       } as unknown as Kit);
 
-      expect(data.ports).toEqual([{ guid: "port-entity", name: "P1", description: "d" }]);
+      expect(data.ports).toEqual([{ id: "port-entity", name: "P1", description: "d" }]);
       expect(data.connectors).toEqual([
         {
-          guid: "conn-1",
-          typeGuid: "kind-guid",
+          id: "conn-1",
+          typeId: "kind-id",
           id: "C1",
           port: undefined,
           name: "C1",
@@ -6022,9 +6022,9 @@ if ((import.meta as any).vitest) {
         {
           name: "Metabolism",
           types: [
-            { guid: "capsule", name: "Capsule" },
-            { guid: "ellipsoid", name: "Ellipsoid", parent: { guid: "capsule" } },
-            { guid: "l", name: "L", parent: { guid: "ellipsoid" } },
+            { id: "capsule", name: "Capsule" },
+            { id: "ellipsoid", name: "Ellipsoid", parent: { id: "capsule" } },
+            { id: "l", name: "L", parent: { id: "ellipsoid" } },
           ],
         },
         { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
@@ -6038,9 +6038,9 @@ if ((import.meta as any).vitest) {
         {
           name: "Metabolism",
           types: [
-            { guid: "capsule", name: "Capsule" },
-            { guid: "ellipsoid", name: "Ellipsoid", parent: { guid: "capsule" } },
-            { guid: "balcony", name: "Balcony", parent: { guid: "capsule" } },
+            { id: "capsule", name: "Capsule" },
+            { id: "ellipsoid", name: "Ellipsoid", parent: { id: "capsule" } },
+            { id: "balcony", name: "Balcony", parent: { id: "capsule" } },
           ],
         },
         { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
@@ -6054,18 +6054,18 @@ if ((import.meta as any).vitest) {
       const hierarchy = buildKitHierarchy(
         {
           name: "Metabolism",
-          types: [{ guid: "l", name: "L" }],
-          connectors: [{ guid: "entry", typeGuid: "l", name: "Entry" }],
+          types: [{ id: "l", name: "L" }],
+          connectors: [{ id: "entry", typeId: "l", name: "Entry" }],
         },
         { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
       expect(getKitNodePath(hierarchy, "connector:entry").map((node) => node.label)).toEqual(["Kit", "Metabolism", "Types", "L", "Entry"]);
       expect(getKitNodeSelection(hierarchy.nodesByKey.get("connector:entry")!)).toEqual({
-        designGuids: [],
-        typeGuids: [],
-        portGuids: [],
-        connectorGuids: ["entry"],
+        designIds: [],
+        typeIds: [],
+        portIds: [],
+        connectorIds: ["entry"],
       });
     });
 
@@ -6073,14 +6073,14 @@ if ((import.meta as any).vitest) {
       const hierarchy = buildKitHierarchy(
         {
           name: "Metabolism",
-          designs: [{ guid: "tower", name: "Tower" }],
-          types: [{ guid: "capsule", name: "Capsule" }],
+          designs: [{ id: "tower", name: "Tower" }],
+          types: [{ id: "capsule", name: "Capsule" }],
         },
         { designDataEnabled: true, typeDataEnabled: true, portDataEnabled: true, connectorDataEnabled: true },
       );
 
       expect(getDefaultKitNodeKey(hierarchy)).toBe("design:tower");
-      expect(getSelectedKitNodeKey(hierarchy, { designGuids: [], typeGuids: [], portGuids: [], connectorGuids: [] })).toBeUndefined();
+      expect(getSelectedKitNodeKey(hierarchy, { designIds: [], typeIds: [], portIds: [], connectorIds: [] })).toBeUndefined();
     });
   });
 
@@ -6089,20 +6089,20 @@ if ((import.meta as any).vitest) {
       const kit = {
         types: [
           {
-            guid: "kind-1",
+            id: "kind-1",
             representations: [
-              { guid: "representation-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
-              { guid: "representation-default", file: { guid: "file-default" } },
+              { id: "representation-tagged", file: { id: "file-tagged" }, tags: [{ id: "tag-1" }] },
+              { id: "representation-default", file: { id: "file-default" } },
             ],
           },
         ],
         files: [
-          { guid: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
-          { guid: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
+          { id: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+          { id: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
         ],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { id: "piece-1", type: { id: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
 
       expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,BBB");
       expect(assets[0]?.representationName).toBe("default.glb");
@@ -6113,20 +6113,20 @@ if ((import.meta as any).vitest) {
       const kit = {
         types: [
           {
-            guid: "kind-1",
+            id: "kind-1",
             representations: [
-              { guid: "representation-first", file: { guid: "file-first" }, tags: [{ guid: "tag-1" }] },
-              { guid: "representation-second", file: { guid: "file-second" }, tags: [{ guid: "tag-2" }] },
+              { id: "representation-first", file: { id: "file-first" }, tags: [{ id: "tag-1" }] },
+              { id: "representation-second", file: { id: "file-second" }, tags: [{ id: "tag-2" }] },
             ],
           },
         ],
         files: [
-          { guid: "file-first", name: "first.glb", blob: "data:representation/gltf-binary;base64,AAA" },
-          { guid: "file-second", name: "second.glb", blob: "data:representation/gltf-binary;base64,BBB" },
+          { id: "file-first", name: "first.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+          { id: "file-second", name: "second.glb", blob: "data:representation/gltf-binary;base64,BBB" },
         ],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "modified" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { id: "piece-1", type: { id: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "modified" }]);
 
       expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,AAA");
       expect(assets[0]?.representationName).toBe("first.glb");
@@ -6135,37 +6135,37 @@ if ((import.meta as any).vitest) {
 
     it("keeps pieces in the scene and falls back to placeholder geometry when no file source can be resolved", () => {
       const kit = {
-        types: [{ guid: "kind-1", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
-        files: [{ guid: "file-1", name: "missing.glb" }],
+        types: [{ id: "kind-1", representations: [{ id: "representation-1", file: { id: "file-1" } }] }],
+        files: [{ id: "file-1", name: "missing.glb" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "added" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { id: "piece-1", type: { id: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "added" }]);
 
       expect(assets).toHaveLength(1);
       expect(assets[0]?.representationSource).toBeUndefined();
-      expect(assets[0]?.piece.guid).toBe("piece-1");
+      expect(assets[0]?.piece.id).toBe("piece-1");
       expect(assets[0]?.status).toBe("added");
     });
 
     it("uses kit file.remote as the representation URL when blob is absent (sketchpad-shaped kits)", () => {
       const kit = {
-        types: [{ guid: "kind-1", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
-        files: [{ guid: "file-1", name: "remote-mesh.glb", remote: "https://example.com/assets/remote-mesh.glb" }],
+        types: [{ id: "kind-1", representations: [{ id: "representation-1", file: { id: "file-1" } }] }],
+        files: [{ id: "file-1", name: "remote-mesh.glb", remote: "https://example.com/assets/remote-mesh.glb" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { guid: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { id: "piece-1", type: { id: "kind-1" }, plane: testPlane, center: testCenter } as Piece, status: "default" }]);
 
       expect(assets[0]?.representationSource).toBe("https://example.com/assets/remote-mesh.glb");
       expect(assets[0]?.representationName).toBe("remote-mesh.glb");
     });
 
-    it("resolves the kind by type name when the piece omits type guid", () => {
+    it("resolves the kind by type name when the piece omits type id", () => {
       const kit = {
-        types: [{ guid: "kind-1", name: "Capsule", representations: [{ guid: "representation-1", file: { guid: "file-1" } }] }],
-        files: [{ guid: "file-1", name: "cap.glb", blob: "data:representation/gltf-binary;base64,QUFB" }],
+        types: [{ id: "kind-1", name: "Capsule", representations: [{ id: "representation-1", file: { id: "file-1" } }] }],
+        files: [{ id: "file-1", name: "cap.glb", blob: "data:representation/gltf-binary;base64,QUFB" }],
       } as unknown as Kit;
 
-      const assets = buildScenePieceAssets(kit, [{ piece: { guid: "piece-1", type: { name: "Capsule" }, plane: testPlane, center: testCenter } as any as Piece, status: "default" }]);
+      const assets = buildScenePieceAssets(kit, [{ piece: { id: "piece-1", type: { name: "Capsule" }, plane: testPlane, center: testCenter } as any as Piece, status: "default" }]);
 
       expect(assets[0]?.representationSource).toBe("data:representation/gltf-binary;base64,QUFB");
     });
@@ -6175,16 +6175,16 @@ if ((import.meta as any).vitest) {
     it("selects the untagged default representation for a kind when the kit provides matching files", () => {
       const asset = buildTypeRepresentationAsset(
         {
-          guid: "kind-1",
+          id: "kind-1",
           representations: [
-            { guid: "representation-tagged", file: { guid: "file-tagged" }, tags: [{ guid: "tag-1" }] },
-            { guid: "representation-default", file: { guid: "file-default" } },
+            { id: "representation-tagged", file: { id: "file-tagged" }, tags: [{ id: "tag-1" }] },
+            { id: "representation-default", file: { id: "file-default" } },
           ],
         } as unknown as SemioKind,
         {
           files: [
-            { guid: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
-            { guid: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
+            { id: "file-tagged", name: "tagged.glb", blob: "data:representation/gltf-binary;base64,AAA" },
+            { id: "file-default", name: "default.glb", blob: "data:representation/gltf-binary;base64,BBB" },
           ],
         } as unknown as Kit,
       );
@@ -6198,16 +6198,16 @@ if ((import.meta as any).vitest) {
     it("prefers a gltf file when the default selection points at a non-gltf source", () => {
       const asset = buildTypeRepresentationAsset(
         {
-          guid: "kind-1",
+          id: "kind-1",
           representations: [
-            { guid: "representation-default", file: { guid: "file-default" } },
-            { guid: "representation-gltf", file: { guid: "file-gltf" }, tags: [{ guid: "tag-1" }] },
+            { id: "representation-default", file: { id: "file-default" } },
+            { id: "representation-gltf", file: { id: "file-gltf" }, tags: [{ id: "tag-1" }] },
           ],
         } as unknown as SemioKind,
         {
           files: [
-            { guid: "file-default", name: "default.obj", blob: "data:representation/obj;base64,AAA" },
-            { guid: "file-gltf", name: "fallback.glb", blob: "data:representation/gltf-binary;base64,BBB" },
+            { id: "file-default", name: "default.obj", blob: "data:representation/obj;base64,AAA" },
+            { id: "file-gltf", name: "fallback.glb", blob: "data:representation/gltf-binary;base64,BBB" },
           ],
         } as unknown as Kit,
       );
@@ -6222,12 +6222,12 @@ if ((import.meta as any).vitest) {
   describe("buildTypeZoomBox", () => {
     it("covers connector roots and arrow tips in scene space", () => {
       const connector = {
-        guid: "connector-1",
+        id: "connector-1",
         point: { x: 1, y: 2, z: 3 },
         direction: { x: 0, y: 1, z: 0 },
       } as unknown as Connector;
       const box = buildTypeZoomBox({
-        guid: "kind-1",
+        id: "kind-1",
         connectors: [connector],
       } as unknown as SemioKind);
 
@@ -6245,7 +6245,7 @@ if ((import.meta as any).vitest) {
     });
 
     it("falls back to a centered placeholder box when the kind has no connectors", () => {
-      const box = buildTypeZoomBox({ guid: "kind-1", connectors: [] } as unknown as SemioKind);
+      const box = buildTypeZoomBox({ id: "kind-1", connectors: [] } as unknown as SemioKind);
 
       expect(box.min.toArray()).toEqual([-0.5, -0.5, -0.5]);
       expect(box.max.toArray()).toEqual([0.5, 0.5, 0.5]);
@@ -6391,8 +6391,8 @@ if ((import.meta as any).vitest) {
 
   describe("normalizeHover", () => {
     it("fills missing hover fields with null", () => {
-      expect(normalizeHover()).toEqual({ pieceGuid: null, connectionGuid: null });
-      expect(normalizeHover({ pieceGuid: "piece-1" })).toEqual({ pieceGuid: "piece-1", connectionGuid: null });
+      expect(normalizeHover()).toEqual({ pieceId: null, connectionId: null });
+      expect(normalizeHover({ pieceId: "piece-1" })).toEqual({ pieceId: "piece-1", connectionId: null });
     });
   });
 
@@ -6418,65 +6418,65 @@ if ((import.meta as any).vitest) {
   describe("buildSceneSnapshot", () => {
     it("includes piece and connection statuses for flattened scene rendering", () => {
       const pieceA = {
-        guid: "piece-a",
-        type: { guid: "kind-1" },
+        id: "piece-a",
+        type: { id: "kind-1" },
         plane: testPlane,
         center: { u: 0, v: 0 },
       } as unknown as Piece;
       const pieceB = {
-        guid: "piece-b",
-        type: { guid: "kind-1" },
+        id: "piece-b",
+        type: { id: "kind-1" },
         plane: { ...testPlane, origin: { x: 2, y: 0, z: 0 } },
         center: { u: 2, v: 0 },
       } as unknown as Piece;
       const pieceC = {
-        guid: "piece-c",
-        type: { guid: "kind-1" },
+        id: "piece-c",
+        type: { id: "kind-1" },
         plane: { ...testPlane, origin: { x: 4, y: 0, z: 0 } },
         center: { u: 4, v: 0 },
       } as unknown as Piece;
 
       const connectionA = {
-        guid: "connection-a",
-        connected: { piece: { guid: "piece-a" } },
-        connecting: { piece: { guid: "piece-b" } },
+        id: "connection-a",
+        connected: { piece: { id: "piece-a" } },
+        connecting: { piece: { id: "piece-b" } },
       } as unknown as Connection;
       const connectionB = {
-        guid: "connection-b",
-        connected: { piece: { guid: "piece-b" } },
-        connecting: { piece: { guid: "piece-c" } },
+        id: "connection-b",
+        connected: { piece: { id: "piece-b" } },
+        connecting: { piece: { id: "piece-c" } },
       } as unknown as Connection;
 
       const design = {
-        guid: "design-1",
+        id: "design-1",
         pieces: [pieceA, pieceB],
         connections: [connectionA],
       } as unknown as Design;
 
       const kit = {
         designs: [design],
-        types: [{ guid: "kind-1" }],
+        types: [{ id: "kind-1" }],
       } as unknown as Kit;
 
       const diff = {
         pieces: {
           added: [pieceC],
-          updated: [{ piece: { guid: "piece-b" }, diff: {} }],
+          updated: [{ piece: { id: "piece-b" }, diff: {} }],
         },
         connections: {
           added: [connectionB],
-          updated: [{ connection: { guid: "connection-a" }, diff: {} }],
+          updated: [{ connection: { id: "connection-a" }, diff: {} }],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildSceneSnapshot(design, diff);
 
-      expect(snapshot.pieces.map((asset) => [asset.piece.guid, asset.status])).toEqual([
+      expect(snapshot.pieces.map((asset) => [asset.piece.id, asset.status])).toEqual([
         ["piece-a", "default"],
         ["piece-b", "modified"],
         ["piece-c", "added"],
       ]);
-      expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([
+      expect(snapshot.connections.map((asset) => [asset.connection.id, asset.status])).toEqual([
         ["connection-a", "modified"],
         ["connection-b", "added"],
       ]);
@@ -6484,42 +6484,42 @@ if ((import.meta as any).vitest) {
 
     it("keeps existing scene pieces when the next diff version has no plane and propagates connection status to child", () => {
       const pieceA = {
-        guid: "piece-a",
-        type: { guid: "kind-1" },
+        id: "piece-a",
+        type: { id: "kind-1" },
         plane: testPlane,
         center: { u: 0, v: 0 },
       } as unknown as Piece;
       const pieceB = {
-        guid: "piece-b",
-        type: { guid: "kind-1" },
+        id: "piece-b",
+        type: { id: "kind-1" },
         plane: { ...testPlane, origin: { x: 2, y: 0, z: 0 } },
         center: { u: 2, v: 0 },
       } as unknown as Piece;
 
       const connectionA = {
-        guid: "connection-a",
-        connected: { piece: { guid: "piece-a" } },
-        connecting: { piece: { guid: "piece-b" } },
+        id: "connection-a",
+        connected: { piece: { id: "piece-a" } },
+        connecting: { piece: { id: "piece-b" } },
       } as unknown as Connection;
 
       const design = {
-        guid: "design-1",
+        id: "design-1",
         pieces: [pieceA, pieceB],
         connections: [connectionA],
       } as unknown as Design;
 
       const diff = {
         pieces: {
-          removed: [{ guid: "piece-b" }],
+          removed: [{ id: "piece-b" }],
           added: [{ ...pieceB, plane: undefined }],
         },
         connections: {
-          updated: [{ connection: { guid: "connection-a" }, diff: {} }],
+          updated: [{ connection: { id: "connection-a" }, diff: {} }],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildSceneSnapshot(design, diff);
-      const pieceStatuses = new Map(snapshot.pieces.map((asset) => [asset.piece.guid, asset.status] as const));
+      const pieceStatuses = new Map(snapshot.pieces.map((asset) => [asset.piece.id, asset.status] as const));
 
       expect(pieceStatuses).toEqual(
         new Map([
@@ -6527,38 +6527,38 @@ if ((import.meta as any).vitest) {
           ["piece-b", "added"],
         ]),
       );
-      expect(snapshot.pieces.find((asset) => asset.piece.guid === "piece-b")?.piece.plane).toEqual(pieceB.plane);
-      expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
+      expect(snapshot.pieces.find((asset) => asset.piece.id === "piece-b")?.piece.plane).toEqual(pieceB.plane);
+      expect(snapshot.connections.map((asset) => [asset.connection.id, asset.status])).toEqual([["connection-a", "modified"]]);
     });
 
     it("propagates modified to child endpoint of a reparented connection", () => {
       const pieceA = {
-        guid: "piece-a",
-        type: { guid: "kind-1" },
+        id: "piece-a",
+        type: { id: "kind-1" },
         plane: testPlane,
         center: { u: 0, v: 0 },
       } as unknown as Piece;
       const pieceB = {
-        guid: "piece-b",
-        type: { guid: "kind-1" },
+        id: "piece-b",
+        type: { id: "kind-1" },
         plane: { ...testPlane, origin: { x: 2, y: 0, z: 0 } },
         center: { u: 2, v: 0 },
       } as unknown as Piece;
       const pieceC = {
-        guid: "piece-c",
-        type: { guid: "kind-1" },
+        id: "piece-c",
+        type: { id: "kind-1" },
         plane: { ...testPlane, origin: { x: 4, y: 0, z: 0 } },
         center: { u: 4, v: 0 },
       } as unknown as Piece;
 
       const connectionA = {
-        guid: "connection-a",
-        connected: { piece: { guid: "piece-a" } },
-        connecting: { piece: { guid: "piece-b" } },
+        id: "connection-a",
+        connected: { piece: { id: "piece-a" } },
+        connecting: { piece: { id: "piece-b" } },
       } as unknown as Connection;
 
       const design = {
-        guid: "design-1",
+        id: "design-1",
         pieces: [pieceA, pieceB, pieceC],
         connections: [connectionA],
       } as unknown as Design;
@@ -6567,9 +6567,9 @@ if ((import.meta as any).vitest) {
         connections: {
           updated: [
             {
-              connection: { guid: "connection-a" },
+              connection: { id: "connection-a" },
               diff: {
-                connected: { piece: { guid: "piece-c" } },
+                connected: { piece: { id: "piece-c" } },
               },
             },
           ],
@@ -6577,7 +6577,7 @@ if ((import.meta as any).vitest) {
       } as unknown as DesignDiff;
 
       const snapshot = buildSceneSnapshot(design, diff);
-      const pieceStatuses = new Map(snapshot.pieces.map((asset) => [asset.piece.guid, asset.status] as const));
+      const pieceStatuses = new Map(snapshot.pieces.map((asset) => [asset.piece.id, asset.status] as const));
 
       expect(pieceStatuses).toEqual(
         new Map([
@@ -6586,9 +6586,9 @@ if ((import.meta as any).vitest) {
           ["piece-c", "default"],
         ]),
       );
-      expect(snapshot.connections.map((asset) => [asset.connection.guid, asset.status])).toEqual([["connection-a", "modified"]]);
-      expect(snapshot.connections[0]?.sourcePiece.guid).toBe("piece-c");
-      expect(snapshot.connections[0]?.targetPiece.guid).toBe("piece-b");
+      expect(snapshot.connections.map((asset) => [asset.connection.id, asset.status])).toEqual([["connection-a", "modified"]]);
+      expect(snapshot.connections[0]?.sourcePiece.id).toBe("piece-c");
+      expect(snapshot.connections[0]?.targetPiece.id).toBe("piece-b");
     });
   });
 
@@ -6620,77 +6620,77 @@ if ((import.meta as any).vitest) {
   describe("buildDiagramSnapshot with diff", () => {
     it("annotates updated pieces as modified and propagates piece status to connections (one-hop)", () => {
       const design = {
-        guid: "d",
+        id: "d",
         pieces: [
-          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
-          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
-          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+          { id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
         ],
-        connections: [{ guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+        connections: [{ id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
 
       const diff: DesignDiff = {
         pieces: {
-          updated: [{ piece: { guid: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
+          updated: [{ piece: { id: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
         },
         connections: {
-          updated: [{ connection: { guid: "conn-ab" }, diff: { u: 1, v: 2 } }],
+          updated: [{ connection: { id: "conn-ab" }, diff: { u: 1, v: 2 } }],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildDiagramSnapshot(design, 12, diff);
 
-      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.id, p.status]));
       expect(pieceStatuses.get("piece-a")).toBe("modified");
       // piece-b is NOT in the diff → stays default (no connection→piece cascade)
       expect(pieceStatuses.get("piece-b")).toBe("default");
       expect(pieceStatuses.get("piece-c")).toBe("default");
 
       // Updated pieces should be at their NEW positions (diff applied)
-      const pieceA = snapshot.points.find((p) => p.guid === "piece-a")!;
+      const pieceA = snapshot.points.find((p) => p.id === "piece-a")!;
       expect(pieceA.u).toBe(1);
       expect(pieceA.v).toBe(2);
 
       // piece-b is not in the diff itself, stays at original center
-      const pieceB = snapshot.points.find((p) => p.guid === "piece-b")!;
+      const pieceB = snapshot.points.find((p) => p.id === "piece-b")!;
       expect(pieceB.u).toBe(5);
       expect(pieceB.v).toBe(3);
 
-      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.id, l.status]));
       // conn-ab is explicitly modified from diff + piece-a is modified → stays modified
       expect(connectionStatuses.get("conn-ab")).toBe("modified");
     });
 
     it("propagates piece status one-hop to adjacent connections only (no multi-hop cascade)", () => {
       const design = {
-        guid: "d",
+        id: "d",
         pieces: [
-          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
-          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
-          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+          { id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
         ],
         connections: [
-          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
-          { guid: "conn-bc", connected: { piece: { guid: "piece-b" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-bc", connected: { piece: { id: "piece-b" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
       const diff: DesignDiff = {
         pieces: {
-          updated: [{ piece: { guid: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
+          updated: [{ piece: { id: "piece-a" }, diff: { center: { u: 1, v: 2 } } }],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildDiagramSnapshot(design, 12, diff);
 
-      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.id, p.status]));
       // piece-a explicitly modified
       expect(pieceStatuses.get("piece-a")).toBe("modified");
       // piece-b and piece-c are NOT in the diff → stay default (no connection→piece cascade)
       expect(pieceStatuses.get("piece-b")).toBe("default");
       expect(pieceStatuses.get("piece-c")).toBe("default");
 
-      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.id, l.status]));
       // conn-ab: piece-a is modified → conn-ab becomes modified (piece→connection one-hop)
       expect(connectionStatuses.get("conn-ab")).toBe("modified");
       // conn-bc: neither piece-b nor piece-c is non-default → conn-bc stays default
@@ -6699,58 +6699,58 @@ if ((import.meta as any).vitest) {
 
     it("propagates status to connections when endpoint piece is added or removed", () => {
       const design = {
-        guid: "d",
-        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        id: "d",
+        pieces: [{ id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
         connections: [
-          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
-          { guid: "conn-ac", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-ac", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
       const diff: DesignDiff = {
         pieces: {
-          removed: [{ guid: "piece-b" } as unknown as Piece],
-          added: [{ guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
+          removed: [{ id: "piece-b" } as unknown as Piece],
+          added: [{ id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildDiagramSnapshot(design, 12, diff);
 
-      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.id, l.status]));
       expect(connectionStatuses.get("conn-ab")).toBe("modified");
       expect(connectionStatuses.get("conn-ac")).toBe("modified");
     });
 
     it("does not propagate status when diff is absent", () => {
       const design = {
-        guid: "d",
-        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
-        connections: [{ guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+        id: "d",
+        pieces: [{ id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        connections: [{ id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
 
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
 
-      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.id, l.status]));
       expect(connectionStatuses.get("conn-ab")).toBe("default");
     });
 
     it("annotates added pieces as added and removed pieces as removed", () => {
       const design = {
-        guid: "d",
-        pieces: [{ guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
+        id: "d",
+        pieces: [{ id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece],
         connections: [],
       } as unknown as Design;
 
       const diff: DesignDiff = {
         pieces: {
-          removed: [{ guid: "piece-b" } as unknown as Piece],
-          added: [{ guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
+          removed: [{ id: "piece-b" } as unknown as Piece],
+          added: [{ id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 8, v: 1 } } as unknown as Piece],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildDiagramSnapshot(design, 12, diff);
 
-      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.id, p.status]));
       expect(pieceStatuses.get("piece-a")).toBe("default");
       expect(pieceStatuses.get("piece-b")).toBe("removed");
       expect(pieceStatuses.get("piece-c")).toBe("added");
@@ -6760,36 +6760,36 @@ if ((import.meta as any).vitest) {
       // Simulates dragging a connected piece: only the parent connection is in the diff.
       // Only conn-ab should be modified. No cascade to pieces or downstream connections.
       const design = {
-        guid: "d",
+        id: "d",
         pieces: [
-          { guid: "piece-a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
-          { guid: "piece-b", type: { guid: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
-          { guid: "piece-c", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
-          { guid: "piece-d", type: { guid: "k" }, plane: testPlane, center: { u: 15, v: 0 } } as unknown as Piece,
+          { id: "piece-a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece,
+          { id: "piece-b", type: { id: "k" }, plane: testPlane, center: { u: 5, v: 3 } } as unknown as Piece,
+          { id: "piece-c", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 0 } } as unknown as Piece,
+          { id: "piece-d", type: { id: "k" }, plane: testPlane, center: { u: 15, v: 0 } } as unknown as Piece,
         ],
         connections: [
-          { guid: "conn-ab", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection,
-          { guid: "conn-bc", connected: { piece: { guid: "piece-b" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection,
+          { id: "conn-ab", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection,
+          { id: "conn-bc", connected: { piece: { id: "piece-b" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection,
         ],
       } as unknown as Design;
 
       // Only the connection is in the diff (like Design.dragBySelection for a connected piece)
       const diff: DesignDiff = {
         connections: {
-          updated: [{ connection: { guid: "conn-ab" }, diff: { u: 2, v: 1 } }],
+          updated: [{ connection: { id: "conn-ab" }, diff: { u: 2, v: 1 } }],
         },
       } as unknown as DesignDiff;
 
       const snapshot = buildDiagramSnapshot(design, 12, diff);
 
-      const pieceStatuses = new Map(snapshot.points.map((p) => [p.guid, p.status]));
+      const pieceStatuses = new Map(snapshot.points.map((p) => [p.id, p.status]));
       // No pieces are in the diff → all stay default (no connection→piece cascade)
       expect(pieceStatuses.get("piece-a")).toBe("default");
       expect(pieceStatuses.get("piece-b")).toBe("default");
       expect(pieceStatuses.get("piece-c")).toBe("default");
       expect(pieceStatuses.get("piece-d")).toBe("default");
 
-      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.guid, l.status]));
+      const connectionStatuses = new Map(snapshot.lines.map((l) => [l.id, l.status]));
       // conn-ab explicitly modified from diff
       expect(connectionStatuses.get("conn-ab")).toBe("modified");
       // conn-bc has no non-default endpoint pieces → stays default
@@ -6800,8 +6800,8 @@ if ((import.meta as any).vitest) {
   describe("computeDiagramSelectionOverlayRect", () => {
     it("returns null when no pieces or connections are selected", () => {
       const design = {
-        guid: "d",
-        pieces: [{ guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece],
+        id: "d",
+        pieces: [{ id: "a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece],
         connections: [],
       } as unknown as Design;
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
@@ -6820,8 +6820,8 @@ if ((import.meta as any).vitest) {
 
     it("wraps selected piece centers with padding in pixel space", () => {
       const design = {
-        guid: "d",
-        pieces: [{ guid: "a", type: { guid: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "b", type: { guid: "k" }, plane: testPlane, center: { u: 10, v: 4 } } as unknown as Piece],
+        id: "d",
+        pieces: [{ id: "a", type: { id: "k" }, plane: testPlane, center: { u: 0, v: 0 } } as unknown as Piece, { id: "b", type: { id: "k" }, plane: testPlane, center: { u: 10, v: 4 } } as unknown as Piece],
         connections: [],
       } as unknown as Design;
       const snapshot = buildDiagramSnapshot(design, 12, undefined);
@@ -6839,7 +6839,7 @@ if ((import.meta as any).vitest) {
   });
 
   describe("computeSceneSelectionUnionBox", () => {
-    it("returns null when no roots match selected guids", () => {
+    it("returns null when no roots match selected ids", () => {
       const roots = new Map<string, THREE.Object3D>();
       expect(computeSceneSelectionUnionBox(roots, new Set(["missing"]), new Set())).toBeNull();
     });
@@ -6862,31 +6862,31 @@ if ((import.meta as any).vitest) {
 
   describe("buildDesignClipboardData", () => {
     const baseDesign = {
-      guid: "design-1",
+      id: "design-1",
       name: "TestDesign",
       createdAt: "2026-01-01",
       updatedAt: "2026-01-01",
       pieces: [
-        { guid: "p1", type: { guid: "t1" }, center: { u: 0, v: 0 } } as unknown as Piece,
-        { guid: "p2", type: { guid: "t1" }, center: { u: 1, v: 0 } } as unknown as Piece,
-        { guid: "p3", type: { guid: "t1" }, center: { u: 2, v: 0 } } as unknown as Piece,
+        { id: "p1", type: { id: "t1" }, center: { u: 0, v: 0 } } as unknown as Piece,
+        { id: "p2", type: { id: "t1" }, center: { u: 1, v: 0 } } as unknown as Piece,
+        { id: "p3", type: { id: "t1" }, center: { u: 2, v: 0 } } as unknown as Piece,
       ],
       connections: [
-        { guid: "c1", connected: { piece: { guid: "p1" } }, connecting: { piece: { guid: "p2" } } } as unknown as Connection,
-        { guid: "c2", connected: { piece: { guid: "p2" } }, connecting: { piece: { guid: "p3" } } } as unknown as Connection,
+        { id: "c1", connected: { piece: { id: "p1" } }, connecting: { piece: { id: "p2" } } } as unknown as Connection,
+        { id: "c2", connected: { piece: { id: "p2" } }, connecting: { piece: { id: "p3" } } } as unknown as Connection,
       ],
     } as unknown as Design;
 
     const baseDiff: DesignDiff = {
       pieces: {
-        added: [{ guid: "p4", type: { guid: "t1" }, center: { u: 3, v: 0 } } as unknown as Piece],
-        removed: [{ guid: "p3" }],
-        updated: [{ piece: { guid: "p2" }, diff: { name: "UpdatedP2" } }],
+        added: [{ id: "p4", type: { id: "t1" }, center: { u: 3, v: 0 } } as unknown as Piece],
+        removed: [{ id: "p3" }],
+        updated: [{ piece: { id: "p2" }, diff: { name: "UpdatedP2" } }],
       },
       connections: {
-        added: [{ guid: "c3", connected: { piece: { guid: "p1" } }, connecting: { piece: { guid: "p4" } } } as unknown as Connection],
-        removed: [{ guid: "c2" }],
-        updated: [{ connection: { guid: "c1" }, diff: {} }],
+        added: [{ id: "c3", connected: { piece: { id: "p1" } }, connecting: { piece: { id: "p4" } } } as unknown as Connection],
+        removed: [{ id: "c2" }],
+        updated: [{ connection: { id: "c1" }, diff: {} }],
       },
     };
 
@@ -6897,21 +6897,21 @@ if ((import.meta as any).vitest) {
     });
 
     it("copies the full design when no diff and empty selection", () => {
-      const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: [], connectionGuids: [] });
+      const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: [], connectionIds: [] });
       expect(result.design).toBe(baseDesign);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("copies selected pieces and connections when no diff and selection present", () => {
-      const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1", "p2"], connectionGuids: ["c1"] });
-      expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1", "p2"]);
-      expect(snapshotDesignConnections(result.design!).map((c) => c.guid)).toEqual(["c1"]);
+      const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1", "p2"], connectionIds: ["c1"] });
+      expect(result.design?.pieces?.map((p) => p.id)).toEqual(["p1", "p2"]);
+      expect(snapshotDesignConnections(result.design!).map((c) => c.id)).toEqual(["c1"]);
       expect(result.designDiff).toBeUndefined();
     });
 
     it("omits pieces/connections arrays when none are selected in a no-diff selection", () => {
-      const result = buildDesignClipboardData(baseDesign, undefined, { pieceGuids: ["p1"], connectionGuids: [] });
-      expect(result.design?.pieces?.map((p) => p.guid)).toEqual(["p1"]);
+      const result = buildDesignClipboardData(baseDesign, undefined, { pieceIds: ["p1"], connectionIds: [] });
+      expect(result.design?.pieces?.map((p) => p.id)).toEqual(["p1"]);
       expect((result.design as unknown as { connections?: unknown }).connections).toBeUndefined();
     });
 
@@ -6922,26 +6922,26 @@ if ((import.meta as any).vitest) {
     });
 
     it("copies the full diff when diff present and empty selection", () => {
-      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceGuids: [], connectionGuids: [] });
+      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceIds: [], connectionIds: [] });
       expect(result.design).toBe(baseDesign);
       expect(result.designDiff).toBe(baseDiff);
     });
 
     it("filters diff to selected pieces and connections when both diff and selection", () => {
-      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceGuids: ["p4", "p3"], connectionGuids: ["c3"] });
+      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceIds: ["p4", "p3"], connectionIds: ["c3"] });
       expect(result.design).toBe(baseDesign);
-      expect(result.designDiff?.pieces?.added?.map((p) => p.guid)).toEqual(["p4"]);
-      expect(result.designDiff?.pieces?.removed?.map((p) => p.guid)).toEqual(["p3"]);
+      expect(result.designDiff?.pieces?.added?.map((p) => p.id)).toEqual(["p4"]);
+      expect(result.designDiff?.pieces?.removed?.map((p) => p.id)).toEqual(["p3"]);
       expect(result.designDiff?.pieces?.updated).toEqual([]);
-      expect(result.designDiff?.connections?.added?.map((c) => c.guid)).toEqual(["c3"]);
+      expect(result.designDiff?.connections?.added?.map((c) => c.id)).toEqual(["c3"]);
       expect(result.designDiff?.connections?.removed).toEqual([]);
       expect(result.designDiff?.connections?.updated).toEqual([]);
     });
 
-    it("filters diff updated entries by piece/connection guid", () => {
-      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceGuids: ["p2"], connectionGuids: ["c1"] });
-      expect(result.designDiff?.pieces?.updated?.map((u) => u.piece.guid)).toEqual(["p2"]);
-      expect(result.designDiff?.connections?.updated?.map((u) => u.connection.guid)).toEqual(["c1"]);
+    it("filters diff updated entries by piece/connection id", () => {
+      const result = buildDesignClipboardData(baseDesign, baseDiff, { pieceIds: ["p2"], connectionIds: ["c1"] });
+      expect(result.designDiff?.pieces?.updated?.map((u) => u.piece.id)).toEqual(["p2"]);
+      expect(result.designDiff?.connections?.updated?.map((u) => u.connection.id)).toEqual(["c1"]);
     });
   });
 
@@ -6963,7 +6963,7 @@ if ((import.meta as any).vitest) {
       expect(canDisplayKitArtifactsFallback("select-pieces", true, undefined)).toBe(false);
     });
 
-    it("disallows kit fallback when a design guid is present (stale show-diagram + merged design)", () => {
+    it("disallows kit fallback when a design id is present (stale show-diagram + merged design)", () => {
       expect(canDisplayKitArtifactsFallback("show-diagram", false, "d1")).toBe(false);
     });
   });
@@ -7014,10 +7014,10 @@ export interface AlgorithmContextValue {
   onMoveVectorChange?: (v: MoveVector) => void;
   moveVectorMin?: MoveVector;
   moveVectorMax?: MoveVector;
-  selectedPieceGuids: string[];
-  onSelectedPieceGuidsChange?: (guids: string[]) => void;
-  selectedConnectionGuids?: string[];
-  onSelectedConnectionGuidsChange?: (guids: string[]) => void;
+  selectedPieceIds: string[];
+  onSelectedPieceIdsChange?: (ids: string[]) => void;
+  selectedConnectionIds?: string[];
+  onSelectedConnectionIdsChange?: (ids: string[]) => void;
   designDiff?: DesignDiff;
   diffDesign?: Design;
   /** Passed to {@link SemioDiagram} as `layoutDiff` so linked pieces get u/v without mutating `design`. */
@@ -7078,55 +7078,55 @@ interface AlgorithmDiffTreeCategory {
   checkedCount: number;
 }
 
-const formatAlgorithmDiffGuid = (value: string | undefined, fallback: string): string => (value && value.length > 0 ? value : fallback);
+const formatAlgorithmDiffId = (value: string | undefined, fallback: string): string => (value && value.length > 0 ? value : fallback);
 
-const buildAlgorithmDiffEntryId = (groupKind: AlgorithmDiffEntryGroupKind, changeKind: AlgorithmDiffEntryChangeKind, guid: string): string => `${groupKind}:${changeKind}:${guid}`;
+const buildAlgorithmDiffEntryId = (groupKind: AlgorithmDiffEntryGroupKind, changeKind: AlgorithmDiffEntryChangeKind, id: string): string => `${groupKind}:${changeKind}:${id}`;
 
-const resolveAlgorithmPieceDiffGuid = (pieceLike: unknown, fallbackIndex: number): string => {
-  if (pieceLike && typeof pieceLike === "object" && "guid" in pieceLike && typeof pieceLike.guid === "string") {
-    return formatAlgorithmDiffGuid(pieceLike.guid, `piece-${fallbackIndex}`);
+const resolveAlgorithmPieceDiffId = (pieceLike: unknown, fallbackIndex: number): string => {
+  if (pieceLike && typeof pieceLike === "object" && "id" in pieceLike && typeof pieceLike.id === "string") {
+    return formatAlgorithmDiffId(pieceLike.id, `piece-${fallbackIndex}`);
   }
   return `piece-${fallbackIndex}`;
 };
 
-const resolveAlgorithmConnectionDiffGuid = (connectionLike: unknown, fallbackIndex: number): string => {
+const resolveAlgorithmConnectionDiffId = (connectionLike: unknown, fallbackIndex: number): string => {
   if (connectionLike && typeof connectionLike === "object") {
-    if ("guid" in connectionLike && typeof connectionLike.guid === "string") {
-      return formatAlgorithmDiffGuid(connectionLike.guid, `connection-${fallbackIndex}`);
+    if ("id" in connectionLike && typeof connectionLike.id === "string") {
+      return formatAlgorithmDiffId(connectionLike.id, `connection-${fallbackIndex}`);
     }
-    const connectedPieceGuid =
+    const connectedPieceId =
       "connected" in connectionLike &&
       connectionLike.connected &&
       typeof connectionLike.connected === "object" &&
       "piece" in connectionLike.connected &&
       connectionLike.connected.piece &&
       typeof connectionLike.connected.piece === "object" &&
-      "guid" in connectionLike.connected.piece &&
-      typeof connectionLike.connected.piece.guid === "string"
-        ? connectionLike.connected.piece.guid
+      "id" in connectionLike.connected.piece &&
+      typeof connectionLike.connected.piece.id === "string"
+        ? connectionLike.connected.piece.id
         : undefined;
-    const connectingPieceGuid =
+    const connectingPieceId =
       "connecting" in connectionLike &&
       connectionLike.connecting &&
       typeof connectionLike.connecting === "object" &&
       "piece" in connectionLike.connecting &&
       connectionLike.connecting.piece &&
       typeof connectionLike.connecting.piece === "object" &&
-      "guid" in connectionLike.connecting.piece &&
-      typeof connectionLike.connecting.piece.guid === "string"
-        ? connectionLike.connecting.piece.guid
+      "id" in connectionLike.connecting.piece &&
+      typeof connectionLike.connecting.piece.id === "string"
+        ? connectionLike.connecting.piece.id
         : undefined;
-    if (connectedPieceGuid || connectingPieceGuid) {
-      return `${connectedPieceGuid ?? "from"}-${connectingPieceGuid ?? "to"}`;
+    if (connectedPieceId || connectingPieceId) {
+      return `${connectedPieceId ?? "from"}-${connectingPieceId ?? "to"}`;
     }
   }
   return `connection-${fallbackIndex}`;
 };
 
 const resolveAlgorithmPieceDiffLabel = (design: Design | undefined, pieceLike: unknown, fallbackIndex: number): string => {
-  const pieceGuid = resolveAlgorithmPieceDiffGuid(pieceLike, fallbackIndex);
-  const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || design?.pieces?.find((piece) => piece.guid === pieceGuid)?.name;
-  return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceGuid;
+  const pieceId = resolveAlgorithmPieceDiffId(pieceLike, fallbackIndex);
+  const sourcePiece = (pieceLike && typeof pieceLike === "object" ? (pieceLike as { name?: string }).name : undefined) || design?.pieces?.find((piece) => piece.id === pieceId)?.name;
+  return sourcePiece && sourcePiece.length > 0 ? sourcePiece : pieceId;
 };
 
 const ALGORITHM_CONNECTION_UPDATE_DIFF_KEYS = ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"] as const;
@@ -7207,12 +7207,12 @@ const buildAlgorithmPieceUpdateDiffDetail = (item: unknown, entryId: string): Re
 };
 
 const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connectionLike: unknown, fallbackIndex: number): string => {
-  const connectionGuid = resolveAlgorithmConnectionDiffGuid(connectionLike, fallbackIndex);
+  const connectionId = resolveAlgorithmConnectionDiffId(connectionLike, fallbackIndex);
   const sourceConnection = design ? snapshotDesignConnections(design).find((connection) => {
-    if (connection.guid && connection.guid === connectionGuid) return true;
+    if (connection.id && connection.id === connectionId) return true;
     return false;
   }) : undefined;
-  const connectedPieceGuid =
+  const connectedPieceId =
     (connectionLike &&
     typeof connectionLike === "object" &&
     "connected" in connectionLike &&
@@ -7221,11 +7221,11 @@ const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connect
     "piece" in connectionLike.connected &&
     connectionLike.connected.piece &&
     typeof connectionLike.connected.piece === "object" &&
-    "guid" in connectionLike.connected.piece &&
-    typeof connectionLike.connected.piece.guid === "string"
-      ? connectionLike.connected.piece.guid
-      : undefined) ?? sourceConnection?.connected?.piece?.guid;
-  const connectingPieceGuid =
+    "id" in connectionLike.connected.piece &&
+    typeof connectionLike.connected.piece.id === "string"
+      ? connectionLike.connected.piece.id
+      : undefined) ?? sourceConnection?.connected?.piece?.id;
+  const connectingPieceId =
     (connectionLike &&
     typeof connectionLike === "object" &&
     "connecting" in connectionLike &&
@@ -7234,32 +7234,32 @@ const resolveAlgorithmConnectionDiffLabel = (design: Design | undefined, connect
     "piece" in connectionLike.connecting &&
     connectionLike.connecting.piece &&
     typeof connectionLike.connecting.piece === "object" &&
-    "guid" in connectionLike.connecting.piece &&
-    typeof connectionLike.connecting.piece.guid === "string"
-      ? connectionLike.connecting.piece.guid
-      : undefined) ?? sourceConnection?.connecting?.piece?.guid;
+    "id" in connectionLike.connecting.piece &&
+    typeof connectionLike.connecting.piece.id === "string"
+      ? connectionLike.connecting.piece.id
+      : undefined) ?? sourceConnection?.connecting?.piece?.id;
 
-  const connectedPieceName = connectedPieceGuid ? (design?.pieces?.find((piece) => piece.guid === connectedPieceGuid)?.name ?? connectedPieceGuid) : undefined;
-  const connectingPieceName = connectingPieceGuid ? (design?.pieces?.find((piece) => piece.guid === connectingPieceGuid)?.name ?? connectingPieceGuid) : undefined;
+  const connectedPieceName = connectedPieceId ? (design?.pieces?.find((piece) => piece.id === connectedPieceId)?.name ?? connectedPieceId) : undefined;
+  const connectingPieceName = connectingPieceId ? (design?.pieces?.find((piece) => piece.id === connectingPieceId)?.name ?? connectingPieceId) : undefined;
   if (connectedPieceName || connectingPieceName) {
     return `${connectedPieceName ?? "Unknown"} -> ${connectingPieceName ?? "Unknown"}`;
   }
-  return connectionGuid;
+  return connectionId;
 };
 
 const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: AlgorithmDiffEntryGroupKind, changeKind: AlgorithmDiffEntryChangeKind, items: unknown[] | undefined, uncheckedEntryIds: Set<string>): AlgorithmDiffTreeGroup | undefined => {
   const safeItems = items ?? [];
   if (safeItems.length === 0) return undefined;
   const entries = safeItems.map((item, index) => {
-    const guid =
+    const id =
       groupKind === "pieces"
-        ? resolveAlgorithmPieceDiffGuid(changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
-        : resolveAlgorithmConnectionDiffGuid(changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
+        ? resolveAlgorithmPieceDiffId(changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
+        : resolveAlgorithmConnectionDiffId(changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
     const label =
       groupKind === "pieces"
         ? resolveAlgorithmPieceDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
         : resolveAlgorithmConnectionDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
-    const id = buildAlgorithmDiffEntryId(groupKind, changeKind, guid);
+    const id = buildAlgorithmDiffEntryId(groupKind, changeKind, id);
     const detail = changeKind === "updated" && groupKind === "connections" ? buildAlgorithmConnectionUpdateDiffDetail(item, id) : changeKind === "updated" && groupKind === "pieces" ? buildAlgorithmPieceUpdateDiffDetail(item, id) : undefined;
     return { id, label, checked: !uncheckedEntryIds.has(id), detail };
   });
@@ -7323,18 +7323,18 @@ const filterAlgorithmDesignDiffByUncheckedEntryIds = (designDiff: DesignDiff | u
     pieces: designDiff.pieces
       ? {
           ...designDiff.pieces,
-          added: (designDiff.pieces.added ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "added", resolveAlgorithmPieceDiffGuid(piece, index)))),
-          removed: (designDiff.pieces.removed ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "removed", resolveAlgorithmPieceDiffGuid(piece, index)))),
-          updated: (designDiff.pieces.updated ?? []).filter((pieceUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "updated", resolveAlgorithmPieceDiffGuid((pieceUpdate as { piece?: unknown }).piece, index)))),
+          added: (designDiff.pieces.added ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "added", resolveAlgorithmPieceDiffId(piece, index)))),
+          removed: (designDiff.pieces.removed ?? []).filter((piece, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "removed", resolveAlgorithmPieceDiffId(piece, index)))),
+          updated: (designDiff.pieces.updated ?? []).filter((pieceUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("pieces", "updated", resolveAlgorithmPieceDiffId((pieceUpdate as { piece?: unknown }).piece, index)))),
         }
       : undefined,
     connections: designDiff.connections
       ? {
           ...designDiff.connections,
-          added: (designDiff.connections.added ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "added", resolveAlgorithmConnectionDiffGuid(connection, index)))),
-          removed: (designDiff.connections.removed ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "removed", resolveAlgorithmConnectionDiffGuid(connection, index)))),
+          added: (designDiff.connections.added ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "added", resolveAlgorithmConnectionDiffId(connection, index)))),
+          removed: (designDiff.connections.removed ?? []).filter((connection, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "removed", resolveAlgorithmConnectionDiffId(connection, index)))),
           updated: (designDiff.connections.updated ?? []).filter(
-            (connectionUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "updated", resolveAlgorithmConnectionDiffGuid((connectionUpdate as { connection?: unknown }).connection, index))),
+            (connectionUpdate, index) => !uncheckedEntryIds.has(buildAlgorithmDiffEntryId("connections", "updated", resolveAlgorithmConnectionDiffId((connectionUpdate as { connection?: unknown }).connection, index))),
           ),
         }
       : undefined,
@@ -7486,8 +7486,8 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     createProps: (context) => ({
       design: context.design,
       layoutDiff: context.diagramLayoutDiff,
-      selection: { pieceGuids: context.selectedPieceGuids },
-      onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []),
+      selection: { pieceIds: context.selectedPieceIds },
+      onSelectionChange: (next: PieceSelectionState) => context.onSelectedPieceIdsChange?.(next.pieceIds ?? []),
       selectionEnabled: true,
       diffEnabled: false,
       zoomTarget: "design" as ZoomTarget,
@@ -7506,10 +7506,10 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
     createProps: (context) => ({
       design: context.design,
       layoutDiff: context.diagramLayoutDiff,
-      selection: { pieceGuids: context.selectedPieceGuids, connectionGuids: context.selectedConnectionGuids ?? [] },
+      selection: { pieceIds: context.selectedPieceIds, connectionIds: context.selectedConnectionIds ?? [] },
       onSelectionChange: (next: DiagramSelectionState) => {
-        context.onSelectedPieceGuidsChange?.(next.pieceGuids ?? []);
-        context.onSelectedConnectionGuidsChange?.(next.connectionGuids ?? []);
+        context.onSelectedPieceIdsChange?.(next.pieceIds ?? []);
+        context.onSelectedConnectionIdsChange?.(next.connectionIds ?? []);
       },
       selectionEnabled: true,
       diffEnabled: false,
@@ -7583,7 +7583,7 @@ const ALGORITHM_WINDOW_BEHAVIORS: Record<AlgorithmWindowKind, Omit<AlgorithmWind
       selectionEnabled: false,
       pieceSelectionEnabled: false,
       connectionSelectionEnabled: false,
-      selection: { pieceGuids: context.selectedPieceGuids },
+      selection: { pieceIds: context.selectedPieceIds },
     }),
     render: renderAlgorithmStatusWindow,
   },
@@ -7715,7 +7715,7 @@ const AlgorithmDetailsPanel: React.FC = () => {
 
   const design = ctx.design;
   const allPieces = design?.pieces ?? [];
-  const selectedPieces = allPieces.filter((p) => ctx.selectedPieceGuids.includes(p.guid));
+  const selectedPieces = allPieces.filter((p) => ctx.selectedPieceIds.includes(p.id));
   const visibleDiffCategories = ctx.diffTreeCategories;
   const visibleDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.checkedCount, 0);
   const totalDiffCount = visibleDiffCategories.reduce((sum, category) => sum + category.totalCount, 0);
@@ -7793,10 +7793,10 @@ const AlgorithmDetailsPanel: React.FC = () => {
           </TreeRow>
         ) : (
           selectedPieces.map((piece) => (
-            <TreeRow key={piece.guid} id={`algorithm.details.selection.${piece.guid}`} label={null}>
+            <TreeRow key={piece.id} id={`algorithm.details.selection.${piece.id}`} label={null}>
               <div className="flex items-center justify-between w-full px-2 py-0.5">
-                <span className="text-xs truncate max-w-24">{piece.name ?? piece.guid.slice(0, 8)}</span>
-                <span className="text-xs text-muted-foreground font-mono">{piece.type?.guid.slice(0, 8) ?? "—"}</span>
+                <span className="text-xs truncate max-w-24">{piece.name ?? piece.id.slice(0, 8)}</span>
+                <span className="text-xs text-muted-foreground font-mono">{piece.type?.id.slice(0, 8) ?? "—"}</span>
               </div>
             </TreeRow>
           ))
@@ -7984,7 +7984,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
       {
         id: `${id}.footer.pieces`,
         icon: <PieceIcon size={12} />,
-        text: `${context.selectedPieceGuids.length}/${pieceCount}`,
+        text: `${context.selectedPieceIds.length}/${pieceCount}`,
         order: 0,
       },
       ...(context.error
@@ -7999,7 +7999,7 @@ export const AlgorithmApp: React.FC<AlgorithmAppProps> = ({ id, label, windows, 
           ]
         : []),
     ],
-    [id, context.selectedPieceGuids.length, pieceCount, context.error],
+    [id, context.selectedPieceIds.length, pieceCount, context.error],
   );
 
   const apps: UIAppConfig[] = React.useMemo(
@@ -8106,11 +8106,11 @@ if (algorithmVitest) {
       const pan = { x: 24, y: -18 };
       const zoom = 2.5;
       const runtimeContext: AlgorithmRuntimeContextValue = {
-        kit: { guid: "kit", name: "Kit", version: "1", designs: [], types: [] } as unknown as Kit,
-        design: { guid: "design", name: "", pieces: [], connections: [] } as unknown as Design,
-        selectedPieceGuids: [],
-        selectedConnectionGuids: [],
-        outputDesign: { guid: "output", name: "", pieces: [], connections: [] } as unknown as Design,
+        kit: { id: "kit", name: "Kit", version: "1", designs: [], types: [] } as unknown as Kit,
+        design: { id: "design", name: "", pieces: [], connections: [] } as unknown as Design,
+        selectedPieceIds: [],
+        selectedConnectionIds: [],
+        outputDesign: { id: "output", name: "", pieces: [], connections: [] } as unknown as Design,
         diagramViewport: { pan, zoom, sourceKind: WindowKind.DESIGN_INPUT },
         onDiagramViewportPanChange: () => undefined,
         onDiagramViewportZoomChange: () => undefined,
@@ -8228,20 +8228,20 @@ if (algorithmVitest) {
 
     it("filters unchecked diff entries before wiring the diff output window", () => {
       const design = {
-        guid: "design-1",
+        id: "design-1",
         name: "Design",
-        pieces: [{ guid: "piece-a", name: "Piece A", type: { guid: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { guid: "piece-b", name: "Piece B", type: { guid: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
-        connections: [{ guid: "connection-a", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-b" } } } as unknown as Connection],
+        pieces: [{ id: "piece-a", name: "Piece A", type: { id: "type-a" }, center: { u: 0, v: 0 } } as unknown as Piece, { id: "piece-b", name: "Piece B", type: { id: "type-a" }, center: { u: 1, v: 0 } } as unknown as Piece],
+        connections: [{ id: "connection-a", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-b" } } } as unknown as Connection],
       } as unknown as Design;
       const diff: DesignDiff = {
         pieces: {
-          added: [{ guid: "piece-c", name: "Piece C", type: { guid: "type-a" }, center: { u: 2, v: 0 } } as unknown as Piece],
-          removed: [{ guid: "piece-b" }],
-          updated: [{ piece: { guid: "piece-a" }, diff: { name: "Renamed Piece A" } }],
+          added: [{ id: "piece-c", name: "Piece C", type: { id: "type-a" }, center: { u: 2, v: 0 } } as unknown as Piece],
+          removed: [{ id: "piece-b" }],
+          updated: [{ piece: { id: "piece-a" }, diff: { name: "Renamed Piece A" } }],
         },
         connections: {
-          added: [{ guid: "connection-b", connected: { piece: { guid: "piece-a" } }, connecting: { piece: { guid: "piece-c" } } } as unknown as Connection],
-          removed: [{ guid: "connection-a" }],
+          added: [{ id: "connection-b", connected: { piece: { id: "piece-a" } }, connecting: { piece: { id: "piece-c" } } } as unknown as Connection],
+          removed: [{ id: "connection-a" }],
           updated: [],
         },
       };
@@ -8250,9 +8250,9 @@ if (algorithmVitest) {
       const categories = buildAlgorithmDiffTreeCategories(design, diff, new Set([buildAlgorithmDiffEntryId("pieces", "removed", "piece-b")]));
 
       expect(filtered?.pieces?.removed).toEqual([]);
-      expect(filtered?.pieces?.added?.map((piece) => piece.guid)).toEqual(["piece-c"]);
+      expect(filtered?.pieces?.added?.map((piece) => piece.id)).toEqual(["piece-c"]);
       expect(filtered?.connections?.added).toEqual([]);
-      expect(filtered?.connections?.removed?.map((connection) => connection.guid)).toEqual(["connection-a"]);
+      expect(filtered?.connections?.removed?.map((connection) => connection.id)).toEqual(["connection-a"]);
       expect(categories.map((category) => ({ id: category.id, checked: category.checkedCount, total: category.totalCount }))).toEqual([
         { id: "pieces", checked: 2, total: 3 },
         { id: "connections", checked: 2, total: 2 },

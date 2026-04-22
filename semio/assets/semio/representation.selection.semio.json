@@ -2,137 +2,137 @@
   "cases": [
     {
       "name": "default_representation_when_no_tags_are_selected",
-      "selectedTagGuids": [],
+      "selectedTagIds": [],
       "representations": [
         {
-          "guid": "representation-default",
-          "fileGuid": "file-default",
-          "tagGuids": []
+          "id": "representation-default",
+          "fileId": "file-default",
+          "tagIds": []
         },
         {
-          "guid": "representation-a",
-          "fileGuid": "file-a",
-          "tagGuids": [
+          "id": "representation-a",
+          "fileId": "file-a",
+          "tagIds": [
             "tag-a"
           ]
         }
       ],
-      "expectedGuid": "representation-default"
+      "expectedId": "representation-default"
     },
     {
       "name": "exact_match_beats_partial_overlap",
-      "selectedTagGuids": [
+      "selectedTagIds": [
         "tag-a",
         "tag-b"
       ],
       "representations": [
         {
-          "guid": "representation-a",
-          "fileGuid": "file-a",
-          "tagGuids": [
+          "id": "representation-a",
+          "fileId": "file-a",
+          "tagIds": [
             "tag-a"
           ]
         },
         {
-          "guid": "representation-ab",
-          "fileGuid": "file-ab",
-          "tagGuids": [
+          "id": "representation-ab",
+          "fileId": "file-ab",
+          "tagIds": [
             "tag-a",
             "tag-b"
           ]
         },
         {
-          "guid": "representation-ac",
-          "fileGuid": "file-ac",
-          "tagGuids": [
+          "id": "representation-ac",
+          "fileId": "file-ac",
+          "tagIds": [
             "tag-a",
             "tag-c"
           ]
         }
       ],
-      "expectedGuid": "representation-ab"
+      "expectedId": "representation-ab"
     },
     {
       "name": "subset_filter_then_best_match",
-      "selectedTagGuids": [
+      "selectedTagIds": [
         "tag-a"
       ],
       "representations": [
         {
-          "guid": "representation-a",
-          "fileGuid": "file-a",
-          "tagGuids": [
+          "id": "representation-a",
+          "fileId": "file-a",
+          "tagIds": [
             "tag-a"
           ]
         },
         {
-          "guid": "representation-ab",
-          "fileGuid": "file-ab",
-          "tagGuids": [
+          "id": "representation-ab",
+          "fileId": "file-ab",
+          "tagIds": [
             "tag-a",
             "tag-b"
           ]
         },
         {
-          "guid": "representation-b",
-          "fileGuid": "file-b",
-          "tagGuids": [
+          "id": "representation-b",
+          "fileId": "file-b",
+          "tagIds": [
             "tag-b"
           ]
         }
       ],
-      "expectedGuid": "representation-a"
+      "expectedId": "representation-a"
     },
     {
       "name": "no_representation_matches_all_selected_tags",
-      "selectedTagGuids": [
+      "selectedTagIds": [
         "tag-z"
       ],
       "representations": [
         {
-          "guid": "representation-a",
-          "fileGuid": "file-a",
-          "tagGuids": [
+          "id": "representation-a",
+          "fileId": "file-a",
+          "tagIds": [
             "tag-a"
           ]
         },
         {
-          "guid": "representation-b",
-          "fileGuid": "file-b",
-          "tagGuids": [
+          "id": "representation-b",
+          "fileId": "file-b",
+          "tagIds": [
             "tag-b"
           ]
         }
       ],
-      "expectedGuid": null
+      "expectedId": null
     },
     {
       "name": "nakagin_capsule_tower_cast_case_selects_1to200",
-      "selectedTagGuids": [
+      "selectedTagIds": [
         "14c03d58-6241-48e8-9ffe-89fc268124d2"
       ],
       "representations": [
         {
-          "guid": "nakagin-cast-default",
-          "fileGuid": "file-nakagin-cast-default",
-          "tagGuids": []
+          "id": "nakagin-cast-default",
+          "fileId": "file-nakagin-cast-default",
+          "tagIds": []
         },
         {
-          "guid": "nakagin-cast-1to100",
-          "fileGuid": "file-nakagin-cast-1to100",
-          "tagGuids": [
+          "id": "nakagin-cast-1to100",
+          "fileId": "file-nakagin-cast-1to100",
+          "tagIds": [
             "34b6308b-0600-4a8e-aff6-a70b9f27caac"
           ]
         },
         {
-          "guid": "nakagin-cast-1to200",
-          "fileGuid": "file-nakagin-cast-1to200",
-          "tagGuids": [
+          "id": "nakagin-cast-1to200",
+          "fileId": "file-nakagin-cast-1to200",
+          "tagIds": [
             "14c03d58-6241-48e8-9ffe-89fc268124d2"
           ]
         }
       ],
-      "expectedGuid": "nakagin-cast-1to200"
+      "expectedId": "nakagin-cast-1to200"
     }
   ]
 }

@@ -1,18 +1,18 @@
 {
-  "guid": "synthetic-kit",
+  "id": "synthetic-kit",
   "name": "synthetic-kit",
   "types": [
     {
-      "guid": "selected-external-lg",
+      "id": "selected-external-lg",
       "name": "selected-external-lg",
       "connectors": []
     },
     {
-      "guid": "selected-isolated-lg",
+      "id": "selected-isolated-lg",
       "name": "selected-isolated-lg",
       "connectors": [
         {
-          "guid": "selected-isolated-lg-connector-0",
+          "id": "selected-isolated-lg-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -25,11 +25,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L"
+            "id": "port-L"
           }
         },
         {
-          "guid": "selected-isolated-lg-connector-1",
+          "id": "selected-isolated-lg-connector-1",
           "t": 0,
           "point": {
             "x": 0,
@@ -42,22 +42,22 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         }
       ]
     },
     {
-      "guid": "selected-external-ll",
+      "id": "selected-external-ll",
       "name": "selected-external-ll",
       "connectors": []
     },
     {
-      "guid": "neighbor-l",
+      "id": "neighbor-l",
       "name": "neighbor-l",
       "connectors": [
         {
-          "guid": "neighbor-l-connector-0",
+          "id": "neighbor-l-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -70,17 +70,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L"
+            "id": "port-L"
           }
         }
       ]
     },
     {
-      "guid": "neighbor-g",
+      "id": "neighbor-g",
       "name": "neighbor-g",
       "connectors": [
         {
-          "guid": "neighbor-g-connector-0",
+          "id": "neighbor-g-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -93,17 +93,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         }
       ]
     },
     {
-      "guid": "candidate-l",
+      "id": "candidate-l",
       "name": "candidate-l",
       "connectors": [
         {
-          "guid": "candidate-l-connector-0",
+          "id": "candidate-l-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -116,17 +116,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L"
+            "id": "port-L"
           }
         }
       ]
     },
     {
-      "guid": "candidate-lg",
+      "id": "candidate-lg",
       "name": "candidate-lg",
       "connectors": [
         {
-          "guid": "candidate-lg-connector-0",
+          "id": "candidate-lg-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -139,11 +139,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L-compatible"
+            "id": "port-L-compatible"
           }
         },
         {
-          "guid": "candidate-lg-connector-1",
+          "id": "candidate-lg-connector-1",
           "t": 0,
           "point": {
             "x": 0,
@@ -156,17 +156,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         }
       ]
     },
     {
-      "guid": "candidate-lg-lg",
+      "id": "candidate-lg-lg",
       "name": "candidate-lg-lg",
       "connectors": [
         {
-          "guid": "candidate-lg-lg-connector-0",
+          "id": "candidate-lg-lg-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -179,11 +179,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L-compatible"
+            "id": "port-L-compatible"
           }
         },
         {
-          "guid": "candidate-lg-lg-connector-1",
+          "id": "candidate-lg-lg-connector-1",
           "t": 0,
           "point": {
             "x": 0,
@@ -196,11 +196,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         },
         {
-          "guid": "candidate-lg-lg-connector-2",
+          "id": "candidate-lg-lg-connector-2",
           "t": 0,
           "point": {
             "x": 0,
@@ -213,11 +213,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L"
+            "id": "port-L"
           }
         },
         {
-          "guid": "candidate-lg-lg-connector-3",
+          "id": "candidate-lg-lg-connector-3",
           "t": 0,
           "point": {
             "x": 0,
@@ -230,17 +230,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         }
       ]
     },
     {
-      "guid": "candidate-ll",
+      "id": "candidate-ll",
       "name": "candidate-ll",
       "connectors": [
         {
-          "guid": "candidate-ll-connector-0",
+          "id": "candidate-ll-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -253,11 +253,11 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L"
+            "id": "port-L"
           }
         },
         {
-          "guid": "candidate-ll-connector-1",
+          "id": "candidate-ll-connector-1",
           "t": 0,
           "point": {
             "x": 0,
@@ -270,17 +270,17 @@
             "z": 0
           },
           "port": {
-            "guid": "port-L-compatible"
+            "id": "port-L-compatible"
           }
         }
       ]
     },
     {
-      "guid": "candidate-g",
+      "id": "candidate-g",
       "name": "candidate-g",
       "connectors": [
         {
-          "guid": "candidate-g-connector-0",
+          "id": "candidate-g-connector-0",
           "t": 0,
           "point": {
             "x": 0,
@@ -293,7 +293,7 @@
             "z": 0
           },
           "port": {
-            "guid": "port-G"
+            "id": "port-G"
           }
         }
       ]
@@ -301,177 +301,177 @@
   ],
   "designs": [
     {
-      "guid": "root-design",
+      "id": "root-design",
       "name": "root-design",
       "pieces": [
         {
-          "guid": "piece-external-lg",
+          "id": "piece-external-lg",
           "type": {
-            "guid": "selected-external-lg"
+            "id": "selected-external-lg"
           }
         },
         {
-          "guid": "piece-isolated-lg",
+          "id": "piece-isolated-lg",
           "type": {
-            "guid": "selected-isolated-lg"
+            "id": "selected-isolated-lg"
           }
         },
         {
-          "guid": "piece-external-ll",
+          "id": "piece-external-ll",
           "type": {
-            "guid": "selected-external-ll"
+            "id": "selected-external-ll"
           }
         },
         {
-          "guid": "neighbor-piece-l",
+          "id": "neighbor-piece-l",
           "type": {
-            "guid": "neighbor-l"
+            "id": "neighbor-l"
           }
         },
         {
-          "guid": "neighbor-piece-g",
+          "id": "neighbor-piece-g",
           "type": {
-            "guid": "neighbor-g"
+            "id": "neighbor-g"
           }
         },
         {
-          "guid": "neighbor-piece-l-a",
+          "id": "neighbor-piece-l-a",
           "type": {
-            "guid": "neighbor-l"
+            "id": "neighbor-l"
           }
         },
         {
-          "guid": "neighbor-piece-l-b",
+          "id": "neighbor-piece-l-b",
           "type": {
-            "guid": "neighbor-l"
+            "id": "neighbor-l"
           }
         }
       ],
       "connections": [
         {
-          "guid": "external-lg-l",
+          "id": "external-lg-l",
           "connected": {
             "piece": {
-              "guid": "piece-external-lg"
+              "id": "piece-external-lg"
             },
             "connector": {
-              "guid": "selected-external-lg-connector-0"
+              "id": "selected-external-lg-connector-0"
             }
           },
           "connecting": {
             "piece": {
-              "guid": "neighbor-piece-l"
+              "id": "neighbor-piece-l"
             },
             "connector": {
-              "guid": "neighbor-l-connector-0"
+              "id": "neighbor-l-connector-0"
             }
           }
         },
         {
-          "guid": "external-lg-g",
+          "id": "external-lg-g",
           "connected": {
             "piece": {
-              "guid": "piece-external-lg"
+              "id": "piece-external-lg"
             },
             "connector": {
-              "guid": "selected-external-lg-connector-1"
+              "id": "selected-external-lg-connector-1"
             }
           },
           "connecting": {
             "piece": {
-              "guid": "neighbor-piece-g"
+              "id": "neighbor-piece-g"
             },
             "connector": {
-              "guid": "neighbor-g-connector-0"
+              "id": "neighbor-g-connector-0"
             }
           }
         },
         {
-          "guid": "external-ll-a",
+          "id": "external-ll-a",
           "connected": {
             "piece": {
-              "guid": "piece-external-ll"
+              "id": "piece-external-ll"
             },
             "connector": {
-              "guid": "selected-external-ll-connector-0"
+              "id": "selected-external-ll-connector-0"
             }
           },
           "connecting": {
             "piece": {
-              "guid": "neighbor-piece-l-a"
+              "id": "neighbor-piece-l-a"
             },
             "connector": {
-              "guid": "neighbor-l-connector-0"
+              "id": "neighbor-l-connector-0"
             }
           }
         },
         {
-          "guid": "external-ll-b",
+          "id": "external-ll-b",
           "connected": {
             "piece": {
-              "guid": "piece-external-ll"
+              "id": "piece-external-ll"
             },
             "connector": {
-              "guid": "selected-external-ll-connector-1"
+              "id": "selected-external-ll-connector-1"
             }
           },
           "connecting": {
             "piece": {
-              "guid": "neighbor-piece-l-b"
+              "id": "neighbor-piece-l-b"
             },
             "connector": {
-              "guid": "neighbor-l-connector-0"
+              "id": "neighbor-l-connector-0"
             }
           }
         }
       ]
     },
     {
-      "guid": "candidate-design-free-lg",
+      "id": "candidate-design-free-lg",
       "name": "candidate-design-free-lg",
       "pieces": [
         {
-          "guid": "candidate-design-free-piece",
+          "id": "candidate-design-free-piece",
           "type": {
-            "guid": "candidate-lg"
+            "id": "candidate-lg"
           }
         }
       ]
     },
     {
-      "guid": "candidate-design-consumed-lg",
+      "id": "candidate-design-consumed-lg",
       "name": "candidate-design-consumed-lg",
       "pieces": [
         {
-          "guid": "candidate-design-consumed-a",
+          "id": "candidate-design-consumed-a",
           "type": {
-            "guid": "candidate-lg"
+            "id": "candidate-lg"
           }
         },
         {
-          "guid": "candidate-design-consumed-b",
+          "id": "candidate-design-consumed-b",
           "type": {
-            "guid": "candidate-l"
+            "id": "candidate-l"
           }
         }
       ],
       "connections": [
         {
-          "guid": "candidate-design-consumed-link",
+          "id": "candidate-design-consumed-link",
           "connected": {
             "piece": {
-              "guid": "candidate-design-consumed-a"
+              "id": "candidate-design-consumed-a"
             },
             "connector": {
-              "guid": "candidate-lg-connector-0"
+              "id": "candidate-lg-connector-0"
             }
           },
           "connecting": {
             "piece": {
-              "guid": "candidate-design-consumed-b"
+              "id": "candidate-design-consumed-b"
             },
             "connector": {
-              "guid": "candidate-l-connector-0"
+              "id": "candidate-l-connector-0"
             }
           }
         }
@@ -480,31 +480,31 @@
   ],
   "families": [
     {
-      "guid": "family-synthetic-kit-ports",
+      "id": "family-synthetic-kit-ports",
       "name": "Ports",
       "description": "Connector ports owned by the default family.",
       "icon": "🔌",
       "ports": [
         {
-          "guid": "port-L",
+          "id": "port-L",
           "name": "port-L",
           "compatiblePorts": [
             {
-              "guid": "port-L-compatible"
+              "id": "port-L-compatible"
             }
           ]
         },
         {
-          "guid": "port-L-compatible",
+          "id": "port-L-compatible",
           "name": "port-L-compatible",
           "compatiblePorts": [
             {
-              "guid": "port-L"
+              "id": "port-L"
             }
           ]
         },
         {
-          "guid": "port-G",
+          "id": "port-G",
           "name": "port-G"
         }
       ]

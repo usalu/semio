@@ -1,5 +1,5 @@
 {
-  "guid": "",
+  "id": "",
   "name": "",
   "isAbstract": null,
   "folder": null,
@@ -16,11 +16,11 @@
   "activeLayer": null,
   "pieces": [
     {
-      "guid": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
+      "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb",
       "name": "t_f1_b_c1",
       "description": "",
       "type": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+        "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
       "design": null,
       "plane": null,
@@ -33,13 +33,13 @@
       "props": null,
       "attributes": [
         {
-          "guid": "",
+          "id": "",
           "key": "semio.center",
           "value": "{\"u\":1.907067,\"v\":5.867067}",
           "definition": null
         },
         {
-          "guid": "",
+          "id": "",
           "key": "semio.plane",
           "value": "{\"origin\":{\"x\":-18.6,\"y\":-7.7,\"z\":10.25},\"xAxis\":{\"x\":6.1230317691118863E-17,\"y\":-1.0,\"z\":0.0},\"yAxis\":{\"x\":1.0,\"y\":6.1230317691118863E-17,\"z\":0.0}}",
           "definition": null
@@ -47,11 +47,11 @@
       ]
     },
     {
-      "guid": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9",
+      "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9",
       "name": "cs_sl0_d2_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "818f2a23-569b-47cb-a69c-147694beb815"
+        "id": "818f2a23-569b-47cb-a69c-147694beb815"
       },
       "design": null,
       "plane": null,
@@ -65,11 +65,11 @@
       "attributes": []
     },
     {
-      "guid": "536f3512-ca21-45ab-a6a8-08f48a939c8f",
+      "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f",
       "name": "cs_sl0_d0_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+        "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
       },
       "design": null,
       "plane": null,
@@ -83,11 +83,11 @@
       "attributes": []
     },
     {
-      "guid": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc",
+      "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc",
       "name": "cs_sl2_d0_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "214a30f8-adfc-40de-840b-151d9f7e17dd"
+        "id": "214a30f8-adfc-40de-840b-151d9f7e17dd"
       },
       "design": null,
       "plane": null,
@@ -101,11 +101,11 @@
       "attributes": []
     },
     {
-      "guid": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
+      "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
       "name": "b",
       "description": "",
       "type": {
-        "guid": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
+        "id": "277768b5-9220-4312-bf0d-ab82d9fb6a73"
       },
       "design": null,
       "plane": {
@@ -138,11 +138,11 @@
       "attributes": []
     },
     {
-      "guid": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
+      "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e",
       "name": "cs_sl0_d3_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
+        "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
       },
       "design": null,
       "plane": null,
@@ -156,11 +156,11 @@
       "attributes": []
     },
     {
-      "guid": "8cf31906-5b4c-48d7-929f-cbe0e469d423",
+      "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423",
       "name": "cs_sl2_d1_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "357b841f-b121-463c-88a6-153d7cbf272f"
+        "id": "357b841f-b121-463c-88a6-153d7cbf272f"
       },
       "design": null,
       "plane": null,
@@ -174,11 +174,11 @@
       "attributes": []
     },
     {
-      "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6",
+      "id": "9d18882e-d90b-40de-a171-47cb4564ffa6",
       "name": "t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
+        "id": "2a6bb3e8-4adb-44a3-bc87-3314b77b40f7"
       },
       "design": null,
       "plane": null,
@@ -192,11 +192,11 @@
       "attributes": []
     },
     {
-      "guid": "d064105d-9a9d-442b-a53f-ed010b155b89",
+      "id": "d064105d-9a9d-442b-a53f-ed010b155b89",
       "name": "cs_sl1_d0_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+        "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
       },
       "design": null,
       "plane": null,
@@ -210,11 +210,11 @@
       "attributes": []
     },
     {
-      "guid": "dcf9ff79-1f52-412d-9eb4-7329f77b237c",
+      "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c",
       "name": "cs_sl1_d1_t_f2_b_c1",
       "description": "",
       "type": {
-        "guid": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd"
+        "id": "6ed26ed1-dffa-40d3-b405-d49b35a90fcd"
       },
       "design": null,
       "plane": null,
@@ -228,11 +228,11 @@
       "attributes": []
     },
     {
-      "guid": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd",
+      "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd",
       "name": "t_f0_b_c1",
       "description": "",
       "type": {
-        "guid": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
+        "id": "5b3e2b28-e331-420b-83bd-9a8c05ac2918"
       },
       "design": null,
       "plane": null,
@@ -245,13 +245,13 @@
       "props": null,
       "attributes": [
         {
-          "guid": "",
+          "id": "",
           "key": "semio.piece.origin",
           "value": "external",
           "definition": null
         },
         {
-          "guid": "",
+          "id": "",
           "key": "semio.center",
           "value": "{\"u\":1.907067,\"v\":1.907067}",
           "definition": null
@@ -262,23 +262,23 @@
   "groups": [],
   "connections": [
     {
-      "guid": "06e4aa42-4a30-4149-9f0d-0eea397c0120",
+      "id": "06e4aa42-4a30-4149-9f0d-0eea397c0120",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "d6038721-3f2a-42cd-affd-d8041fdb8bdd"
+          "id": "d6038721-3f2a-42cd-affd-d8041fdb8bdd"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "536f3512-ca21-45ab-a6a8-08f48a939c8f"
+          "id": "536f3512-ca21-45ab-a6a8-08f48a939c8f"
         },
         "designPiece": null,
         "connector": {
-          "guid": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d"
+          "id": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d"
         }
       },
       "description": "",
@@ -293,23 +293,23 @@
       "attributes": []
     },
     {
-      "guid": "138cdf8a-711b-4585-94e7-7451b2e003e4",
+      "id": "138cdf8a-711b-4585-94e7-7451b2e003e4",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "26ed7622-ef47-4bc2-ae9c-af32f63e3b64"
+          "id": "26ed7622-ef47-4bc2-ae9c-af32f63e3b64"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e"
+          "id": "7ef59b73-e757-47a6-a5dd-a8d1dbd59c8e"
         },
         "designPiece": null,
         "connector": {
-          "guid": "dfae8d2b-a0df-4e59-bcdb-865fa8426e50"
+          "id": "dfae8d2b-a0df-4e59-bcdb-865fa8426e50"
         }
       },
       "description": "",
@@ -324,23 +324,23 @@
       "attributes": []
     },
     {
-      "guid": "345d3126-7233-4ca6-9dd2-a30776c55e72",
+      "id": "345d3126-7233-4ca6-9dd2-a30776c55e72",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "22c85739-0973-47c2-9b15-0f21f5958f9c"
+          "id": "22c85739-0973-47c2-9b15-0f21f5958f9c"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc"
+          "id": "5c18fab0-05cb-4639-8d97-a8e1f7cf23fc"
         },
         "designPiece": null,
         "connector": {
-          "guid": "406ee5c9-8d1e-4639-a9d7-781006082347"
+          "id": "406ee5c9-8d1e-4639-a9d7-781006082347"
         }
       },
       "description": "",
@@ -355,23 +355,23 @@
       "attributes": []
     },
     {
-      "guid": "37dc5318-eebc-4ef8-a79b-78c28e0845c4",
+      "id": "37dc5318-eebc-4ef8-a79b-78c28e0845c4",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "aaab3a27-ac93-4141-be16-4058507947c8"
+          "id": "aaab3a27-ac93-4141-be16-4058507947c8"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "8cf31906-5b4c-48d7-929f-cbe0e469d423"
+          "id": "8cf31906-5b4c-48d7-929f-cbe0e469d423"
         },
         "designPiece": null,
         "connector": {
-          "guid": "8408bbc8-9055-4edc-9276-f1588c8a6c32"
+          "id": "8408bbc8-9055-4edc-9276-f1588c8a6c32"
         }
       },
       "description": "",
@@ -386,23 +386,23 @@
       "attributes": []
     },
     {
-      "guid": "6a474315-df57-416d-8b0a-6bf4976cecb9",
+      "id": "6a474315-df57-416d-8b0a-6bf4976cecb9",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "1bc49750-e3f1-4e6d-be49-b685ec02688d"
+          "id": "1bc49750-e3f1-4e6d-be49-b685ec02688d"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "dcf9ff79-1f52-412d-9eb4-7329f77b237c"
+          "id": "dcf9ff79-1f52-412d-9eb4-7329f77b237c"
         },
         "designPiece": null,
         "connector": {
-          "guid": "a34db64e-24a5-40c7-9ece-7480f5817151"
+          "id": "a34db64e-24a5-40c7-9ece-7480f5817151"
         }
       },
       "description": "",
@@ -417,23 +417,23 @@
       "attributes": []
     },
     {
-      "guid": "6bc57a6b-f0b4-4bb7-bf4c-ca06ef510ecd",
+      "id": "6bc57a6b-f0b4-4bb7-bf4c-ca06ef510ecd",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "f842a603-8ede-49b6-82c6-27543f70f993"
+          "id": "f842a603-8ede-49b6-82c6-27543f70f993"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "d064105d-9a9d-442b-a53f-ed010b155b89"
+          "id": "d064105d-9a9d-442b-a53f-ed010b155b89"
         },
         "designPiece": null,
         "connector": {
-          "guid": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d"
+          "id": "a3edeb3f-85a4-4f1c-9bf9-55ba5440022d"
         }
       },
       "description": "",
@@ -448,23 +448,23 @@
       "attributes": []
     },
     {
-      "guid": "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
+      "id": "b1ecc6c5-722a-4814-9047-a87222bbaa4d",
       "connected": {
         "piece": {
-          "guid": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
+          "id": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
         },
         "designPiece": null,
         "connector": {
-          "guid": "8001a609-ea58-4cc1-a1bb-a1e56fbc2f3a"
+          "id": "8001a609-ea58-4cc1-a1bb-a1e56fbc2f3a"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
+          "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
         "designPiece": null,
         "connector": {
-          "guid": "d33bc30f-a228-4708-a8db-49eeabf51f71"
+          "id": "d33bc30f-a228-4708-a8db-49eeabf51f71"
         }
       },
       "description": "",
@@ -479,23 +479,23 @@
       "attributes": []
     },
     {
-      "guid": "bb5449be-247b-498e-b8c8-309697ddea7b",
+      "id": "bb5449be-247b-498e-b8c8-309697ddea7b",
       "connected": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "43b0ad58-5a1f-4965-98ec-6a76f337f0ed"
+          "id": "43b0ad58-5a1f-4965-98ec-6a76f337f0ed"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9"
+          "id": "3b0444ad-2307-442e-972a-7f1c2cc7dcb9"
         },
         "designPiece": null,
         "connector": {
-          "guid": "cfe0b1e5-468b-48b3-a888-5b5d5eb81ffa"
+          "id": "cfe0b1e5-468b-48b3-a888-5b5d5eb81ffa"
         }
       },
       "description": "",
@@ -510,23 +510,23 @@
       "attributes": []
     },
     {
-      "guid": "ddf9e0e4-40e1-4079-aa40-c86cf699788b",
+      "id": "ddf9e0e4-40e1-4079-aa40-c86cf699788b",
       "connected": {
         "piece": {
-          "guid": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
+          "id": "31be08e1-e75c-4024-86b4-c3c6d3939fbb"
         },
         "designPiece": null,
         "connector": {
-          "guid": "a074038c-a741-427c-a90f-6ec66000b09e"
+          "id": "a074038c-a741-427c-a90f-6ec66000b09e"
         }
       },
       "connecting": {
         "piece": {
-          "guid": "9d18882e-d90b-40de-a171-47cb4564ffa6"
+          "id": "9d18882e-d90b-40de-a171-47cb4564ffa6"
         },
         "designPiece": null,
         "connector": {
-          "guid": "d33bc30f-a228-4708-a8db-49eeabf51f71"
+          "id": "d33bc30f-a228-4708-a8db-49eeabf51f71"
         }
       },
       "description": "",

@@ -13,7 +13,7 @@ todos:
    status: completed
  - id: sketchpad_delete_sync
    content: "Sketchpad: delete yjs import, SyncInterfaces, CrdtBackend, PersistenceProviders, SyncPath helpers/types, Derived Store, Store/AppStore/KitDiffAppStore/PlainAppStore classes; remove yjs from package.json."
-   status: in_progress
+   status: completed
  - id: sketchpad_delete_kit_state
    content: "Sketchpad: delete Granular Hook Types, Entity Data Hooks, Piece/Design Derived Hooks, Targeted Kit Hooks, useKit, useKitCommands, useKitTransaction, useKitScope/KitScopeProvider, kitCommands map, executeKitCommand, KitWasmRuntimeBridge, createJsonFileKitStore/createFolderKitStore/createSessionKitStore re-exports."
    status: pending

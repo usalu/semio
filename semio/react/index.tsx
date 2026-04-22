@@ -18,7 +18,7 @@ import {
 	createSessionKitStore,
 	Design,
 	getIncludedDesigns,
-	guid,
+	id,
 	InMemoryKitStore,
 	KitImpl,
 	type KitLike,
@@ -46,7 +46,7 @@ export type SchemaPropertyEvent = {
 	key: string;
 	typeName: string;
 	fieldName: string;
-	guid?: string;
+	id?: string;
 	previous: unknown;
 	current: unknown;
 };
@@ -81,7 +81,7 @@ export type KitProviderBackbone = MemoryBackboneConfig | DevBackboneConfig | Loc
 
 type IndexedSchemaReference = {
 	typeName: string;
-	guid?: string;
+	id?: string;
 	path: Array<string | number>;
 	value: any;
 };
@@ -89,14 +89,14 @@ type IndexedSchemaReference = {
 type IndexedSchemaState = {
 	plain: any;
 	kit: KitImpl;
-	kitGuid?: string;
-	byGuid: Map<string, IndexedSchemaReference[]>;
+	kitId?: string;
+	byId: Map<string, IndexedSchemaReference[]>;
 	byType: Map<string, IndexedSchemaReference[]>;
 };
 
 type SchemaScope = {
 	typeName: string;
-	guid?: string;
+	id?: string;
 	path: Array<string | number>;
 };
 
@@ -108,11 +108,11 @@ export type KitRuntimeContextValue = {
 	recentSetRejections: SetError[];
 	pushSetRejection: (e: SetError) => void;
 	canWrite: boolean;
-	/** Active kit guid: {@link KitProvider} `kitGuid` when set, otherwise `snapshot.kit.guid`. */
-	kitGuid?: string;
+	/** Active kit id: {@link KitProvider} `kitId` when set, otherwise `snapshot.kit.id`. */
+	kitId?: string;
 	kitClient: KitStoreClient | null;
-	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
-	setObjectValue: (typeName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
+	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
+	setObjectValue: (typeName: string, next: SetStateAction<any>, id?: string, scope?: SchemaScope | null) => void;
 };
 
 // #endregion ⚛️Types
@@ -233,8 +233,8 @@ async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
 	return { ok: true } as const;
 }
 
-function kitGuidFromRuntime(runtime: KitRuntimeContextValue): string | null {
-	const g = runtime.kitGuid ?? (runtime.snapshot as { kit?: { guid?: string } }).kit?.guid;
+function kitIdFromRuntime(runtime: KitRuntimeContextValue): string | null {
+	const g = runtime.kitId ?? (runtime.snapshot as { kit?: { id?: string } }).kit?.id;
 	return g != null && g !== "" ? String(g) : null;
 }
 
@@ -266,13 +266,13 @@ function deepEqual(a: any, b: any): boolean {
 }
 
 function getFieldDataKey(typeName: string, fieldName: string): string {
-	if (fieldName === "id") return "guid";
+	if (fieldName === "id") return "id";
 	if (typeName === "Kit" && fieldName === "release") return "version";
 	return fieldName;
 }
 
 function getSchemaFieldName(typeName: string, dataKey: string): string {
-	if (dataKey === "guid") return "id";
+	if (dataKey === "id") return "id";
 	if (typeName === "Kit" && dataKey === "version") return "release";
 	return dataKey;
 }
@@ -301,14 +301,14 @@ function inferTypeName(parentTypeName: string | undefined, key: string | undefin
 }
 
 function scanSchemaState(root: any): IndexedSchemaState {
-	const byGuid = new Map<string, IndexedSchemaReference[]>();
+	const byId = new Map<string, IndexedSchemaReference[]>();
 	const byType = new Map<string, IndexedSchemaReference[]>();
 
 	function push(ref: IndexedSchemaReference): void {
-		if (ref.guid) {
-			const existing = byGuid.get(ref.guid) ?? [];
+		if (ref.id) {
+			const existing = byId.get(ref.id) ?? [];
 			existing.push(ref);
-			byGuid.set(ref.guid, existing);
+			byId.set(ref.id, existing);
 		}
 		const existing = byType.get(ref.typeName) ?? [];
 		existing.push(ref);
@@ -325,8 +325,8 @@ function scanSchemaState(root: any): IndexedSchemaState {
 		}
 		if (typeof value !== "object") return;
 		const resolvedTypeName = typeName ?? "Kit";
-		const guidValue = typeof value.guid === "string" ? value.guid : undefined;
-		push({ typeName: resolvedTypeName, guid: guidValue, path, value });
+		const idValue = typeof value.id === "string" ? value.id : undefined;
+		push({ typeName: resolvedTypeName, id: idValue, path, value });
 		for (const [key, entry] of Object.entries(value)) {
 			walk(entry, [...path, key], inferTypeName(resolvedTypeName, key));
 		}
@@ -337,93 +337,93 @@ function scanSchemaState(root: any): IndexedSchemaState {
 	return {
 		plain: root,
 		kit: asKitInstance(root),
-		kitGuid: root?.guid,
-		byGuid,
+		kitId: root?.id,
+		byId,
 		byType,
 	};
 }
 
-function collectGuids(value: any, target: Set<string>): void {
+function collectIds(value: any, target: Set<string>): void {
 	if (value == null) return;
 	if (Array.isArray(value)) {
-		for (const entry of value) collectGuids(entry, target);
+		for (const entry of value) collectIds(entry, target);
 		return;
 	}
 	if (typeof value !== "object") return;
-	if (typeof value.guid === "string") target.add(value.guid);
-	for (const entry of Object.values(value)) collectGuids(entry, target);
+	if (typeof value.id === "string") target.add(value.id);
+	for (const entry of Object.values(value)) collectIds(entry, target);
 }
 
-function resolveReference(index: IndexedSchemaState, typeName: string, guid?: string, scope?: SchemaScope | null): IndexedSchemaReference | undefined {
+function resolveReference(index: IndexedSchemaState, typeName: string, id?: string, scope?: SchemaScope | null): IndexedSchemaReference | undefined {
 	if (typeName === "Kit") return index.byType.get("Kit")?.[0];
-	if (guid) {
-		const matches = index.byGuid.get(guid) ?? [];
+	if (id) {
+		const matches = index.byId.get(id) ?? [];
 		return matches.find((entry) => entry.typeName === typeName) ?? matches[0];
 	}
 	if (scope && scope.typeName === typeName) {
-		return { typeName, guid: scope.guid, path: scope.path, value: getByPath(index.plain, scope.path) };
+		return { typeName, id: scope.id, path: scope.path, value: getByPath(index.plain, scope.path) };
 	}
 	const typeMatches = index.byType.get(typeName) ?? [];
 	if (typeMatches.length === 1) return typeMatches[0];
 	return undefined;
 }
 
-function findLivePiece(kit: KitImpl, pieceGuid: string): { piece: Piece; design: Design } | undefined {
+function findLivePiece(kit: KitImpl, pieceId: string): { piece: Piece; design: Design } | undefined {
 	for (const design of kit.designs ?? []) {
-		const piece = design.pieces?.find((entry) => entry.guid === pieceGuid);
+		const piece = design.pieces?.find((entry) => entry.id === pieceId);
 		if (piece) return { piece, design };
 	}
 	return undefined;
 }
 
-function findLiveConnection(kit: KitImpl, connectionGuid: string): { connection: any; design: Design } | undefined {
+function findLiveConnection(kit: KitImpl, connectionId: string): { connection: any; design: Design } | undefined {
 	for (const design of kit.designs ?? []) {
-		const connection = design._connections?.find((entry) => entry.guid === connectionGuid);
+		const connection = design._connections?.find((entry) => entry.id === connectionId);
 		if (connection) return { connection, design };
 	}
 	return undefined;
 }
 
-function findLiveEntity(kit: KitImpl, typeName: string, guid?: string): any {
+function findLiveEntity(kit: KitImpl, typeName: string, id?: string): any {
 	if (typeName === "Kit") return kit;
-	if (!guid) return undefined;
-	if (typeName === "Piece") return findLivePiece(kit, guid)?.piece;
-	if (typeName === "Connection") return findLiveConnection(kit, guid)?.connection;
-	if (typeName === "Type") return kit.findType(guid);
-	if (typeName === "Design") return kit.findDesign(guid);
-	if (typeName === "Port") return kit.ports?.find((entry) => entry.guid === guid);
-	if (typeName === "Quality") return kit.qualities?.find((entry) => entry.guid === guid);
-	if (typeName === "File") return kit.files?.find((entry) => entry.guid === guid);
-	if (typeName === "Folder") return kit.folders?.find((entry) => entry.guid === guid);
-	if (typeName === "Author") return kit.authors?.find((entry) => entry.guid === guid);
-	if (typeName === "Tag") return kit.tags?.find((entry) => entry.guid === guid);
-	if (typeName === "Concept") return kit.concepts?.find((entry) => entry.guid === guid);
-	if (typeName === "Family") return kit.families?.find((entry) => entry.guid === guid);
+	if (!id) return undefined;
+	if (typeName === "Piece") return findLivePiece(kit, id)?.piece;
+	if (typeName === "Connection") return findLiveConnection(kit, id)?.connection;
+	if (typeName === "Type") return kit.findType(id);
+	if (typeName === "Design") return kit.findDesign(id);
+	if (typeName === "Port") return kit.ports?.find((entry) => entry.id === id);
+	if (typeName === "Quality") return kit.qualities?.find((entry) => entry.id === id);
+	if (typeName === "File") return kit.files?.find((entry) => entry.id === id);
+	if (typeName === "Folder") return kit.folders?.find((entry) => entry.id === id);
+	if (typeName === "Author") return kit.authors?.find((entry) => entry.id === id);
+	if (typeName === "Tag") return kit.tags?.find((entry) => entry.id === id);
+	if (typeName === "Concept") return kit.concepts?.find((entry) => entry.id === id);
+	if (typeName === "Family") return kit.families?.find((entry) => entry.id === id);
 	if (typeName === "Representation") {
 		for (const entry of kit.types ?? []) {
-			const match = entry.representations?.find((representation) => representation.guid === guid);
+			const match = entry.representations?.find((representation) => representation.id === id);
 			if (match) return match;
 		}
 	}
 	if (typeName === "Connector") {
 		for (const entry of kit.types ?? []) {
-			const match = entry.connectors?.find((connector) => connector.guid === guid);
+			const match = entry.connectors?.find((connector) => connector.id === id);
 			if (match) return match;
 		}
 	}
 	if (typeName === "Benchmark") {
 		for (const entry of kit.qualities ?? []) {
-			const match = entry.benchmarks?.find((benchmark) => benchmark.guid === guid);
+			const match = entry.benchmarks?.find((benchmark) => benchmark.id === id);
 			if (match) return match;
 		}
 	}
 	return undefined;
 }
 
-function readCustomFieldValue(state: IndexedSchemaState, typeName: string, fieldName: string, guid?: string): any {
+function readCustomFieldValue(state: IndexedSchemaState, typeName: string, fieldName: string, id?: string): any {
 	if (typeName === "Kit" && fieldName === "release") return (state.kit as any).version;
 	if (typeName === "Piece") {
-		const found = guid ? findLivePiece(state.kit, guid) : undefined;
+		const found = id ? findLivePiece(state.kit, id) : undefined;
 		if (!found) return undefined;
 		const { piece, design } = found;
 		if (fieldName === "kind") return piece.wireDesignAsPieceId() ? "DESIGN" : piece.wireTypeId() ? "TYPE" : undefined;
@@ -431,35 +431,35 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
 		if (fieldName === "flatCenter") return piece.flatCenter();
 		if (fieldName === "parentPiece") {
 			try {
-				return state.kit.findParentPieceInDesign(design.guid, piece.guid);
+				return state.kit.findParentPieceInDesign(design.id, piece.id);
 			} catch {
 				return undefined;
 			}
 		}
 		if (fieldName === "parentConnection") {
 			try {
-				return state.kit.findParentConnectionForPieceInDesign(design.guid, piece.guid);
+				return state.kit.findParentConnectionForPieceInDesign(design.id, piece.id);
 			} catch {
 				return undefined;
 			}
 		}
 		if (fieldName === "childPieces") {
 			try {
-				return state.kit.findChildrenPiecesInDesign(design.guid, piece.guid);
+				return state.kit.findChildrenPiecesInDesign(design.id, piece.id);
 			} catch {
 				return [];
 			}
 		}
 		if (fieldName === "childConnections") {
 			try {
-				const metadata = state.kit.piecesMetadataFor(design.guid);
+				const metadata = state.kit.piecesMetadataFor(design.id);
 				if (!metadata.ok || !metadata.diff) return [];
 				return (design._connections ?? []).filter((connection) => {
 					try {
-						const connectedGuid = connection.connected.wirePieceId().guid;
-						const connectingGuid = connection.connecting.wirePieceId().guid;
-						if (connectedGuid === piece.guid) return metadata.diff.get(connectingGuid)?.parentPieceId === piece.guid;
-						if (connectingGuid === piece.guid) return metadata.diff.get(connectedGuid)?.parentPieceId === piece.guid;
+						const connectedId = connection.connected.wirePieceId().id;
+						const connectingId = connection.connecting.wirePieceId().id;
+						if (connectedId === piece.id) return metadata.diff.get(connectingId)?.parentPieceId === piece.id;
+						if (connectingId === piece.id) return metadata.diff.get(connectedId)?.parentPieceId === piece.id;
 						return false;
 					} catch {
 						return false;
@@ -474,7 +474,7 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
 			const nestedDesign = piece.design;
 			if (!nestedDesign || typeof nestedDesign.getDesignFamily !== "function") return [];
 			try {
-				return nestedDesign.getDesignFamily().filter((entry) => entry.guid !== nestedDesign.guid);
+				return nestedDesign.getDesignFamily().filter((entry) => entry.id !== nestedDesign.id);
 			} catch {
 				return [];
 			}
@@ -482,12 +482,12 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
 		if (fieldName === "alternatives") {
 			return [
 				...((piece.alternativeTypes() ?? []).map((entry) => ({ type: entry, design: undefined }))),
-				...((readCustomFieldValue(state, typeName, "alternativeDesigns", guid) ?? []).map((entry: any) => ({ type: undefined, design: entry }))),
+				...((readCustomFieldValue(state, typeName, "alternativeDesigns", id) ?? []).map((entry: any) => ({ type: undefined, design: entry }))),
 			];
 		}
 	}
 	if (typeName === "Connection") {
-		const found = guid ? findLiveConnection(state.kit, guid) : undefined;
+		const found = id ? findLiveConnection(state.kit, id) : undefined;
 		if (!found) return undefined;
 		const { connection } = found;
 		if (fieldName === "childPiece") return connection.connecting?.piece;
@@ -496,12 +496,12 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
 		if (fieldName === "parentConnector") return connection.connected?.connector;
 	}
 	if (typeName === "Type" && fieldName === "fixedPieces") {
-		const liveType = guid ? state.kit.findType(guid) : undefined;
+		const liveType = id ? state.kit.findType(id) : undefined;
 		if (!liveType) return [];
 		const pieces: Piece[] = [];
 		for (const design of state.kit.designs ?? []) {
 			for (const piece of design.pieces ?? []) {
-				if (piece.wireTypeId()?.guid === liveType.guid) pieces.push(piece);
+				if (piece.wireTypeId()?.id === liveType.id) pieces.push(piece);
 			}
 		}
 		return pieces;
@@ -509,18 +509,18 @@ function readCustomFieldValue(state: IndexedSchemaState, typeName: string, field
 	return undefined;
 }
 
-function readSchemaFieldValue(state: IndexedSchemaState, typeName: string, fieldName: string, guid?: string, scope?: SchemaScope | null): any {
-	const custom = readCustomFieldValue(state, typeName, fieldName, guid);
+function readSchemaFieldValue(state: IndexedSchemaState, typeName: string, fieldName: string, id?: string, scope?: SchemaScope | null): any {
+	const custom = readCustomFieldValue(state, typeName, fieldName, id);
 	if (custom !== undefined) return custom;
-	const ref = resolveReference(state, typeName, guid, scope);
+	const ref = resolveReference(state, typeName, id, scope);
 	if (!ref) return undefined;
 	const key = getFieldDataKey(typeName, fieldName);
 	return ref.value?.[key];
 }
 
-function isWritableField(state: IndexedSchemaState, typeName: string, fieldName: string, guid?: string, scope?: SchemaScope | null): boolean {
+function isWritableField(state: IndexedSchemaState, typeName: string, fieldName: string, id?: string, scope?: SchemaScope | null): boolean {
 	if (NEVER_WRITABLE_FIELDS.has(fieldName)) return false;
-	const ref = resolveReference(state, typeName, guid, scope);
+	const ref = resolveReference(state, typeName, id, scope);
 	if (!ref) return false;
 	const key = getFieldDataKey(typeName, fieldName);
 	if (fieldName === "hash") return false;
@@ -528,11 +528,11 @@ function isWritableField(state: IndexedSchemaState, typeName: string, fieldName:
 }
 
 function normalizeNextValue(current: any, fieldName: string, next: any): any {
-	if (typeof next === "string" && current && typeof current === "object" && "guid" in current) {
-		return { guid: next };
+	if (typeof next === "string" && current && typeof current === "object" && "id" in current) {
+		return { id: next };
 	}
 	if ((fieldName === "type" || fieldName === "design" || fieldName === "piece" || fieldName === "designPiece" || fieldName === "connector") && typeof next === "string") {
-		return { guid: next };
+		return { id: next };
 	}
 	return next;
 }
@@ -542,7 +542,7 @@ function nextValueFromAction<T>(current: T, next: SetStateAction<T>): T {
 }
 
 function normalizeStateInput(input: KitStoreSnapshot | KitLike | IndexedSchemaState): IndexedSchemaState {
-	if ((input as IndexedSchemaState).byGuid instanceof Map) return input as IndexedSchemaState;
+	if ((input as IndexedSchemaState).byId instanceof Map) return input as IndexedSchemaState;
 	if ((input as KitStoreSnapshot).kit) {
 		const snapshot = input as KitStoreSnapshot;
 		return scanSchemaState(snapshot.kit.toJSON());
@@ -571,40 +571,40 @@ function collectChangedObjectFields(typeName: string, previousValue: any, nextVa
 export function diffSchemaPropertyEvents(previousInput: KitStoreSnapshot | KitLike | IndexedSchemaState, nextInput: KitStoreSnapshot | KitLike | IndexedSchemaState): SchemaPropertyEvent[] {
 	const previous = normalizeStateInput(previousInput);
 	const next = normalizeStateInput(nextInput);
-	const dirtyGuids = new Set<string>();
-	const allGuids = new Set<string>([...(previous.byGuid.keys() ?? []), ...(next.byGuid.keys() ?? [])]);
+	const dirtyIds = new Set<string>();
+	const allIds = new Set<string>([...(previous.byId.keys() ?? []), ...(next.byId.keys() ?? [])]);
 
-	for (const guidValue of allGuids) {
-		const previousRef = (previous.byGuid.get(guidValue) ?? [])[0];
-		const nextRef = (next.byGuid.get(guidValue) ?? [])[0];
+	for (const idValue of allIds) {
+		const previousRef = (previous.byId.get(idValue) ?? [])[0];
+		const nextRef = (next.byId.get(idValue) ?? [])[0];
 		if (!deepEqual(previousRef?.value, nextRef?.value)) {
-			dirtyGuids.add(guidValue);
-			collectGuids(previousRef?.value, dirtyGuids);
-			collectGuids(nextRef?.value, dirtyGuids);
+			dirtyIds.add(idValue);
+			collectIds(previousRef?.value, dirtyIds);
+			collectIds(nextRef?.value, dirtyIds);
 		}
 	}
 
 	const events: SchemaPropertyEvent[] = [];
-	for (const guidValue of dirtyGuids) {
-		const previousRef = (previous.byGuid.get(guidValue) ?? [])[0];
-		const nextRef = (next.byGuid.get(guidValue) ?? [])[0];
+	for (const idValue of dirtyIds) {
+		const previousRef = (previous.byId.get(idValue) ?? [])[0];
+		const nextRef = (next.byId.get(idValue) ?? [])[0];
 		const typeName = nextRef?.typeName ?? previousRef?.typeName;
 		if (!typeName) continue;
 		for (const fieldName of collectChangedObjectFields(typeName, previousRef?.value, nextRef?.value)) {
-			const previousValue = readSchemaFieldValue(previous, typeName, fieldName, guidValue);
-			const nextValue = readSchemaFieldValue(next, typeName, fieldName, guidValue);
+			const previousValue = readSchemaFieldValue(previous, typeName, fieldName, idValue);
+			const nextValue = readSchemaFieldValue(next, typeName, fieldName, idValue);
 			if (!deepEqual(previousValue, nextValue)) {
-				events.push({ key: `${typeName}.${fieldName}`, typeName, fieldName, guid: guidValue, previous: previousValue, current: nextValue });
+				events.push({ key: `${typeName}.${fieldName}`, typeName, fieldName, id: idValue, previous: previousValue, current: nextValue });
 			}
 		}
 	}
 
-	if (!deepEqual(previous.plain, next.plain) && next.kitGuid) {
+	if (!deepEqual(previous.plain, next.plain) && next.kitId) {
 		for (const fieldName of collectChangedObjectFields("Kit", previous.plain, next.plain)) {
-			const previousValue = readSchemaFieldValue(previous, "Kit", fieldName, previous.kitGuid);
-			const nextValue = readSchemaFieldValue(next, "Kit", fieldName, next.kitGuid);
+			const previousValue = readSchemaFieldValue(previous, "Kit", fieldName, previous.kitId);
+			const nextValue = readSchemaFieldValue(next, "Kit", fieldName, next.kitId);
 			if (!deepEqual(previousValue, nextValue)) {
-				events.push({ key: `Kit.${fieldName}`, typeName: "Kit", fieldName, guid: next.kitGuid, previous: previousValue, current: nextValue });
+				events.push({ key: `Kit.${fieldName}`, typeName: "Kit", fieldName, id: next.kitId, previous: previousValue, current: nextValue });
 			}
 		}
 	}
@@ -704,7 +704,7 @@ async function createNodeFolderAdapter(folderPath: string) {
 async function createStoreFromBackbone(backbone: KitProviderBackbone | undefined, initialKit?: KitLike): Promise<KitStore> {
 	const resolvedBackbone = backbone?.kind ? backbone : ({ kind: "memory", initialKit } as MemoryBackboneConfig);
 	if (resolvedBackbone.kind === "memory") {
-		const seed = resolvedBackbone.initialKit ?? initialKit ?? { guid: guid(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+		const seed = resolvedBackbone.initialKit ?? initialKit ?? { id: id(), name: "Untitled", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 		return new InMemoryKitStore(asKitInstance(seed));
 	}
 	if (resolvedBackbone.kind === "dev") {
@@ -740,11 +740,11 @@ export type KitRegistryEntry = {
 };
 
 export type KitRegistryValue = {
-	open: (guid: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore }) => Promise<void>;
-	close: (guid: string) => void;
-	get: (guid: string) => KitRegistryEntry | undefined;
+	open: (id: string, init: { backbone?: KitProviderBackbone; initialKit?: KitLike; store?: KitStore }) => Promise<void>;
+	close: (id: string) => void;
+	get: (id: string) => KitRegistryEntry | undefined;
 	list: () => string[];
-	status: (guid: string) => "idle" | "loading" | "ready" | "error";
+	status: (id: string) => "idle" | "loading" | "ready" | "error";
 };
 
 type RegistryRow = {
@@ -764,15 +764,15 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
 
 	const value = React.useMemo<KitRegistryValue>(
 		() => ({
-			async open(guid, init) {
-				const cur = rowsRef.current.get(guid);
+			async open(id, init) {
+				const cur = rowsRef.current.get(id);
 				if (cur) {
 					cur.refs += 1;
 					bump();
 					return;
 				}
-				loadingRef.current.add(guid);
-				errRef.current.delete(guid);
+				loadingRef.current.add(id);
+				errRef.current.delete(id);
 				bump();
 				try {
 					const store = init.store ?? (await createStoreFromBackbone(init.backbone, init.initialKit));
@@ -787,37 +787,37 @@ export function KitRegistryProvider({ children }: { children: ReactNode }): Reac
 							store.replace(asKitInstance(kitClient.getDto()));
 						}
 					});
-					rowsRef.current.set(guid, { store, kitClient, refs: 1, unsub });
+					rowsRef.current.set(id, { store, kitClient, refs: 1, unsub });
 				} catch (e) {
-					errRef.current.set(guid, e instanceof Error ? e : new Error(String(e)));
+					errRef.current.set(id, e instanceof Error ? e : new Error(String(e)));
 				} finally {
-					loadingRef.current.delete(guid);
+					loadingRef.current.delete(id);
 					bump();
 				}
 			},
-			close(guid) {
-				const row = rowsRef.current.get(guid);
+			close(id) {
+				const row = rowsRef.current.get(id);
 				if (!row) return;
 				row.refs -= 1;
 				if (row.refs <= 0) {
 					row.unsub();
 					row.kitClient.dispose();
-					rowsRef.current.delete(guid);
+					rowsRef.current.delete(id);
 				}
 				bump();
 			},
-			get(guid) {
-				const row = rowsRef.current.get(guid);
+			get(id) {
+				const row = rowsRef.current.get(id);
 				if (!row) return undefined;
 				return { store: row.store, kitClient: row.kitClient, refs: row.refs };
 			},
 			list() {
 				return Array.from(rowsRef.current.keys());
 			},
-			status(guid) {
-				if (loadingRef.current.has(guid)) return "loading";
-				if (errRef.current.has(guid)) return "error";
-				if (rowsRef.current.has(guid)) return "ready";
+			status(id) {
+				if (loadingRef.current.has(id)) return "loading";
+				if (errRef.current.has(id)) return "error";
+				if (rowsRef.current.has(id)) return "ready";
 				return "idle";
 			},
 		}),
@@ -857,15 +857,15 @@ export function useKitStoreClient(): KitStoreClient | null {
 	return runtime.kitClient;
 }
 
-/** Active kit guid from {@link KitProvider} runtime, or `undefined` outside a provider. */
-export function useActiveKitGuid(): string | undefined {
-	return React.useContext(KitRuntimeContext)?.kitGuid;
+/** Active kit id from {@link KitProvider} runtime, or `undefined` outside a provider. */
+export function useActiveKitId(): string | undefined {
+	return React.useContext(KitRuntimeContext)?.kitId;
 }
 
 export type KitProviderProps = {
 	store?: KitStore;
 	/** When set with <KitRegistryProvider>, uses the registry entry for this kit (warm WASM worker). */
-	kitGuid?: string;
+	kitId?: string;
 	/** When provided (e.g. from registry), skips creating a new worker client. */
 	kitClient?: KitStoreClient | null;
 	backbone?: KitProviderBackbone;
@@ -876,7 +876,7 @@ export type KitProviderProps = {
 
 export function KitProvider({
 	store: externalStore,
-	kitGuid: kitGuidProp,
+	kitId: kitIdProp,
 	kitClient: kitClientProp,
 	backbone,
 	initialKit,
@@ -884,16 +884,16 @@ export function KitProvider({
 	fallback = null,
 }: KitProviderProps): React.ReactElement | null {
 	const registry = React.useContext(KitRegistryContext);
-	if (kitGuidProp && !registry) {
-		throw new Error("semio/react: <KitProvider kitGuid={...}> must be wrapped in <KitRegistryProvider>.");
+	if (kitIdProp && !registry) {
+		throw new Error("semio/react: <KitProvider kitId={...}> must be wrapped in <KitRegistryProvider>.");
 	}
-	const registryEntry = kitGuidProp && registry ? registry.get(kitGuidProp) : undefined;
+	const registryEntry = kitIdProp && registry ? registry.get(kitIdProp) : undefined;
 
 	const [internalStore, setInternalStore] = React.useState<KitStore | null>(externalStore ?? null);
 	const [kitClientState, setKitClientState] = React.useState<KitStoreClient | null>(kitClientProp ?? null);
 
 	React.useEffect(() => {
-		if (kitGuidProp) return;
+		if (kitIdProp) return;
 		if (externalStore) {
 			setInternalStore(externalStore);
 			return;
@@ -905,10 +905,10 @@ export function KitProvider({
 		return () => {
 			disposed = true;
 		};
-	}, [kitGuidProp, externalStore, backbone, initialKit]);
+	}, [kitIdProp, externalStore, backbone, initialKit]);
 
 	React.useEffect(() => {
-		if (kitGuidProp) return;
+		if (kitIdProp) return;
 		if (kitClientProp !== undefined) {
 			setKitClientState(kitClientProp);
 			return;
@@ -930,16 +930,16 @@ export function KitProvider({
 			client?.dispose();
 			setKitClientState(null);
 		};
-	}, [kitGuidProp, externalStore, internalStore, kitClientProp]);
+	}, [kitIdProp, externalStore, internalStore, kitClientProp]);
 
-	const store = kitGuidProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
-	const kitClient = kitGuidProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
+	const store = kitIdProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
+	const kitClient = kitIdProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
 
-	if (kitGuidProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
+	if (kitIdProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
 	if (!store) return React.createElement(React.Fragment, null, fallback);
 
 	React.useEffect(() => {
-		if (kitGuidProp) return;
+		if (kitIdProp) return;
 		if (!kitClient) return;
 		return kitClient.subscribe(() => {
 			try {
@@ -951,7 +951,7 @@ export function KitProvider({
 				store.replace(asKitInstance(kitClient.getDto()));
 			}
 		});
-	}, [kitClient, store, kitGuidProp]);
+	}, [kitClient, store, kitIdProp]);
 
 	const snapshotRef = React.useRef<KitStoreSnapshot | null>(null);
 	const getSnapshot = React.useCallback(() => {
@@ -998,10 +998,10 @@ export function KitProvider({
 		setRecentSetRejections((r) => [...r.slice(-99), e]);
 	}, []);
 
-	const setFieldValue = React.useCallback((typeName: string, fieldName: string, next: SetStateAction<any>, guidValue?: string, scope?: SchemaScope | null) => {
+	const setFieldValue = React.useCallback((typeName: string, fieldName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null) => {
 		const currentState = scanSchemaState(store.getSnapshot().kit.toJSON());
-		if (!isWritableField(currentState, typeName, fieldName, guidValue, scope)) return;
-		const ref = resolveReference(currentState, typeName, guidValue, scope);
+		if (!isWritableField(currentState, typeName, fieldName, idValue, scope)) return;
+		const ref = resolveReference(currentState, typeName, idValue, scope);
 		if (!ref) return;
 		const key = getFieldDataKey(typeName, fieldName);
 		const clone = deepClone(currentState.plain);
@@ -1011,9 +1011,9 @@ export function KitProvider({
 		store.replace(asKitInstance(clone));
 	}, [store]);
 
-	const setObjectValue = React.useCallback((typeName: string, next: SetStateAction<any>, guidValue?: string, scope?: SchemaScope | null) => {
+	const setObjectValue = React.useCallback((typeName: string, next: SetStateAction<any>, idValue?: string, scope?: SchemaScope | null) => {
 		const currentState = scanSchemaState(store.getSnapshot().kit.toJSON());
-		const ref = resolveReference(currentState, typeName, guidValue, scope);
+		const ref = resolveReference(currentState, typeName, idValue, scope);
 		if (!ref) return;
 		const clone = deepClone(currentState.plain);
 		const currentValue = getByPath(clone, ref.path);
@@ -1021,7 +1021,7 @@ export function KitProvider({
 		store.replace(asKitInstance(clone));
 	}, [store]);
 
-	const activeKitGuid = kitGuidProp ?? snapshot.kit?.guid;
+	const activeKitId = kitIdProp ?? snapshot.kit?.id;
 
 	const value = React.useMemo<KitRuntimeContextValue>(() => ({
 		store,
@@ -1031,119 +1031,119 @@ export function KitProvider({
 		recentSetRejections,
 		pushSetRejection,
 		canWrite: !snapshot.sync.readonly,
-		kitGuid: activeKitGuid,
+		kitId: activeKitId,
 		kitClient,
 		setFieldValue,
 		setObjectValue,
-	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitGuid, kitClient, setFieldValue, setObjectValue]);
+	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitId, kitClient, setFieldValue, setObjectValue]);
 
 	return React.createElement(KitRuntimeContext.Provider, { value }, children);
 }
 
-function useEntityScope(typeName: string, guidValue?: string): SchemaScope {
+function useEntityScope(typeName: string, idValue?: string): SchemaScope {
 	const runtime = useKitRuntime();
 	const parentScope = React.useContext(SchemaScopeContext);
-	const ref = resolveReference(runtime.state, typeName, guidValue, parentScope);
-	return ref ? { typeName, guid: ref.guid, path: ref.path } : { typeName, guid: guidValue, path: [] };
+	const ref = resolveReference(runtime.state, typeName, idValue, parentScope);
+	return ref ? { typeName, id: ref.id, path: ref.path } : { typeName, id: idValue, path: [] };
 }
 
-export function PieceProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Piece", guidValue);
+export function PieceProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Piece", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function TypeProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Type", guidValue);
+export function TypeProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Type", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function DesignProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Design", guidValue);
+export function DesignProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Design", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function ConnectionProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Connection", guidValue);
+export function ConnectionProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Connection", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function PortProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Port", guidValue);
+export function PortProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Port", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function QualityProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Quality", guidValue);
+export function QualityProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Quality", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function FileProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("File", guidValue);
+export function FileProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("File", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function FolderProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Folder", guidValue);
+export function FolderProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Folder", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function AuthorProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Author", guidValue);
+export function AuthorProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Author", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function TagProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Tag", guidValue);
+export function TagProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Tag", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function ConceptProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Concept", guidValue);
+export function ConceptProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Concept", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function FamilyProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Family", guidValue);
+export function FamilyProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Family", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function RepresentationProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Representation", guidValue);
+export function RepresentationProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Representation", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function ConnectorProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Connector", guidValue);
+export function ConnectorProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Connector", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function BenchmarkProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Benchmark", guidValue);
+export function BenchmarkProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Benchmark", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function LayerProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Layer", guidValue);
+export function LayerProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Layer", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function GroupProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Group", guidValue);
+export function GroupProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Group", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function StatProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Stat", guidValue);
+export function StatProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Stat", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function PropProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Prop", guidValue);
+export function PropProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Prop", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
-export function AttributeProvider({ guid: guidValue, children }: { guid?: string; children: ReactNode }): React.ReactElement {
-	const scope = useEntityScope("Attribute", guidValue);
+export function AttributeProvider({ id: idValue, children }: { id?: string; children: ReactNode }): React.ReactElement {
+	const scope = useEntityScope("Attribute", idValue);
 	return React.createElement(SchemaScopeContext.Provider, { value: scope }, children);
 }
 
@@ -1155,52 +1155,52 @@ function resolveRustFieldTarget(
 	runtime: KitRuntimeContextValue,
 	typeName: string,
 	fieldName: string,
-	guidValue: string | undefined,
+	idValue: string | undefined,
 	scope: SchemaScope | null,
-): { kind: string; guid: string; field: string } | null {
+): { kind: string; id: string; field: string } | null {
 	if (!runtime.kitClient) return null;
 	if (typeName === "Piece" && (fieldName === "name" || fieldName === "color")) {
-		const g = guidValue ?? scope?.guid;
+		const g = idValue ?? scope?.id;
 		if (!g) return null;
-		return { kind: "Piece", guid: g, field: fieldName };
+		return { kind: "Piece", id: g, field: fieldName };
 	}
 	if (typeName === "Kit" && fieldName === "name") {
-		return { kind: "Kit", guid: runtime.snapshot.kit.guid, field: "name" };
+		return { kind: "Kit", id: runtime.snapshot.kit.id, field: "name" };
 	}
 	if (typeName === "Design" && fieldName === "name") {
-		const g = guidValue ?? scope?.guid;
+		const g = idValue ?? scope?.id;
 		if (!g) return null;
-		return { kind: "Design", guid: g, field: "name" };
+		return { kind: "Design", id: g, field: "name" };
 	}
 	if (typeName === "Type" && fieldName === "name") {
-		const g = guidValue ?? scope?.guid;
+		const g = idValue ?? scope?.id;
 		if (!g) return null;
-		return { kind: "Type", guid: g, field: "name" };
+		return { kind: "Type", id: g, field: "name" };
 	}
 	return null;
 }
 
-export function useSchemaEvents(filter?: Partial<Pick<SchemaPropertyEvent, "typeName" | "fieldName" | "guid" | "key">>): SchemaPropertyEvent[] {
+export function useSchemaEvents(filter?: Partial<Pick<SchemaPropertyEvent, "typeName" | "fieldName" | "id" | "key">>): SchemaPropertyEvent[] {
 	const runtime = useKitRuntime();
 	return React.useMemo(() => {
 		if (!filter) return runtime.recentEvents;
 		return runtime.recentEvents.filter((event) => {
 			if (filter.typeName && event.typeName !== filter.typeName) return false;
 			if (filter.fieldName && event.fieldName !== filter.fieldName) return false;
-			if (filter.guid && event.guid !== filter.guid) return false;
+			if (filter.id && event.id !== filter.id) return false;
 			if (filter.key && event.key !== filter.key) return false;
 			return true;
 		});
 	}, [runtime.recentEvents, filter]);
 }
 
-export function useSetErrors(filter?: Partial<{ entityKind: string; guid: string }>): SetError[] {
+export function useSetErrors(filter?: Partial<{ entityKind: string; id: string }>): SetError[] {
 	const runtime = useKitRuntime();
 	return React.useMemo(() => {
 		if (!filter) return runtime.recentSetRejections;
 		return runtime.recentSetRejections.filter((e) => {
 			if (filter.entityKind && e.entity?.kind !== filter.entityKind) return false;
-			if (filter.guid && e.entity?.guid !== filter.guid) return false;
+			if (filter.id && e.entity?.id !== filter.id) return false;
 			return true;
 		});
 	}, [runtime.recentSetRejections, filter]);
@@ -1314,20 +1314,20 @@ export function useDraft<T>(triad: HookTriad<T>): {
 // #region 🎛️KitStoreClient command hooks (WASM / worker RPCs)
 
 export function useClusterPieces(): {
-	run: (designGuid: string, pieceGuids: string[], clusterName: string) => Promise<SetResult>;
+	run: (designId: string, pieceIds: string[], clusterName: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuids: string[], clusterName: string) => {
+		async (designId: string, pieceIds: string[], clusterName: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.clusterPieces(designGuid, pieceGuids, clusterName);
+			const r = await runtime.kitClient.clusterPieces(designId, pieceIds, clusterName);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1342,20 +1342,20 @@ export function useClusterPieces(): {
 }
 
 export function useDragPieces(): {
-	run: (designGuid: string, pieceGuids: string[], du: number, dv: number) => Promise<SetResult>;
+	run: (designId: string, pieceIds: string[], du: number, dv: number) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuids: string[], du: number, dv: number) => {
+		async (designId: string, pieceIds: string[], du: number, dv: number) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.dragPieces(designGuid, pieceGuids, du, dv);
+			const r = await runtime.kitClient.dragPieces(designId, pieceIds, du, dv);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1370,20 +1370,20 @@ export function useDragPieces(): {
 }
 
 export function useMovePieces(): {
-	run: (designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number) => Promise<SetResult>;
+	run: (designId: string, pieceIds: string[], gap: number, shift: number, rise: number) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number) => {
+		async (designId: string, pieceIds: string[], gap: number, shift: number, rise: number) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.movePieces(designGuid, pieceGuids, gap, shift, rise);
+			const r = await runtime.kitClient.movePieces(designId, pieceIds, gap, shift, rise);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1398,20 +1398,20 @@ export function useMovePieces(): {
 }
 
 export function useFixPieces(): {
-	run: (designGuid: string, pieceGuids: string[]) => Promise<SetResult>;
+	run: (designId: string, pieceIds: string[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuids: string[]) => {
+		async (designId: string, pieceIds: string[]) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.fixPieces(designGuid, pieceGuids);
+			const r = await runtime.kitClient.fixPieces(designId, pieceIds);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1425,18 +1425,18 @@ export function useFixPieces(): {
 	return { run, status };
 }
 
-export function useFlattenDesign(): { run: (designGuid: string) => Promise<SetResult>; status: WriteStatus } {
+export function useFlattenDesign(): { run: (designId: string) => Promise<SetResult>; status: WriteStatus } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string) => {
+		async (designId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.flattenDesign(designGuid);
+			const r = await runtime.kitClient.flattenDesign(designId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1451,20 +1451,20 @@ export function useFlattenDesign(): { run: (designGuid: string) => Promise<SetRe
 }
 
 export function useExpandDesign(): {
-	run: (parentDesignGuid: string, nestedDesignGuid: string) => Promise<SetResult>;
+	run: (parentDesignId: string, nestedDesignId: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (parentDesignGuid: string, nestedDesignGuid: string) => {
+		async (parentDesignId: string, nestedDesignId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.expandDesign(parentDesignGuid, nestedDesignGuid);
+			const r = await runtime.kitClient.expandDesign(parentDesignId, nestedDesignId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1479,20 +1479,20 @@ export function useExpandDesign(): {
 }
 
 export function useDeleteConnection(): {
-	run: (designGuid: string, connectionGuid: string) => Promise<SetResult>;
+	run: (designId: string, connectionId: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, connectionGuid: string) => {
+		async (designId: string, connectionId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.deleteConnection(designGuid, connectionGuid);
+			const r = await runtime.kitClient.deleteConnection(designId, connectionId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1507,20 +1507,20 @@ export function useDeleteConnection(): {
 }
 
 export function useChangePieceType(): {
-	run: (designGuid: string, pieceGuid: string, newTypeGuid: string) => Promise<SetResult>;
+	run: (designId: string, pieceId: string, newTypeId: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuid: string, newTypeGuid: string) => {
+		async (designId: string, pieceId: string, newTypeId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.changePieceType(designGuid, pieceGuid, newTypeGuid);
+			const r = await runtime.kitClient.changePieceType(designId, pieceId, newTypeId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1724,7 +1724,7 @@ function useKitAddToKit(childKind: string): {
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
-			const kg = kitGuidFromRuntime(runtime);
+			const kg = kitIdFromRuntime(runtime);
 			if (!kg) {
 				const e: SetError = { kind: "NotFound", message: "no active kit" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1746,26 +1746,26 @@ function useKitAddToKit(childKind: string): {
 }
 
 function useKitRemoveFromKit(childKind: string): {
-	run: (childGuid: string) => Promise<SetResult>;
+	run: (childId: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (childGuid: string) => {
+		async (childId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
-			const kg = kitGuidFromRuntime(runtime);
+			const kg = kitIdFromRuntime(runtime);
 			if (!kg) {
 				const e: SetError = { kind: "NotFound", message: "no active kit" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.removeChild("Kit", kg, childKind, childGuid);
+			const r = await runtime.kitClient.removeChild("Kit", kg, childKind, childId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1782,13 +1782,13 @@ function useKitRemoveFromKit(childKind: string): {
 export const useCreateAuthor = () => useKitAddToKit("Author");
 export const useDeleteAuthor = () => useKitRemoveFromKit("Author");
 export const useUpdateAuthor = (): {
-	run: (authorGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (authorId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (authorGuid: string, patch: Record<string, unknown>) => {
+		async (authorId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1796,7 +1796,7 @@ export const useUpdateAuthor = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Author", authorGuid, field, value);
+				const r = await runtime.kitClient.setField("Author", authorId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1814,13 +1814,13 @@ export const useUpdateAuthor = (): {
 export const useCreateType = () => useKitAddToKit("Type");
 export const useDeleteType = () => useKitRemoveFromKit("Type");
 export const useUpdateType = (): {
-	run: (typeGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (typeId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (typeGuid: string, patch: Record<string, unknown>) => {
+		async (typeId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1828,7 +1828,7 @@ export const useUpdateType = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Type", typeGuid, field, value);
+				const r = await runtime.kitClient.setField("Type", typeId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1846,13 +1846,13 @@ export const useUpdateType = (): {
 export const useCreateDesign = () => useKitAddToKit("Design");
 export const useDeleteDesign = () => useKitRemoveFromKit("Design");
 export const useUpdateDesign = (): {
-	run: (designGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (designId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, patch: Record<string, unknown>) => {
+		async (designId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1860,7 +1860,7 @@ export const useUpdateDesign = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Design", designGuid, field, value);
+				const r = await runtime.kitClient.setField("Design", designId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1878,13 +1878,13 @@ export const useUpdateDesign = (): {
 export const useCreateQuality = () => useKitAddToKit("Quality");
 export const useDeleteQuality = () => useKitRemoveFromKit("Quality");
 export const useUpdateQuality = (): {
-	run: (qualityGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (qualityId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (qualityGuid: string, patch: Record<string, unknown>) => {
+		async (qualityId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1892,7 +1892,7 @@ export const useUpdateQuality = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Quality", qualityGuid, field, value);
+				const r = await runtime.kitClient.setField("Quality", qualityId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1910,13 +1910,13 @@ export const useUpdateQuality = (): {
 export const useCreatePort = () => useKitAddToKit("Port");
 export const useDeletePort = () => useKitRemoveFromKit("Port");
 export const useUpdatePort = (): {
-	run: (portGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (portId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (portGuid: string, patch: Record<string, unknown>) => {
+		async (portId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1924,7 +1924,7 @@ export const useUpdatePort = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Port", portGuid, field, value);
+				const r = await runtime.kitClient.setField("Port", portId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1942,13 +1942,13 @@ export const useUpdatePort = (): {
 export const useCreateTag = () => useKitAddToKit("Tag");
 export const useDeleteTag = () => useKitRemoveFromKit("Tag");
 export const useUpdateTag = (): {
-	run: (tagGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (tagId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (tagGuid: string, patch: Record<string, unknown>) => {
+		async (tagId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1956,7 +1956,7 @@ export const useUpdateTag = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Tag", tagGuid, field, value);
+				const r = await runtime.kitClient.setField("Tag", tagId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -1977,13 +1977,13 @@ export const useDeleteConcept = () => useKitRemoveFromKit("Concept");
 export const useAddFile = () => useKitAddToKit("File");
 export const useRemoveFile = () => useKitRemoveFromKit("File");
 export const useUpdateFile = (): {
-	run: (fileGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (fileId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (fileGuid: string, patch: Record<string, unknown>) => {
+		async (fileId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -1991,7 +1991,7 @@ export const useUpdateFile = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("File", fileGuid, field, value);
+				const r = await runtime.kitClient.setField("File", fileId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2009,13 +2009,13 @@ export const useUpdateFile = (): {
 export const useCreateFolder = () => useKitAddToKit("Folder");
 export const useDeleteFolder = () => useKitRemoveFromKit("Folder");
 export const useUpdateFolder = (): {
-	run: (folderGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	run: (folderId: string, patch: Record<string, unknown>) => Promise<SetResult>;
 	status: WriteStatus;
 } => {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (folderGuid: string, patch: Record<string, unknown>) => {
+		async (folderId: string, patch: Record<string, unknown>) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -2023,7 +2023,7 @@ export const useUpdateFolder = (): {
 			}
 			setStatus({ kind: "pending", pending: 1 });
 			for (const [field, value] of Object.entries(patch)) {
-				const r = await runtime.kitClient.setField("Folder", folderGuid, field, value);
+				const r = await runtime.kitClient.setField("Folder", folderId, field, value);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2039,20 +2039,20 @@ export const useUpdateFolder = (): {
 };
 
 export function useMoveToFolder(): {
-	run: (fileGuid: string, targetFolderGuid: string | null) => Promise<SetResult>;
+	run: (fileId: string, targetFolderId: string | null) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (fileGuid: string, targetFolderGuid: string | null) => {
+		async (fileId: string, targetFolderId: string | null) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.setField("File", fileGuid, "folder", targetFolderGuid);
+			const r = await runtime.kitClient.setField("File", fileId, "folder", targetFolderId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2089,14 +2089,14 @@ export function useExportKit(): { run: () => Promise<SetResult>; status: WriteSt
 }
 
 export function useAddConnections(): {
-	run: (designGuid: string, connections: unknown[]) => Promise<SetResult>;
+	run: (designId: string, connections: unknown[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const add = useAddConnection();
 	const run = React.useCallback(
-		async (designGuid: string, connections: unknown[]) => {
+		async (designId: string, connections: unknown[]) => {
 			for (const c of connections) {
-				const r = await add.run(designGuid, c);
+				const r = await add.run(designId, c);
 				if (!r.ok) return r;
 			}
 			return { ok: true } as const;
@@ -2109,21 +2109,21 @@ export function useAddConnections(): {
 export const useRemoveConnection = useDeleteConnection;
 
 export function useRemoveConnections(): {
-	run: (designGuid: string, connectionGuids: string[]) => Promise<SetResult>;
+	run: (designId: string, connectionIds: string[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, connectionGuids: string[]) => {
+		async (designId: string, connectionIds: string[]) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			for (const cg of connectionGuids) {
-				const r = await runtime.kitClient.deleteConnection(designGuid, cg);
+			for (const cg of connectionIds) {
+				const r = await runtime.kitClient.deleteConnection(designId, cg);
 				if (!r.ok) {
 					runtime.pushSetRejection(r.error);
 					setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2155,20 +2155,20 @@ export function useDeselectAll(): { run: () => Promise<SetResult>; status: Write
 }
 
 export function usePasteDesignSelection(): {
-	run: (designGuid: string, selection: unknown, plane?: unknown) => Promise<SetResult>;
+	run: (designId: string, selection: unknown, plane?: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, selection: unknown, plane?: unknown) => {
+		async (designId: string, selection: unknown, plane?: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.pasteDesignSelection(designGuid, selection, plane ?? null);
+			const r = await runtime.kitClient.pasteDesignSelection(designId, selection, plane ?? null);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2183,20 +2183,20 @@ export function usePasteDesignSelection(): {
 }
 
 export function useCreateHangingPieces(): {
-	run: (designGuid: string, typeGuids: string[], plane: unknown) => Promise<SetResult>;
+	run: (designId: string, typeIds: string[], plane: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, typeGuids: string[], plane: unknown) => {
+		async (designId: string, typeIds: string[], plane: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.createHangingPieces(designGuid, typeGuids, plane);
+			const r = await runtime.kitClient.createHangingPieces(designId, typeIds, plane);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2211,20 +2211,20 @@ export function useCreateHangingPieces(): {
 }
 
 export function useCreateConnectedPiece(): {
-	run: (designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => Promise<SetResult>;
+	run: (designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => {
+		async (designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.createConnectedPiece(designGuid, parentPiece, parentPort, childType, childPort);
+			const r = await runtime.kitClient.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2239,20 +2239,20 @@ export function useCreateConnectedPiece(): {
 }
 
 export function useCreateFixedPiece(): {
-	run: (designGuid: string, typeGuid: string, plane: unknown) => Promise<SetResult>;
+	run: (designId: string, typeId: string, plane: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, typeGuid: string, plane: unknown) => {
+		async (designId: string, typeId: string, plane: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.createFixedPiece(designGuid, typeGuid, plane);
+			const r = await runtime.kitClient.createFixedPiece(designId, typeId, plane);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2267,20 +2267,20 @@ export function useCreateFixedPiece(): {
 }
 
 export function useDeletePiece(): {
-	run: (designGuid: string, pieceGuid: string) => Promise<SetResult>;
+	run: (designId: string, pieceId: string) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuid: string) => {
+		async (designId: string, pieceId: string) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.removeChild("Design", designGuid, "Piece", pieceGuid);
+			const r = await runtime.kitClient.removeChild("Design", designId, "Piece", pieceId);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2295,20 +2295,20 @@ export function useDeletePiece(): {
 }
 
 export function useCreatePiece(): {
-	run: (designGuid: string, piece: unknown) => Promise<SetResult>;
+	run: (designId: string, piece: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, piece: unknown) => {
+		async (designId: string, piece: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.addChild("Design", designGuid, "Piece", piece);
+			const r = await runtime.kitClient.addChild("Design", designId, "Piece", piece);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2326,14 +2326,14 @@ export function useCreatePiece(): {
 export const useAddPiece = useCreatePiece;
 
 export function useAddPieces(): {
-	run: (designGuid: string, pieces: unknown[]) => Promise<SetResult>;
+	run: (designId: string, pieces: unknown[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const c = useCreatePiece();
 	const run = React.useCallback(
-		async (designGuid: string, pieces: unknown[]) => {
+		async (designId: string, pieces: unknown[]) => {
 			for (const p of pieces) {
-				const r = await c.run(designGuid, p);
+				const r = await c.run(designId, p);
 				if (!r.ok) return r;
 			}
 			return { ok: true } as const;
@@ -2347,14 +2347,14 @@ export function useAddPieces(): {
 export const useRemovePiece = useDeletePiece;
 
 export function useRemovePieces(): {
-	run: (designGuid: string, pieceGuids: string[]) => Promise<SetResult>;
+	run: (designId: string, pieceIds: string[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const del = useDeletePiece();
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuids: string[]) => {
-			for (const g of pieceGuids) {
-				const r = await del.run(designGuid, g);
+		async (designId: string, pieceIds: string[]) => {
+			for (const g of pieceIds) {
+				const r = await del.run(designId, g);
 				if (!r.ok) return r;
 			}
 			return { ok: true } as const;
@@ -2365,20 +2365,20 @@ export function useRemovePieces(): {
 }
 
 export function useAddConnection(): {
-	run: (designGuid: string, connection: unknown) => Promise<SetResult>;
+	run: (designId: string, connection: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, connection: unknown) => {
+		async (designId: string, connection: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const r = await runtime.kitClient.addChild("Design", designGuid, "Connection", connection);
+			const r = await runtime.kitClient.addChild("Design", designId, "Connection", connection);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2393,21 +2393,21 @@ export function useAddConnection(): {
 }
 
 export function useUpdatePiece(): {
-	run: (designGuid: string, pieceGuid: string, patch: unknown) => Promise<SetResult>;
+	run: (designId: string, pieceId: string, patch: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, pieceGuid: string, patch: unknown) => {
+		async (designId: string, pieceId: string, patch: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const diff = { pieces: { updated: [{ piece: { guid: pieceGuid }, diff: patch }] } };
-			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			const diff = { pieces: { updated: [{ piece: { id: pieceId }, diff: patch }] } };
+			const r = await runtime.kitClient.applyDesignDiff(designId, diff);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2422,13 +2422,13 @@ export function useUpdatePiece(): {
 }
 
 export function useUpdatePieces(): {
-	run: (designGuid: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
+	run: (designId: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, updates: { id: string; diff: unknown }[]) => {
+		async (designId: string, updates: { id: string; diff: unknown }[]) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -2437,10 +2437,10 @@ export function useUpdatePieces(): {
 			setStatus({ kind: "pending", pending: 1 });
 			const diff = {
 				pieces: {
-					updated: updates.map((u) => ({ piece: { guid: u.id }, diff: u.diff })),
+					updated: updates.map((u) => ({ piece: { id: u.id }, diff: u.diff })),
 				},
 			};
-			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			const r = await runtime.kitClient.applyDesignDiff(designId, diff);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2455,21 +2455,21 @@ export function useUpdatePieces(): {
 }
 
 export function useUpdateConnection(): {
-	run: (designGuid: string, connectionGuid: string, patch: unknown) => Promise<SetResult>;
+	run: (designId: string, connectionId: string, patch: unknown) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, connectionGuid: string, patch: unknown) => {
+		async (designId: string, connectionId: string, patch: unknown) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
 				return { ok: false, error: e } as const;
 			}
 			setStatus({ kind: "pending", pending: 1 });
-			const diff = { connections: { updated: [{ connection: { guid: connectionGuid }, diff: patch }] } };
-			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			const diff = { connections: { updated: [{ connection: { id: connectionId }, diff: patch }] } };
+			const r = await runtime.kitClient.applyDesignDiff(designId, diff);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2484,13 +2484,13 @@ export function useUpdateConnection(): {
 }
 
 export function useUpdateConnections(): {
-	run: (designGuid: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
+	run: (designId: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
 	status: WriteStatus;
 } {
 	const runtime = useKitRuntime();
 	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
 	const run = React.useCallback(
-		async (designGuid: string, updates: { id: string; diff: unknown }[]) => {
+		async (designId: string, updates: { id: string; diff: unknown }[]) => {
 			if (!runtime.kitClient || !runtime.canWrite) {
 				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
 				setStatus({ kind: "error", pending: 0, lastError: e });
@@ -2499,10 +2499,10 @@ export function useUpdateConnections(): {
 			setStatus({ kind: "pending", pending: 1 });
 			const diff = {
 				connections: {
-					updated: updates.map((u) => ({ connection: { guid: u.id }, diff: u.diff })),
+					updated: updates.map((u) => ({ connection: { id: u.id }, diff: u.diff })),
 				},
 			};
-			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			const r = await runtime.kitClient.applyDesignDiff(designId, diff);
 			if (!r.ok) {
 				runtime.pushSetRejection(r.error);
 				setStatus({ kind: "error", pending: 0, lastError: r.error });
@@ -2517,12 +2517,12 @@ export function useUpdateConnections(): {
 }
 
 /** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`). */
-export function usePiecesMetadataMap(designGuid?: string): SchemaHookTriad<Record<string, any>> {
+export function usePiecesMetadataMap(designId?: string): SchemaHookTriad<Record<string, any>> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<Record<string, any>>({});
 	const [pending, setPending] = React.useState(0);
 	React.useEffect(() => {
-		if (!runtime.kitClient || !designGuid) {
+		if (!runtime.kitClient || !designId) {
 			setValue({});
 			return;
 		}
@@ -2530,7 +2530,7 @@ export function usePiecesMetadataMap(designGuid?: string): SchemaHookTriad<Recor
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const m = await runtime.kitClient.getPiecesMetadata(designGuid);
+				const m = await runtime.kitClient.getPiecesMetadata(designId);
 				if (!cancelled && m && typeof m === "object") setValue(m as Record<string, any>);
 			} catch {
 				if (!cancelled) setValue({});
@@ -2546,9 +2546,9 @@ export function usePiecesMetadataMap(designGuid?: string): SchemaHookTriad<Recor
 			cancelled = true;
 			unsub();
 		};
-	}, [runtime.kitClient, designGuid]);
+	}, [runtime.kitClient, designId]);
 	const status: WriteStatus =
-		!designGuid || !runtime.kitClient
+		!designId || !runtime.kitClient
 			? { kind: "readonly", pending: 0 }
 			: pending > 0
 				? { kind: "pending", pending }
@@ -2556,12 +2556,12 @@ export function usePiecesMetadataMap(designGuid?: string): SchemaHookTriad<Recor
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useRpcPieces(designGuid?: string): SchemaHookTriad<any[]> {
+export function useRpcPieces(designId?: string): SchemaHookTriad<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
 	React.useEffect(() => {
-		if (!runtime.kitClient || !designGuid) {
+		if (!runtime.kitClient || !designId) {
 			setValue([]);
 			return;
 		}
@@ -2569,7 +2569,7 @@ export function useRpcPieces(designGuid?: string): SchemaHookTriad<any[]> {
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const m = await runtime.kitClient.getPieces(designGuid);
+				const m = await runtime.kitClient.getPieces(designId);
 				if (!cancelled) setValue(Array.isArray(m) ? m : []);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -2583,9 +2583,9 @@ export function useRpcPieces(designGuid?: string): SchemaHookTriad<any[]> {
 			cancelled = true;
 			unsub();
 		};
-	}, [runtime.kitClient, designGuid]);
+	}, [runtime.kitClient, designId]);
 	const status: WriteStatus =
-		!designGuid || !runtime.kitClient
+		!designId || !runtime.kitClient
 			? { kind: "readonly", pending: 0 }
 			: pending > 0
 				? { kind: "pending", pending }
@@ -2593,12 +2593,12 @@ export function useRpcPieces(designGuid?: string): SchemaHookTriad<any[]> {
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useRpcConnections(designGuid?: string): SchemaHookTriad<any[]> {
+export function useRpcConnections(designId?: string): SchemaHookTriad<any[]> {
 	const runtime = useKitRuntime();
 	const [value, setValue] = React.useState<any[]>([]);
 	const [pending, setPending] = React.useState(0);
 	React.useEffect(() => {
-		if (!runtime.kitClient || !designGuid) {
+		if (!runtime.kitClient || !designId) {
 			setValue([]);
 			return;
 		}
@@ -2606,7 +2606,7 @@ export function useRpcConnections(designGuid?: string): SchemaHookTriad<any[]> {
 		const load = async () => {
 			setPending((p) => p + 1);
 			try {
-				const m = await runtime.kitClient.getConnections(designGuid);
+				const m = await runtime.kitClient.getConnections(designId);
 				if (!cancelled) setValue(Array.isArray(m) ? m : []);
 			} catch {
 				if (!cancelled) setValue([]);
@@ -2620,9 +2620,9 @@ export function useRpcConnections(designGuid?: string): SchemaHookTriad<any[]> {
 			cancelled = true;
 			unsub();
 		};
-	}, [runtime.kitClient, designGuid]);
+	}, [runtime.kitClient, designId]);
 	const status: WriteStatus =
-		!designGuid || !runtime.kitClient
+		!designId || !runtime.kitClient
 			? { kind: "readonly", pending: 0 }
 			: pending > 0
 				? { kind: "pending", pending }
@@ -2742,13 +2742,13 @@ export function useRpcAuthors(): SchemaHookTriad<any[]> {
 }
 
 /** Alias for {@link useRpcPieces}. */
-export function usePieces(designGuid?: string): SchemaHookTriad<any[]> {
-	return useRpcPieces(designGuid);
+export function usePieces(designId?: string): SchemaHookTriad<any[]> {
+	return useRpcPieces(designId);
 }
 
 /** Alias for {@link useRpcConnections}. */
-export function useConnections(designGuid?: string): SchemaHookTriad<any[]> {
-	return useRpcConnections(designGuid);
+export function useConnections(designId?: string): SchemaHookTriad<any[]> {
+	return useRpcConnections(designId);
 }
 
 /** Alias for {@link useRpcDesigns}. */
@@ -2766,102 +2766,102 @@ export function useAuthors(): SchemaHookTriad<any[]> {
 	return useRpcAuthors();
 }
 
-export function usePieceMetadata(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
-	const [map, , status] = usePiecesMetadataMap(designGuid);
-	const value = React.useMemo(() => (pieceGuid ? map[pieceGuid] : undefined), [map, pieceGuid]);
+export function usePieceMetadata(designId?: string, pieceId?: string): SchemaHookTriad<any> {
+	const [map, , status] = usePiecesMetadataMap(designId);
+	const value = React.useMemo(() => (pieceId ? map[pieceId] : undefined), [map, pieceId]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useFlatPiecePlane(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function useFlatPiecePlane(designId?: string, pieceId?: string): SchemaHookTriad<any> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.plane, [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useFlatPieceCenter(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function useFlatPieceCenter(designId?: string, pieceId?: string): SchemaHookTriad<any> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.center, [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useIsConnectedPiece(designGuid?: string, pieceGuid?: string): SchemaHookTriad<boolean> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function useIsConnectedPiece(designId?: string, pieceId?: string): SchemaHookTriad<boolean> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => !!(meta?.parentPieceId), [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function usePieceDepth(designGuid?: string, pieceGuid?: string): SchemaHookTriad<number> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function usePieceDepth(designId?: string, pieceId?: string): SchemaHookTriad<number> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => (typeof meta?.depth === "number" ? meta.depth : 0), [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useFixedPieceId(designGuid?: string, pieceGuid?: string): SchemaHookTriad<string | undefined> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function useFixedPieceId(designId?: string, pieceId?: string): SchemaHookTriad<string | undefined> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.fixedPieceId, [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function useParentPieceId(designGuid?: string, pieceGuid?: string): SchemaHookTriad<string | undefined> {
-	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+export function useParentPieceId(designId?: string, pieceId?: string): SchemaHookTriad<string | undefined> {
+	const [meta, , status] = usePieceMetadata(designId, pieceId);
 	const value = React.useMemo(() => meta?.parentPieceId ?? undefined, [meta]);
 	return [value, noopAsyncSet, status] as const;
 }
 
-export function usePieceParentConnection(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any | undefined> {
-	const [conns, , st] = useRpcConnections(designGuid);
+export function usePieceParentConnection(designId?: string, pieceId?: string): SchemaHookTriad<any | undefined> {
+	const [conns, , st] = useRpcConnections(designId);
 	const value = React.useMemo(() => {
-		if (!pieceGuid || !Array.isArray(conns)) return undefined;
-		return conns.find((c: any) => c?.connecting?.piece?.guid === pieceGuid);
-	}, [conns, pieceGuid]);
+		if (!pieceId || !Array.isArray(conns)) return undefined;
+		return conns.find((c: any) => c?.connecting?.piece?.id === pieceId);
+	}, [conns, pieceId]);
 	return [value, noopAsyncSet, st] as const;
 }
 
-export function useIncludedDesigns(designGuid?: string): SchemaHookTriad<any[]> {
+export function useIncludedDesigns(designId?: string): SchemaHookTriad<any[]> {
 	const runtime = useKitRuntime();
 	const value = React.useMemo(() => {
-		if (!designGuid || !runtime.state?.kit) return [];
-		const d = runtime.state.kit.designs?.find((x: any) => x.guid === designGuid);
+		if (!designId || !runtime.state?.kit) return [];
+		const d = runtime.state.kit.designs?.find((x: any) => x.id === designId);
 		return d ? getIncludedDesigns(d as Design) : [];
-	}, [runtime.state.kit, designGuid]);
+	}, [runtime.state.kit, designId]);
 	return [value, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
 
-export function useReplacableTypes(designGuid?: string, pieceGuids?: string[]): SchemaHookTriad<string[]> {
+export function useReplacableTypes(designId?: string, pieceIds?: string[]): SchemaHookTriad<string[]> {
 	const runtime = useKitRuntime();
-	const [, , metaStatus] = usePiecesMetadataMap(designGuid);
+	const [, , metaStatus] = usePiecesMetadataMap(designId);
 	const value = React.useMemo(() => {
-		if (!designGuid || !pieceGuids?.length || !runtime.state?.kit) return [];
+		if (!designId || !pieceIds?.length || !runtime.state?.kit) return [];
 		const kit = runtime.state.kit;
-		const design = kit.designs?.find((d: any) => d.guid === designGuid);
+		const design = kit.designs?.find((d: any) => d.id === designId);
 		if (!design) return [];
 		const designs = kit.designs ?? [];
 		const types = kit.types ?? [];
 		const ports = kit.ports ?? [];
-		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceGuids }).types;
-	}, [runtime.state.kit, designGuid, pieceGuids]);
+		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).types;
+	}, [runtime.state.kit, designId, pieceIds]);
 	return [value, noopAsyncSet, metaStatus] as const;
 }
 
-export function useReplacableDesigns(designGuid?: string, pieceGuids?: string[]): SchemaHookTriad<string[]> {
+export function useReplacableDesigns(designId?: string, pieceIds?: string[]): SchemaHookTriad<string[]> {
 	const runtime = useKitRuntime();
-	const [, , metaStatus] = usePiecesMetadataMap(designGuid);
+	const [, , metaStatus] = usePiecesMetadataMap(designId);
 	const value = React.useMemo(() => {
-		if (!designGuid || !pieceGuids?.length || !runtime.state?.kit) return [];
+		if (!designId || !pieceIds?.length || !runtime.state?.kit) return [];
 		const kit = runtime.state.kit;
-		const design = kit.designs?.find((d: any) => d.guid === designGuid);
+		const design = kit.designs?.find((d: any) => d.id === designId);
 		if (!design) return [];
 		const designs = kit.designs ?? [];
 		const types = kit.types ?? [];
 		const ports = kit.ports ?? [];
-		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceGuids }).designs;
-	}, [runtime.state.kit, designGuid, pieceGuids]);
+		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceIds }).designs;
+	}, [runtime.state.kit, designId, pieceIds]);
 	return [value, noopAsyncSet, metaStatus] as const;
 }
 
-export function useExplodeableDesignNodes(designGuid?: string): SchemaHookTriad<string[]> {
-	const [included, , st] = useIncludedDesigns(designGuid);
-	const value = React.useMemo(() => (included ?? []).map((x: any) => x.guid).filter(Boolean), [included]);
+export function useExplodeableDesignNodes(designId?: string): SchemaHookTriad<string[]> {
+	const [included, , st] = useIncludedDesigns(designId);
+	const value = React.useMemo(() => (included ?? []).map((x: any) => x.id).filter(Boolean), [included]);
 	return [value, noopAsyncSet, st] as const;
 }
 
@@ -2877,32 +2877,32 @@ export function useKitSnapshot(): SchemaHookTriad<KitStoreSnapshot> {
 	return [runtime.snapshot, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 }
 
-function useSchemaObjectState(typeName: string, guidValue?: string): SchemaHookTriad<any> {
+function useSchemaObjectState(typeName: string, idValue?: string): SchemaHookTriad<any> {
 	const runtime = useKitRuntime();
 	const scope = React.useContext(SchemaScopeContext);
-	const ref = resolveReference(runtime.state, typeName, guidValue, scope);
+	const ref = resolveReference(runtime.state, typeName, idValue, scope);
 	const value = ref?.value;
 	const canWrite = runtime.canWrite && !!ref;
 	const setValue = React.useCallback(
 		async (next: SetStateAction<any>) => {
 			if (!canWrite) return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
-			runtime.setObjectValue(typeName, next, guidValue, scope);
+			runtime.setObjectValue(typeName, next, idValue, scope);
 			return { ok: true } as const;
 		},
-		[runtime, typeName, guidValue, scope, canWrite],
+		[runtime, typeName, idValue, scope, canWrite],
 	);
 	const status: WriteStatus = canWrite ? { kind: "idle", pending: 0 } : { kind: "readonly", pending: 0 };
 	return [value, setValue, status] as const;
 }
 
-function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: string): SchemaHookTriad<any> {
+function useSchemaFieldState(typeName: string, fieldName: string, idValue?: string): SchemaHookTriad<any> {
 	const runtime = useKitRuntime();
 	const scope = React.useContext(SchemaScopeContext);
-	const value = readSchemaFieldValue(runtime.state, typeName, fieldName, guidValue, scope);
-	const classicWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, guidValue, scope);
+	const value = readSchemaFieldValue(runtime.state, typeName, fieldName, idValue, scope);
+	const classicWritable = runtime.canWrite && isWritableField(runtime.state, typeName, fieldName, idValue, scope);
 	const rustTarget = React.useMemo(
-		() => resolveRustFieldTarget(runtime, typeName, fieldName, guidValue, scope),
-		[runtime.kitClient, runtime.snapshot.kit.guid, runtime.canWrite, typeName, fieldName, guidValue, scope],
+		() => resolveRustFieldTarget(runtime, typeName, fieldName, idValue, scope),
+		[runtime.kitClient, runtime.snapshot.kit.id, runtime.canWrite, typeName, fieldName, idValue, scope],
 	);
 	const [pending, setPending] = React.useState(0);
 	const [lastErr, setLastErr] = React.useState<SetError | undefined>(undefined);
@@ -2916,7 +2916,7 @@ function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: st
 				}
 				setPending((p) => p + 1);
 				setLastErr(undefined);
-				const r = await runtime.kitClient.setField(rustTarget.kind, rustTarget.guid, rustTarget.field, resolved);
+				const r = await runtime.kitClient.setField(rustTarget.kind, rustTarget.id, rustTarget.field, resolved);
 				setPending((p) => p - 1);
 				if (!r.ok) {
 					setLastErr(r.error);
@@ -2928,10 +2928,10 @@ function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: st
 			if (!classicWritable) {
 				return { ok: false, error: { kind: "Readonly" as const, message: "read-only" } };
 			}
-			runtime.setFieldValue(typeName, fieldName, resolved, guidValue, scope);
+			runtime.setFieldValue(typeName, fieldName, resolved, idValue, scope);
 			return { ok: true } as const;
 		},
-		[runtime, rustTarget, classicWritable, typeName, fieldName, guidValue, scope, value],
+		[runtime, rustTarget, classicWritable, typeName, fieldName, idValue, scope, value],
 	);
 
 	let status: WriteStatus;
@@ -2956,10516 +2956,10516 @@ function useSchemaFieldState(typeName: string, fieldName: string, guidValue?: st
 
 // #region ⚛️Direct Domain Exports
 
-export function useJSON(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("JSON", guidValue);
+export function useJSON(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("JSON", idValue);
 }
 
-export function useActorKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ActorKind", guidValue);
+export function useActorKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ActorKind", idValue);
 }
 
-export function useActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Actor", guidValue);
+export function useActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Actor", idValue);
 }
 
-export function useActorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Actor", "id", guidValue);
+export function useActorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Actor", "id", idValue);
 }
 
-export function useActorName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Actor", "name", guidValue);
+export function useActorName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Actor", "name", idValue);
 }
 
-export function useActorEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Actor", "email", guidValue);
+export function useActorEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Actor", "email", idValue);
 }
 
-export function useActorColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Actor", "color", guidValue);
+export function useActorColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Actor", "color", idValue);
 }
 
-export function useUser(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("User", guidValue);
+export function useUser(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("User", idValue);
 }
 
-export function useUserHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("User", "hash", guidValue);
+export function useUserHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("User", "hash", idValue);
 }
 
-export function useUserId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("User", "id", guidValue);
+export function useUserId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("User", "id", idValue);
 }
 
-export function useUserName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("User", "name", guidValue);
+export function useUserName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("User", "name", idValue);
 }
 
-export function useUserEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("User", "email", guidValue);
+export function useUserEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("User", "email", idValue);
 }
 
-export function useUserColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("User", "color", guidValue);
+export function useUserColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("User", "color", idValue);
 }
 
-export function useAgent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Agent", guidValue);
+export function useAgent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Agent", idValue);
 }
 
-export function useAgentHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "hash", guidValue);
+export function useAgentHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "hash", idValue);
 }
 
-export function useAgentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "id", guidValue);
+export function useAgentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "id", idValue);
 }
 
-export function useAgentLlm(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "llm", guidValue);
+export function useAgentLlm(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "llm", idValue);
 }
 
-export function useAgentName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "name", guidValue);
+export function useAgentName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "name", idValue);
 }
 
-export function useAgentEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "email", guidValue);
+export function useAgentEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "email", idValue);
 }
 
-export function useAgentColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Agent", "color", guidValue);
+export function useAgentColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Agent", "color", idValue);
 }
 
-export function useSessionActorInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionActorInput", guidValue);
+export function useSessionActorInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionActorInput", idValue);
 }
 
-export function useSessionActorInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "id", guidValue);
+export function useSessionActorInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "id", idValue);
 }
 
-export function useSessionActorInputKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "kind", guidValue);
+export function useSessionActorInputKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "kind", idValue);
 }
 
-export function useSessionActorInputLlm(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "llm", guidValue);
+export function useSessionActorInputLlm(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "llm", idValue);
 }
 
-export function useSessionActorInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "name", guidValue);
+export function useSessionActorInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "name", idValue);
 }
 
-export function useSessionActorInputEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "email", guidValue);
+export function useSessionActorInputEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "email", idValue);
 }
 
-export function useSessionActorInputColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionActorInput", "color", guidValue);
+export function useSessionActorInputColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionActorInput", "color", idValue);
 }
 
-export function useCoordinate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Coordinate", guidValue);
+export function useCoordinate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Coordinate", idValue);
 }
 
-export function useCoordinateHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Coordinate", "hash", guidValue);
+export function useCoordinateHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Coordinate", "hash", idValue);
 }
 
-export function useCoordinateU(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Coordinate", "u", guidValue);
+export function useCoordinateU(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Coordinate", "u", idValue);
 }
 
-export function useCoordinateV(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Coordinate", "v", guidValue);
+export function useCoordinateV(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Coordinate", "v", idValue);
 }
 
-export function useCoordinateInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CoordinateInput", guidValue);
+export function useCoordinateInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CoordinateInput", idValue);
 }
 
-export function useCoordinateInputU(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CoordinateInput", "u", guidValue);
+export function useCoordinateInputU(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CoordinateInput", "u", idValue);
 }
 
-export function useCoordinateInputV(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CoordinateInput", "v", guidValue);
+export function useCoordinateInputV(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CoordinateInput", "v", idValue);
 }
 
-export function usePoint(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Point", guidValue);
+export function usePoint(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Point", idValue);
 }
 
-export function usePointHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Point", "hash", guidValue);
+export function usePointHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Point", "hash", idValue);
 }
 
-export function usePointX(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Point", "x", guidValue);
+export function usePointX(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Point", "x", idValue);
 }
 
-export function usePointY(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Point", "y", guidValue);
+export function usePointY(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Point", "y", idValue);
 }
 
-export function usePointZ(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Point", "z", guidValue);
+export function usePointZ(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Point", "z", idValue);
 }
 
-export function usePointInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PointInput", guidValue);
+export function usePointInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PointInput", idValue);
 }
 
-export function usePointInputX(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PointInput", "x", guidValue);
+export function usePointInputX(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PointInput", "x", idValue);
 }
 
-export function usePointInputY(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PointInput", "y", guidValue);
+export function usePointInputY(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PointInput", "y", idValue);
 }
 
-export function usePointInputZ(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PointInput", "z", guidValue);
+export function usePointInputZ(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PointInput", "z", idValue);
 }
 
-export function useVector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Vector", guidValue);
+export function useVector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Vector", idValue);
 }
 
-export function useVectorHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Vector", "hash", guidValue);
+export function useVectorHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Vector", "hash", idValue);
 }
 
-export function useVectorX(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Vector", "x", guidValue);
+export function useVectorX(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Vector", "x", idValue);
 }
 
-export function useVectorY(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Vector", "y", guidValue);
+export function useVectorY(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Vector", "y", idValue);
 }
 
-export function useVectorZ(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Vector", "z", guidValue);
+export function useVectorZ(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Vector", "z", idValue);
 }
 
-export function useVectorInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("VectorInput", guidValue);
+export function useVectorInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("VectorInput", idValue);
 }
 
-export function useVectorInputX(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VectorInput", "x", guidValue);
+export function useVectorInputX(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VectorInput", "x", idValue);
 }
 
-export function useVectorInputY(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VectorInput", "y", guidValue);
+export function useVectorInputY(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VectorInput", "y", idValue);
 }
 
-export function useVectorInputZ(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VectorInput", "z", guidValue);
+export function useVectorInputZ(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VectorInput", "z", idValue);
 }
 
-export function usePlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Plane", guidValue);
+export function usePlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Plane", idValue);
 }
 
-export function usePlaneHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Plane", "hash", guidValue);
+export function usePlaneHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Plane", "hash", idValue);
 }
 
-export function usePlaneOrigin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Plane", "origin", guidValue);
+export function usePlaneOrigin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Plane", "origin", idValue);
 }
 
-export function usePlaneXAxis(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Plane", "xAxis", guidValue);
+export function usePlaneXAxis(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Plane", "xAxis", idValue);
 }
 
-export function usePlaneYAxis(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Plane", "yAxis", guidValue);
+export function usePlaneYAxis(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Plane", "yAxis", idValue);
 }
 
-export function usePlaneInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PlaneInput", guidValue);
+export function usePlaneInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PlaneInput", idValue);
 }
 
-export function usePlaneInputOrigin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PlaneInput", "origin", guidValue);
+export function usePlaneInputOrigin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PlaneInput", "origin", idValue);
 }
 
-export function usePlaneInputXAxis(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PlaneInput", "xAxis", guidValue);
+export function usePlaneInputXAxis(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PlaneInput", "xAxis", idValue);
 }
 
-export function usePlaneInputYAxis(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PlaneInput", "yAxis", guidValue);
+export function usePlaneInputYAxis(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PlaneInput", "yAxis", idValue);
 }
 
-export function useCamera(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Camera", guidValue);
+export function useCamera(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Camera", idValue);
 }
 
-export function useCameraHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Camera", "hash", guidValue);
+export function useCameraHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Camera", "hash", idValue);
 }
 
-export function useCameraPosition(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Camera", "position", guidValue);
+export function useCameraPosition(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Camera", "position", idValue);
 }
 
-export function useCameraForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Camera", "forward", guidValue);
+export function useCameraForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Camera", "forward", idValue);
 }
 
-export function useCameraUp(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Camera", "up", guidValue);
+export function useCameraUp(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Camera", "up", idValue);
 }
 
-export function useCameraInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CameraInput", guidValue);
+export function useCameraInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CameraInput", idValue);
 }
 
-export function useCameraInputPosition(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CameraInput", "position", guidValue);
+export function useCameraInputPosition(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CameraInput", "position", idValue);
 }
 
-export function useCameraInputForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CameraInput", "forward", guidValue);
+export function useCameraInputForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CameraInput", "forward", idValue);
 }
 
-export function useCameraInputUp(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CameraInput", "up", guidValue);
+export function useCameraInputUp(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CameraInput", "up", idValue);
 }
 
-export function useAttribute(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Attribute", guidValue);
+export function useAttribute(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Attribute", idValue);
 }
 
-export function useAttributeHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Attribute", "hash", guidValue);
+export function useAttributeHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Attribute", "hash", idValue);
 }
 
-export function useAttributeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Attribute", "id", guidValue);
+export function useAttributeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Attribute", "id", idValue);
 }
 
-export function useAttributeKey(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Attribute", "key", guidValue);
+export function useAttributeKey(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Attribute", "key", idValue);
 }
 
-export function useAttributeValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Attribute", "value", guidValue);
+export function useAttributeValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Attribute", "value", idValue);
 }
 
-export function useAttributeDefinition(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Attribute", "definition", guidValue);
+export function useAttributeDefinition(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Attribute", "definition", idValue);
 }
 
-export function useAttributeInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("AttributeInput", guidValue);
+export function useAttributeInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("AttributeInput", idValue);
 }
 
-export function useAttributeInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AttributeInput", "id", guidValue);
+export function useAttributeInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AttributeInput", "id", idValue);
 }
 
-export function useAttributeInputKey(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AttributeInput", "key", guidValue);
+export function useAttributeInputKey(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AttributeInput", "key", idValue);
 }
 
-export function useAttributeInputValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AttributeInput", "value", guidValue);
+export function useAttributeInputValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AttributeInput", "value", idValue);
 }
 
-export function useAttributeInputDefinition(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AttributeInput", "definition", guidValue);
+export function useAttributeInputDefinition(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AttributeInput", "definition", idValue);
 }
 
-export function useLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Location", guidValue);
+export function useLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Location", idValue);
 }
 
-export function useLocationHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Location", "hash", guidValue);
+export function useLocationHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Location", "hash", idValue);
 }
 
-export function useLocationLongitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Location", "longitude", guidValue);
+export function useLocationLongitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Location", "longitude", idValue);
 }
 
-export function useLocationLatitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Location", "latitude", guidValue);
+export function useLocationLatitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Location", "latitude", idValue);
 }
 
-export function useLocationAltitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Location", "altitude", guidValue);
+export function useLocationAltitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Location", "altitude", idValue);
 }
 
-export function useLocationAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Location", "attributes", guidValue);
+export function useLocationAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Location", "attributes", idValue);
 }
 
-export function useLocationInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("LocationInput", guidValue);
+export function useLocationInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("LocationInput", idValue);
 }
 
-export function useLocationInputLongitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LocationInput", "longitude", guidValue);
+export function useLocationInputLongitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LocationInput", "longitude", idValue);
 }
 
-export function useLocationInputLatitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LocationInput", "latitude", guidValue);
+export function useLocationInputLatitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LocationInput", "latitude", idValue);
 }
 
-export function useLocationInputAltitude(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LocationInput", "altitude", guidValue);
+export function useLocationInputAltitude(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LocationInput", "altitude", idValue);
 }
 
-export function useLocationInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LocationInput", "attributes", guidValue);
+export function useLocationInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LocationInput", "attributes", idValue);
 }
 
-export function useAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Author", guidValue);
+export function useAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Author", idValue);
 }
 
-export function useAuthorHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Author", "hash", guidValue);
+export function useAuthorHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Author", "hash", idValue);
 }
 
-export function useAuthorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Author", "id", guidValue);
+export function useAuthorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Author", "id", idValue);
 }
 
-export function useAuthorName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Author", "name", guidValue);
+export function useAuthorName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Author", "name", idValue);
 }
 
-export function useAuthorEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Author", "email", guidValue);
+export function useAuthorEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Author", "email", idValue);
 }
 
-export function useAuthorAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Author", "attributes", guidValue);
+export function useAuthorAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Author", "attributes", idValue);
 }
 
-export function useAuthorInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("AuthorInput", guidValue);
+export function useAuthorInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("AuthorInput", idValue);
 }
 
-export function useAuthorInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorInput", "id", guidValue);
+export function useAuthorInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorInput", "id", idValue);
 }
 
-export function useAuthorInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorInput", "name", guidValue);
+export function useAuthorInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorInput", "name", idValue);
 }
 
-export function useAuthorInputEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorInput", "email", guidValue);
+export function useAuthorInputEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorInput", "email", idValue);
 }
 
-export function useAuthorInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorInput", "attributes", guidValue);
+export function useAuthorInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorInput", "attributes", idValue);
 }
 
-export function useAuthorPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("AuthorPatchInput", guidValue);
+export function useAuthorPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("AuthorPatchInput", idValue);
 }
 
-export function useAuthorPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorPatchInput", "name", guidValue);
+export function useAuthorPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorPatchInput", "name", idValue);
 }
 
-export function useAuthorPatchInputEmail(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorPatchInput", "email", guidValue);
+export function useAuthorPatchInputEmail(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorPatchInput", "email", idValue);
 }
 
-export function useAuthorPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AuthorPatchInput", "attributes", guidValue);
+export function useAuthorPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AuthorPatchInput", "attributes", idValue);
 }
 
-export function useFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Folder", guidValue);
+export function useFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Folder", idValue);
 }
 
-export function useFolderHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "hash", guidValue);
+export function useFolderHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "hash", idValue);
 }
 
-export function useFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "id", guidValue);
+export function useFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "id", idValue);
 }
 
-export function useFolderKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "kit", guidValue);
+export function useFolderKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "kit", idValue);
 }
 
-export function useFolderName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "name", guidValue);
+export function useFolderName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "name", idValue);
 }
 
-export function useFolderParent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "parent", guidValue);
+export function useFolderParent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "parent", idValue);
 }
 
-export function useFolderChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "children", guidValue);
+export function useFolderChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "children", idValue);
 }
 
-export function useFolderDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "description", guidValue);
+export function useFolderDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "description", idValue);
 }
 
-export function useFolderAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "attributes", guidValue);
+export function useFolderAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "attributes", idValue);
 }
 
-export function useFolderCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "createdAt", guidValue);
+export function useFolderCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "createdAt", idValue);
 }
 
-export function useFolderCreatedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "createdBy", guidValue);
+export function useFolderCreatedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "createdBy", idValue);
 }
 
-export function useFolderUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "updatedAt", guidValue);
+export function useFolderUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "updatedAt", idValue);
 }
 
-export function useFolderUpdatedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Folder", "updatedBy", guidValue);
+export function useFolderUpdatedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Folder", "updatedBy", idValue);
 }
 
-export function useFolderInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FolderInput", guidValue);
+export function useFolderInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FolderInput", idValue);
 }
 
-export function useFolderInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "id", guidValue);
+export function useFolderInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "id", idValue);
 }
 
-export function useFolderInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "name", guidValue);
+export function useFolderInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "name", idValue);
 }
 
-export function useFolderInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "parentId", guidValue);
+export function useFolderInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "parentId", idValue);
 }
 
-export function useFolderInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "description", guidValue);
+export function useFolderInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "description", idValue);
 }
 
-export function useFolderInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "attributes", guidValue);
+export function useFolderInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "attributes", idValue);
 }
 
-export function useFolderInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "createdAt", guidValue);
+export function useFolderInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "createdAt", idValue);
 }
 
-export function useFolderInputCreatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "createdById", guidValue);
+export function useFolderInputCreatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "createdById", idValue);
 }
 
-export function useFolderInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "updatedAt", guidValue);
+export function useFolderInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "updatedAt", idValue);
 }
 
-export function useFolderInputUpdatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderInput", "updatedById", guidValue);
+export function useFolderInputUpdatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderInput", "updatedById", idValue);
 }
 
-export function useFolderPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FolderPatchInput", guidValue);
+export function useFolderPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FolderPatchInput", idValue);
 }
 
-export function useFolderPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "name", guidValue);
+export function useFolderPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "name", idValue);
 }
 
-export function useFolderPatchInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "parentId", guidValue);
+export function useFolderPatchInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "parentId", idValue);
 }
 
-export function useFolderPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "description", guidValue);
+export function useFolderPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "description", idValue);
 }
 
-export function useFolderPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "attributes", guidValue);
+export function useFolderPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "attributes", idValue);
 }
 
-export function useFolderPatchInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "createdAt", guidValue);
+export function useFolderPatchInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "createdAt", idValue);
 }
 
-export function useFolderPatchInputCreatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "createdById", guidValue);
+export function useFolderPatchInputCreatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "createdById", idValue);
 }
 
-export function useFolderPatchInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "updatedAt", guidValue);
+export function useFolderPatchInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "updatedAt", idValue);
 }
 
-export function useFolderPatchInputUpdatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FolderPatchInput", "updatedById", guidValue);
+export function useFolderPatchInputUpdatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FolderPatchInput", "updatedById", idValue);
 }
 
-export function useFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("File", guidValue);
+export function useFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("File", idValue);
 }
 
-export function useFileHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "hash", guidValue);
+export function useFileHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "hash", idValue);
 }
 
-export function useFileId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "id", guidValue);
+export function useFileId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "id", idValue);
 }
 
-export function useFileKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "kit", guidValue);
+export function useFileKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "kit", idValue);
 }
 
-export function useFileName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "name", guidValue);
+export function useFileName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "name", idValue);
 }
 
-export function useFileRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "remote", guidValue);
+export function useFileRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "remote", idValue);
 }
 
-export function useFileFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "folder", guidValue);
+export function useFileFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "folder", idValue);
 }
 
-export function useFileSize(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "size", guidValue);
+export function useFileSize(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "size", idValue);
 }
 
-export function useFileContentHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "contentHash", guidValue);
+export function useFileContentHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "contentHash", idValue);
 }
 
-export function useFileBlob(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "blob", guidValue);
+export function useFileBlob(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "blob", idValue);
 }
 
-export function useFileMime(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "mime", guidValue);
+export function useFileMime(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "mime", idValue);
 }
 
-export function useFileCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "createdAt", guidValue);
+export function useFileCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "createdAt", idValue);
 }
 
-export function useFileCreatedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "createdBy", guidValue);
+export function useFileCreatedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "createdBy", idValue);
 }
 
-export function useFileUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "updatedAt", guidValue);
+export function useFileUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "updatedAt", idValue);
 }
 
-export function useFileUpdatedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("File", "updatedBy", guidValue);
+export function useFileUpdatedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("File", "updatedBy", idValue);
 }
 
-export function useFileInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FileInput", guidValue);
+export function useFileInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FileInput", idValue);
 }
 
-export function useFileInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "id", guidValue);
+export function useFileInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "id", idValue);
 }
 
-export function useFileInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "name", guidValue);
+export function useFileInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "name", idValue);
 }
 
-export function useFileInputRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "remote", guidValue);
+export function useFileInputRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "remote", idValue);
 }
 
-export function useFileInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "folderId", guidValue);
+export function useFileInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "folderId", idValue);
 }
 
-export function useFileInputSize(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "size", guidValue);
+export function useFileInputSize(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "size", idValue);
 }
 
-export function useFileInputContentHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "contentHash", guidValue);
+export function useFileInputContentHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "contentHash", idValue);
 }
 
-export function useFileInputBlob(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "blob", guidValue);
+export function useFileInputBlob(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "blob", idValue);
 }
 
-export function useFileInputMime(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "mime", guidValue);
+export function useFileInputMime(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "mime", idValue);
 }
 
-export function useFileInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "createdAt", guidValue);
+export function useFileInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "createdAt", idValue);
 }
 
-export function useFileInputCreatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "createdById", guidValue);
+export function useFileInputCreatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "createdById", idValue);
 }
 
-export function useFileInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "updatedAt", guidValue);
+export function useFileInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "updatedAt", idValue);
 }
 
-export function useFileInputUpdatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FileInput", "updatedById", guidValue);
+export function useFileInputUpdatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FileInput", "updatedById", idValue);
 }
 
-export function useFilePatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FilePatchInput", guidValue);
+export function useFilePatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FilePatchInput", idValue);
 }
 
-export function useFilePatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "name", guidValue);
+export function useFilePatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "name", idValue);
 }
 
-export function useFilePatchInputRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "remote", guidValue);
+export function useFilePatchInputRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "remote", idValue);
 }
 
-export function useFilePatchInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "folderId", guidValue);
+export function useFilePatchInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "folderId", idValue);
 }
 
-export function useFilePatchInputSize(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "size", guidValue);
+export function useFilePatchInputSize(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "size", idValue);
 }
 
-export function useFilePatchInputContentHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "contentHash", guidValue);
+export function useFilePatchInputContentHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "contentHash", idValue);
 }
 
-export function useFilePatchInputBlob(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "blob", guidValue);
+export function useFilePatchInputBlob(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "blob", idValue);
 }
 
-export function useFilePatchInputMime(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "mime", guidValue);
+export function useFilePatchInputMime(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "mime", idValue);
 }
 
-export function useFilePatchInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "createdAt", guidValue);
+export function useFilePatchInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "createdAt", idValue);
 }
 
-export function useFilePatchInputCreatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "createdById", guidValue);
+export function useFilePatchInputCreatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "createdById", idValue);
 }
 
-export function useFilePatchInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "updatedAt", guidValue);
+export function useFilePatchInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "updatedAt", idValue);
 }
 
-export function useFilePatchInputUpdatedById(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FilePatchInput", "updatedById", guidValue);
+export function useFilePatchInputUpdatedById(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FilePatchInput", "updatedById", idValue);
 }
 
-export function useBenchmark(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Benchmark", guidValue);
+export function useBenchmark(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Benchmark", idValue);
 }
 
-export function useBenchmarkHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "hash", guidValue);
+export function useBenchmarkHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "hash", idValue);
 }
 
-export function useBenchmarkId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "id", guidValue);
+export function useBenchmarkId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "id", idValue);
 }
 
-export function useBenchmarkQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "quality", guidValue);
+export function useBenchmarkQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "quality", idValue);
 }
 
-export function useBenchmarkName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "name", guidValue);
+export function useBenchmarkName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "name", idValue);
 }
 
-export function useBenchmarkIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "icon", guidValue);
+export function useBenchmarkIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "icon", idValue);
 }
 
-export function useBenchmarkMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "min", guidValue);
+export function useBenchmarkMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "min", idValue);
 }
 
-export function useBenchmarkMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "minExcluded", guidValue);
+export function useBenchmarkMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "minExcluded", idValue);
 }
 
-export function useBenchmarkMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "max", guidValue);
+export function useBenchmarkMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "max", idValue);
 }
 
-export function useBenchmarkMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "maxExcluded", guidValue);
+export function useBenchmarkMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "maxExcluded", idValue);
 }
 
-export function useBenchmarkAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Benchmark", "attributes", guidValue);
+export function useBenchmarkAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Benchmark", "attributes", idValue);
 }
 
-export function useBenchmarkInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("BenchmarkInput", guidValue);
+export function useBenchmarkInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("BenchmarkInput", idValue);
 }
 
-export function useBenchmarkInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "id", guidValue);
+export function useBenchmarkInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "id", idValue);
 }
 
-export function useBenchmarkInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "name", guidValue);
+export function useBenchmarkInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "name", idValue);
 }
 
-export function useBenchmarkInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "icon", guidValue);
+export function useBenchmarkInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "icon", idValue);
 }
 
-export function useBenchmarkInputMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "min", guidValue);
+export function useBenchmarkInputMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "min", idValue);
 }
 
-export function useBenchmarkInputMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "minExcluded", guidValue);
+export function useBenchmarkInputMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "minExcluded", idValue);
 }
 
-export function useBenchmarkInputMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "max", guidValue);
+export function useBenchmarkInputMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "max", idValue);
 }
 
-export function useBenchmarkInputMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "maxExcluded", guidValue);
+export function useBenchmarkInputMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "maxExcluded", idValue);
 }
 
-export function useBenchmarkInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BenchmarkInput", "attributes", guidValue);
+export function useBenchmarkInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BenchmarkInput", "attributes", idValue);
 }
 
-export function useQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Quality", guidValue);
+export function useQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Quality", idValue);
 }
 
-export function useQualityHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "hash", guidValue);
+export function useQualityHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "hash", idValue);
 }
 
-export function useQualityId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "id", guidValue);
+export function useQualityId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "id", idValue);
 }
 
-export function useQualityKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "kit", guidValue);
+export function useQualityKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "kit", idValue);
 }
 
-export function useQualityKey(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "key", guidValue);
+export function useQualityKey(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "key", idValue);
 }
 
-export function useQualityName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "name", guidValue);
+export function useQualityName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "name", idValue);
 }
 
-export function useQualityDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "description", guidValue);
+export function useQualityDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "description", idValue);
 }
 
-export function useQualityUri(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "uri", guidValue);
+export function useQualityUri(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "uri", idValue);
 }
 
-export function useQualityKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "kind", guidValue);
+export function useQualityKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "kind", idValue);
 }
 
-export function useQualityFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "folder", guidValue);
+export function useQualityFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "folder", idValue);
 }
 
-export function useQualityCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "canScale", guidValue);
+export function useQualityCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "canScale", idValue);
 }
 
-export function useQualityDefaultSiUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "defaultSiUnit", guidValue);
+export function useQualityDefaultSiUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "defaultSiUnit", idValue);
 }
 
-export function useQualityDefaultImperialUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "defaultImperialUnit", guidValue);
+export function useQualityDefaultImperialUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "defaultImperialUnit", idValue);
 }
 
-export function useQualityMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "min", guidValue);
+export function useQualityMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "min", idValue);
 }
 
-export function useQualityIsMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "isMinExcluded", guidValue);
+export function useQualityIsMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "isMinExcluded", idValue);
 }
 
-export function useQualityMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "max", guidValue);
+export function useQualityMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "max", idValue);
 }
 
-export function useQualityIsMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "isMaxExcluded", guidValue);
+export function useQualityIsMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "isMaxExcluded", idValue);
 }
 
-export function useQualityDefaultValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "defaultValue", guidValue);
+export function useQualityDefaultValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "defaultValue", idValue);
 }
 
-export function useQualityFormula(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "formula", guidValue);
+export function useQualityFormula(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "formula", idValue);
 }
 
-export function useQualityIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "icon", guidValue);
+export function useQualityIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "icon", idValue);
 }
 
-export function useQualityImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "image", guidValue);
+export function useQualityImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "image", idValue);
 }
 
-export function useQualityUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "unit", guidValue);
+export function useQualityUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "unit", idValue);
 }
 
-export function useQualityBenchmarks(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "benchmarks", guidValue);
+export function useQualityBenchmarks(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "benchmarks", idValue);
 }
 
-export function useQualityAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Quality", "attributes", guidValue);
+export function useQualityAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Quality", "attributes", idValue);
 }
 
-export function useQualityInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("QualityInput", guidValue);
+export function useQualityInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("QualityInput", idValue);
 }
 
-export function useQualityInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "id", guidValue);
+export function useQualityInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "id", idValue);
 }
 
-export function useQualityInputKey(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "key", guidValue);
+export function useQualityInputKey(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "key", idValue);
 }
 
-export function useQualityInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "name", guidValue);
+export function useQualityInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "name", idValue);
 }
 
-export function useQualityInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "description", guidValue);
+export function useQualityInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "description", idValue);
 }
 
-export function useQualityInputUri(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "uri", guidValue);
+export function useQualityInputUri(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "uri", idValue);
 }
 
-export function useQualityInputKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "kind", guidValue);
+export function useQualityInputKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "kind", idValue);
 }
 
-export function useQualityInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "folderId", guidValue);
+export function useQualityInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "folderId", idValue);
 }
 
-export function useQualityInputCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "canScale", guidValue);
+export function useQualityInputCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "canScale", idValue);
 }
 
-export function useQualityInputDefaultSiUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "defaultSiUnit", guidValue);
+export function useQualityInputDefaultSiUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "defaultSiUnit", idValue);
 }
 
-export function useQualityInputDefaultImperialUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "defaultImperialUnit", guidValue);
+export function useQualityInputDefaultImperialUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "defaultImperialUnit", idValue);
 }
 
-export function useQualityInputMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "min", guidValue);
+export function useQualityInputMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "min", idValue);
 }
 
-export function useQualityInputIsMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "isMinExcluded", guidValue);
+export function useQualityInputIsMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "isMinExcluded", idValue);
 }
 
-export function useQualityInputMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "max", guidValue);
+export function useQualityInputMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "max", idValue);
 }
 
-export function useQualityInputIsMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "isMaxExcluded", guidValue);
+export function useQualityInputIsMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "isMaxExcluded", idValue);
 }
 
-export function useQualityInputDefaultValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "defaultValue", guidValue);
+export function useQualityInputDefaultValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "defaultValue", idValue);
 }
 
-export function useQualityInputFormula(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "formula", guidValue);
+export function useQualityInputFormula(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "formula", idValue);
 }
 
-export function useQualityInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "icon", guidValue);
+export function useQualityInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "icon", idValue);
 }
 
-export function useQualityInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "image", guidValue);
+export function useQualityInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "image", idValue);
 }
 
-export function useQualityInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "unit", guidValue);
+export function useQualityInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "unit", idValue);
 }
 
-export function useQualityInputBenchmarks(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "benchmarks", guidValue);
+export function useQualityInputBenchmarks(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "benchmarks", idValue);
 }
 
-export function useQualityInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityInput", "attributes", guidValue);
+export function useQualityInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityInput", "attributes", idValue);
 }
 
-export function useQualityPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("QualityPatchInput", guidValue);
+export function useQualityPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("QualityPatchInput", idValue);
 }
 
-export function useQualityPatchInputKey(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "key", guidValue);
+export function useQualityPatchInputKey(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "key", idValue);
 }
 
-export function useQualityPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "name", guidValue);
+export function useQualityPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "name", idValue);
 }
 
-export function useQualityPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "description", guidValue);
+export function useQualityPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "description", idValue);
 }
 
-export function useQualityPatchInputUri(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "uri", guidValue);
+export function useQualityPatchInputUri(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "uri", idValue);
 }
 
-export function useQualityPatchInputKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "kind", guidValue);
+export function useQualityPatchInputKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "kind", idValue);
 }
 
-export function useQualityPatchInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "folderId", guidValue);
+export function useQualityPatchInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "folderId", idValue);
 }
 
-export function useQualityPatchInputCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "canScale", guidValue);
+export function useQualityPatchInputCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "canScale", idValue);
 }
 
-export function useQualityPatchInputDefaultSiUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "defaultSiUnit", guidValue);
+export function useQualityPatchInputDefaultSiUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "defaultSiUnit", idValue);
 }
 
-export function useQualityPatchInputDefaultImperialUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "defaultImperialUnit", guidValue);
+export function useQualityPatchInputDefaultImperialUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "defaultImperialUnit", idValue);
 }
 
-export function useQualityPatchInputMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "min", guidValue);
+export function useQualityPatchInputMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "min", idValue);
 }
 
-export function useQualityPatchInputIsMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "isMinExcluded", guidValue);
+export function useQualityPatchInputIsMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "isMinExcluded", idValue);
 }
 
-export function useQualityPatchInputMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "max", guidValue);
+export function useQualityPatchInputMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "max", idValue);
 }
 
-export function useQualityPatchInputIsMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "isMaxExcluded", guidValue);
+export function useQualityPatchInputIsMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "isMaxExcluded", idValue);
 }
 
-export function useQualityPatchInputDefaultValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "defaultValue", guidValue);
+export function useQualityPatchInputDefaultValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "defaultValue", idValue);
 }
 
-export function useQualityPatchInputFormula(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "formula", guidValue);
+export function useQualityPatchInputFormula(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "formula", idValue);
 }
 
-export function useQualityPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "icon", guidValue);
+export function useQualityPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "icon", idValue);
 }
 
-export function useQualityPatchInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "image", guidValue);
+export function useQualityPatchInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "image", idValue);
 }
 
-export function useQualityPatchInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "unit", guidValue);
+export function useQualityPatchInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "unit", idValue);
 }
 
-export function useQualityPatchInputBenchmarks(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "benchmarks", guidValue);
+export function useQualityPatchInputBenchmarks(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "benchmarks", idValue);
 }
 
-export function useQualityPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("QualityPatchInput", "attributes", guidValue);
+export function useQualityPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("QualityPatchInput", "attributes", idValue);
 }
 
-export function usePort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Port", guidValue);
+export function usePort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Port", idValue);
 }
 
-export function usePortHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "hash", guidValue);
+export function usePortHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "hash", idValue);
 }
 
-export function usePortId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "id", guidValue);
+export function usePortId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "id", idValue);
 }
 
-export function usePortKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "kit", guidValue);
+export function usePortKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "kit", idValue);
 }
 
-export function usePortName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "name", guidValue);
+export function usePortName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "name", idValue);
 }
 
-export function usePortDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "description", guidValue);
+export function usePortDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "description", idValue);
 }
 
-export function usePortIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "icon", guidValue);
+export function usePortIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "icon", idValue);
 }
 
-export function usePortMaxChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "maxChildren", guidValue);
+export function usePortMaxChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "maxChildren", idValue);
 }
 
-export function usePortCompatiblePorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "compatiblePorts", guidValue);
+export function usePortCompatiblePorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "compatiblePorts", idValue);
 }
 
-export function usePortAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Port", "attributes", guidValue);
+export function usePortAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Port", "attributes", idValue);
 }
 
-export function usePortInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PortInput", guidValue);
+export function usePortInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PortInput", idValue);
 }
 
-export function usePortInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "id", guidValue);
+export function usePortInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "id", idValue);
 }
 
-export function usePortInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "name", guidValue);
+export function usePortInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "name", idValue);
 }
 
-export function usePortInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "description", guidValue);
+export function usePortInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "description", idValue);
 }
 
-export function usePortInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "icon", guidValue);
+export function usePortInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "icon", idValue);
 }
 
-export function usePortInputMaxChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "maxChildren", guidValue);
+export function usePortInputMaxChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "maxChildren", idValue);
 }
 
-export function usePortInputCompatiblePortIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "compatiblePortIds", guidValue);
+export function usePortInputCompatiblePortIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "compatiblePortIds", idValue);
 }
 
-export function usePortInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortInput", "attributes", guidValue);
+export function usePortInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortInput", "attributes", idValue);
 }
 
-export function usePortPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PortPatchInput", guidValue);
+export function usePortPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PortPatchInput", idValue);
 }
 
-export function usePortPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "name", guidValue);
+export function usePortPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "name", idValue);
 }
 
-export function usePortPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "description", guidValue);
+export function usePortPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "description", idValue);
 }
 
-export function usePortPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "icon", guidValue);
+export function usePortPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "icon", idValue);
 }
 
-export function usePortPatchInputMaxChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "maxChildren", guidValue);
+export function usePortPatchInputMaxChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "maxChildren", idValue);
 }
 
-export function usePortPatchInputCompatiblePortIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "compatiblePortIds", guidValue);
+export function usePortPatchInputCompatiblePortIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "compatiblePortIds", idValue);
 }
 
-export function usePortPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PortPatchInput", "attributes", guidValue);
+export function usePortPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PortPatchInput", "attributes", idValue);
 }
 
-export function useProp(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Prop", guidValue);
+export function useProp(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Prop", idValue);
 }
 
-export function usePropHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "hash", guidValue);
+export function usePropHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "hash", idValue);
 }
 
-export function usePropId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "id", guidValue);
+export function usePropId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "id", idValue);
 }
 
-export function usePropKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "kit", guidValue);
+export function usePropKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "kit", idValue);
 }
 
-export function usePropQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "quality", guidValue);
+export function usePropQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "quality", idValue);
 }
 
-export function usePropValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "value", guidValue);
+export function usePropValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "value", idValue);
 }
 
-export function usePropUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "unit", guidValue);
+export function usePropUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "unit", idValue);
 }
 
-export function usePropAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Prop", "attributes", guidValue);
+export function usePropAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Prop", "attributes", idValue);
 }
 
-export function usePropInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PropInput", guidValue);
+export function usePropInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PropInput", idValue);
 }
 
-export function usePropInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PropInput", "id", guidValue);
+export function usePropInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PropInput", "id", idValue);
 }
 
-export function usePropInputQualityId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PropInput", "qualityId", guidValue);
+export function usePropInputQualityId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PropInput", "qualityId", idValue);
 }
 
-export function usePropInputValue(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PropInput", "value", guidValue);
+export function usePropInputValue(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PropInput", "value", idValue);
 }
 
-export function usePropInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PropInput", "unit", guidValue);
+export function usePropInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PropInput", "unit", idValue);
 }
 
-export function usePropInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PropInput", "attributes", guidValue);
+export function usePropInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PropInput", "attributes", idValue);
 }
 
-export function useTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Tag", guidValue);
+export function useTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Tag", idValue);
 }
 
-export function useTagHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "hash", guidValue);
+export function useTagHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "hash", idValue);
 }
 
-export function useTagId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "id", guidValue);
+export function useTagId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "id", idValue);
 }
 
-export function useTagKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "kit", guidValue);
+export function useTagKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "kit", idValue);
 }
 
-export function useTagName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "name", guidValue);
+export function useTagName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "name", idValue);
 }
 
-export function useTagDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "description", guidValue);
+export function useTagDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "description", idValue);
 }
 
-export function useTagIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "icon", guidValue);
+export function useTagIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "icon", idValue);
 }
 
-export function useTagAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Tag", "attributes", guidValue);
+export function useTagAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Tag", "attributes", idValue);
 }
 
-export function useTagInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TagInput", guidValue);
+export function useTagInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TagInput", idValue);
 }
 
-export function useTagInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagInput", "id", guidValue);
+export function useTagInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagInput", "id", idValue);
 }
 
-export function useTagInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagInput", "name", guidValue);
+export function useTagInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagInput", "name", idValue);
 }
 
-export function useTagInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagInput", "description", guidValue);
+export function useTagInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagInput", "description", idValue);
 }
 
-export function useTagInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagInput", "icon", guidValue);
+export function useTagInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagInput", "icon", idValue);
 }
 
-export function useTagInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagInput", "attributes", guidValue);
+export function useTagInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagInput", "attributes", idValue);
 }
 
-export function useTagPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TagPatchInput", guidValue);
+export function useTagPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TagPatchInput", idValue);
 }
 
-export function useTagPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagPatchInput", "name", guidValue);
+export function useTagPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagPatchInput", "name", idValue);
 }
 
-export function useTagPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagPatchInput", "description", guidValue);
+export function useTagPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagPatchInput", "description", idValue);
 }
 
-export function useTagPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagPatchInput", "icon", guidValue);
+export function useTagPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagPatchInput", "icon", idValue);
 }
 
-export function useTagPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TagPatchInput", "attributes", guidValue);
+export function useTagPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TagPatchInput", "attributes", idValue);
 }
 
-export function useConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Concept", guidValue);
+export function useConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Concept", idValue);
 }
 
-export function useConceptHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "hash", guidValue);
+export function useConceptHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "hash", idValue);
 }
 
-export function useConceptId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "id", guidValue);
+export function useConceptId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "id", idValue);
 }
 
-export function useConceptKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "kit", guidValue);
+export function useConceptKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "kit", idValue);
 }
 
-export function useConceptName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "name", guidValue);
+export function useConceptName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "name", idValue);
 }
 
-export function useConceptDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "description", guidValue);
+export function useConceptDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "description", idValue);
 }
 
-export function useConceptIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "icon", guidValue);
+export function useConceptIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "icon", idValue);
 }
 
-export function useConceptAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Concept", "attributes", guidValue);
+export function useConceptAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Concept", "attributes", idValue);
 }
 
-export function useConceptInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConceptInput", guidValue);
+export function useConceptInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConceptInput", idValue);
 }
 
-export function useConceptInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptInput", "id", guidValue);
+export function useConceptInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptInput", "id", idValue);
 }
 
-export function useConceptInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptInput", "name", guidValue);
+export function useConceptInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptInput", "name", idValue);
 }
 
-export function useConceptInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptInput", "description", guidValue);
+export function useConceptInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptInput", "description", idValue);
 }
 
-export function useConceptInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptInput", "icon", guidValue);
+export function useConceptInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptInput", "icon", idValue);
 }
 
-export function useConceptInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptInput", "attributes", guidValue);
+export function useConceptInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptInput", "attributes", idValue);
 }
 
-export function useConceptPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConceptPatchInput", guidValue);
+export function useConceptPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConceptPatchInput", idValue);
 }
 
-export function useConceptPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptPatchInput", "name", guidValue);
+export function useConceptPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptPatchInput", "name", idValue);
 }
 
-export function useConceptPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptPatchInput", "description", guidValue);
+export function useConceptPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptPatchInput", "description", idValue);
 }
 
-export function useConceptPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptPatchInput", "icon", guidValue);
+export function useConceptPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptPatchInput", "icon", idValue);
 }
 
-export function useConceptPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConceptPatchInput", "attributes", guidValue);
+export function useConceptPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConceptPatchInput", "attributes", idValue);
 }
 
-export function useFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Family", guidValue);
+export function useFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Family", idValue);
 }
 
-export function useFamilyHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "hash", guidValue);
+export function useFamilyHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "hash", idValue);
 }
 
-export function useFamilyId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "id", guidValue);
+export function useFamilyId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "id", idValue);
 }
 
-export function useFamilyKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "kit", guidValue);
+export function useFamilyKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "kit", idValue);
 }
 
-export function useFamilyName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "name", guidValue);
+export function useFamilyName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "name", idValue);
 }
 
-export function useFamilyDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "description", guidValue);
+export function useFamilyDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "description", idValue);
 }
 
-export function useFamilyIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "icon", guidValue);
+export function useFamilyIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "icon", idValue);
 }
 
-export function useFamilyPorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "ports", guidValue);
+export function useFamilyPorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "ports", idValue);
 }
 
-export function useFamilyAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Family", "attributes", guidValue);
+export function useFamilyAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Family", "attributes", idValue);
 }
 
-export function useFamilyInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FamilyInput", guidValue);
+export function useFamilyInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FamilyInput", idValue);
 }
 
-export function useFamilyInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "id", guidValue);
+export function useFamilyInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "id", idValue);
 }
 
-export function useFamilyInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "name", guidValue);
+export function useFamilyInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "name", idValue);
 }
 
-export function useFamilyInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "description", guidValue);
+export function useFamilyInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "description", idValue);
 }
 
-export function useFamilyInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "icon", guidValue);
+export function useFamilyInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "icon", idValue);
 }
 
-export function useFamilyInputPorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "ports", guidValue);
+export function useFamilyInputPorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "ports", idValue);
 }
 
-export function useFamilyInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyInput", "attributes", guidValue);
+export function useFamilyInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyInput", "attributes", idValue);
 }
 
-export function useFamilyPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FamilyPatchInput", guidValue);
+export function useFamilyPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FamilyPatchInput", idValue);
 }
 
-export function useFamilyPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyPatchInput", "name", guidValue);
+export function useFamilyPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyPatchInput", "name", idValue);
 }
 
-export function useFamilyPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyPatchInput", "description", guidValue);
+export function useFamilyPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyPatchInput", "description", idValue);
 }
 
-export function useFamilyPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyPatchInput", "icon", guidValue);
+export function useFamilyPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyPatchInput", "icon", idValue);
 }
 
-export function useFamilyPatchInputPorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyPatchInput", "ports", guidValue);
+export function useFamilyPatchInputPorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyPatchInput", "ports", idValue);
 }
 
-export function useFamilyPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FamilyPatchInput", "attributes", guidValue);
+export function useFamilyPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FamilyPatchInput", "attributes", idValue);
 }
 
-export function useRepresentation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Representation", guidValue);
+export function useRepresentation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Representation", idValue);
 }
 
-export function useRepresentationHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "hash", guidValue);
+export function useRepresentationHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "hash", idValue);
 }
 
-export function useRepresentationId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "id", guidValue);
+export function useRepresentationId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "id", idValue);
 }
 
-export function useRepresentationType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "type", guidValue);
+export function useRepresentationType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "type", idValue);
 }
 
-export function useRepresentationName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "name", guidValue);
+export function useRepresentationName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "name", idValue);
 }
 
-export function useRepresentationTags(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "tags", guidValue);
+export function useRepresentationTags(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "tags", idValue);
 }
 
-export function useRepresentationFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "file", guidValue);
+export function useRepresentationFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "file", idValue);
 }
 
-export function useRepresentationDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "description", guidValue);
+export function useRepresentationDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "description", idValue);
 }
 
-export function useRepresentationAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Representation", "attributes", guidValue);
+export function useRepresentationAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Representation", "attributes", idValue);
 }
 
-export function useRepresentationInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("RepresentationInput", guidValue);
+export function useRepresentationInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("RepresentationInput", idValue);
 }
 
-export function useRepresentationInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "id", guidValue);
+export function useRepresentationInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "id", idValue);
 }
 
-export function useRepresentationInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "name", guidValue);
+export function useRepresentationInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "name", idValue);
 }
 
-export function useRepresentationInputTagIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "tagIds", guidValue);
+export function useRepresentationInputTagIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "tagIds", idValue);
 }
 
-export function useRepresentationInputFileId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "fileId", guidValue);
+export function useRepresentationInputFileId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "fileId", idValue);
 }
 
-export function useRepresentationInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "description", guidValue);
+export function useRepresentationInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "description", idValue);
 }
 
-export function useRepresentationInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("RepresentationInput", "attributes", guidValue);
+export function useRepresentationInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("RepresentationInput", "attributes", idValue);
 }
 
-export function useConnector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Connector", guidValue);
+export function useConnector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Connector", idValue);
 }
 
-export function useConnectorHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "hash", guidValue);
+export function useConnectorHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "hash", idValue);
 }
 
-export function useConnectorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "id", guidValue);
+export function useConnectorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "id", idValue);
 }
 
-export function useConnectorType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "type", guidValue);
+export function useConnectorType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "type", idValue);
 }
 
-export function useConnectorName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "name", guidValue);
+export function useConnectorName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "name", idValue);
 }
 
-export function useConnectorT(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "t", guidValue);
+export function useConnectorT(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "t", idValue);
 }
 
-export function useConnectorPoint(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "point", guidValue);
+export function useConnectorPoint(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "point", idValue);
 }
 
-export function useConnectorDirection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "direction", guidValue);
+export function useConnectorDirection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "direction", idValue);
 }
 
-export function useConnectorDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "description", guidValue);
+export function useConnectorDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "description", idValue);
 }
 
-export function useConnectorPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "port", guidValue);
+export function useConnectorPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "port", idValue);
 }
 
-export function useConnectorMandatory(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "mandatory", guidValue);
+export function useConnectorMandatory(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "mandatory", idValue);
 }
 
-export function useConnectorMaxChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "maxChildren", guidValue);
+export function useConnectorMaxChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "maxChildren", idValue);
 }
 
-export function useConnectorProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "props", guidValue);
+export function useConnectorProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "props", idValue);
 }
 
-export function useConnectorAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "attributes", guidValue);
+export function useConnectorAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "attributes", idValue);
 }
 
-export function useConnectorPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "pieces", guidValue);
+export function useConnectorPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "pieces", idValue);
 }
 
-export function useConnectorCompatibleConnectors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connector", "compatibleConnectors", guidValue);
+export function useConnectorCompatibleConnectors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connector", "compatibleConnectors", idValue);
 }
 
-export function useConnectorInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConnectorInput", guidValue);
+export function useConnectorInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConnectorInput", idValue);
 }
 
-export function useConnectorInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "id", guidValue);
+export function useConnectorInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "id", idValue);
 }
 
-export function useConnectorInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "name", guidValue);
+export function useConnectorInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "name", idValue);
 }
 
-export function useConnectorInputT(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "t", guidValue);
+export function useConnectorInputT(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "t", idValue);
 }
 
-export function useConnectorInputPoint(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "point", guidValue);
+export function useConnectorInputPoint(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "point", idValue);
 }
 
-export function useConnectorInputDirection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "direction", guidValue);
+export function useConnectorInputDirection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "direction", idValue);
 }
 
-export function useConnectorInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "description", guidValue);
+export function useConnectorInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "description", idValue);
 }
 
-export function useConnectorInputPortId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "portId", guidValue);
+export function useConnectorInputPortId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "portId", idValue);
 }
 
-export function useConnectorInputMandatory(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "mandatory", guidValue);
+export function useConnectorInputMandatory(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "mandatory", idValue);
 }
 
-export function useConnectorInputMaxChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "maxChildren", guidValue);
+export function useConnectorInputMaxChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "maxChildren", idValue);
 }
 
-export function useConnectorInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "props", guidValue);
+export function useConnectorInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "props", idValue);
 }
 
-export function useConnectorInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectorInput", "attributes", guidValue);
+export function useConnectorInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectorInput", "attributes", idValue);
 }
 
-export function useType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Type", guidValue);
+export function useType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Type", idValue);
 }
 
-export function useTypeHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "hash", guidValue);
+export function useTypeHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "hash", idValue);
 }
 
-export function useTypeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "id", guidValue);
+export function useTypeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "id", idValue);
 }
 
-export function useTypeKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "kit", guidValue);
+export function useTypeKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "kit", idValue);
 }
 
-export function useTypeName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "name", guidValue);
+export function useTypeName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "name", idValue);
 }
 
-export function useTypeParent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "parent", guidValue);
+export function useTypeParent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "parent", idValue);
 }
 
-export function useTypeChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "children", guidValue);
+export function useTypeChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "children", idValue);
 }
 
-export function useTypeIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "isAbstract", guidValue);
+export function useTypeIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "isAbstract", idValue);
 }
 
-export function useTypeFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "folder", guidValue);
+export function useTypeFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "folder", idValue);
 }
 
-export function useTypeRepresentations(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "representations", guidValue);
+export function useTypeRepresentations(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "representations", idValue);
 }
 
-export function useTypeConnectors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "connectors", guidValue);
+export function useTypeConnectors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "connectors", idValue);
 }
 
-export function useTypeProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "props", guidValue);
+export function useTypeProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "props", idValue);
 }
 
-export function useTypeStock(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "stock", guidValue);
+export function useTypeStock(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "stock", idValue);
 }
 
-export function useTypeVirtual(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "virtual", guidValue);
+export function useTypeVirtual(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "virtual", idValue);
 }
 
-export function useTypeUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "unit", guidValue);
+export function useTypeUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "unit", idValue);
 }
 
-export function useTypeCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "createdAt", guidValue);
+export function useTypeCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "createdAt", idValue);
 }
 
-export function useTypeUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "updatedAt", guidValue);
+export function useTypeUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "updatedAt", idValue);
 }
 
-export function useTypeLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "location", guidValue);
+export function useTypeLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "location", idValue);
 }
 
-export function useTypeAuthors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "authors", guidValue);
+export function useTypeAuthors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "authors", idValue);
 }
 
-export function useTypeConcepts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "concepts", guidValue);
+export function useTypeConcepts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "concepts", idValue);
 }
 
-export function useTypeIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "icon", guidValue);
+export function useTypeIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "icon", idValue);
 }
 
-export function useTypeImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "image", guidValue);
+export function useTypeImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "image", idValue);
 }
 
-export function useTypeDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "description", guidValue);
+export function useTypeDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "description", idValue);
 }
 
-export function useTypeAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "attributes", guidValue);
+export function useTypeAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "attributes", idValue);
 }
 
-export function useTypeFixedPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Type", "fixedPieces", guidValue);
+export function useTypeFixedPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Type", "fixedPieces", idValue);
 }
 
-export function useTypeInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TypeInput", guidValue);
+export function useTypeInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TypeInput", idValue);
 }
 
-export function useTypeInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "id", guidValue);
+export function useTypeInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "id", idValue);
 }
 
-export function useTypeInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "name", guidValue);
+export function useTypeInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "name", idValue);
 }
 
-export function useTypeInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "parentId", guidValue);
+export function useTypeInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "parentId", idValue);
 }
 
-export function useTypeInputIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "isAbstract", guidValue);
+export function useTypeInputIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "isAbstract", idValue);
 }
 
-export function useTypeInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "folderId", guidValue);
+export function useTypeInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "folderId", idValue);
 }
 
-export function useTypeInputRepresentations(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "representations", guidValue);
+export function useTypeInputRepresentations(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "representations", idValue);
 }
 
-export function useTypeInputConnectors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "connectors", guidValue);
+export function useTypeInputConnectors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "connectors", idValue);
 }
 
-export function useTypeInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "props", guidValue);
+export function useTypeInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "props", idValue);
 }
 
-export function useTypeInputStock(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "stock", guidValue);
+export function useTypeInputStock(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "stock", idValue);
 }
 
-export function useTypeInputVirtual(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "virtual", guidValue);
+export function useTypeInputVirtual(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "virtual", idValue);
 }
 
-export function useTypeInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "unit", guidValue);
+export function useTypeInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "unit", idValue);
 }
 
-export function useTypeInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "createdAt", guidValue);
+export function useTypeInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "createdAt", idValue);
 }
 
-export function useTypeInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "updatedAt", guidValue);
+export function useTypeInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "updatedAt", idValue);
 }
 
-export function useTypeInputLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "location", guidValue);
+export function useTypeInputLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "location", idValue);
 }
 
-export function useTypeInputAuthorIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "authorIds", guidValue);
+export function useTypeInputAuthorIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "authorIds", idValue);
 }
 
-export function useTypeInputConceptIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "conceptIds", guidValue);
+export function useTypeInputConceptIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "conceptIds", idValue);
 }
 
-export function useTypeInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "icon", guidValue);
+export function useTypeInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "icon", idValue);
 }
 
-export function useTypeInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "image", guidValue);
+export function useTypeInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "image", idValue);
 }
 
-export function useTypeInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "description", guidValue);
+export function useTypeInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "description", idValue);
 }
 
-export function useTypeInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypeInput", "attributes", guidValue);
+export function useTypeInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypeInput", "attributes", idValue);
 }
 
-export function useTypePatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TypePatchInput", guidValue);
+export function useTypePatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TypePatchInput", idValue);
 }
 
-export function useTypePatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "name", guidValue);
+export function useTypePatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "name", idValue);
 }
 
-export function useTypePatchInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "parentId", guidValue);
+export function useTypePatchInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "parentId", idValue);
 }
 
-export function useTypePatchInputIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "isAbstract", guidValue);
+export function useTypePatchInputIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "isAbstract", idValue);
 }
 
-export function useTypePatchInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "folderId", guidValue);
+export function useTypePatchInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "folderId", idValue);
 }
 
-export function useTypePatchInputRepresentations(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "representations", guidValue);
+export function useTypePatchInputRepresentations(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "representations", idValue);
 }
 
-export function useTypePatchInputConnectors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "connectors", guidValue);
+export function useTypePatchInputConnectors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "connectors", idValue);
 }
 
-export function useTypePatchInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "props", guidValue);
+export function useTypePatchInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "props", idValue);
 }
 
-export function useTypePatchInputStock(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "stock", guidValue);
+export function useTypePatchInputStock(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "stock", idValue);
 }
 
-export function useTypePatchInputVirtual(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "virtual", guidValue);
+export function useTypePatchInputVirtual(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "virtual", idValue);
 }
 
-export function useTypePatchInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "unit", guidValue);
+export function useTypePatchInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "unit", idValue);
 }
 
-export function useTypePatchInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "createdAt", guidValue);
+export function useTypePatchInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "createdAt", idValue);
 }
 
-export function useTypePatchInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "updatedAt", guidValue);
+export function useTypePatchInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "updatedAt", idValue);
 }
 
-export function useTypePatchInputLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "location", guidValue);
+export function useTypePatchInputLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "location", idValue);
 }
 
-export function useTypePatchInputAuthorIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "authorIds", guidValue);
+export function useTypePatchInputAuthorIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "authorIds", idValue);
 }
 
-export function useTypePatchInputConceptIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "conceptIds", guidValue);
+export function useTypePatchInputConceptIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "conceptIds", idValue);
 }
 
-export function useTypePatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "icon", guidValue);
+export function useTypePatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "icon", idValue);
 }
 
-export function useTypePatchInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "image", guidValue);
+export function useTypePatchInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "image", idValue);
 }
 
-export function useTypePatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "description", guidValue);
+export function useTypePatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "description", idValue);
 }
 
-export function useTypePatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TypePatchInput", "attributes", guidValue);
+export function useTypePatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TypePatchInput", "attributes", idValue);
 }
 
-export function useLayer(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Layer", guidValue);
+export function useLayer(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Layer", idValue);
 }
 
-export function useLayerHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "hash", guidValue);
+export function useLayerHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "hash", idValue);
 }
 
-export function useLayerId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "id", guidValue);
+export function useLayerId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "id", idValue);
 }
 
-export function useLayerDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "design", guidValue);
+export function useLayerDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "design", idValue);
 }
 
-export function useLayerPath(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "path", guidValue);
+export function useLayerPath(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "path", idValue);
 }
 
-export function useLayerIsHidden(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "isHidden", guidValue);
+export function useLayerIsHidden(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "isHidden", idValue);
 }
 
-export function useLayerIsLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "isLocked", guidValue);
+export function useLayerIsLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "isLocked", idValue);
 }
 
-export function useLayerColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "color", guidValue);
+export function useLayerColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "color", idValue);
 }
 
-export function useLayerDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "description", guidValue);
+export function useLayerDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "description", idValue);
 }
 
-export function useLayerAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Layer", "attributes", guidValue);
+export function useLayerAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Layer", "attributes", idValue);
 }
 
-export function useLayerInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("LayerInput", guidValue);
+export function useLayerInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("LayerInput", idValue);
 }
 
-export function useLayerInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "id", guidValue);
+export function useLayerInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "id", idValue);
 }
 
-export function useLayerInputPath(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "path", guidValue);
+export function useLayerInputPath(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "path", idValue);
 }
 
-export function useLayerInputIsHidden(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "isHidden", guidValue);
+export function useLayerInputIsHidden(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "isHidden", idValue);
 }
 
-export function useLayerInputIsLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "isLocked", guidValue);
+export function useLayerInputIsLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "isLocked", idValue);
 }
 
-export function useLayerInputColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "color", guidValue);
+export function useLayerInputColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "color", idValue);
 }
 
-export function useLayerInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "description", guidValue);
+export function useLayerInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "description", idValue);
 }
 
-export function useLayerInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("LayerInput", "attributes", guidValue);
+export function useLayerInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("LayerInput", "attributes", idValue);
 }
 
-export function useSide(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Side", guidValue);
+export function useSide(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Side", idValue);
 }
 
-export function useSideHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Side", "hash", guidValue);
+export function useSideHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Side", "hash", idValue);
 }
 
-export function useSideConnection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Side", "connection", guidValue);
+export function useSideConnection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Side", "connection", idValue);
 }
 
-export function useSidePiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Side", "piece", guidValue);
+export function useSidePiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Side", "piece", idValue);
 }
 
-export function useSideDesignPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Side", "designPiece", guidValue);
+export function useSideDesignPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Side", "designPiece", idValue);
 }
 
-export function useSideConnector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Side", "connector", guidValue);
+export function useSideConnector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Side", "connector", idValue);
 }
 
-export function useSideInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SideInput", guidValue);
+export function useSideInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SideInput", idValue);
 }
 
-export function useSideInputPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SideInput", "pieceId", guidValue);
+export function useSideInputPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SideInput", "pieceId", idValue);
 }
 
-export function useSideInputDesignPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SideInput", "designPieceId", guidValue);
+export function useSideInputDesignPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SideInput", "designPieceId", idValue);
 }
 
-export function useSideInputConnectorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SideInput", "connectorId", guidValue);
+export function useSideInputConnectorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SideInput", "connectorId", idValue);
 }
 
-export function useConnection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Connection", guidValue);
+export function useConnection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Connection", idValue);
 }
 
-export function useConnectionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "hash", guidValue);
+export function useConnectionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "hash", idValue);
 }
 
-export function useConnectionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "id", guidValue);
+export function useConnectionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "id", idValue);
 }
 
-export function useConnectionDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "design", guidValue);
+export function useConnectionDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "design", idValue);
 }
 
-export function useConnectionConnected(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "connected", guidValue);
+export function useConnectionConnected(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "connected", idValue);
 }
 
-export function useConnectionConnecting(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "connecting", guidValue);
+export function useConnectionConnecting(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "connecting", idValue);
 }
 
-export function useConnectionGap(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "gap", guidValue);
+export function useConnectionGap(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "gap", idValue);
 }
 
-export function useConnectionShift(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "shift", guidValue);
+export function useConnectionShift(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "shift", idValue);
 }
 
-export function useConnectionRise(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "rise", guidValue);
+export function useConnectionRise(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "rise", idValue);
 }
 
-export function useConnectionRotation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "rotation", guidValue);
+export function useConnectionRotation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "rotation", idValue);
 }
 
-export function useConnectionTurn(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "turn", guidValue);
+export function useConnectionTurn(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "turn", idValue);
 }
 
-export function useConnectionTilt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "tilt", guidValue);
+export function useConnectionTilt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "tilt", idValue);
 }
 
-export function useConnectionU(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "u", guidValue);
+export function useConnectionU(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "u", idValue);
 }
 
-export function useConnectionV(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "v", guidValue);
+export function useConnectionV(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "v", idValue);
 }
 
-export function useConnectionDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "description", guidValue);
+export function useConnectionDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "description", idValue);
 }
 
-export function useConnectionAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "attributes", guidValue);
+export function useConnectionAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "attributes", idValue);
 }
 
-export function useConnectionChildPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "childPiece", guidValue);
+export function useConnectionChildPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "childPiece", idValue);
 }
 
-export function useConnectionChildConnector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "childConnector", guidValue);
+export function useConnectionChildConnector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "childConnector", idValue);
 }
 
-export function useConnectionParentPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "parentPiece", guidValue);
+export function useConnectionParentPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "parentPiece", idValue);
 }
 
-export function useConnectionParentConnector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Connection", "parentConnector", guidValue);
+export function useConnectionParentConnector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Connection", "parentConnector", idValue);
 }
 
-export function useConnectionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConnectionInput", guidValue);
+export function useConnectionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConnectionInput", idValue);
 }
 
-export function useConnectionInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "id", guidValue);
+export function useConnectionInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "id", idValue);
 }
 
-export function useConnectionInputConnected(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "connected", guidValue);
+export function useConnectionInputConnected(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "connected", idValue);
 }
 
-export function useConnectionInputConnecting(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "connecting", guidValue);
+export function useConnectionInputConnecting(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "connecting", idValue);
 }
 
-export function useConnectionInputGap(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "gap", guidValue);
+export function useConnectionInputGap(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "gap", idValue);
 }
 
-export function useConnectionInputShift(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "shift", guidValue);
+export function useConnectionInputShift(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "shift", idValue);
 }
 
-export function useConnectionInputRise(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "rise", guidValue);
+export function useConnectionInputRise(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "rise", idValue);
 }
 
-export function useConnectionInputRotation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "rotation", guidValue);
+export function useConnectionInputRotation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "rotation", idValue);
 }
 
-export function useConnectionInputTurn(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "turn", guidValue);
+export function useConnectionInputTurn(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "turn", idValue);
 }
 
-export function useConnectionInputTilt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "tilt", guidValue);
+export function useConnectionInputTilt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "tilt", idValue);
 }
 
-export function useConnectionInputU(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "u", guidValue);
+export function useConnectionInputU(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "u", idValue);
 }
 
-export function useConnectionInputV(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "v", guidValue);
+export function useConnectionInputV(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "v", idValue);
 }
 
-export function useConnectionInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "description", guidValue);
+export function useConnectionInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "description", idValue);
 }
 
-export function useConnectionInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionInput", "attributes", guidValue);
+export function useConnectionInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionInput", "attributes", idValue);
 }
 
-export function useConnectionPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConnectionPatchInput", guidValue);
+export function useConnectionPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConnectionPatchInput", idValue);
 }
 
-export function useConnectionPatchInputConnected(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "connected", guidValue);
+export function useConnectionPatchInputConnected(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "connected", idValue);
 }
 
-export function useConnectionPatchInputConnecting(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "connecting", guidValue);
+export function useConnectionPatchInputConnecting(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "connecting", idValue);
 }
 
-export function useConnectionPatchInputGap(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "gap", guidValue);
+export function useConnectionPatchInputGap(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "gap", idValue);
 }
 
-export function useConnectionPatchInputShift(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "shift", guidValue);
+export function useConnectionPatchInputShift(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "shift", idValue);
 }
 
-export function useConnectionPatchInputRise(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "rise", guidValue);
+export function useConnectionPatchInputRise(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "rise", idValue);
 }
 
-export function useConnectionPatchInputRotation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "rotation", guidValue);
+export function useConnectionPatchInputRotation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "rotation", idValue);
 }
 
-export function useConnectionPatchInputTurn(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "turn", guidValue);
+export function useConnectionPatchInputTurn(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "turn", idValue);
 }
 
-export function useConnectionPatchInputTilt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "tilt", guidValue);
+export function useConnectionPatchInputTilt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "tilt", idValue);
 }
 
-export function useConnectionPatchInputU(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "u", guidValue);
+export function useConnectionPatchInputU(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "u", idValue);
 }
 
-export function useConnectionPatchInputV(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "v", guidValue);
+export function useConnectionPatchInputV(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "v", idValue);
 }
 
-export function useConnectionPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "description", guidValue);
+export function useConnectionPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "description", idValue);
 }
 
-export function useConnectionPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionPatchInput", "attributes", guidValue);
+export function useConnectionPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionPatchInput", "attributes", idValue);
 }
 
-export function useStat(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Stat", guidValue);
+export function useStat(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Stat", idValue);
 }
 
-export function useStatHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "hash", guidValue);
+export function useStatHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "hash", idValue);
 }
 
-export function useStatId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "id", guidValue);
+export function useStatId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "id", idValue);
 }
 
-export function useStatDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "design", guidValue);
+export function useStatDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "design", idValue);
 }
 
-export function useStatQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "quality", guidValue);
+export function useStatQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "quality", idValue);
 }
 
-export function useStatUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "unit", guidValue);
+export function useStatUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "unit", idValue);
 }
 
-export function useStatMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "min", guidValue);
+export function useStatMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "min", idValue);
 }
 
-export function useStatMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "minExcluded", guidValue);
+export function useStatMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "minExcluded", idValue);
 }
 
-export function useStatMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "max", guidValue);
+export function useStatMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "max", idValue);
 }
 
-export function useStatMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Stat", "maxExcluded", guidValue);
+export function useStatMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Stat", "maxExcluded", idValue);
 }
 
-export function useStatInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("StatInput", guidValue);
+export function useStatInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("StatInput", idValue);
 }
 
-export function useStatInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "id", guidValue);
+export function useStatInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "id", idValue);
 }
 
-export function useStatInputQualityId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "qualityId", guidValue);
+export function useStatInputQualityId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "qualityId", idValue);
 }
 
-export function useStatInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "unit", guidValue);
+export function useStatInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "unit", idValue);
 }
 
-export function useStatInputMin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "min", guidValue);
+export function useStatInputMin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "min", idValue);
 }
 
-export function useStatInputMinExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "minExcluded", guidValue);
+export function useStatInputMinExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "minExcluded", idValue);
 }
 
-export function useStatInputMax(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "max", guidValue);
+export function useStatInputMax(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "max", idValue);
 }
 
-export function useStatInputMaxExcluded(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StatInput", "maxExcluded", guidValue);
+export function useStatInputMaxExcluded(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StatInput", "maxExcluded", idValue);
 }
 
-export function usePieceKindEnum(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PieceKind", guidValue);
+export function usePieceKindEnum(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PieceKind", idValue);
 }
 
-export function useBlueprint(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Blueprint", guidValue);
+export function useBlueprint(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Blueprint", idValue);
 }
 
-export function useBlueprintType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Blueprint", "type", guidValue);
+export function useBlueprintType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Blueprint", "type", idValue);
 }
 
-export function useBlueprintDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Blueprint", "design", guidValue);
+export function useBlueprintDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Blueprint", "design", idValue);
 }
 
-export function usePiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Piece", guidValue);
+export function usePiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Piece", idValue);
 }
 
-export function usePieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "id", guidValue);
+export function usePieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "id", idValue);
 }
 
-export function usePieceHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "hash", guidValue);
+export function usePieceHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "hash", idValue);
 }
 
-export function usePieceName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "name", guidValue);
+export function usePieceName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "name", idValue);
 }
 
-export function usePiecePlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "plane", guidValue);
+export function usePiecePlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "plane", idValue);
 }
 
-export function usePieceCenter(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "center", guidValue);
+export function usePieceCenter(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "center", idValue);
 }
 
-export function usePieceScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "scale", guidValue);
+export function usePieceScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "scale", idValue);
 }
 
-export function usePieceMirrorPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "mirrorPlane", guidValue);
+export function usePieceMirrorPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "mirrorPlane", idValue);
 }
 
-export function usePieceIsHidden(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "isHidden", guidValue);
+export function usePieceIsHidden(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "isHidden", idValue);
 }
 
-export function usePieceIsLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "isLocked", guidValue);
+export function usePieceIsLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "isLocked", idValue);
 }
 
-export function usePieceColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "color", guidValue);
+export function usePieceColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "color", idValue);
 }
 
-export function usePieceDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "description", guidValue);
+export function usePieceDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "description", idValue);
 }
 
-export function usePieceKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "kind", guidValue);
+export function usePieceKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "kind", idValue);
 }
 
-export function usePieceType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "type", guidValue);
+export function usePieceType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "type", idValue);
 }
 
-export function usePieceDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "design", guidValue);
+export function usePieceDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "design", idValue);
 }
 
-export function usePieceProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "props", guidValue);
+export function usePieceProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "props", idValue);
 }
 
-export function usePieceAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "attributes", guidValue);
+export function usePieceAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "attributes", idValue);
 }
 
-export function usePieceFlatPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "flatPlane", guidValue);
+export function usePieceFlatPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "flatPlane", idValue);
 }
 
-export function usePieceFlatCenter(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "flatCenter", guidValue);
+export function usePieceFlatCenter(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "flatCenter", idValue);
 }
 
-export function usePieceParentPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "parentPiece", guidValue);
+export function usePieceParentPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "parentPiece", idValue);
 }
 
-export function usePieceChildPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "childPieces", guidValue);
+export function usePieceChildPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "childPieces", idValue);
 }
 
-export function usePieceChildConnections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "childConnections", guidValue);
+export function usePieceChildConnections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "childConnections", idValue);
 }
 
-export function usePieceAlternatives(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "alternatives", guidValue);
+export function usePieceAlternatives(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "alternatives", idValue);
 }
 
-export function usePieceAlternativeTypes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "alternativeTypes", guidValue);
+export function usePieceAlternativeTypes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "alternativeTypes", idValue);
 }
 
-export function usePieceAlternativeDesigns(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "alternativeDesigns", guidValue);
+export function usePieceAlternativeDesigns(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Piece", "alternativeDesigns", idValue);
 }
 
-export function usePieceInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PieceInput", guidValue);
+export function usePieceInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PieceInput", idValue);
 }
 
-export function usePieceInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "id", guidValue);
+export function usePieceInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "id", idValue);
 }
 
-export function usePieceInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "name", guidValue);
+export function usePieceInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "name", idValue);
 }
 
-export function usePieceInputTypeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "typeId", guidValue);
+export function usePieceInputTypeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "typeId", idValue);
 }
 
-export function usePieceInputDesignReferenceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "designReferenceId", guidValue);
+export function usePieceInputDesignReferenceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "designReferenceId", idValue);
 }
 
-export function usePieceInputPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "plane", guidValue);
+export function usePieceInputPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "plane", idValue);
 }
 
-export function usePieceInputCenter(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "center", guidValue);
+export function usePieceInputCenter(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "center", idValue);
 }
 
-export function usePieceInputScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "scale", guidValue);
+export function usePieceInputScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "scale", idValue);
 }
 
-export function usePieceInputMirrorPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "mirrorPlane", guidValue);
+export function usePieceInputMirrorPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "mirrorPlane", idValue);
 }
 
-export function usePieceInputIsHidden(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "isHidden", guidValue);
+export function usePieceInputIsHidden(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "isHidden", idValue);
 }
 
-export function usePieceInputIsLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "isLocked", guidValue);
+export function usePieceInputIsLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "isLocked", idValue);
 }
 
-export function usePieceInputColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "color", guidValue);
+export function usePieceInputColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "color", idValue);
 }
 
-export function usePieceInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "description", guidValue);
+export function usePieceInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "description", idValue);
 }
 
-export function usePieceInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "props", guidValue);
+export function usePieceInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "props", idValue);
 }
 
-export function usePieceInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceInput", "attributes", guidValue);
+export function usePieceInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceInput", "attributes", idValue);
 }
 
-export function usePiecePatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PiecePatchInput", guidValue);
+export function usePiecePatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PiecePatchInput", idValue);
 }
 
-export function usePiecePatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "name", guidValue);
+export function usePiecePatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "name", idValue);
 }
 
-export function usePiecePatchInputTypeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "typeId", guidValue);
+export function usePiecePatchInputTypeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "typeId", idValue);
 }
 
-export function usePiecePatchInputDesignReferenceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "designReferenceId", guidValue);
+export function usePiecePatchInputDesignReferenceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "designReferenceId", idValue);
 }
 
-export function usePiecePatchInputPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "plane", guidValue);
+export function usePiecePatchInputPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "plane", idValue);
 }
 
-export function usePiecePatchInputCenter(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "center", guidValue);
+export function usePiecePatchInputCenter(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "center", idValue);
 }
 
-export function usePiecePatchInputScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "scale", guidValue);
+export function usePiecePatchInputScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "scale", idValue);
 }
 
-export function usePiecePatchInputMirrorPlane(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "mirrorPlane", guidValue);
+export function usePiecePatchInputMirrorPlane(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "mirrorPlane", idValue);
 }
 
-export function usePiecePatchInputIsHidden(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "isHidden", guidValue);
+export function usePiecePatchInputIsHidden(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "isHidden", idValue);
 }
 
-export function usePiecePatchInputIsLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "isLocked", guidValue);
+export function usePiecePatchInputIsLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "isLocked", idValue);
 }
 
-export function usePiecePatchInputColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "color", guidValue);
+export function usePiecePatchInputColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "color", idValue);
 }
 
-export function usePiecePatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "description", guidValue);
+export function usePiecePatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "description", idValue);
 }
 
-export function usePiecePatchInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "props", guidValue);
+export function usePiecePatchInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "props", idValue);
 }
 
-export function usePiecePatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PiecePatchInput", "attributes", guidValue);
+export function usePiecePatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PiecePatchInput", "attributes", idValue);
 }
 
-export function useGroup(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Group", guidValue);
+export function useGroup(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Group", idValue);
 }
 
-export function useGroupHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "hash", guidValue);
+export function useGroupHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "hash", idValue);
 }
 
-export function useGroupId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "id", guidValue);
+export function useGroupId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "id", idValue);
 }
 
-export function useGroupDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "design", guidValue);
+export function useGroupDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "design", idValue);
 }
 
-export function useGroupPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "pieces", guidValue);
+export function useGroupPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "pieces", idValue);
 }
 
-export function useGroupColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "color", guidValue);
+export function useGroupColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "color", idValue);
 }
 
-export function useGroupName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "name", guidValue);
+export function useGroupName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "name", idValue);
 }
 
-export function useGroupDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "description", guidValue);
+export function useGroupDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "description", idValue);
 }
 
-export function useGroupAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Group", "attributes", guidValue);
+export function useGroupAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Group", "attributes", idValue);
 }
 
-export function useGroupInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("GroupInput", guidValue);
+export function useGroupInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("GroupInput", idValue);
 }
 
-export function useGroupInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "id", guidValue);
+export function useGroupInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "id", idValue);
 }
 
-export function useGroupInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "pieceIds", guidValue);
+export function useGroupInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "pieceIds", idValue);
 }
 
-export function useGroupInputColor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "color", guidValue);
+export function useGroupInputColor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "color", idValue);
 }
 
-export function useGroupInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "name", guidValue);
+export function useGroupInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "name", idValue);
 }
 
-export function useGroupInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "description", guidValue);
+export function useGroupInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "description", idValue);
 }
 
-export function useGroupInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("GroupInput", "attributes", guidValue);
+export function useGroupInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("GroupInput", "attributes", idValue);
 }
 
-export function useDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Design", guidValue);
+export function useDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Design", idValue);
 }
 
-export function useDesignHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "hash", guidValue);
+export function useDesignHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "hash", idValue);
 }
 
-export function useDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "id", guidValue);
+export function useDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "id", idValue);
 }
 
-export function useDesignKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "kit", guidValue);
+export function useDesignKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "kit", idValue);
 }
 
-export function useDesignName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "name", guidValue);
+export function useDesignName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "name", idValue);
 }
 
-export function useDesignParent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "parent", guidValue);
+export function useDesignParent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "parent", idValue);
 }
 
-export function useDesignChildren(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "children", guidValue);
+export function useDesignChildren(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "children", idValue);
 }
 
-export function useDesignIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "isAbstract", guidValue);
+export function useDesignIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "isAbstract", idValue);
 }
 
-export function useDesignFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "folder", guidValue);
+export function useDesignFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "folder", idValue);
 }
 
-export function useDesignPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "pieces", guidValue);
+export function useDesignPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "pieces", idValue);
 }
 
-export function useDesignConnections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "connections", guidValue);
+export function useDesignConnections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "connections", idValue);
 }
 
-export function useDesignStats(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "stats", guidValue);
+export function useDesignStats(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "stats", idValue);
 }
 
-export function useDesignProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "props", guidValue);
+export function useDesignProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "props", idValue);
 }
 
-export function useDesignLayers(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "layers", guidValue);
+export function useDesignLayers(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "layers", idValue);
 }
 
-export function useDesignActiveLayer(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "activeLayer", guidValue);
+export function useDesignActiveLayer(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "activeLayer", idValue);
 }
 
-export function useDesignGroups(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "groups", guidValue);
+export function useDesignGroups(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "groups", idValue);
 }
 
-export function useDesignCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "canScale", guidValue);
+export function useDesignCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "canScale", idValue);
 }
 
-export function useDesignCanMirror(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "canMirror", guidValue);
+export function useDesignCanMirror(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "canMirror", idValue);
 }
 
-export function useDesignUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "unit", guidValue);
+export function useDesignUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "unit", idValue);
 }
 
-export function useDesignLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "location", guidValue);
+export function useDesignLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "location", idValue);
 }
 
-export function useDesignAuthors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "authors", guidValue);
+export function useDesignAuthors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "authors", idValue);
 }
 
-export function useDesignConcepts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "concepts", guidValue);
+export function useDesignConcepts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "concepts", idValue);
 }
 
-export function useDesignIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "icon", guidValue);
+export function useDesignIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "icon", idValue);
 }
 
-export function useDesignImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "image", guidValue);
+export function useDesignImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "image", idValue);
 }
 
-export function useDesignDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "description", guidValue);
+export function useDesignDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "description", idValue);
 }
 
-export function useDesignAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "attributes", guidValue);
+export function useDesignAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "attributes", idValue);
 }
 
-export function useDesignCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "createdAt", guidValue);
+export function useDesignCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "createdAt", idValue);
 }
 
-export function useDesignUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Design", "updatedAt", guidValue);
+export function useDesignUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Design", "updatedAt", idValue);
 }
 
-export function useDesignInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DesignInput", guidValue);
+export function useDesignInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DesignInput", idValue);
 }
 
-export function useDesignInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "id", guidValue);
+export function useDesignInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "id", idValue);
 }
 
-export function useDesignInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "name", guidValue);
+export function useDesignInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "name", idValue);
 }
 
-export function useDesignInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "parentId", guidValue);
+export function useDesignInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "parentId", idValue);
 }
 
-export function useDesignInputIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "isAbstract", guidValue);
+export function useDesignInputIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "isAbstract", idValue);
 }
 
-export function useDesignInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "folderId", guidValue);
+export function useDesignInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "folderId", idValue);
 }
 
-export function useDesignInputPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "pieces", guidValue);
+export function useDesignInputPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "pieces", idValue);
 }
 
-export function useDesignInputConnections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "connections", guidValue);
+export function useDesignInputConnections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "connections", idValue);
 }
 
-export function useDesignInputStats(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "stats", guidValue);
+export function useDesignInputStats(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "stats", idValue);
 }
 
-export function useDesignInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "props", guidValue);
+export function useDesignInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "props", idValue);
 }
 
-export function useDesignInputLayers(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "layers", guidValue);
+export function useDesignInputLayers(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "layers", idValue);
 }
 
-export function useDesignInputActiveLayerId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "activeLayerId", guidValue);
+export function useDesignInputActiveLayerId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "activeLayerId", idValue);
 }
 
-export function useDesignInputGroups(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "groups", guidValue);
+export function useDesignInputGroups(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "groups", idValue);
 }
 
-export function useDesignInputCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "canScale", guidValue);
+export function useDesignInputCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "canScale", idValue);
 }
 
-export function useDesignInputCanMirror(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "canMirror", guidValue);
+export function useDesignInputCanMirror(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "canMirror", idValue);
 }
 
-export function useDesignInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "unit", guidValue);
+export function useDesignInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "unit", idValue);
 }
 
-export function useDesignInputLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "location", guidValue);
+export function useDesignInputLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "location", idValue);
 }
 
-export function useDesignInputAuthorIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "authorIds", guidValue);
+export function useDesignInputAuthorIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "authorIds", idValue);
 }
 
-export function useDesignInputConceptIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "conceptIds", guidValue);
+export function useDesignInputConceptIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "conceptIds", idValue);
 }
 
-export function useDesignInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "icon", guidValue);
+export function useDesignInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "icon", idValue);
 }
 
-export function useDesignInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "image", guidValue);
+export function useDesignInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "image", idValue);
 }
 
-export function useDesignInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "description", guidValue);
+export function useDesignInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "description", idValue);
 }
 
-export function useDesignInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "attributes", guidValue);
+export function useDesignInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "attributes", idValue);
 }
 
-export function useDesignInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "createdAt", guidValue);
+export function useDesignInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "createdAt", idValue);
 }
 
-export function useDesignInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignInput", "updatedAt", guidValue);
+export function useDesignInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignInput", "updatedAt", idValue);
 }
 
-export function useDesignPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DesignPatchInput", guidValue);
+export function useDesignPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DesignPatchInput", idValue);
 }
 
-export function useDesignPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "name", guidValue);
+export function useDesignPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "name", idValue);
 }
 
-export function useDesignPatchInputParentId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "parentId", guidValue);
+export function useDesignPatchInputParentId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "parentId", idValue);
 }
 
-export function useDesignPatchInputIsAbstract(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "isAbstract", guidValue);
+export function useDesignPatchInputIsAbstract(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "isAbstract", idValue);
 }
 
-export function useDesignPatchInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "folderId", guidValue);
+export function useDesignPatchInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "folderId", idValue);
 }
 
-export function useDesignPatchInputStats(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "stats", guidValue);
+export function useDesignPatchInputStats(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "stats", idValue);
 }
 
-export function useDesignPatchInputProps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "props", guidValue);
+export function useDesignPatchInputProps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "props", idValue);
 }
 
-export function useDesignPatchInputLayers(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "layers", guidValue);
+export function useDesignPatchInputLayers(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "layers", idValue);
 }
 
-export function useDesignPatchInputActiveLayerId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "activeLayerId", guidValue);
+export function useDesignPatchInputActiveLayerId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "activeLayerId", idValue);
 }
 
-export function useDesignPatchInputGroups(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "groups", guidValue);
+export function useDesignPatchInputGroups(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "groups", idValue);
 }
 
-export function useDesignPatchInputCanScale(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "canScale", guidValue);
+export function useDesignPatchInputCanScale(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "canScale", idValue);
 }
 
-export function useDesignPatchInputCanMirror(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "canMirror", guidValue);
+export function useDesignPatchInputCanMirror(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "canMirror", idValue);
 }
 
-export function useDesignPatchInputUnit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "unit", guidValue);
+export function useDesignPatchInputUnit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "unit", idValue);
 }
 
-export function useDesignPatchInputLocation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "location", guidValue);
+export function useDesignPatchInputLocation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "location", idValue);
 }
 
-export function useDesignPatchInputAuthorIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "authorIds", guidValue);
+export function useDesignPatchInputAuthorIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "authorIds", idValue);
 }
 
-export function useDesignPatchInputConceptIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "conceptIds", guidValue);
+export function useDesignPatchInputConceptIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "conceptIds", idValue);
 }
 
-export function useDesignPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "icon", guidValue);
+export function useDesignPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "icon", idValue);
 }
 
-export function useDesignPatchInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "image", guidValue);
+export function useDesignPatchInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "image", idValue);
 }
 
-export function useDesignPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "description", guidValue);
+export function useDesignPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "description", idValue);
 }
 
-export function useDesignPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "attributes", guidValue);
+export function useDesignPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "attributes", idValue);
 }
 
-export function useDesignPatchInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "createdAt", guidValue);
+export function useDesignPatchInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "createdAt", idValue);
 }
 
-export function useDesignPatchInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DesignPatchInput", "updatedAt", guidValue);
+export function useDesignPatchInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DesignPatchInput", "updatedAt", idValue);
 }
 
-export function useKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Kit", guidValue);
+export function useKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Kit", idValue);
 }
 
-export function useKitHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "hash", guidValue);
+export function useKitHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "hash", idValue);
 }
 
-export function useKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "id", guidValue);
+export function useKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "id", idValue);
 }
 
-export function useKitName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "name", guidValue);
+export function useKitName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "name", idValue);
 }
 
-export function useKitRelease(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "release", guidValue);
+export function useKitRelease(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "release", idValue);
 }
 
-export function useKitTypes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "types", guidValue);
+export function useKitTypes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "types", idValue);
 }
 
-export function useKitDesigns(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "designs", guidValue);
+export function useKitDesigns(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "designs", idValue);
 }
 
-export function useKitTags(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "tags", guidValue);
+export function useKitTags(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "tags", idValue);
 }
 
-export function useKitConcepts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "concepts", guidValue);
+export function useKitConcepts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "concepts", idValue);
 }
 
-export function useKitFamilies(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "families", guidValue);
+export function useKitFamilies(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "families", idValue);
 }
 
-export function useKitPorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "ports", guidValue);
+export function useKitPorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "ports", idValue);
 }
 
-export function useKitQualities(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "qualities", guidValue);
+export function useKitQualities(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "qualities", idValue);
 }
 
-export function useKitFiles(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "files", guidValue);
+export function useKitFiles(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "files", idValue);
 }
 
-export function useKitFolders(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "folders", guidValue);
+export function useKitFolders(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "folders", idValue);
 }
 
-export function useKitAuthors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "authors", guidValue);
+export function useKitAuthors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "authors", idValue);
 }
 
-export function useKitRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "remote", guidValue);
+export function useKitRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "remote", idValue);
 }
 
-export function useKitHomepage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "homepage", guidValue);
+export function useKitHomepage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "homepage", idValue);
 }
 
-export function useKitLicense(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "license", guidValue);
+export function useKitLicense(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "license", idValue);
 }
 
-export function useKitPreview(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "preview", guidValue);
+export function useKitPreview(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "preview", idValue);
 }
 
-export function useKitIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "icon", guidValue);
+export function useKitIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "icon", idValue);
 }
 
-export function useKitImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "image", guidValue);
+export function useKitImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "image", idValue);
 }
 
-export function useKitDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "description", guidValue);
+export function useKitDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "description", idValue);
 }
 
-export function useKitAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "attributes", guidValue);
+export function useKitAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "attributes", idValue);
 }
 
-export function useKitCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "createdAt", guidValue);
+export function useKitCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "createdAt", idValue);
 }
 
-export function useKitUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Kit", "updatedAt", guidValue);
+export function useKitUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Kit", "updatedAt", idValue);
 }
 
-export function useKitInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitInput", guidValue);
+export function useKitInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitInput", idValue);
 }
 
-export function useKitInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "id", guidValue);
+export function useKitInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "id", idValue);
 }
 
-export function useKitInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "name", guidValue);
+export function useKitInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "name", idValue);
 }
 
-export function useKitInputRelease(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "release", guidValue);
+export function useKitInputRelease(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "release", idValue);
 }
 
-export function useKitInputTypes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "types", guidValue);
+export function useKitInputTypes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "types", idValue);
 }
 
-export function useKitInputDesigns(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "designs", guidValue);
+export function useKitInputDesigns(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "designs", idValue);
 }
 
-export function useKitInputTags(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "tags", guidValue);
+export function useKitInputTags(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "tags", idValue);
 }
 
-export function useKitInputConcepts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "concepts", guidValue);
+export function useKitInputConcepts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "concepts", idValue);
 }
 
-export function useKitInputFamilies(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "families", guidValue);
+export function useKitInputFamilies(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "families", idValue);
 }
 
-export function useKitInputPorts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "ports", guidValue);
+export function useKitInputPorts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "ports", idValue);
 }
 
-export function useKitInputQualities(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "qualities", guidValue);
+export function useKitInputQualities(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "qualities", idValue);
 }
 
-export function useKitInputFiles(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "files", guidValue);
+export function useKitInputFiles(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "files", idValue);
 }
 
-export function useKitInputFolders(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "folders", guidValue);
+export function useKitInputFolders(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "folders", idValue);
 }
 
-export function useKitInputAuthors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "authors", guidValue);
+export function useKitInputAuthors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "authors", idValue);
 }
 
-export function useKitInputRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "remote", guidValue);
+export function useKitInputRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "remote", idValue);
 }
 
-export function useKitInputHomepage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "homepage", guidValue);
+export function useKitInputHomepage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "homepage", idValue);
 }
 
-export function useKitInputLicense(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "license", guidValue);
+export function useKitInputLicense(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "license", idValue);
 }
 
-export function useKitInputPreview(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "preview", guidValue);
+export function useKitInputPreview(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "preview", idValue);
 }
 
-export function useKitInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "icon", guidValue);
+export function useKitInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "icon", idValue);
 }
 
-export function useKitInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "image", guidValue);
+export function useKitInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "image", idValue);
 }
 
-export function useKitInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "description", guidValue);
+export function useKitInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "description", idValue);
 }
 
-export function useKitInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "attributes", guidValue);
+export function useKitInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "attributes", idValue);
 }
 
-export function useKitInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "createdAt", guidValue);
+export function useKitInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "createdAt", idValue);
 }
 
-export function useKitInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInput", "updatedAt", guidValue);
+export function useKitInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInput", "updatedAt", idValue);
 }
 
-export function useKitPatchInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitPatchInput", guidValue);
+export function useKitPatchInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitPatchInput", idValue);
 }
 
-export function useKitPatchInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "name", guidValue);
+export function useKitPatchInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "name", idValue);
 }
 
-export function useKitPatchInputRelease(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "release", guidValue);
+export function useKitPatchInputRelease(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "release", idValue);
 }
 
-export function useKitPatchInputRemote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "remote", guidValue);
+export function useKitPatchInputRemote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "remote", idValue);
 }
 
-export function useKitPatchInputHomepage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "homepage", guidValue);
+export function useKitPatchInputHomepage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "homepage", idValue);
 }
 
-export function useKitPatchInputLicense(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "license", guidValue);
+export function useKitPatchInputLicense(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "license", idValue);
 }
 
-export function useKitPatchInputPreview(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "preview", guidValue);
+export function useKitPatchInputPreview(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "preview", idValue);
 }
 
-export function useKitPatchInputIcon(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "icon", guidValue);
+export function useKitPatchInputIcon(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "icon", idValue);
 }
 
-export function useKitPatchInputImage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "image", guidValue);
+export function useKitPatchInputImage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "image", idValue);
 }
 
-export function useKitPatchInputDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "description", guidValue);
+export function useKitPatchInputDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "description", idValue);
 }
 
-export function useKitPatchInputAttributes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "attributes", guidValue);
+export function useKitPatchInputAttributes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "attributes", idValue);
 }
 
-export function useKitPatchInputCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "createdAt", guidValue);
+export function useKitPatchInputCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "createdAt", idValue);
 }
 
-export function useKitPatchInputUpdatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitPatchInput", "updatedAt", guidValue);
+export function useKitPatchInputUpdatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitPatchInput", "updatedAt", idValue);
 }
 
-export function useBackboneKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("BackboneKind", guidValue);
+export function useBackboneKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("BackboneKind", idValue);
 }
 
-export function useKitBackbone(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitBackbone", guidValue);
+export function useKitBackbone(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitBackbone", idValue);
 }
 
-export function useKitBackboneHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "hash", guidValue);
+export function useKitBackboneHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "hash", idValue);
 }
 
-export function useKitBackboneKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "kind", guidValue);
+export function useKitBackboneKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "kind", idValue);
 }
 
-export function useKitBackboneEndpoint(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "endpoint", guidValue);
+export function useKitBackboneEndpoint(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "endpoint", idValue);
 }
 
-export function useKitBackboneAuthoritative(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "authoritative", guidValue);
+export function useKitBackboneAuthoritative(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "authoritative", idValue);
 }
 
-export function useKitBackboneLinearHistory(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "linearHistory", guidValue);
+export function useKitBackboneLinearHistory(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "linearHistory", idValue);
 }
 
-export function useKitBackboneConnected(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "connected", guidValue);
+export function useKitBackboneConnected(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "connected", idValue);
 }
 
-export function useKitBackboneTimeoutSeconds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "timeoutSeconds", guidValue);
+export function useKitBackboneTimeoutSeconds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "timeoutSeconds", idValue);
 }
 
-export function useKitBackboneCurrentHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "currentHash", guidValue);
+export function useKitBackboneCurrentHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "currentHash", idValue);
 }
 
-export function useKitBackboneLastInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "lastInteractionIndex", guidValue);
+export function useKitBackboneLastInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "lastInteractionIndex", idValue);
 }
 
-export function useKitBackbonePendingCandidateCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitBackbone", "pendingCandidateCount", guidValue);
+export function useKitBackbonePendingCandidateCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitBackbone", "pendingCandidateCount", idValue);
 }
 
-export function useKitClientInfo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitClientInfo", guidValue);
+export function useKitClientInfo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitClientInfo", idValue);
 }
 
-export function useKitClientInfoHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfo", "hash", guidValue);
+export function useKitClientInfoHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfo", "hash", idValue);
 }
 
-export function useKitClientInfoId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfo", "id", guidValue);
+export function useKitClientInfoId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfo", "id", idValue);
 }
 
-export function useKitClientInfoName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfo", "name", guidValue);
+export function useKitClientInfoName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfo", "name", idValue);
 }
 
-export function useKitClientInfoVersion(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfo", "version", guidValue);
+export function useKitClientInfoVersion(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfo", "version", idValue);
 }
 
-export function useKitClientInfoPlatform(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfo", "platform", guidValue);
+export function useKitClientInfoPlatform(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfo", "platform", idValue);
 }
 
-export function useKitClientInfoInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitClientInfoInput", guidValue);
+export function useKitClientInfoInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitClientInfoInput", idValue);
 }
 
-export function useKitClientInfoInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfoInput", "id", guidValue);
+export function useKitClientInfoInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfoInput", "id", idValue);
 }
 
-export function useKitClientInfoInputName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfoInput", "name", guidValue);
+export function useKitClientInfoInputName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfoInput", "name", idValue);
 }
 
-export function useKitClientInfoInputVersion(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfoInput", "version", guidValue);
+export function useKitClientInfoInputVersion(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfoInput", "version", idValue);
 }
 
-export function useKitClientInfoInputPlatform(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitClientInfoInput", "platform", guidValue);
+export function useKitClientInfoInputPlatform(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitClientInfoInput", "platform", idValue);
 }
 
-export function useSessionState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionState", guidValue);
+export function useSessionState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionState", idValue);
 }
 
-export function useSessionWarningActionKindEnum(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionWarningActionKind", guidValue);
+export function useSessionWarningActionKindEnum(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionWarningActionKind", idValue);
 }
 
-export function useSessionWarningAction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionWarningAction", guidValue);
+export function useSessionWarningAction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionWarningAction", idValue);
 }
 
-export function useSessionWarningActionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionWarningAction", "hash", guidValue);
+export function useSessionWarningActionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionWarningAction", "hash", idValue);
 }
 
-export function useSessionWarningActionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionWarningAction", "kind", guidValue);
+export function useSessionWarningActionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionWarningAction", "kind", idValue);
 }
 
-export function useSessionWarningActionLabel(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionWarningAction", "label", guidValue);
+export function useSessionWarningActionLabel(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionWarningAction", "label", idValue);
 }
 
-export function useKitSessionWarningEntity(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitSessionWarning", guidValue);
+export function useKitSessionWarningEntity(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitSessionWarning", idValue);
 }
 
-export function useKitSessionWarningHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionWarning", "hash", guidValue);
+export function useKitSessionWarningHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionWarning", "hash", idValue);
 }
 
-export function useKitSessionWarningCode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionWarning", "code", guidValue);
+export function useKitSessionWarningCode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionWarning", "code", idValue);
 }
 
-export function useKitSessionWarningMessage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionWarning", "message", guidValue);
+export function useKitSessionWarningMessage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionWarning", "message", idValue);
 }
 
-export function useKitSessionWarningActions(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionWarning", "actions", guidValue);
+export function useKitSessionWarningActions(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionWarning", "actions", idValue);
 }
 
-export function useSessionConnectorSelection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionConnectorSelection", guidValue);
+export function useSessionConnectorSelection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionConnectorSelection", idValue);
 }
 
-export function useSessionConnectorSelectionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelection", "hash", guidValue);
+export function useSessionConnectorSelectionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelection", "hash", idValue);
 }
 
-export function useSessionConnectorSelectionPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelection", "piece", guidValue);
+export function useSessionConnectorSelectionPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelection", "piece", idValue);
 }
 
-export function useSessionConnectorSelectionDesignPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelection", "designPiece", guidValue);
+export function useSessionConnectorSelectionDesignPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelection", "designPiece", idValue);
 }
 
-export function useSessionConnectorSelectionConnector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelection", "connector", guidValue);
+export function useSessionConnectorSelectionConnector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelection", "connector", idValue);
 }
 
-export function useSessionConnectorSelectionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionConnectorSelectionInput", guidValue);
+export function useSessionConnectorSelectionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionConnectorSelectionInput", idValue);
 }
 
-export function useSessionConnectorSelectionInputPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelectionInput", "pieceId", guidValue);
+export function useSessionConnectorSelectionInputPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelectionInput", "pieceId", idValue);
 }
 
-export function useSessionConnectorSelectionInputDesignPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelectionInput", "designPieceId", guidValue);
+export function useSessionConnectorSelectionInputDesignPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelectionInput", "designPieceId", idValue);
 }
 
-export function useSessionConnectorSelectionInputConnectorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionConnectorSelectionInput", "connectorId", guidValue);
+export function useSessionConnectorSelectionInputConnectorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionConnectorSelectionInput", "connectorId", idValue);
 }
 
-export function useKitSessionSelectionEntity(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitSessionSelection", guidValue);
+export function useKitSessionSelectionEntity(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitSessionSelection", idValue);
 }
 
-export function useKitSessionSelectionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "hash", guidValue);
+export function useKitSessionSelectionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "hash", idValue);
 }
 
-export function useKitSessionSelectionActiveDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "activeDesign", guidValue);
+export function useKitSessionSelectionActiveDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "activeDesign", idValue);
 }
 
-export function useKitSessionSelectionPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "pieces", guidValue);
+export function useKitSessionSelectionPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "pieces", idValue);
 }
 
-export function useKitSessionSelectionConnections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "connections", guidValue);
+export function useKitSessionSelectionConnections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "connections", idValue);
 }
 
-export function useKitSessionSelectionConnectors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "connectors", guidValue);
+export function useKitSessionSelectionConnectors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "connectors", idValue);
 }
 
-export function useKitSessionSelectionRepresentations(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "representations", guidValue);
+export function useKitSessionSelectionRepresentations(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "representations", idValue);
 }
 
-export function useKitSessionSelectionDesigns(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "designs", guidValue);
+export function useKitSessionSelectionDesigns(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "designs", idValue);
 }
 
-export function useKitSessionSelectionTypes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "types", guidValue);
+export function useKitSessionSelectionTypes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "types", idValue);
 }
 
-export function useKitSessionSelectionReplacementTypeCandidates(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "replacementTypeCandidates", guidValue);
+export function useKitSessionSelectionReplacementTypeCandidates(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "replacementTypeCandidates", idValue);
 }
 
-export function useKitSessionSelectionReplacementDesignCandidates(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "replacementDesignCandidates", guidValue);
+export function useKitSessionSelectionReplacementDesignCandidates(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "replacementDesignCandidates", idValue);
 }
 
-export function useKitSessionSelectionBoundaryConnectorCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSessionSelection", "boundaryConnectorCount", guidValue);
+export function useKitSessionSelectionBoundaryConnectorCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSessionSelection", "boundaryConnectorCount", idValue);
 }
 
-export function useSessionSelectionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SessionSelectionInput", guidValue);
+export function useSessionSelectionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SessionSelectionInput", idValue);
 }
 
-export function useSessionSelectionInputActiveDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "activeDesignId", guidValue);
+export function useSessionSelectionInputActiveDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "activeDesignId", idValue);
 }
 
-export function useSessionSelectionInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "pieceIds", guidValue);
+export function useSessionSelectionInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "pieceIds", idValue);
 }
 
-export function useSessionSelectionInputConnectionIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "connectionIds", guidValue);
+export function useSessionSelectionInputConnectionIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "connectionIds", idValue);
 }
 
-export function useSessionSelectionInputConnectorSelections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "connectorSelections", guidValue);
+export function useSessionSelectionInputConnectorSelections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "connectorSelections", idValue);
 }
 
-export function useSessionSelectionInputRepresentationIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "representationIds", guidValue);
+export function useSessionSelectionInputRepresentationIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "representationIds", idValue);
 }
 
-export function useSessionSelectionInputDesignIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "designIds", guidValue);
+export function useSessionSelectionInputDesignIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "designIds", idValue);
 }
 
-export function useSessionSelectionInputTypeIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SessionSelectionInput", "typeIds", guidValue);
+export function useSessionSelectionInputTypeIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SessionSelectionInput", "typeIds", idValue);
 }
 
-export function useKitSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitSession", guidValue);
+export function useKitSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitSession", idValue);
 }
 
-export function useKitSessionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "hash", guidValue);
+export function useKitSessionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "hash", idValue);
 }
 
-export function useKitSessionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "id", guidValue);
+export function useKitSessionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "id", idValue);
 }
 
-export function useKitSessionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "kit", guidValue);
+export function useKitSessionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "kit", idValue);
 }
 
-export function useKitSessionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "actor", guidValue);
+export function useKitSessionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "actor", idValue);
 }
 
-export function useKitSessionClient(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "client", guidValue);
+export function useKitSessionClient(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "client", idValue);
 }
 
-export function useKitSessionState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "state", guidValue);
+export function useKitSessionState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "state", idValue);
 }
 
-export function useKitSessionStrictMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "strictMode", guidValue);
+export function useKitSessionStrictMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "strictMode", idValue);
 }
 
-export function useKitSessionTimeoutSeconds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "timeoutSeconds", guidValue);
+export function useKitSessionTimeoutSeconds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "timeoutSeconds", idValue);
 }
 
-export function useKitSessionStartedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "startedAt", guidValue);
+export function useKitSessionStartedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "startedAt", idValue);
 }
 
-export function useKitSessionLastSeenAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "lastSeenAt", guidValue);
+export function useKitSessionLastSeenAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "lastSeenAt", idValue);
 }
 
-export function useKitSessionExpiresAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "expiresAt", guidValue);
+export function useKitSessionExpiresAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "expiresAt", idValue);
 }
 
-export function useKitSessionDisconnectedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "disconnectedAt", guidValue);
+export function useKitSessionDisconnectedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "disconnectedAt", idValue);
 }
 
-export function useKitSessionLocked(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "locked", guidValue);
+export function useKitSessionLocked(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "locked", idValue);
 }
 
-export function useKitSessionCanReconnect(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "canReconnect", guidValue);
+export function useKitSessionCanReconnect(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "canReconnect", idValue);
 }
 
-export function useKitSessionCanSaveLocalChanges(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "canSaveLocalChanges", guidValue);
+export function useKitSessionCanSaveLocalChanges(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "canSaveLocalChanges", idValue);
 }
 
-export function useKitSessionWarning(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "warning", guidValue);
+export function useKitSessionWarning(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "warning", idValue);
 }
 
-export function useKitSessionSelection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "selection", guidValue);
+export function useKitSessionSelection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "selection", idValue);
 }
 
-export function useKitSessionActiveTransactions(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitSession", "activeTransactions", guidValue);
+export function useKitSessionActiveTransactions(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitSession", "activeTransactions", idValue);
 }
 
-export function useValidationSeverity(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ValidationSeverity", guidValue);
+export function useValidationSeverity(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ValidationSeverity", idValue);
 }
 
-export function useValidationNote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ValidationNote", guidValue);
+export function useValidationNote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ValidationNote", idValue);
 }
 
-export function useValidationNoteHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "hash", guidValue);
+export function useValidationNoteHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "hash", idValue);
 }
 
-export function useValidationNoteSeverity(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "severity", guidValue);
+export function useValidationNoteSeverity(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "severity", idValue);
 }
 
-export function useValidationNoteCode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "code", guidValue);
+export function useValidationNoteCode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "code", idValue);
 }
 
-export function useValidationNotePath(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "path", guidValue);
+export function useValidationNotePath(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "path", idValue);
 }
 
-export function useValidationNoteEntityId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "entityId", guidValue);
+export function useValidationNoteEntityId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "entityId", idValue);
 }
 
-export function useValidationNoteMessage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ValidationNote", "message", guidValue);
+export function useValidationNoteMessage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ValidationNote", "message", idValue);
 }
 
-export function useKitValidationResult(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitValidationResult", guidValue);
+export function useKitValidationResult(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitValidationResult", idValue);
 }
 
-export function useKitValidationResultHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "hash", guidValue);
+export function useKitValidationResultHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "hash", idValue);
 }
 
-export function useKitValidationResultOk(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "ok", guidValue);
+export function useKitValidationResultOk(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "ok", idValue);
 }
 
-export function useKitValidationResultImmutable(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "immutable", guidValue);
+export function useKitValidationResultImmutable(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "immutable", idValue);
 }
 
-export function useKitValidationResultStrict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "strict", guidValue);
+export function useKitValidationResultStrict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "strict", idValue);
 }
 
-export function useKitValidationResultErrors(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "errors", guidValue);
+export function useKitValidationResultErrors(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "errors", idValue);
 }
 
-export function useKitValidationResultWarnings(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "warnings", guidValue);
+export function useKitValidationResultWarnings(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "warnings", idValue);
 }
 
-export function useKitValidationResultInfos(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitValidationResult", "infos", guidValue);
+export function useKitValidationResultInfos(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitValidationResult", "infos", idValue);
 }
 
-export function useKitConflictStatusEnum(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitConflictStatus", guidValue);
+export function useKitConflictStatusEnum(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitConflictStatus", idValue);
 }
 
-export function useKitConflictKindEnum(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitConflictKind", guidValue);
+export function useKitConflictKindEnum(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitConflictKind", idValue);
 }
 
-export function useConflictResolutionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConflictResolutionKind", guidValue);
+export function useConflictResolutionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConflictResolutionKind", idValue);
 }
 
-export function useConflictResolutionOption(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConflictResolutionOption", guidValue);
+export function useConflictResolutionOption(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConflictResolutionOption", idValue);
 }
 
-export function useConflictResolutionOptionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "hash", guidValue);
+export function useConflictResolutionOptionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "hash", idValue);
 }
 
-export function useConflictResolutionOptionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "id", guidValue);
+export function useConflictResolutionOptionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "id", idValue);
 }
 
-export function useConflictResolutionOptionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "kind", guidValue);
+export function useConflictResolutionOptionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "kind", idValue);
 }
 
-export function useConflictResolutionOptionLabel(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "label", guidValue);
+export function useConflictResolutionOptionLabel(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "label", idValue);
 }
 
-export function useConflictResolutionOptionDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "description", guidValue);
+export function useConflictResolutionOptionDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "description", idValue);
 }
 
-export function useConflictResolutionOptionPatchPreview(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConflictResolutionOption", "patchPreview", guidValue);
+export function useConflictResolutionOptionPatchPreview(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConflictResolutionOption", "patchPreview", idValue);
 }
 
-export function useKitConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitConflict", guidValue);
+export function useKitConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitConflict", idValue);
 }
 
-export function useKitConflictHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "hash", guidValue);
+export function useKitConflictHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "hash", idValue);
 }
 
-export function useKitConflictId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "id", guidValue);
+export function useKitConflictId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "id", idValue);
 }
 
-export function useKitConflictKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "kit", guidValue);
+export function useKitConflictKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "kit", idValue);
 }
 
-export function useKitConflictSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "session", guidValue);
+export function useKitConflictSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "session", idValue);
 }
 
-export function useKitConflictCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "candidate", guidValue);
+export function useKitConflictCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "candidate", idValue);
 }
 
-export function useKitConflictStatus(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "status", guidValue);
+export function useKitConflictStatus(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "status", idValue);
 }
 
-export function useKitConflictKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "kind", guidValue);
+export function useKitConflictKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "kind", idValue);
 }
 
-export function useKitConflictTitle(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "title", guidValue);
+export function useKitConflictTitle(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "title", idValue);
 }
 
-export function useKitConflictMessage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "message", guidValue);
+export function useKitConflictMessage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "message", idValue);
 }
 
-export function useKitConflictBlocking(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "blocking", guidValue);
+export function useKitConflictBlocking(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "blocking", idValue);
 }
 
-export function useKitConflictStrict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "strict", guidValue);
+export function useKitConflictStrict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "strict", idValue);
 }
 
-export function useKitConflictNotes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "notes", guidValue);
+export function useKitConflictNotes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "notes", idValue);
 }
 
-export function useKitConflictOptions(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "options", guidValue);
+export function useKitConflictOptions(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "options", idValue);
 }
 
-export function useKitConflictCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "createdAt", guidValue);
+export function useKitConflictCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "createdAt", idValue);
 }
 
-export function useKitConflictResolvedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitConflict", "resolvedAt", guidValue);
+export function useKitConflictResolvedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitConflict", "resolvedAt", idValue);
 }
 
-export function useKitCommandKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitCommandKind", guidValue);
+export function useKitCommandKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitCommandKind", idValue);
 }
 
-export function useKitCommandDescriptor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitCommandDescriptor", guidValue);
+export function useKitCommandDescriptor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitCommandDescriptor", idValue);
 }
 
-export function useKitCommandDescriptorHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "hash", guidValue);
+export function useKitCommandDescriptorHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "hash", idValue);
 }
 
-export function useKitCommandDescriptorKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "kind", guidValue);
+export function useKitCommandDescriptorKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "kind", idValue);
 }
 
-export function useKitCommandDescriptorMutatesKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "mutatesKit", guidValue);
+export function useKitCommandDescriptorMutatesKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "mutatesKit", idValue);
 }
 
-export function useKitCommandDescriptorSessionScoped(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "sessionScoped", guidValue);
+export function useKitCommandDescriptorSessionScoped(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "sessionScoped", idValue);
 }
 
-export function useKitCommandDescriptorRequiresConsensus(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "requiresConsensus", guidValue);
+export function useKitCommandDescriptorRequiresConsensus(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "requiresConsensus", idValue);
 }
 
-export function useKitCommandDescriptorDescription(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandDescriptor", "description", guidValue);
+export function useKitCommandDescriptorDescription(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandDescriptor", "description", idValue);
 }
 
-export function useKitChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitChange", guidValue);
+export function useKitChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitChange", idValue);
 }
 
-export function useKitChangeHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "hash", guidValue);
+export function useKitChangeHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "hash", idValue);
 }
 
-export function useKitChangeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "id", guidValue);
+export function useKitChangeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "id", idValue);
 }
 
-export function useKitChangeKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "kind", guidValue);
+export function useKitChangeKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "kind", idValue);
 }
 
-export function useKitChangeSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "summary", guidValue);
+export function useKitChangeSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "summary", idValue);
 }
 
-export function useKitChangeOrigin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "origin", guidValue);
+export function useKitChangeOrigin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "origin", idValue);
 }
 
-export function useKitChangeActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "actor", guidValue);
+export function useKitChangeActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "actor", idValue);
 }
 
-export function useKitChangeSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "session", guidValue);
+export function useKitChangeSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "session", idValue);
 }
 
-export function useKitChangeTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "transaction", guidValue);
+export function useKitChangeTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "transaction", idValue);
 }
 
-export function useKitChangeForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "forward", guidValue);
+export function useKitChangeForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "forward", idValue);
 }
 
-export function useKitChangeBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "backward", guidValue);
+export function useKitChangeBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "backward", idValue);
 }
 
-export function useKitChangeValidation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "validation", guidValue);
+export function useKitChangeValidation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "validation", idValue);
 }
 
-export function useKitChangeCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "createdAt", guidValue);
+export function useKitChangeCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "createdAt", idValue);
 }
 
-export function useKitChangeAppliedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChange", "appliedAt", guidValue);
+export function useKitChangeAppliedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChange", "appliedAt", idValue);
 }
 
-export function useKitCandidateStatus(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitCandidateStatus", guidValue);
+export function useKitCandidateStatus(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitCandidateStatus", idValue);
 }
 
-export function useCandidateVoteState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CandidateVoteState", guidValue);
+export function useCandidateVoteState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CandidateVoteState", idValue);
 }
 
-export function useKitCandidateVote(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitCandidateVote", guidValue);
+export function useKitCandidateVote(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitCandidateVote", idValue);
 }
 
-export function useKitCandidateVoteHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "hash", guidValue);
+export function useKitCandidateVoteHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "hash", idValue);
 }
 
-export function useKitCandidateVoteSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "session", guidValue);
+export function useKitCandidateVoteSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "session", idValue);
 }
 
-export function useKitCandidateVoteState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "state", guidValue);
+export function useKitCandidateVoteState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "state", idValue);
 }
 
-export function useKitCandidateVoteReason(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "reason", guidValue);
+export function useKitCandidateVoteReason(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "reason", idValue);
 }
 
-export function useKitCandidateVoteRespondedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "respondedAt", guidValue);
+export function useKitCandidateVoteRespondedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "respondedAt", idValue);
 }
 
-export function useKitCandidateVoteResolutionOptionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCandidateVote", "resolutionOptionId", guidValue);
+export function useKitCandidateVoteResolutionOptionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCandidateVote", "resolutionOptionId", idValue);
 }
 
-export function useKitChangeCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitChangeCandidate", guidValue);
+export function useKitChangeCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitChangeCandidate", idValue);
 }
 
-export function useKitChangeCandidateHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "hash", guidValue);
+export function useKitChangeCandidateHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "hash", idValue);
 }
 
-export function useKitChangeCandidateId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "id", guidValue);
+export function useKitChangeCandidateId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "id", idValue);
 }
 
-export function useKitChangeCandidateKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "kit", guidValue);
+export function useKitChangeCandidateKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "kit", idValue);
 }
 
-export function useKitChangeCandidateKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "kind", guidValue);
+export function useKitChangeCandidateKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "kind", idValue);
 }
 
-export function useKitChangeCandidateSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "summary", guidValue);
+export function useKitChangeCandidateSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "summary", idValue);
 }
 
-export function useKitChangeCandidateProposedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "proposedBy", guidValue);
+export function useKitChangeCandidateProposedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "proposedBy", idValue);
 }
 
-export function useKitChangeCandidateActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "actor", guidValue);
+export function useKitChangeCandidateActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "actor", idValue);
 }
 
-export function useKitChangeCandidateTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "transaction", guidValue);
+export function useKitChangeCandidateTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "transaction", idValue);
 }
 
-export function useKitChangeCandidateStatus(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "status", guidValue);
+export function useKitChangeCandidateStatus(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "status", idValue);
 }
 
-export function useKitChangeCandidateRequestedFrom(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "requestedFrom", guidValue);
+export function useKitChangeCandidateRequestedFrom(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "requestedFrom", idValue);
 }
 
-export function useKitChangeCandidateVotes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "votes", guidValue);
+export function useKitChangeCandidateVotes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "votes", idValue);
 }
 
-export function useKitChangeCandidateValidation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "validation", guidValue);
+export function useKitChangeCandidateValidation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "validation", idValue);
 }
 
-export function useKitChangeCandidatePreview(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "preview", guidValue);
+export function useKitChangeCandidatePreview(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "preview", idValue);
 }
 
-export function useKitChangeCandidateProposedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "proposedAt", guidValue);
+export function useKitChangeCandidateProposedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "proposedAt", idValue);
 }
 
-export function useKitChangeCandidateExpiresAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "expiresAt", guidValue);
+export function useKitChangeCandidateExpiresAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "expiresAt", idValue);
 }
 
-export function useKitChangeCandidateDecidedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitChangeCandidate", "decidedAt", guidValue);
+export function useKitChangeCandidateDecidedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitChangeCandidate", "decidedAt", idValue);
 }
 
-export function useTransactionState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TransactionState", guidValue);
+export function useTransactionState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TransactionState", idValue);
 }
 
-export function useKitTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitTransaction", guidValue);
+export function useKitTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitTransaction", idValue);
 }
 
-export function useKitTransactionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "hash", guidValue);
+export function useKitTransactionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "hash", idValue);
 }
 
-export function useKitTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "id", guidValue);
+export function useKitTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "id", idValue);
 }
 
-export function useKitTransactionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "kit", guidValue);
+export function useKitTransactionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "kit", idValue);
 }
 
-export function useKitTransactionLabel(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "label", guidValue);
+export function useKitTransactionLabel(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "label", idValue);
 }
 
-export function useKitTransactionState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "state", guidValue);
+export function useKitTransactionState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "state", idValue);
 }
 
-export function useKitTransactionStartedBy(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "startedBy", guidValue);
+export function useKitTransactionStartedBy(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "startedBy", idValue);
 }
 
-export function useKitTransactionParent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "parent", guidValue);
+export function useKitTransactionParent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "parent", idValue);
 }
 
-export function useKitTransactionStartedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "startedAt", guidValue);
+export function useKitTransactionStartedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "startedAt", idValue);
 }
 
-export function useKitTransactionFinalizedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "finalizedAt", guidValue);
+export function useKitTransactionFinalizedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "finalizedAt", idValue);
 }
 
-export function useKitTransactionAbortedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "abortedAt", guidValue);
+export function useKitTransactionAbortedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "abortedAt", idValue);
 }
 
-export function useKitTransactionChanges(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "changes", guidValue);
+export function useKitTransactionChanges(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "changes", idValue);
 }
 
-export function useKitTransactionUndoStack(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "undoStack", guidValue);
+export function useKitTransactionUndoStack(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "undoStack", idValue);
 }
 
-export function useKitTransactionRedoStack(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "redoStack", guidValue);
+export function useKitTransactionRedoStack(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "redoStack", idValue);
 }
 
-export function useKitTransactionCanUndo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "canUndo", guidValue);
+export function useKitTransactionCanUndo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "canUndo", idValue);
 }
 
-export function useKitTransactionCanRedo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "canRedo", guidValue);
+export function useKitTransactionCanRedo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "canRedo", idValue);
 }
 
-export function useKitTransactionSquashedChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitTransaction", "squashedChange", guidValue);
+export function useKitTransactionSquashedChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitTransaction", "squashedChange", idValue);
 }
 
-export function useKitHistoryEntry(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitHistoryEntry", guidValue);
+export function useKitHistoryEntry(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitHistoryEntry", idValue);
 }
 
-export function useKitHistoryEntryHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "hash", guidValue);
+export function useKitHistoryEntryHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "hash", idValue);
 }
 
-export function useKitHistoryEntryId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "id", guidValue);
+export function useKitHistoryEntryId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "id", idValue);
 }
 
-export function useKitHistoryEntryIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "index", guidValue);
+export function useKitHistoryEntryIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "index", idValue);
 }
 
-export function useKitHistoryEntryTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "transaction", guidValue);
+export function useKitHistoryEntryTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "transaction", idValue);
 }
 
-export function useKitHistoryEntryCommandKinds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "commandKinds", guidValue);
+export function useKitHistoryEntryCommandKinds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "commandKinds", idValue);
 }
 
-export function useKitHistoryEntrySummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "summary", guidValue);
+export function useKitHistoryEntrySummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "summary", idValue);
 }
 
-export function useKitHistoryEntrySquashedChangeCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "squashedChangeCount", guidValue);
+export function useKitHistoryEntrySquashedChangeCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "squashedChangeCount", idValue);
 }
 
-export function useKitHistoryEntryChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "change", guidValue);
+export function useKitHistoryEntryChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "change", idValue);
 }
 
-export function useKitHistoryEntryCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "createdAt", guidValue);
+export function useKitHistoryEntryCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "createdAt", idValue);
 }
 
-export function useKitHistoryEntryFinalizedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "finalizedAt", guidValue);
+export function useKitHistoryEntryFinalizedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "finalizedAt", idValue);
 }
 
-export function useKitHistoryEntryUndoneAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryEntry", "undoneAt", guidValue);
+export function useKitHistoryEntryUndoneAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryEntry", "undoneAt", idValue);
 }
 
-export function useKitHistoryPage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitHistoryPage", guidValue);
+export function useKitHistoryPage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitHistoryPage", idValue);
 }
 
-export function useKitHistoryPageHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryPage", "hash", guidValue);
+export function useKitHistoryPageHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryPage", "hash", idValue);
 }
 
-export function useKitHistoryPageNodes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryPage", "nodes", guidValue);
+export function useKitHistoryPageNodes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryPage", "nodes", idValue);
 }
 
-export function useKitHistoryPagePageInfo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryPage", "pageInfo", guidValue);
+export function useKitHistoryPagePageInfo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryPage", "pageInfo", idValue);
 }
 
-export function useKitHistoryPageTotalCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistoryPage", "totalCount", guidValue);
+export function useKitHistoryPageTotalCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistoryPage", "totalCount", idValue);
 }
 
-export function useKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitInteraction", guidValue);
+export function useKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitInteraction", idValue);
 }
 
-export function useKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "id", guidValue);
+export function useKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "id", idValue);
 }
 
-export function useKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "hash", guidValue);
+export function useKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "hash", idValue);
 }
 
-export function useKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "index", guidValue);
+export function useKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "index", idValue);
 }
 
-export function useKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "kit", guidValue);
+export function useKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "kit", idValue);
 }
 
-export function useKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "kind", guidValue);
+export function useKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "kind", idValue);
 }
 
-export function useKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "actor", guidValue);
+export function useKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "actor", idValue);
 }
 
-export function useKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "session", guidValue);
+export function useKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "session", idValue);
 }
 
-export function useKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "transaction", guidValue);
+export function useKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "transaction", idValue);
 }
 
-export function useKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "candidate", guidValue);
+export function useKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "candidate", idValue);
 }
 
-export function useKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "change", guidValue);
+export function useKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "change", idValue);
 }
 
-export function useKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "conflict", guidValue);
+export function useKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "conflict", idValue);
 }
 
-export function useKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "summary", guidValue);
+export function useKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "summary", idValue);
 }
 
-export function useKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "metadata", guidValue);
+export function useKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "metadata", idValue);
 }
 
-export function useKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteraction", "createdAt", guidValue);
+export function useKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteraction", "createdAt", idValue);
 }
 
-export function useChangeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ChangeKitInteraction", guidValue);
+export function useChangeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ChangeKitInteraction", idValue);
 }
 
-export function useChangeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "id", guidValue);
+export function useChangeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "id", idValue);
 }
 
-export function useChangeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "hash", guidValue);
+export function useChangeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "hash", idValue);
 }
 
-export function useChangeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "index", guidValue);
+export function useChangeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "index", idValue);
 }
 
-export function useChangeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "kit", guidValue);
+export function useChangeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "kit", idValue);
 }
 
-export function useChangeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "kind", guidValue);
+export function useChangeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "kind", idValue);
 }
 
-export function useChangeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "actor", guidValue);
+export function useChangeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "actor", idValue);
 }
 
-export function useChangeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "session", guidValue);
+export function useChangeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "session", idValue);
 }
 
-export function useChangeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "transaction", guidValue);
+export function useChangeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "transaction", idValue);
 }
 
-export function useChangeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "candidate", guidValue);
+export function useChangeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "candidate", idValue);
 }
 
-export function useChangeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "change", guidValue);
+export function useChangeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "change", idValue);
 }
 
-export function useChangeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "conflict", guidValue);
+export function useChangeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "conflict", idValue);
 }
 
-export function useChangeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "summary", guidValue);
+export function useChangeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "summary", idValue);
 }
 
-export function useChangeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "metadata", guidValue);
+export function useChangeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "metadata", idValue);
 }
 
-export function useChangeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "createdAt", guidValue);
+export function useChangeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "createdAt", idValue);
 }
 
-export function useChangeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "forward", guidValue);
+export function useChangeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "forward", idValue);
 }
 
-export function useChangeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangeKitInteraction", "backward", guidValue);
+export function useChangeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangeKitInteraction", "backward", idValue);
 }
 
-export function useSetSessionSelectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SetSessionSelectionKitInteraction", guidValue);
+export function useSetSessionSelectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SetSessionSelectionKitInteraction", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "id", guidValue);
+export function useSetSessionSelectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "id", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "hash", guidValue);
+export function useSetSessionSelectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "hash", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "index", guidValue);
+export function useSetSessionSelectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "index", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "kit", guidValue);
+export function useSetSessionSelectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "kit", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "kind", guidValue);
+export function useSetSessionSelectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "kind", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "actor", guidValue);
+export function useSetSessionSelectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "actor", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "session", guidValue);
+export function useSetSessionSelectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "session", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "transaction", guidValue);
+export function useSetSessionSelectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "transaction", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "candidate", guidValue);
+export function useSetSessionSelectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "candidate", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "change", guidValue);
+export function useSetSessionSelectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "change", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "conflict", guidValue);
+export function useSetSessionSelectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "conflict", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "summary", guidValue);
+export function useSetSessionSelectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "summary", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "metadata", guidValue);
+export function useSetSessionSelectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "metadata", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "createdAt", guidValue);
+export function useSetSessionSelectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "createdAt", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "forward", guidValue);
+export function useSetSessionSelectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "forward", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "backward", guidValue);
+export function useSetSessionSelectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "backward", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "mode", guidValue);
+export function useSetSessionSelectionKitInteractionMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "mode", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionSelection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "selection", guidValue);
+export function useSetSessionSelectionKitInteractionSelection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "selection", idValue);
 }
 
-export function useSetSessionSelectionKitInteractionPreviousSelection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionKitInteraction", "previousSelection", guidValue);
+export function useSetSessionSelectionKitInteractionPreviousSelection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionKitInteraction", "previousSelection", idValue);
 }
 
-export function useCreateAuthorKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateAuthorKitInteraction", guidValue);
+export function useCreateAuthorKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateAuthorKitInteraction", idValue);
 }
 
-export function useCreateAuthorKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "id", guidValue);
+export function useCreateAuthorKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "id", idValue);
 }
 
-export function useCreateAuthorKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "hash", guidValue);
+export function useCreateAuthorKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "hash", idValue);
 }
 
-export function useCreateAuthorKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "index", guidValue);
+export function useCreateAuthorKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "index", idValue);
 }
 
-export function useCreateAuthorKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "kit", guidValue);
+export function useCreateAuthorKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "kit", idValue);
 }
 
-export function useCreateAuthorKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "kind", guidValue);
+export function useCreateAuthorKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "kind", idValue);
 }
 
-export function useCreateAuthorKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "actor", guidValue);
+export function useCreateAuthorKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "actor", idValue);
 }
 
-export function useCreateAuthorKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "session", guidValue);
+export function useCreateAuthorKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "session", idValue);
 }
 
-export function useCreateAuthorKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "transaction", guidValue);
+export function useCreateAuthorKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "transaction", idValue);
 }
 
-export function useCreateAuthorKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "candidate", guidValue);
+export function useCreateAuthorKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "candidate", idValue);
 }
 
-export function useCreateAuthorKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "change", guidValue);
+export function useCreateAuthorKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "change", idValue);
 }
 
-export function useCreateAuthorKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "conflict", guidValue);
+export function useCreateAuthorKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "conflict", idValue);
 }
 
-export function useCreateAuthorKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "summary", guidValue);
+export function useCreateAuthorKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "summary", idValue);
 }
 
-export function useCreateAuthorKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "metadata", guidValue);
+export function useCreateAuthorKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "metadata", idValue);
 }
 
-export function useCreateAuthorKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "createdAt", guidValue);
+export function useCreateAuthorKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateAuthorKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "forward", guidValue);
+export function useCreateAuthorKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "forward", idValue);
 }
 
-export function useCreateAuthorKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "backward", guidValue);
+export function useCreateAuthorKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "backward", idValue);
 }
 
-export function useCreateAuthorKitInteractionAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorKitInteraction", "author", guidValue);
+export function useCreateAuthorKitInteractionAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorKitInteraction", "author", idValue);
 }
 
-export function useUpdateAuthorKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateAuthorKitInteraction", guidValue);
+export function useUpdateAuthorKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateAuthorKitInteraction", idValue);
 }
 
-export function useUpdateAuthorKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "id", guidValue);
+export function useUpdateAuthorKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "id", idValue);
 }
 
-export function useUpdateAuthorKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "hash", guidValue);
+export function useUpdateAuthorKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "hash", idValue);
 }
 
-export function useUpdateAuthorKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "index", guidValue);
+export function useUpdateAuthorKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "index", idValue);
 }
 
-export function useUpdateAuthorKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "kit", guidValue);
+export function useUpdateAuthorKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "kit", idValue);
 }
 
-export function useUpdateAuthorKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "kind", guidValue);
+export function useUpdateAuthorKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "kind", idValue);
 }
 
-export function useUpdateAuthorKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "actor", guidValue);
+export function useUpdateAuthorKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "actor", idValue);
 }
 
-export function useUpdateAuthorKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "session", guidValue);
+export function useUpdateAuthorKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "session", idValue);
 }
 
-export function useUpdateAuthorKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "transaction", guidValue);
+export function useUpdateAuthorKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateAuthorKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "candidate", guidValue);
+export function useUpdateAuthorKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateAuthorKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "change", guidValue);
+export function useUpdateAuthorKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "change", idValue);
 }
 
-export function useUpdateAuthorKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "conflict", guidValue);
+export function useUpdateAuthorKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateAuthorKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "summary", guidValue);
+export function useUpdateAuthorKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "summary", idValue);
 }
 
-export function useUpdateAuthorKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "metadata", guidValue);
+export function useUpdateAuthorKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateAuthorKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "createdAt", guidValue);
+export function useUpdateAuthorKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateAuthorKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "forward", guidValue);
+export function useUpdateAuthorKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "forward", idValue);
 }
 
-export function useUpdateAuthorKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "backward", guidValue);
+export function useUpdateAuthorKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "backward", idValue);
 }
 
-export function useUpdateAuthorKitInteractionAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "author", guidValue);
+export function useUpdateAuthorKitInteractionAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "author", idValue);
 }
 
-export function useUpdateAuthorKitInteractionPreviousAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorKitInteraction", "previousAuthor", guidValue);
+export function useUpdateAuthorKitInteractionPreviousAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorKitInteraction", "previousAuthor", idValue);
 }
 
-export function useDeleteAuthorKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteAuthorKitInteraction", guidValue);
+export function useDeleteAuthorKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteAuthorKitInteraction", idValue);
 }
 
-export function useDeleteAuthorKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "id", guidValue);
+export function useDeleteAuthorKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "id", idValue);
 }
 
-export function useDeleteAuthorKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "hash", guidValue);
+export function useDeleteAuthorKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "hash", idValue);
 }
 
-export function useDeleteAuthorKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "index", guidValue);
+export function useDeleteAuthorKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "index", idValue);
 }
 
-export function useDeleteAuthorKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "kit", guidValue);
+export function useDeleteAuthorKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "kit", idValue);
 }
 
-export function useDeleteAuthorKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "kind", guidValue);
+export function useDeleteAuthorKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "kind", idValue);
 }
 
-export function useDeleteAuthorKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "actor", guidValue);
+export function useDeleteAuthorKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "actor", idValue);
 }
 
-export function useDeleteAuthorKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "session", guidValue);
+export function useDeleteAuthorKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "session", idValue);
 }
 
-export function useDeleteAuthorKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "transaction", guidValue);
+export function useDeleteAuthorKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteAuthorKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "candidate", guidValue);
+export function useDeleteAuthorKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteAuthorKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "change", guidValue);
+export function useDeleteAuthorKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "change", idValue);
 }
 
-export function useDeleteAuthorKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "conflict", guidValue);
+export function useDeleteAuthorKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteAuthorKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "summary", guidValue);
+export function useDeleteAuthorKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "summary", idValue);
 }
 
-export function useDeleteAuthorKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "metadata", guidValue);
+export function useDeleteAuthorKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteAuthorKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "createdAt", guidValue);
+export function useDeleteAuthorKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteAuthorKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "forward", guidValue);
+export function useDeleteAuthorKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "forward", idValue);
 }
 
-export function useDeleteAuthorKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "backward", guidValue);
+export function useDeleteAuthorKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "backward", idValue);
 }
 
-export function useDeleteAuthorKitInteractionPreviousAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorKitInteraction", "previousAuthor", guidValue);
+export function useDeleteAuthorKitInteractionPreviousAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorKitInteraction", "previousAuthor", idValue);
 }
 
-export function useCreateTypeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateTypeKitInteraction", guidValue);
+export function useCreateTypeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateTypeKitInteraction", idValue);
 }
 
-export function useCreateTypeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "id", guidValue);
+export function useCreateTypeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "id", idValue);
 }
 
-export function useCreateTypeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "hash", guidValue);
+export function useCreateTypeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "hash", idValue);
 }
 
-export function useCreateTypeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "index", guidValue);
+export function useCreateTypeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "index", idValue);
 }
 
-export function useCreateTypeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "kit", guidValue);
+export function useCreateTypeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "kit", idValue);
 }
 
-export function useCreateTypeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "kind", guidValue);
+export function useCreateTypeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "kind", idValue);
 }
 
-export function useCreateTypeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "actor", guidValue);
+export function useCreateTypeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "actor", idValue);
 }
 
-export function useCreateTypeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "session", guidValue);
+export function useCreateTypeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "session", idValue);
 }
 
-export function useCreateTypeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "transaction", guidValue);
+export function useCreateTypeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "transaction", idValue);
 }
 
-export function useCreateTypeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "candidate", guidValue);
+export function useCreateTypeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "candidate", idValue);
 }
 
-export function useCreateTypeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "change", guidValue);
+export function useCreateTypeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "change", idValue);
 }
 
-export function useCreateTypeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "conflict", guidValue);
+export function useCreateTypeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "conflict", idValue);
 }
 
-export function useCreateTypeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "summary", guidValue);
+export function useCreateTypeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "summary", idValue);
 }
 
-export function useCreateTypeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "metadata", guidValue);
+export function useCreateTypeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "metadata", idValue);
 }
 
-export function useCreateTypeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "createdAt", guidValue);
+export function useCreateTypeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateTypeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "forward", guidValue);
+export function useCreateTypeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "forward", idValue);
 }
 
-export function useCreateTypeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "backward", guidValue);
+export function useCreateTypeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "backward", idValue);
 }
 
-export function useCreateTypeKitInteractionType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeKitInteraction", "type", guidValue);
+export function useCreateTypeKitInteractionType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeKitInteraction", "type", idValue);
 }
 
-export function useUpdateTypeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateTypeKitInteraction", guidValue);
+export function useUpdateTypeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateTypeKitInteraction", idValue);
 }
 
-export function useUpdateTypeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "id", guidValue);
+export function useUpdateTypeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "id", idValue);
 }
 
-export function useUpdateTypeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "hash", guidValue);
+export function useUpdateTypeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "hash", idValue);
 }
 
-export function useUpdateTypeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "index", guidValue);
+export function useUpdateTypeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "index", idValue);
 }
 
-export function useUpdateTypeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "kit", guidValue);
+export function useUpdateTypeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "kit", idValue);
 }
 
-export function useUpdateTypeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "kind", guidValue);
+export function useUpdateTypeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "kind", idValue);
 }
 
-export function useUpdateTypeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "actor", guidValue);
+export function useUpdateTypeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "actor", idValue);
 }
 
-export function useUpdateTypeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "session", guidValue);
+export function useUpdateTypeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "session", idValue);
 }
 
-export function useUpdateTypeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "transaction", guidValue);
+export function useUpdateTypeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateTypeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "candidate", guidValue);
+export function useUpdateTypeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateTypeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "change", guidValue);
+export function useUpdateTypeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "change", idValue);
 }
 
-export function useUpdateTypeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "conflict", guidValue);
+export function useUpdateTypeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateTypeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "summary", guidValue);
+export function useUpdateTypeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "summary", idValue);
 }
 
-export function useUpdateTypeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "metadata", guidValue);
+export function useUpdateTypeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateTypeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "createdAt", guidValue);
+export function useUpdateTypeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateTypeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "forward", guidValue);
+export function useUpdateTypeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "forward", idValue);
 }
 
-export function useUpdateTypeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "backward", guidValue);
+export function useUpdateTypeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "backward", idValue);
 }
 
-export function useUpdateTypeKitInteractionType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "type", guidValue);
+export function useUpdateTypeKitInteractionType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "type", idValue);
 }
 
-export function useUpdateTypeKitInteractionPreviousType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeKitInteraction", "previousType", guidValue);
+export function useUpdateTypeKitInteractionPreviousType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeKitInteraction", "previousType", idValue);
 }
 
-export function useDeleteTypeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteTypeKitInteraction", guidValue);
+export function useDeleteTypeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteTypeKitInteraction", idValue);
 }
 
-export function useDeleteTypeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "id", guidValue);
+export function useDeleteTypeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "id", idValue);
 }
 
-export function useDeleteTypeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "hash", guidValue);
+export function useDeleteTypeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "hash", idValue);
 }
 
-export function useDeleteTypeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "index", guidValue);
+export function useDeleteTypeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "index", idValue);
 }
 
-export function useDeleteTypeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "kit", guidValue);
+export function useDeleteTypeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "kit", idValue);
 }
 
-export function useDeleteTypeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "kind", guidValue);
+export function useDeleteTypeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "kind", idValue);
 }
 
-export function useDeleteTypeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "actor", guidValue);
+export function useDeleteTypeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "actor", idValue);
 }
 
-export function useDeleteTypeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "session", guidValue);
+export function useDeleteTypeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "session", idValue);
 }
 
-export function useDeleteTypeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "transaction", guidValue);
+export function useDeleteTypeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteTypeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "candidate", guidValue);
+export function useDeleteTypeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteTypeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "change", guidValue);
+export function useDeleteTypeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "change", idValue);
 }
 
-export function useDeleteTypeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "conflict", guidValue);
+export function useDeleteTypeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteTypeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "summary", guidValue);
+export function useDeleteTypeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "summary", idValue);
 }
 
-export function useDeleteTypeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "metadata", guidValue);
+export function useDeleteTypeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteTypeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "createdAt", guidValue);
+export function useDeleteTypeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteTypeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "forward", guidValue);
+export function useDeleteTypeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "forward", idValue);
 }
 
-export function useDeleteTypeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "backward", guidValue);
+export function useDeleteTypeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "backward", idValue);
 }
 
-export function useDeleteTypeKitInteractionPreviousType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeKitInteraction", "previousType", guidValue);
+export function useDeleteTypeKitInteractionPreviousType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeKitInteraction", "previousType", idValue);
 }
 
-export function useCreateDesignKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateDesignKitInteraction", guidValue);
+export function useCreateDesignKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateDesignKitInteraction", idValue);
 }
 
-export function useCreateDesignKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "id", guidValue);
+export function useCreateDesignKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "id", idValue);
 }
 
-export function useCreateDesignKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "hash", guidValue);
+export function useCreateDesignKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "hash", idValue);
 }
 
-export function useCreateDesignKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "index", guidValue);
+export function useCreateDesignKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "index", idValue);
 }
 
-export function useCreateDesignKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "kit", guidValue);
+export function useCreateDesignKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "kit", idValue);
 }
 
-export function useCreateDesignKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "kind", guidValue);
+export function useCreateDesignKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "kind", idValue);
 }
 
-export function useCreateDesignKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "actor", guidValue);
+export function useCreateDesignKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "actor", idValue);
 }
 
-export function useCreateDesignKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "session", guidValue);
+export function useCreateDesignKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "session", idValue);
 }
 
-export function useCreateDesignKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "transaction", guidValue);
+export function useCreateDesignKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "transaction", idValue);
 }
 
-export function useCreateDesignKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "candidate", guidValue);
+export function useCreateDesignKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "candidate", idValue);
 }
 
-export function useCreateDesignKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "change", guidValue);
+export function useCreateDesignKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "change", idValue);
 }
 
-export function useCreateDesignKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "conflict", guidValue);
+export function useCreateDesignKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "conflict", idValue);
 }
 
-export function useCreateDesignKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "summary", guidValue);
+export function useCreateDesignKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "summary", idValue);
 }
 
-export function useCreateDesignKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "metadata", guidValue);
+export function useCreateDesignKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "metadata", idValue);
 }
 
-export function useCreateDesignKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "createdAt", guidValue);
+export function useCreateDesignKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateDesignKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "forward", guidValue);
+export function useCreateDesignKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "forward", idValue);
 }
 
-export function useCreateDesignKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "backward", guidValue);
+export function useCreateDesignKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "backward", idValue);
 }
 
-export function useCreateDesignKitInteractionDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignKitInteraction", "design", guidValue);
+export function useCreateDesignKitInteractionDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignKitInteraction", "design", idValue);
 }
 
-export function useUpdateDesignKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateDesignKitInteraction", guidValue);
+export function useUpdateDesignKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateDesignKitInteraction", idValue);
 }
 
-export function useUpdateDesignKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "id", guidValue);
+export function useUpdateDesignKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "id", idValue);
 }
 
-export function useUpdateDesignKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "hash", guidValue);
+export function useUpdateDesignKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "hash", idValue);
 }
 
-export function useUpdateDesignKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "index", guidValue);
+export function useUpdateDesignKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "index", idValue);
 }
 
-export function useUpdateDesignKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "kit", guidValue);
+export function useUpdateDesignKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "kit", idValue);
 }
 
-export function useUpdateDesignKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "kind", guidValue);
+export function useUpdateDesignKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "kind", idValue);
 }
 
-export function useUpdateDesignKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "actor", guidValue);
+export function useUpdateDesignKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "actor", idValue);
 }
 
-export function useUpdateDesignKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "session", guidValue);
+export function useUpdateDesignKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "session", idValue);
 }
 
-export function useUpdateDesignKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "transaction", guidValue);
+export function useUpdateDesignKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateDesignKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "candidate", guidValue);
+export function useUpdateDesignKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateDesignKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "change", guidValue);
+export function useUpdateDesignKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "change", idValue);
 }
 
-export function useUpdateDesignKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "conflict", guidValue);
+export function useUpdateDesignKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateDesignKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "summary", guidValue);
+export function useUpdateDesignKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "summary", idValue);
 }
 
-export function useUpdateDesignKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "metadata", guidValue);
+export function useUpdateDesignKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateDesignKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "createdAt", guidValue);
+export function useUpdateDesignKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateDesignKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "forward", guidValue);
+export function useUpdateDesignKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "forward", idValue);
 }
 
-export function useUpdateDesignKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "backward", guidValue);
+export function useUpdateDesignKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "backward", idValue);
 }
 
-export function useUpdateDesignKitInteractionDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "design", guidValue);
+export function useUpdateDesignKitInteractionDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "design", idValue);
 }
 
-export function useUpdateDesignKitInteractionPreviousDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignKitInteraction", "previousDesign", guidValue);
+export function useUpdateDesignKitInteractionPreviousDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignKitInteraction", "previousDesign", idValue);
 }
 
-export function useDeleteDesignKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteDesignKitInteraction", guidValue);
+export function useDeleteDesignKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteDesignKitInteraction", idValue);
 }
 
-export function useDeleteDesignKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "id", guidValue);
+export function useDeleteDesignKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "id", idValue);
 }
 
-export function useDeleteDesignKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "hash", guidValue);
+export function useDeleteDesignKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "hash", idValue);
 }
 
-export function useDeleteDesignKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "index", guidValue);
+export function useDeleteDesignKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "index", idValue);
 }
 
-export function useDeleteDesignKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "kit", guidValue);
+export function useDeleteDesignKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "kit", idValue);
 }
 
-export function useDeleteDesignKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "kind", guidValue);
+export function useDeleteDesignKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "kind", idValue);
 }
 
-export function useDeleteDesignKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "actor", guidValue);
+export function useDeleteDesignKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "actor", idValue);
 }
 
-export function useDeleteDesignKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "session", guidValue);
+export function useDeleteDesignKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "session", idValue);
 }
 
-export function useDeleteDesignKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "transaction", guidValue);
+export function useDeleteDesignKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteDesignKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "candidate", guidValue);
+export function useDeleteDesignKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteDesignKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "change", guidValue);
+export function useDeleteDesignKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "change", idValue);
 }
 
-export function useDeleteDesignKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "conflict", guidValue);
+export function useDeleteDesignKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteDesignKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "summary", guidValue);
+export function useDeleteDesignKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "summary", idValue);
 }
 
-export function useDeleteDesignKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "metadata", guidValue);
+export function useDeleteDesignKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteDesignKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "createdAt", guidValue);
+export function useDeleteDesignKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteDesignKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "forward", guidValue);
+export function useDeleteDesignKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "forward", idValue);
 }
 
-export function useDeleteDesignKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "backward", guidValue);
+export function useDeleteDesignKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "backward", idValue);
 }
 
-export function useDeleteDesignKitInteractionPreviousDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignKitInteraction", "previousDesign", guidValue);
+export function useDeleteDesignKitInteractionPreviousDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignKitInteraction", "previousDesign", idValue);
 }
 
-export function useCreateQualityKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateQualityKitInteraction", guidValue);
+export function useCreateQualityKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateQualityKitInteraction", idValue);
 }
 
-export function useCreateQualityKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "id", guidValue);
+export function useCreateQualityKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "id", idValue);
 }
 
-export function useCreateQualityKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "hash", guidValue);
+export function useCreateQualityKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "hash", idValue);
 }
 
-export function useCreateQualityKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "index", guidValue);
+export function useCreateQualityKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "index", idValue);
 }
 
-export function useCreateQualityKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "kit", guidValue);
+export function useCreateQualityKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "kit", idValue);
 }
 
-export function useCreateQualityKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "kind", guidValue);
+export function useCreateQualityKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "kind", idValue);
 }
 
-export function useCreateQualityKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "actor", guidValue);
+export function useCreateQualityKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "actor", idValue);
 }
 
-export function useCreateQualityKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "session", guidValue);
+export function useCreateQualityKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "session", idValue);
 }
 
-export function useCreateQualityKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "transaction", guidValue);
+export function useCreateQualityKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "transaction", idValue);
 }
 
-export function useCreateQualityKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "candidate", guidValue);
+export function useCreateQualityKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "candidate", idValue);
 }
 
-export function useCreateQualityKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "change", guidValue);
+export function useCreateQualityKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "change", idValue);
 }
 
-export function useCreateQualityKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "conflict", guidValue);
+export function useCreateQualityKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "conflict", idValue);
 }
 
-export function useCreateQualityKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "summary", guidValue);
+export function useCreateQualityKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "summary", idValue);
 }
 
-export function useCreateQualityKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "metadata", guidValue);
+export function useCreateQualityKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "metadata", idValue);
 }
 
-export function useCreateQualityKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "createdAt", guidValue);
+export function useCreateQualityKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateQualityKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "forward", guidValue);
+export function useCreateQualityKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "forward", idValue);
 }
 
-export function useCreateQualityKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "backward", guidValue);
+export function useCreateQualityKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "backward", idValue);
 }
 
-export function useCreateQualityKitInteractionQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityKitInteraction", "quality", guidValue);
+export function useCreateQualityKitInteractionQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityKitInteraction", "quality", idValue);
 }
 
-export function useUpdateQualityKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateQualityKitInteraction", guidValue);
+export function useUpdateQualityKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateQualityKitInteraction", idValue);
 }
 
-export function useUpdateQualityKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "id", guidValue);
+export function useUpdateQualityKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "id", idValue);
 }
 
-export function useUpdateQualityKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "hash", guidValue);
+export function useUpdateQualityKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "hash", idValue);
 }
 
-export function useUpdateQualityKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "index", guidValue);
+export function useUpdateQualityKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "index", idValue);
 }
 
-export function useUpdateQualityKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "kit", guidValue);
+export function useUpdateQualityKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "kit", idValue);
 }
 
-export function useUpdateQualityKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "kind", guidValue);
+export function useUpdateQualityKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "kind", idValue);
 }
 
-export function useUpdateQualityKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "actor", guidValue);
+export function useUpdateQualityKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "actor", idValue);
 }
 
-export function useUpdateQualityKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "session", guidValue);
+export function useUpdateQualityKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "session", idValue);
 }
 
-export function useUpdateQualityKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "transaction", guidValue);
+export function useUpdateQualityKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateQualityKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "candidate", guidValue);
+export function useUpdateQualityKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateQualityKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "change", guidValue);
+export function useUpdateQualityKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "change", idValue);
 }
 
-export function useUpdateQualityKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "conflict", guidValue);
+export function useUpdateQualityKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateQualityKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "summary", guidValue);
+export function useUpdateQualityKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "summary", idValue);
 }
 
-export function useUpdateQualityKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "metadata", guidValue);
+export function useUpdateQualityKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateQualityKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "createdAt", guidValue);
+export function useUpdateQualityKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateQualityKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "forward", guidValue);
+export function useUpdateQualityKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "forward", idValue);
 }
 
-export function useUpdateQualityKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "backward", guidValue);
+export function useUpdateQualityKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "backward", idValue);
 }
 
-export function useUpdateQualityKitInteractionQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "quality", guidValue);
+export function useUpdateQualityKitInteractionQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "quality", idValue);
 }
 
-export function useUpdateQualityKitInteractionPreviousQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityKitInteraction", "previousQuality", guidValue);
+export function useUpdateQualityKitInteractionPreviousQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityKitInteraction", "previousQuality", idValue);
 }
 
-export function useDeleteQualityKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteQualityKitInteraction", guidValue);
+export function useDeleteQualityKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteQualityKitInteraction", idValue);
 }
 
-export function useDeleteQualityKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "id", guidValue);
+export function useDeleteQualityKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "id", idValue);
 }
 
-export function useDeleteQualityKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "hash", guidValue);
+export function useDeleteQualityKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "hash", idValue);
 }
 
-export function useDeleteQualityKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "index", guidValue);
+export function useDeleteQualityKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "index", idValue);
 }
 
-export function useDeleteQualityKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "kit", guidValue);
+export function useDeleteQualityKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "kit", idValue);
 }
 
-export function useDeleteQualityKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "kind", guidValue);
+export function useDeleteQualityKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "kind", idValue);
 }
 
-export function useDeleteQualityKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "actor", guidValue);
+export function useDeleteQualityKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "actor", idValue);
 }
 
-export function useDeleteQualityKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "session", guidValue);
+export function useDeleteQualityKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "session", idValue);
 }
 
-export function useDeleteQualityKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "transaction", guidValue);
+export function useDeleteQualityKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteQualityKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "candidate", guidValue);
+export function useDeleteQualityKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteQualityKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "change", guidValue);
+export function useDeleteQualityKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "change", idValue);
 }
 
-export function useDeleteQualityKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "conflict", guidValue);
+export function useDeleteQualityKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteQualityKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "summary", guidValue);
+export function useDeleteQualityKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "summary", idValue);
 }
 
-export function useDeleteQualityKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "metadata", guidValue);
+export function useDeleteQualityKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteQualityKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "createdAt", guidValue);
+export function useDeleteQualityKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteQualityKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "forward", guidValue);
+export function useDeleteQualityKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "forward", idValue);
 }
 
-export function useDeleteQualityKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "backward", guidValue);
+export function useDeleteQualityKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "backward", idValue);
 }
 
-export function useDeleteQualityKitInteractionPreviousQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityKitInteraction", "previousQuality", guidValue);
+export function useDeleteQualityKitInteractionPreviousQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityKitInteraction", "previousQuality", idValue);
 }
 
-export function useCreatePortKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePortKitInteraction", guidValue);
+export function useCreatePortKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePortKitInteraction", idValue);
 }
 
-export function useCreatePortKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "id", guidValue);
+export function useCreatePortKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "id", idValue);
 }
 
-export function useCreatePortKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "hash", guidValue);
+export function useCreatePortKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "hash", idValue);
 }
 
-export function useCreatePortKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "index", guidValue);
+export function useCreatePortKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "index", idValue);
 }
 
-export function useCreatePortKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "kit", guidValue);
+export function useCreatePortKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "kit", idValue);
 }
 
-export function useCreatePortKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "kind", guidValue);
+export function useCreatePortKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "kind", idValue);
 }
 
-export function useCreatePortKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "actor", guidValue);
+export function useCreatePortKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "actor", idValue);
 }
 
-export function useCreatePortKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "session", guidValue);
+export function useCreatePortKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "session", idValue);
 }
 
-export function useCreatePortKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "transaction", guidValue);
+export function useCreatePortKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "transaction", idValue);
 }
 
-export function useCreatePortKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "candidate", guidValue);
+export function useCreatePortKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "candidate", idValue);
 }
 
-export function useCreatePortKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "change", guidValue);
+export function useCreatePortKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "change", idValue);
 }
 
-export function useCreatePortKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "conflict", guidValue);
+export function useCreatePortKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "conflict", idValue);
 }
 
-export function useCreatePortKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "summary", guidValue);
+export function useCreatePortKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "summary", idValue);
 }
 
-export function useCreatePortKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "metadata", guidValue);
+export function useCreatePortKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "metadata", idValue);
 }
 
-export function useCreatePortKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "createdAt", guidValue);
+export function useCreatePortKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "createdAt", idValue);
 }
 
-export function useCreatePortKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "forward", guidValue);
+export function useCreatePortKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "forward", idValue);
 }
 
-export function useCreatePortKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "backward", guidValue);
+export function useCreatePortKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "backward", idValue);
 }
 
-export function useCreatePortKitInteractionPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortKitInteraction", "port", guidValue);
+export function useCreatePortKitInteractionPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortKitInteraction", "port", idValue);
 }
 
-export function useUpdatePortKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePortKitInteraction", guidValue);
+export function useUpdatePortKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePortKitInteraction", idValue);
 }
 
-export function useUpdatePortKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "id", guidValue);
+export function useUpdatePortKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "id", idValue);
 }
 
-export function useUpdatePortKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "hash", guidValue);
+export function useUpdatePortKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "hash", idValue);
 }
 
-export function useUpdatePortKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "index", guidValue);
+export function useUpdatePortKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "index", idValue);
 }
 
-export function useUpdatePortKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "kit", guidValue);
+export function useUpdatePortKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "kit", idValue);
 }
 
-export function useUpdatePortKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "kind", guidValue);
+export function useUpdatePortKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "kind", idValue);
 }
 
-export function useUpdatePortKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "actor", guidValue);
+export function useUpdatePortKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "actor", idValue);
 }
 
-export function useUpdatePortKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "session", guidValue);
+export function useUpdatePortKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "session", idValue);
 }
 
-export function useUpdatePortKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "transaction", guidValue);
+export function useUpdatePortKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "transaction", idValue);
 }
 
-export function useUpdatePortKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "candidate", guidValue);
+export function useUpdatePortKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "candidate", idValue);
 }
 
-export function useUpdatePortKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "change", guidValue);
+export function useUpdatePortKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "change", idValue);
 }
 
-export function useUpdatePortKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "conflict", guidValue);
+export function useUpdatePortKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "conflict", idValue);
 }
 
-export function useUpdatePortKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "summary", guidValue);
+export function useUpdatePortKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "summary", idValue);
 }
 
-export function useUpdatePortKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "metadata", guidValue);
+export function useUpdatePortKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "metadata", idValue);
 }
 
-export function useUpdatePortKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "createdAt", guidValue);
+export function useUpdatePortKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdatePortKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "forward", guidValue);
+export function useUpdatePortKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "forward", idValue);
 }
 
-export function useUpdatePortKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "backward", guidValue);
+export function useUpdatePortKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "backward", idValue);
 }
 
-export function useUpdatePortKitInteractionPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "port", guidValue);
+export function useUpdatePortKitInteractionPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "port", idValue);
 }
 
-export function useUpdatePortKitInteractionPreviousPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortKitInteraction", "previousPort", guidValue);
+export function useUpdatePortKitInteractionPreviousPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortKitInteraction", "previousPort", idValue);
 }
 
-export function useDeletePortKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePortKitInteraction", guidValue);
+export function useDeletePortKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePortKitInteraction", idValue);
 }
 
-export function useDeletePortKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "id", guidValue);
+export function useDeletePortKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "id", idValue);
 }
 
-export function useDeletePortKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "hash", guidValue);
+export function useDeletePortKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "hash", idValue);
 }
 
-export function useDeletePortKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "index", guidValue);
+export function useDeletePortKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "index", idValue);
 }
 
-export function useDeletePortKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "kit", guidValue);
+export function useDeletePortKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "kit", idValue);
 }
 
-export function useDeletePortKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "kind", guidValue);
+export function useDeletePortKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "kind", idValue);
 }
 
-export function useDeletePortKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "actor", guidValue);
+export function useDeletePortKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "actor", idValue);
 }
 
-export function useDeletePortKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "session", guidValue);
+export function useDeletePortKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "session", idValue);
 }
 
-export function useDeletePortKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "transaction", guidValue);
+export function useDeletePortKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "transaction", idValue);
 }
 
-export function useDeletePortKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "candidate", guidValue);
+export function useDeletePortKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "candidate", idValue);
 }
 
-export function useDeletePortKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "change", guidValue);
+export function useDeletePortKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "change", idValue);
 }
 
-export function useDeletePortKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "conflict", guidValue);
+export function useDeletePortKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "conflict", idValue);
 }
 
-export function useDeletePortKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "summary", guidValue);
+export function useDeletePortKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "summary", idValue);
 }
 
-export function useDeletePortKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "metadata", guidValue);
+export function useDeletePortKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "metadata", idValue);
 }
 
-export function useDeletePortKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "createdAt", guidValue);
+export function useDeletePortKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "createdAt", idValue);
 }
 
-export function useDeletePortKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "forward", guidValue);
+export function useDeletePortKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "forward", idValue);
 }
 
-export function useDeletePortKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "backward", guidValue);
+export function useDeletePortKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "backward", idValue);
 }
 
-export function useDeletePortKitInteractionPreviousPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortKitInteraction", "previousPort", guidValue);
+export function useDeletePortKitInteractionPreviousPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortKitInteraction", "previousPort", idValue);
 }
 
-export function useCreateFamilyKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFamilyKitInteraction", guidValue);
+export function useCreateFamilyKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFamilyKitInteraction", idValue);
 }
 
-export function useCreateFamilyKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "id", guidValue);
+export function useCreateFamilyKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "id", idValue);
 }
 
-export function useCreateFamilyKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "hash", guidValue);
+export function useCreateFamilyKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "hash", idValue);
 }
 
-export function useCreateFamilyKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "index", guidValue);
+export function useCreateFamilyKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "index", idValue);
 }
 
-export function useCreateFamilyKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "kit", guidValue);
+export function useCreateFamilyKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "kit", idValue);
 }
 
-export function useCreateFamilyKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "kind", guidValue);
+export function useCreateFamilyKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "kind", idValue);
 }
 
-export function useCreateFamilyKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "actor", guidValue);
+export function useCreateFamilyKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "actor", idValue);
 }
 
-export function useCreateFamilyKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "session", guidValue);
+export function useCreateFamilyKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "session", idValue);
 }
 
-export function useCreateFamilyKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "transaction", guidValue);
+export function useCreateFamilyKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "transaction", idValue);
 }
 
-export function useCreateFamilyKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "candidate", guidValue);
+export function useCreateFamilyKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "candidate", idValue);
 }
 
-export function useCreateFamilyKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "change", guidValue);
+export function useCreateFamilyKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "change", idValue);
 }
 
-export function useCreateFamilyKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "conflict", guidValue);
+export function useCreateFamilyKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "conflict", idValue);
 }
 
-export function useCreateFamilyKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "summary", guidValue);
+export function useCreateFamilyKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "summary", idValue);
 }
 
-export function useCreateFamilyKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "metadata", guidValue);
+export function useCreateFamilyKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "metadata", idValue);
 }
 
-export function useCreateFamilyKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "createdAt", guidValue);
+export function useCreateFamilyKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateFamilyKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "forward", guidValue);
+export function useCreateFamilyKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "forward", idValue);
 }
 
-export function useCreateFamilyKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "backward", guidValue);
+export function useCreateFamilyKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "backward", idValue);
 }
 
-export function useCreateFamilyKitInteractionFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyKitInteraction", "family", guidValue);
+export function useCreateFamilyKitInteractionFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyKitInteraction", "family", idValue);
 }
 
-export function useUpdateFamilyKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFamilyKitInteraction", guidValue);
+export function useUpdateFamilyKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFamilyKitInteraction", idValue);
 }
 
-export function useUpdateFamilyKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "id", guidValue);
+export function useUpdateFamilyKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "id", idValue);
 }
 
-export function useUpdateFamilyKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "hash", guidValue);
+export function useUpdateFamilyKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "hash", idValue);
 }
 
-export function useUpdateFamilyKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "index", guidValue);
+export function useUpdateFamilyKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "index", idValue);
 }
 
-export function useUpdateFamilyKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "kit", guidValue);
+export function useUpdateFamilyKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "kit", idValue);
 }
 
-export function useUpdateFamilyKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "kind", guidValue);
+export function useUpdateFamilyKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "kind", idValue);
 }
 
-export function useUpdateFamilyKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "actor", guidValue);
+export function useUpdateFamilyKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "actor", idValue);
 }
 
-export function useUpdateFamilyKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "session", guidValue);
+export function useUpdateFamilyKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "session", idValue);
 }
 
-export function useUpdateFamilyKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "transaction", guidValue);
+export function useUpdateFamilyKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateFamilyKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "candidate", guidValue);
+export function useUpdateFamilyKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateFamilyKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "change", guidValue);
+export function useUpdateFamilyKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "change", idValue);
 }
 
-export function useUpdateFamilyKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "conflict", guidValue);
+export function useUpdateFamilyKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateFamilyKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "summary", guidValue);
+export function useUpdateFamilyKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "summary", idValue);
 }
 
-export function useUpdateFamilyKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "metadata", guidValue);
+export function useUpdateFamilyKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateFamilyKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "createdAt", guidValue);
+export function useUpdateFamilyKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateFamilyKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "forward", guidValue);
+export function useUpdateFamilyKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "forward", idValue);
 }
 
-export function useUpdateFamilyKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "backward", guidValue);
+export function useUpdateFamilyKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "backward", idValue);
 }
 
-export function useUpdateFamilyKitInteractionFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "family", guidValue);
+export function useUpdateFamilyKitInteractionFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "family", idValue);
 }
 
-export function useUpdateFamilyKitInteractionPreviousFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyKitInteraction", "previousFamily", guidValue);
+export function useUpdateFamilyKitInteractionPreviousFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyKitInteraction", "previousFamily", idValue);
 }
 
-export function useDeleteFamilyKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFamilyKitInteraction", guidValue);
+export function useDeleteFamilyKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFamilyKitInteraction", idValue);
 }
 
-export function useDeleteFamilyKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "id", guidValue);
+export function useDeleteFamilyKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "id", idValue);
 }
 
-export function useDeleteFamilyKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "hash", guidValue);
+export function useDeleteFamilyKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "hash", idValue);
 }
 
-export function useDeleteFamilyKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "index", guidValue);
+export function useDeleteFamilyKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "index", idValue);
 }
 
-export function useDeleteFamilyKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "kit", guidValue);
+export function useDeleteFamilyKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "kit", idValue);
 }
 
-export function useDeleteFamilyKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "kind", guidValue);
+export function useDeleteFamilyKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "kind", idValue);
 }
 
-export function useDeleteFamilyKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "actor", guidValue);
+export function useDeleteFamilyKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "actor", idValue);
 }
 
-export function useDeleteFamilyKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "session", guidValue);
+export function useDeleteFamilyKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "session", idValue);
 }
 
-export function useDeleteFamilyKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "transaction", guidValue);
+export function useDeleteFamilyKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteFamilyKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "candidate", guidValue);
+export function useDeleteFamilyKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteFamilyKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "change", guidValue);
+export function useDeleteFamilyKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "change", idValue);
 }
 
-export function useDeleteFamilyKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "conflict", guidValue);
+export function useDeleteFamilyKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteFamilyKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "summary", guidValue);
+export function useDeleteFamilyKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "summary", idValue);
 }
 
-export function useDeleteFamilyKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "metadata", guidValue);
+export function useDeleteFamilyKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteFamilyKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "createdAt", guidValue);
+export function useDeleteFamilyKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteFamilyKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "forward", guidValue);
+export function useDeleteFamilyKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "forward", idValue);
 }
 
-export function useDeleteFamilyKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "backward", guidValue);
+export function useDeleteFamilyKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "backward", idValue);
 }
 
-export function useDeleteFamilyKitInteractionPreviousFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyKitInteraction", "previousFamily", guidValue);
+export function useDeleteFamilyKitInteractionPreviousFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyKitInteraction", "previousFamily", idValue);
 }
 
-export function useCreateTagKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateTagKitInteraction", guidValue);
+export function useCreateTagKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateTagKitInteraction", idValue);
 }
 
-export function useCreateTagKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "id", guidValue);
+export function useCreateTagKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "id", idValue);
 }
 
-export function useCreateTagKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "hash", guidValue);
+export function useCreateTagKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "hash", idValue);
 }
 
-export function useCreateTagKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "index", guidValue);
+export function useCreateTagKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "index", idValue);
 }
 
-export function useCreateTagKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "kit", guidValue);
+export function useCreateTagKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "kit", idValue);
 }
 
-export function useCreateTagKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "kind", guidValue);
+export function useCreateTagKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "kind", idValue);
 }
 
-export function useCreateTagKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "actor", guidValue);
+export function useCreateTagKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "actor", idValue);
 }
 
-export function useCreateTagKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "session", guidValue);
+export function useCreateTagKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "session", idValue);
 }
 
-export function useCreateTagKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "transaction", guidValue);
+export function useCreateTagKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "transaction", idValue);
 }
 
-export function useCreateTagKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "candidate", guidValue);
+export function useCreateTagKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "candidate", idValue);
 }
 
-export function useCreateTagKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "change", guidValue);
+export function useCreateTagKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "change", idValue);
 }
 
-export function useCreateTagKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "conflict", guidValue);
+export function useCreateTagKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "conflict", idValue);
 }
 
-export function useCreateTagKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "summary", guidValue);
+export function useCreateTagKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "summary", idValue);
 }
 
-export function useCreateTagKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "metadata", guidValue);
+export function useCreateTagKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "metadata", idValue);
 }
 
-export function useCreateTagKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "createdAt", guidValue);
+export function useCreateTagKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateTagKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "forward", guidValue);
+export function useCreateTagKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "forward", idValue);
 }
 
-export function useCreateTagKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "backward", guidValue);
+export function useCreateTagKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "backward", idValue);
 }
 
-export function useCreateTagKitInteractionTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagKitInteraction", "tag", guidValue);
+export function useCreateTagKitInteractionTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagKitInteraction", "tag", idValue);
 }
 
-export function useUpdateTagKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateTagKitInteraction", guidValue);
+export function useUpdateTagKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateTagKitInteraction", idValue);
 }
 
-export function useUpdateTagKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "id", guidValue);
+export function useUpdateTagKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "id", idValue);
 }
 
-export function useUpdateTagKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "hash", guidValue);
+export function useUpdateTagKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "hash", idValue);
 }
 
-export function useUpdateTagKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "index", guidValue);
+export function useUpdateTagKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "index", idValue);
 }
 
-export function useUpdateTagKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "kit", guidValue);
+export function useUpdateTagKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "kit", idValue);
 }
 
-export function useUpdateTagKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "kind", guidValue);
+export function useUpdateTagKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "kind", idValue);
 }
 
-export function useUpdateTagKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "actor", guidValue);
+export function useUpdateTagKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "actor", idValue);
 }
 
-export function useUpdateTagKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "session", guidValue);
+export function useUpdateTagKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "session", idValue);
 }
 
-export function useUpdateTagKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "transaction", guidValue);
+export function useUpdateTagKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateTagKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "candidate", guidValue);
+export function useUpdateTagKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateTagKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "change", guidValue);
+export function useUpdateTagKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "change", idValue);
 }
 
-export function useUpdateTagKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "conflict", guidValue);
+export function useUpdateTagKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateTagKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "summary", guidValue);
+export function useUpdateTagKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "summary", idValue);
 }
 
-export function useUpdateTagKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "metadata", guidValue);
+export function useUpdateTagKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateTagKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "createdAt", guidValue);
+export function useUpdateTagKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateTagKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "forward", guidValue);
+export function useUpdateTagKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "forward", idValue);
 }
 
-export function useUpdateTagKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "backward", guidValue);
+export function useUpdateTagKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "backward", idValue);
 }
 
-export function useUpdateTagKitInteractionTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "tag", guidValue);
+export function useUpdateTagKitInteractionTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "tag", idValue);
 }
 
-export function useUpdateTagKitInteractionPreviousTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagKitInteraction", "previousTag", guidValue);
+export function useUpdateTagKitInteractionPreviousTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagKitInteraction", "previousTag", idValue);
 }
 
-export function useDeleteTagKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteTagKitInteraction", guidValue);
+export function useDeleteTagKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteTagKitInteraction", idValue);
 }
 
-export function useDeleteTagKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "id", guidValue);
+export function useDeleteTagKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "id", idValue);
 }
 
-export function useDeleteTagKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "hash", guidValue);
+export function useDeleteTagKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "hash", idValue);
 }
 
-export function useDeleteTagKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "index", guidValue);
+export function useDeleteTagKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "index", idValue);
 }
 
-export function useDeleteTagKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "kit", guidValue);
+export function useDeleteTagKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "kit", idValue);
 }
 
-export function useDeleteTagKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "kind", guidValue);
+export function useDeleteTagKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "kind", idValue);
 }
 
-export function useDeleteTagKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "actor", guidValue);
+export function useDeleteTagKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "actor", idValue);
 }
 
-export function useDeleteTagKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "session", guidValue);
+export function useDeleteTagKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "session", idValue);
 }
 
-export function useDeleteTagKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "transaction", guidValue);
+export function useDeleteTagKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteTagKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "candidate", guidValue);
+export function useDeleteTagKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteTagKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "change", guidValue);
+export function useDeleteTagKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "change", idValue);
 }
 
-export function useDeleteTagKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "conflict", guidValue);
+export function useDeleteTagKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteTagKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "summary", guidValue);
+export function useDeleteTagKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "summary", idValue);
 }
 
-export function useDeleteTagKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "metadata", guidValue);
+export function useDeleteTagKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteTagKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "createdAt", guidValue);
+export function useDeleteTagKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteTagKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "forward", guidValue);
+export function useDeleteTagKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "forward", idValue);
 }
 
-export function useDeleteTagKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "backward", guidValue);
+export function useDeleteTagKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "backward", idValue);
 }
 
-export function useDeleteTagKitInteractionPreviousTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagKitInteraction", "previousTag", guidValue);
+export function useDeleteTagKitInteractionPreviousTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagKitInteraction", "previousTag", idValue);
 }
 
-export function useCreateConceptKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConceptKitInteraction", guidValue);
+export function useCreateConceptKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConceptKitInteraction", idValue);
 }
 
-export function useCreateConceptKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "id", guidValue);
+export function useCreateConceptKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "id", idValue);
 }
 
-export function useCreateConceptKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "hash", guidValue);
+export function useCreateConceptKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "hash", idValue);
 }
 
-export function useCreateConceptKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "index", guidValue);
+export function useCreateConceptKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "index", idValue);
 }
 
-export function useCreateConceptKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "kit", guidValue);
+export function useCreateConceptKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "kit", idValue);
 }
 
-export function useCreateConceptKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "kind", guidValue);
+export function useCreateConceptKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "kind", idValue);
 }
 
-export function useCreateConceptKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "actor", guidValue);
+export function useCreateConceptKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "actor", idValue);
 }
 
-export function useCreateConceptKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "session", guidValue);
+export function useCreateConceptKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "session", idValue);
 }
 
-export function useCreateConceptKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "transaction", guidValue);
+export function useCreateConceptKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "transaction", idValue);
 }
 
-export function useCreateConceptKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "candidate", guidValue);
+export function useCreateConceptKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "candidate", idValue);
 }
 
-export function useCreateConceptKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "change", guidValue);
+export function useCreateConceptKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "change", idValue);
 }
 
-export function useCreateConceptKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "conflict", guidValue);
+export function useCreateConceptKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "conflict", idValue);
 }
 
-export function useCreateConceptKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "summary", guidValue);
+export function useCreateConceptKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "summary", idValue);
 }
 
-export function useCreateConceptKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "metadata", guidValue);
+export function useCreateConceptKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "metadata", idValue);
 }
 
-export function useCreateConceptKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "createdAt", guidValue);
+export function useCreateConceptKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateConceptKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "forward", guidValue);
+export function useCreateConceptKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "forward", idValue);
 }
 
-export function useCreateConceptKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "backward", guidValue);
+export function useCreateConceptKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "backward", idValue);
 }
 
-export function useCreateConceptKitInteractionConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptKitInteraction", "concept", guidValue);
+export function useCreateConceptKitInteractionConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptKitInteraction", "concept", idValue);
 }
 
-export function useUpdateConceptKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConceptKitInteraction", guidValue);
+export function useUpdateConceptKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConceptKitInteraction", idValue);
 }
 
-export function useUpdateConceptKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "id", guidValue);
+export function useUpdateConceptKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "id", idValue);
 }
 
-export function useUpdateConceptKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "hash", guidValue);
+export function useUpdateConceptKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "hash", idValue);
 }
 
-export function useUpdateConceptKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "index", guidValue);
+export function useUpdateConceptKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "index", idValue);
 }
 
-export function useUpdateConceptKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "kit", guidValue);
+export function useUpdateConceptKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "kit", idValue);
 }
 
-export function useUpdateConceptKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "kind", guidValue);
+export function useUpdateConceptKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "kind", idValue);
 }
 
-export function useUpdateConceptKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "actor", guidValue);
+export function useUpdateConceptKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "actor", idValue);
 }
 
-export function useUpdateConceptKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "session", guidValue);
+export function useUpdateConceptKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "session", idValue);
 }
 
-export function useUpdateConceptKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "transaction", guidValue);
+export function useUpdateConceptKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateConceptKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "candidate", guidValue);
+export function useUpdateConceptKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateConceptKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "change", guidValue);
+export function useUpdateConceptKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "change", idValue);
 }
 
-export function useUpdateConceptKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "conflict", guidValue);
+export function useUpdateConceptKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateConceptKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "summary", guidValue);
+export function useUpdateConceptKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "summary", idValue);
 }
 
-export function useUpdateConceptKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "metadata", guidValue);
+export function useUpdateConceptKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateConceptKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "createdAt", guidValue);
+export function useUpdateConceptKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateConceptKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "forward", guidValue);
+export function useUpdateConceptKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "forward", idValue);
 }
 
-export function useUpdateConceptKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "backward", guidValue);
+export function useUpdateConceptKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "backward", idValue);
 }
 
-export function useUpdateConceptKitInteractionConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "concept", guidValue);
+export function useUpdateConceptKitInteractionConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "concept", idValue);
 }
 
-export function useUpdateConceptKitInteractionPreviousConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptKitInteraction", "previousConcept", guidValue);
+export function useUpdateConceptKitInteractionPreviousConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptKitInteraction", "previousConcept", idValue);
 }
 
-export function useDeleteConceptKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConceptKitInteraction", guidValue);
+export function useDeleteConceptKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConceptKitInteraction", idValue);
 }
 
-export function useDeleteConceptKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "id", guidValue);
+export function useDeleteConceptKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "id", idValue);
 }
 
-export function useDeleteConceptKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "hash", guidValue);
+export function useDeleteConceptKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "hash", idValue);
 }
 
-export function useDeleteConceptKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "index", guidValue);
+export function useDeleteConceptKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "index", idValue);
 }
 
-export function useDeleteConceptKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "kit", guidValue);
+export function useDeleteConceptKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "kit", idValue);
 }
 
-export function useDeleteConceptKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "kind", guidValue);
+export function useDeleteConceptKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "kind", idValue);
 }
 
-export function useDeleteConceptKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "actor", guidValue);
+export function useDeleteConceptKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "actor", idValue);
 }
 
-export function useDeleteConceptKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "session", guidValue);
+export function useDeleteConceptKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "session", idValue);
 }
 
-export function useDeleteConceptKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "transaction", guidValue);
+export function useDeleteConceptKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteConceptKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "candidate", guidValue);
+export function useDeleteConceptKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteConceptKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "change", guidValue);
+export function useDeleteConceptKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "change", idValue);
 }
 
-export function useDeleteConceptKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "conflict", guidValue);
+export function useDeleteConceptKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteConceptKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "summary", guidValue);
+export function useDeleteConceptKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "summary", idValue);
 }
 
-export function useDeleteConceptKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "metadata", guidValue);
+export function useDeleteConceptKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteConceptKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "createdAt", guidValue);
+export function useDeleteConceptKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteConceptKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "forward", guidValue);
+export function useDeleteConceptKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "forward", idValue);
 }
 
-export function useDeleteConceptKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "backward", guidValue);
+export function useDeleteConceptKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "backward", idValue);
 }
 
-export function useDeleteConceptKitInteractionPreviousConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptKitInteraction", "previousConcept", guidValue);
+export function useDeleteConceptKitInteractionPreviousConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptKitInteraction", "previousConcept", idValue);
 }
 
-export function useCreateFileKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFileKitInteraction", guidValue);
+export function useCreateFileKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFileKitInteraction", idValue);
 }
 
-export function useCreateFileKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "id", guidValue);
+export function useCreateFileKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "id", idValue);
 }
 
-export function useCreateFileKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "hash", guidValue);
+export function useCreateFileKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "hash", idValue);
 }
 
-export function useCreateFileKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "index", guidValue);
+export function useCreateFileKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "index", idValue);
 }
 
-export function useCreateFileKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "kit", guidValue);
+export function useCreateFileKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "kit", idValue);
 }
 
-export function useCreateFileKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "kind", guidValue);
+export function useCreateFileKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "kind", idValue);
 }
 
-export function useCreateFileKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "actor", guidValue);
+export function useCreateFileKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "actor", idValue);
 }
 
-export function useCreateFileKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "session", guidValue);
+export function useCreateFileKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "session", idValue);
 }
 
-export function useCreateFileKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "transaction", guidValue);
+export function useCreateFileKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "transaction", idValue);
 }
 
-export function useCreateFileKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "candidate", guidValue);
+export function useCreateFileKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "candidate", idValue);
 }
 
-export function useCreateFileKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "change", guidValue);
+export function useCreateFileKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "change", idValue);
 }
 
-export function useCreateFileKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "conflict", guidValue);
+export function useCreateFileKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "conflict", idValue);
 }
 
-export function useCreateFileKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "summary", guidValue);
+export function useCreateFileKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "summary", idValue);
 }
 
-export function useCreateFileKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "metadata", guidValue);
+export function useCreateFileKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "metadata", idValue);
 }
 
-export function useCreateFileKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "createdAt", guidValue);
+export function useCreateFileKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateFileKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "forward", guidValue);
+export function useCreateFileKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "forward", idValue);
 }
 
-export function useCreateFileKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "backward", guidValue);
+export function useCreateFileKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "backward", idValue);
 }
 
-export function useCreateFileKitInteractionFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileKitInteraction", "file", guidValue);
+export function useCreateFileKitInteractionFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileKitInteraction", "file", idValue);
 }
 
-export function useUpdateFileKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFileKitInteraction", guidValue);
+export function useUpdateFileKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFileKitInteraction", idValue);
 }
 
-export function useUpdateFileKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "id", guidValue);
+export function useUpdateFileKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "id", idValue);
 }
 
-export function useUpdateFileKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "hash", guidValue);
+export function useUpdateFileKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "hash", idValue);
 }
 
-export function useUpdateFileKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "index", guidValue);
+export function useUpdateFileKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "index", idValue);
 }
 
-export function useUpdateFileKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "kit", guidValue);
+export function useUpdateFileKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "kit", idValue);
 }
 
-export function useUpdateFileKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "kind", guidValue);
+export function useUpdateFileKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "kind", idValue);
 }
 
-export function useUpdateFileKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "actor", guidValue);
+export function useUpdateFileKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "actor", idValue);
 }
 
-export function useUpdateFileKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "session", guidValue);
+export function useUpdateFileKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "session", idValue);
 }
 
-export function useUpdateFileKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "transaction", guidValue);
+export function useUpdateFileKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateFileKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "candidate", guidValue);
+export function useUpdateFileKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateFileKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "change", guidValue);
+export function useUpdateFileKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "change", idValue);
 }
 
-export function useUpdateFileKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "conflict", guidValue);
+export function useUpdateFileKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateFileKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "summary", guidValue);
+export function useUpdateFileKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "summary", idValue);
 }
 
-export function useUpdateFileKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "metadata", guidValue);
+export function useUpdateFileKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateFileKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "createdAt", guidValue);
+export function useUpdateFileKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateFileKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "forward", guidValue);
+export function useUpdateFileKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "forward", idValue);
 }
 
-export function useUpdateFileKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "backward", guidValue);
+export function useUpdateFileKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "backward", idValue);
 }
 
-export function useUpdateFileKitInteractionFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "file", guidValue);
+export function useUpdateFileKitInteractionFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "file", idValue);
 }
 
-export function useUpdateFileKitInteractionPreviousFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileKitInteraction", "previousFile", guidValue);
+export function useUpdateFileKitInteractionPreviousFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileKitInteraction", "previousFile", idValue);
 }
 
-export function useDeleteFileKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFileKitInteraction", guidValue);
+export function useDeleteFileKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFileKitInteraction", idValue);
 }
 
-export function useDeleteFileKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "id", guidValue);
+export function useDeleteFileKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "id", idValue);
 }
 
-export function useDeleteFileKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "hash", guidValue);
+export function useDeleteFileKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "hash", idValue);
 }
 
-export function useDeleteFileKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "index", guidValue);
+export function useDeleteFileKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "index", idValue);
 }
 
-export function useDeleteFileKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "kit", guidValue);
+export function useDeleteFileKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "kit", idValue);
 }
 
-export function useDeleteFileKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "kind", guidValue);
+export function useDeleteFileKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "kind", idValue);
 }
 
-export function useDeleteFileKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "actor", guidValue);
+export function useDeleteFileKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "actor", idValue);
 }
 
-export function useDeleteFileKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "session", guidValue);
+export function useDeleteFileKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "session", idValue);
 }
 
-export function useDeleteFileKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "transaction", guidValue);
+export function useDeleteFileKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteFileKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "candidate", guidValue);
+export function useDeleteFileKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteFileKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "change", guidValue);
+export function useDeleteFileKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "change", idValue);
 }
 
-export function useDeleteFileKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "conflict", guidValue);
+export function useDeleteFileKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteFileKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "summary", guidValue);
+export function useDeleteFileKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "summary", idValue);
 }
 
-export function useDeleteFileKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "metadata", guidValue);
+export function useDeleteFileKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteFileKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "createdAt", guidValue);
+export function useDeleteFileKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteFileKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "forward", guidValue);
+export function useDeleteFileKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "forward", idValue);
 }
 
-export function useDeleteFileKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "backward", guidValue);
+export function useDeleteFileKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "backward", idValue);
 }
 
-export function useDeleteFileKitInteractionPreviousFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileKitInteraction", "previousFile", guidValue);
+export function useDeleteFileKitInteractionPreviousFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileKitInteraction", "previousFile", idValue);
 }
 
-export function useCreateFolderKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFolderKitInteraction", guidValue);
+export function useCreateFolderKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFolderKitInteraction", idValue);
 }
 
-export function useCreateFolderKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "id", guidValue);
+export function useCreateFolderKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "id", idValue);
 }
 
-export function useCreateFolderKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "hash", guidValue);
+export function useCreateFolderKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "hash", idValue);
 }
 
-export function useCreateFolderKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "index", guidValue);
+export function useCreateFolderKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "index", idValue);
 }
 
-export function useCreateFolderKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "kit", guidValue);
+export function useCreateFolderKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "kit", idValue);
 }
 
-export function useCreateFolderKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "kind", guidValue);
+export function useCreateFolderKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "kind", idValue);
 }
 
-export function useCreateFolderKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "actor", guidValue);
+export function useCreateFolderKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "actor", idValue);
 }
 
-export function useCreateFolderKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "session", guidValue);
+export function useCreateFolderKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "session", idValue);
 }
 
-export function useCreateFolderKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "transaction", guidValue);
+export function useCreateFolderKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "transaction", idValue);
 }
 
-export function useCreateFolderKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "candidate", guidValue);
+export function useCreateFolderKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "candidate", idValue);
 }
 
-export function useCreateFolderKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "change", guidValue);
+export function useCreateFolderKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "change", idValue);
 }
 
-export function useCreateFolderKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "conflict", guidValue);
+export function useCreateFolderKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "conflict", idValue);
 }
 
-export function useCreateFolderKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "summary", guidValue);
+export function useCreateFolderKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "summary", idValue);
 }
 
-export function useCreateFolderKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "metadata", guidValue);
+export function useCreateFolderKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "metadata", idValue);
 }
 
-export function useCreateFolderKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "createdAt", guidValue);
+export function useCreateFolderKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateFolderKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "forward", guidValue);
+export function useCreateFolderKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "forward", idValue);
 }
 
-export function useCreateFolderKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "backward", guidValue);
+export function useCreateFolderKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "backward", idValue);
 }
 
-export function useCreateFolderKitInteractionFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderKitInteraction", "folder", guidValue);
+export function useCreateFolderKitInteractionFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderKitInteraction", "folder", idValue);
 }
 
-export function useUpdateFolderKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFolderKitInteraction", guidValue);
+export function useUpdateFolderKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFolderKitInteraction", idValue);
 }
 
-export function useUpdateFolderKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "id", guidValue);
+export function useUpdateFolderKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "id", idValue);
 }
 
-export function useUpdateFolderKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "hash", guidValue);
+export function useUpdateFolderKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "hash", idValue);
 }
 
-export function useUpdateFolderKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "index", guidValue);
+export function useUpdateFolderKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "index", idValue);
 }
 
-export function useUpdateFolderKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "kit", guidValue);
+export function useUpdateFolderKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "kit", idValue);
 }
 
-export function useUpdateFolderKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "kind", guidValue);
+export function useUpdateFolderKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "kind", idValue);
 }
 
-export function useUpdateFolderKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "actor", guidValue);
+export function useUpdateFolderKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "actor", idValue);
 }
 
-export function useUpdateFolderKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "session", guidValue);
+export function useUpdateFolderKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "session", idValue);
 }
 
-export function useUpdateFolderKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "transaction", guidValue);
+export function useUpdateFolderKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateFolderKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "candidate", guidValue);
+export function useUpdateFolderKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateFolderKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "change", guidValue);
+export function useUpdateFolderKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "change", idValue);
 }
 
-export function useUpdateFolderKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "conflict", guidValue);
+export function useUpdateFolderKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateFolderKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "summary", guidValue);
+export function useUpdateFolderKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "summary", idValue);
 }
 
-export function useUpdateFolderKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "metadata", guidValue);
+export function useUpdateFolderKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateFolderKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "createdAt", guidValue);
+export function useUpdateFolderKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateFolderKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "forward", guidValue);
+export function useUpdateFolderKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "forward", idValue);
 }
 
-export function useUpdateFolderKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "backward", guidValue);
+export function useUpdateFolderKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "backward", idValue);
 }
 
-export function useUpdateFolderKitInteractionFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "folder", guidValue);
+export function useUpdateFolderKitInteractionFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "folder", idValue);
 }
 
-export function useUpdateFolderKitInteractionPreviousFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderKitInteraction", "previousFolder", guidValue);
+export function useUpdateFolderKitInteractionPreviousFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderKitInteraction", "previousFolder", idValue);
 }
 
-export function useDeleteFolderKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFolderKitInteraction", guidValue);
+export function useDeleteFolderKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFolderKitInteraction", idValue);
 }
 
-export function useDeleteFolderKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "id", guidValue);
+export function useDeleteFolderKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "id", idValue);
 }
 
-export function useDeleteFolderKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "hash", guidValue);
+export function useDeleteFolderKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "hash", idValue);
 }
 
-export function useDeleteFolderKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "index", guidValue);
+export function useDeleteFolderKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "index", idValue);
 }
 
-export function useDeleteFolderKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "kit", guidValue);
+export function useDeleteFolderKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "kit", idValue);
 }
 
-export function useDeleteFolderKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "kind", guidValue);
+export function useDeleteFolderKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "kind", idValue);
 }
 
-export function useDeleteFolderKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "actor", guidValue);
+export function useDeleteFolderKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "actor", idValue);
 }
 
-export function useDeleteFolderKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "session", guidValue);
+export function useDeleteFolderKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "session", idValue);
 }
 
-export function useDeleteFolderKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "transaction", guidValue);
+export function useDeleteFolderKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteFolderKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "candidate", guidValue);
+export function useDeleteFolderKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteFolderKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "change", guidValue);
+export function useDeleteFolderKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "change", idValue);
 }
 
-export function useDeleteFolderKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "conflict", guidValue);
+export function useDeleteFolderKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteFolderKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "summary", guidValue);
+export function useDeleteFolderKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "summary", idValue);
 }
 
-export function useDeleteFolderKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "metadata", guidValue);
+export function useDeleteFolderKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteFolderKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "createdAt", guidValue);
+export function useDeleteFolderKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteFolderKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "forward", guidValue);
+export function useDeleteFolderKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "forward", idValue);
 }
 
-export function useDeleteFolderKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "backward", guidValue);
+export function useDeleteFolderKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "backward", idValue);
 }
 
-export function useDeleteFolderKitInteractionPreviousFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderKitInteraction", "previousFolder", guidValue);
+export function useDeleteFolderKitInteractionPreviousFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderKitInteraction", "previousFolder", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("MoveArtifactToFolderKitInteraction", guidValue);
+export function useMoveArtifactToFolderKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("MoveArtifactToFolderKitInteraction", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "id", guidValue);
+export function useMoveArtifactToFolderKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "id", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "hash", guidValue);
+export function useMoveArtifactToFolderKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "hash", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "index", guidValue);
+export function useMoveArtifactToFolderKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "index", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "kit", guidValue);
+export function useMoveArtifactToFolderKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "kit", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "kind", guidValue);
+export function useMoveArtifactToFolderKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "kind", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "actor", guidValue);
+export function useMoveArtifactToFolderKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "actor", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "session", guidValue);
+export function useMoveArtifactToFolderKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "session", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "transaction", guidValue);
+export function useMoveArtifactToFolderKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "transaction", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "candidate", guidValue);
+export function useMoveArtifactToFolderKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "candidate", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "change", guidValue);
+export function useMoveArtifactToFolderKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "change", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "conflict", guidValue);
+export function useMoveArtifactToFolderKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "conflict", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "summary", guidValue);
+export function useMoveArtifactToFolderKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "summary", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "metadata", guidValue);
+export function useMoveArtifactToFolderKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "metadata", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "createdAt", guidValue);
+export function useMoveArtifactToFolderKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "createdAt", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "forward", guidValue);
+export function useMoveArtifactToFolderKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "forward", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "backward", guidValue);
+export function useMoveArtifactToFolderKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "backward", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionArtifactKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "artifactKind", guidValue);
+export function useMoveArtifactToFolderKitInteractionArtifactKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "artifactKind", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionArtifactId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "artifactId", guidValue);
+export function useMoveArtifactToFolderKitInteractionArtifactId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "artifactId", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "folder", guidValue);
+export function useMoveArtifactToFolderKitInteractionFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "folder", idValue);
 }
 
-export function useMoveArtifactToFolderKitInteractionPreviousFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "previousFolder", guidValue);
+export function useMoveArtifactToFolderKitInteractionPreviousFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderKitInteraction", "previousFolder", idValue);
 }
 
-export function useCreatePieceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePieceKitInteraction", guidValue);
+export function useCreatePieceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePieceKitInteraction", idValue);
 }
 
-export function useCreatePieceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "id", guidValue);
+export function useCreatePieceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "id", idValue);
 }
 
-export function useCreatePieceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "hash", guidValue);
+export function useCreatePieceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "hash", idValue);
 }
 
-export function useCreatePieceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "index", guidValue);
+export function useCreatePieceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "index", idValue);
 }
 
-export function useCreatePieceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "kit", guidValue);
+export function useCreatePieceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "kit", idValue);
 }
 
-export function useCreatePieceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "kind", guidValue);
+export function useCreatePieceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "kind", idValue);
 }
 
-export function useCreatePieceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "actor", guidValue);
+export function useCreatePieceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "actor", idValue);
 }
 
-export function useCreatePieceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "session", guidValue);
+export function useCreatePieceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "session", idValue);
 }
 
-export function useCreatePieceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "transaction", guidValue);
+export function useCreatePieceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "transaction", idValue);
 }
 
-export function useCreatePieceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "candidate", guidValue);
+export function useCreatePieceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "candidate", idValue);
 }
 
-export function useCreatePieceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "change", guidValue);
+export function useCreatePieceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "change", idValue);
 }
 
-export function useCreatePieceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "conflict", guidValue);
+export function useCreatePieceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "conflict", idValue);
 }
 
-export function useCreatePieceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "summary", guidValue);
+export function useCreatePieceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "summary", idValue);
 }
 
-export function useCreatePieceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "metadata", guidValue);
+export function useCreatePieceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "metadata", idValue);
 }
 
-export function useCreatePieceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "createdAt", guidValue);
+export function useCreatePieceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "createdAt", idValue);
 }
 
-export function useCreatePieceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "forward", guidValue);
+export function useCreatePieceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "forward", idValue);
 }
 
-export function useCreatePieceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceKitInteraction", "backward", guidValue);
+export function useCreatePieceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceKitInteraction", "backward", idValue);
 }
 
-export function useCreatePiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePiecesKitInteraction", guidValue);
+export function useCreatePiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePiecesKitInteraction", idValue);
 }
 
-export function useCreatePiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "id", guidValue);
+export function useCreatePiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "id", idValue);
 }
 
-export function useCreatePiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "hash", guidValue);
+export function useCreatePiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "hash", idValue);
 }
 
-export function useCreatePiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "index", guidValue);
+export function useCreatePiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "index", idValue);
 }
 
-export function useCreatePiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "kit", guidValue);
+export function useCreatePiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "kit", idValue);
 }
 
-export function useCreatePiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "kind", guidValue);
+export function useCreatePiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "kind", idValue);
 }
 
-export function useCreatePiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "actor", guidValue);
+export function useCreatePiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "actor", idValue);
 }
 
-export function useCreatePiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "session", guidValue);
+export function useCreatePiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "session", idValue);
 }
 
-export function useCreatePiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "transaction", guidValue);
+export function useCreatePiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "transaction", idValue);
 }
 
-export function useCreatePiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "candidate", guidValue);
+export function useCreatePiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "candidate", idValue);
 }
 
-export function useCreatePiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "change", guidValue);
+export function useCreatePiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "change", idValue);
 }
 
-export function useCreatePiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "conflict", guidValue);
+export function useCreatePiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "conflict", idValue);
 }
 
-export function useCreatePiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "summary", guidValue);
+export function useCreatePiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "summary", idValue);
 }
 
-export function useCreatePiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "metadata", guidValue);
+export function useCreatePiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "metadata", idValue);
 }
 
-export function useCreatePiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "createdAt", guidValue);
+export function useCreatePiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useCreatePiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "forward", guidValue);
+export function useCreatePiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "forward", idValue);
 }
 
-export function useCreatePiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesKitInteraction", "backward", guidValue);
+export function useCreatePiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesKitInteraction", "backward", idValue);
 }
 
-export function useUpdatePieceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePieceKitInteraction", guidValue);
+export function useUpdatePieceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePieceKitInteraction", idValue);
 }
 
-export function useUpdatePieceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "id", guidValue);
+export function useUpdatePieceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "id", idValue);
 }
 
-export function useUpdatePieceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "hash", guidValue);
+export function useUpdatePieceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "hash", idValue);
 }
 
-export function useUpdatePieceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "index", guidValue);
+export function useUpdatePieceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "index", idValue);
 }
 
-export function useUpdatePieceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "kit", guidValue);
+export function useUpdatePieceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "kit", idValue);
 }
 
-export function useUpdatePieceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "kind", guidValue);
+export function useUpdatePieceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "kind", idValue);
 }
 
-export function useUpdatePieceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "actor", guidValue);
+export function useUpdatePieceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "actor", idValue);
 }
 
-export function useUpdatePieceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "session", guidValue);
+export function useUpdatePieceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "session", idValue);
 }
 
-export function useUpdatePieceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "transaction", guidValue);
+export function useUpdatePieceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "transaction", idValue);
 }
 
-export function useUpdatePieceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "candidate", guidValue);
+export function useUpdatePieceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "candidate", idValue);
 }
 
-export function useUpdatePieceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "change", guidValue);
+export function useUpdatePieceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "change", idValue);
 }
 
-export function useUpdatePieceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "conflict", guidValue);
+export function useUpdatePieceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "conflict", idValue);
 }
 
-export function useUpdatePieceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "summary", guidValue);
+export function useUpdatePieceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "summary", idValue);
 }
 
-export function useUpdatePieceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "metadata", guidValue);
+export function useUpdatePieceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "metadata", idValue);
 }
 
-export function useUpdatePieceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "createdAt", guidValue);
+export function useUpdatePieceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdatePieceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "forward", guidValue);
+export function useUpdatePieceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "forward", idValue);
 }
 
-export function useUpdatePieceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceKitInteraction", "backward", guidValue);
+export function useUpdatePieceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceKitInteraction", "backward", idValue);
 }
 
-export function useUpdatePiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePiecesKitInteraction", guidValue);
+export function useUpdatePiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePiecesKitInteraction", idValue);
 }
 
-export function useUpdatePiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "id", guidValue);
+export function useUpdatePiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "id", idValue);
 }
 
-export function useUpdatePiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "hash", guidValue);
+export function useUpdatePiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "hash", idValue);
 }
 
-export function useUpdatePiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "index", guidValue);
+export function useUpdatePiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "index", idValue);
 }
 
-export function useUpdatePiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "kit", guidValue);
+export function useUpdatePiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "kit", idValue);
 }
 
-export function useUpdatePiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "kind", guidValue);
+export function useUpdatePiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "kind", idValue);
 }
 
-export function useUpdatePiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "actor", guidValue);
+export function useUpdatePiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "actor", idValue);
 }
 
-export function useUpdatePiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "session", guidValue);
+export function useUpdatePiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "session", idValue);
 }
 
-export function useUpdatePiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "transaction", guidValue);
+export function useUpdatePiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "transaction", idValue);
 }
 
-export function useUpdatePiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "candidate", guidValue);
+export function useUpdatePiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "candidate", idValue);
 }
 
-export function useUpdatePiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "change", guidValue);
+export function useUpdatePiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "change", idValue);
 }
 
-export function useUpdatePiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "conflict", guidValue);
+export function useUpdatePiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "conflict", idValue);
 }
 
-export function useUpdatePiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "summary", guidValue);
+export function useUpdatePiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "summary", idValue);
 }
 
-export function useUpdatePiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "metadata", guidValue);
+export function useUpdatePiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "metadata", idValue);
 }
 
-export function useUpdatePiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "createdAt", guidValue);
+export function useUpdatePiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdatePiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "forward", guidValue);
+export function useUpdatePiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "forward", idValue);
 }
 
-export function useUpdatePiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesKitInteraction", "backward", guidValue);
+export function useUpdatePiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesKitInteraction", "backward", idValue);
 }
 
-export function useDeletePieceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePieceKitInteraction", guidValue);
+export function useDeletePieceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePieceKitInteraction", idValue);
 }
 
-export function useDeletePieceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "id", guidValue);
+export function useDeletePieceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "id", idValue);
 }
 
-export function useDeletePieceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "hash", guidValue);
+export function useDeletePieceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "hash", idValue);
 }
 
-export function useDeletePieceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "index", guidValue);
+export function useDeletePieceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "index", idValue);
 }
 
-export function useDeletePieceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "kit", guidValue);
+export function useDeletePieceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "kit", idValue);
 }
 
-export function useDeletePieceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "kind", guidValue);
+export function useDeletePieceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "kind", idValue);
 }
 
-export function useDeletePieceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "actor", guidValue);
+export function useDeletePieceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "actor", idValue);
 }
 
-export function useDeletePieceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "session", guidValue);
+export function useDeletePieceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "session", idValue);
 }
 
-export function useDeletePieceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "transaction", guidValue);
+export function useDeletePieceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "transaction", idValue);
 }
 
-export function useDeletePieceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "candidate", guidValue);
+export function useDeletePieceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "candidate", idValue);
 }
 
-export function useDeletePieceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "change", guidValue);
+export function useDeletePieceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "change", idValue);
 }
 
-export function useDeletePieceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "conflict", guidValue);
+export function useDeletePieceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "conflict", idValue);
 }
 
-export function useDeletePieceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "summary", guidValue);
+export function useDeletePieceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "summary", idValue);
 }
 
-export function useDeletePieceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "metadata", guidValue);
+export function useDeletePieceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "metadata", idValue);
 }
 
-export function useDeletePieceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "createdAt", guidValue);
+export function useDeletePieceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "createdAt", idValue);
 }
 
-export function useDeletePieceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "forward", guidValue);
+export function useDeletePieceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "forward", idValue);
 }
 
-export function useDeletePieceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceKitInteraction", "backward", guidValue);
+export function useDeletePieceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceKitInteraction", "backward", idValue);
 }
 
-export function useDeletePiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePiecesKitInteraction", guidValue);
+export function useDeletePiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePiecesKitInteraction", idValue);
 }
 
-export function useDeletePiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "id", guidValue);
+export function useDeletePiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "id", idValue);
 }
 
-export function useDeletePiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "hash", guidValue);
+export function useDeletePiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "hash", idValue);
 }
 
-export function useDeletePiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "index", guidValue);
+export function useDeletePiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "index", idValue);
 }
 
-export function useDeletePiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "kit", guidValue);
+export function useDeletePiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "kit", idValue);
 }
 
-export function useDeletePiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "kind", guidValue);
+export function useDeletePiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "kind", idValue);
 }
 
-export function useDeletePiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "actor", guidValue);
+export function useDeletePiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "actor", idValue);
 }
 
-export function useDeletePiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "session", guidValue);
+export function useDeletePiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "session", idValue);
 }
 
-export function useDeletePiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "transaction", guidValue);
+export function useDeletePiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "transaction", idValue);
 }
 
-export function useDeletePiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "candidate", guidValue);
+export function useDeletePiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "candidate", idValue);
 }
 
-export function useDeletePiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "change", guidValue);
+export function useDeletePiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "change", idValue);
 }
 
-export function useDeletePiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "conflict", guidValue);
+export function useDeletePiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "conflict", idValue);
 }
 
-export function useDeletePiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "summary", guidValue);
+export function useDeletePiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "summary", idValue);
 }
 
-export function useDeletePiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "metadata", guidValue);
+export function useDeletePiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "metadata", idValue);
 }
 
-export function useDeletePiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "createdAt", guidValue);
+export function useDeletePiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useDeletePiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "forward", guidValue);
+export function useDeletePiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "forward", idValue);
 }
 
-export function useDeletePiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesKitInteraction", "backward", guidValue);
+export function useDeletePiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesKitInteraction", "backward", idValue);
 }
 
-export function useCreateConnectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectionKitInteraction", guidValue);
+export function useCreateConnectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectionKitInteraction", idValue);
 }
 
-export function useCreateConnectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "id", guidValue);
+export function useCreateConnectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "id", idValue);
 }
 
-export function useCreateConnectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "hash", guidValue);
+export function useCreateConnectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "hash", idValue);
 }
 
-export function useCreateConnectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "index", guidValue);
+export function useCreateConnectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "index", idValue);
 }
 
-export function useCreateConnectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "kit", guidValue);
+export function useCreateConnectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "kit", idValue);
 }
 
-export function useCreateConnectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "kind", guidValue);
+export function useCreateConnectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "kind", idValue);
 }
 
-export function useCreateConnectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "actor", guidValue);
+export function useCreateConnectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "actor", idValue);
 }
 
-export function useCreateConnectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "session", guidValue);
+export function useCreateConnectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "session", idValue);
 }
 
-export function useCreateConnectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "transaction", guidValue);
+export function useCreateConnectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "transaction", idValue);
 }
 
-export function useCreateConnectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "candidate", guidValue);
+export function useCreateConnectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "candidate", idValue);
 }
 
-export function useCreateConnectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "change", guidValue);
+export function useCreateConnectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "change", idValue);
 }
 
-export function useCreateConnectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "conflict", guidValue);
+export function useCreateConnectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "conflict", idValue);
 }
 
-export function useCreateConnectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "summary", guidValue);
+export function useCreateConnectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "summary", idValue);
 }
 
-export function useCreateConnectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "metadata", guidValue);
+export function useCreateConnectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "metadata", idValue);
 }
 
-export function useCreateConnectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "createdAt", guidValue);
+export function useCreateConnectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateConnectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "forward", guidValue);
+export function useCreateConnectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "forward", idValue);
 }
 
-export function useCreateConnectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionKitInteraction", "backward", guidValue);
+export function useCreateConnectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionKitInteraction", "backward", idValue);
 }
 
-export function useCreateConnectionsKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectionsKitInteraction", guidValue);
+export function useCreateConnectionsKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectionsKitInteraction", idValue);
 }
 
-export function useCreateConnectionsKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "id", guidValue);
+export function useCreateConnectionsKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "id", idValue);
 }
 
-export function useCreateConnectionsKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "hash", guidValue);
+export function useCreateConnectionsKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "hash", idValue);
 }
 
-export function useCreateConnectionsKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "index", guidValue);
+export function useCreateConnectionsKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "index", idValue);
 }
 
-export function useCreateConnectionsKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "kit", guidValue);
+export function useCreateConnectionsKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "kit", idValue);
 }
 
-export function useCreateConnectionsKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "kind", guidValue);
+export function useCreateConnectionsKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "kind", idValue);
 }
 
-export function useCreateConnectionsKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "actor", guidValue);
+export function useCreateConnectionsKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "actor", idValue);
 }
 
-export function useCreateConnectionsKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "session", guidValue);
+export function useCreateConnectionsKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "session", idValue);
 }
 
-export function useCreateConnectionsKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "transaction", guidValue);
+export function useCreateConnectionsKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "transaction", idValue);
 }
 
-export function useCreateConnectionsKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "candidate", guidValue);
+export function useCreateConnectionsKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "candidate", idValue);
 }
 
-export function useCreateConnectionsKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "change", guidValue);
+export function useCreateConnectionsKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "change", idValue);
 }
 
-export function useCreateConnectionsKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "conflict", guidValue);
+export function useCreateConnectionsKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "conflict", idValue);
 }
 
-export function useCreateConnectionsKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "summary", guidValue);
+export function useCreateConnectionsKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "summary", idValue);
 }
 
-export function useCreateConnectionsKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "metadata", guidValue);
+export function useCreateConnectionsKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "metadata", idValue);
 }
 
-export function useCreateConnectionsKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "createdAt", guidValue);
+export function useCreateConnectionsKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateConnectionsKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "forward", guidValue);
+export function useCreateConnectionsKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "forward", idValue);
 }
 
-export function useCreateConnectionsKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsKitInteraction", "backward", guidValue);
+export function useCreateConnectionsKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsKitInteraction", "backward", idValue);
 }
 
-export function useUpdateConnectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConnectionKitInteraction", guidValue);
+export function useUpdateConnectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConnectionKitInteraction", idValue);
 }
 
-export function useUpdateConnectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "id", guidValue);
+export function useUpdateConnectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "id", idValue);
 }
 
-export function useUpdateConnectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "hash", guidValue);
+export function useUpdateConnectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "hash", idValue);
 }
 
-export function useUpdateConnectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "index", guidValue);
+export function useUpdateConnectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "index", idValue);
 }
 
-export function useUpdateConnectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "kit", guidValue);
+export function useUpdateConnectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "kit", idValue);
 }
 
-export function useUpdateConnectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "kind", guidValue);
+export function useUpdateConnectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "kind", idValue);
 }
 
-export function useUpdateConnectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "actor", guidValue);
+export function useUpdateConnectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "actor", idValue);
 }
 
-export function useUpdateConnectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "session", guidValue);
+export function useUpdateConnectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "session", idValue);
 }
 
-export function useUpdateConnectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "transaction", guidValue);
+export function useUpdateConnectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateConnectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "candidate", guidValue);
+export function useUpdateConnectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateConnectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "change", guidValue);
+export function useUpdateConnectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "change", idValue);
 }
 
-export function useUpdateConnectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "conflict", guidValue);
+export function useUpdateConnectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateConnectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "summary", guidValue);
+export function useUpdateConnectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "summary", idValue);
 }
 
-export function useUpdateConnectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "metadata", guidValue);
+export function useUpdateConnectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateConnectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "createdAt", guidValue);
+export function useUpdateConnectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateConnectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "forward", guidValue);
+export function useUpdateConnectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "forward", idValue);
 }
 
-export function useUpdateConnectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionKitInteraction", "backward", guidValue);
+export function useUpdateConnectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionKitInteraction", "backward", idValue);
 }
 
-export function useUpdateConnectionsKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConnectionsKitInteraction", guidValue);
+export function useUpdateConnectionsKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConnectionsKitInteraction", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "id", guidValue);
+export function useUpdateConnectionsKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "id", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "hash", guidValue);
+export function useUpdateConnectionsKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "hash", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "index", guidValue);
+export function useUpdateConnectionsKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "index", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "kit", guidValue);
+export function useUpdateConnectionsKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "kit", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "kind", guidValue);
+export function useUpdateConnectionsKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "kind", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "actor", guidValue);
+export function useUpdateConnectionsKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "actor", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "session", guidValue);
+export function useUpdateConnectionsKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "session", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "transaction", guidValue);
+export function useUpdateConnectionsKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "transaction", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "candidate", guidValue);
+export function useUpdateConnectionsKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "candidate", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "change", guidValue);
+export function useUpdateConnectionsKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "change", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "conflict", guidValue);
+export function useUpdateConnectionsKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "conflict", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "summary", guidValue);
+export function useUpdateConnectionsKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "summary", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "metadata", guidValue);
+export function useUpdateConnectionsKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "metadata", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "createdAt", guidValue);
+export function useUpdateConnectionsKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "createdAt", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "forward", guidValue);
+export function useUpdateConnectionsKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "forward", idValue);
 }
 
-export function useUpdateConnectionsKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsKitInteraction", "backward", guidValue);
+export function useUpdateConnectionsKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsKitInteraction", "backward", idValue);
 }
 
-export function useDeleteConnectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConnectionKitInteraction", guidValue);
+export function useDeleteConnectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConnectionKitInteraction", idValue);
 }
 
-export function useDeleteConnectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "id", guidValue);
+export function useDeleteConnectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "id", idValue);
 }
 
-export function useDeleteConnectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "hash", guidValue);
+export function useDeleteConnectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "hash", idValue);
 }
 
-export function useDeleteConnectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "index", guidValue);
+export function useDeleteConnectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "index", idValue);
 }
 
-export function useDeleteConnectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "kit", guidValue);
+export function useDeleteConnectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "kit", idValue);
 }
 
-export function useDeleteConnectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "kind", guidValue);
+export function useDeleteConnectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "kind", idValue);
 }
 
-export function useDeleteConnectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "actor", guidValue);
+export function useDeleteConnectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "actor", idValue);
 }
 
-export function useDeleteConnectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "session", guidValue);
+export function useDeleteConnectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "session", idValue);
 }
 
-export function useDeleteConnectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "transaction", guidValue);
+export function useDeleteConnectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteConnectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "candidate", guidValue);
+export function useDeleteConnectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteConnectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "change", guidValue);
+export function useDeleteConnectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "change", idValue);
 }
 
-export function useDeleteConnectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "conflict", guidValue);
+export function useDeleteConnectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteConnectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "summary", guidValue);
+export function useDeleteConnectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "summary", idValue);
 }
 
-export function useDeleteConnectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "metadata", guidValue);
+export function useDeleteConnectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteConnectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "createdAt", guidValue);
+export function useDeleteConnectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteConnectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "forward", guidValue);
+export function useDeleteConnectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "forward", idValue);
 }
 
-export function useDeleteConnectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionKitInteraction", "backward", guidValue);
+export function useDeleteConnectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionKitInteraction", "backward", idValue);
 }
 
-export function useDeleteConnectionsKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConnectionsKitInteraction", guidValue);
+export function useDeleteConnectionsKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConnectionsKitInteraction", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "id", guidValue);
+export function useDeleteConnectionsKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "id", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "hash", guidValue);
+export function useDeleteConnectionsKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "hash", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "index", guidValue);
+export function useDeleteConnectionsKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "index", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "kit", guidValue);
+export function useDeleteConnectionsKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "kit", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "kind", guidValue);
+export function useDeleteConnectionsKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "kind", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "actor", guidValue);
+export function useDeleteConnectionsKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "actor", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "session", guidValue);
+export function useDeleteConnectionsKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "session", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "transaction", guidValue);
+export function useDeleteConnectionsKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "candidate", guidValue);
+export function useDeleteConnectionsKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "change", guidValue);
+export function useDeleteConnectionsKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "change", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "conflict", guidValue);
+export function useDeleteConnectionsKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "summary", guidValue);
+export function useDeleteConnectionsKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "summary", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "metadata", guidValue);
+export function useDeleteConnectionsKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "createdAt", guidValue);
+export function useDeleteConnectionsKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "forward", guidValue);
+export function useDeleteConnectionsKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "forward", idValue);
 }
 
-export function useDeleteConnectionsKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsKitInteraction", "backward", guidValue);
+export function useDeleteConnectionsKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsKitInteraction", "backward", idValue);
 }
 
-export function useDeleteSelectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteSelectionKitInteraction", guidValue);
+export function useDeleteSelectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteSelectionKitInteraction", idValue);
 }
 
-export function useDeleteSelectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "id", guidValue);
+export function useDeleteSelectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "id", idValue);
 }
 
-export function useDeleteSelectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "hash", guidValue);
+export function useDeleteSelectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "hash", idValue);
 }
 
-export function useDeleteSelectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "index", guidValue);
+export function useDeleteSelectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "index", idValue);
 }
 
-export function useDeleteSelectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "kit", guidValue);
+export function useDeleteSelectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "kit", idValue);
 }
 
-export function useDeleteSelectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "kind", guidValue);
+export function useDeleteSelectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "kind", idValue);
 }
 
-export function useDeleteSelectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "actor", guidValue);
+export function useDeleteSelectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "actor", idValue);
 }
 
-export function useDeleteSelectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "session", guidValue);
+export function useDeleteSelectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "session", idValue);
 }
 
-export function useDeleteSelectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "transaction", guidValue);
+export function useDeleteSelectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "transaction", idValue);
 }
 
-export function useDeleteSelectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "candidate", guidValue);
+export function useDeleteSelectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "candidate", idValue);
 }
 
-export function useDeleteSelectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "change", guidValue);
+export function useDeleteSelectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "change", idValue);
 }
 
-export function useDeleteSelectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "conflict", guidValue);
+export function useDeleteSelectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "conflict", idValue);
 }
 
-export function useDeleteSelectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "summary", guidValue);
+export function useDeleteSelectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "summary", idValue);
 }
 
-export function useDeleteSelectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "metadata", guidValue);
+export function useDeleteSelectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "metadata", idValue);
 }
 
-export function useDeleteSelectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "createdAt", guidValue);
+export function useDeleteSelectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "createdAt", idValue);
 }
 
-export function useDeleteSelectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "forward", guidValue);
+export function useDeleteSelectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "forward", idValue);
 }
 
-export function useDeleteSelectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionKitInteraction", "backward", guidValue);
+export function useDeleteSelectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionKitInteraction", "backward", idValue);
 }
 
-export function useFixPiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FixPiecesKitInteraction", guidValue);
+export function useFixPiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FixPiecesKitInteraction", idValue);
 }
 
-export function useFixPiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "id", guidValue);
+export function useFixPiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "id", idValue);
 }
 
-export function useFixPiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "hash", guidValue);
+export function useFixPiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "hash", idValue);
 }
 
-export function useFixPiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "index", guidValue);
+export function useFixPiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "index", idValue);
 }
 
-export function useFixPiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "kit", guidValue);
+export function useFixPiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "kit", idValue);
 }
 
-export function useFixPiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "kind", guidValue);
+export function useFixPiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "kind", idValue);
 }
 
-export function useFixPiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "actor", guidValue);
+export function useFixPiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "actor", idValue);
 }
 
-export function useFixPiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "session", guidValue);
+export function useFixPiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "session", idValue);
 }
 
-export function useFixPiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "transaction", guidValue);
+export function useFixPiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "transaction", idValue);
 }
 
-export function useFixPiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "candidate", guidValue);
+export function useFixPiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "candidate", idValue);
 }
 
-export function useFixPiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "change", guidValue);
+export function useFixPiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "change", idValue);
 }
 
-export function useFixPiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "conflict", guidValue);
+export function useFixPiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "conflict", idValue);
 }
 
-export function useFixPiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "summary", guidValue);
+export function useFixPiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "summary", idValue);
 }
 
-export function useFixPiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "metadata", guidValue);
+export function useFixPiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "metadata", idValue);
 }
 
-export function useFixPiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "createdAt", guidValue);
+export function useFixPiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useFixPiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "forward", guidValue);
+export function useFixPiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "forward", idValue);
 }
 
-export function useFixPiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesKitInteraction", "backward", guidValue);
+export function useFixPiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesKitInteraction", "backward", idValue);
 }
 
-export function useClusterPiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ClusterPiecesKitInteraction", guidValue);
+export function useClusterPiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ClusterPiecesKitInteraction", idValue);
 }
 
-export function useClusterPiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "id", guidValue);
+export function useClusterPiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "id", idValue);
 }
 
-export function useClusterPiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "hash", guidValue);
+export function useClusterPiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "hash", idValue);
 }
 
-export function useClusterPiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "index", guidValue);
+export function useClusterPiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "index", idValue);
 }
 
-export function useClusterPiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "kit", guidValue);
+export function useClusterPiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "kit", idValue);
 }
 
-export function useClusterPiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "kind", guidValue);
+export function useClusterPiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "kind", idValue);
 }
 
-export function useClusterPiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "actor", guidValue);
+export function useClusterPiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "actor", idValue);
 }
 
-export function useClusterPiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "session", guidValue);
+export function useClusterPiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "session", idValue);
 }
 
-export function useClusterPiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "transaction", guidValue);
+export function useClusterPiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "transaction", idValue);
 }
 
-export function useClusterPiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "candidate", guidValue);
+export function useClusterPiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "candidate", idValue);
 }
 
-export function useClusterPiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "change", guidValue);
+export function useClusterPiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "change", idValue);
 }
 
-export function useClusterPiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "conflict", guidValue);
+export function useClusterPiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "conflict", idValue);
 }
 
-export function useClusterPiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "summary", guidValue);
+export function useClusterPiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "summary", idValue);
 }
 
-export function useClusterPiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "metadata", guidValue);
+export function useClusterPiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "metadata", idValue);
 }
 
-export function useClusterPiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "createdAt", guidValue);
+export function useClusterPiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useClusterPiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "forward", guidValue);
+export function useClusterPiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "forward", idValue);
 }
 
-export function useClusterPiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesKitInteraction", "backward", guidValue);
+export function useClusterPiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesKitInteraction", "backward", idValue);
 }
 
-export function useExpandDesignReferenceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ExpandDesignReferenceKitInteraction", guidValue);
+export function useExpandDesignReferenceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ExpandDesignReferenceKitInteraction", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "id", guidValue);
+export function useExpandDesignReferenceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "id", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "hash", guidValue);
+export function useExpandDesignReferenceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "hash", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "index", guidValue);
+export function useExpandDesignReferenceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "index", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "kit", guidValue);
+export function useExpandDesignReferenceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "kit", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "kind", guidValue);
+export function useExpandDesignReferenceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "kind", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "actor", guidValue);
+export function useExpandDesignReferenceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "actor", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "session", guidValue);
+export function useExpandDesignReferenceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "session", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "transaction", guidValue);
+export function useExpandDesignReferenceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "transaction", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "candidate", guidValue);
+export function useExpandDesignReferenceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "candidate", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "change", guidValue);
+export function useExpandDesignReferenceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "change", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "conflict", guidValue);
+export function useExpandDesignReferenceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "conflict", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "summary", guidValue);
+export function useExpandDesignReferenceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "summary", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "metadata", guidValue);
+export function useExpandDesignReferenceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "metadata", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "createdAt", guidValue);
+export function useExpandDesignReferenceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "createdAt", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "forward", guidValue);
+export function useExpandDesignReferenceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "forward", idValue);
 }
 
-export function useExpandDesignReferenceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "backward", guidValue);
+export function useExpandDesignReferenceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceKitInteraction", "backward", idValue);
 }
 
-export function useFlattenDesignKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FlattenDesignKitInteraction", guidValue);
+export function useFlattenDesignKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FlattenDesignKitInteraction", idValue);
 }
 
-export function useFlattenDesignKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "id", guidValue);
+export function useFlattenDesignKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "id", idValue);
 }
 
-export function useFlattenDesignKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "hash", guidValue);
+export function useFlattenDesignKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "hash", idValue);
 }
 
-export function useFlattenDesignKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "index", guidValue);
+export function useFlattenDesignKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "index", idValue);
 }
 
-export function useFlattenDesignKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "kit", guidValue);
+export function useFlattenDesignKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "kit", idValue);
 }
 
-export function useFlattenDesignKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "kind", guidValue);
+export function useFlattenDesignKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "kind", idValue);
 }
 
-export function useFlattenDesignKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "actor", guidValue);
+export function useFlattenDesignKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "actor", idValue);
 }
 
-export function useFlattenDesignKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "session", guidValue);
+export function useFlattenDesignKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "session", idValue);
 }
 
-export function useFlattenDesignKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "transaction", guidValue);
+export function useFlattenDesignKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "transaction", idValue);
 }
 
-export function useFlattenDesignKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "candidate", guidValue);
+export function useFlattenDesignKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "candidate", idValue);
 }
 
-export function useFlattenDesignKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "change", guidValue);
+export function useFlattenDesignKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "change", idValue);
 }
 
-export function useFlattenDesignKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "conflict", guidValue);
+export function useFlattenDesignKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "conflict", idValue);
 }
 
-export function useFlattenDesignKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "summary", guidValue);
+export function useFlattenDesignKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "summary", idValue);
 }
 
-export function useFlattenDesignKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "metadata", guidValue);
+export function useFlattenDesignKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "metadata", idValue);
 }
 
-export function useFlattenDesignKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "createdAt", guidValue);
+export function useFlattenDesignKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "createdAt", idValue);
 }
 
-export function useFlattenDesignKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "forward", guidValue);
+export function useFlattenDesignKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "forward", idValue);
 }
 
-export function useFlattenDesignKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignKitInteraction", "backward", guidValue);
+export function useFlattenDesignKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignKitInteraction", "backward", idValue);
 }
 
-export function useDragPiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DragPiecesKitInteraction", guidValue);
+export function useDragPiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DragPiecesKitInteraction", idValue);
 }
 
-export function useDragPiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "id", guidValue);
+export function useDragPiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "id", idValue);
 }
 
-export function useDragPiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "hash", guidValue);
+export function useDragPiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "hash", idValue);
 }
 
-export function useDragPiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "index", guidValue);
+export function useDragPiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "index", idValue);
 }
 
-export function useDragPiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "kit", guidValue);
+export function useDragPiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "kit", idValue);
 }
 
-export function useDragPiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "kind", guidValue);
+export function useDragPiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "kind", idValue);
 }
 
-export function useDragPiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "actor", guidValue);
+export function useDragPiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "actor", idValue);
 }
 
-export function useDragPiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "session", guidValue);
+export function useDragPiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "session", idValue);
 }
 
-export function useDragPiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "transaction", guidValue);
+export function useDragPiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "transaction", idValue);
 }
 
-export function useDragPiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "candidate", guidValue);
+export function useDragPiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "candidate", idValue);
 }
 
-export function useDragPiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "change", guidValue);
+export function useDragPiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "change", idValue);
 }
 
-export function useDragPiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "conflict", guidValue);
+export function useDragPiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "conflict", idValue);
 }
 
-export function useDragPiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "summary", guidValue);
+export function useDragPiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "summary", idValue);
 }
 
-export function useDragPiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "metadata", guidValue);
+export function useDragPiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "metadata", idValue);
 }
 
-export function useDragPiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "createdAt", guidValue);
+export function useDragPiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useDragPiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "forward", guidValue);
+export function useDragPiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "forward", idValue);
 }
 
-export function useDragPiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesKitInteraction", "backward", guidValue);
+export function useDragPiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesKitInteraction", "backward", idValue);
 }
 
-export function useMovePiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("MovePiecesKitInteraction", guidValue);
+export function useMovePiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("MovePiecesKitInteraction", idValue);
 }
 
-export function useMovePiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "id", guidValue);
+export function useMovePiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "id", idValue);
 }
 
-export function useMovePiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "hash", guidValue);
+export function useMovePiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "hash", idValue);
 }
 
-export function useMovePiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "index", guidValue);
+export function useMovePiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "index", idValue);
 }
 
-export function useMovePiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "kit", guidValue);
+export function useMovePiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "kit", idValue);
 }
 
-export function useMovePiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "kind", guidValue);
+export function useMovePiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "kind", idValue);
 }
 
-export function useMovePiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "actor", guidValue);
+export function useMovePiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "actor", idValue);
 }
 
-export function useMovePiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "session", guidValue);
+export function useMovePiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "session", idValue);
 }
 
-export function useMovePiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "transaction", guidValue);
+export function useMovePiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "transaction", idValue);
 }
 
-export function useMovePiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "candidate", guidValue);
+export function useMovePiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "candidate", idValue);
 }
 
-export function useMovePiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "change", guidValue);
+export function useMovePiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "change", idValue);
 }
 
-export function useMovePiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "conflict", guidValue);
+export function useMovePiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "conflict", idValue);
 }
 
-export function useMovePiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "summary", guidValue);
+export function useMovePiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "summary", idValue);
 }
 
-export function useMovePiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "metadata", guidValue);
+export function useMovePiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "metadata", idValue);
 }
 
-export function useMovePiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "createdAt", guidValue);
+export function useMovePiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useMovePiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "forward", guidValue);
+export function useMovePiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "forward", idValue);
 }
 
-export function useMovePiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesKitInteraction", "backward", guidValue);
+export function useMovePiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesKitInteraction", "backward", idValue);
 }
 
-export function useCreateFixedPieceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFixedPieceKitInteraction", guidValue);
+export function useCreateFixedPieceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFixedPieceKitInteraction", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "id", guidValue);
+export function useCreateFixedPieceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "id", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "hash", guidValue);
+export function useCreateFixedPieceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "hash", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "index", guidValue);
+export function useCreateFixedPieceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "index", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "kit", guidValue);
+export function useCreateFixedPieceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "kit", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "kind", guidValue);
+export function useCreateFixedPieceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "kind", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "actor", guidValue);
+export function useCreateFixedPieceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "actor", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "session", guidValue);
+export function useCreateFixedPieceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "session", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "transaction", guidValue);
+export function useCreateFixedPieceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "transaction", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "candidate", guidValue);
+export function useCreateFixedPieceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "candidate", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "change", guidValue);
+export function useCreateFixedPieceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "change", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "conflict", guidValue);
+export function useCreateFixedPieceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "conflict", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "summary", guidValue);
+export function useCreateFixedPieceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "summary", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "metadata", guidValue);
+export function useCreateFixedPieceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "metadata", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "createdAt", guidValue);
+export function useCreateFixedPieceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "forward", guidValue);
+export function useCreateFixedPieceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "forward", idValue);
 }
 
-export function useCreateFixedPieceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceKitInteraction", "backward", guidValue);
+export function useCreateFixedPieceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceKitInteraction", "backward", idValue);
 }
 
-export function useCreateConnectedPieceKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectedPieceKitInteraction", guidValue);
+export function useCreateConnectedPieceKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectedPieceKitInteraction", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "id", guidValue);
+export function useCreateConnectedPieceKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "id", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "hash", guidValue);
+export function useCreateConnectedPieceKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "hash", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "index", guidValue);
+export function useCreateConnectedPieceKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "index", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "kit", guidValue);
+export function useCreateConnectedPieceKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "kit", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "kind", guidValue);
+export function useCreateConnectedPieceKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "kind", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "actor", guidValue);
+export function useCreateConnectedPieceKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "actor", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "session", guidValue);
+export function useCreateConnectedPieceKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "session", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "transaction", guidValue);
+export function useCreateConnectedPieceKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "transaction", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "candidate", guidValue);
+export function useCreateConnectedPieceKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "candidate", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "change", guidValue);
+export function useCreateConnectedPieceKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "change", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "conflict", guidValue);
+export function useCreateConnectedPieceKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "conflict", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "summary", guidValue);
+export function useCreateConnectedPieceKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "summary", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "metadata", guidValue);
+export function useCreateConnectedPieceKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "metadata", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "createdAt", guidValue);
+export function useCreateConnectedPieceKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "forward", guidValue);
+export function useCreateConnectedPieceKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "forward", idValue);
 }
 
-export function useCreateConnectedPieceKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "backward", guidValue);
+export function useCreateConnectedPieceKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceKitInteraction", "backward", idValue);
 }
 
-export function useCreateHangingPiecesKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateHangingPiecesKitInteraction", guidValue);
+export function useCreateHangingPiecesKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateHangingPiecesKitInteraction", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "id", guidValue);
+export function useCreateHangingPiecesKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "id", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "hash", guidValue);
+export function useCreateHangingPiecesKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "hash", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "index", guidValue);
+export function useCreateHangingPiecesKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "index", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "kit", guidValue);
+export function useCreateHangingPiecesKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "kit", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "kind", guidValue);
+export function useCreateHangingPiecesKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "kind", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "actor", guidValue);
+export function useCreateHangingPiecesKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "actor", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "session", guidValue);
+export function useCreateHangingPiecesKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "session", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "transaction", guidValue);
+export function useCreateHangingPiecesKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "transaction", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "candidate", guidValue);
+export function useCreateHangingPiecesKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "candidate", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "change", guidValue);
+export function useCreateHangingPiecesKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "change", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "conflict", guidValue);
+export function useCreateHangingPiecesKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "conflict", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "summary", guidValue);
+export function useCreateHangingPiecesKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "summary", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "metadata", guidValue);
+export function useCreateHangingPiecesKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "metadata", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "createdAt", guidValue);
+export function useCreateHangingPiecesKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "createdAt", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "forward", guidValue);
+export function useCreateHangingPiecesKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "forward", idValue);
 }
 
-export function useCreateHangingPiecesKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "backward", guidValue);
+export function useCreateHangingPiecesKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesKitInteraction", "backward", idValue);
 }
 
-export function useChangePieceTypeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ChangePieceTypeKitInteraction", guidValue);
+export function useChangePieceTypeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ChangePieceTypeKitInteraction", idValue);
 }
 
-export function useChangePieceTypeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "id", guidValue);
+export function useChangePieceTypeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "id", idValue);
 }
 
-export function useChangePieceTypeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "hash", guidValue);
+export function useChangePieceTypeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "hash", idValue);
 }
 
-export function useChangePieceTypeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "index", guidValue);
+export function useChangePieceTypeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "index", idValue);
 }
 
-export function useChangePieceTypeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "kit", guidValue);
+export function useChangePieceTypeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "kit", idValue);
 }
 
-export function useChangePieceTypeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "kind", guidValue);
+export function useChangePieceTypeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "kind", idValue);
 }
 
-export function useChangePieceTypeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "actor", guidValue);
+export function useChangePieceTypeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "actor", idValue);
 }
 
-export function useChangePieceTypeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "session", guidValue);
+export function useChangePieceTypeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "session", idValue);
 }
 
-export function useChangePieceTypeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "transaction", guidValue);
+export function useChangePieceTypeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "transaction", idValue);
 }
 
-export function useChangePieceTypeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "candidate", guidValue);
+export function useChangePieceTypeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "candidate", idValue);
 }
 
-export function useChangePieceTypeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "change", guidValue);
+export function useChangePieceTypeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "change", idValue);
 }
 
-export function useChangePieceTypeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "conflict", guidValue);
+export function useChangePieceTypeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "conflict", idValue);
 }
 
-export function useChangePieceTypeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "summary", guidValue);
+export function useChangePieceTypeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "summary", idValue);
 }
 
-export function useChangePieceTypeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "metadata", guidValue);
+export function useChangePieceTypeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "metadata", idValue);
 }
 
-export function useChangePieceTypeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "createdAt", guidValue);
+export function useChangePieceTypeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "createdAt", idValue);
 }
 
-export function useChangePieceTypeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "forward", guidValue);
+export function useChangePieceTypeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "forward", idValue);
 }
 
-export function useChangePieceTypeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeKitInteraction", "backward", guidValue);
+export function useChangePieceTypeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeKitInteraction", "backward", idValue);
 }
 
-export function useChangePiecesTypeKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ChangePiecesTypeKitInteraction", guidValue);
+export function useChangePiecesTypeKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ChangePiecesTypeKitInteraction", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "id", guidValue);
+export function useChangePiecesTypeKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "id", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "hash", guidValue);
+export function useChangePiecesTypeKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "hash", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "index", guidValue);
+export function useChangePiecesTypeKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "index", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "kit", guidValue);
+export function useChangePiecesTypeKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "kit", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "kind", guidValue);
+export function useChangePiecesTypeKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "kind", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "actor", guidValue);
+export function useChangePiecesTypeKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "actor", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "session", guidValue);
+export function useChangePiecesTypeKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "session", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "transaction", guidValue);
+export function useChangePiecesTypeKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "transaction", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "candidate", guidValue);
+export function useChangePiecesTypeKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "candidate", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "change", guidValue);
+export function useChangePiecesTypeKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "change", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "conflict", guidValue);
+export function useChangePiecesTypeKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "conflict", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "summary", guidValue);
+export function useChangePiecesTypeKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "summary", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "metadata", guidValue);
+export function useChangePiecesTypeKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "metadata", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "createdAt", guidValue);
+export function useChangePiecesTypeKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "createdAt", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "forward", guidValue);
+export function useChangePiecesTypeKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "forward", idValue);
 }
 
-export function useChangePiecesTypeKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "backward", guidValue);
+export function useChangePiecesTypeKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeKitInteraction", "backward", idValue);
 }
 
-export function usePasteDesignSelectionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PasteDesignSelectionKitInteraction", guidValue);
+export function usePasteDesignSelectionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PasteDesignSelectionKitInteraction", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "id", guidValue);
+export function usePasteDesignSelectionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "id", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "hash", guidValue);
+export function usePasteDesignSelectionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "hash", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "index", guidValue);
+export function usePasteDesignSelectionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "index", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "kit", guidValue);
+export function usePasteDesignSelectionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "kit", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "kind", guidValue);
+export function usePasteDesignSelectionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "kind", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "actor", guidValue);
+export function usePasteDesignSelectionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "actor", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "session", guidValue);
+export function usePasteDesignSelectionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "session", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "transaction", guidValue);
+export function usePasteDesignSelectionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "transaction", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "candidate", guidValue);
+export function usePasteDesignSelectionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "candidate", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "change", guidValue);
+export function usePasteDesignSelectionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "change", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "conflict", guidValue);
+export function usePasteDesignSelectionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "conflict", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "summary", guidValue);
+export function usePasteDesignSelectionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "summary", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "metadata", guidValue);
+export function usePasteDesignSelectionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "metadata", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "createdAt", guidValue);
+export function usePasteDesignSelectionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "createdAt", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "forward", guidValue);
+export function usePasteDesignSelectionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "forward", idValue);
 }
 
-export function usePasteDesignSelectionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "backward", guidValue);
+export function usePasteDesignSelectionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionKitInteraction", "backward", idValue);
 }
 
-export function useImportKitKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ImportKitKitInteraction", guidValue);
+export function useImportKitKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ImportKitKitInteraction", idValue);
 }
 
-export function useImportKitKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "id", guidValue);
+export function useImportKitKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "id", idValue);
 }
 
-export function useImportKitKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "hash", guidValue);
+export function useImportKitKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "hash", idValue);
 }
 
-export function useImportKitKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "index", guidValue);
+export function useImportKitKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "index", idValue);
 }
 
-export function useImportKitKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "kit", guidValue);
+export function useImportKitKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "kit", idValue);
 }
 
-export function useImportKitKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "kind", guidValue);
+export function useImportKitKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "kind", idValue);
 }
 
-export function useImportKitKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "actor", guidValue);
+export function useImportKitKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "actor", idValue);
 }
 
-export function useImportKitKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "session", guidValue);
+export function useImportKitKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "session", idValue);
 }
 
-export function useImportKitKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "transaction", guidValue);
+export function useImportKitKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "transaction", idValue);
 }
 
-export function useImportKitKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "candidate", guidValue);
+export function useImportKitKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "candidate", idValue);
 }
 
-export function useImportKitKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "change", guidValue);
+export function useImportKitKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "change", idValue);
 }
 
-export function useImportKitKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "conflict", guidValue);
+export function useImportKitKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "conflict", idValue);
 }
 
-export function useImportKitKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "summary", guidValue);
+export function useImportKitKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "summary", idValue);
 }
 
-export function useImportKitKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "metadata", guidValue);
+export function useImportKitKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "metadata", idValue);
 }
 
-export function useImportKitKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "createdAt", guidValue);
+export function useImportKitKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "createdAt", idValue);
 }
 
-export function useImportKitKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "forward", guidValue);
+export function useImportKitKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "forward", idValue);
 }
 
-export function useImportKitKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitKitInteraction", "backward", guidValue);
+export function useImportKitKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitKitInteraction", "backward", idValue);
 }
 
-export function useResetKitKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ResetKitKitInteraction", guidValue);
+export function useResetKitKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ResetKitKitInteraction", idValue);
 }
 
-export function useResetKitKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "id", guidValue);
+export function useResetKitKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "id", idValue);
 }
 
-export function useResetKitKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "hash", guidValue);
+export function useResetKitKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "hash", idValue);
 }
 
-export function useResetKitKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "index", guidValue);
+export function useResetKitKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "index", idValue);
 }
 
-export function useResetKitKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "kit", guidValue);
+export function useResetKitKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "kit", idValue);
 }
 
-export function useResetKitKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "kind", guidValue);
+export function useResetKitKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "kind", idValue);
 }
 
-export function useResetKitKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "actor", guidValue);
+export function useResetKitKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "actor", idValue);
 }
 
-export function useResetKitKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "session", guidValue);
+export function useResetKitKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "session", idValue);
 }
 
-export function useResetKitKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "transaction", guidValue);
+export function useResetKitKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "transaction", idValue);
 }
 
-export function useResetKitKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "candidate", guidValue);
+export function useResetKitKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "candidate", idValue);
 }
 
-export function useResetKitKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "change", guidValue);
+export function useResetKitKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "change", idValue);
 }
 
-export function useResetKitKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "conflict", guidValue);
+export function useResetKitKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "conflict", idValue);
 }
 
-export function useResetKitKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "summary", guidValue);
+export function useResetKitKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "summary", idValue);
 }
 
-export function useResetKitKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "metadata", guidValue);
+export function useResetKitKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "metadata", idValue);
 }
 
-export function useResetKitKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "createdAt", guidValue);
+export function useResetKitKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "createdAt", idValue);
 }
 
-export function useResetKitKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "forward", guidValue);
+export function useResetKitKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "forward", idValue);
 }
 
-export function useResetKitKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitKitInteraction", "backward", guidValue);
+export function useResetKitKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitKitInteraction", "backward", idValue);
 }
 
-export function useExportKitKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ExportKitKitInteraction", guidValue);
+export function useExportKitKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ExportKitKitInteraction", idValue);
 }
 
-export function useExportKitKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "id", guidValue);
+export function useExportKitKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "id", idValue);
 }
 
-export function useExportKitKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "hash", guidValue);
+export function useExportKitKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "hash", idValue);
 }
 
-export function useExportKitKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "index", guidValue);
+export function useExportKitKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "index", idValue);
 }
 
-export function useExportKitKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "kit", guidValue);
+export function useExportKitKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "kit", idValue);
 }
 
-export function useExportKitKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "kind", guidValue);
+export function useExportKitKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "kind", idValue);
 }
 
-export function useExportKitKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "actor", guidValue);
+export function useExportKitKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "actor", idValue);
 }
 
-export function useExportKitKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "session", guidValue);
+export function useExportKitKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "session", idValue);
 }
 
-export function useExportKitKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "transaction", guidValue);
+export function useExportKitKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "transaction", idValue);
 }
 
-export function useExportKitKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "candidate", guidValue);
+export function useExportKitKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "candidate", idValue);
 }
 
-export function useExportKitKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "change", guidValue);
+export function useExportKitKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "change", idValue);
 }
 
-export function useExportKitKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "conflict", guidValue);
+export function useExportKitKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "conflict", idValue);
 }
 
-export function useExportKitKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "summary", guidValue);
+export function useExportKitKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "summary", idValue);
 }
 
-export function useExportKitKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "metadata", guidValue);
+export function useExportKitKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "metadata", idValue);
 }
 
-export function useExportKitKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "createdAt", guidValue);
+export function useExportKitKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "createdAt", idValue);
 }
 
-export function useExportKitKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "forward", guidValue);
+export function useExportKitKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "forward", idValue);
 }
 
-export function useExportKitKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitKitInteraction", "backward", guidValue);
+export function useExportKitKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitKitInteraction", "backward", idValue);
 }
 
-export function useStartKitSessionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("StartKitSessionKitInteraction", guidValue);
+export function useStartKitSessionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("StartKitSessionKitInteraction", idValue);
 }
 
-export function useStartKitSessionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "id", guidValue);
+export function useStartKitSessionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "id", idValue);
 }
 
-export function useStartKitSessionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "hash", guidValue);
+export function useStartKitSessionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "hash", idValue);
 }
 
-export function useStartKitSessionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "index", guidValue);
+export function useStartKitSessionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "index", idValue);
 }
 
-export function useStartKitSessionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "kit", guidValue);
+export function useStartKitSessionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "kit", idValue);
 }
 
-export function useStartKitSessionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "kind", guidValue);
+export function useStartKitSessionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "kind", idValue);
 }
 
-export function useStartKitSessionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "actor", guidValue);
+export function useStartKitSessionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "actor", idValue);
 }
 
-export function useStartKitSessionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "session", guidValue);
+export function useStartKitSessionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "session", idValue);
 }
 
-export function useStartKitSessionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "transaction", guidValue);
+export function useStartKitSessionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "transaction", idValue);
 }
 
-export function useStartKitSessionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "candidate", guidValue);
+export function useStartKitSessionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "candidate", idValue);
 }
 
-export function useStartKitSessionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "change", guidValue);
+export function useStartKitSessionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "change", idValue);
 }
 
-export function useStartKitSessionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "conflict", guidValue);
+export function useStartKitSessionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "conflict", idValue);
 }
 
-export function useStartKitSessionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "summary", guidValue);
+export function useStartKitSessionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "summary", idValue);
 }
 
-export function useStartKitSessionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "metadata", guidValue);
+export function useStartKitSessionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "metadata", idValue);
 }
 
-export function useStartKitSessionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "createdAt", guidValue);
+export function useStartKitSessionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "createdAt", idValue);
 }
 
-export function useStartKitSessionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "forward", guidValue);
+export function useStartKitSessionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "forward", idValue);
 }
 
-export function useStartKitSessionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionKitInteraction", "backward", guidValue);
+export function useStartKitSessionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionKitInteraction", "backward", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("HeartbeatKitSessionKitInteraction", guidValue);
+export function useHeartbeatKitSessionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("HeartbeatKitSessionKitInteraction", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "id", guidValue);
+export function useHeartbeatKitSessionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "id", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "hash", guidValue);
+export function useHeartbeatKitSessionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "hash", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "index", guidValue);
+export function useHeartbeatKitSessionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "index", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "kit", guidValue);
+export function useHeartbeatKitSessionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "kit", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "kind", guidValue);
+export function useHeartbeatKitSessionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "kind", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "actor", guidValue);
+export function useHeartbeatKitSessionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "actor", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "session", guidValue);
+export function useHeartbeatKitSessionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "session", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "transaction", guidValue);
+export function useHeartbeatKitSessionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "transaction", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "candidate", guidValue);
+export function useHeartbeatKitSessionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "candidate", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "change", guidValue);
+export function useHeartbeatKitSessionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "change", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "conflict", guidValue);
+export function useHeartbeatKitSessionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "conflict", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "summary", guidValue);
+export function useHeartbeatKitSessionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "summary", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "metadata", guidValue);
+export function useHeartbeatKitSessionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "metadata", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "createdAt", guidValue);
+export function useHeartbeatKitSessionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "createdAt", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "forward", guidValue);
+export function useHeartbeatKitSessionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "forward", idValue);
 }
 
-export function useHeartbeatKitSessionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "backward", guidValue);
+export function useHeartbeatKitSessionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionKitInteraction", "backward", idValue);
 }
 
-export function useEndKitSessionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("EndKitSessionKitInteraction", guidValue);
+export function useEndKitSessionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("EndKitSessionKitInteraction", idValue);
 }
 
-export function useEndKitSessionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "id", guidValue);
+export function useEndKitSessionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "id", idValue);
 }
 
-export function useEndKitSessionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "hash", guidValue);
+export function useEndKitSessionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "hash", idValue);
 }
 
-export function useEndKitSessionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "index", guidValue);
+export function useEndKitSessionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "index", idValue);
 }
 
-export function useEndKitSessionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "kit", guidValue);
+export function useEndKitSessionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "kit", idValue);
 }
 
-export function useEndKitSessionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "kind", guidValue);
+export function useEndKitSessionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "kind", idValue);
 }
 
-export function useEndKitSessionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "actor", guidValue);
+export function useEndKitSessionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "actor", idValue);
 }
 
-export function useEndKitSessionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "session", guidValue);
+export function useEndKitSessionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "session", idValue);
 }
 
-export function useEndKitSessionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "transaction", guidValue);
+export function useEndKitSessionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "transaction", idValue);
 }
 
-export function useEndKitSessionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "candidate", guidValue);
+export function useEndKitSessionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "candidate", idValue);
 }
 
-export function useEndKitSessionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "change", guidValue);
+export function useEndKitSessionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "change", idValue);
 }
 
-export function useEndKitSessionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "conflict", guidValue);
+export function useEndKitSessionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "conflict", idValue);
 }
 
-export function useEndKitSessionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "summary", guidValue);
+export function useEndKitSessionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "summary", idValue);
 }
 
-export function useEndKitSessionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "metadata", guidValue);
+export function useEndKitSessionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "metadata", idValue);
 }
 
-export function useEndKitSessionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "createdAt", guidValue);
+export function useEndKitSessionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "createdAt", idValue);
 }
 
-export function useEndKitSessionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "forward", guidValue);
+export function useEndKitSessionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "forward", idValue);
 }
 
-export function useEndKitSessionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionKitInteraction", "backward", guidValue);
+export function useEndKitSessionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionKitInteraction", "backward", idValue);
 }
 
-export function useReconnectKitSessionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ReconnectKitSessionKitInteraction", guidValue);
+export function useReconnectKitSessionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ReconnectKitSessionKitInteraction", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "id", guidValue);
+export function useReconnectKitSessionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "id", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "hash", guidValue);
+export function useReconnectKitSessionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "hash", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "index", guidValue);
+export function useReconnectKitSessionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "index", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "kit", guidValue);
+export function useReconnectKitSessionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "kit", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "kind", guidValue);
+export function useReconnectKitSessionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "kind", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "actor", guidValue);
+export function useReconnectKitSessionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "actor", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "session", guidValue);
+export function useReconnectKitSessionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "session", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "transaction", guidValue);
+export function useReconnectKitSessionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "transaction", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "candidate", guidValue);
+export function useReconnectKitSessionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "candidate", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "change", guidValue);
+export function useReconnectKitSessionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "change", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "conflict", guidValue);
+export function useReconnectKitSessionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "conflict", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "summary", guidValue);
+export function useReconnectKitSessionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "summary", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "metadata", guidValue);
+export function useReconnectKitSessionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "metadata", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "createdAt", guidValue);
+export function useReconnectKitSessionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "createdAt", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "forward", guidValue);
+export function useReconnectKitSessionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "forward", idValue);
 }
 
-export function useReconnectKitSessionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "backward", guidValue);
+export function useReconnectKitSessionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionKitInteraction", "backward", idValue);
 }
 
-export function useBeginKitTransactionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("BeginKitTransactionKitInteraction", guidValue);
+export function useBeginKitTransactionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("BeginKitTransactionKitInteraction", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "id", guidValue);
+export function useBeginKitTransactionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "id", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "hash", guidValue);
+export function useBeginKitTransactionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "hash", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "index", guidValue);
+export function useBeginKitTransactionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "index", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "kit", guidValue);
+export function useBeginKitTransactionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "kit", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "kind", guidValue);
+export function useBeginKitTransactionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "kind", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "actor", guidValue);
+export function useBeginKitTransactionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "actor", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "session", guidValue);
+export function useBeginKitTransactionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "session", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "transaction", guidValue);
+export function useBeginKitTransactionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "transaction", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "candidate", guidValue);
+export function useBeginKitTransactionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "candidate", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "change", guidValue);
+export function useBeginKitTransactionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "change", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "conflict", guidValue);
+export function useBeginKitTransactionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "conflict", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "summary", guidValue);
+export function useBeginKitTransactionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "summary", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "metadata", guidValue);
+export function useBeginKitTransactionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "metadata", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "createdAt", guidValue);
+export function useBeginKitTransactionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "createdAt", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "forward", guidValue);
+export function useBeginKitTransactionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "forward", idValue);
 }
 
-export function useBeginKitTransactionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionKitInteraction", "backward", guidValue);
+export function useBeginKitTransactionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionKitInteraction", "backward", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FinalizeKitTransactionKitInteraction", guidValue);
+export function useFinalizeKitTransactionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FinalizeKitTransactionKitInteraction", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "id", guidValue);
+export function useFinalizeKitTransactionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "id", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "hash", guidValue);
+export function useFinalizeKitTransactionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "hash", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "index", guidValue);
+export function useFinalizeKitTransactionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "index", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "kit", guidValue);
+export function useFinalizeKitTransactionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "kit", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "kind", guidValue);
+export function useFinalizeKitTransactionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "kind", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "actor", guidValue);
+export function useFinalizeKitTransactionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "actor", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "session", guidValue);
+export function useFinalizeKitTransactionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "session", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "transaction", guidValue);
+export function useFinalizeKitTransactionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "transaction", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "candidate", guidValue);
+export function useFinalizeKitTransactionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "candidate", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "change", guidValue);
+export function useFinalizeKitTransactionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "change", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "conflict", guidValue);
+export function useFinalizeKitTransactionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "conflict", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "summary", guidValue);
+export function useFinalizeKitTransactionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "summary", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "metadata", guidValue);
+export function useFinalizeKitTransactionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "metadata", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "createdAt", guidValue);
+export function useFinalizeKitTransactionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "createdAt", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "forward", guidValue);
+export function useFinalizeKitTransactionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "forward", idValue);
 }
 
-export function useFinalizeKitTransactionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "backward", guidValue);
+export function useFinalizeKitTransactionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionKitInteraction", "backward", idValue);
 }
 
-export function useAbortKitTransactionKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("AbortKitTransactionKitInteraction", guidValue);
+export function useAbortKitTransactionKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("AbortKitTransactionKitInteraction", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "id", guidValue);
+export function useAbortKitTransactionKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "id", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "hash", guidValue);
+export function useAbortKitTransactionKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "hash", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "index", guidValue);
+export function useAbortKitTransactionKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "index", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "kit", guidValue);
+export function useAbortKitTransactionKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "kit", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "kind", guidValue);
+export function useAbortKitTransactionKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "kind", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "actor", guidValue);
+export function useAbortKitTransactionKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "actor", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "session", guidValue);
+export function useAbortKitTransactionKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "session", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "transaction", guidValue);
+export function useAbortKitTransactionKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "transaction", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "candidate", guidValue);
+export function useAbortKitTransactionKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "candidate", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "change", guidValue);
+export function useAbortKitTransactionKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "change", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "conflict", guidValue);
+export function useAbortKitTransactionKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "conflict", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "summary", guidValue);
+export function useAbortKitTransactionKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "summary", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "metadata", guidValue);
+export function useAbortKitTransactionKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "metadata", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "createdAt", guidValue);
+export function useAbortKitTransactionKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "createdAt", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "forward", guidValue);
+export function useAbortKitTransactionKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "forward", idValue);
 }
 
-export function useAbortKitTransactionKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionKitInteraction", "backward", guidValue);
+export function useAbortKitTransactionKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionKitInteraction", "backward", idValue);
 }
 
-export function useTransactionStepKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TransactionStepKitInteraction", guidValue);
+export function useTransactionStepKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TransactionStepKitInteraction", idValue);
 }
 
-export function useTransactionStepKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "id", guidValue);
+export function useTransactionStepKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "id", idValue);
 }
 
-export function useTransactionStepKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "hash", guidValue);
+export function useTransactionStepKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "hash", idValue);
 }
 
-export function useTransactionStepKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "index", guidValue);
+export function useTransactionStepKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "index", idValue);
 }
 
-export function useTransactionStepKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "kit", guidValue);
+export function useTransactionStepKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "kit", idValue);
 }
 
-export function useTransactionStepKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "kind", guidValue);
+export function useTransactionStepKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "kind", idValue);
 }
 
-export function useTransactionStepKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "actor", guidValue);
+export function useTransactionStepKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "actor", idValue);
 }
 
-export function useTransactionStepKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "session", guidValue);
+export function useTransactionStepKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "session", idValue);
 }
 
-export function useTransactionStepKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "transaction", guidValue);
+export function useTransactionStepKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "transaction", idValue);
 }
 
-export function useTransactionStepKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "candidate", guidValue);
+export function useTransactionStepKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "candidate", idValue);
 }
 
-export function useTransactionStepKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "change", guidValue);
+export function useTransactionStepKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "change", idValue);
 }
 
-export function useTransactionStepKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "conflict", guidValue);
+export function useTransactionStepKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "conflict", idValue);
 }
 
-export function useTransactionStepKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "summary", guidValue);
+export function useTransactionStepKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "summary", idValue);
 }
 
-export function useTransactionStepKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "metadata", guidValue);
+export function useTransactionStepKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "metadata", idValue);
 }
 
-export function useTransactionStepKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "createdAt", guidValue);
+export function useTransactionStepKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "createdAt", idValue);
 }
 
-export function useTransactionStepKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "forward", guidValue);
+export function useTransactionStepKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "forward", idValue);
 }
 
-export function useTransactionStepKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepKitInteraction", "backward", guidValue);
+export function useTransactionStepKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepKitInteraction", "backward", idValue);
 }
 
-export function useHistoryStepKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("HistoryStepKitInteraction", guidValue);
+export function useHistoryStepKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("HistoryStepKitInteraction", idValue);
 }
 
-export function useHistoryStepKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "id", guidValue);
+export function useHistoryStepKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "id", idValue);
 }
 
-export function useHistoryStepKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "hash", guidValue);
+export function useHistoryStepKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "hash", idValue);
 }
 
-export function useHistoryStepKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "index", guidValue);
+export function useHistoryStepKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "index", idValue);
 }
 
-export function useHistoryStepKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "kit", guidValue);
+export function useHistoryStepKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "kit", idValue);
 }
 
-export function useHistoryStepKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "kind", guidValue);
+export function useHistoryStepKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "kind", idValue);
 }
 
-export function useHistoryStepKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "actor", guidValue);
+export function useHistoryStepKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "actor", idValue);
 }
 
-export function useHistoryStepKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "session", guidValue);
+export function useHistoryStepKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "session", idValue);
 }
 
-export function useHistoryStepKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "transaction", guidValue);
+export function useHistoryStepKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "transaction", idValue);
 }
 
-export function useHistoryStepKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "candidate", guidValue);
+export function useHistoryStepKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "candidate", idValue);
 }
 
-export function useHistoryStepKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "change", guidValue);
+export function useHistoryStepKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "change", idValue);
 }
 
-export function useHistoryStepKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "conflict", guidValue);
+export function useHistoryStepKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "conflict", idValue);
 }
 
-export function useHistoryStepKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "summary", guidValue);
+export function useHistoryStepKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "summary", idValue);
 }
 
-export function useHistoryStepKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "metadata", guidValue);
+export function useHistoryStepKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "metadata", idValue);
 }
 
-export function useHistoryStepKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "createdAt", guidValue);
+export function useHistoryStepKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "createdAt", idValue);
 }
 
-export function useHistoryStepKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "forward", guidValue);
+export function useHistoryStepKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "forward", idValue);
 }
 
-export function useHistoryStepKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepKitInteraction", "backward", guidValue);
+export function useHistoryStepKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepKitInteraction", "backward", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("VoteOnKitChangeCandidateKitInteraction", guidValue);
+export function useVoteOnKitChangeCandidateKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("VoteOnKitChangeCandidateKitInteraction", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "id", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "id", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "hash", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "hash", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "index", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "index", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "kit", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "kit", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "kind", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "kind", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "actor", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "actor", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "session", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "session", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "transaction", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "transaction", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "candidate", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "candidate", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "change", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "change", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "conflict", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "conflict", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "summary", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "summary", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "metadata", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "metadata", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "createdAt", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "createdAt", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "forward", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "forward", idValue);
 }
 
-export function useVoteOnKitChangeCandidateKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "backward", guidValue);
+export function useVoteOnKitChangeCandidateKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateKitInteraction", "backward", idValue);
 }
 
-export function useResolveKitConflictKitInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ResolveKitConflictKitInteraction", guidValue);
+export function useResolveKitConflictKitInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ResolveKitConflictKitInteraction", idValue);
 }
 
-export function useResolveKitConflictKitInteractionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "id", guidValue);
+export function useResolveKitConflictKitInteractionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "id", idValue);
 }
 
-export function useResolveKitConflictKitInteractionHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "hash", guidValue);
+export function useResolveKitConflictKitInteractionHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "hash", idValue);
 }
 
-export function useResolveKitConflictKitInteractionIndex(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "index", guidValue);
+export function useResolveKitConflictKitInteractionIndex(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "index", idValue);
 }
 
-export function useResolveKitConflictKitInteractionKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "kit", guidValue);
+export function useResolveKitConflictKitInteractionKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "kit", idValue);
 }
 
-export function useResolveKitConflictKitInteractionKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "kind", guidValue);
+export function useResolveKitConflictKitInteractionKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "kind", idValue);
 }
 
-export function useResolveKitConflictKitInteractionActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "actor", guidValue);
+export function useResolveKitConflictKitInteractionActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "actor", idValue);
 }
 
-export function useResolveKitConflictKitInteractionSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "session", guidValue);
+export function useResolveKitConflictKitInteractionSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "session", idValue);
 }
 
-export function useResolveKitConflictKitInteractionTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "transaction", guidValue);
+export function useResolveKitConflictKitInteractionTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "transaction", idValue);
 }
 
-export function useResolveKitConflictKitInteractionCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "candidate", guidValue);
+export function useResolveKitConflictKitInteractionCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "candidate", idValue);
 }
 
-export function useResolveKitConflictKitInteractionChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "change", guidValue);
+export function useResolveKitConflictKitInteractionChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "change", idValue);
 }
 
-export function useResolveKitConflictKitInteractionConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "conflict", guidValue);
+export function useResolveKitConflictKitInteractionConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "conflict", idValue);
 }
 
-export function useResolveKitConflictKitInteractionSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "summary", guidValue);
+export function useResolveKitConflictKitInteractionSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "summary", idValue);
 }
 
-export function useResolveKitConflictKitInteractionMetadata(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "metadata", guidValue);
+export function useResolveKitConflictKitInteractionMetadata(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "metadata", idValue);
 }
 
-export function useResolveKitConflictKitInteractionCreatedAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "createdAt", guidValue);
+export function useResolveKitConflictKitInteractionCreatedAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "createdAt", idValue);
 }
 
-export function useResolveKitConflictKitInteractionForward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "forward", guidValue);
+export function useResolveKitConflictKitInteractionForward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "forward", idValue);
 }
 
-export function useResolveKitConflictKitInteractionBackward(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictKitInteraction", "backward", guidValue);
+export function useResolveKitConflictKitInteractionBackward(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictKitInteraction", "backward", idValue);
 }
 
-export function useKitInteractionPage(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitInteractionPage", guidValue);
+export function useKitInteractionPage(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitInteractionPage", idValue);
 }
 
-export function useKitInteractionPageHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteractionPage", "hash", guidValue);
+export function useKitInteractionPageHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteractionPage", "hash", idValue);
 }
 
-export function useKitInteractionPageNodes(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteractionPage", "nodes", guidValue);
+export function useKitInteractionPageNodes(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteractionPage", "nodes", idValue);
 }
 
-export function useKitInteractionPagePageInfo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteractionPage", "pageInfo", guidValue);
+export function useKitInteractionPagePageInfo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteractionPage", "pageInfo", idValue);
 }
 
-export function useKitInteractionPageTotalCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitInteractionPage", "totalCount", guidValue);
+export function useKitInteractionPageTotalCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitInteractionPage", "totalCount", idValue);
 }
 
-export function useKitHistory(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitHistory", guidValue);
+export function useKitHistory(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitHistory", idValue);
 }
 
-export function useKitHistoryHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistory", "hash", guidValue);
+export function useKitHistoryHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistory", "hash", idValue);
 }
 
-export function useKitHistoryCanUndo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistory", "canUndo", guidValue);
+export function useKitHistoryCanUndo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistory", "canUndo", idValue);
 }
 
-export function useKitHistoryCanRedo(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistory", "canRedo", guidValue);
+export function useKitHistoryCanRedo(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistory", "canRedo", idValue);
 }
 
-export function useKitHistoryTotalCount(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistory", "totalCount", guidValue);
+export function useKitHistoryTotalCount(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistory", "totalCount", idValue);
 }
 
-export function useKitHistoryHead(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitHistory", "head", guidValue);
+export function useKitHistoryHead(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitHistory", "head", idValue);
 }
 
-export function useKitStoreEntity(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitStore", guidValue);
+export function useKitStoreEntity(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitStore", idValue);
 }
 
-export function useKitStoreHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "hash", guidValue);
+export function useKitStoreHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "hash", idValue);
 }
 
-export function useKitStoreKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "kit", guidValue);
+export function useKitStoreKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "kit", idValue);
 }
 
-export function useKitStoreBackbone(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "backbone", guidValue);
+export function useKitStoreBackbone(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "backbone", idValue);
 }
 
-export function useKitStoreSessions(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "sessions", guidValue);
+export function useKitStoreSessions(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "sessions", idValue);
 }
 
-export function useKitStoreTransactions(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "transactions", guidValue);
+export function useKitStoreTransactions(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "transactions", idValue);
 }
 
-export function useKitStorePendingCandidates(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "pendingCandidates", guidValue);
+export function useKitStorePendingCandidates(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "pendingCandidates", idValue);
 }
 
-export function useKitStoreActiveConflicts(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "activeConflicts", guidValue);
+export function useKitStoreActiveConflicts(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "activeConflicts", idValue);
 }
 
-export function useKitStoreValidation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "validation", guidValue);
+export function useKitStoreValidation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "validation", idValue);
 }
 
-export function useKitStoreHistory(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "history", guidValue);
+export function useKitStoreHistory(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "history", idValue);
 }
 
-export function useKitStoreBlockedByConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "blockedByConflict", guidValue);
+export function useKitStoreBlockedByConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "blockedByConflict", idValue);
 }
 
-export function useKitStoreStrictMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStore", "strictMode", guidValue);
+export function useKitStoreStrictMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStore", "strictMode", idValue);
 }
 
-export function useArtifactKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ArtifactKind", guidValue);
+export function useArtifactKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ArtifactKind", idValue);
 }
 
-export function useSelectionMutationMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SelectionMutationMode", guidValue);
+export function useSelectionMutationMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SelectionMutationMode", idValue);
 }
 
-export function useKitArchiveExport(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitArchiveExport", guidValue);
+export function useKitArchiveExport(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitArchiveExport", idValue);
 }
 
-export function useKitArchiveExportHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitArchiveExport", "hash", guidValue);
+export function useKitArchiveExportHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitArchiveExport", "hash", idValue);
 }
 
-export function useKitArchiveExportFileName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitArchiveExport", "fileName", guidValue);
+export function useKitArchiveExportFileName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitArchiveExport", "fileName", idValue);
 }
 
-export function useKitArchiveExportUrl(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitArchiveExport", "url", guidValue);
+export function useKitArchiveExportUrl(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitArchiveExport", "url", idValue);
 }
 
-export function useKitArchiveExportExpiresAt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitArchiveExport", "expiresAt", guidValue);
+export function useKitArchiveExportExpiresAt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitArchiveExport", "expiresAt", idValue);
 }
 
-export function useKitMutationResult(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitMutationResult", guidValue);
+export function useKitMutationResult(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitMutationResult", idValue);
 }
 
-export function useKitMutationResultHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "hash", guidValue);
+export function useKitMutationResultHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "hash", idValue);
 }
 
-export function useKitMutationResultAccepted(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "accepted", guidValue);
+export function useKitMutationResultAccepted(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "accepted", idValue);
 }
 
-export function useKitMutationResultKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "kind", guidValue);
+export function useKitMutationResultKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "kind", idValue);
 }
 
-export function useKitMutationResultSummary(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "summary", guidValue);
+export function useKitMutationResultSummary(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "summary", idValue);
 }
 
-export function useKitMutationResultStore(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "store", guidValue);
+export function useKitMutationResultStore(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "store", idValue);
 }
 
-export function useKitMutationResultKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "kit", guidValue);
+export function useKitMutationResultKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "kit", idValue);
 }
 
-export function useKitMutationResultSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "session", guidValue);
+export function useKitMutationResultSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "session", idValue);
 }
 
-export function useKitMutationResultTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "transaction", guidValue);
+export function useKitMutationResultTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "transaction", idValue);
 }
 
-export function useKitMutationResultCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "candidate", guidValue);
+export function useKitMutationResultCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "candidate", idValue);
 }
 
-export function useKitMutationResultChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "change", guidValue);
+export function useKitMutationResultChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "change", idValue);
 }
 
-export function useKitMutationResultHistoryEntry(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "historyEntry", guidValue);
+export function useKitMutationResultHistoryEntry(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "historyEntry", idValue);
 }
 
-export function useKitMutationResultConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "conflict", guidValue);
+export function useKitMutationResultConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "conflict", idValue);
 }
 
-export function useKitMutationResultValidation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "validation", guidValue);
+export function useKitMutationResultValidation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "validation", idValue);
 }
 
-export function useKitMutationResultExport(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitMutationResult", "export", guidValue);
+export function useKitMutationResultExport(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitMutationResult", "export", idValue);
 }
 
-export function useKitCommandContextInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitCommandContextInput", guidValue);
+export function useKitCommandContextInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitCommandContextInput", idValue);
 }
 
-export function useKitCommandContextInputKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "kitId", guidValue);
+export function useKitCommandContextInputKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "kitId", idValue);
 }
 
-export function useKitCommandContextInputSessionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "sessionId", guidValue);
+export function useKitCommandContextInputSessionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "sessionId", idValue);
 }
 
-export function useKitCommandContextInputTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "transactionId", guidValue);
+export function useKitCommandContextInputTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "transactionId", idValue);
 }
 
-export function useKitCommandContextInputOrigin(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "origin", guidValue);
+export function useKitCommandContextInputOrigin(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "origin", idValue);
 }
 
-export function useKitCommandContextInputExpectedHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "expectedHash", guidValue);
+export function useKitCommandContextInputExpectedHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "expectedHash", idValue);
 }
 
-export function useKitCommandContextInputStrictMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitCommandContextInput", "strictMode", guidValue);
+export function useKitCommandContextInputStrictMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitCommandContextInput", "strictMode", idValue);
 }
 
-export function useStartKitSessionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("StartKitSessionInput", guidValue);
+export function useStartKitSessionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("StartKitSessionInput", idValue);
 }
 
-export function useStartKitSessionInputKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionInput", "kitId", guidValue);
+export function useStartKitSessionInputKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionInput", "kitId", idValue);
 }
 
-export function useStartKitSessionInputActor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionInput", "actor", guidValue);
+export function useStartKitSessionInputActor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionInput", "actor", idValue);
 }
 
-export function useStartKitSessionInputClient(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionInput", "client", guidValue);
+export function useStartKitSessionInputClient(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionInput", "client", idValue);
 }
 
-export function useStartKitSessionInputStrictMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("StartKitSessionInput", "strictMode", guidValue);
+export function useStartKitSessionInputStrictMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("StartKitSessionInput", "strictMode", idValue);
 }
 
-export function useHeartbeatKitSessionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("HeartbeatKitSessionInput", guidValue);
+export function useHeartbeatKitSessionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("HeartbeatKitSessionInput", idValue);
 }
 
-export function useHeartbeatKitSessionInputKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionInput", "kitId", guidValue);
+export function useHeartbeatKitSessionInputKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionInput", "kitId", idValue);
 }
 
-export function useHeartbeatKitSessionInputSessionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionInput", "sessionId", guidValue);
+export function useHeartbeatKitSessionInputSessionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionInput", "sessionId", idValue);
 }
 
-export function useHeartbeatKitSessionInputLastKnownHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HeartbeatKitSessionInput", "lastKnownHash", guidValue);
+export function useHeartbeatKitSessionInputLastKnownHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HeartbeatKitSessionInput", "lastKnownHash", idValue);
 }
 
-export function useEndKitSessionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("EndKitSessionInput", guidValue);
+export function useEndKitSessionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("EndKitSessionInput", idValue);
 }
 
-export function useEndKitSessionInputKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionInput", "kitId", guidValue);
+export function useEndKitSessionInputKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionInput", "kitId", idValue);
 }
 
-export function useEndKitSessionInputSessionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("EndKitSessionInput", "sessionId", guidValue);
+export function useEndKitSessionInputSessionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("EndKitSessionInput", "sessionId", idValue);
 }
 
-export function useReconnectKitSessionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ReconnectKitSessionInput", guidValue);
+export function useReconnectKitSessionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ReconnectKitSessionInput", idValue);
 }
 
-export function useReconnectKitSessionInputKitId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionInput", "kitId", guidValue);
+export function useReconnectKitSessionInputKitId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionInput", "kitId", idValue);
 }
 
-export function useReconnectKitSessionInputSessionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionInput", "sessionId", guidValue);
+export function useReconnectKitSessionInputSessionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionInput", "sessionId", idValue);
 }
 
-export function useReconnectKitSessionInputClient(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionInput", "client", guidValue);
+export function useReconnectKitSessionInputClient(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionInput", "client", idValue);
 }
 
-export function useReconnectKitSessionInputLastKnownHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ReconnectKitSessionInput", "lastKnownHash", guidValue);
+export function useReconnectKitSessionInputLastKnownHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ReconnectKitSessionInput", "lastKnownHash", idValue);
 }
 
-export function useSetSessionSelectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("SetSessionSelectionCommandInput", guidValue);
+export function useSetSessionSelectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("SetSessionSelectionCommandInput", idValue);
 }
 
-export function useSetSessionSelectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionCommandInput", "context", guidValue);
+export function useSetSessionSelectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionCommandInput", "context", idValue);
 }
 
-export function useSetSessionSelectionCommandInputMode(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionCommandInput", "mode", guidValue);
+export function useSetSessionSelectionCommandInputMode(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionCommandInput", "mode", idValue);
 }
 
-export function useSetSessionSelectionCommandInputSelection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("SetSessionSelectionCommandInput", "selection", guidValue);
+export function useSetSessionSelectionCommandInputSelection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("SetSessionSelectionCommandInput", "selection", idValue);
 }
 
-export function useBeginKitTransactionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("BeginKitTransactionInput", guidValue);
+export function useBeginKitTransactionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("BeginKitTransactionInput", idValue);
 }
 
-export function useBeginKitTransactionInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionInput", "context", guidValue);
+export function useBeginKitTransactionInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionInput", "context", idValue);
 }
 
-export function useBeginKitTransactionInputLabel(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionInput", "label", guidValue);
+export function useBeginKitTransactionInputLabel(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionInput", "label", idValue);
 }
 
-export function useBeginKitTransactionInputParentTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("BeginKitTransactionInput", "parentTransactionId", guidValue);
+export function useBeginKitTransactionInputParentTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("BeginKitTransactionInput", "parentTransactionId", idValue);
 }
 
-export function useFinalizeKitTransactionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FinalizeKitTransactionInput", guidValue);
+export function useFinalizeKitTransactionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FinalizeKitTransactionInput", idValue);
 }
 
-export function useFinalizeKitTransactionInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionInput", "context", guidValue);
+export function useFinalizeKitTransactionInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionInput", "context", idValue);
 }
 
-export function useFinalizeKitTransactionInputTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FinalizeKitTransactionInput", "transactionId", guidValue);
+export function useFinalizeKitTransactionInputTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FinalizeKitTransactionInput", "transactionId", idValue);
 }
 
-export function useAbortKitTransactionInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("AbortKitTransactionInput", guidValue);
+export function useAbortKitTransactionInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("AbortKitTransactionInput", idValue);
 }
 
-export function useAbortKitTransactionInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionInput", "context", guidValue);
+export function useAbortKitTransactionInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionInput", "context", idValue);
 }
 
-export function useAbortKitTransactionInputTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("AbortKitTransactionInput", "transactionId", guidValue);
+export function useAbortKitTransactionInputTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("AbortKitTransactionInput", "transactionId", idValue);
 }
 
-export function useTransactionStepInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("TransactionStepInput", guidValue);
+export function useTransactionStepInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("TransactionStepInput", idValue);
 }
 
-export function useTransactionStepInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepInput", "context", guidValue);
+export function useTransactionStepInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepInput", "context", idValue);
 }
 
-export function useTransactionStepInputTransactionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("TransactionStepInput", "transactionId", guidValue);
+export function useTransactionStepInputTransactionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("TransactionStepInput", "transactionId", idValue);
 }
 
-export function useHistoryStepInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("HistoryStepInput", guidValue);
+export function useHistoryStepInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("HistoryStepInput", idValue);
 }
 
-export function useHistoryStepInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepInput", "context", guidValue);
+export function useHistoryStepInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepInput", "context", idValue);
 }
 
-export function useHistoryStepInputSteps(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("HistoryStepInput", "steps", guidValue);
+export function useHistoryStepInputSteps(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("HistoryStepInput", "steps", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("VoteOnKitChangeCandidateInput", guidValue);
+export function useVoteOnKitChangeCandidateInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("VoteOnKitChangeCandidateInput", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "context", guidValue);
+export function useVoteOnKitChangeCandidateInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "context", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInputCandidateId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "candidateId", guidValue);
+export function useVoteOnKitChangeCandidateInputCandidateId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "candidateId", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInputState(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "state", guidValue);
+export function useVoteOnKitChangeCandidateInputState(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "state", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInputReason(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "reason", guidValue);
+export function useVoteOnKitChangeCandidateInputReason(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "reason", idValue);
 }
 
-export function useVoteOnKitChangeCandidateInputResolutionOptionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "resolutionOptionId", guidValue);
+export function useVoteOnKitChangeCandidateInputResolutionOptionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("VoteOnKitChangeCandidateInput", "resolutionOptionId", idValue);
 }
 
-export function useResolveKitConflictInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ResolveKitConflictInput", guidValue);
+export function useResolveKitConflictInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ResolveKitConflictInput", idValue);
 }
 
-export function useResolveKitConflictInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictInput", "context", guidValue);
+export function useResolveKitConflictInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictInput", "context", idValue);
 }
 
-export function useResolveKitConflictInputConflictId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictInput", "conflictId", guidValue);
+export function useResolveKitConflictInputConflictId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictInput", "conflictId", idValue);
 }
 
-export function useResolveKitConflictInputOptionId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictInput", "optionId", guidValue);
+export function useResolveKitConflictInputOptionId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictInput", "optionId", idValue);
 }
 
-export function useResolveKitConflictInputPayload(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResolveKitConflictInput", "payload", guidValue);
+export function useResolveKitConflictInputPayload(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResolveKitConflictInput", "payload", idValue);
 }
 
-export function useCreateAuthorCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateAuthorCommandInput", guidValue);
+export function useCreateAuthorCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateAuthorCommandInput", idValue);
 }
 
-export function useCreateAuthorCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorCommandInput", "context", guidValue);
+export function useCreateAuthorCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorCommandInput", "context", idValue);
 }
 
-export function useCreateAuthorCommandInputAuthor(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateAuthorCommandInput", "author", guidValue);
+export function useCreateAuthorCommandInputAuthor(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateAuthorCommandInput", "author", idValue);
 }
 
-export function useUpdateAuthorCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateAuthorCommandInput", guidValue);
+export function useUpdateAuthorCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateAuthorCommandInput", idValue);
 }
 
-export function useUpdateAuthorCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorCommandInput", "context", guidValue);
+export function useUpdateAuthorCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorCommandInput", "context", idValue);
 }
 
-export function useUpdateAuthorCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorCommandInput", "id", guidValue);
+export function useUpdateAuthorCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorCommandInput", "id", idValue);
 }
 
-export function useUpdateAuthorCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateAuthorCommandInput", "patch", guidValue);
+export function useUpdateAuthorCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateAuthorCommandInput", "patch", idValue);
 }
 
-export function useDeleteAuthorCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteAuthorCommandInput", guidValue);
+export function useDeleteAuthorCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteAuthorCommandInput", idValue);
 }
 
-export function useDeleteAuthorCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorCommandInput", "context", guidValue);
+export function useDeleteAuthorCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorCommandInput", "context", idValue);
 }
 
-export function useDeleteAuthorCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteAuthorCommandInput", "id", guidValue);
+export function useDeleteAuthorCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteAuthorCommandInput", "id", idValue);
 }
 
-export function useCreateTypeCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateTypeCommandInput", guidValue);
+export function useCreateTypeCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateTypeCommandInput", idValue);
 }
 
-export function useCreateTypeCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeCommandInput", "context", guidValue);
+export function useCreateTypeCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeCommandInput", "context", idValue);
 }
 
-export function useCreateTypeCommandInputType(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTypeCommandInput", "type", guidValue);
+export function useCreateTypeCommandInputType(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTypeCommandInput", "type", idValue);
 }
 
-export function useUpdateTypeCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateTypeCommandInput", guidValue);
+export function useUpdateTypeCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateTypeCommandInput", idValue);
 }
 
-export function useUpdateTypeCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeCommandInput", "context", guidValue);
+export function useUpdateTypeCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeCommandInput", "context", idValue);
 }
 
-export function useUpdateTypeCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeCommandInput", "id", guidValue);
+export function useUpdateTypeCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeCommandInput", "id", idValue);
 }
 
-export function useUpdateTypeCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTypeCommandInput", "patch", guidValue);
+export function useUpdateTypeCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTypeCommandInput", "patch", idValue);
 }
 
-export function useDeleteTypeCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteTypeCommandInput", guidValue);
+export function useDeleteTypeCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteTypeCommandInput", idValue);
 }
 
-export function useDeleteTypeCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeCommandInput", "context", guidValue);
+export function useDeleteTypeCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeCommandInput", "context", idValue);
 }
 
-export function useDeleteTypeCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTypeCommandInput", "id", guidValue);
+export function useDeleteTypeCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTypeCommandInput", "id", idValue);
 }
 
-export function useCreateDesignCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateDesignCommandInput", guidValue);
+export function useCreateDesignCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateDesignCommandInput", idValue);
 }
 
-export function useCreateDesignCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignCommandInput", "context", guidValue);
+export function useCreateDesignCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignCommandInput", "context", idValue);
 }
 
-export function useCreateDesignCommandInputDesign(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateDesignCommandInput", "design", guidValue);
+export function useCreateDesignCommandInputDesign(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateDesignCommandInput", "design", idValue);
 }
 
-export function useUpdateDesignCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateDesignCommandInput", guidValue);
+export function useUpdateDesignCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateDesignCommandInput", idValue);
 }
 
-export function useUpdateDesignCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignCommandInput", "context", guidValue);
+export function useUpdateDesignCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignCommandInput", "context", idValue);
 }
 
-export function useUpdateDesignCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignCommandInput", "id", guidValue);
+export function useUpdateDesignCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignCommandInput", "id", idValue);
 }
 
-export function useUpdateDesignCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateDesignCommandInput", "patch", guidValue);
+export function useUpdateDesignCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateDesignCommandInput", "patch", idValue);
 }
 
-export function useDeleteDesignCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteDesignCommandInput", guidValue);
+export function useDeleteDesignCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteDesignCommandInput", idValue);
 }
 
-export function useDeleteDesignCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignCommandInput", "context", guidValue);
+export function useDeleteDesignCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignCommandInput", "context", idValue);
 }
 
-export function useDeleteDesignCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteDesignCommandInput", "id", guidValue);
+export function useDeleteDesignCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteDesignCommandInput", "id", idValue);
 }
 
-export function useCreateQualityCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateQualityCommandInput", guidValue);
+export function useCreateQualityCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateQualityCommandInput", idValue);
 }
 
-export function useCreateQualityCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityCommandInput", "context", guidValue);
+export function useCreateQualityCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityCommandInput", "context", idValue);
 }
 
-export function useCreateQualityCommandInputQuality(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateQualityCommandInput", "quality", guidValue);
+export function useCreateQualityCommandInputQuality(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateQualityCommandInput", "quality", idValue);
 }
 
-export function useUpdateQualityCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateQualityCommandInput", guidValue);
+export function useUpdateQualityCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateQualityCommandInput", idValue);
 }
 
-export function useUpdateQualityCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityCommandInput", "context", guidValue);
+export function useUpdateQualityCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityCommandInput", "context", idValue);
 }
 
-export function useUpdateQualityCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityCommandInput", "id", guidValue);
+export function useUpdateQualityCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityCommandInput", "id", idValue);
 }
 
-export function useUpdateQualityCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateQualityCommandInput", "patch", guidValue);
+export function useUpdateQualityCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateQualityCommandInput", "patch", idValue);
 }
 
-export function useDeleteQualityCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteQualityCommandInput", guidValue);
+export function useDeleteQualityCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteQualityCommandInput", idValue);
 }
 
-export function useDeleteQualityCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityCommandInput", "context", guidValue);
+export function useDeleteQualityCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityCommandInput", "context", idValue);
 }
 
-export function useDeleteQualityCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteQualityCommandInput", "id", guidValue);
+export function useDeleteQualityCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteQualityCommandInput", "id", idValue);
 }
 
-export function useCreatePortCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePortCommandInput", guidValue);
+export function useCreatePortCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePortCommandInput", idValue);
 }
 
-export function useCreatePortCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortCommandInput", "context", guidValue);
+export function useCreatePortCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortCommandInput", "context", idValue);
 }
 
-export function useCreatePortCommandInputPort(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePortCommandInput", "port", guidValue);
+export function useCreatePortCommandInputPort(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePortCommandInput", "port", idValue);
 }
 
-export function useUpdatePortCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePortCommandInput", guidValue);
+export function useUpdatePortCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePortCommandInput", idValue);
 }
 
-export function useUpdatePortCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortCommandInput", "context", guidValue);
+export function useUpdatePortCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortCommandInput", "context", idValue);
 }
 
-export function useUpdatePortCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortCommandInput", "id", guidValue);
+export function useUpdatePortCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortCommandInput", "id", idValue);
 }
 
-export function useUpdatePortCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePortCommandInput", "patch", guidValue);
+export function useUpdatePortCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePortCommandInput", "patch", idValue);
 }
 
-export function useDeletePortCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePortCommandInput", guidValue);
+export function useDeletePortCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePortCommandInput", idValue);
 }
 
-export function useDeletePortCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortCommandInput", "context", guidValue);
+export function useDeletePortCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortCommandInput", "context", idValue);
 }
 
-export function useDeletePortCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePortCommandInput", "id", guidValue);
+export function useDeletePortCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePortCommandInput", "id", idValue);
 }
 
-export function useCreateFamilyCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFamilyCommandInput", guidValue);
+export function useCreateFamilyCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFamilyCommandInput", idValue);
 }
 
-export function useCreateFamilyCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyCommandInput", "context", guidValue);
+export function useCreateFamilyCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyCommandInput", "context", idValue);
 }
 
-export function useCreateFamilyCommandInputFamily(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFamilyCommandInput", "family", guidValue);
+export function useCreateFamilyCommandInputFamily(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFamilyCommandInput", "family", idValue);
 }
 
-export function useUpdateFamilyCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFamilyCommandInput", guidValue);
+export function useUpdateFamilyCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFamilyCommandInput", idValue);
 }
 
-export function useUpdateFamilyCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyCommandInput", "context", guidValue);
+export function useUpdateFamilyCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyCommandInput", "context", idValue);
 }
 
-export function useUpdateFamilyCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyCommandInput", "id", guidValue);
+export function useUpdateFamilyCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyCommandInput", "id", idValue);
 }
 
-export function useUpdateFamilyCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFamilyCommandInput", "patch", guidValue);
+export function useUpdateFamilyCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFamilyCommandInput", "patch", idValue);
 }
 
-export function useDeleteFamilyCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFamilyCommandInput", guidValue);
+export function useDeleteFamilyCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFamilyCommandInput", idValue);
 }
 
-export function useDeleteFamilyCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyCommandInput", "context", guidValue);
+export function useDeleteFamilyCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyCommandInput", "context", idValue);
 }
 
-export function useDeleteFamilyCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFamilyCommandInput", "id", guidValue);
+export function useDeleteFamilyCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFamilyCommandInput", "id", idValue);
 }
 
-export function useCreateTagCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateTagCommandInput", guidValue);
+export function useCreateTagCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateTagCommandInput", idValue);
 }
 
-export function useCreateTagCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagCommandInput", "context", guidValue);
+export function useCreateTagCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagCommandInput", "context", idValue);
 }
 
-export function useCreateTagCommandInputTag(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateTagCommandInput", "tag", guidValue);
+export function useCreateTagCommandInputTag(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateTagCommandInput", "tag", idValue);
 }
 
-export function useUpdateTagCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateTagCommandInput", guidValue);
+export function useUpdateTagCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateTagCommandInput", idValue);
 }
 
-export function useUpdateTagCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagCommandInput", "context", guidValue);
+export function useUpdateTagCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagCommandInput", "context", idValue);
 }
 
-export function useUpdateTagCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagCommandInput", "id", guidValue);
+export function useUpdateTagCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagCommandInput", "id", idValue);
 }
 
-export function useUpdateTagCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateTagCommandInput", "patch", guidValue);
+export function useUpdateTagCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateTagCommandInput", "patch", idValue);
 }
 
-export function useDeleteTagCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteTagCommandInput", guidValue);
+export function useDeleteTagCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteTagCommandInput", idValue);
 }
 
-export function useDeleteTagCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagCommandInput", "context", guidValue);
+export function useDeleteTagCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagCommandInput", "context", idValue);
 }
 
-export function useDeleteTagCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteTagCommandInput", "id", guidValue);
+export function useDeleteTagCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteTagCommandInput", "id", idValue);
 }
 
-export function useCreateConceptCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConceptCommandInput", guidValue);
+export function useCreateConceptCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConceptCommandInput", idValue);
 }
 
-export function useCreateConceptCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptCommandInput", "context", guidValue);
+export function useCreateConceptCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptCommandInput", "context", idValue);
 }
 
-export function useCreateConceptCommandInputConcept(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConceptCommandInput", "concept", guidValue);
+export function useCreateConceptCommandInputConcept(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConceptCommandInput", "concept", idValue);
 }
 
-export function useUpdateConceptCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConceptCommandInput", guidValue);
+export function useUpdateConceptCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConceptCommandInput", idValue);
 }
 
-export function useUpdateConceptCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptCommandInput", "context", guidValue);
+export function useUpdateConceptCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptCommandInput", "context", idValue);
 }
 
-export function useUpdateConceptCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptCommandInput", "id", guidValue);
+export function useUpdateConceptCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptCommandInput", "id", idValue);
 }
 
-export function useUpdateConceptCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConceptCommandInput", "patch", guidValue);
+export function useUpdateConceptCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConceptCommandInput", "patch", idValue);
 }
 
-export function useDeleteConceptCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConceptCommandInput", guidValue);
+export function useDeleteConceptCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConceptCommandInput", idValue);
 }
 
-export function useDeleteConceptCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptCommandInput", "context", guidValue);
+export function useDeleteConceptCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptCommandInput", "context", idValue);
 }
 
-export function useDeleteConceptCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConceptCommandInput", "id", guidValue);
+export function useDeleteConceptCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConceptCommandInput", "id", idValue);
 }
 
-export function useCreateFileCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFileCommandInput", guidValue);
+export function useCreateFileCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFileCommandInput", idValue);
 }
 
-export function useCreateFileCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileCommandInput", "context", guidValue);
+export function useCreateFileCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileCommandInput", "context", idValue);
 }
 
-export function useCreateFileCommandInputFile(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFileCommandInput", "file", guidValue);
+export function useCreateFileCommandInputFile(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFileCommandInput", "file", idValue);
 }
 
-export function useUpdateFileCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFileCommandInput", guidValue);
+export function useUpdateFileCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFileCommandInput", idValue);
 }
 
-export function useUpdateFileCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileCommandInput", "context", guidValue);
+export function useUpdateFileCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileCommandInput", "context", idValue);
 }
 
-export function useUpdateFileCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileCommandInput", "id", guidValue);
+export function useUpdateFileCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileCommandInput", "id", idValue);
 }
 
-export function useUpdateFileCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFileCommandInput", "patch", guidValue);
+export function useUpdateFileCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFileCommandInput", "patch", idValue);
 }
 
-export function useDeleteFileCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFileCommandInput", guidValue);
+export function useDeleteFileCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFileCommandInput", idValue);
 }
 
-export function useDeleteFileCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileCommandInput", "context", guidValue);
+export function useDeleteFileCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileCommandInput", "context", idValue);
 }
 
-export function useDeleteFileCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFileCommandInput", "id", guidValue);
+export function useDeleteFileCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFileCommandInput", "id", idValue);
 }
 
-export function useCreateFolderCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFolderCommandInput", guidValue);
+export function useCreateFolderCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFolderCommandInput", idValue);
 }
 
-export function useCreateFolderCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderCommandInput", "context", guidValue);
+export function useCreateFolderCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderCommandInput", "context", idValue);
 }
 
-export function useCreateFolderCommandInputFolder(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFolderCommandInput", "folder", guidValue);
+export function useCreateFolderCommandInputFolder(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFolderCommandInput", "folder", idValue);
 }
 
-export function useUpdateFolderCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateFolderCommandInput", guidValue);
+export function useUpdateFolderCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateFolderCommandInput", idValue);
 }
 
-export function useUpdateFolderCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderCommandInput", "context", guidValue);
+export function useUpdateFolderCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderCommandInput", "context", idValue);
 }
 
-export function useUpdateFolderCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderCommandInput", "id", guidValue);
+export function useUpdateFolderCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderCommandInput", "id", idValue);
 }
 
-export function useUpdateFolderCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateFolderCommandInput", "patch", guidValue);
+export function useUpdateFolderCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateFolderCommandInput", "patch", idValue);
 }
 
-export function useDeleteFolderCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteFolderCommandInput", guidValue);
+export function useDeleteFolderCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteFolderCommandInput", idValue);
 }
 
-export function useDeleteFolderCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderCommandInput", "context", guidValue);
+export function useDeleteFolderCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderCommandInput", "context", idValue);
 }
 
-export function useDeleteFolderCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteFolderCommandInput", "id", guidValue);
+export function useDeleteFolderCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteFolderCommandInput", "id", idValue);
 }
 
-export function useMoveArtifactToFolderCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("MoveArtifactToFolderCommandInput", guidValue);
+export function useMoveArtifactToFolderCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("MoveArtifactToFolderCommandInput", idValue);
 }
 
-export function useMoveArtifactToFolderCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "context", guidValue);
+export function useMoveArtifactToFolderCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "context", idValue);
 }
 
-export function useMoveArtifactToFolderCommandInputArtifactKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "artifactKind", guidValue);
+export function useMoveArtifactToFolderCommandInputArtifactKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "artifactKind", idValue);
 }
 
-export function useMoveArtifactToFolderCommandInputArtifactId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "artifactId", guidValue);
+export function useMoveArtifactToFolderCommandInputArtifactId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "artifactId", idValue);
 }
 
-export function useMoveArtifactToFolderCommandInputFolderId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "folderId", guidValue);
+export function useMoveArtifactToFolderCommandInputFolderId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MoveArtifactToFolderCommandInput", "folderId", idValue);
 }
 
-export function useCreatePieceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePieceCommandInput", guidValue);
+export function useCreatePieceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePieceCommandInput", idValue);
 }
 
-export function useCreatePieceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceCommandInput", "context", guidValue);
+export function useCreatePieceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceCommandInput", "context", idValue);
 }
 
-export function useCreatePieceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceCommandInput", "designId", guidValue);
+export function useCreatePieceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceCommandInput", "designId", idValue);
 }
 
-export function useCreatePieceCommandInputPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePieceCommandInput", "piece", guidValue);
+export function useCreatePieceCommandInputPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePieceCommandInput", "piece", idValue);
 }
 
-export function useCreatePiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreatePiecesCommandInput", guidValue);
+export function useCreatePiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreatePiecesCommandInput", idValue);
 }
 
-export function useCreatePiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesCommandInput", "context", guidValue);
+export function useCreatePiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesCommandInput", "context", idValue);
 }
 
-export function useCreatePiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesCommandInput", "designId", guidValue);
+export function useCreatePiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesCommandInput", "designId", idValue);
 }
 
-export function useCreatePiecesCommandInputPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreatePiecesCommandInput", "pieces", guidValue);
+export function useCreatePiecesCommandInputPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreatePiecesCommandInput", "pieces", idValue);
 }
 
-export function usePieceUpdateInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PieceUpdateInput", guidValue);
+export function usePieceUpdateInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PieceUpdateInput", idValue);
 }
 
-export function usePieceUpdateInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceUpdateInput", "id", guidValue);
+export function usePieceUpdateInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceUpdateInput", "id", idValue);
 }
 
-export function usePieceUpdateInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PieceUpdateInput", "patch", guidValue);
+export function usePieceUpdateInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PieceUpdateInput", "patch", idValue);
 }
 
-export function useUpdatePieceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePieceCommandInput", guidValue);
+export function useUpdatePieceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePieceCommandInput", idValue);
 }
 
-export function useUpdatePieceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceCommandInput", "context", guidValue);
+export function useUpdatePieceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceCommandInput", "context", idValue);
 }
 
-export function useUpdatePieceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceCommandInput", "designId", guidValue);
+export function useUpdatePieceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceCommandInput", "designId", idValue);
 }
 
-export function useUpdatePieceCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceCommandInput", "id", guidValue);
+export function useUpdatePieceCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceCommandInput", "id", idValue);
 }
 
-export function useUpdatePieceCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePieceCommandInput", "patch", guidValue);
+export function useUpdatePieceCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePieceCommandInput", "patch", idValue);
 }
 
-export function useUpdatePiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdatePiecesCommandInput", guidValue);
+export function useUpdatePiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdatePiecesCommandInput", idValue);
 }
 
-export function useUpdatePiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesCommandInput", "context", guidValue);
+export function useUpdatePiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesCommandInput", "context", idValue);
 }
 
-export function useUpdatePiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesCommandInput", "designId", guidValue);
+export function useUpdatePiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesCommandInput", "designId", idValue);
 }
 
-export function useUpdatePiecesCommandInputUpdates(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdatePiecesCommandInput", "updates", guidValue);
+export function useUpdatePiecesCommandInputUpdates(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdatePiecesCommandInput", "updates", idValue);
 }
 
-export function useDeletePieceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePieceCommandInput", guidValue);
+export function useDeletePieceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePieceCommandInput", idValue);
 }
 
-export function useDeletePieceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceCommandInput", "context", guidValue);
+export function useDeletePieceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceCommandInput", "context", idValue);
 }
 
-export function useDeletePieceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceCommandInput", "designId", guidValue);
+export function useDeletePieceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceCommandInput", "designId", idValue);
 }
 
-export function useDeletePieceCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePieceCommandInput", "id", guidValue);
+export function useDeletePieceCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePieceCommandInput", "id", idValue);
 }
 
-export function useDeletePiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeletePiecesCommandInput", guidValue);
+export function useDeletePiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeletePiecesCommandInput", idValue);
 }
 
-export function useDeletePiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesCommandInput", "context", guidValue);
+export function useDeletePiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesCommandInput", "context", idValue);
 }
 
-export function useDeletePiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesCommandInput", "designId", guidValue);
+export function useDeletePiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesCommandInput", "designId", idValue);
 }
 
-export function useDeletePiecesCommandInputIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeletePiecesCommandInput", "ids", guidValue);
+export function useDeletePiecesCommandInputIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeletePiecesCommandInput", "ids", idValue);
 }
 
-export function useCreateConnectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectionCommandInput", guidValue);
+export function useCreateConnectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectionCommandInput", idValue);
 }
 
-export function useCreateConnectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionCommandInput", "context", guidValue);
+export function useCreateConnectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionCommandInput", "context", idValue);
 }
 
-export function useCreateConnectionCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionCommandInput", "designId", guidValue);
+export function useCreateConnectionCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionCommandInput", "designId", idValue);
 }
 
-export function useCreateConnectionCommandInputConnection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionCommandInput", "connection", guidValue);
+export function useCreateConnectionCommandInputConnection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionCommandInput", "connection", idValue);
 }
 
-export function useCreateConnectionsCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectionsCommandInput", guidValue);
+export function useCreateConnectionsCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectionsCommandInput", idValue);
 }
 
-export function useCreateConnectionsCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsCommandInput", "context", guidValue);
+export function useCreateConnectionsCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsCommandInput", "context", idValue);
 }
 
-export function useCreateConnectionsCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsCommandInput", "designId", guidValue);
+export function useCreateConnectionsCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsCommandInput", "designId", idValue);
 }
 
-export function useCreateConnectionsCommandInputConnections(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectionsCommandInput", "connections", guidValue);
+export function useCreateConnectionsCommandInputConnections(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectionsCommandInput", "connections", idValue);
 }
 
-export function useConnectionUpdateInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ConnectionUpdateInput", guidValue);
+export function useConnectionUpdateInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ConnectionUpdateInput", idValue);
 }
 
-export function useConnectionUpdateInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionUpdateInput", "id", guidValue);
+export function useConnectionUpdateInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionUpdateInput", "id", idValue);
 }
 
-export function useConnectionUpdateInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ConnectionUpdateInput", "patch", guidValue);
+export function useConnectionUpdateInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ConnectionUpdateInput", "patch", idValue);
 }
 
-export function useUpdateConnectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConnectionCommandInput", guidValue);
+export function useUpdateConnectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConnectionCommandInput", idValue);
 }
 
-export function useUpdateConnectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionCommandInput", "context", guidValue);
+export function useUpdateConnectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionCommandInput", "context", idValue);
 }
 
-export function useUpdateConnectionCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionCommandInput", "designId", guidValue);
+export function useUpdateConnectionCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionCommandInput", "designId", idValue);
 }
 
-export function useUpdateConnectionCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionCommandInput", "id", guidValue);
+export function useUpdateConnectionCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionCommandInput", "id", idValue);
 }
 
-export function useUpdateConnectionCommandInputPatch(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionCommandInput", "patch", guidValue);
+export function useUpdateConnectionCommandInputPatch(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionCommandInput", "patch", idValue);
 }
 
-export function useUpdateConnectionsCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("UpdateConnectionsCommandInput", guidValue);
+export function useUpdateConnectionsCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("UpdateConnectionsCommandInput", idValue);
 }
 
-export function useUpdateConnectionsCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsCommandInput", "context", guidValue);
+export function useUpdateConnectionsCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsCommandInput", "context", idValue);
 }
 
-export function useUpdateConnectionsCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsCommandInput", "designId", guidValue);
+export function useUpdateConnectionsCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsCommandInput", "designId", idValue);
 }
 
-export function useUpdateConnectionsCommandInputUpdates(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("UpdateConnectionsCommandInput", "updates", guidValue);
+export function useUpdateConnectionsCommandInputUpdates(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("UpdateConnectionsCommandInput", "updates", idValue);
 }
 
-export function useDeleteConnectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConnectionCommandInput", guidValue);
+export function useDeleteConnectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConnectionCommandInput", idValue);
 }
 
-export function useDeleteConnectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionCommandInput", "context", guidValue);
+export function useDeleteConnectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionCommandInput", "context", idValue);
 }
 
-export function useDeleteConnectionCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionCommandInput", "designId", guidValue);
+export function useDeleteConnectionCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionCommandInput", "designId", idValue);
 }
 
-export function useDeleteConnectionCommandInputId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionCommandInput", "id", guidValue);
+export function useDeleteConnectionCommandInputId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionCommandInput", "id", idValue);
 }
 
-export function useDeleteConnectionsCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteConnectionsCommandInput", guidValue);
+export function useDeleteConnectionsCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteConnectionsCommandInput", idValue);
 }
 
-export function useDeleteConnectionsCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsCommandInput", "context", guidValue);
+export function useDeleteConnectionsCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsCommandInput", "context", idValue);
 }
 
-export function useDeleteConnectionsCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsCommandInput", "designId", guidValue);
+export function useDeleteConnectionsCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsCommandInput", "designId", idValue);
 }
 
-export function useDeleteConnectionsCommandInputIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteConnectionsCommandInput", "ids", guidValue);
+export function useDeleteConnectionsCommandInputIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteConnectionsCommandInput", "ids", idValue);
 }
 
-export function useDeleteSelectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DeleteSelectionCommandInput", guidValue);
+export function useDeleteSelectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DeleteSelectionCommandInput", idValue);
 }
 
-export function useDeleteSelectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionCommandInput", "context", guidValue);
+export function useDeleteSelectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionCommandInput", "context", idValue);
 }
 
-export function useDeleteSelectionCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionCommandInput", "designId", guidValue);
+export function useDeleteSelectionCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionCommandInput", "designId", idValue);
 }
 
-export function useDeleteSelectionCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionCommandInput", "pieceIds", guidValue);
+export function useDeleteSelectionCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionCommandInput", "pieceIds", idValue);
 }
 
-export function useDeleteSelectionCommandInputConnectionIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DeleteSelectionCommandInput", "connectionIds", guidValue);
+export function useDeleteSelectionCommandInputConnectionIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DeleteSelectionCommandInput", "connectionIds", idValue);
 }
 
-export function useFixPiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FixPiecesCommandInput", guidValue);
+export function useFixPiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FixPiecesCommandInput", idValue);
 }
 
-export function useFixPiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesCommandInput", "context", guidValue);
+export function useFixPiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesCommandInput", "context", idValue);
 }
 
-export function useFixPiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesCommandInput", "designId", guidValue);
+export function useFixPiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesCommandInput", "designId", idValue);
 }
 
-export function useFixPiecesCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FixPiecesCommandInput", "pieceIds", guidValue);
+export function useFixPiecesCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FixPiecesCommandInput", "pieceIds", idValue);
 }
 
-export function useClusterPiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ClusterPiecesCommandInput", guidValue);
+export function useClusterPiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ClusterPiecesCommandInput", idValue);
 }
 
-export function useClusterPiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesCommandInput", "context", guidValue);
+export function useClusterPiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesCommandInput", "context", idValue);
 }
 
-export function useClusterPiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesCommandInput", "designId", guidValue);
+export function useClusterPiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesCommandInput", "designId", idValue);
 }
 
-export function useClusterPiecesCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesCommandInput", "pieceIds", guidValue);
+export function useClusterPiecesCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesCommandInput", "pieceIds", idValue);
 }
 
-export function useClusterPiecesCommandInputNewDesignName(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ClusterPiecesCommandInput", "newDesignName", guidValue);
+export function useClusterPiecesCommandInputNewDesignName(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ClusterPiecesCommandInput", "newDesignName", idValue);
 }
 
-export function useExpandDesignReferenceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ExpandDesignReferenceCommandInput", guidValue);
+export function useExpandDesignReferenceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ExpandDesignReferenceCommandInput", idValue);
 }
 
-export function useExpandDesignReferenceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "context", guidValue);
+export function useExpandDesignReferenceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "context", idValue);
 }
 
-export function useExpandDesignReferenceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "designId", guidValue);
+export function useExpandDesignReferenceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "designId", idValue);
 }
 
-export function useExpandDesignReferenceCommandInputReferencedDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "referencedDesignId", guidValue);
+export function useExpandDesignReferenceCommandInputReferencedDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExpandDesignReferenceCommandInput", "referencedDesignId", idValue);
 }
 
-export function useFlattenDesignCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("FlattenDesignCommandInput", guidValue);
+export function useFlattenDesignCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("FlattenDesignCommandInput", idValue);
 }
 
-export function useFlattenDesignCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignCommandInput", "context", guidValue);
+export function useFlattenDesignCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignCommandInput", "context", idValue);
 }
 
-export function useFlattenDesignCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("FlattenDesignCommandInput", "designId", guidValue);
+export function useFlattenDesignCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("FlattenDesignCommandInput", "designId", idValue);
 }
 
-export function useDragPiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("DragPiecesCommandInput", guidValue);
+export function useDragPiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("DragPiecesCommandInput", idValue);
 }
 
-export function useDragPiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesCommandInput", "context", guidValue);
+export function useDragPiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesCommandInput", "context", idValue);
 }
 
-export function useDragPiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesCommandInput", "designId", guidValue);
+export function useDragPiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesCommandInput", "designId", idValue);
 }
 
-export function useDragPiecesCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesCommandInput", "pieceIds", guidValue);
+export function useDragPiecesCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesCommandInput", "pieceIds", idValue);
 }
 
-export function useDragPiecesCommandInputOffset(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("DragPiecesCommandInput", "offset", guidValue);
+export function useDragPiecesCommandInputOffset(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("DragPiecesCommandInput", "offset", idValue);
 }
 
-export function useMovePiecesVectorInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("MovePiecesVectorInput", guidValue);
+export function useMovePiecesVectorInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("MovePiecesVectorInput", idValue);
 }
 
-export function useMovePiecesVectorInputShift(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "shift", guidValue);
+export function useMovePiecesVectorInputShift(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "shift", idValue);
 }
 
-export function useMovePiecesVectorInputGap(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "gap", guidValue);
+export function useMovePiecesVectorInputGap(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "gap", idValue);
 }
 
-export function useMovePiecesVectorInputRise(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "rise", guidValue);
+export function useMovePiecesVectorInputRise(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "rise", idValue);
 }
 
-export function useMovePiecesVectorInputRotation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "rotation", guidValue);
+export function useMovePiecesVectorInputRotation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "rotation", idValue);
 }
 
-export function useMovePiecesVectorInputTurn(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "turn", guidValue);
+export function useMovePiecesVectorInputTurn(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "turn", idValue);
 }
 
-export function useMovePiecesVectorInputTilt(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesVectorInput", "tilt", guidValue);
+export function useMovePiecesVectorInputTilt(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesVectorInput", "tilt", idValue);
 }
 
-export function useMovePiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("MovePiecesCommandInput", guidValue);
+export function useMovePiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("MovePiecesCommandInput", idValue);
 }
 
-export function useMovePiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesCommandInput", "context", guidValue);
+export function useMovePiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesCommandInput", "context", idValue);
 }
 
-export function useMovePiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesCommandInput", "designId", guidValue);
+export function useMovePiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesCommandInput", "designId", idValue);
 }
 
-export function useMovePiecesCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesCommandInput", "pieceIds", guidValue);
+export function useMovePiecesCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesCommandInput", "pieceIds", idValue);
 }
 
-export function useMovePiecesCommandInputVector(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("MovePiecesCommandInput", "vector", guidValue);
+export function useMovePiecesCommandInputVector(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("MovePiecesCommandInput", "vector", idValue);
 }
 
-export function useCreateFixedPieceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateFixedPieceCommandInput", guidValue);
+export function useCreateFixedPieceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateFixedPieceCommandInput", idValue);
 }
 
-export function useCreateFixedPieceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceCommandInput", "context", guidValue);
+export function useCreateFixedPieceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceCommandInput", "context", idValue);
 }
 
-export function useCreateFixedPieceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceCommandInput", "designId", guidValue);
+export function useCreateFixedPieceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceCommandInput", "designId", idValue);
 }
 
-export function useCreateFixedPieceCommandInputPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateFixedPieceCommandInput", "piece", guidValue);
+export function useCreateFixedPieceCommandInputPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateFixedPieceCommandInput", "piece", idValue);
 }
 
-export function useCreateConnectedPieceCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateConnectedPieceCommandInput", guidValue);
+export function useCreateConnectedPieceCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateConnectedPieceCommandInput", idValue);
 }
 
-export function useCreateConnectedPieceCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceCommandInput", "context", guidValue);
+export function useCreateConnectedPieceCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceCommandInput", "context", idValue);
 }
 
-export function useCreateConnectedPieceCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceCommandInput", "designId", guidValue);
+export function useCreateConnectedPieceCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceCommandInput", "designId", idValue);
 }
 
-export function useCreateConnectedPieceCommandInputPiece(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceCommandInput", "piece", guidValue);
+export function useCreateConnectedPieceCommandInputPiece(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceCommandInput", "piece", idValue);
 }
 
-export function useCreateConnectedPieceCommandInputConnection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateConnectedPieceCommandInput", "connection", guidValue);
+export function useCreateConnectedPieceCommandInputConnection(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateConnectedPieceCommandInput", "connection", idValue);
 }
 
-export function useCreateHangingPiecesCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("CreateHangingPiecesCommandInput", guidValue);
+export function useCreateHangingPiecesCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("CreateHangingPiecesCommandInput", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "context", guidValue);
+export function useCreateHangingPiecesCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "context", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "designId", guidValue);
+export function useCreateHangingPiecesCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "designId", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputPieces(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "pieces", guidValue);
+export function useCreateHangingPiecesCommandInputPieces(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "pieces", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputParentPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentPieceId", guidValue);
+export function useCreateHangingPiecesCommandInputParentPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentPieceId", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputParentDesignPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentDesignPieceId", guidValue);
+export function useCreateHangingPiecesCommandInputParentDesignPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentDesignPieceId", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputParentConnectorId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentConnectorId", guidValue);
+export function useCreateHangingPiecesCommandInputParentConnectorId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "parentConnectorId", idValue);
 }
 
-export function useCreateHangingPiecesCommandInputConnectionTemplate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("CreateHangingPiecesCommandInput", "connectionTemplate", guidValue);
+export function useCreateHangingPiecesCommandInputConnectionTemplate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("CreateHangingPiecesCommandInput", "connectionTemplate", idValue);
 }
 
-export function useChangePieceTypeCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ChangePieceTypeCommandInput", guidValue);
+export function useChangePieceTypeCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ChangePieceTypeCommandInput", idValue);
 }
 
-export function useChangePieceTypeCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeCommandInput", "context", guidValue);
+export function useChangePieceTypeCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeCommandInput", "context", idValue);
 }
 
-export function useChangePieceTypeCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeCommandInput", "designId", guidValue);
+export function useChangePieceTypeCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeCommandInput", "designId", idValue);
 }
 
-export function useChangePieceTypeCommandInputPieceId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeCommandInput", "pieceId", guidValue);
+export function useChangePieceTypeCommandInputPieceId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeCommandInput", "pieceId", idValue);
 }
 
-export function useChangePieceTypeCommandInputTypeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePieceTypeCommandInput", "typeId", guidValue);
+export function useChangePieceTypeCommandInputTypeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePieceTypeCommandInput", "typeId", idValue);
 }
 
-export function useChangePiecesTypeCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ChangePiecesTypeCommandInput", guidValue);
+export function useChangePiecesTypeCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ChangePiecesTypeCommandInput", idValue);
 }
 
-export function useChangePiecesTypeCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeCommandInput", "context", guidValue);
+export function useChangePiecesTypeCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeCommandInput", "context", idValue);
 }
 
-export function useChangePiecesTypeCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeCommandInput", "designId", guidValue);
+export function useChangePiecesTypeCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeCommandInput", "designId", idValue);
 }
 
-export function useChangePiecesTypeCommandInputPieceIds(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeCommandInput", "pieceIds", guidValue);
+export function useChangePiecesTypeCommandInputPieceIds(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeCommandInput", "pieceIds", idValue);
 }
 
-export function useChangePiecesTypeCommandInputTypeId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ChangePiecesTypeCommandInput", "typeId", guidValue);
+export function useChangePiecesTypeCommandInputTypeId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ChangePiecesTypeCommandInput", "typeId", idValue);
 }
 
-export function usePasteDesignSelectionCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("PasteDesignSelectionCommandInput", guidValue);
+export function usePasteDesignSelectionCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("PasteDesignSelectionCommandInput", idValue);
 }
 
-export function usePasteDesignSelectionCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionCommandInput", "context", guidValue);
+export function usePasteDesignSelectionCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionCommandInput", "context", idValue);
 }
 
-export function usePasteDesignSelectionCommandInputDesignId(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionCommandInput", "designId", guidValue);
+export function usePasteDesignSelectionCommandInputDesignId(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionCommandInput", "designId", idValue);
 }
 
-export function usePasteDesignSelectionCommandInputPayload(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionCommandInput", "payload", guidValue);
+export function usePasteDesignSelectionCommandInputPayload(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionCommandInput", "payload", idValue);
 }
 
-export function usePasteDesignSelectionCommandInputOffset(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("PasteDesignSelectionCommandInput", "offset", guidValue);
+export function usePasteDesignSelectionCommandInputOffset(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("PasteDesignSelectionCommandInput", "offset", idValue);
 }
 
-export function useImportKitCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ImportKitCommandInput", guidValue);
+export function useImportKitCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ImportKitCommandInput", idValue);
 }
 
-export function useImportKitCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitCommandInput", "context", guidValue);
+export function useImportKitCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitCommandInput", "context", idValue);
 }
 
-export function useImportKitCommandInputSourceUrl(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitCommandInput", "sourceUrl", guidValue);
+export function useImportKitCommandInputSourceUrl(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitCommandInput", "sourceUrl", idValue);
 }
 
-export function useImportKitCommandInputArchiveBase64(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ImportKitCommandInput", "archiveBase64", guidValue);
+export function useImportKitCommandInputArchiveBase64(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ImportKitCommandInput", "archiveBase64", idValue);
 }
 
-export function useResetKitCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ResetKitCommandInput", guidValue);
+export function useResetKitCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ResetKitCommandInput", idValue);
 }
 
-export function useResetKitCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitCommandInput", "context", guidValue);
+export function useResetKitCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitCommandInput", "context", idValue);
 }
 
-export function useResetKitCommandInputSourceUrl(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitCommandInput", "sourceUrl", guidValue);
+export function useResetKitCommandInputSourceUrl(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitCommandInput", "sourceUrl", idValue);
 }
 
-export function useResetKitCommandInputArchiveBase64(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitCommandInput", "archiveBase64", guidValue);
+export function useResetKitCommandInputArchiveBase64(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitCommandInput", "archiveBase64", idValue);
 }
 
-export function useResetKitCommandInputKit(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ResetKitCommandInput", "kit", guidValue);
+export function useResetKitCommandInputKit(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ResetKitCommandInput", "kit", idValue);
 }
 
-export function useExportKitCommandInput(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("ExportKitCommandInput", guidValue);
+export function useExportKitCommandInput(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("ExportKitCommandInput", idValue);
 }
 
-export function useExportKitCommandInputContext(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("ExportKitCommandInput", "context", guidValue);
+export function useExportKitCommandInputContext(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("ExportKitCommandInput", "context", idValue);
 }
 
-export function useQuery(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Query", guidValue);
+export function useQuery(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Query", idValue);
 }
 
-export function useQueryKitCommandCatalog(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Query", "kitCommandCatalog", guidValue);
+export function useQueryKitCommandCatalog(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("Query", "kitCommandCatalog", idValue);
 }
 
-export function useMutation(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("Mutation", guidValue);
+export function useMutation(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("Mutation", idValue);
 }
 
-export function useKitStoreEventKindEnum(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitStoreEventKind", guidValue);
+export function useKitStoreEventKindEnum(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitStoreEventKind", idValue);
 }
 
-export function useKitStoreEvent(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaObjectState("KitStoreEvent", guidValue);
+export function useKitStoreEvent(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaObjectState("KitStoreEvent", idValue);
 }
 
-export function useKitStoreEventHash(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "hash", guidValue);
+export function useKitStoreEventHash(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "hash", idValue);
 }
 
-export function useKitStoreEventKind(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "kind", guidValue);
+export function useKitStoreEventKind(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "kind", idValue);
 }
 
-export function useKitStoreEventStore(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "store", guidValue);
+export function useKitStoreEventStore(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "store", idValue);
 }
 
-export function useKitStoreEventInteraction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "interaction", guidValue);
+export function useKitStoreEventInteraction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "interaction", idValue);
 }
 
-export function useKitStoreEventChange(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "change", guidValue);
+export function useKitStoreEventChange(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "change", idValue);
 }
 
-export function useKitStoreEventCandidate(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "candidate", guidValue);
+export function useKitStoreEventCandidate(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "candidate", idValue);
 }
 
-export function useKitStoreEventConflict(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "conflict", guidValue);
+export function useKitStoreEventConflict(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "conflict", idValue);
 }
 
-export function useKitStoreEventSession(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "session", guidValue);
+export function useKitStoreEventSession(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "session", idValue);
 }
 
-export function useKitStoreEventTransaction(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("KitStoreEvent", "transaction", guidValue);
+export function useKitStoreEventTransaction(idValue?: string): SchemaHookTriad<any> {
+	return useSchemaFieldState("KitStoreEvent", "transaction", idValue);
 }
 
 export const schemaHooks = Object.freeze({
@@ -13994,12 +13994,12 @@ export const schemaHooks = Object.freeze({
 	useKitStoreEventTransaction,
 });
 
-export function useSchemaHook(hookName: string, guidValue?: string): SchemaHookTriad<any> {
+export function useSchemaHook(hookName: string, idValue?: string): SchemaHookTriad<any> {
 	const hook = (schemaHooks)[hookName];
 	if (typeof hook !== "function") {
 		return [undefined, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
 	}
-	return hook(guidValue);
+	return hook(idValue);
 }
 
 // #endregion ⚛️Direct Domain Exports
@@ -14018,17 +14018,17 @@ if (shouldRunReactEmbeddedTests) {
 	describe("pipeline hooks", () => {
 		it("useKitName rejects empty required name via kit client", async () => {
 			const kit = asKitInstance({
-				guid: "k1",
+				id: "k1",
 				name: "K",
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				designs: [
 					{
-						guid: "d1",
+						id: "d1",
 						name: "D",
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
-						pieces: [{ guid: "p1", name: "N" }],
+						pieces: [{ id: "p1", name: "N" }],
 					},
 				],
 			});
@@ -14055,7 +14055,7 @@ if (shouldRunReactEmbeddedTests) {
 	describe("KitRegistry + useOptimistic", () => {
 		it("registry open/close refcounts and useOptimistic keeps draft until commit", async () => {
 			const kit = asKitInstance({
-				guid: "k1",
+				id: "k1",
 				name: "K",
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
@@ -14102,17 +14102,17 @@ if (shouldRunReactEmbeddedTests) {
 	describe("KitStoreClient stub RPC hooks", () => {
 		it("useClusterPieces forwards failures to useSetErrors", async () => {
 			const kit = asKitInstance({
-				guid: "k1",
+				id: "k1",
 				name: "K",
 				createdAt: new Date().toISOString(),
 				updatedAt: new Date().toISOString(),
 				designs: [
 					{
-						guid: "d1",
+						id: "d1",
 						name: "D",
 						createdAt: new Date().toISOString(),
 						updatedAt: new Date().toISOString(),
-						pieces: [{ guid: "p1", name: "P" }],
+						pieces: [{ id: "p1", name: "P" }],
 						connections: [],
 					},
 				],
