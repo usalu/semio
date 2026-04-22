@@ -28,7 +28,8 @@ in `OnceLock` fields invalidated by the owning entity's setters.
 - Type-scoped children: [`port`](src/port.rs), [`connector`](src/connector.rs), [`representation`](src/representation.rs).
 - Design-scoped children: [`piece`](src/piece.rs), [`connection`](src/connection.rs), [`side`](src/side.rs), [`layer`](src/layer.rs), [`group`](src/group.rs).
 - Aggregates: [`typ`](src/typ.rs) (Type), [`design`](src/design.rs), [`kit`](src/kit.rs).
-- Change flow: [`diff`](src/diff.rs) (`DesignDiff`/`DesignChange`), [`session`](src/session.rs) (`KitGraphSession` owns `Arc<RwLock<Kit>>`).
+- Change flow: [`diff`](src/diff.rs) (`DesignDiff`/`DesignChange`), [`session`](src/session.rs) (`KitGraphSession` owns `Arc<RwLock<Kit>>` + [`KitHistory`](src/lib.rs) version graph).
+- Kit versioning: `kit_diff`, `kit_change`, `kit_operation`, `kit_command`, `history` in [`lib.rs`](src/lib.rs) (`KitCheckpoint` / `KitHistory` / alternatives / materialize).
 - I/O backends: [`io::json`](src/io/json.rs); SQLite/ZIP stubs under [`io`](src/io/mod.rs).
 - WASM surface: [`wasm`](src/wasm.rs) (identical JS names, delegates to OO API).
 

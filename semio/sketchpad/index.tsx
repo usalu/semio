@@ -41,13 +41,15 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
-  exportKit,
+  executeKitCommand,
   FileDiff,
   findDesignInKit,
   findRepresentation,
   findPieceInDesign,
   findTypeInKit,
   flattenFileTree,
+  getOrCreateKitFileState,
+  getStoredKitFileUrls,
   Folder,
   FolderDiff,
   generateUniqueName,
@@ -67,6 +69,8 @@ import {
   KitDiff,
   KitSchema,
   KitShallow,
+  type KitCommandContext,
+  type KitCommandResult,
   type KitStore,
   type KitStoreSnapshot,
   type KitStoreStatus,
@@ -1710,25 +1714,7 @@ export type SketchpadScope = { id: string; remote?: RemoteProviders; desktop?: D
 // #endregion 📹Sketchpad State
 
 // #region 💧Commands
-// MUST define command context and result interfaces for kit and sketchpad operations.
-
-/**
- * Context for kit commands including kit data, file URLs, and origin.
- **/
-export interface KitCommandContext {
-  kit: Kit;
-  fileUrls: Map<Url, Url>;
-  origin?: string;
-}
-
-/**
- * Result of a kit command with optional diff, files, and origin.
- **/
-export interface KitCommandResult {
-  diff?: KitDiff;
-  files?: File[];
-  origin?: string;
-}
+// Sketchpad command context/result; kit graph commands live in @semio/js (KitCommandContext, KitCommandResult, executeKitCommand).
 
 /**
  * Context for sketchpad commands including sketchpad state and origin.

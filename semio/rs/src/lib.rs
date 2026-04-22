@@ -2714,8 +2714,8 @@ pub mod design {
             let mut m = HashMap::new();
             for p in &self.pieces {
                 if let Ok(pr) = p.read() {
-                    let pl = pr.plane.unwrap_or_else(Plane::world_xy);
-                    let ce = pr.center.unwrap_or_default();
+                    let pl = pr.pose.plane.unwrap_or_else(Plane::world_xy);
+                    let ce = pr.pose.center.unwrap_or_default();
                     m.insert(pr.id.clone(), (pl, ce));
                 }
             }
@@ -2784,12 +2784,12 @@ pub mod design {
                 visited.insert(root.clone());
                 if let Some(p) = piece_map.get(&root) {
                     if let Ok(pr) = p.read() {
-                        let pl = if pr.plane.is_some() && pr.center.is_some() {
-                            pr.plane.unwrap()
+                        let pl = if pr.pose.plane.is_some() && pr.pose.center.is_some() {
+                            pr.pose.plane.unwrap()
                         } else {
                             Plane::world_xy()
                         };
-                        let ce = pr.center.unwrap_or_default();
+                        let ce = pr.pose.center.unwrap_or_default();
                         piece_planes.insert(root.clone(), pl);
                         centers.insert(root, ce);
                     }
@@ -3834,7 +3834,7 @@ pub mod diff {
     }
 
     /// Structural delta between two [`DesignStore`] states, expressed in DTO shape.
-    #[derive(Clone, Debug, Serialize, Deserialize, Default)]
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct DesignDiff {
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedPieces")]
         pub added_pieces: Vec<PieceFullDto>,
@@ -4049,6 +4049,1312 @@ pub mod diff {
                 before: Some(before.clone()),
                 after: Some(before),
             })
+        }
+    }
+}
+
+/// Structural delta and operations at the whole-kit scope (see [`kit_change::KitChange`]).
+pub mod kit_diff {
+    use serde::{Deserialize, Serialize};
+    use std::collections::{HashMap, HashSet};
+
+    use crate::attribute::AttributeIdDto;
+    use crate::author::AuthorIdDto;
+    use crate::attribute::AttributeFullDto;
+    use crate::author::AuthorFullDto;
+    use crate::concept::ConceptIdDto;
+    use crate::concept::ConceptFullDto;
+    use crate::design::DesignFullDto;
+    use crate::design::DesignIdDto;
+    use crate::diff::DesignDiff;
+    use crate::file::FileFullDto;
+    use crate::file::FileIdDto;
+    use crate::folder::FolderFullDto;
+    use crate::folder::FolderIdDto;
+    use crate::id::Id;
+    use crate::kit::{KitFullDto, KitMetadataDto, KitStore, KitStoreRef};
+    use crate::prop::PropFullDto;
+    use crate::prop::PropIdDto;
+    use crate::quality::QualityFullDto;
+    use crate::quality::QualityIdDto;
+    use crate::tag::TagFullDto;
+    use crate::tag::TagIdDto;
+    use crate::typ::TypeFullDto;
+    use crate::typ::TypeIdDto;
+
+    /// Design sub-diff tied to a single design id (pieces/connections; does not include design metadata).
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct DesignDiffPatch {
+        pub design_id: Id,
+        #[serde(flatten)]
+        pub diff: DesignDiff,
+    }
+
+    /// Kit-wide structural diff between two [`KitFullDto`] snapshots.
+    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    pub struct KitDiff {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub kit_metadata: Option<KitMetadataDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedTypes")]
+        pub added_types: Vec<TypeFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTypes")]
+        pub removed_types: Vec<TypeIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedTypes"
+        )]
+        pub modified_types: Vec<TypeFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedDesigns")]
+        pub added_designs: Vec<DesignFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedDesigns"
+        )]
+        pub removed_designs: Vec<DesignIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "replacedFullDesigns"
+        )]
+        pub replaced_full_designs: Vec<DesignFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "patchedDesigns"
+        )]
+        pub patched_designs: Vec<DesignDiffPatch>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFiles")]
+        pub added_files: Vec<FileFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedFiles")]
+        pub removed_files: Vec<FileIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedFiles"
+        )]
+        pub modified_files: Vec<FileFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFolders")]
+        pub added_folders: Vec<FolderFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedFolders"
+        )]
+        pub removed_folders: Vec<FolderIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedFolders"
+        )]
+        pub modified_folders: Vec<FolderFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedAuthors")]
+        pub added_authors: Vec<AuthorFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedAuthors"
+        )]
+        pub removed_authors: Vec<AuthorIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedAuthors"
+        )]
+        pub modified_authors: Vec<AuthorFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedConcepts")]
+        pub added_concepts: Vec<ConceptFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedConcepts"
+        )]
+        pub removed_concepts: Vec<ConceptIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedConcepts"
+        )]
+        pub modified_concepts: Vec<ConceptFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedTags")]
+        pub added_tags: Vec<TagFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTags")]
+        pub removed_tags: Vec<TagIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedTags")]
+        pub modified_tags: Vec<TagFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedQualities"
+        )]
+        pub added_qualities: Vec<QualityFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedQualities"
+        )]
+        pub removed_qualities: Vec<QualityIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedQualities"
+        )]
+        pub modified_qualities: Vec<QualityFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedProps")]
+        pub added_props: Vec<PropFullDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedProps")]
+        pub removed_props: Vec<PropIdDto>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedProps")]
+        pub modified_props: Vec<PropFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedAttributes"
+        )]
+        pub added_attributes: Vec<AttributeFullDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedAttributes"
+        )]
+        pub removed_attributes: Vec<AttributeIdDto>,
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedAttributes"
+        )]
+        pub modified_attributes: Vec<AttributeFullDto>,
+    }
+
+    /// Apply [`DesignDiff`] to a DTO in the same order as [`crate::design::DesignStore::apply_diff`]
+    /// (not including rewire/flatten; sufficient for `between` / replay round-trips from snapshots).
+    pub fn apply_design_full_dto(d: &mut DesignFullDto, diff: &DesignDiff) {
+        for r in &diff.removed_connections {
+            d.connections
+                .retain(|c| c.id != r.id);
+        }
+        let rpid: HashSet<Id> = diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
+        d.pieces.retain(|p| !rpid.contains(&p.id));
+        for p in &diff.added_pieces {
+            d.pieces.push(p.clone());
+        }
+        for p in &diff.modified_pieces {
+            if let Some(i) = d.pieces.iter().position(|x| x.id == p.id) {
+                d.pieces[i] = p.clone();
+            }
+        }
+        for c in &diff.added_connections {
+            d.connections.push(c.clone());
+        }
+        for c in &diff.modified_connections {
+            d.connections
+                .retain(|x| x.id != c.id);
+            d.connections.push(c.clone());
+        }
+    }
+
+    fn design_metadata_differed(a: &DesignFullDto, b: &DesignFullDto) -> bool {
+        a.name != b.name
+            || a.description != b.description
+            || a.icon != b.icon
+            || a.image != b.image
+            || a.variant != b.variant
+            || a.view != b.view
+            || a.location != b.location
+            || a.camera != b.camera
+            || a.unit != b.unit
+            || a.kit != b.kit
+            || a.created != b.created
+            || a.updated != b.updated
+            || a.authors != b.authors
+            || a.concepts != b.concepts
+            || a.tags != b.tags
+            || a.qualities != b.qualities
+            || a.props != b.props
+            || a.attributes != b.attributes
+            || a.stats != b.stats
+            || a.layers != b.layers
+            || a.groups != b.groups
+    }
+
+    /// Merge non-piece/connection fields from `src` into `d` (after [`apply_design_full_dto`]).
+    fn merge_full_design_except_scenes(d: &mut DesignFullDto, src: &DesignFullDto) {
+        d.name = src.name.clone();
+        d.description = src.description.clone();
+        d.icon = src.icon.clone();
+        d.image = src.image.clone();
+        d.variant = src.variant.clone();
+        d.view = src.view.clone();
+        d.location = src.location;
+        d.camera = src.camera;
+        d.unit = src.unit.clone();
+        d.kit = src.kit.clone();
+        d.created = src.created.clone();
+        d.updated = src.updated.clone();
+        d.authors = src.authors.clone();
+        d.concepts = src.concepts.clone();
+        d.tags = src.tags.clone();
+        d.qualities = src.qualities.clone();
+        d.props = src.props.clone();
+        d.attributes = src.attributes.clone();
+        d.stats = src.stats.clone();
+        d.layers = src.layers.clone();
+        d.groups = src.groups.clone();
+    }
+
+    /// Lift a single design [`DesignDiff`] into a [`KitDiff`].
+    pub fn from_design_diff(design_id: Id, diff: &DesignDiff) -> KitDiff {
+        KitDiff {
+            patched_designs: vec![DesignDiffPatch {
+                design_id,
+                diff: diff.clone(),
+            }],
+            ..KitDiff::default()
+        }
+    }
+
+    fn after_to_metadata_dto(kit: &KitFullDto) -> KitMetadataDto {
+        KitMetadataDto {
+            id: kit.id.clone(),
+            name: kit.name.clone(),
+            description: kit.description.clone(),
+            icon: kit.icon.clone(),
+            image: kit.image.clone(),
+            preview: kit.preview.clone(),
+            version: kit.version.clone(),
+            remote: kit.remote.clone(),
+            homepage: kit.homepage.clone(),
+            license: kit.license.clone(),
+            uri: kit.uri.clone(),
+            created: kit.created.clone(),
+            updated: kit.updated.clone(),
+        }
+    }
+
+    fn diff_designs(
+        before: &KitFullDto,
+        after: &KitFullDto,
+    ) -> (Vec<DesignFullDto>, Vec<DesignIdDto>, Vec<DesignFullDto>, Vec<DesignDiffPatch>) {
+        let bm: HashMap<Id, &DesignFullDto> = before
+            .designs
+            .iter()
+            .map(|d| (d.id.clone(), d))
+            .collect();
+        let am: HashMap<Id, &DesignFullDto> = after
+            .designs
+            .iter()
+            .map(|d| (d.id.clone(), d))
+            .collect();
+        let kb: HashSet<Id> = bm.keys().cloned().collect();
+        let ka: HashSet<Id> = am.keys().cloned().collect();
+        let mut added: Vec<DesignFullDto> = Vec::new();
+        let mut removed: Vec<DesignIdDto> = Vec::new();
+        let mut replaced: Vec<DesignFullDto> = Vec::new();
+        let mut patches: Vec<DesignDiffPatch> = Vec::new();
+        for id in ka.difference(&kb) {
+            added.push((**am.get(id).expect("k")).clone());
+        }
+        for id in kb.difference(&ka) {
+            removed.push(DesignIdDto { id: id.clone() });
+        }
+        for id in ka.intersection(&kb) {
+            let b = *bm.get(id).expect("b");
+            let a = *am.get(id).expect("a");
+            if b == a {
+                continue;
+            }
+            let pdd = DesignDiff::between(b, a);
+            if pdd == DesignDiff::default() {
+                if design_metadata_differed(b, a) {
+                    let mut t = b.clone();
+                    merge_full_design_except_scenes(&mut t, a);
+                    if t == *a {
+                        // metadata-only: record full `after` body
+                        replaced.push(a.clone());
+                    } else {
+                        replaced.push(a.clone());
+                    }
+                } else {
+                    replaced.push(a.clone());
+                }
+            } else {
+                let mut temp = b.clone();
+                apply_design_full_dto(&mut temp, &pdd);
+                if temp == *a {
+                    patches.push(DesignDiffPatch {
+                        design_id: id.clone(),
+                        diff: pdd,
+                    });
+                } else {
+                    if design_metadata_differed(b, a) {
+                        merge_full_design_except_scenes(&mut temp, a);
+                    }
+                    if temp == *a {
+                        patches.push(DesignDiffPatch {
+                            design_id: id.clone(),
+                            diff: pdd,
+                        });
+                    } else {
+                        replaced.push(a.clone());
+                    }
+                }
+            }
+        }
+        (added, removed, replaced, patches)
+    }
+
+    /// Apply a [`KitMetadataDto`] to a [`KitFullDto`].
+    pub fn apply_metadata_to_kit_dto(kit: &mut KitFullDto, m: &KitMetadataDto) {
+        if kit.id != m.id {
+            // Keep kit root id; only merge scalars
+        }
+        kit.name = m.name.clone();
+        kit.description = m.description.clone();
+        kit.icon = m.icon.clone();
+        kit.image = m.image.clone();
+        kit.preview = m.preview.clone();
+        kit.version = m.version.clone();
+        kit.remote = m.remote.clone();
+        kit.homepage = m.homepage.clone();
+        kit.license = m.license.clone();
+        kit.uri = m.uri.clone();
+        kit.created = m.created.clone();
+        kit.updated = m.updated.clone();
+    }
+
+    fn diff_id_list<T: PartialEq + Clone>(
+        before: &[T],
+        after: &[T],
+        get_id: impl Fn(&T) -> &Id,
+    ) -> (Vec<T>, Vec<Id>, Vec<T>) {
+        let bm: HashMap<Id, &T> = before.iter().map(|t| (get_id(t).clone(), t)).collect();
+        let am: HashMap<Id, &T> = after.iter().map(|t| (get_id(t).clone(), t)).collect();
+        let kb: HashSet<Id> = bm.keys().cloned().collect();
+        let ka: HashSet<Id> = am.keys().cloned().collect();
+        let mut added = Vec::new();
+        let mut removed = Vec::new();
+        let mut modified = Vec::new();
+        for id in ka.difference(&kb) {
+            added.push((**am.get(id).expect("a")).clone());
+        }
+        for id in kb.difference(&ka) {
+            removed.push(id.clone());
+        }
+        for id in ka.intersection(&kb) {
+            let b = *bm.get(id).expect("b");
+            let a = *am.get(id).expect("a");
+            if b != a {
+                modified.push(a.clone());
+            }
+        }
+        (added, removed, modified)
+    }
+
+    /// Apply a [`KitDiff`] to a [`KitFullDto`]. Must be applied to the same snapshot shape the diff
+    /// was computed from (e.g. replay from an initial or checkpoint state).
+    pub fn apply_to_dto(s: &KitFullDto, d: &KitDiff) -> KitFullDto {
+        let mut out = s.clone();
+        if let Some(m) = &d.kit_metadata {
+            apply_metadata_to_kit_dto(&mut out, m);
+        }
+        // remove
+        for e in &d.removed_types {
+            out.types.retain(|t| t.id != e.id);
+        }
+        for e in &d.removed_designs {
+            out.designs.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_files {
+            out.files.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_folders {
+            out.folders.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_authors {
+            out.authors.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_concepts {
+            out.concepts.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_tags {
+            out.tags.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_qualities {
+            out.qualities.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_props {
+            out.props.retain(|x| x.id != e.id);
+        }
+        for e in &d.removed_attributes {
+            out.attributes.retain(|x| x.id != e.id);
+        }
+        // patch designs
+        for p in &d.patched_designs {
+            if let Some(dsgn) = out.designs.iter_mut().find(|dsg| dsg.id == p.design_id) {
+                apply_design_full_dto(dsgn, &p.diff);
+            }
+        }
+        // full design replacements
+        for nd in &d.replaced_full_designs {
+            if let Some(i) = out
+                .designs
+                .iter()
+                .position(|dsgn| dsgn.id == nd.id)
+            {
+                out.designs[i] = nd.clone();
+            } else {
+                out.designs.push(nd.clone());
+            }
+        }
+        // add
+        for t in &d.added_types {
+            out.types.push(t.clone());
+        }
+        for t in &d.added_files {
+            out.files.push(t.clone());
+        }
+        for t in &d.added_folders {
+            out.folders.push(t.clone());
+        }
+        for t in &d.added_authors {
+            out.authors.push(t.clone());
+        }
+        for t in &d.added_concepts {
+            out.concepts.push(t.clone());
+        }
+        for t in &d.added_tags {
+            out.tags.push(t.clone());
+        }
+        for t in &d.added_qualities {
+            out.qualities.push(t.clone());
+        }
+        for t in &d.added_props {
+            out.props.push(t.clone());
+        }
+        for t in &d.added_attributes {
+            out.attributes.push(t.clone());
+        }
+        for t in &d.added_designs {
+            out.designs.push(t.clone());
+        }
+        // modify (replace by id)
+        for t in &d.modified_types {
+            if let Some(i) = out.types.iter().position(|x| x.id == t.id) {
+                out.types[i] = t.clone();
+            }
+        }
+        for t in &d.modified_files {
+            if let Some(i) = out.files.iter().position(|x| x.id == t.id) {
+                out.files[i] = t.clone();
+            }
+        }
+        for t in &d.modified_folders {
+            if let Some(i) = out.folders.iter().position(|x| x.id == t.id) {
+                out.folders[i] = t.clone();
+            }
+        }
+        for t in &d.modified_authors {
+            if let Some(i) = out.authors.iter().position(|x| x.id == t.id) {
+                out.authors[i] = t.clone();
+            }
+        }
+        for t in &d.modified_concepts {
+            if let Some(i) = out.concepts.iter().position(|x| x.id == t.id) {
+                out.concepts[i] = t.clone();
+            }
+        }
+        for t in &d.modified_tags {
+            if let Some(i) = out.tags.iter().position(|x| x.id == t.id) {
+                out.tags[i] = t.clone();
+            }
+        }
+        for t in &d.modified_qualities {
+            if let Some(i) = out.qualities.iter().position(|x| x.id == t.id) {
+                out.qualities[i] = t.clone();
+            }
+        }
+        for t in &d.modified_props {
+            if let Some(i) = out.props.iter().position(|x| x.id == t.id) {
+                out.props[i] = t.clone();
+            }
+        }
+        for t in &d.modified_attributes {
+            if let Some(i) = out.attributes.iter().position(|x| x.id == t.id) {
+                out.attributes[i] = t.clone();
+            }
+        }
+        out
+    }
+
+    impl KitDiff {
+        pub fn is_empty(&self) -> bool {
+            *self == KitDiff::default()
+        }
+
+        /// Structural kit delta from `before` to `after`.
+        pub fn between(before: &KitFullDto, after: &KitFullDto) -> Self {
+            let mut d = Self::default();
+            if before.name != after.name
+                || before.description != after.description
+                || before.icon != after.icon
+                || before.image != after.image
+                || before.preview != after.preview
+                || before.version != after.version
+                || before.remote != after.remote
+                || before.homepage != after.homepage
+                || before.license != after.license
+                || before.uri != after.uri
+                || before.created != after.created
+                || before.updated != after.updated
+            {
+                d.kit_metadata = Some(after_to_metadata_dto(after));
+            }
+            let (a_t, r_t, m_t) = diff_id_list(&before.types, &after.types, |t| &t.id);
+            d.added_types = a_t;
+            d.removed_types = r_t.iter().map(|i| TypeIdDto { id: i.clone() }).collect();
+            d.modified_types = m_t;
+            let (a_f, r_f, m_f) = diff_id_list(&before.files, &after.files, |t| &t.id);
+            d.added_files = a_f;
+            d.removed_files = r_f.iter().map(|i| FileIdDto { id: i.clone() }).collect();
+            d.modified_files = m_f;
+            let (a_fo, r_fo, m_fo) = diff_id_list(&before.folders, &after.folders, |t| &t.id);
+            d.added_folders = a_fo;
+            d.removed_folders = r_fo.iter().map(|i| FolderIdDto { id: i.clone() }).collect();
+            d.modified_folders = m_fo;
+            let (a_a, r_a, m_a) = diff_id_list(&before.authors, &after.authors, |t| &t.id);
+            d.added_authors = a_a;
+            d.removed_authors = r_a.iter().map(|i| AuthorIdDto { id: i.clone() }).collect();
+            d.modified_authors = m_a;
+            let (a_c, r_c, m_c) = diff_id_list(&before.concepts, &after.concepts, |t| &t.id);
+            d.added_concepts = a_c;
+            d.removed_concepts = r_c.iter().map(|i| ConceptIdDto { id: i.clone() }).collect();
+            d.modified_concepts = m_c;
+            let (a_ta, r_ta, m_ta) = diff_id_list(&before.tags, &after.tags, |t| &t.id);
+            d.added_tags = a_ta;
+            d.removed_tags = r_ta.iter().map(|i| TagIdDto { id: i.clone() }).collect();
+            d.modified_tags = m_ta;
+            let (a_q, r_q, m_q) = diff_id_list(&before.qualities, &after.qualities, |t| &t.id);
+            d.added_qualities = a_q;
+            d.removed_qualities = r_q
+                .iter()
+                .map(|i| QualityIdDto { id: i.clone() })
+                .collect();
+            d.modified_qualities = m_q;
+            let (a_p, r_p, m_p) = diff_id_list(&before.props, &after.props, |t| &t.id);
+            d.added_props = a_p;
+            d.removed_props = r_p.iter().map(|i| PropIdDto { id: i.clone() }).collect();
+            d.modified_props = m_p;
+            let (a_at, r_at, m_at) =
+                diff_id_list(&before.attributes, &after.attributes, |t| &t.id);
+            d.added_attributes = a_at;
+            d.removed_attributes = r_at
+                .iter()
+                .map(|i| AttributeIdDto { id: i.clone() })
+                .collect();
+            d.modified_attributes = m_at;
+            let (ad, rd, rfd, pds) = diff_designs(before, after);
+            d.added_designs = ad;
+            d.removed_designs = rd;
+            d.replaced_full_designs = rfd;
+            d.patched_designs = pds;
+            d
+        }
+
+        /// Inverse delta (swap `before`/`after` when computing).
+        pub fn invert_between(before: &KitFullDto, after: &KitFullDto) -> Self {
+            Self::between(after, before)
+        }
+
+        /// Apply to an in-memory [`KitStore`] by replacing the graph from a DTO.
+        pub fn apply(&self, kit: &KitStoreRef) -> crate::error::SetResult {
+            let before = kit
+                .read()
+                .map_err(|_| crate::error::SetError::LockPoisoned("kit".into()))?
+                .to_full_dto();
+            let after = apply_to_dto(&before, self);
+            KitStore::replace_from_full_dto(kit, after)
+        }
+    }
+}
+
+/// Forward and backward kit structural steps (see [`kit_diff::KitDiff`]).
+pub mod kit_change {
+    use serde::{Deserialize, Serialize};
+
+    use crate::kit::KitFullDto;
+    use crate::kit_diff::KitDiff;
+
+    #[derive(Clone, Debug, Serialize, Deserialize, Default)]
+    pub struct KitChange {
+        pub forward: KitDiff,
+        pub backward: KitDiff,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub before: Option<KitFullDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub after: Option<KitFullDto>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub author: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub time: Option<String>,
+    }
+
+    impl KitChange {
+        pub fn between(before: &KitFullDto, after: &KitFullDto) -> Option<Self> {
+            if before == after {
+                return None;
+            }
+            let forward = KitDiff::between(before, after);
+            let backward = KitDiff::between(after, before);
+            Some(KitChange {
+                forward,
+                backward,
+                before: Some(before.clone()),
+                after: Some(after.clone()),
+                author: None,
+                time: None,
+            })
+        }
+
+        pub fn apply_forward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
+            crate::kit_diff::apply_to_dto(s, &c.forward)
+        }
+
+        pub fn apply_backward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
+            crate::kit_diff::apply_to_dto(s, &c.backward)
+        }
+
+        /// Apply the forward step to a store (replaces the graph from DTO).
+        pub fn apply_forward(
+            c: &KitChange,
+            kit: &crate::kit::KitStoreRef,
+        ) -> crate::error::SetResult {
+            c.forward.apply(kit)
+        }
+
+        /// Apply the backward (undo) step to a store.
+        pub fn apply_backward(
+            c: &KitChange,
+            kit: &crate::kit::KitStoreRef,
+        ) -> crate::error::SetResult {
+            c.backward.apply(kit)
+        }
+    }
+}
+
+/// Semantics label for a [`kit_operation::KitOperation`].
+pub mod kit_operation {
+    use serde::{Deserialize, Serialize};
+
+    use crate::kit_change::KitChange;
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitOperationKind {
+        SetKitMetadata,
+        AddType,
+        RemoveType,
+        ModifyType,
+        AddDesign,
+        RemoveDesign,
+        ModifyDesign,
+        AddPiece,
+        RemovePiece,
+        Connect,
+        Disconnect,
+        ApplyDesignDiff,
+        ApplyKitDiff,
+        Other(String),
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitOperation {
+        pub kind: KitOperationKind,
+        pub change: KitChange,
+    }
+}
+
+/// Commands to a [`kit::KitStore`] (may or may not produce a [`kit_operation::KitOperation`]).
+pub mod kit_command {
+    use serde::Deserialize;
+
+    use crate::diff::DesignDiff;
+    use crate::error::Result;
+    use crate::id::Id;
+    use crate::kit::{KitStore, KitStoreRef};
+    use crate::kit_operation::{KitOperation, KitOperationKind};
+    use crate::piece::PieceFullDto;
+    use crate::events::EntityKind;
+
+    pub trait KitCommand: Send {
+        /// Mutate the kit, then return an operation to record, or `None` if the graph is unchanged.
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>>;
+    }
+
+    /// Wire-friendly commands wrapping existing RPC entry points.
+    pub enum BuiltinKitCommand {
+        ApplyDesignDiff {
+            design_id: String,
+            diff: DesignDiff,
+        },
+        AddChildPiece {
+            design_id: String,
+            piece: PieceFullDto,
+        },
+        RemoveChildPiece {
+            design_id: String,
+            piece_id: String,
+        },
+    }
+
+    impl KitCommand for BuiltinKitCommand {
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
+            match self {
+                BuiltinKitCommand::ApplyDesignDiff { design_id, diff } => {
+                    let before = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    KitStore::with_undo(kit, || {
+                        let mut g = kit
+                            .write()
+                            .map_err(|_| {
+                                crate::error::SetError::LockPoisoned("kit".into())
+                            })?;
+                        g.apply_design_diff(design_id, diff)
+                            .map_err(|e| {
+                                crate::error::SetError::Internal(
+                                    e.to_string(),
+                                )
+                            })
+                    })
+                    .map_err(|e| {
+                        crate::error::SemioError::InvalidOperation(e.to_string())
+                    })?;
+                    let after = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    if before == after {
+                        return Ok(None);
+                    }
+                    let change = crate::kit_change::KitChange::between(&before, &after)
+                        .ok_or_else(|| {
+                            crate::error::SemioError::InvalidOperation(
+                                "empty kit change after apply design diff".into(),
+                            )
+                        })?;
+                    Ok(Some(KitOperation {
+                        kind: KitOperationKind::ApplyDesignDiff,
+                        change,
+                    }))
+                }
+                BuiltinKitCommand::AddChildPiece { design_id, piece } => {
+                    let before = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    let diff = {
+                        let mut d = DesignDiff::default();
+                        d.added_pieces.push(piece.clone());
+                        d
+                    };
+                    KitStore::with_undo(kit, || {
+                        let mut g = kit
+                            .write()
+                            .map_err(|_| {
+                                crate::error::SetError::LockPoisoned("kit".into())
+                            })?;
+                        g.apply_design_diff(design_id, &diff)
+                            .map_err(|e| {
+                                crate::error::SetError::Internal(
+                                    e.to_string(),
+                                )
+                            })
+                    })
+                    .map_err(|e| {
+                        crate::error::SemioError::InvalidOperation(e.to_string())
+                    })?;
+                    let after = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    if before == after {
+                        return Ok(None);
+                    }
+                    let change = crate::kit_change::KitChange::between(&before, &after)
+                        .ok_or_else(|| {
+                            crate::error::SemioError::InvalidOperation(
+                                "empty kit change after add piece".into(),
+                            )
+                        })?;
+                    Ok(Some(KitOperation {
+                        kind: KitOperationKind::AddPiece,
+                        change,
+                    }))
+                }
+                BuiltinKitCommand::RemoveChildPiece {
+                    design_id,
+                    piece_id,
+                } => {
+                    let before = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    let diff = {
+                        use crate::piece::PieceIdDto;
+                        let mut d = DesignDiff::default();
+                        d.removed_pieces
+                            .push(PieceIdDto {
+                                id: Id::from(piece_id.as_str()),
+                            });
+                        d
+                    };
+                    KitStore::with_undo(kit, || {
+                        let mut g = kit
+                            .write()
+                            .map_err(|_| {
+                                crate::error::SetError::LockPoisoned("kit".into())
+                            })?;
+                        g.apply_design_diff(design_id, &diff)
+                            .map_err(|e| {
+                                crate::error::SetError::Internal(
+                                    e.to_string(),
+                                )
+                            })
+                    })
+                    .map_err(|e| {
+                        crate::error::SemioError::InvalidOperation(e.to_string())
+                    })?;
+                    let after = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    if before == after {
+                        return Ok(None);
+                    }
+                    let change = crate::kit_change::KitChange::between(&before, &after)
+                        .ok_or_else(|| {
+                            crate::error::SemioError::InvalidOperation(
+                                "empty kit change after remove piece".into(),
+                            )
+                        })?;
+                    Ok(Some(KitOperation {
+                        kind: KitOperationKind::RemovePiece,
+                        change,
+                    }))
+                }
+            }
+        }
+    }
+
+    /// Adapter for [`KitStore::apply_design_diff_rpc`].
+    #[derive(Debug, Deserialize)]
+    pub struct ApplyDesignDiffRpc {
+        #[serde(rename = "designId", default)]
+        pub design_id: String,
+        pub diff: serde_json::Value,
+    }
+
+    impl KitCommand for ApplyDesignDiffRpc {
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
+            let diff: DesignDiff = serde_json::from_value(self.diff.clone())
+                .map_err(crate::error::SemioError::from)?;
+            BuiltinKitCommand::ApplyDesignDiff {
+                design_id: self.design_id.clone(),
+                diff,
+            }
+            .apply(kit)
+        }
+    }
+
+    /// Adapter for [`KitStore::add_child_rpc`].
+    pub struct AddChildRpc {
+        pub parent_kind: EntityKind,
+        pub parent_id: String,
+        pub child_kind: EntityKind,
+        pub dto: serde_json::Value,
+    }
+
+    impl KitCommand for AddChildRpc {
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
+            match (self.parent_kind, self.child_kind) {
+                (EntityKind::Design, EntityKind::Piece) => {
+                    let piece: PieceFullDto = serde_json::from_value(self.dto.clone())
+                        .map_err(crate::error::SemioError::from)?;
+                    BuiltinKitCommand::AddChildPiece {
+                        design_id: self.parent_id.clone(),
+                        piece,
+                    }
+                    .apply(kit)
+                }
+                _ => Err(crate::error::SemioError::InvalidOperation(format!(
+                    "add_child not implemented for {:?} -> {:?}",
+                    self.parent_kind, self.child_kind
+                ))),
+            }
+        }
+    }
+
+    /// Adapter for [`KitStore::remove_child_rpc`].
+    pub struct RemoveChildRpc {
+        pub parent_kind: EntityKind,
+        pub parent_id: String,
+        pub child_kind: EntityKind,
+        pub child_id: String,
+    }
+
+    impl KitCommand for RemoveChildRpc {
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
+            match (self.parent_kind, self.child_kind) {
+                (EntityKind::Design, EntityKind::Piece) => {
+                    BuiltinKitCommand::RemoveChildPiece {
+                        design_id: self.parent_id.clone(),
+                        piece_id: self.child_id.clone(),
+                    }
+                    .apply(kit)
+                }
+                _ => Err(crate::error::SemioError::InvalidOperation(format!(
+                    "remove_child not implemented for {:?} -> {:?}",
+                    self.parent_kind, self.child_kind
+                ))),
+            }
+        }
+    }
+}
+
+/// Checkpoints, alternatives, and materialization of versioned kit state.
+pub mod history {
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
+
+    use crate::hash::HashWriter;
+    use crate::id::Id;
+    use crate::kit::KitFullDto;
+    use crate::kit_diff::KitDiff;
+    use crate::kit_operation::KitOperation;
+
+    /// Serializable snapshot of `initial + operations` on that path.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct MaterializedKit {
+        pub initial: KitFullDto,
+        pub operations: Vec<KitOperation>,
+        /// Same as calling [`Self::compute`] after construction.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub computed: Option<KitFullDto>,
+    }
+
+    impl MaterializedKit {
+        /// Fold all operations' forward diffs on top of `initial`.
+        pub fn compute(&self) -> KitFullDto {
+            self.operations.iter().fold(self.initial.clone(), |acc, op| {
+                crate::kit_change::KitChange::apply_forward_dto(&acc, &op.change)
+            })
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitCheckpoint {
+        pub id: Id,
+        pub parent: Option<Id>,
+        pub operations: Vec<KitOperation>,
+        pub message: Option<String>,
+        pub author: Option<String>,
+        pub time: Option<String>,
+        pub hash: String,
+    }
+
+    /// Ordered checkpoint DTOs + head + active alternative buffer for persist/reload.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitHistoryFullDto {
+        pub initial: KitFullDto,
+        pub checkpoints: Vec<KitCheckpoint>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub head: Option<Id>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub active_alternative: Option<Id>,
+        pub alternatives: Vec<(Id, Vec<KitOperation>)>,
+    }
+
+    /// Tree of checkpoints; operations after `head` live in per-alternative buffers.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitHistory {
+        pub initial: KitFullDto,
+        /// Checkpoint id -> node.
+        pub checkpoints: HashMap<Id, KitCheckpoint>,
+        /// Parent checkpoint id (None = from initial) to child ids.
+        pub children: HashMap<Option<Id>, Vec<Id>>,
+        /// Tip of the main committed line, or `None` if there are no checkpoints.
+        pub head: Option<Id>,
+        /// Named alternative op buffers after `head`.
+        pub alternatives: HashMap<Id, Vec<KitOperation>>,
+        /// Current alternative that receives new operations.
+        pub active_alternative: Option<Id>,
+    }
+
+    fn checkpoint_chain_tips_to_root(head: &Id, cps: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
+        let mut out = vec![head.clone()];
+        let mut cur = head.clone();
+        loop {
+            let p = cps
+                .get(&cur)
+                .and_then(|c| c.parent.as_ref().cloned());
+            match p {
+                Some(id) if out.contains(&id) => break,
+                Some(id) => {
+                    out.push(id.clone());
+                    cur = id;
+                }
+                None => break,
+            }
+        }
+        out.reverse();
+        out
+    }
+
+    impl KitHistory {
+        pub fn new(initial: KitFullDto) -> Self {
+            let first_alt = Id::new_v7();
+            let mut alts = HashMap::new();
+            alts.insert(first_alt.clone(), Vec::new());
+            Self {
+                initial,
+                checkpoints: HashMap::new(),
+                children: HashMap::new(),
+                head: None,
+                alternatives: alts,
+                active_alternative: Some(first_alt),
+            }
+        }
+
+        /// Serialize a stable wire shape (topo order is checkpoint depth-first from initial).
+        pub fn to_full_dto(&self) -> KitHistoryFullDto {
+            let mut cps: Vec<KitCheckpoint> = self
+                .checkpoints
+                .values()
+                .cloned()
+                .collect();
+            cps.sort_by_key(|c| c.id.to_string());
+            let alts: Vec<(Id, Vec<KitOperation>)> = self
+                .alternatives
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone()))
+                .collect();
+            KitHistoryFullDto {
+                initial: self.initial.clone(),
+                checkpoints: cps,
+                head: self.head.clone(),
+                active_alternative: self.active_alternative.clone(),
+                alternatives: alts,
+            }
+        }
+
+        /// Restore from [`KitHistoryFullDto`]. Does not re-validate the graph.
+        pub fn from_full_dto(d: KitHistoryFullDto) -> Self {
+            let map: HashMap<Id, KitCheckpoint> = d
+                .checkpoints
+                .into_iter()
+                .map(|c| (c.id.clone(), c))
+                .collect();
+            let mut children: HashMap<Option<Id>, Vec<Id>> = HashMap::new();
+            for c in map.values() {
+                children
+                    .entry(c.parent.clone())
+                    .or_default()
+                    .push(c.id.clone());
+            }
+            let alts: HashMap<Id, Vec<KitOperation>> = d
+                .alternatives
+                .into_iter()
+                .collect();
+            Self {
+                initial: d.initial,
+                checkpoints: map,
+                children,
+                head: d.head,
+                alternatives: alts,
+                active_alternative: d.active_alternative,
+            }
+        }
+
+        /// Ordered checkpoints from the root (first) to `head` (last), inclusive.
+        pub fn path_to_head(&self) -> Vec<Id> {
+            let Some(h) = &self.head else {
+                return Vec::new();
+            };
+            checkpoint_chain_tips_to_root(h, &self.checkpoints)
+        }
+
+        /// DTO for the last committed state on the main line (excludes uncommitted alternatives).
+        pub fn the_kit_dto(&self) -> KitFullDto {
+            self.materialize_dto(self.head.as_ref())
+        }
+
+        /// Full kit state at `at` checkpoint, or `initial` for `None`.
+        pub fn materialize_dto(&self, at: Option<&Id>) -> KitFullDto {
+            let Some(at_id) = at else {
+                return self.initial.clone();
+            };
+            let path = checkpoint_chain_tips_to_root(at_id, &self.checkpoints);
+            let mut s = self.initial.clone();
+            for id in &path {
+                if let Some(cp) = self.checkpoints.get(id) {
+                    for op in &cp.operations {
+                        s = crate::kit_change::KitChange::apply_forward_dto(&s, &op.change);
+                    }
+                }
+            }
+            s
+        }
+
+        /// Committed `head` plus all uncommitted operations in `alt` (if any).
+        pub fn materialize_with_alternative(&self, alt: Option<&Id>) -> KitFullDto {
+            let mut s = self.materialize_dto(self.head.as_ref());
+            if let Some(a) = alt {
+                if let Some(ops) = self.alternatives.get(a) {
+                    for op in ops {
+                        s = crate::kit_change::KitChange::apply_forward_dto(&s, &op.change);
+                    }
+                }
+            }
+            s
+        }
+
+        /// Diff between two materialized points (commits only; pass head ids).
+        pub fn diff_checkpoints(
+            &self,
+            a: Option<&Id>,
+            b: Option<&Id>,
+        ) -> KitDiff {
+            let da = self.materialize_dto(a);
+            let db = self.materialize_dto(b);
+            KitDiff::between(&da, &db)
+        }
+
+        /// Record an op in the current alternative (does not change committed history).
+        pub fn record_operation(&mut self, op: KitOperation) {
+            let id = self
+                .active_alternative
+                .as_ref()
+                .expect("active alternative")
+                .clone();
+            self.alternatives
+                .entry(id)
+                .or_default()
+                .push(op);
+        }
+
+        /// New empty alternative, becomes active. Resets the live buffer index only.
+        pub fn open_alternative(&mut self) -> Id {
+            let n = Id::new_v7();
+            self.alternatives.insert(n.clone(), Vec::new());
+            self.active_alternative = Some(n.clone());
+            n
+        }
+
+        /// Select which buffer receives new operations.
+        pub fn switch_alternative(&mut self, id: Option<Id>) {
+            self.active_alternative = id;
+        }
+
+        /// Clear an alternative's pending ops.
+        pub fn discard_alternative(&mut self, alt: Id) {
+            if let Some(e) = self.alternatives.get_mut(&alt) {
+                e.clear();
+            }
+        }
+
+        /// Move `alt`'s ops into a new checkpoint, parent the previous `head`, advance `head`.
+        pub fn promote_alternative(
+            &mut self,
+            alt: Id,
+            message: Option<String>,
+            author: Option<String>,
+            time: Option<String>,
+        ) -> Option<Id> {
+            let ops = self
+                .alternatives
+                .get(&alt)
+                .cloned()
+                .unwrap_or_default();
+            if ops.is_empty() {
+                return None;
+            }
+            let new_id = Id::new_v7();
+            let h = self.hash_for_new_checkpoint(self.head.as_ref(), &new_id, &ops);
+            let was_active = self.active_alternative.as_ref() == Some(&alt);
+            let parent = self.head.clone();
+            let cp = KitCheckpoint {
+                id: new_id.clone(),
+                parent: parent,
+                operations: ops,
+                message,
+                author,
+                time,
+                hash: h,
+            };
+            self.children
+                .entry(self.head.clone())
+                .or_default()
+                .push(new_id.clone());
+            self.checkpoints.insert(new_id.clone(), cp);
+            self.head = Some(new_id);
+            self.alternatives.remove(&alt);
+            if was_active {
+                self.open_alternative();
+            }
+            self.head.clone()
+        }
+
+        /// Hash for a checkpoint (content-addressed over parent + new id + op list).
+        fn hash_for_new_checkpoint(
+            &self,
+            parent: Option<&Id>,
+            new_id: &Id,
+            ops: &[KitOperation],
+        ) -> String {
+            let mut w = HashWriter::new();
+            w.tag("kit_cp");
+            if let Some(p) = parent {
+                w.str(p.as_str());
+            } else {
+                w.str("");
+            }
+            w.str(new_id.as_str());
+            w.str(
+                &ops
+                    .iter()
+                    .map(|o| {
+                        serde_json::to_string(o).unwrap_or_default()
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+            w.finalize()
+        }
+
+        /// [`MaterializedKit`] for the committed `head` line (no pending alternatives).
+        pub fn materialized_the_kit(&self) -> MaterializedKit {
+            let path = self.path_to_head();
+            let mut ops: Vec<KitOperation> = Vec::new();
+            for i in path {
+                if let Some(cp) = self.checkpoints.get(&i) {
+                    for o in &cp.operations {
+                        ops.push(o.clone());
+                    }
+                }
+            }
+            let mk = MaterializedKit {
+                initial: self.initial.clone(),
+                operations: ops,
+                computed: None,
+            };
+            let c = mk.compute();
+            MaterializedKit {
+                initial: mk.initial,
+                operations: mk.operations,
+                computed: Some(c),
+            }
         }
     }
 }
@@ -4272,6 +5578,7 @@ pub mod events {
         Type,
         Design,
         Piece,
+        Pose,
         Connection,
         Side,
         Port,
@@ -9060,14 +10367,37 @@ pub mod piece {
         pub designs: Vec<DesignStoreRef>,
     }
 
+    // #region 📍Pose
+    /// 📍Owned placement container for a piece's explicit plane and center.
+    #[derive(Debug, Default)]
+    pub struct PoseStore {
+        pub plane: Option<Plane>,
+        pub center: Option<Coordinate>,
+    }
+
+    impl PoseStore {
+        fn entity_ref(&self, piece_id: &Id) -> EntityRef {
+            EntityRef::new(EntityKind::Pose, piece_id.clone())
+        }
+
+        fn hash_into(&self, w: &mut HashWriter) {
+            if let Some(plane) = &self.plane {
+                plane.hash_into(w);
+            }
+            if let Some(center) = &self.center {
+                center.hash_into(w);
+            }
+        }
+    }
+    // #endregion
+
     /// Placed instance of a [`crate::typ::TypeStore`] inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
     pub struct PieceStore {
         pub id: Id,
         pub name: Option<String>,
         pub description: Option<String>,
-        pub plane: Option<Plane>,
-        pub center: Option<Coordinate>,
+        pub pose: PoseStore,
         pub scale: Option<f64>,
         pub mirror_plane: Option<Plane>,
         pub hidden: Option<bool>,
@@ -9197,8 +10527,7 @@ pub mod piece {
                 id: Id::new_v7(),
                 name: None,
                 description: None,
-                plane: None,
-                center: None,
+                pose: PoseStore::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -9222,8 +10551,7 @@ pub mod piece {
                 id,
                 name: None,
                 description: None,
-                plane: None,
-                center: None,
+                pose: PoseStore::default(),
                 scale: None,
                 mirror_plane: None,
                 hidden: None,
@@ -9251,12 +10579,16 @@ pub mod piece {
             EntityRef::new(EntityKind::Piece, self.id.clone())
         }
 
+        fn pose_entity_ref(&self) -> EntityRef {
+            self.pose.entity_ref(&self.id)
+        }
+
         pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
             self.id = d.id;
             self.name = d.name;
             self.description = d.description;
-            self.plane = d.plane;
-            self.center = d.center;
+            self.pose.plane = d.plane;
+            self.pose.center = d.center;
             self.scale = d.scale;
             self.mirror_plane = d.mirror_plane;
             self.hidden = d.hidden;
@@ -9392,13 +10724,19 @@ pub mod piece {
         }
 
         pub fn set_plane(&mut self, plane: Option<Plane>) -> crate::error::SetResult {
-            if self.plane == plane {
+            if self.pose.plane == plane {
                 return Ok(());
             }
-            self.plane = plane;
+            let pose_entity = self.pose_entity_ref();
+            self.pose.plane = plane;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: pose_entity.clone(),
+                field: "plane",
+            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
-                field: "plane",
+                field: "pose",
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -9406,13 +10744,19 @@ pub mod piece {
         }
 
         pub fn set_center(&mut self, center: Option<Coordinate>) -> crate::error::SetResult {
-            if self.center == center {
+            if self.pose.center == center {
                 return Ok(());
             }
-            self.center = center;
+            let pose_entity = self.pose_entity_ref();
+            self.pose.center = center;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: pose_entity.clone(),
+                field: "center",
+            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
             self.emit_ev(KitEvent::FieldChanged {
                 entity: self.entity_ref(),
-                field: "center",
+                field: "pose",
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -9452,6 +10796,7 @@ pub mod piece {
             }
             let previous_id = self.id.clone();
             let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
+            let previous_pose_entity = EntityRef::new(EntityKind::Pose, previous_id.clone());
             self.id = id;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: previous_entity.clone(),
@@ -9459,6 +10804,9 @@ pub mod piece {
             });
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
+            self.emit_ev(KitEvent::HashInvalidated {
+                entity: previous_pose_entity,
+            });
             self.emit_ev(KitEvent::HashInvalidated {
                 entity: previous_entity,
             });
@@ -9576,7 +10924,7 @@ pub mod piece {
         /// World-space plane from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_plane(&self) -> Plane {
             self.flat_plane.get_or_init(|| {
-                self.plane
+                self.pose.plane
                     .or_else(|| self.computed_flat_plane())
                     .unwrap_or_else(Plane::world_xy)
             })
@@ -9585,7 +10933,7 @@ pub mod piece {
         /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coordinate {
             self.flat_center.get_or_init(|| {
-                self.center
+                self.pose.center
                     .or_else(|| self.computed_flat_center())
                     .unwrap_or_default()
             })
@@ -9708,72 +11056,72 @@ pub mod piece {
         ) -> (Plane, Coordinate) {
             let Some(parent_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Some(child_type_ref) = child.type_ref.as_ref().and_then(|t| t.upgrade()) else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(connection) = connection_ref.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(parent_side) = connection.connected.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(child_side) = connection.connecting.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(parent_type) = parent_type_ref.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(child_type) = child_type_ref.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Some(parent_connector_ref) =
                 crate::design::resolve_connector_for_side(&parent_side, &parent_type)
             else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Some(child_connector_ref) =
                 crate::design::resolve_connector_for_side(&child_side, &child_type)
             else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(parent_connector) = parent_connector_ref.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             let Ok(child_connector) = child_connector_ref.read() else {
                 return (
-                    child.plane.unwrap_or_else(Plane::world_xy),
-                    child.center.unwrap_or_default(),
+                    child.pose.plane.unwrap_or_else(Plane::world_xy),
+                    child.pose.center.unwrap_or_default(),
                 );
             };
             (
@@ -9788,8 +11136,8 @@ pub mod piece {
 
         fn detach_flat_pose(&self) -> (Plane, Coordinate) {
             let fallback = (
-                self.plane.unwrap_or_else(Plane::world_xy),
-                self.center.unwrap_or_default(),
+                self.pose.plane.unwrap_or_else(Plane::world_xy),
+                self.pose.center.unwrap_or_default(),
             );
             let Some(parent_piece_ref) = self.parent_piece.as_ref().and_then(|p| p.upgrade())
             else {
@@ -9847,14 +11195,14 @@ pub mod piece {
             let Ok(child_connector) = child_connector_ref.read() else {
                 return fallback;
             };
-            let plane = self.plane.unwrap_or_else(|| {
+            let plane = self.pose.plane.unwrap_or_else(|| {
                 connection.compute_child_plane_for_flatten(
                     &parent_plane,
                     &parent_connector,
                     &child_connector,
                 )
             });
-            let center = self.center.unwrap_or_else(|| {
+            let center = self.pose.center.unwrap_or_else(|| {
                 connection.compute_child_center_for_flatten(parent_center, &parent_connector)
             });
             (plane, center)
@@ -9951,6 +11299,7 @@ pub mod piece {
             }
 
             let next = self
+                .pose
                 .center
                 .unwrap_or_default()
                 .add(&Coordinate::new(du, dv, 0.0));
@@ -9961,7 +11310,7 @@ pub mod piece {
 
         /// 🧭Move this piece in plane-space and invalidate descendant plane caches.
         pub fn r#move(&mut self, gap: f64, shift: f64, rise: f64) -> SetResult {
-            let base = self.plane.unwrap_or_else(|| self.flat_plane());
+            let base = self.pose.plane.unwrap_or_else(|| self.flat_plane());
             let translation = Self::domain_move_translation_world(&base, gap, shift, rise);
             let mut plane = base;
             plane.origin = plane.origin.add(&translation);
@@ -9985,8 +11334,8 @@ pub mod piece {
                         .map(|connection| connection.id.clone())
                 });
 
-            self.plane = Some(flat_plane);
-            self.center = Some(flat_center);
+            self.pose.plane = Some(flat_plane);
+            self.pose.center = Some(flat_center);
             self.parent_piece = None;
             self.parent_connection = None;
             self.hash_cache.invalidate();
@@ -10021,8 +11370,8 @@ pub mod piece {
                             flat_plane,
                             flat_center,
                         );
-                        child.plane = Some(child_plane);
-                        child.center = Some(child_center);
+                        child.pose.plane = Some(child_plane);
+                        child.pose.center = Some(child_center);
                         child.parent_piece = None;
                         child.parent_connection = None;
                         child.hash_cache.invalidate();
@@ -10069,12 +11418,7 @@ pub mod piece {
                 .str(self.id.as_str())
                 .opt_str(self.name.as_deref())
                 .opt_str(self.description.as_deref());
-            if let Some(p) = &self.plane {
-                p.hash_into(w);
-            }
-            if let Some(c) = &self.center {
-                c.hash_into(w);
-            }
+            self.pose.hash_into(w);
             w.opt_f64(self.scale);
             if let Some(p) = &self.mirror_plane {
                 p.hash_into(w);
@@ -10124,8 +11468,8 @@ pub mod piece {
                 id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
-                plane: self.plane,
-                center: self.center,
+                plane: self.pose.plane,
+                center: self.pose.center,
                 scale: self.scale,
                 mirror_plane: self.mirror_plane,
                 hidden: self.hidden,
@@ -11708,24 +13052,32 @@ pub mod session {
 
     use crate::diff::DesignChange;
     use crate::error::{Result, SemioError};
-    use crate::kit::{KitStore, KitStoreRef};
+    use crate::history::KitHistory;
+    use crate::id::Id;
+    use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+    use crate::kit_command::KitCommand;
+    use crate::kit_operation::{KitOperation, KitOperationKind};
 
-    /// In-memory transaction boundary around a [`KitStore`].
+    /// In-memory transaction boundary around a [`KitStore`] and [`KitHistory`].
     pub struct KitGraphSession {
         inner: Mutex<Inner>,
     }
 
     struct Inner {
         kit: KitStoreRef,
+        history: Arc<RwLock<KitHistory>>,
+        /// Legacy design-level undo stack (kept for [`Self::commit`] shim).
         undo: Vec<DesignChange>,
         redo: Vec<DesignChange>,
     }
 
     impl KitGraphSession {
         pub fn new(kit: KitStore) -> Self {
+            let initial = kit.to_full_dto();
             Self {
                 inner: Mutex::new(Inner {
                     kit: Arc::new(RwLock::new(kit)),
+                    history: Arc::new(RwLock::new(KitHistory::new(initial))),
                     undo: Vec::new(),
                     redo: Vec::new(),
                 }),
@@ -11733,19 +13085,49 @@ pub mod session {
         }
 
         pub fn from_ref(kit: KitStoreRef) -> Self {
+            let initial = kit
+                .read()
+                .expect("kit from_ref: read for initial history snapshot")
+                .to_full_dto();
             Self {
                 inner: Mutex::new(Inner {
                     kit,
+                    history: Arc::new(RwLock::new(KitHistory::new(initial))),
                     undo: Vec::new(),
                     redo: Vec::new(),
                 }),
             }
         }
 
+        /// Wire a pre-built [`KitHistory`] (e.g. deserialized) to a kit handle.
+        pub fn from_kit_and_history(kit: KitStoreRef, history: Arc<RwLock<KitHistory>>) -> Self {
+            Self {
+                inner: Mutex::new(Inner {
+                    kit,
+                    history,
+                    undo: Vec::new(),
+                    redo: Vec::new(),
+                }),
+            }
+        }
+
+        fn sync_kit_to_history(kit: &KitStoreRef, hist: &KitHistory) -> Result<()> {
+            let dto = hist.materialize_with_alternative(hist.active_alternative.as_ref());
+            KitStore::replace_from_full_dto(kit, dto)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))
+        }
+
         pub fn kit_handle(&self) -> Result<KitStoreRef> {
             self.inner
                 .lock()
                 .map(|g| g.kit.clone())
+                .map_err(|_| SemioError::LockPoisoned("session"))
+        }
+
+        pub fn history_handle(&self) -> Result<Arc<RwLock<KitHistory>>> {
+            self.inner
+                .lock()
+                .map(|g| g.history.clone())
                 .map_err(|_| SemioError::LockPoisoned("session"))
         }
 
@@ -11767,32 +13149,232 @@ pub mod session {
             Ok(f(&mut kit))
         }
 
+        /// Run a [`KitCommand`]; on success record a [`KitOperation`] in the active alternative.
+        pub fn execute<C: KitCommand>(&self, cmd: C) -> Result<Option<KitOperation>> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let op = cmd.apply(&g.kit)?;
+            if let Some(ref o) = op {
+                g.history
+                    .write()
+                    .map_err(|_| SemioError::LockPoisoned("history"))?
+                    .record_operation(o.clone());
+            }
+            Ok(op)
+        }
+
+        /// Promote the given alternative into a checkpoint (see [`KitHistory::promote_alternative`]).
+        pub fn checkpoint(
+            &self,
+            alt: Id,
+            message: Option<String>,
+            author: Option<String>,
+            time: Option<String>,
+        ) -> Result<Option<Id>> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let new_id = g
+                .history
+                .write()
+                .map_err(|_| SemioError::LockPoisoned("history"))?
+                .promote_alternative(alt, message, author, time);
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Self::sync_kit_to_history(&g.kit, &*h)?;
+            Ok(new_id)
+        }
+
+        /// Alias: promote the active alternative.
+        pub fn checkpoint_active(
+            &self,
+            message: Option<String>,
+            author: Option<String>,
+            time: Option<String>,
+        ) -> Result<Option<Id>> {
+            let alt = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?
+                .active_alternative
+                .clone()
+                .ok_or_else(|| SemioError::InvalidOperation("no active alternative".into()))?;
+            self.checkpoint(alt, message, author, time)
+        }
+
+        /// Last committed main-line [`KitFullDto`] (no uncommitted alternatives).
+        pub fn the_kit(&self) -> Result<KitFullDto> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Ok(h.the_kit_dto())
+        }
+
+        /// Materialize at a checkpoint id, or `initial` when `None`.
+        pub fn materialize_at(&self, at: Option<Id>) -> Result<KitFullDto> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Ok(h.materialize_dto(at.as_ref()))
+        }
+
+        pub fn open_alternative(&self) -> Result<Id> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let id = g
+                .history
+                .write()
+                .map_err(|_| SemioError::LockPoisoned("history"))?
+                .open_alternative();
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Self::sync_kit_to_history(&g.kit, &*h)?;
+            Ok(id)
+        }
+
+        pub fn switch_alternative(&self, id: Option<Id>) -> Result<()> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            g.history
+                .write()
+                .map_err(|_| SemioError::LockPoisoned("history"))?
+                .switch_alternative(id);
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Self::sync_kit_to_history(&g.kit, &*h)?;
+            Ok(())
+        }
+
+        pub fn promote_alternative(
+            &self,
+            alt: Id,
+            message: Option<String>,
+            author: Option<String>,
+            time: Option<String>,
+        ) -> Result<Option<Id>> {
+            self.checkpoint(alt, message, author, time)
+        }
+
+        pub fn diff_checkpoints(&self, a: Option<Id>, b: Option<Id>) -> Result<crate::kit_diff::KitDiff> {
+            let g = self
+                .inner
+                .lock()
+                .map_err(|_| SemioError::LockPoisoned("session"))?;
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            Ok(h.diff_checkpoints(a.as_ref(), b.as_ref()))
+        }
+
+        /// Deprecated: use [`Self::execute`]. Lifts a design-scoped change into a kit-scoped
+        /// [`KitChange`] and records it in the active alternative.
         pub fn commit(&self, change: DesignChange) -> Result<()> {
             let mut g = self
                 .inner
                 .lock()
                 .map_err(|_| SemioError::LockPoisoned("session"))?;
-            g.undo.push(change);
+            let author = change.author.clone();
+            let time = change.time.clone();
+            g.undo.push(change.clone());
             g.redo.clear();
+            let current = g
+                .kit
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("kit"))?
+                .to_full_dto();
+            let op = if let (Some(b), Some(_a)) = (change.before, change.after) {
+                let mut before_k = current.clone();
+                if let Some(i) = before_k.designs.iter().position(|d| d.id == b.id) {
+                    before_k.designs[i] = b;
+                } else {
+                    before_k.designs.push(b);
+                }
+                let mut kc = crate::kit_change::KitChange::between(&before_k, &current)
+                    .ok_or_else(|| {
+                        SemioError::InvalidOperation(
+                            "commit: no kit delta between before and current kit".into(),
+                        )
+                    })?;
+                kc.author = author;
+                kc.time = time;
+                KitOperation {
+                    kind: KitOperationKind::ApplyDesignDiff,
+                    change: kc,
+                }
+            } else {
+                KitOperation {
+                    kind: KitOperationKind::Other("legacy-DesignChange-without-snapshots".into()),
+                    change: crate::kit_change::KitChange {
+                        forward: crate::kit_diff::KitDiff::default(),
+                        backward: crate::kit_diff::KitDiff::default(),
+                        before: None,
+                        after: None,
+                        author,
+                        time,
+                    },
+                }
+            };
+            g.history
+                .write()
+                .map_err(|_| SemioError::LockPoisoned("history"))?
+                .record_operation(op);
             Ok(())
         }
 
+        /// Length of the active alternative's pending operations (primary "depth" for branching).
         pub fn undo_depth(&self) -> Result<usize> {
             let g = self
                 .inner
                 .lock()
                 .map_err(|_| SemioError::LockPoisoned("session"))?;
-            Ok(g.undo.len())
+            let h = g
+                .history
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("history"))?;
+            let aid = h
+                .active_alternative
+                .as_ref()
+                .ok_or_else(|| SemioError::InvalidOperation("no active alternative".into()))?;
+            Ok(h
+                .alternatives
+                .get(aid)
+                .map(|v| v.len())
+                .unwrap_or(0))
         }
 
+        /// Always zero in this VCS model (alternatives are not a redo stack).
         pub fn redo_depth(&self) -> Result<usize> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            Ok(g.redo.len())
+            Ok(0)
         }
 
+        /// Last op in the active alternative, if any.
         pub fn last_change(&self) -> Result<Option<DesignChange>> {
             let g = self
                 .inner
@@ -15942,6 +17524,157 @@ pub mod wasm {
             .replace(|c: char| c.is_whitespace(), "-")
     }
 
+    #[wasm_bindgen(js_name = kitHistoryNew)]
+    pub fn wasm_kit_history_new(dto: JsValue) -> Result<JsValue, JsValue> {
+        let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h = crate::history::KitHistory::new(dto);
+        serde_wasm_bindgen::to_value(&h.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryTheKit)]
+    pub fn wasm_kit_history_the_kit(dto: JsValue) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h = crate::history::KitHistory::from_full_dto(wire);
+        let k = h.the_kit_dto();
+        serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryMaterializeAt)]
+    pub fn wasm_kit_history_materialize_at(dto: JsValue, at: Option<String>) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h = crate::history::KitHistory::from_full_dto(wire);
+        let at_id = at.map(crate::id::Id::from);
+        let k = h.materialize_dto(at_id.as_ref());
+        serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryDiff)]
+    pub fn wasm_kit_history_diff(
+        dto: JsValue,
+        a: Option<String>,
+        b: Option<String>,
+    ) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h = crate::history::KitHistory::from_full_dto(wire);
+        let aid = a.map(crate::id::Id::from);
+        let bid = b.map(crate::id::Id::from);
+        let d = h.diff_checkpoints(aid.as_ref(), bid.as_ref());
+        serde_wasm_bindgen::to_value(&d).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryOpenAlternative)]
+    pub fn wasm_kit_history_open_alternative(dto: JsValue) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut h = crate::history::KitHistory::from_full_dto(wire);
+        let id = h.open_alternative();
+        let wire = h.to_full_dto();
+        serde_wasm_bindgen::to_value(&serde_json::json!({
+            "history": wire,
+            "alternativeId": id,
+        }))
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistorySwitchAlternative)]
+    pub fn wasm_kit_history_switch_alternative(
+        dto: JsValue,
+        active: Option<String>,
+    ) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut h = crate::history::KitHistory::from_full_dto(wire);
+        h.switch_alternative(active.map(crate::id::Id::from));
+        let wire = h.to_full_dto();
+        serde_wasm_bindgen::to_value(&wire).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryCheckpoint)]
+    pub fn wasm_kit_history_checkpoint(
+        dto: JsValue,
+        message: Option<String>,
+        author: Option<String>,
+        time: Option<String>,
+    ) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut h = crate::history::KitHistory::from_full_dto(wire);
+        let alt = h
+            .active_alternative
+            .clone()
+            .ok_or_else(|| JsValue::from_str("no active alternative"))?;
+        let new_id = h.promote_alternative(alt, message, author, time);
+        let wire = h.to_full_dto();
+        serde_wasm_bindgen::to_value(&serde_json::json!({
+            "history": wire,
+            "checkpointId": new_id,
+        }))
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryPromoteAlternative)]
+    pub fn wasm_kit_history_promote_alternative(
+        dto: JsValue,
+        alt: String,
+        message: Option<String>,
+        author: Option<String>,
+        time: Option<String>,
+    ) -> Result<JsValue, JsValue> {
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut h = crate::history::KitHistory::from_full_dto(wire);
+        let new_id = h.promote_alternative(
+            crate::id::Id::from(alt.as_str()),
+            message,
+            author,
+            time,
+        );
+        let wire = h.to_full_dto();
+        serde_wasm_bindgen::to_value(&serde_json::json!({
+            "history": wire,
+            "checkpointId": new_id,
+        }))
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = kitHistoryExecute)]
+    pub fn wasm_kit_history_execute(kit: JsValue, history: JsValue, cmd: JsValue) -> Result<JsValue, JsValue> {
+        use std::sync::{Arc, RwLock};
+
+        let kit_dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(history)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h = Arc::new(RwLock::new(crate::history::KitHistory::from_full_dto(wire)));
+        let kit_ref = KitStore::from_full_dto(kit_dto);
+        let apply: crate::kit_command::ApplyDesignDiffRpc = serde_wasm_bindgen::from_value(cmd)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let sess = crate::session::KitGraphSession::from_kit_and_history(kit_ref.clone(), h);
+        let op = sess
+            .execute(apply)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let h_out = sess
+            .history_handle()
+            .map_err(|e| JsValue::from_str(&e.to_string()))?
+            .read()
+            .map_err(|_| JsValue::from_str("history lock"))?
+            .to_full_dto();
+        let g = kit_ref
+            .read()
+            .map_err(|_| JsValue::from_str("kit lock"))?
+            .to_full_dto();
+        serde_wasm_bindgen::to_value(&serde_json::json!({
+            "kit": g,
+            "history": h_out,
+            "op": op,
+        }))
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     /// 🌐 Stateful [`KitStoreRef`] for web-worker-hosted mutations + event stream.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
@@ -16891,10 +18624,10 @@ mod tests {
             let leaf_read = leaf.read().expect("leaf read after fix");
             assert!(middle_read.parent_connection.is_none());
             assert!(leaf_read.parent_connection.is_none());
-            assert_eq!(middle_read.plane, Some(middle_plane));
-            assert_eq!(middle_read.center, Some(middle_center));
-            assert_eq!(leaf_read.plane, Some(leaf_plane));
-            assert_eq!(leaf_read.center, Some(leaf_center));
+            assert_eq!(middle_read.pose.plane, Some(middle_plane));
+            assert_eq!(middle_read.pose.center, Some(middle_center));
+            assert_eq!(leaf_read.pose.plane, Some(leaf_plane));
+            assert_eq!(leaf_read.pose.center, Some(leaf_center));
         }
     }
 
@@ -19290,6 +21023,103 @@ mod tests {
             });
         }
     }
+
+    mod history_tests {
+        use crate::history::KitHistory;
+        use crate::kit::KitStore;
+        use crate::kit_change::KitChange;
+        use crate::kit_diff::KitDiff;
+        use crate::kit_operation::{KitOperation, KitOperationKind};
+
+        #[test]
+        fn empty_history_the_kit_is_initial() {
+            let k = KitStore::new("h");
+            let initial = k.to_full_dto();
+            let h = KitHistory::new(initial.clone());
+            assert_eq!(h.the_kit_dto(), initial);
+        }
+
+        #[test]
+        fn kit_diff_apply_round_trip() {
+            let a = KitStore::new("a");
+            let mut b = KitStore::new("b");
+            b.set_name("renamed".into()).unwrap();
+            let d = KitDiff::between(&a.to_full_dto(), &b.to_full_dto());
+            let ka = KitStore::from_full_dto(a.to_full_dto());
+            d.apply(&ka).unwrap();
+            assert_eq!(ka.read().unwrap().name, "renamed");
+        }
+
+        #[test]
+        fn promote_creates_head_and_persists_ops() {
+            let initial = KitStore::new("p").to_full_dto();
+            let mut h = KitHistory::new(initial.clone());
+            let alt = h.active_alternative.as_ref().unwrap().clone();
+            let after = {
+                let mut d = initial.clone();
+                d.name = "ck".into();
+                d
+            };
+            let c = KitChange::between(&initial, &after).unwrap();
+            h.record_operation(KitOperation {
+                kind: KitOperationKind::SetKitMetadata,
+                change: c,
+            });
+            h.promote_alternative(alt, Some("m".into()), None, None)
+                .expect("checkpoint");
+            assert_eq!(h.the_kit_dto().name, "ck");
+            let back = h.materialize_dto(h.head.as_ref());
+            assert_eq!(back.name, "ck");
+            assert!(h.head.is_some());
+        }
+
+        #[test]
+        fn materialize_at_is_replay() {
+            let initial = KitStore::new("r").to_full_dto();
+            let mut h = KitHistory::new(initial);
+            let alt = h.active_alternative.as_ref().unwrap().clone();
+            let mut a = KitStore::new("r");
+            let before = a.to_full_dto();
+            a.set_name("two".into()).unwrap();
+            let kc = KitChange::between(&before, &a.to_full_dto()).unwrap();
+            h.record_operation(KitOperation {
+                kind: KitOperationKind::SetKitMetadata,
+                change: kc,
+            });
+            h.promote_alternative(alt, None, None, None)
+                .expect("ck");
+            let m1 = h.materialize_dto(h.head.as_ref());
+            let mut s = h.initial.clone();
+            for o in h.path_to_head().iter().filter_map(|x| h.checkpoints.get(x)) {
+                for op in &o.operations {
+                    s = KitChange::apply_forward_dto(&s, &op.change);
+                }
+            }
+            assert_eq!(m1, s);
+        }
+
+        #[test]
+        fn alternative_buffers_are_independent() {
+            let h0 = KitStore::new("alt").to_full_dto();
+            let mut his = KitHistory::new(h0);
+            let a1 = his.active_alternative.as_ref().unwrap().clone();
+            his.record_operation(KitOperation {
+                kind: KitOperationKind::SetKitMetadata,
+                change: {
+                    let mut d = his.initial.clone();
+                    d.name = "fromA".into();
+                    KitChange::between(&his.initial, &d).unwrap()
+                },
+            });
+            let a2 = his.open_alternative();
+            his.switch_alternative(Some(a1.clone()));
+            let m = his.materialize_with_alternative(Some(&a1));
+            assert_eq!(m.name, "fromA");
+            his.switch_alternative(Some(a2.clone()));
+            let m2 = his.materialize_with_alternative(Some(&a2));
+            assert_eq!(m2.name, "alt");
+        }
+    }
 }
 
 #[cfg(all(test, target_arch = "wasm32"))]
@@ -19339,6 +21169,15 @@ pub use design::{
     DesignStoreWeak,
 };
 pub use diff::{DesignChange, DesignDiff};
+pub use history::{KitCheckpoint, KitHistory, KitHistoryFullDto, MaterializedKit};
+pub use kit_change::KitChange;
+pub use kit_command::{
+    AddChildRpc, ApplyDesignDiffRpc, BuiltinKitCommand, KitCommand, RemoveChildRpc,
+};
+pub use kit_diff::{
+    apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,
+};
+pub use kit_operation::{KitOperation, KitOperationKind};
 pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{

@@ -2,33 +2,33 @@
 name: kit version control layer
 overview: "Add a VCS-like layer to `semio/rs` that promotes Kit from a mutable graph to a versioned artifact: an initial snapshot, a tree of checkpoints (each a list of operations), alternatives, and a materialization routine, with commands distinguished from change-producing operations."
 todos:
-  - id: kit-diff
-    content: Add pub mod kit_diff with KitDiff (kit-scope delta), between(), apply(), invert(), from_design_diff().
-    status: pending
-  - id: kit-change
-    content: Add pub mod kit_change with KitChange (forward+backward KitDiff plus metadata) and between/apply_forward/apply_backward.
-    status: pending
-  - id: kit-command
-    content: Add pub mod kit_command with KitCommand trait and BuiltinKitCommand enum; adapt existing RPC entry points (apply_design_diff_rpc, add_child_rpc, remove_child_rpc) as commands.
-    status: pending
-  - id: kit-operation
-    content: Add pub mod kit_operation with KitOperation { kind, change } and KitOperationKind enum (SetKitMetadata, AddType, RemoveType, AddDesign, AddPiece, ApplyDesignDiff, ApplyKitDiff, Other, ...).
-    status: pending
-  - id: history
-    content: Add pub mod history with KitCheckpoint (id, parent, operations, hash, message, author, time), KitHistory tree, alternatives map, head pointer, the_kit, materialize_at, diff, open/switch/promote/discard_alternative, content-addressable hashing via HashWriter.
-    status: pending
-  - id: session
-    content: Rewire KitGraphSession to own Arc<RwLock<KitHistory>>, add execute/checkpoint/the_kit/materialize_at/alternative APIs, keep old commit() as deprecated shim.
-    status: pending
-  - id: wasm
-    content: "Mirror new API in pub mod wasm: kitHistoryNew, kitHistoryExecute, kitHistoryCheckpoint, kitHistoryTheKit, kitHistoryMaterializeAt, kitHistoryOpenAlternative, kitHistorySwitchAlternative, kitHistoryPromoteAlternative, kitHistoryDiff."
-    status: pending
-  - id: serde
-    content: Add KitHistoryFullDto (topo-ordered checkpoints, head, alternatives) and implement Serialize/Deserialize on KitHistory.
-    status: pending
-  - id: tests
-    content: Add history_tests covering empty history, checkpoint round-trip, alternative isolation, promote semantics, materialize_at equivalence, KitDiff round-trip.
-    status: pending
+ - id: kit-diff
+   content: Add pub mod kit_diff with KitDiff (kit-scope delta), between(), apply(), invert(), from_design_diff().
+   status: completed
+ - id: kit-change
+   content: Add pub mod kit_change with KitChange (forward+backward KitDiff plus metadata) and between/apply_forward/apply_backward.
+   status: completed
+ - id: kit-command
+   content: Add pub mod kit_command with KitCommand trait and BuiltinKitCommand enum; adapt existing RPC entry points (apply_design_diff_rpc, add_child_rpc, remove_child_rpc) as commands.
+   status: completed
+ - id: kit-operation
+   content: Add pub mod kit_operation with KitOperation { kind, change } and KitOperationKind enum (SetKitMetadata, AddType, RemoveType, AddDesign, AddPiece, ApplyDesignDiff, ApplyKitDiff, Other, ...).
+   status: completed
+ - id: history
+   content: Add pub mod history with KitCheckpoint (id, parent, operations, hash, message, author, time), KitHistory tree, alternatives map, head pointer, the_kit, materialize_at, diff, open/switch/promote/discard_alternative, content-addressable hashing via HashWriter.
+   status: completed
+ - id: session
+   content: Rewire KitGraphSession to own Arc<RwLock<KitHistory>>, add execute/checkpoint/the_kit/materialize_at/alternative APIs, keep old commit() as deprecated shim.
+   status: completed
+ - id: wasm
+   content: "Mirror new API in pub mod wasm: kitHistoryNew, kitHistoryExecute, kitHistoryCheckpoint, kitHistoryTheKit, kitHistoryMaterializeAt, kitHistoryOpenAlternative, kitHistorySwitchAlternative, kitHistoryPromoteAlternative, kitHistoryDiff."
+   status: completed
+ - id: serde
+   content: Add KitHistoryFullDto (topo-ordered checkpoints, head, alternatives) and implement Serialize/Deserialize on KitHistory.
+   status: completed
+ - id: tests
+   content: Add history_tests covering empty history, checkpoint round-trip, alternative isolation, promote semantics, materialize_at equivalence, KitDiff round-trip.
+   status: completed
 isProject: false
 ---
 
