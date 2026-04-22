@@ -30,7 +30,7 @@ Es wird ein System bereitgestellt, in dem Gebäude als **Materialbanken** versta
 Es wird gezeigt, wie Materialien über den Lebenszyklus hinweg **identifizierbar und quantifizierbar** gemacht werden können.
 
 **Verbindungen**
-- [[bim-berlin-data-model]] → aktuelle, kurzfristige Bauteildaten
+- [[bim-berlin]] → aktuelle, kurzfristige Bauteildaten
 - [[concular]] → operative Nutzung von Bestandsdaten
 - [[zrs-crclr-house]] → Anwendung im Entwurf
 
@@ -46,8 +46,8 @@ Der Materialpass definiert, welche Informationen notwendig sind, um Materialien 
 Er liefert eine Referenz für die Entwicklung eines **standardisierten Datenmodells** für wiederverwendbare Bauteile.
 
 **Verbindungen**
-- [[concular-urban-mining]] → Datenerhebung im Bestand
-- [[be-ware-engineering]] → technische Ergänzung um Zustandsdaten
+- [[concular]] → Datenerhebung im Bestand
+- [[be-ware]] → technische Ergänzung um Zustandsdaten
 - [[arup-reuse]] → strukturierte Bewertungslogik
 
 ---
@@ -62,8 +62,8 @@ Es wird ein Ansatz verfolgt, bei dem Materialien nicht nur projektbezogen, sonde
 Dies adressiert die Frage, wie Bauteile nicht nur einmal, sondern **dauerhaft in digitalen Systemen verfügbar bleiben**.
 
 **Verbindungen**
-- [[bim-berlin-bauteilauktion]] → kurzfristige Verfügbarkeit vs. langfristige Dokumentation
-- [[concular-supply]] → Übergang von Daten zu Nutzung
+- [[bim-berlin]] → kurzfristige Verfügbarkeit vs. langfristige Dokumentation
+- [[concular]] → Übergang von Daten zu Nutzung
 - [[haus-der-materialisierung]] → reale Materialkreisläufe
 
 ---
@@ -128,12 +128,9 @@ Dies adressiert die Frage, wie Bauteile nicht nur einmal, sondern **dauerhaft in
 
 ## Connections
 
-- [[bim-berlin-data-model]]
-- [[bim-berlin-bauteilauktion]]
+- [[bim-berlin]]
 - [[concular]]
-- [[concular-urban-mining]]
-- [[concular-supply]]
 - [[zrs-crclr-house]]
-- [[be-ware-engineering]]
+- [[be-ware]]
 - [[arup-reuse]]
 - [[haus-der-materialisierung]]

@@ -36,7 +36,7 @@ Besonders relevant ist, dass nicht nur einzelne Materialien betrachtet werden, s
 Für das Forschungsvorhaben ist dies wichtig, weil damit der Übergang von **Bestand → Prüfung → Verarbeitung → struktureller Einsatz** als zusammenhängender Workflow sichtbar wird.
 
 **Verbindungen**
-- [[concular-urban-mining]] → frühere Bestandserfassung und Auditlogik
+- [[concular]] → frühere Bestandserfassung und Auditlogik
 - [[bim-berlin-reuse-pilots]] → reale Materialquellen und öffentliche Reuse-Projekte
 - [[zrs-crclr-house]] → Anwendung wiederverwendeter Bauteile im architektonischen und strukturellen Entwurf
 
@@ -74,9 +74,9 @@ der Übergang von einem **potenziell wiederverwendbaren Bauteil** zu einem **tat
 Es wird deutlich, dass Bauteildaten ohne Information zu **Bergung, Zwischenlagerung und Aufbereitung** nur begrenzten Wert für den Entwurf besitzen.
 
 **Verbindungen**
-- [[bim-berlin-supply]] → Sichtbarkeit und Angebotslogik auf Plattformebene
+- [[bim-berlin]] → Sichtbarkeit und Angebotslogik auf Plattformebene
 - [[kunst-stoffe-berlin]] → reale Materialflüsse außerhalb formaler Planungsketten
-- [[hdm-reuse-market-actors]] → lokale Versorgungs- und Lagerlogiken
+- [[haus-der-materialisierung]] → lokale Versorgungs- und Lagerlogiken
 
 ---
 
@@ -93,8 +93,8 @@ B(e) Ware macht deutlich, dass tragende Wiederverwendung andere Anforderungen an
 
 **Verbindungen**
 - [[arup-reuse]] → strukturierte Prüf- und Bewertungslogik für wiederverwendete Tragwerkselemente
-- [[zrs-crclr-house-design]] → gestalterische Integration tragender Reuse-Komponenten
-- [[bim-berlin-data-model]] → Frage, welche Metadaten für strukturelle Nutzbarkeit fehlen
+- [[zrs-crclr-house]] → gestalterische Integration tragender Reuse-Komponenten
+- [[bim-berlin]] → Frage, welche Metadaten für strukturelle Nutzbarkeit fehlen
 
 ---
 
@@ -112,7 +112,7 @@ Es wird damit deutlich, dass die Entwicklung eines Bauteilkatalogs nur dann sinn
 **Verbindungen**
 - [[museums-pavilion]]
 - [[bim-berlin-reuse-pilots]]
-- [[reallabor-zirkulaeres-bauen-design]]
+- [[biz-reallabor-zirkulaeres-bauen]]
 
 ---
 
@@ -180,17 +180,12 @@ Aus dem Projekt werden für die Entwicklung der Forschungsplattform folgende Anf
 ## Connections
 
 - [[concular]]
-- [[concular-urban-mining]]
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
 - [[bim-berlin-reuse-pilots]]
-- [[bim-berlin-supply]]
 - [[zrs-crclr-house]]
-- [[zrs-crclr-house-design]]
 - [[zrs-engineering]]
 - [[arup-reuse]]
 - [[museums-pavilion]]
-- [[reallabor-zirkulaeres-bauen-design]]
+- [[biz-reallabor-zirkulaeres-bauen]]
 - [[haus-der-materialisierung]]
-- [[hdm-reuse-market-actors]]
 - [[kunst-stoffe-berlin]]

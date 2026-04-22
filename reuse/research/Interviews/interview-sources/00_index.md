@@ -4,8 +4,7 @@
 
 ### Digital Platforms
 
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
 - [[madaster]]
 - [[concular]]
 - [[biz-reallabor-zirkulaeres-bauen]]
@@ -13,14 +12,12 @@
 ### Urban Mining
 
 - [[haus-der-materialisierung]]
-- [[kunst-stoffe-berlin]]
 - [[be-ware]]
 - [[bim-berlin-reuse-pilots]]
 
 ### Material Supply
 
-- [[kunst-stoffe-pankow]]
-- [[kunst-stoffe-hdm]]
+- [[kunst-stoffe-berlin]]
 
 ### Engineering
 
@@ -41,7 +38,7 @@
 
 ### Tier 1 – Strongest and Most Informative
 
-- [[bim-berlin-bauteilauktion]]
+- [[bim-berlin]]
 - [[concular]]
 - [[zrs-crclr-house]]
 - [[haus-der-materialisierung]]
@@ -51,7 +48,6 @@
 
 ### Tier 2 – Important Complements
 
-- [[bim-berlin-data-model]]
 - [[bim-berlin-reuse-pilots]]
 - [[zrs-engineering]]
 - [[biz-reallabor-zirkulaeres-bauen]]
@@ -65,7 +61,7 @@
 ## Key Bridge Actors
 
 - [[concular]] — Digital platforms / Urban mining / Material supply
-- [[bim-berlin-bauteilauktion]] — Digital platforms / Material supply / Urban mining
+- [[bim-berlin]] — Digital platforms / Material supply / Urban mining
 - [[zrs-crclr-house]] — Design / Engineering
 - [[haus-der-materialisierung]] — Urban mining / Material supply / Design ecosystem
 - [[be-ware]] — Urban mining / Engineering / Design experiments

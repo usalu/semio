@@ -29,7 +29,7 @@ Es wird deutlich, dass für Reuse eine **frühe Kopplung von Entwurf und Tragwer
 
 **Verbindungen**
 - [[zrs-crclr-house]]
-- [[be-ware-engineering]]
+- [[be-ware]]
 - [[concular]]
 
 ---
@@ -49,7 +49,7 @@ Dies bestätigt die Notwendigkeit, dass eine Plattform **mehrere Bewertungsebene
 **Verbindungen**
 - [[madaster]]
 - [[concular]]
-- [[reallabor-zirkulaeres-bauen-design]]
+- [[biz-reallabor-zirkulaeres-bauen]]
 
 ---
 
@@ -63,8 +63,8 @@ Konkrete Umsetzung von reuse-basiertem Tragwerk.
 Zeigt, wie strukturelle Entscheidungen aus **bestehenden Bauteilen abgeleitet** werden.
 
 **Verbindungen**
-- [[bim-berlin-data-model]]
-- [[be-ware-engineering]]
+- [[bim-berlin]]
+- [[be-ware]]
 - [[arup-reuse]]
 
 ---
@@ -123,9 +123,9 @@ Zeigt, wie strukturelle Entscheidungen aus **bestehenden Bauteilen abgeleitet** 
 ## Connections
 
 - [[zrs-crclr-house]]
-- [[zrs-crclr-house-design]]
-- [[be-ware-engineering]]
+- [[be-ware]]
 - [[arup-reuse]]
 - [[concular]]
 - [[madaster]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
+- [[biz-reallabor-zirkulaeres-bauen]]

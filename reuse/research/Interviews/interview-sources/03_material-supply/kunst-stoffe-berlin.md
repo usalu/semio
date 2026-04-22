@@ -37,13 +37,13 @@ Dies ist unmittelbar relevant für die Frage, wie eine Plattform zwischen **real
 
 **Verbindungen**
 - [[haus-der-materialisierung]] → lokales Kreislauf- und Netzwerksystem
-- [[bim-berlin-bauteilauktion]] → stärker formalisierte Bauteilvermittlung
+- [[bim-berlin]] → stärker formalisierte Bauteilvermittlung
 - [[concular]] → stärker audit- und prozessorientierte Bestandserfassung
 
 ---
 
 ### 2. Materialmarkt Pankow
-https://kunst-stoffe-berlin.de/materialmarkt-pankow/
+https://kunst-stoffe-berlin.de/materialmarkt-pankow/  
 https://kunst-stoffe-berlin.de/en/materialmarkt-pankow/
 
 **Relevanz für das Projekt**  
@@ -56,9 +56,9 @@ Damit wird deutlich, dass Materialverfügbarkeit im Reuse-Kontext oft **instabil
 Eine digitale Plattform müsste solche Bedingungen zumindest teilweise abbilden oder gezielt übersetzen.
 
 **Verbindungen**
-- [[bim-berlin-supply]] → stärker katalogisierte Angebotslogik
-- [[hdm-reuse-market-actors]] → lokale Versorgungsnetzwerke
-- [[reallabor-zirkulaeres-bauen-design]] → praktische Übersetzung in Gestaltung und Umsetzung
+- [[bim-berlin]] → stärker katalogisierte Angebotslogik
+- [[haus-der-materialisierung]] → lokale Versorgungsnetzwerke
+- [[biz-reallabor-zirkulaeres-bauen]] → praktische Übersetzung in Gestaltung und Umsetzung
 
 ---
 
@@ -74,9 +74,7 @@ Damit wird der Kontext deutlich, in den digitale Plattformen eingebettet sein m�
 
 **Verbindungen**
 - [[haus-der-materialisierung]]
-- [[haus-der-materialisierung-design]]
 - [[zusammenkunft-berlin]]
-- [[kunst-stoffe-pankow]]
 
 ---
 
@@ -94,12 +92,12 @@ Das betrifft direkt die geplante Plattform, da Verfügbarkeit nicht abstrakt, so
 **Verbindungen**
 - [[be-ware]] → zentrale Lagerung und Aufbereitung als Teil des Prozesses
 - [[bim-berlin-reuse-pilots]] → institutionelle Materialfreigabe
-- [[concular-supply]] → stärker planungsnahe Supply-Logik
+- [[concular]] → stärker planungsnahe Supply-Logik
 
 ---
 
 ### 5. Reuse als Bildungs- und Praxiskontext
-https://kunst-stoffe-berlin.de/en/w-i-r/
+https://kunst-stoffe-berlin.de/en/w-i-r/  
 https://kunst-stoffe-berlin.de/en/uba-projekt/
 
 **Relevanz für das Projekt**  
@@ -112,7 +110,7 @@ Für die Plattformentwicklung bedeutet dies, dass Nutzer:innen nicht nur Datens�
 
 **Verbindungen**
 - [[biz-reallabor-zirkulaeres-bauen]]
-- [[haus-der-materialisierung-design]]
+- [[haus-der-materialisierung]]
 - [[zusammenkunft-berlin]]
 
 ---
@@ -181,13 +179,9 @@ Aus Kunst-Stoffe werden für die Entwicklung der Forschungsplattform folgende An
 ## Connections
 
 - [[haus-der-materialisierung]]
-- [[haus-der-materialisierung-design]]
-- [[hdm-reuse-market-actors]]
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-supply]]
+- [[bim-berlin]]
+- [[bim-berlin-reuse-pilots]]
 - [[concular]]
-- [[concular-supply]]
-- [[concular-urban-mining]]
 - [[be-ware]]
 - [[biz-reallabor-zirkulaeres-bauen]]
 - [[zusammenkunft-berlin]]

@@ -32,10 +32,8 @@ Für das Forschungsvorhaben wird damit sichtbar, dass der für Entwerfende relev
 Concular liefert damit ein Referenzmodell dafür, wie ein erweiterter Workflow zwischen **Bestand**, **Bauteildaten**, **Entscheidungsgrundlagen** und **Umsetzung** strukturiert werden kann. citeturn504018view0
 
 **Verbindungen**
-- [[bim-berlin-bauteilauktion]] → stärker marktplatzorientierte Darstellung wiederverwendbarer Bauteile
+- [[bim-berlin]] → stärker marktplatzorientierte Darstellung wiederverwendbarer Bauteile
 - [[madaster]] → langfristige Material- und Ressourcenpässe
-- [[concular-urban-mining]] → Vertiefung der Audit- und Bestandserfassungslogik
-- [[concular-supply]] → Vertiefung der Angebots- und Platzierungslogik
 
 ---
 
@@ -51,7 +49,7 @@ Für das Projekt ist dies unmittelbar relevant, weil hier die Frage berührt wir
 Der Audit-Gedanke ist direkt anschlussfähig an die Entwicklung eines **maschinenlesbaren Bauteilkatalogs** mit Zustands-, Herkunfts- und Nutzungsdaten. citeturn504018view0
 
 **Verbindungen**
-- [[bim-berlin-data-model]] → sichtbare Metadaten auf Bauteilebene
+- [[bim-berlin]] → sichtbare Metadaten auf Bauteilebene
 - [[be-ware]] → technische Vertiefung bei Bewertung und Wiederverwendung tragender Systeme
 - [[haus-der-materialisierung]] → Gegenpol aus lokaler, weniger standardisierter Materialzirkulation
 
@@ -71,7 +69,7 @@ Ein digitales Inventar allein reicht nicht aus; entscheidend ist die Übersetzun
 **Verbindungen**
 - [[zrs-crclr-house]] → Anwendung wiederverwendeter Bauteile im architektonischen Entwurf
 - [[zrs-engineering]] → frühe strukturelle Integration in den Planungsprozess
-- [[reallabor-zirkulaeres-bauen-design]] → experimentelle und interdisziplinäre Entwurfsprozesse
+- [[biz-reallabor-zirkulaeres-bauen]] → experimentelle und interdisziplinäre Entwurfsprozesse
 
 ---
 
@@ -88,8 +86,8 @@ Concular zeigt, dass diese Funktionen in der Praxis bereits gekoppelt werden –
 
 **Verbindungen**
 - [[madaster]] → verwandte Fragen zu Ressourcenpass und Datenpersistenz
-- [[bim-berlin-bauteilauktion]] → Kontrast zwischen Handelslogik und Bewertungslogik
-- [[be-ware-engineering]] → Ergänzung um technische statt primär ökologische Bewertung
+- [[bim-berlin]] → Kontrast zwischen Handelslogik und Bewertungslogik
+- [[be-ware]] → Ergänzung um technische statt primär ökologische Bewertung
 
 ---
 
@@ -176,15 +174,12 @@ Aus Concular wird für die Entwicklung der Forschungsplattform abgeleitet:
 
 ## Connections
 
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
-- [[concular-urban-mining]]
-- [[concular-supply]]
+- [[bim-berlin]]
 - [[madaster]]
 - [[be-ware]]
-- [[be-ware-engineering]]
 - [[zrs-crclr-house]]
 - [[zrs-engineering]]
 - [[bim-berlin-reuse-pilots]]
 - [[haus-der-materialisierung]]
 - [[zusammenkunft-berlin]]
+- [[biz-reallabor-zirkulaeres-bauen]]

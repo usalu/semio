@@ -51,7 +51,7 @@ Für das Forschungsvorhaben ist dies besonders wertvoll, weil hier deutlich wird
 Zugleich wird sichtbar, dass für die Planung nicht nur Materialart und Menge, sondern auch **Herkunft, konstruktive Eignung und Einbindung in ein neues Gebäudesystem** relevant sind.
 
 **Verbindungen**
-- [[bim-berlin-data-model]] → Frage nach notwendigen Bauteil- und Materialdaten
+- [[bim-berlin]] → Frage nach notwendigen Bauteil- und Materialdaten
 - [[madaster]] → langfristige Dokumentation und Ressourcenlogik
 - [[kunst-stoffe-berlin]] → reale Materialquellen und heterogene Verfügbarkeit
 
@@ -68,8 +68,8 @@ Für das Forschungsvorhaben ist dies hoch relevant, weil genau jene Schritte sic
 Es wird deutlich, dass zwischen Fund eines Materials und dessen planerischer Nutzbarkeit eine zusätzliche Schicht aus **Prüfung, Abstimmung und Prozessorganisation** liegt.
 
 **Verbindungen**
-- [[be-ware-engineering]] → technische Bewertung und Logistik im Reuse-Prozess
-- [[concular-urban-mining]] → frühphasige Bestandserfassung und Audit
+- [[be-ware]] → technische Bewertung und Logistik im Reuse-Prozess
+- [[concular]] → frühphasige Bestandserfassung und Audit
 - [[arup-reuse]] → strukturierte Prüf- und Bewertungslogik
 
 ---
@@ -87,7 +87,7 @@ Für die Plattformentwicklung ist dies wichtig, weil Entscheidungsprozesse nicht
 
 **Verbindungen**
 - [[zusammenkunft-berlin]] → akteursbasierte und kollaborative Prozesslogik
-- [[haus-der-materialisierung-design]] → Gestaltung im Kontext lokaler Material- und Netzwerkbedingungen
+- [[haus-der-materialisierung]] → Gestaltung im Kontext lokaler Material- und Netzwerkbedingungen
 - [[biz-reallabor-zirkulaeres-bauen]] → interdisziplinäre Zusammenarbeit im Realmaßstab
 
 ---
@@ -106,7 +106,7 @@ Dies erweitert die Forschungsperspektive um die Frage, wie Plattformen nicht nur
 **Verbindungen**
 - [[biz-reallabor-zirkulaeres-bauen]] → praktische Erprobung und handwerkliche Umsetzung
 - [[haus-der-materialisierung]] → Reparatur-, Werkstatt- und Kreislaufkontexte
-- [[zrs-crclr-house-design]] → Gestaltung im Horizont zirkulärer Nutzung
+- [[zrs-crclr-house]] → Gestaltung im Horizont zirkulärer Nutzung
 
 ---
 
@@ -179,15 +179,12 @@ Aus dem Projekt werden für die Entwicklung der Forschungsplattform folgende Anf
 
 - [[zrs-engineering]]
 - [[zrs-crclr-house]]
-- [[zrs-crclr-house-design]]
 - [[be-ware]]
-- [[be-ware-engineering]]
 - [[arup-reuse]]
 - [[concular]]
-- [[concular-urban-mining]]
 - [[biz-reallabor-zirkulaeres-bauen]]
 - [[haus-der-materialisierung]]
-- [[haus-der-materialisierung-design]]
 - [[kunst-stoffe-berlin]]
 - [[madaster]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
+- [[zusammenkunft-berlin]]

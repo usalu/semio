@@ -34,9 +34,9 @@ Für das Forschungsvorhaben wird sichtbar, dass Wiederverwendung auch eine **kom
 Bauteile sind nicht nur physische Elemente, sondern können als **sichtbare Ressourcen und Lernobjekte** eingesetzt werden.
 
 **Verbindungen**
-- [[zrs-crclr-house-design]]
+- [[zrs-crclr-house]]
 - [[biz-reallabor-zirkulaeres-bauen]]
-- [[haus-der-materialisierung-design]]
+- [[haus-der-materialisierung]]
 
 ---
 
@@ -133,10 +133,11 @@ Für die Plattform bedeutet dies, dass neben Daten auch **Verständlichkeit, Dar
 
 ## Connections
 
-- [[zrs-crclr-house-design]]
+- [[zrs-crclr-house]]
 - [[zrs-engineering]]
 - [[arup-reuse]]
 - [[concular]]
 - [[biz-reallabor-zirkulaeres-bauen]]
 - [[kunst-stoffe-berlin]]
 - [[haus-der-materialisierung]]
+- [[be-ware]]

@@ -1,6 +1,6 @@
 # BIM Berlin – Bauteilauktion / Reuse-Datenmodell
 
-Tags: #digital-platform #material-supply #urban-mining #reuse #interview-source #priority-high
+Tags: #digital-platform #material-supply #urban-mining #public-sector #reuse #interview-source #priority-high
 
 ---
 
@@ -63,9 +63,8 @@ Die Prozesskette von **Bestand → Rückbau → Plattform → Wiederverwendung**
 Damit wird die Schnittstelle zwischen **Urban Mining und digitalem Katalog** sichtbar.
 
 **Verbindungen**
-- [[concular-urban-mining]] → systematisierte Bestandsaufnahme
+- [[concular]] → systematisierte Bestandsaufnahme
 - [[haus-der-materialisierung]] → lokale Kreislaufstrukturen
-- [[bim-berlin-supply]] → Überführung in Angebot
 
 ---
 
@@ -130,10 +129,9 @@ Aus den Beispielen wird abgeleitet:
 ## Connections
 
 - [[concular]]
-- [[concular-urban-mining]]
 - [[madaster]]
 - [[zrs-crclr-house]]
 - [[be-ware]]
 - [[haus-der-materialisierung]]
 - [[kunst-stoffe-berlin]]
-- [[bim-berlin-supply]]
+- [[bim-berlin-reuse-pilots]]

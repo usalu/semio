@@ -35,7 +35,7 @@ Für das Forschungsvorhaben wird damit sichtbar, dass Wiederverwendung durch **r
 Damit wird ein Gegenpol zu rein digitalen Plattformen sichtbar: Bauteile und Materialien müssen nicht nur dokumentiert, sondern auch **gesammelt, bereitgestellt und vermittelt** werden.
 
 **Verbindungen**
-- [[bim-berlin-bauteilauktion]] → digital sichtbares Angebot im Kontrast zu lokaler Kreislaufinfrastruktur
+- [[bim-berlin]] → digital sichtbares Angebot im Kontrast zu lokaler Kreislaufinfrastruktur
 - [[concular]] → stärker standardisierte Prozess- und Auditlogik
 - [[kunst-stoffe-berlin]] → operative Materialrettung und -verteilung im HdM-Kontext
 
@@ -52,9 +52,8 @@ Für das Projekt ist dies deshalb wichtig, weil hier sichtbar wird, dass Materia
 Damit wird eine zentrale Herausforderung für die Plattform konkret: Ein digitales System muss auch mit **nicht idealisierten, wechselhaften Beständen** umgehen können.
 
 **Verbindungen**
-- [[kunst-stoffe-pankow]] → vergleichbare Materialversorgung in anderer räumlicher Konstellation
-- [[hdm-reuse-market-actors]] → Netzwerk- und Partnerstruktur hinter solchen Materialflüssen
-- [[reallabor-zirkulaeres-bauen-design]] → Entwurfsfolgen begrenzter und variabler Materialverfügbarkeit
+- [[kunst-stoffe-berlin]] → vergleichbare Materialversorgung in anderen Standorten
+- [[biz-reallabor-zirkulaeres-bauen]] → Entwurfsfolgen begrenzter und variabler Materialverfügbarkeit
 
 ---
 
@@ -69,8 +68,8 @@ Für das Forschungsvorhaben ist dies unmittelbar relevant, weil damit deutlich w
 Es müssen auch **Leihen, Teilen, Schenken und temporäre Nutzung** als reale Zirkulationsformen mitgedacht werden. Diese Logiken sind für klassische Bauteilkataloge meist nicht ausreichend abgebildet.
 
 **Verbindungen**
-- [[bim-berlin-supply]] → stärker transaktionsorientierte Angebotslogik
-- [[concular-supply]] → stärker projektbezogene und beratungsnahe Materialplatzierung
+- [[bim-berlin]] → stärker transaktionsorientierte Angebotslogik
+- [[concular]] → stärker projektbezogene und beratungsnahe Materialplatzierung
 - [[zusammenkunft-berlin]] → gemeinschaftliche und akteursbasierte Organisationsform
 
 ---
@@ -87,9 +86,9 @@ Für das Projekt ist dies wichtig, weil Wiederverwendung in der Praxis häufig *
 Damit wird deutlich, dass eine Plattform nicht nur den Zustand eines Bauteils dokumentieren, sondern idealerweise auch Informationen zu **Bearbeitbarkeit, Aufbereitungsbedarf und Einsatzfähigkeit** abbilden müsste.
 
 **Verbindungen**
-- [[be-ware-engineering]] → technische Bewertung und Vorbereitung auf Wiederverwendung
+- [[be-ware]] → technische Bewertung und Vorbereitung auf Wiederverwendung
 - [[zrs-crclr-house]] → Einbindung vorhandener Komponenten in einen konkreten Entwurfsprozess
-- [[bim-berlin-data-model]] → Frage, wie solche Zustands- und Bearbeitungsinformationen digital modelliert werden können
+- [[bim-berlin]] → Frage, wie solche Zustands- und Bearbeitungsinformationen digital modelliert werden können
 
 ---
 
@@ -105,8 +104,6 @@ Wiederverwendung wird nicht allein technisch organisiert, sondern über Kooperat
 
 **Verbindungen**
 - [[zusammenkunft-berlin]] → kooperative Stadtentwicklungs- und Akteurslogik
-- [[haus-der-materialisierung-design]] → Gestaltung unter Bedingungen lokaler Materialkreisläufe
-- [[hdm-reuse-market-actors]] → Netzwerkperspektive auf Materialversorgung
 
 ---
 
@@ -183,14 +180,9 @@ Aus dem HdM wird für die Entwicklung der Forschungsplattform abgeleitet:
 ## Connections
 
 - [[kunst-stoffe-berlin]]
-- [[kunst-stoffe-pankow]]
-- [[kunst-stoffe-hdm]]
-- [[hdm-reuse-market-actors]]
-- [[haus-der-materialisierung-design]]
 - [[zusammenkunft-berlin]]
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-supply]]
+- [[bim-berlin]]
 - [[concular]]
-- [[concular-urban-mining]]
 - [[zrs-crclr-house]]
-- [[be-ware-engineering]]
+- [[be-ware]]
+- [[biz-reallabor-zirkulaeres-bauen]]

@@ -37,7 +37,7 @@ Dies ist für die Plattformentwicklung relevant, weil reuse-basierte Entwurfswer
 **Verbindungen**
 - [[haus-der-materialisierung]] → lokale Kreislauf- und Akteursinfrastruktur
 - [[biz-reallabor-zirkulaeres-bauen]] → interdisziplinäre Umsetzungs- und Erprobungspraxis
-- [[zrs-crclr-house-design]] → architektonische Integration von Reuse in konkrete Projekte
+- [[zrs-crclr-house]] → architektonische Integration von Reuse in konkrete Projekte
 
 ---
 
@@ -53,8 +53,7 @@ Dies ist für das Forschungsvorhaben besonders relevant, weil hier sichtbar wird
 Für die eigene Forschung lässt sich daraus ableiten, dass eine reuse-orientierte Plattform nicht nur Bauteile verwalten, sondern auch **kooperative Entwicklung, gemeinsame Sichtbarkeit und abgestimmte Entscheidungsprozesse** unterstützen sollte. citeturn273846view0
 
 **Verbindungen**
-- [[haus-der-materialisierung-design]] → Gestaltung im Kontext lokaler Kreisläufe
-- [[hdm-reuse-market-actors]] → materialbezogene Netzwerklogik
+- [[haus-der-materialisierung]] → Gestaltung im Kontext lokaler Kreisläufe
 - [[concular]] → stärker daten- und auditbasierte Prozessstruktur im Vergleich
 
 ---
@@ -92,7 +91,7 @@ Für die Plattformentwicklung bedeutet dies, dass nicht nur Ergebnisse, sondern 
 **Verbindungen**
 - [[zrs-engineering]] → frühe Integration technischer Logiken
 - [[arup-reuse]] → strukturierte Prozess- und Rollenlogik für Reuse
-- [[concular-urban-mining]] → Bestands- und Auditlogik als vorgelagerte Prozessphase
+- [[concular]] → Bestands- und Auditlogik als vorgelagerte Prozessphase
 
 ---
 
@@ -109,7 +108,7 @@ Entscheidend sind auch **Moderation, Vermittlung, Governance und die Fähigkeit,
 Gerade für das Human-Interface-Design der Plattform ist dies wichtig, weil spätere Nutzer:innen nicht als homogene Fachgruppe verstanden werden sollten. citeturn273846view0
 
 **Verbindungen**
-- [[haus-der-materialisierung-design]] → Gestaltung im erweiterten sozialen und materiellen Kontext
+- [[haus-der-materialisierung]] → Gestaltung im erweiterten sozialen und materiellen Kontext
 - [[biz-reallabor-zirkulaeres-bauen]] → interdisziplinäre Zusammenarbeit in der Umsetzung
 - [[kunst-stoffe-berlin]] → materialseitige Realität außerhalb rein planerischer Systeme
 
@@ -183,13 +182,10 @@ Aus ZUsammenKUNFT Berlin werden für die Entwicklung der Forschungsplattform fol
 ## Connections
 
 - [[haus-der-materialisierung]]
-- [[haus-der-materialisierung-design]]
-- [[hdm-reuse-market-actors]]
 - [[biz-reallabor-zirkulaeres-bauen]]
-- [[reallabor-zirkulaeres-bauen-design]]
 - [[concular]]
-- [[concular-urban-mining]]
-- [[zrs-crclr-house-design]]
+- [[zrs-crclr-house]]
 - [[zrs-engineering]]
+- [[arup-reuse]]
 - [[kunst-stoffe-berlin]]
 - [[museums-pavilion]]

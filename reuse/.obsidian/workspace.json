@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+                "file": "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "zusammenkunft-berlin"
+              "title": "haus-der-materialisierung"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#material-passport",
+                "query": "tag:#reuse",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+                "file": "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for zusammenkunft-berlin"
+              "title": "Backlinks for haus-der-materialisierung"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+                "file": "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from zusammenkunft-berlin"
+              "title": "Outgoing links from haus-der-materialisierung"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+                "file": "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of zusammenkunft-berlin"
+              "title": "Outline of haus-der-materialisierung"
             }
           }
         ]
@@ -185,6 +185,23 @@
   },
   "active": "98e5dd2c0b43ebdf",
   "lastOpenFiles": [
+    "research/Interviews/interview-sources/02_urban-mining/bim-berlin-reuse-pilots.md",
+    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin.md",
+    "research/Interviews/interview-sources/01_digital-platforms/biz-reallabor-zirkulaeres-bauen.md",
+    "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
+    "research/Interviews/interview-sources/00_index.md.tmp.49368.1776871608661",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871591021",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871584490",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871575348",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871567686",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md.tmp.49368.1776871560974",
+    "research/Interviews/interview-sources/05_design/museums-pavilion.md.tmp.49368.1776871553144",
+    "research/Interviews/interview-sources/05_design/museums-pavilion.md.tmp.49368.1776871547436",
+    "research/Interviews/interview-sources/04_engineering/zrs-engineering.md.tmp.49368.1776871541133",
+    "research/Interviews/interview-sources/04_engineering/zrs-engineering.md.tmp.49368.1776871534974",
+    "research/Interviews/interview-sources/04_engineering/zrs-crclr-house.md",
+    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-berlin.md",
+    "research/Interviews/interview-sources/02_urban-mining/be-ware.md",
     "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
     "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
     "research/Interviews/interview-sources/05_design/museums-pavilion.md",
@@ -201,22 +218,8 @@
     "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-hdm.md",
     "research/Interviews/interview-sources/02_urban-mining/kunst-stoffe-berlin.md",
     "research/Interviews/interview-sources/02_urban-mining/hdm-research-note.md",
-    "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
-    "research/Interviews/interview-sources/02_urban-mining/bim-berlin-reuse-pilots.md",
     "research/Interviews/interview-sources/02_urban-mining/be-ware-nbl.md",
     "research/Interviews/interview-sources/01_digital-platforms/madaster.md",
-    "research/Interviews/interview-sources/01_digital-platforms/concular.md",
-    "research/Interviews/interview-sources/01_digital-platforms/biz-reallabor-zirkulaeres-bauen.md",
-    "research/Interviews/interview-sources/01_digital-platforms/biz-berlin-enhanced.md",
-    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin-research-note.md",
-    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin.md",
-    "research/Interviews/interview-sources/02_urban-mining/be-ware.md",
-    "research/Interviews/interview-sources/05_design",
-    "research/Interviews/interview-sources/04_engineering",
-    "research/Interviews/interview-sources/03_material-supply",
-    "research/Interviews/interview-sources/02_urban-mining",
-    "research/Interviews/interview-sources/01_digital-platforms",
-    "research/Interviews/interview-sources",
-    "research/Interviews"
+    "research/Interviews/interview-sources/01_digital-platforms/concular.md"
   ]
 }

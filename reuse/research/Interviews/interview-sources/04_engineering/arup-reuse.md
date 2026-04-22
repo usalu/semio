@@ -53,8 +53,8 @@ Dies ist für das Forschungsvorhaben besonders wichtig, weil hier klar benannt w
 Damit wird eine direkte Brücke zum eigenen Bauteilkatalog und zur Frage nach **minimalen und erweiterten Metadatensätzen** geschlagen.
 
 **Verbindungen**
-- [[concular-urban-mining]] → Audit- und Bestandserfassungslogik
-- [[bim-berlin-data-model]] → sichtbare Metadaten auf Bauteilebene
+- [[concular]] → Audit- und Bestandserfassungslogik
+- [[bim-berlin]] → sichtbare Metadaten auf Bauteilebene
 - [[madaster]] → langfristige Dokumentation und Datenpersistenz
 
 ---
@@ -71,9 +71,9 @@ Für das Forschungsvorhaben ist dies besonders relevant, weil damit bestätigt w
 Die Forschung kann daraus ableiten, dass eine Plattform nicht nur ein Katalog, sondern auch ein **Entscheidungs- und Abstimmungsinstrument** sein muss.
 
 **Verbindungen**
-- [[zrs-crclr-house-design]] → entwurfsprägende Integration wiederverwendeter Bauteile
+- [[zrs-crclr-house]] → entwurfsprägende Integration wiederverwendeter Bauteile
 - [[biz-reallabor-zirkulaeres-bauen]] → reale interdisziplinäre Erprobung
-- [[haus-der-materialisierung-design]] → Gestaltung im Kontext materieller und organisatorischer Bedingungen
+- [[haus-der-materialisierung]] → Gestaltung im Kontext materieller und organisatorischer Bedingungen
 
 ---
 
@@ -94,7 +94,7 @@ Besonders relevant sind:
 - Rückkopplung in die Entwurfs- und Ausführungslogik
 
 **Verbindungen**
-- [[be-ware-engineering]] → technische Bewertung und Wiederverwendung tragender Systeme
+- [[be-ware]] → technische Bewertung und Wiederverwendung tragender Systeme
 - [[zrs-crclr-house]] → Integration wiederverwendeter Tragwerkselemente in ein neues Projekt
 - [[bim-berlin-reuse-pilots]] → reale Bestandsquellen für spätere Wiederverwendung
 
@@ -112,8 +112,8 @@ Für das Forschungsvorhaben ist dies besonders wichtig, weil hier deutlich wird,
 Damit wird die Relevanz eines Systems bestätigt, das nicht nur statische Bauteildaten, sondern auch **Status, Verfügbarkeit, Prüfstand und Prozesszeitpunkte** abbilden kann.
 
 **Verbindungen**
-- [[concular-supply]] → Übergang von Inventar zu Nutzung
-- [[bim-berlin-supply]] → Angebots- und Verfügbarkeitslogik
+- [[concular]] → Übergang von Inventar zu Nutzung
+- [[bim-berlin]] → Angebots- und Verfügbarkeitslogik
 - [[kunst-stoffe-berlin]] → reale Materialverfügbarkeit unter begrenzten Rahmenbedingungen
 
 ---
@@ -192,17 +192,12 @@ Aus Arup werden für die Entwicklung der Forschungsplattform folgende Anforderun
 ## Connections
 
 - [[concular]]
-- [[concular-urban-mining]]
-- [[concular-supply]]
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
-- [[bim-berlin-supply]]
+- [[bim-berlin]]
+- [[bim-berlin-reuse-pilots]]
 - [[madaster]]
 - [[zrs-engineering]]
 - [[zrs-crclr-house]]
-- [[zrs-crclr-house-design]]
 - [[be-ware]]
-- [[be-ware-engineering]]
 - [[biz-reallabor-zirkulaeres-bauen]]
 - [[haus-der-materialisierung]]
 - [[kunst-stoffe-berlin]]

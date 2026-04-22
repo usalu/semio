@@ -30,7 +30,7 @@ Es wird ein Gebäude beschrieben, das auf einem **Bestandsbau aufsetzt und diese
 Es wird sichtbar, dass Wiederverwendung nicht als nachgelagerte Entscheidung erfolgt, sondern **früh in die Entwurfslogik integriert werden muss**.
 
 **Verbindungen**
-- [[bim-berlin-bauteilauktion]] → Quelle realer Bauteile
+- [[bim-berlin]] → Quelle realer Bauteile
 - [[concular]] → vorgelagerte Bestandsanalyse und Audit
 - [[zrs-engineering]] → integrierte Tragwerksplanung
 
@@ -47,9 +47,9 @@ Damit wird die zentrale Herausforderung sichtbar:
 Das Tragwerk entsteht nicht aus idealisierten Parametern, sondern aus **vorhandenen, diskreten Elementen**.
 
 **Verbindungen**
-- [[be-ware-engineering]] → strukturelle Bewertung wiederverwendeter Systeme
+- [[be-ware]] → strukturelle Bewertung wiederverwendeter Systeme
 - [[arup-reuse]] → standardisierte Prüf- und Bewertungsansätze
-- [[bim-berlin-data-model]] → notwendige Bauteildaten
+- [[bim-berlin]] → notwendige Bauteildaten
 
 ---
 
@@ -63,9 +63,9 @@ Das Projekt kombiniert **Bestandsstruktur, neue Holzbauelemente und wiederverwen
 Es wird deutlich, dass reuse-basierter Entwurf immer eine **Hybridisierung von Systemen** bedeutet.
 
 **Verbindungen**
-- [[reallabor-zirkulaeres-bauen-design]] → experimentelle Entwurfsprozesse
+- [[biz-reallabor-zirkulaeres-bauen]] → experimentelle Entwurfsprozesse
 - [[madaster]] → Materialpässe für hybride Systeme
-- [[concular-supply]] → Verfügbarkeit unterschiedlicher Bauteiltypen
+- [[concular]] → Verfügbarkeit unterschiedlicher Bauteiltypen
 
 ---
 
@@ -136,11 +136,9 @@ Es wird deutlich, dass reuse-basierter Entwurf immer eine **Hybridisierung von S
 ## Connections
 
 - [[zrs-engineering]]
-- [[be-ware-engineering]]
+- [[be-ware]]
 - [[arup-reuse]]
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
 - [[concular]]
-- [[concular-urban-mining]]
-- [[reallabor-zirkulaeres-bauen-design]]
+- [[biz-reallabor-zirkulaeres-bauen]]
 - [[madaster]]

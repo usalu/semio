@@ -26,10 +26,9 @@ Direkt relevant für:
 - Schnittstelle zwischen Eigentümer, Rückbau und Plattform
 
 ## Connections
-- [[bim-berlin-bauteilauktion]]
-- [[bim-berlin-data-model]]
+- [[bim-berlin]]
 - [[haus-der-materialisierung]]
-- [[concular-urban-mining]]
+- [[concular]]
 
 ## External Links
 - https://www.bim-berlin.de/landesimmobilien/projekte-und-news/reuse-pilot-wasserrettungsstation-friedrichshagen
