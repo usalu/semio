@@ -278,7 +278,7 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import { KitProvider, KitRegistryProvider, useKitRegistrySafe } from "@semio/react";
+import { KitProvider, KitRegistryProvider, useActiveKitGuid, useKitRegistrySafe } from "@semio/react";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -7919,17 +7919,18 @@ function KitWasmRuntimeBridge(props: { kitGuid: string; children: React.ReactNod
  * React context provider scoping kit by guid.
  **/
 export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
-  const value = { guid: props.guid };
-  return React.createElement(
-    KitScopeContext.Provider,
-    { value },
-    React.createElement(KitWasmRuntimeBridge, { kitGuid: props.guid, children: props.children as any }),
-  );
+  return React.createElement(KitWasmRuntimeBridge, { kitGuid: props.guid, children: props.children as any });
 };
 /**
- * Hook returning the current kit scope context.
+ * Resolves the active kit guid: R3F {@link SceneContextBridge} re-provides {@link KitScopeContext};
+ * the DOM tree uses {@link useActiveKitGuid} from {@link KitProvider}.
  **/
-export const useKitScope = () => useContext(KitScopeContext);
+export const useKitScope = (): KitScope | null => {
+  const bridged = useContext(KitScopeContext);
+  if (bridged) return bridged;
+  const g = useActiveKitGuid();
+  return g != null && g !== "" ? { guid: g } : null;
+};
 /**
  * Hook returning whether a kit scope is active.
  **/

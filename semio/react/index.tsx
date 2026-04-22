@@ -108,6 +108,8 @@ type KitRuntimeContextValue = {
 	recentSetRejections: SetError[];
 	pushSetRejection: (e: SetError) => void;
 	canWrite: boolean;
+	/** Active kit guid: {@link KitProvider} `kitGuid` when set, otherwise `snapshot.kit.guid`. */
+	kitGuid?: string;
 	kitClient: KitStoreClient | null;
 	setFieldValue: (typeName: string, fieldName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
 	setObjectValue: (typeName: string, next: SetStateAction<any>, guid?: string, scope?: SchemaScope | null) => void;
@@ -845,6 +847,11 @@ export function useKitStoreClient(): KitStoreClient | null {
 	return runtime.kitClient;
 }
 
+/** Active kit guid from {@link KitProvider} runtime, or `undefined` outside a provider. */
+export function useActiveKitGuid(): string | undefined {
+	return React.useContext(KitRuntimeContext)?.kitGuid;
+}
+
 export type KitProviderProps = {
 	store?: KitStore;
 	/** When set with <KitRegistryProvider>, uses the registry entry for this kit (warm WASM worker). */
@@ -859,7 +866,7 @@ export type KitProviderProps = {
 
 export function KitProvider({
 	store: externalStore,
-	kitGuid,
+	kitGuid: kitGuidProp,
 	kitClient: kitClientProp,
 	backbone,
 	initialKit,
@@ -867,16 +874,16 @@ export function KitProvider({
 	fallback = null,
 }: KitProviderProps): React.ReactElement | null {
 	const registry = React.useContext(KitRegistryContext);
-	if (kitGuid && !registry) {
+	if (kitGuidProp && !registry) {
 		throw new Error("semio/react: <KitProvider kitGuid={...}> must be wrapped in <KitRegistryProvider>.");
 	}
-	const registryEntry = kitGuid && registry ? registry.get(kitGuid) : undefined;
+	const registryEntry = kitGuidProp && registry ? registry.get(kitGuidProp) : undefined;
 
 	const [internalStore, setInternalStore] = React.useState<KitStore | null>(externalStore ?? null);
 	const [kitClientState, setKitClientState] = React.useState<KitStoreClient | null>(kitClientProp ?? null);
 
 	React.useEffect(() => {
-		if (kitGuid) return;
+		if (kitGuidProp) return;
 		if (externalStore) {
 			setInternalStore(externalStore);
 			return;
@@ -888,10 +895,10 @@ export function KitProvider({
 		return () => {
 			disposed = true;
 		};
-	}, [kitGuid, externalStore, backbone, initialKit]);
+	}, [kitGuidProp, externalStore, backbone, initialKit]);
 
 	React.useEffect(() => {
-		if (kitGuid) return;
+		if (kitGuidProp) return;
 		if (kitClientProp !== undefined) {
 			setKitClientState(kitClientProp);
 			return;
@@ -913,16 +920,16 @@ export function KitProvider({
 			client?.dispose();
 			setKitClientState(null);
 		};
-	}, [kitGuid, externalStore, internalStore, kitClientProp]);
+	}, [kitGuidProp, externalStore, internalStore, kitClientProp]);
 
-	const store = kitGuid && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
-	const kitClient = kitGuid && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
+	const store = kitGuidProp && registryEntry ? registryEntry.store : (externalStore ?? internalStore);
+	const kitClient = kitGuidProp && registryEntry ? registryEntry.kitClient : (kitClientProp ?? kitClientState);
 
-	if (kitGuid && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
+	if (kitGuidProp && registry && !registryEntry) return React.createElement(React.Fragment, null, fallback);
 	if (!store) return React.createElement(React.Fragment, null, fallback);
 
 	React.useEffect(() => {
-		if (kitGuid) return;
+		if (kitGuidProp) return;
 		if (!kitClient) return;
 		return kitClient.subscribe(() => {
 			try {
@@ -934,7 +941,7 @@ export function KitProvider({
 				store.replace(asKitInstance(kitClient.getDto()));
 			}
 		});
-	}, [kitClient, store, kitGuid]);
+	}, [kitClient, store, kitGuidProp]);
 
 	const snapshotRef = React.useRef<KitStoreSnapshot | null>(null);
 	const getSnapshot = React.useCallback(() => {
@@ -1004,6 +1011,8 @@ export function KitProvider({
 		store.replace(asKitInstance(clone));
 	}, [store]);
 
+	const activeKitGuid = kitGuidProp ?? snapshot.kit?.guid;
+
 	const value = React.useMemo<KitRuntimeContextValue>(() => ({
 		store,
 		snapshot,
@@ -1012,10 +1021,11 @@ export function KitProvider({
 		recentSetRejections,
 		pushSetRejection,
 		canWrite: !snapshot.sync.readonly,
+		kitGuid: activeKitGuid,
 		kitClient,
 		setFieldValue,
 		setObjectValue,
-	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, kitClient, setFieldValue, setObjectValue]);
+	}), [store, snapshot, state, recentEvents, recentSetRejections, pushSetRejection, activeKitGuid, kitClient, setFieldValue, setObjectValue]);
 
 	return React.createElement(KitRuntimeContext.Provider, { value }, children);
 }
@@ -4605,10 +4615,6 @@ export function usePieceFlatCenter(guidValue?: string): SchemaHookTriad<any> {
 
 export function usePieceParentPiece(guidValue?: string): SchemaHookTriad<any> {
 	return useSchemaFieldState("Piece", "parentPiece", guidValue);
-}
-
-export function usePieceParentConnection(guidValue?: string): SchemaHookTriad<any> {
-	return useSchemaFieldState("Piece", "parentConnection", guidValue);
 }
 
 export function usePieceChildPieces(guidValue?: string): SchemaHookTriad<any> {

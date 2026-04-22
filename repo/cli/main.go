@@ -20428,22 +20428,44 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagem
 	return ctx.GoalCreate(input)
 }
 
+// 🎫validateTicketTitle MUST validate the title and return the derived slug.
+// 🎫Rejects empty titles, titles missing a leading emoji, and all-caps/lowercase slug-style titles.
+func validateTicketTitle(title string) (string, error) {
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return "", fmt.Errorf("ticket title is required")
+	}
+	emoji, remaining := extractEntityEmoji(title)
+	if emoji == "" {
+		return "", fmt.Errorf("ticket title must start with an emoji (e.g. \"🎫 Some Title on Something\")")
+	}
+	body := strings.TrimSpace(remaining)
+	if body == "" {
+		return "", fmt.Errorf("ticket title must have text after the leading emoji (e.g. \"🎫 Some Title on Something\")")
+	}
+	slug := Slugify(body)
+	if slug == "" {
+		return "", fmt.Errorf("ticket title must contain at least one alphanumeric character after the leading emoji")
+	}
+	if body == slug {
+		return "", fmt.Errorf("ticket title must be titleized (e.g. \"🎫 Some Title on Something\") and NOT an all-caps slug")
+	}
+	if body == strings.ToLower(slug) {
+		return "", fmt.Errorf("ticket title must be titleized (e.g. \"🎫 Some Title on Something\") and NOT a slug")
+	}
+	return slug, nil
+}
+
 // 🔁UpdateTicketTitle MUST complete the operation and return consistent results.
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
 	}
+	slug, err := validateTicketTitle(title)
+	if err != nil {
+		return err
+	}
 	title = strings.TrimSpace(title)
-	if title == "" {
-		return fmt.Errorf("ticket title is required")
-	}
-	slug := Slugify(title)
-	if title == slug {
-		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
-	}
-	if title == strings.ToLower(slug) {
-		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
-	}
 
 	parentDir := filepath.Dir(ticket.Slug)
 	if parentDir != "." {
@@ -20473,17 +20495,14 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 // 🆕CreateTicket MUST persist the new entity and return a reference to it.
 // 🆕CreateTicket creates a new ticket and persists it.
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
-	title = strings.TrimSpace(title)
 	if goal == "" {
 		return nil, fmt.Errorf("ticket goal is required")
 	}
-	slug := Slugify(title)
-	if title == slug {
-		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
+	slug, err := validateTicketTitle(title)
+	if err != nil {
+		return nil, err
 	}
-	if title == strings.ToLower(slug) {
-		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
-	}
+	title = strings.TrimSpace(title)
 
 	now := time.Now()
 	year, month, day := FormatDate(now)
@@ -20500,7 +20519,6 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 	}
 
 	var llmSlug string
-	var err error
 	if llm != "" {
 		llmSlug, err = ResolveAllowedLLM(llm)
 		if err != nil {
