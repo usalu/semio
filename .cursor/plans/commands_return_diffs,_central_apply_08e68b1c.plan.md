@@ -2,33 +2,33 @@
 name: commands return diffs, central apply
 overview: 'Refactor [semio/rs/lib.rs](semio/rs/lib.rs) so every `Change{Entity}Command::apply` returns a scoped structural diff, and every entity store implements one central `apply_diff` that applies children in strict "remove, then update, then add" order — centralizing event emission, cache invalidation, and pointer rewiring. Changes continue to be tracked as command lists (`KitChange.forward/inverse: Vec<ChangeKitCommand>`); diffs are ephemeral. Old flat diff types and dto-replacement paths are deleted.'
 todos:
-  - id: diff_rewrite
-    content: Rewrite `pub mod diff` + `pub mod kit_diff` with sparse per-entity XDiff + nested XsDiff{removed,updated,added}, `is_empty`, `merge`
-    status: pending
-  - id: apply_diff_on_stores
-    content: Add `pub fn apply_diff(&mut self, &XDiff) -> Result<()>` to every entity store (attribute, author, benchmark, concept, connection, connector, design, file, folder, group, kit, layer, piece, port, prop, quality, representation, side, stat, tag, typ), centralizing event emission, cache invalidation, and pointer rewiring in strict remove->update->add order
-    status: pending
-  - id: commands_return_diff
-    content: Change every Change*Command::apply to return (XDiff, Vec<Self> /*inverse*/), route all mutations through store.apply_diff, delete direct set_*/insert_*/remove_* usage and the FromKitDiff variant
-    status: pending
-  - id: apply_many_compact
-    content: Rewrite ChangeKitCommand::apply_many to fold diffs via merge, add ChangeKitCommand::compact that drops empty diffs, collapses repeated scalar writes, cancels Add+Remove pairs, and merges nested ChangeXCommands
-    status: pending
-  - id: kit_change_trim
-    content: "Trim `pub mod kit_change`: keep KitChange as command-list forward+inverse, delete from_dto_pair / apply_forward_dto / apply_backward_dto, rewrite apply_forward/apply_backward over apply_many"
-    status: pending
-  - id: delete_legacy
-    content: Delete DesignChange, DesignStore::delete_change/flatten_change/invert_change/validate_change/diff_from, KitDiff::between/apply_to_dto/apply_metadata_to_kit_dto, apply_design_full_dto, DesignDiffPatch, apply_design_diff_rpc, apply_kit_diff_rpc, and the WASM apply_design_diff / apply_kit_diff shims
-    status: pending
-  - id: caller_rewire
-    content: Rewire kit_transaction, kit_draft, kit_session, kit_store_command, kit_checkpoint, kit_alternative, io, wasm to the new commands-only model
-    status: pending
-  - id: tests
-    content: Add tests for apply_diff order-of-operations, per-command diff correctness, compact preserves final state, forward+inverse round-trip; rewrite existing apply_design_diff tests as command-based
-    status: pending
-  - id: agents_md
-    content: Update `Change flow` line in [semio/rs/AGENTS.md](semio/rs/AGENTS.md) to describe the new command->diff->central-apply pipeline
-    status: pending
+ - id: diff_rewrite
+   content: Rewrite `pub mod diff` + `pub mod kit_diff` with sparse per-entity XDiff + nested XsDiff{removed,updated,added}, `is_empty`, `merge`
+   status: in_progress
+ - id: apply_diff_on_stores
+   content: Add `pub fn apply_diff(&mut self, &XDiff) -> Result<()>` to every entity store (attribute, author, benchmark, concept, connection, connector, design, file, folder, group, kit, layer, piece, port, prop, quality, representation, side, stat, tag, typ), centralizing event emission, cache invalidation, and pointer rewiring in strict remove->update->add order
+   status: pending
+ - id: commands_return_diff
+   content: Change every Change*Command::apply to return (XDiff, Vec<Self> /*inverse*/), route all mutations through store.apply_diff, delete direct set_*/insert_*/remove_* usage and the FromKitDiff variant
+   status: pending
+ - id: apply_many_compact
+   content: Rewrite ChangeKitCommand::apply_many to fold diffs via merge, add ChangeKitCommand::compact that drops empty diffs, collapses repeated scalar writes, cancels Add+Remove pairs, and merges nested ChangeXCommands
+   status: pending
+ - id: kit_change_trim
+   content: "Trim `pub mod kit_change`: keep KitChange as command-list forward+inverse, delete from_dto_pair / apply_forward_dto / apply_backward_dto, rewrite apply_forward/apply_backward over apply_many"
+   status: pending
+ - id: delete_legacy
+   content: Delete DesignChange, DesignStore::delete_change/flatten_change/invert_change/validate_change/diff_from, KitDiff::between/apply_to_dto/apply_metadata_to_kit_dto, apply_design_full_dto, DesignDiffPatch, apply_design_diff_rpc, apply_kit_diff_rpc, and the WASM apply_design_diff / apply_kit_diff shims
+   status: pending
+ - id: caller_rewire
+   content: Rewire kit_transaction, kit_draft, kit_session, kit_store_command, kit_checkpoint, kit_alternative, io, wasm to the new commands-only model
+   status: pending
+ - id: tests
+   content: Add tests for apply_diff order-of-operations, per-command diff correctness, compact preserves final state, forward+inverse round-trip; rewrite existing apply_design_diff tests as command-based
+   status: pending
+ - id: agents_md
+   content: Update `Change flow` line in [semio/rs/AGENTS.md](semio/rs/AGENTS.md) to describe the new command->diff->central-apply pipeline
+   status: pending
 isProject: false
 ---
 
