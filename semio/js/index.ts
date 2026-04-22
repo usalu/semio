@@ -17551,11 +17551,52 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
 // ­ƒôªsqliteToKit converts a SQLite database into a kit object.
 export const sqliteToKit = async (db: any): Promise<KitImpl> => {
   const existingTables = new Set<string>();
+  const existingColumns = new Map<string, Set<string>>();
   const tableStmt = db.prepare("SELECT name FROM sqlite_master WHERE type='table'");
   while (tableStmt.step()) {
-    existingTables.add(tableStmt.getAsObject().name as string);
+    const tableName = tableStmt.getAsObject().name as string;
+    existingTables.add(tableName);
   }
   tableStmt.free();
+
+  for (const tableName of existingTables) {
+    const columns = new Set<string>();
+    const columnStmt = db.prepare(`PRAGMA table_info("${String(tableName).replace(/"/g, '""')}")`);
+    while (columnStmt.step()) {
+      const row = columnStmt.getAsObject();
+      if (typeof row.name === "string") columns.add(row.name);
+    }
+    columnStmt.free();
+    existingColumns.set(tableName, columns);
+  }
+
+  const quoteIdentifier = (value: string): string => `"${String(value).replace(/"/g, '""')}"`;
+  const normalizeRow = (row: any): any => {
+    const normalized: any = { ...row };
+    for (const [key, value] of Object.entries(row)) {
+      if (key === "guid" && normalized.id === undefined) {
+        normalized.id = value;
+        continue;
+      }
+      if (key.endsWith("_guid_ref")) {
+        const alias = `${key.slice(0, -9)}_id_ref`;
+        if (normalized[alias] === undefined) normalized[alias] = value;
+        continue;
+      }
+      if (key.endsWith("_guid")) {
+        const alias = `${key.slice(0, -5)}_id`;
+        if (normalized[alias] === undefined) normalized[alias] = value;
+      }
+    }
+    return normalized;
+  };
+  const pickColumn = (tableName: string, ...candidates: string[]): string => {
+    const columns = existingColumns.get(tableName);
+    for (const candidate of candidates) {
+      if (columns?.has(candidate)) return candidate;
+    }
+    throw new Error(`Missing expected column on ${tableName}: ${candidates.join(", ")}`);
+  };
 
   const execResult = (query: string, params?: any[]): any[] => {
     const stmt = db.prepare(query);
@@ -17564,21 +17605,34 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     }
     const result: any[] = [];
     while (stmt.step()) {
-      const row = stmt.getAsObject();
+      const row = normalizeRow(stmt.getAsObject());
       result.push(row);
     }
     stmt.free();
     return result;
   };
 
-  const safeExecResult = (tableName: string, query: string, params?: any[]): any[] => {
-    if (!existingTables.has(tableName)) {
-      return [];
+  const selectAll = (tableName: string, options?: { columns: string[]; value: any; orderBy?: string }): any[] => {
+    let query = `SELECT * FROM ${quoteIdentifier(tableName)}`;
+    const params: any[] = [];
+    if (options) {
+      const columnName = pickColumn(tableName, ...options.columns);
+      query += ` WHERE ${quoteIdentifier(columnName)} = ?`;
+      params.push(options.value);
+      if (options.orderBy) query += ` ORDER BY ${options.orderBy}`;
     }
     return execResult(query, params);
   };
 
-  const kitRows = execResult("SELECT * FROM kit LIMIT 1");
+  const safeSelectAll = (tableName: string, options?: { columns: string[]; value: any; orderBy?: string }): any[] => {
+    if (!existingTables.has(tableName)) {
+      return [];
+    }
+    return selectAll(tableName, options);
+  };
+  const selectById = (tableName: string, entityId: any): any | null => selectAll(tableName, { columns: ["id", "guid"], value: entityId })[0] ?? null;
+
+  const kitRows = selectAll("kit");
   if (kitRows.length === 0) {
     throw new Error("No kit found in database");
   }
@@ -17610,14 +17664,30 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     updatedAt: kitRow.updated,
   };
 
-  const types = execResult("SELECT * FROM type WHERE kit_id = ?", [kit.id]);
+  const familyRows = selectAll("family", { columns: ["kit_id", "kit_guid"], value: kit.id });
+  const normalizeEntityRefs = (raw: any): Array<{ id: string }> | undefined => {
+    if (raw === undefined || raw === null || raw === "") return undefined;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(parsed)) return undefined;
+    const refs = parsed
+      .map((entry: any) => {
+        if (typeof entry === "string") return { id: entry };
+        if (entry && typeof entry.id === "string") return { id: entry.id };
+        if (entry && typeof entry.guid === "string") return { id: entry.guid };
+        return null;
+      })
+      .filter((entry: any): entry is { id: string } => entry !== null);
+    return refs.length > 0 ? refs : undefined;
+  };
+
+  const types = selectAll("type", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.types = mapOrUndefined(types, (row: any) => {
     const typeId = row.id || String(row.id);
-    const representations = execResult("SELECT * FROM representation WHERE type_id = ?", [typeId]);
-    const connectors = execResult("SELECT * FROM connector WHERE type_id = ?", [typeId]);
-    const typeAttributes = execResult("SELECT * FROM attribute WHERE type_id = ?", [typeId]);
-    const typeConcepts = execResult("SELECT * FROM type_concept WHERE type_id = ?", [typeId]);
-    const typeAuthors = execResult("SELECT * FROM type_author WHERE type_id = ? ORDER BY rank", [typeId]);
+    const representations = selectAll("representation", { columns: ["type_id", "type_guid"], value: typeId });
+    const connectors = selectAll("connector", { columns: ["type_id", "type_guid"], value: typeId });
+    const typeAttributes = selectAll("attribute", { columns: ["type_id", "type_guid"], value: typeId });
+    const typeConcepts = selectAll("type_concept", { columns: ["type_id", "type_guid"], value: typeId });
+    const typeAuthors = selectAll("type_author", { columns: ["type_id", "type_guid"], value: typeId, orderBy: "rank" });
 
     const type: any = {
       id: typeId,
@@ -17634,8 +17704,8 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     if (icon !== undefined) type.icon = icon;
     const image = toUndefined(row.image);
     if (image !== undefined) type.image = image;
-    const familiesRaw = toUndefined(row.families);
-    if (familiesRaw) type.families = JSON.parse(familiesRaw);
+    const families = normalizeEntityRefs(toUndefined(row.families));
+    if (families) type.families = families;
     if (row.virtual) type.virtual = true;
     const unit = toUndefined(row.unit);
     if (unit !== undefined) type.unit = unit;
@@ -17649,8 +17719,8 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     if (authors) type.authors = authors;
 
     const representations_value = mapOrUndefined(representations, (m: any) => {
-      const representationTags = execResult("SELECT tag_id FROM representation_tag WHERE representation_id = ?", [m.id]);
-      const representationAttributes = execResult("SELECT * FROM attribute WHERE representation_id = ?", [m.id]);
+      const representationTags = selectAll("representation_tag", { columns: ["representation_id", "representation_guid"], value: m.id });
+      const representationAttributes = selectAll("attribute", { columns: ["representation_id", "representation_guid"], value: m.id });
       return {
         id: m.id,
         file: { id: m.file_id },
@@ -17663,8 +17733,8 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     if (representations_value) type.representations = representations_value;
 
     const connectors_value = mapOrUndefined(connectors, (p: any) => {
-      const connectorProps = execResult("SELECT * FROM prop WHERE connector_id = ?", [p.id]);
-      const connectorAttributes = execResult("SELECT * FROM attribute WHERE connector_id = ?", [p.id]);
+      const connectorProps = selectAll("prop", { columns: ["connector_id", "connector_guid"], value: p.id });
+      const connectorAttributes = selectAll("attribute", { columns: ["connector_id", "connector_guid"], value: p.id });
 
       const connector: any = {
         id: p.id,
@@ -17680,7 +17750,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
 
       const props_value = connectorProps
         .map((pr: any) => {
-          const propAttributes = execResult("SELECT * FROM attribute WHERE prop_id = ?", [pr.id]);
+          const propAttributes = selectAll("attribute", { columns: ["prop_id", "prop_guid"], value: pr.id });
           if (!pr.quality_id) return null;
           return {
             id: pr.id,
@@ -17700,11 +17770,13 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     });
     if (connectors_value) type.connectors = connectors_value;
 
-    const typeProps = safeExecResult("type_prop", "SELECT prop.* FROM prop JOIN type_prop ON prop.id = type_prop.prop_id WHERE type_prop.type_id = ?", [typeId]);
+    const typeProps = safeSelectAll("type_prop", { columns: ["type_id", "type_guid"], value: typeId })
+      .map((link: any) => selectById("prop", link.prop_id))
+      .filter((prop: any): prop is NonNullable<typeof prop> => prop !== null);
     const props_value = (() => {
       const filtered = typeProps
         .map((pr: any) => {
-          const propAttributes = execResult("SELECT * FROM attribute WHERE prop_id = ?", [pr.id]);
+          const propAttributes = selectAll("attribute", { columns: ["prop_id", "prop_guid"], value: pr.id });
           if (!pr.quality_id) return null;
           return {
             id: pr.id,
@@ -17725,18 +17797,18 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     return type;
   });
 
-  const designs = execResult("SELECT * FROM design WHERE kit_id = ?", [kit.id]);
+  const designs = selectAll("design", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.designs = mapOrUndefined(designs, (row: any) => {
     const designId = row.id || String(row.id);
-    const pieces = execResult("SELECT * FROM piece WHERE design_id = ?", [designId]);
-    const connections = execResult("SELECT * FROM connection WHERE design_id = ?", [designId]);
-    const layers = execResult("SELECT * FROM layer WHERE design_id = ?", [designId]);
-    const groups = execResult('SELECT * FROM "group" WHERE design_id = ?', [designId]);
-    const stats = execResult("SELECT * FROM stat WHERE design_id = ?", [designId]);
-    const designAttributes = execResult("SELECT * FROM attribute WHERE design_id = ?", [designId]);
-    const designConcepts = execResult("SELECT * FROM design_concept WHERE design_id = ?", [designId]);
-    const designProps = execResult("SELECT * FROM design_prop WHERE design_id = ?", [designId]);
-    const designAuthors = execResult("SELECT * FROM design_author WHERE design_id = ? ORDER BY rank ASC", [designId]);
+    const pieces = selectAll("piece", { columns: ["design_id", "design_guid"], value: designId });
+    const connections = selectAll("connection", { columns: ["design_id", "design_guid"], value: designId });
+    const layers = selectAll("layer", { columns: ["design_id", "design_guid"], value: designId });
+    const groups = selectAll("group", { columns: ["design_id", "design_guid"], value: designId });
+    const stats = selectAll("stat", { columns: ["design_id", "design_guid"], value: designId });
+    const designAttributes = selectAll("attribute", { columns: ["design_id", "design_guid"], value: designId });
+    const designConcepts = selectAll("design_concept", { columns: ["design_id", "design_guid"], value: designId });
+    const designProps = selectAll("design_prop", { columns: ["design_id", "design_guid"], value: designId });
+    const designAuthors = selectAll("design_author", { columns: ["design_id", "design_guid"], value: designId, orderBy: "rank ASC" });
 
     return {
       id: designId,
@@ -17744,10 +17816,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
       description: toUndefined(row.description),
       icon: toUndefined(row.icon),
       image: toUndefined(row.image),
-      families: (() => {
-        const raw = toUndefined(row.families);
-        return raw ? JSON.parse(raw) : undefined;
-      })(),
+      families: normalizeEntityRefs(toUndefined(row.families)),
       unit: toUndefined(row.unit),
       isAbstract: row.is_abstract ? true : undefined,
       folder: toUndefined(row.folder),
@@ -17764,8 +17833,10 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
       })),
       authors: mapOrUndefined(designAuthors, (da: any) => ({ id: da.author_id })),
       pieces: pieces.map((p: any) => {
-        const pieceProps = execResult("SELECT prop.* FROM prop JOIN piece_prop ON prop.id = piece_prop.prop_id WHERE piece_prop.piece_id = ?", [p.id]);
-        const pieceAttributes = execResult("SELECT * FROM attribute WHERE piece_id = ?", [p.id]);
+        const pieceProps = safeSelectAll("piece_prop", { columns: ["piece_id", "piece_guid"], value: p.id })
+          .map((link: any) => selectById("prop", link.prop_id))
+          .filter((prop: any): prop is NonNullable<typeof prop> => prop !== null);
+        const pieceAttributes = selectAll("attribute", { columns: ["piece_id", "piece_guid"], value: p.id });
         return {
           id: p.id,
           name: toUndefined(p.name),
@@ -17813,7 +17884,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         };
       }),
       connections: connections.map((c: any) => {
-        const connectionAttributes = execResult("SELECT * FROM attribute WHERE connection_id = ?", [c.id]);
+        const connectionAttributes = selectAll("attribute", { columns: ["connection_id", "connection_guid"], value: c.id });
         return {
           id: c.id,
           connected: {
@@ -17839,7 +17910,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         };
       }),
       layers: layers.map((l: any) => {
-        const layerAttributes = execResult("SELECT * FROM attribute WHERE layer_id = ?", [l.id]);
+        const layerAttributes = selectAll("attribute", { columns: ["layer_id", "layer_guid"], value: l.id });
         return {
           id: l.id,
           path: l.path,
@@ -17851,8 +17922,8 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         };
       }),
       groups: groups.map((g: any) => {
-        const groupPieces = execResult("SELECT piece_id FROM group_piece WHERE group_id = ?", [g.id]);
-        const groupAttributes = execResult("SELECT * FROM attribute WHERE group_id = ?", [g.id]);
+        const groupPieces = selectAll("group_piece", { columns: ["group_id", "group_guid"], value: g.id });
+        const groupAttributes = selectAll("attribute", { columns: ["group_id", "group_guid"], value: g.id });
         return {
           id: g.id,
           name: toUndefined(g.name),
@@ -17876,18 +17947,17 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     };
   });
 
-  const familyRows = execResult("SELECT * FROM family WHERE kit_id = ?", [kit.id]);
   kit.families = mapOrUndefined(familyRows, (fRow: any) => {
-    const familyAttributes = execResult("SELECT * FROM attribute WHERE family_id = ?", [fRow.id]);
-    const ports = execResult("SELECT * FROM port WHERE family_id = ?", [fRow.id]);
+    const familyAttributes = selectAll("attribute", { columns: ["family_id", "family_guid"], value: fRow.id });
+    const ports = selectAll("port", { columns: ["family_id", "family_guid"], value: fRow.id });
     return {
       id: fRow.id,
       name: fRow.name,
       description: toUndefined(fRow.description),
       icon: toUndefined(fRow.icon),
       ports: mapOrUndefined(ports, (row: any) => {
-        const compatiblePorts = execResult("SELECT compatible_port_id FROM port_compatibility WHERE port_id = ?", [row.id]);
-        const portAttributes = execResult("SELECT * FROM attribute WHERE port_id = ?", [row.id]);
+        const compatiblePorts = selectAll("port_compatibility", { columns: ["port_id", "port_guid"], value: row.id });
+        const portAttributes = selectAll("attribute", { columns: ["port_id", "port_guid"], value: row.id });
         return {
           id: row.id,
           name: row.name,
@@ -17901,7 +17971,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     };
   });
 
-  const tags = safeExecResult("tag", "SELECT * FROM tag WHERE kit_id = ?", [kit.id]);
+  const tags = safeSelectAll("tag", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.tags = mapOrUndefined(tags, (row: any) => ({
     id: row.id,
     name: row.name,
@@ -17909,12 +17979,12 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     icon: toUndefined(row.icon),
   }));
 
-  const qualities = execResult("SELECT * FROM quality WHERE kit_id = ?", [kit.id]);
+  const qualities = selectAll("quality", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_id = ?", [row.id]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_id = ?", [row.id]);
+          const benchmarks = selectAll("benchmark", { columns: ["quality_id", "quality_guid"], value: row.id });
+          const qualityAttributes = selectAll("attribute", { columns: ["quality_id", "quality_guid"], value: row.id });
           return {
             id: row.id,
             key: row.key,
@@ -17931,7 +18001,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
             canScale: row.can_scale ? true : undefined,
             uri: toUndefined(row.definition),
             benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_id = ?", [b.id]);
+              const benchmarkAttributes = selectAll("attribute", { columns: ["benchmark_id", "benchmark_guid"], value: b.id });
               return {
                 id: b.id,
                 name: b.name,
@@ -17948,7 +18018,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         })
       : undefined;
 
-  const files = execResult("SELECT * FROM file WHERE kit_id = ?", [kit.id]);
+  const files = selectAll("file", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
@@ -17963,7 +18033,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         }))
       : undefined;
 
-  const folders = execResult("SELECT * FROM folder WHERE kit_id = ?", [kit.id]);
+  const folders = selectAll("folder", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.folders = mapOrUndefined(folders, (row: any) => ({
     id: row.id,
     name: row.name,
@@ -17972,7 +18042,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     updatedAt: row.updated,
   }));
 
-  const authors = execResult("SELECT * FROM author WHERE kit_id = ?", [kit.id]);
+  const authors = selectAll("author", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
@@ -17982,7 +18052,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
         }))
       : undefined;
 
-  const concepts = execResult("SELECT * FROM concept WHERE kit_id = ?", [kit.id]);
+  const concepts = selectAll("concept", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.concepts = mapOrUndefined(concepts, (row: any) => ({
     id: row.id,
     name: row.name,
@@ -17990,7 +18060,7 @@ export const sqliteToKit = async (db: any): Promise<KitImpl> => {
     icon: toUndefined(row.icon),
   }));
 
-  const kitAttributes = execResult("SELECT * FROM attribute WHERE kit_id = ?", [kit.id]);
+  const kitAttributes = selectAll("attribute", { columns: ["kit_id", "kit_guid"], value: kit.id });
   kit.attributes = mapOrUndefined(kitAttributes, buildAttribute);
 
   return asKitInstance(kit);
@@ -20416,11 +20486,25 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     "@semio/rs-wasm";
   const timeoutMs = opts.timeoutMs ?? 60_000;
   const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
+
+  const initWasmModule = async (mod: any): Promise<void> => {
+    if (typeof mod.default !== "function") return;
+    if (typeof Worker === "undefined") {
+      try {
+        const fs = await import("node:fs/promises");
+        const { fileURLToPath } = await import("node:url");
+        const wasmPath = fileURLToPath(new URL("../rs/pkg/semio_bg.wasm", import.meta.url));
+        const wasmBytes = await fs.readFile(wasmPath);
+        await mod.default(wasmBytes);
+        return;
+      } catch {}
+    }
+    await mod.default();
+  };
+
   if (useFallback) {
     const mod = await import(/* @vite-ignore */ wasmSpecifier);
-    if (typeof mod.default === "function") {
-      await mod.default();
-    }
+    await initWasmModule(mod);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
   try {
@@ -20433,9 +20517,7 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
   } catch {
     const mod = await import(/* @vite-ignore */ wasmSpecifier);
-    if (typeof mod.default === "function") {
-      await mod.default();
-    }
+    await initWasmModule(mod);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
 }
@@ -27864,7 +27946,7 @@ const semioKitCommandHandlers = {
     };
   },
   "semio.kit.addFile": (context: KitCommandContext, file: SemioFile, blob?: Blob): KitCommandResult => {
-    const files: File[] = blob ? [new File([blob], file.name)] : [];
+    const files: globalThis.File[] = blob ? [new globalThis.File([blob], file.name)] : [];
     return {
       diff: { files: { added: [file] } },
       files,
@@ -27872,10 +27954,10 @@ const semioKitCommandHandlers = {
   },
   "semio.kit.addFiles": (context: KitCommandContext, foldersToAdd: Folder[], filesToAdd: { file: SemioFile; blob?: Blob }[]): KitCommandResult => {
     const semioFiles: SemioFile[] = [];
-    const files: File[] = [];
+    const files: globalThis.File[] = [];
     for (const { file, blob } of filesToAdd) {
       semioFiles.push(file);
-      if (blob) files.push(new File([blob], file.name));
+      if (blob) files.push(new globalThis.File([blob], file.name));
     }
     return {
       diff: { folders: { added: foldersToAdd }, files: { added: semioFiles } },
@@ -27885,7 +27967,7 @@ const semioKitCommandHandlers = {
   "semio.kit.updateFile": (context: KitCommandContext, fileId: Url, fileDiff: FileDiff, blob?: Blob): KitCommandResult => {
     const existing = context.kit.files?.find((f) => f.id === fileId);
     const fileName = fileDiff.name ?? existing?.name ?? "file";
-    const files: File[] = blob ? [new File([blob], fileName)] : [];
+    const files: globalThis.File[] = blob ? [new globalThis.File([blob], fileName)] : [];
     return {
       diff: { files: { updated: [{ file: { id: fileId }, diff: fileDiff }] } },
       files,
@@ -28205,6 +28287,17 @@ const semioKitCommandHandlers = {
 export async function executeSemioKitCommand(kitStore: KitStore, command: string, origin?: string, ...args: any[]): Promise<KitCommandResult> {
   const callback = semioKitCommandHandlers[command as keyof typeof semioKitCommandHandlers];
   if (!callback) throw new Error(`Command "${command}" not found in kit commands`);
+  const replaceOrApplyKit = (nextKit: Kit, diff?: KitDiff) => {
+    if (typeof (kitStore as any).replace === "function") {
+      (kitStore as any).replace(asKitInstance(nextKit), { origin });
+      return;
+    }
+    if (diff && typeof (kitStore as any).apply === "function") {
+      (kitStore as any).apply(diff, { origin });
+      return;
+    }
+    throw new Error("Kit store does not support replace() or apply()");
+  };
   const context: KitCommandContext = {
     kit: kitStore.getSnapshot().kit,
     fileUrls: getStoredKitFileUrls(kitStore) as Map<Url, Url>,
@@ -28212,19 +28305,34 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
   };
   const result = (callback as any)(context, ...args);
   if (result.diff && Object.keys(result.diff).length > 0) {
-    const client = await createKitStoreClient({
-      initialKit: context.kit,
-      forceFallback: typeof Worker === "undefined",
-    });
-    try {
-      const applyResult = await client.applyKitDiff(result.diff);
-      if (!applyResult.ok) {
-        throw new Error(applyResult.error.message);
+    const useJsCompatibilityApply =
+      command === "semio.kit.addFile" ||
+      command === "semio.kit.addFiles" ||
+      command === "semio.kit.updateFile" ||
+      command === "semio.kit.removeFile" ||
+      command === "semio.kit.createFolder" ||
+      command === "semio.kit.updateFolder" ||
+      command === "semio.kit.deleteFolder" ||
+      command === "semio.kit.moveToFolder";
+
+    if (useJsCompatibilityApply) {
+      const nextKit = applyKitDiff(context.kit, result.diff);
+      replaceOrApplyKit(nextKit, result.diff);
+    } else {
+      const client = await createKitStoreClient({
+        initialKit: context.kit,
+        forceFallback: typeof Worker === "undefined",
+      });
+      try {
+        const applyResult = await client.applyKitDiff(result.diff);
+        if (!applyResult.ok) {
+          throw new Error(applyResult.error.message);
+        }
+        const nextSnapshot = await client.getSnapshot();
+        replaceOrApplyKit(nextSnapshot, result.diff);
+      } finally {
+        client.dispose();
       }
-      const nextSnapshot = await client.getSnapshot();
-      kitStore.replace(asKitInstance(nextSnapshot), { origin });
-    } finally {
-      client.dispose();
     }
   }
   await syncKitFileCommandResult(kitStore, context.kit, command, args, result);

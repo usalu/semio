@@ -745,8 +745,26 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
-```rs
+Kits MUST be extended with a version-control-like system:
 
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named line of checkpoints since a `checkpoint` from `the kit`.
+- `kit diff` is a diff to a kit snapshot. The async `kt backbones` only implement how to apply kit diff.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+```rs
 pub enum ReadTypeCommand {
   Everything {},
   Name {},
@@ -788,46 +806,57 @@ pub enum ChangeKitCommand {
   ...
 }
 
-pub enum TransactionCommand {
-
-}
-
-pub enum CheckpointCommand {
-  DraftCommands {id: DraftIdDto,  commands: Vec <DraftCommand>}
+pub enum KitCheckpointCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>}
 }
 
 pub enum TransactionCommand {
-
-  ExecuteTransactionCommands {id: TransactionIdDto, commands: Vec <TransactionCommand>}
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  ChangeKitCommands {commands: Vec <ChangeKitCommand>}
+  Finalize {},
+  Abort {},
+  Undo {},
+  UndoAll {},
+  CanUndo {},
+  Redo {},
+  RedoAll {},
+  CanRedo {},
 }
 
-pub enum DraftCommand {
+pub enum KitDraftCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>}
   StartTransaction {},
-  FinalizeTransaction {id: TransactionIdDto},
-  AbortTransaction {id: TransactionIdDto},
-  Undo {id: TransactionIdDto},
-  UndoAll {id: TransactionIdDto},
-  CanUndo {id: TransactionIdDto},
-  Redo {id: TransactionIdDto},
-  RedoAll {id: TransactionIdDto},
-  CanRedo {id: TransactionIdDto},
+  FinalizeToKitCheckpoint {message: String},
+  Abort {},
+  Undo {count: i32 }, // -1 for all
+  CanUndo {count: i32}, // -1 for all
+  Redo {count: i32}, // -1 for all
+  CanRedo {count: i32}, // -1 for all
   ExecuteTransactionCommands {id: TransactionIdDto, commands: Vec <TransactionCommand>}
 }
 
 pub enum SessionCommand {
-  NewDraft {checkpoint_id: CheckpointIdDto},
-  EndDraft {id: DraftIdDto},
-  Undo {id: DraftIdDto, count: i32 }, // -1 for all
-  CanUndo {id: DraftIdDto, count: i32}, // -1 for all
-  Redo {id: DraftIdDto, count: i32}, // -1 for all
-  CanRedo {id: DraftIdDto, count: i32}, // -1 for all
-  ExecuteDraftCommands {id: DraftIdDto, commands: Vec <DraftCommand>}
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  NewDraft {checkpoint_id: KitCheckpointIdDto},
+  ExecuteKitDraftCommands {id: KitDraftIdDto, commands: Vec <KitDraftCommand>}
 }
 
-pub enum StoreCommand {
+pub enum KitCheckpointCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+
+}
+
+pub enum KitAlternativeCommand {
+  ReadKitCommands {commands: Vec <ReadKitCommand>},
+  UnifyKitCheckpointsToSingleKitCheckpoint {message: String}
+}
+
+pub enum KitStoreCommand {
   NewSession {},
   EndSession {id: SessionIdDto},
   ExecuteSessionCommands {id: SessionIdDto, commands: Vec <SessionCommand>}
+  ExecuteKitCheckpointCommands {id: KitCheckpointIdDto, commands: Vec <KitCheckpointCommand>}
+  ExecuteKitAlternativeCommands {id: KitAlternativeIdDto, commands: Vec <KitAlternativeCommand>}
   ReadKitCommands {commands: Vec <KitReadCommand>}
 }
 ```
@@ -838,12 +867,7 @@ pub enum StoreCommand {
   "readKitCommands": {
    "commands": [
     {
-     "id": "kit1",
-     "commands": [
-      {
-       "id": "type1"
-      }
-     ]
+      "everything":{}
     }
    ]
   }

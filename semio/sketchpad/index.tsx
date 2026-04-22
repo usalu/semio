@@ -305,17 +305,12 @@ import {
   useKitCommands,
   useKitConcepts,
   useKitDescription,
-  useKitDesigns,
-  useKitFiles,
   useKitFolders,
   useKitName,
   useKitPorts,
   useKitQualities,
   useKitRegistrySafe,
   useKitRuntimeSafe,
-  useKitSnapshot,
-  useKitTags,
-  useKitTypes,
   useKitStoredFileUrls as useFileUrls,
   useMoveKitArtifactToFolder,
   useTransaction,
@@ -7358,6 +7353,61 @@ export const useConnectionScope = () => useContext(ConnectionScopeContext);
 function useLocalKitSnapshot(): Kit | null {
   const runtime = useKitRuntimeSafe();
   return runtime?.snapshot.kit ?? null;
+}
+
+function useResolvedKitStoreSnapshot(explicitKitId?: string): KitStoreSnapshot | null {
+  const runtime = useKitRuntimeSafe();
+  const sketchpadStore = useSketchpadStore();
+  const effectiveKitId = useSketchpadKitId(explicitKitId as Id);
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
+        return runtime.store.subscribe(onStoreChange);
+      }
+      if (!effectiveKitId || !sketchpadStore.hasKit(effectiveKitId)) {
+        return () => {};
+      }
+      return sketchpadStore.kit(effectiveKitId).subscribe(onStoreChange);
+    },
+    [runtime, effectiveKitId, sketchpadStore],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (runtime && effectiveKitId && runtime.kitId === effectiveKitId) {
+      return runtime.snapshot;
+    }
+    if (!effectiveKitId || !sketchpadStore.hasKit(effectiveKitId)) {
+      return null;
+    }
+    return sketchpadStore.kit(effectiveKitId).getSnapshot();
+  }, [runtime, effectiveKitId, sketchpadStore]);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+function useKitSnapshot(explicitKitId?: string): HookResult<KitStoreSnapshot | null> {
+  return readonlyHookResult(useResolvedKitStoreSnapshot(explicitKitId));
+}
+
+function useKitTypes(explicitKitId?: string): HookResult<Type[] | undefined> {
+  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
+  return readonlyHookResult(snapshot?.kit?.types);
+}
+
+function useKitDesigns(explicitKitId?: string): HookResult<Design[] | undefined> {
+  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
+  return readonlyHookResult(snapshot?.kit?.designs);
+}
+
+function useKitFiles(explicitKitId?: string): HookResult<SemioFile[] | undefined> {
+  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
+  return readonlyHookResult(snapshot?.kit?.files);
+}
+
+function useKitTags(explicitKitId?: string): HookResult<Tag[] | undefined> {
+  const snapshot = useResolvedKitStoreSnapshot(explicitKitId);
+  return readonlyHookResult(snapshot?.kit?.tags);
 }
 
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Id, deep: boolean = false): T | Author | null {
@@ -18453,7 +18503,7 @@ export class SketchpadStore {
     };
   };
 
-  availableKitKinds = (): SketchpadKitKindAvailability => {
+  supportedKitKinds = (): SketchpadKitKindAvailability => {
     const hasConfiguredKitStoreFactories = Boolean(this.temporaryKitStoreFactory || this.folderKitStoreFactory || this.fileKitStoreFactory || this.remoteKitStoreFactory);
     if (!hasConfiguredKitStoreFactories && this.injectedKitStore) {
       const inferredKitKind = this.inferKitPersistenceKind(this.injectedKitStore);
@@ -18469,6 +18519,20 @@ export class SketchpadStore {
       file: Boolean(this.fileKitStoreFactory),
       folder: Boolean(this.folderKitStoreFactory),
       remote: Boolean(this.remoteKitStoreFactory),
+    };
+  };
+
+  availableKitKinds = (): SketchpadKitKindAvailability => {
+    const supportedKitKinds = this.supportedKitKinds();
+    const hasConfiguredKitStoreFactories = Boolean(this.temporaryKitStoreFactory || this.folderKitStoreFactory || this.fileKitStoreFactory || this.remoteKitStoreFactory);
+    if (!hasConfiguredKitStoreFactories && this.injectedKitStore) {
+      return supportedKitKinds;
+    }
+    return {
+      temporary: supportedKitKinds.temporary,
+      file: false,
+      folder: false,
+      remote: false,
     };
   };
 
@@ -18747,8 +18811,20 @@ export class SketchpadStore {
 
     if (command === "semio.sketchpad.createKit") {
       const kit = rest[0] as Kit;
-      const kind = rest[1] as KitKind | undefined;
-      const kitId = await this.createKit(kit, kind);
+      const kindCandidate = rest[1] as unknown;
+      const sourceCandidate = rest[2] as unknown;
+      const interactiveCandidate = rest[3] as unknown;
+      const kind = kindCandidate === "temporary" || kindCandidate === "file" || kindCandidate === "folder" || kindCandidate === "remote" ? kindCandidate : undefined;
+      const source = sourceCandidate && typeof sourceCandidate === "object" && (sourceCandidate as { kind?: unknown }).kind ? (sourceCandidate as InitialStateKit["source"]) : undefined;
+      const interactive =
+        typeof interactiveCandidate === "boolean"
+          ? interactiveCandidate
+          : typeof sourceCandidate === "boolean"
+            ? sourceCandidate
+            : typeof kindCandidate === "boolean"
+              ? kindCandidate
+              : true;
+      const kitId = await this.createKit(kit, kind, source, interactive);
       return { kitId } as T;
     }
     if (command === "semio.sketchpad.openKit") {
@@ -20097,7 +20173,7 @@ export function useGetKitKind(): (kitId: string) => KitKind | undefined {
 
 export function useAvailableKitKinds(): SketchpadKitKindAvailability {
   const store = useSketchpadStore();
-  return useMemo(() => store.availableKitKinds(), [store]);
+  return useMemo(() => store.supportedKitKinds(), [store]);
 }
 
 /**
