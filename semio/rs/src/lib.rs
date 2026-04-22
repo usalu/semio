@@ -8,11 +8,6 @@
 
 #![allow(clippy::new_without_default)]
 
-#[allow(dead_code)]
-mod kit_domain;
-#[allow(dead_code)]
-mod kit_queries;
-
 pub mod attribute {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
@@ -5861,7 +5856,7 @@ pub mod hash {
 
 pub mod kit {
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
     use async_broadcast::Receiver;
@@ -5871,6 +5866,7 @@ pub mod kit {
     };
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
+    use crate::connection::{ConnectionFullDto, ConnectionIdDto};
     use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
@@ -5878,6 +5874,7 @@ pub mod kit {
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
     use crate::diff::DesignDiff;
+    use crate::geom::{Coordinate, Plane};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
     use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
@@ -5885,7 +5882,7 @@ pub mod kit {
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::report::{SemioReport, ValidationResult};
     use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
-    use crate::typ::{TypeFullDto, TypeStore, TypeStoreRef};
+    use crate::typ::{TypeFullDto, TypeIdDto, TypeStore, TypeStoreRef};
 
     pub type KitStoreRef = Arc<RwLock<KitStore>>;
     pub type KitStoreWeak = Weak<RwLock<KitStore>>;
@@ -6049,6 +6046,18 @@ pub mod kit {
         pub props: Vec<PropFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub attributes: Vec<AttributeFullDto>,
+    }
+
+    #[derive(Clone, Debug, Serialize)]
+    struct PiecePlacementMetadataJson {
+        pub plane: Plane,
+        pub center: Coordinate,
+        #[serde(rename = "fixedPieceId")]
+        pub fixed_piece_id: String,
+        #[serde(rename = "parentPieceId")]
+        pub parent_piece_id: Option<String>,
+        pub depth: i32,
+        pub path: Vec<String>,
     }
 
     impl KitStore {
@@ -7263,6 +7272,852 @@ pub mod kit {
                     .collect(),
             }
         }
+
+        fn domain_type_index(kit: &KitStore) -> HashMap<Guid, TypeStoreRef> {
+            kit.types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|r| (r.guid.clone(), t.clone())))
+                .collect()
+        }
+
+        pub fn insert_design_ref(kit: &KitStoreRef, dto: DesignFullDto) -> SetResult {
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.designs.iter().any(|d| {
+                d.read()
+                    .map(|r| r.guid.as_str() == dto.guid.as_str())
+                    .unwrap_or(false)
+            }) {
+                return Err(SetError::DuplicateGuid(format!("design {}", dto.guid)));
+            }
+            let idx = Self::domain_type_index(&g);
+            let design = DesignStore::hydrate_from_full_dto(dto, &idx);
+            {
+                let kw = Arc::downgrade(kit);
+                if let Ok(mut dw) = design.write() {
+                    dw.parent_kit = kw;
+                }
+            }
+            g.designs.push(design);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn cluster_pieces(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            piece_guids: Vec<String>,
+            cluster_name: String,
+        ) -> SetResult {
+            if piece_guids.is_empty() {
+                return Err(SetError::InvalidValue(
+                    "no piece IDs provided for clustering".into(),
+                ));
+            }
+            let parent_dto: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            let cluster_set: HashSet<&str> = piece_guids.iter().map(|s| s.as_str()).collect();
+            let clustered_pieces: Vec<PieceFullDto> = parent_dto
+                .pieces
+                .iter()
+                .filter(|p| cluster_set.contains(p.guid.as_str()))
+                .cloned()
+                .collect();
+            if clustered_pieces.is_empty() {
+                return Err(SetError::InvalidValue(
+                    "no pieces found matching the provided IDs".into(),
+                ));
+            }
+
+            let internal_connections: Vec<ConnectionFullDto> = parent_dto
+                .connections
+                .iter()
+                .filter(|c| {
+                    cluster_set.contains(c.connected.piece.guid.as_str())
+                        && cluster_set.contains(c.connecting.piece.guid.as_str())
+                })
+                .cloned()
+                .collect();
+
+            let external_connections: Vec<ConnectionFullDto> = parent_dto
+                .connections
+                .iter()
+                .filter(|c| {
+                    let a = cluster_set.contains(c.connected.piece.guid.as_str());
+                    let b = cluster_set.contains(c.connecting.piece.guid.as_str());
+                    a != b
+                })
+                .cloned()
+                .collect();
+
+            let new_guid = Guid::new_v7();
+            let clustered_dto = DesignFullDto {
+                guid: new_guid.clone(),
+                name: cluster_name,
+                description: Some(format!(
+                    "Clustered design with {} pieces",
+                    clustered_pieces.len()
+                )),
+                unit: parent_dto.unit.clone(),
+                kit: parent_dto.kit.clone(),
+                pieces: clustered_pieces,
+                connections: internal_connections,
+                ..Default::default()
+            };
+
+            let mut added_connections: Vec<ConnectionFullDto> = Vec::new();
+            for mut c in external_connections {
+                let connected_in = cluster_set.contains(c.connected.piece.guid.as_str());
+                let connecting_in = cluster_set.contains(c.connecting.piece.guid.as_str());
+                if connected_in {
+                    c.connected.design_piece = Some(PieceIdDto {
+                        guid: new_guid.clone(),
+                    });
+                } else if connecting_in {
+                    c.connecting.design_piece = Some(PieceIdDto {
+                        guid: new_guid.clone(),
+                    });
+                }
+                added_connections.push(c);
+            }
+
+            let removed_connections: Vec<ConnectionIdDto> = parent_dto
+                .connections
+                .iter()
+                .filter(|c| {
+                    cluster_set.contains(c.connected.piece.guid.as_str())
+                        || cluster_set.contains(c.connecting.piece.guid.as_str())
+                })
+                .map(|c| ConnectionIdDto { guid: c.guid.clone() })
+                .collect();
+
+            let removed_pieces: Vec<PieceIdDto> = piece_guids
+                .iter()
+                .filter(|g| cluster_set.contains(g.as_str()))
+                .map(|g| PieceIdDto {
+                    guid: Guid::from(g.as_str()),
+                })
+                .collect();
+
+            let forward = DesignDiff {
+                removed_pieces,
+                removed_connections,
+                added_connections,
+                ..Default::default()
+            };
+
+            Self::insert_design_ref(kit, clustered_dto)?;
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &forward)
+                .map_err(Self::map_semio_err)
+        }
+
+        fn domain_normalize_coord(v: Coordinate) -> Coordinate {
+            let n = v.length();
+            if n < 1e-12 {
+                Coordinate::ZERO
+            } else {
+                v.scale(1.0 / n)
+            }
+        }
+
+        fn domain_cross(a: Coordinate, b: Coordinate) -> Coordinate {
+            Coordinate::new(
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x,
+            )
+        }
+
+        fn domain_move_translation_world(
+            plane: &Plane,
+            gap: f64,
+            shift: f64,
+            rise: f64,
+        ) -> Coordinate {
+            let x = Self::domain_normalize_coord(plane.x_axis);
+            let y = Self::domain_normalize_coord(plane.y_axis);
+            let z = Self::domain_cross(x, y);
+            let zn = z.length();
+            if zn < 1e-12 {
+                return Coordinate::ZERO;
+            }
+            let z = z.scale(1.0 / zn);
+            y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
+        }
+
+        fn domain_has_selected_ancestor_drag(
+            piece: &str,
+            selected: &HashSet<String>,
+            parent_map: &HashMap<String, (String, String)>,
+        ) -> bool {
+            let mut current = piece.to_string();
+            while let Some((_, parent)) = parent_map.get(&current) {
+                if selected.contains(parent) {
+                    return true;
+                }
+                current = parent.clone();
+            }
+            false
+        }
+
+        pub fn drag_pieces(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            piece_guids: Vec<String>,
+            du: f64,
+            dv: f64,
+        ) -> SetResult {
+            if piece_guids.is_empty() {
+                return Ok(());
+            }
+            let dto: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            let selected: HashSet<String> = piece_guids.into_iter().collect();
+            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+            for c in &dto.connections {
+                let child = c.connecting.piece.guid.to_string();
+                let parent = c.connected.piece.guid.to_string();
+                parent_map.insert(child, (c.guid.to_string(), parent));
+            }
+
+            let fixed_guids: Vec<String> = selected
+                .iter()
+                .filter(|g| !parent_map.contains_key(*g))
+                .cloned()
+                .collect();
+
+            let mut modified_pieces: Vec<PieceFullDto> = Vec::new();
+            for g in &fixed_guids {
+                if let Some(p) = dto.pieces.iter().find(|p| p.guid.as_str() == g) {
+                    let mut np = p.clone();
+                    if let Some(ce) = np.center.as_mut() {
+                        ce.x += du;
+                        ce.y += dv;
+                    }
+                    modified_pieces.push(np);
+                }
+            }
+
+            let mut modified_connections: Vec<ConnectionFullDto> = Vec::new();
+            for g in &selected {
+                if fixed_guids.iter().any(|x| x == g) {
+                    continue;
+                }
+                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                    continue;
+                }
+                if let Some((conn_guid, _)) = parent_map.get(g) {
+                    if let Some(c) = dto.connections.iter().find(|c| c.guid.as_str() == conn_guid) {
+                        let mut nc = c.clone();
+                        nc.x = Some(nc.x.unwrap_or(0.0) + du);
+                        nc.y = Some(nc.y.unwrap_or(0.0) + dv);
+                        modified_connections.push(nc);
+                    }
+                }
+            }
+
+            let mut diff = DesignDiff::default();
+            if !modified_pieces.is_empty() {
+                diff.modified_pieces = modified_pieces;
+            }
+            if !modified_connections.is_empty() {
+                diff.modified_connections = modified_connections;
+            }
+            if diff.modified_pieces.is_empty() && diff.modified_connections.is_empty() {
+                return Ok(());
+            }
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn move_pieces(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            piece_guids: Vec<String>,
+            gap: f64,
+            shift: f64,
+            rise: f64,
+        ) -> SetResult {
+            if piece_guids.is_empty() {
+                return Ok(());
+            }
+            let dto: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            let selected: HashSet<String> = piece_guids.into_iter().collect();
+            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+            for c in &dto.connections {
+                parent_map.insert(
+                    c.connecting.piece.guid.to_string(),
+                    (c.guid.to_string(), c.connected.piece.guid.to_string()),
+                );
+            }
+
+            let fixed_guids: Vec<String> = selected
+                .iter()
+                .filter(|g| !parent_map.contains_key(*g))
+                .cloned()
+                .collect();
+
+            let mut modified_pieces: Vec<PieceFullDto> = Vec::new();
+            for g in fixed_guids {
+                if let Some(p) = dto.pieces.iter().find(|p| p.guid.as_str() == g) {
+                    let base = p.plane.unwrap_or_else(Plane::world_xy);
+                    let t = Self::domain_move_translation_world(&base, gap, shift, rise);
+                    let mut np = p.clone();
+                    let pl = np.plane.get_or_insert(base);
+                    pl.origin = pl.origin.add(&t);
+                    modified_pieces.push(np);
+                }
+            }
+
+            if modified_pieces.is_empty() {
+                return Ok(());
+            }
+            let diff = DesignDiff {
+                modified_pieces,
+                ..Default::default()
+            };
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn fix_pieces(kit: &KitStoreRef, design_guid: &str, piece_ids: Vec<String>) -> SetResult {
+            if piece_ids.is_empty() {
+                return Ok(());
+            }
+            let dto: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            let mut removed: Vec<ConnectionIdDto> = Vec::new();
+            let mut seen: HashSet<String> = HashSet::new();
+            for pid in &piece_ids {
+                for c in &dto.connections {
+                    if c.connecting.piece.guid.as_str() == pid.as_str() {
+                        let s = c.guid.to_string();
+                        if seen.insert(s.clone()) {
+                            removed.push(ConnectionIdDto {
+                                guid: Guid::from(s.as_str()),
+                            });
+                        }
+                    }
+                }
+            }
+            if removed.is_empty() {
+                return Ok(());
+            }
+            let diff = DesignDiff {
+                removed_connections: removed,
+                ..Default::default()
+            };
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn delete_connection_in_design(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            connection_guid: &str,
+        ) -> SetResult {
+            let diff = DesignDiff {
+                removed_connections: vec![ConnectionIdDto {
+                    guid: Guid::from(connection_guid),
+                }],
+                ..Default::default()
+            };
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn flatten_design_apply(kit: &KitStoreRef, design_guid: &str) -> SetResult {
+            let report = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.flatten_design(design_guid)
+                    .map_err(Self::map_semio_err)?
+            };
+            if !report.ok {
+                return Err(SetError::Internal("flatten_design failed".into()));
+            }
+            let Some(change) = report.value else {
+                return Err(SetError::Internal("flatten_design missing value".into()));
+            };
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &change.forward)
+                .map_err(Self::map_semio_err)
+        }
+
+        fn design_dto_by_guid(kit: &KitStore, guid: &str) -> Option<DesignFullDto> {
+            kit.design(guid)
+                .and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
+        }
+
+        fn domain_connection_key(c: &ConnectionFullDto) -> String {
+            format!(
+                "{}|{}|{}|{}",
+                c.guid,
+                c.connected.piece.guid,
+                c.connecting.piece.guid,
+                c.connected
+                    .port
+                    .as_ref()
+                    .map(|p| p.guid.to_string())
+                    .unwrap_or_default()
+            )
+        }
+
+        fn strip_design_piece_guid(c: &ConnectionFullDto, nested: &str) -> ConnectionFullDto {
+            let mut o = c.clone();
+            if o.connected
+                .design_piece
+                .as_ref()
+                .is_some_and(|d| d.guid.as_str() == nested)
+            {
+                o.connected.design_piece = None;
+            }
+            if o.connecting
+                .design_piece
+                .as_ref()
+                .is_some_and(|d| d.guid.as_str() == nested)
+            {
+                o.connecting.design_piece = None;
+            }
+            o
+        }
+
+        fn expand_nested_design_pieces_in_dto(
+            kit: &KitStore,
+            mut design: DesignFullDto,
+        ) -> std::result::Result<DesignFullDto, SetError> {
+            let nested_ids: Vec<String> = {
+                let mut s: HashSet<String> = HashSet::new();
+                for c in &design.connections {
+                    if let Some(dp) = &c.connected.design_piece {
+                        s.insert(dp.guid.to_string());
+                    }
+                    if let Some(dp) = &c.connecting.design_piece {
+                        s.insert(dp.guid.to_string());
+                    }
+                }
+                s.into_iter().collect()
+            };
+
+            for nid in nested_ids {
+                let Some(child) = Self::design_dto_by_guid(kit, &nid) else {
+                    continue;
+                };
+                let expanded = Self::expand_nested_design_pieces_in_dto(kit, child)?;
+                let existing: HashSet<String> = design
+                    .pieces
+                    .iter()
+                    .map(|p| p.guid.to_string())
+                    .collect();
+                let add_p: Vec<PieceFullDto> = expanded
+                    .pieces
+                    .into_iter()
+                    .filter(|p| !existing.contains(p.guid.as_str()))
+                    .collect();
+                let keys: HashSet<String> =
+                    design.connections.iter().map(Self::domain_connection_key).collect();
+                let add_c: Vec<ConnectionFullDto> = expanded
+                    .connections
+                    .into_iter()
+                    .filter(|c| !keys.contains(&Self::domain_connection_key(c)))
+                    .collect();
+                design.pieces.extend(add_p);
+                let mut new_conns: Vec<ConnectionFullDto> = design
+                    .connections
+                    .iter()
+                    .map(|c| Self::strip_design_piece_guid(c, &nid))
+                    .collect();
+                new_conns.extend(add_c);
+                design.connections = new_conns;
+            }
+            Ok(design)
+        }
+
+        pub fn expand_nested_design(
+            kit: &KitStoreRef,
+            parent_design_guid: &str,
+            nested_design_guid: &str,
+        ) -> SetResult {
+            let before: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(parent_design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {parent_design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            let mut expanded_child: DesignFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(nested_design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {nested_design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                dr.to_full_dto()
+            };
+
+            {
+                let kg = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
+            }
+
+            let existing_piece: HashSet<String> = before
+                .pieces
+                .iter()
+                .map(|p| p.guid.to_string())
+                .collect();
+            let add_pieces: Vec<PieceFullDto> = expanded_child
+                .pieces
+                .into_iter()
+                .filter(|p| !existing_piece.contains(p.guid.as_str()))
+                .collect();
+
+            let existing_conn_key: HashSet<String> = before
+                .connections
+                .iter()
+                .map(Self::domain_connection_key)
+                .collect();
+            let add_connections: Vec<ConnectionFullDto> = expanded_child
+                .connections
+                .into_iter()
+                .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
+                .collect();
+
+            let mut after = before.clone();
+            after.pieces.extend(add_pieces);
+            let mut conns: Vec<ConnectionFullDto> = after
+                .connections
+                .iter()
+                .map(|c| Self::strip_design_piece_guid(c, nested_design_guid))
+                .collect();
+            conns.extend(add_connections);
+            after.connections = conns;
+
+            let diff = DesignDiff::between(&before, &after);
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(parent_design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn change_piece_type(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            piece_guid: &str,
+            new_type_guid: &str,
+        ) -> SetResult {
+            let p: PieceFullDto = {
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g
+                    .design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+                let dr = d
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                let dto = dr.to_full_dto();
+                dto.pieces
+                    .into_iter()
+                    .find(|p| p.guid.as_str() == piece_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("piece {piece_guid}")))?
+            };
+            let mut np = p;
+            np.r#type = Some(TypeIdDto {
+                guid: Guid::from(new_type_guid),
+            });
+            let diff = DesignDiff {
+                modified_pieces: vec![np],
+                ..Default::default()
+            };
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.apply_design_diff(design_guid, &diff)
+                .map_err(Self::map_semio_err)
+        }
+
+        pub fn paste_design_selection(
+            _kit: &KitStoreRef,
+            _design_guid: &str,
+            _selection_json: serde_json::Value,
+            _plane: Option<Plane>,
+        ) -> SetResult {
+            Err(SetError::InvalidValue(
+                "pasteDesignSelection: not yet implemented in Rust store".into(),
+            ))
+        }
+
+        pub fn create_hanging_pieces(
+            _kit: &KitStoreRef,
+            _design_guid: &str,
+            _type_guids: Vec<String>,
+            _plane: Plane,
+        ) -> SetResult {
+            Err(SetError::InvalidValue(
+                "createHangingPieces: not yet implemented in Rust store".into(),
+            ))
+        }
+
+        pub fn create_connected_piece(
+            _kit: &KitStoreRef,
+            _design_guid: &str,
+            _parent_piece: &str,
+            _parent_port: &str,
+            _child_type: &str,
+            _child_port: &str,
+        ) -> SetResult {
+            Err(SetError::InvalidValue(
+                "createConnectedPiece: not yet implemented in Rust store".into(),
+            ))
+        }
+
+        pub fn create_fixed_piece(
+            _kit: &KitStoreRef,
+            _design_guid: &str,
+            _type_guid: &str,
+            _plane: Plane,
+        ) -> SetResult {
+            Err(SetError::InvalidValue(
+                "createFixedPiece: not yet implemented in Rust store".into(),
+            ))
+        }
+
+        pub fn get_pieces_metadata_json(
+            &self,
+            design_guid: &str,
+        ) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self
+                .design(design_guid)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+            let dr = d
+                .read()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let flat = dr.flatten_map();
+
+            let mut parent_of: HashMap<Guid, Guid> = HashMap::new();
+            let mut is_child: HashSet<Guid> = HashSet::new();
+            for c in &dr.connections {
+                let Ok(conn) = c.read() else { continue };
+                let Ok(s0) = conn.connected.read() else { continue };
+                let Ok(s1) = conn.connecting.read() else { continue };
+                let Some(pg0) = s0
+                    .piece
+                    .upgrade()
+                    .and_then(|p| p.read().ok().map(|r| r.guid.clone()))
+                else {
+                    continue;
+                };
+                let Some(pg1) = s1
+                    .piece
+                    .upgrade()
+                    .and_then(|p| p.read().ok().map(|r| r.guid.clone()))
+                else {
+                    continue;
+                };
+                parent_of.insert(pg1.clone(), pg0);
+                is_child.insert(pg1);
+            }
+
+            let mut depth: HashMap<Guid, i32> = HashMap::new();
+            let mut roots: Vec<Guid> = Vec::new();
+            for p in &dr.pieces {
+                if let Ok(pr) = p.read() {
+                    if !is_child.contains(&pr.guid) {
+                        roots.push(pr.guid.clone());
+                    }
+                }
+            }
+            let mut q: VecDeque<(Guid, i32)> = VecDeque::new();
+            let mut seen_d: HashSet<Guid> = HashSet::new();
+            for r in roots {
+                q.push_back((r, 0));
+            }
+            while let Some((gid, dpt)) = q.pop_front() {
+                if !seen_d.insert(gid.clone()) {
+                    continue;
+                }
+                depth.insert(gid.clone(), dpt);
+                for p in &dr.pieces {
+                    if let Ok(pr) = p.read() {
+                        if parent_of.get(&pr.guid) == Some(&gid) {
+                            q.push_back((pr.guid.clone(), dpt + 1));
+                        }
+                    }
+                }
+            }
+
+            let mut out: HashMap<String, PiecePlacementMetadataJson> = HashMap::new();
+            for p in &dr.pieces {
+                if let Ok(pr) = p.read() {
+                    let guid_s = pr.guid.to_string();
+                    let (plane, center) = flat
+                        .get(&pr.guid)
+                        .cloned()
+                        .unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
+                    let parent_piece_id = parent_of.get(&pr.guid).map(|g| g.to_string());
+                    let dpt = *depth.get(&pr.guid).unwrap_or(&0);
+                    out.insert(
+                        guid_s.clone(),
+                        PiecePlacementMetadataJson {
+                            plane,
+                            center,
+                            fixed_piece_id: guid_s.clone(),
+                            parent_piece_id,
+                            depth: dpt,
+                            path: vec![guid_s],
+                        },
+                    );
+                }
+            }
+            serde_json::to_value(&out).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_kit_json(&self) -> std::result::Result<serde_json::Value, SetError> {
+            serde_json::to_value(self.to_metadata_dto())
+                .map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_designs_json(&self) -> std::result::Result<serde_json::Value, SetError> {
+            let v: Vec<_> = self
+                .designs
+                .iter()
+                .filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_types_json(&self) -> std::result::Result<serde_json::Value, SetError> {
+            let v: Vec<_> = self
+                .types
+                .iter()
+                .filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_authors_json(&self) -> std::result::Result<serde_json::Value, SetError> {
+            let v: Vec<_> = self
+                .authors
+                .iter()
+                .filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto()))
+                .collect();
+            serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_pieces_json(
+            &self,
+            design_guid: &str,
+        ) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self
+                .design(design_guid)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+            let dr = d
+                .read()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let v: Vec<_> = dr
+                .pieces
+                .iter()
+                .filter_map(|p| p.read().ok().map(|r| r.to_full_dto()))
+                .collect();
+            serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
+
+        pub fn get_connections_json(
+            &self,
+            design_guid: &str,
+        ) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self
+                .design(design_guid)
+                .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
+            let dr = d
+                .read()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let v: Vec<_> = dr
+                .connections
+                .iter()
+                .filter_map(|c| c.read().ok().map(|r| r.to_full_dto()))
+                .collect();
+            serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
+        }
     }
 }
 
@@ -8131,6 +8986,19 @@ pub mod piece {
                     .or_else(|| self.computed_flat_center())
                     .unwrap_or_default()
             })
+        }
+
+        /// 🧭Path from the fixed (root) piece down to and including this piece, computed by
+        /// recursing into the parent piece's path and appending this piece's id.
+        pub fn path(&self) -> Vec<PieceIdDto> {
+            let mut path = self
+                .parent_piece
+                .as_ref()
+                .and_then(|w| w.upgrade())
+                .and_then(|p| p.read().ok().map(|p| p.path()))
+                .unwrap_or_default();
+            path.push(self.to_id_dto());
+            path
         }
 
         pub fn hash(&self) -> String {
@@ -11691,44 +12559,1743 @@ pub mod io {
 
     #[cfg(not(target_arch = "wasm32"))]
     pub mod sqlite {
-        //! SQLite persistence: stores the full hydrated kit as JSON in a single row.
-        //! A normalized multi-table layout can be layered on later without changing
-        //! [`KitStore::from_full_dto`] / [`KitStore::to_json`] boundaries.
+        //! SQLite persistence backed by the normalized schema in `semio/sqlite/schema.sql`.
 
         use std::path::Path;
 
-        use rusqlite::Connection;
+        use rusqlite::{params, Connection as SqlConnection, Transaction};
 
+        use crate::attribute::AttributeFullDto;
+        use crate::author::AuthorFullDto;
+        use crate::benchmark::BenchmarkFullDto;
+        use crate::concept::ConceptFullDto;
+        use crate::connection::ConnectionFullDto;
+        use crate::connector::ConnectorFullDto;
+        use crate::design::DesignFullDto;
         use crate::error::Result;
-        use crate::kit::{KitStore, KitStoreRef};
+        use crate::file::{FileFullDto, FileIdDto};
+        use crate::folder::FolderFullDto;
+        use crate::geom::{Camera, Coordinate, Location, Plane};
+        use crate::group::GroupFullDto;
+        use crate::guid::Guid;
+        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::layer::LayerFullDto;
+        use crate::piece::PieceFullDto;
+        use crate::port::{PortFullDto, PortIdDto};
+        use crate::prop::PropFullDto;
+        use crate::quality::QualityFullDto;
+        use crate::representation::RepresentationFullDto;
+        use crate::side::SideMetadataDto;
+        use crate::stat::StatFullDto;
+        use crate::tag::TagFullDto;
+        use crate::typ::TypeFullDto;
+
+        const SCHEMA_SQL: &str = include_str!("../../sqlite/schema.sql");
+        const SCHEMA_VERSION: &str = "2026-04-22-rs-kit-v1";
+        const SCHEMA_ENGINE: &str = "semio-rs";
+
+        #[derive(Clone, Copy, Default)]
+        struct ScopeRefs<'a> {
+            kit: Option<&'a Guid>,
+            typ: Option<&'a Guid>,
+            design: Option<&'a Guid>,
+            port: Option<&'a Guid>,
+            connector: Option<&'a Guid>,
+            representation: Option<&'a Guid>,
+            piece: Option<&'a Guid>,
+            connection: Option<&'a Guid>,
+        }
+
+        fn guid_ref(value: Option<&Guid>) -> Option<&str> {
+            value.map(Guid::as_str)
+        }
+
+        fn opt_bool_to_int(value: Option<bool>) -> Option<i64> {
+            value.map(|flag| if flag { 1 } else { 0 })
+        }
+
+        fn opt_int_to_bool(value: Option<i64>) -> Option<bool> {
+            value.map(|flag| flag != 0)
+        }
+
+        fn coordinate_parts(value: Option<&Coordinate>) -> (Option<f64>, Option<f64>, Option<f64>) {
+            match value {
+                Some(value) => (Some(value.x), Some(value.y), Some(value.z)),
+                None => (None, None, None),
+            }
+        }
+
+        fn location_parts(value: Option<&Location>) -> (Option<f64>, Option<f64>) {
+            match value {
+                Some(value) => (Some(value.x), Some(value.y)),
+                None => (None, None),
+            }
+        }
+
+        fn plane_parts(
+            value: Option<&Plane>,
+        ) -> (
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+        ) {
+            match value {
+                Some(value) => (
+                    Some(value.origin.x),
+                    Some(value.origin.y),
+                    Some(value.origin.z),
+                    Some(value.x_axis.x),
+                    Some(value.x_axis.y),
+                    Some(value.x_axis.z),
+                    Some(value.y_axis.x),
+                    Some(value.y_axis.y),
+                    Some(value.y_axis.z),
+                ),
+                None => (None, None, None, None, None, None, None, None, None),
+            }
+        }
+
+        fn camera_parts(
+            value: Option<&Camera>,
+        ) -> (
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+        ) {
+            match value {
+                Some(value) => (
+                    Some(value.position.x),
+                    Some(value.position.y),
+                    Some(value.position.z),
+                    Some(value.target.x),
+                    Some(value.target.y),
+                    Some(value.target.z),
+                    Some(value.up.x),
+                    Some(value.up.y),
+                    Some(value.up.z),
+                    Some(value.fov),
+                ),
+                None => (None, None, None, None, None, None, None, None, None, None),
+            }
+        }
+
+        fn coordinate_from_parts(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Coordinate> {
+            if x.is_none() && y.is_none() && z.is_none() {
+                return None;
+            }
+            Some(Coordinate::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
+        }
+
+        fn location_from_parts(x: Option<f64>, y: Option<f64>) -> Option<Location> {
+            if x.is_none() && y.is_none() {
+                return None;
+            }
+            Some(Location::new(x.unwrap_or(0.0), y.unwrap_or(0.0)))
+        }
+
+        fn plane_from_parts(
+            ox: Option<f64>,
+            oy: Option<f64>,
+            oz: Option<f64>,
+            xx: Option<f64>,
+            xy: Option<f64>,
+            xz: Option<f64>,
+            yx: Option<f64>,
+            yy: Option<f64>,
+            yz: Option<f64>,
+        ) -> Option<Plane> {
+            if ox.is_none()
+                && oy.is_none()
+                && oz.is_none()
+                && xx.is_none()
+                && xy.is_none()
+                && xz.is_none()
+                && yx.is_none()
+                && yy.is_none()
+                && yz.is_none()
+            {
+                return None;
+            }
+            let mut plane = Plane::world_xy();
+            plane.origin = Coordinate::new(ox.unwrap_or(0.0), oy.unwrap_or(0.0), oz.unwrap_or(0.0));
+            plane.x_axis = Coordinate::new(xx.unwrap_or(1.0), xy.unwrap_or(0.0), xz.unwrap_or(0.0));
+            plane.y_axis = Coordinate::new(yx.unwrap_or(0.0), yy.unwrap_or(1.0), yz.unwrap_or(0.0));
+            Some(plane)
+        }
+
+        fn camera_from_parts(
+            px: Option<f64>,
+            py: Option<f64>,
+            pz: Option<f64>,
+            tx: Option<f64>,
+            ty: Option<f64>,
+            tz: Option<f64>,
+            ux: Option<f64>,
+            uy: Option<f64>,
+            uz: Option<f64>,
+            fov: Option<f64>,
+        ) -> Option<Camera> {
+            if px.is_none()
+                && py.is_none()
+                && pz.is_none()
+                && tx.is_none()
+                && ty.is_none()
+                && tz.is_none()
+                && ux.is_none()
+                && uy.is_none()
+                && uz.is_none()
+                && fov.is_none()
+            {
+                return None;
+            }
+            Some(Camera {
+                position: Coordinate::new(px.unwrap_or(0.0), py.unwrap_or(0.0), pz.unwrap_or(0.0)),
+                target: Coordinate::new(tx.unwrap_or(0.0), ty.unwrap_or(0.0), tz.unwrap_or(0.0)),
+                up: Coordinate::new(ux.unwrap_or(0.0), uy.unwrap_or(0.0), uz.unwrap_or(1.0)),
+                fov: fov.unwrap_or(45.0),
+            })
+        }
+
+        fn init_schema(conn: &mut SqlConnection) -> Result<()> {
+            conn.execute_batch("PRAGMA foreign_keys = ON;")?;
+            conn.execute_batch(SCHEMA_SQL)?;
+            Ok(())
+        }
+
+        fn clear_schema(tx: &Transaction<'_>) -> Result<()> {
+            tx.execute("DROP TABLE IF EXISTS semio_kit_snapshot", [])?;
+            tx.execute_batch(
+                "DELETE FROM attribute;
+                DELETE FROM prop;
+                DELETE FROM benchmark;
+                DELETE FROM quality;
+                DELETE FROM tag;
+                DELETE FROM concept;
+                DELETE FROM author;
+                DELETE FROM stat;
+                DELETE FROM connection;
+                DELETE FROM group_piece;
+                DELETE FROM \"group\";
+                DELETE FROM piece;
+                DELETE FROM layer;
+                DELETE FROM design;
+                DELETE FROM representation;
+                DELETE FROM connector;
+                DELETE FROM port_compatible_family;
+                DELETE FROM port;
+                DELETE FROM \"type\";
+                DELETE FROM file;
+                DELETE FROM folder;
+                DELETE FROM kit;
+                DELETE FROM semio_schema;",
+            )?;
+            Ok(())
+        }
+
+        fn insert_author(
+            tx: &Transaction<'_>,
+            author: &AuthorFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO author (guid, ordinal, name, email, role, rank, kit_guid, type_guid, design_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    author.guid.as_str(),
+                    ordinal as i64,
+                    author.name,
+                    author.email,
+                    author.role,
+                    author.rank,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_concept(
+            tx: &Transaction<'_>,
+            concept: &ConceptFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO concept (guid, ordinal, name, description, order_index, kit_guid, type_guid, design_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    concept.guid.as_str(),
+                    ordinal as i64,
+                    concept.name,
+                    concept.description,
+                    concept.order,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_tag(
+            tx: &Transaction<'_>,
+            tag: &TagFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO tag (guid, ordinal, name, order_index, kit_guid, type_guid, design_guid, representation_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    tag.guid.as_str(),
+                    ordinal as i64,
+                    tag.name,
+                    tag.order,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                    guid_ref(scope.representation),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_benchmarks(
+            tx: &Transaction<'_>,
+            quality_guid: &Guid,
+            benchmarks: &[BenchmarkFullDto],
+        ) -> Result<()> {
+            for (ordinal, benchmark) in benchmarks.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO benchmark (guid, ordinal, name, min_value, max_value, min_excluded, max_excluded, quality_guid)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                    params![
+                        benchmark.guid.as_str(),
+                        ordinal as i64,
+                        benchmark.name,
+                        benchmark.min,
+                        benchmark.max,
+                        opt_bool_to_int(benchmark.min_excluded),
+                        opt_bool_to_int(benchmark.max_excluded),
+                        quality_guid.as_str(),
+                    ],
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_quality(
+            tx: &Transaction<'_>,
+            quality: &QualityFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO quality (
+                    guid, ordinal, key, value, unit, definition, description,
+                    kit_guid, type_guid, design_guid, port_guid, connector_guid, representation_guid
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                params![
+                    quality.guid.as_str(),
+                    ordinal as i64,
+                    quality.key,
+                    quality.value,
+                    quality.unit,
+                    quality.definition,
+                    quality.description,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                    guid_ref(scope.port),
+                    guid_ref(scope.connector),
+                    guid_ref(scope.representation),
+                ],
+            )?;
+            insert_benchmarks(tx, &quality.guid, &quality.benchmarks)
+        }
+
+        fn insert_prop(
+            tx: &Transaction<'_>,
+            prop: &PropFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO prop (guid, ordinal, key, value, unit, kit_guid, type_guid, design_guid, piece_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    prop.guid.as_str(),
+                    ordinal as i64,
+                    prop.key,
+                    prop.value,
+                    prop.unit,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                    guid_ref(scope.piece),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_attribute(
+            tx: &Transaction<'_>,
+            attribute: &AttributeFullDto,
+            ordinal: usize,
+            scope: ScopeRefs<'_>,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO attribute (
+                    guid, ordinal, key, value, definition,
+                    kit_guid, type_guid, design_guid, piece_guid, port_guid,
+                    connector_guid, representation_guid, connection_guid
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                params![
+                    attribute.guid.as_str(),
+                    ordinal as i64,
+                    attribute.key,
+                    attribute.value,
+                    attribute.definition,
+                    guid_ref(scope.kit),
+                    guid_ref(scope.typ),
+                    guid_ref(scope.design),
+                    guid_ref(scope.piece),
+                    guid_ref(scope.port),
+                    guid_ref(scope.connector),
+                    guid_ref(scope.representation),
+                    guid_ref(scope.connection),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_port(tx: &Transaction<'_>, type_guid: &Guid, port: &PortFullDto, ordinal: usize) -> Result<()> {
+            let (point_x, point_y, point_z) = coordinate_parts(port.point.as_ref());
+            let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
+            tx.execute(
+                "INSERT INTO port (
+                    guid, ordinal, id, family, mandatory, t, description,
+                    point_x, point_y, point_z, direction_x, direction_y, direction_z, type_guid
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![
+                    port.guid.as_str(),
+                    ordinal as i64,
+                    port.id,
+                    port.family,
+                    opt_bool_to_int(port.mandatory),
+                    port.t,
+                    port.description,
+                    point_x,
+                    point_y,
+                    point_z,
+                    dir_x,
+                    dir_y,
+                    dir_z,
+                    type_guid.as_str(),
+                ],
+            )?;
+            for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO port_compatible_family (port_guid, ordinal, family) VALUES (?1, ?2, ?3)",
+                    params![port.guid.as_str(), compatible_ordinal as i64, family],
+                )?;
+            }
+            for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
+                insert_quality(
+                    tx,
+                    quality,
+                    quality_ordinal,
+                    ScopeRefs {
+                        port: Some(&port.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        port: Some(&port.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_connector(
+            tx: &Transaction<'_>,
+            type_guid: &Guid,
+            connector: &ConnectorFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO connector (guid, ordinal, code, description, port_guid, type_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    connector.guid.as_str(),
+                    ordinal as i64,
+                    connector.code,
+                    connector.description,
+                    connector.port.as_ref().map(|port| port.guid.as_str()),
+                    type_guid.as_str(),
+                ],
+            )?;
+            for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
+                insert_quality(
+                    tx,
+                    quality,
+                    quality_ordinal,
+                    ScopeRefs {
+                        connector: Some(&connector.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in connector.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        connector: Some(&connector.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_representation(
+            tx: &Transaction<'_>,
+            type_guid: &Guid,
+            representation: &RepresentationFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO representation (guid, ordinal, url, description, file_guid, type_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    representation.guid.as_str(),
+                    ordinal as i64,
+                    representation.url,
+                    representation.description,
+                    representation.file.as_ref().map(|file| file.guid.as_str()),
+                    type_guid.as_str(),
+                ],
+            )?;
+            for (tag_ordinal, tag) in representation.tags.iter().enumerate() {
+                insert_tag(
+                    tx,
+                    tag,
+                    tag_ordinal,
+                    ScopeRefs {
+                        representation: Some(&representation.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (quality_ordinal, quality) in representation.qualities.iter().enumerate() {
+                insert_quality(
+                    tx,
+                    quality,
+                    quality_ordinal,
+                    ScopeRefs {
+                        representation: Some(&representation.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in representation.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        representation: Some(&representation.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_type(tx: &Transaction<'_>, kit_guid: &Guid, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
+            let (location_x, location_y) = location_parts(typ.location.as_ref());
+            tx.execute(
+                "INSERT INTO \"type\" (
+                    guid, ordinal, name, description, icon, image, variant,
+                    stock, virtual, unit, location_x, location_y, created_at, updated_at, kit_guid
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+                params![
+                    typ.guid.as_str(),
+                    ordinal as i64,
+                    typ.name,
+                    typ.description,
+                    typ.icon,
+                    typ.image,
+                    typ.variant,
+                    typ.stock,
+                    opt_bool_to_int(typ.virtual_),
+                    typ.unit,
+                    location_x,
+                    location_y,
+                    typ.created,
+                    typ.updated,
+                    kit_guid.as_str(),
+                ],
+            )?;
+            for (port_ordinal, port) in typ.ports.iter().enumerate() {
+                insert_port(tx, &typ.guid, port, port_ordinal)?;
+            }
+            for (connector_ordinal, connector) in typ.connectors.iter().enumerate() {
+                insert_connector(tx, &typ.guid, connector, connector_ordinal)?;
+            }
+            for (representation_ordinal, representation) in typ.representations.iter().enumerate() {
+                insert_representation(tx, &typ.guid, representation, representation_ordinal)?;
+            }
+            for (author_ordinal, author) in typ.authors.iter().enumerate() {
+                insert_author(
+                    tx,
+                    author,
+                    author_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (concept_ordinal, concept) in typ.concepts.iter().enumerate() {
+                insert_concept(
+                    tx,
+                    concept,
+                    concept_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (tag_ordinal, tag) in typ.tags.iter().enumerate() {
+                insert_tag(
+                    tx,
+                    tag,
+                    tag_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (quality_ordinal, quality) in typ.qualities.iter().enumerate() {
+                insert_quality(
+                    tx,
+                    quality,
+                    quality_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (prop_ordinal, prop) in typ.props.iter().enumerate() {
+                insert_prop(
+                    tx,
+                    prop,
+                    prop_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in typ.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        typ: Some(&typ.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_layer(tx: &Transaction<'_>, design_guid: &Guid, layer: &LayerFullDto, ordinal: usize) -> Result<()> {
+            tx.execute(
+                "INSERT INTO layer (guid, ordinal, name, description, color, order_index, visible, locked, design_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+                params![
+                    layer.guid.as_str(),
+                    ordinal as i64,
+                    layer.name,
+                    layer.description,
+                    layer.color,
+                    layer.order,
+                    opt_bool_to_int(layer.visible),
+                    opt_bool_to_int(layer.locked),
+                    design_guid.as_str(),
+                ],
+            )?;
+            Ok(())
+        }
+
+        fn insert_piece(tx: &Transaction<'_>, design_guid: &Guid, piece: &PieceFullDto, ordinal: usize) -> Result<()> {
+            let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) =
+                plane_parts(piece.plane.as_ref());
+            let (center_x, center_y, center_z) = coordinate_parts(piece.center.as_ref());
+            let (
+                mirror_ox,
+                mirror_oy,
+                mirror_oz,
+                mirror_xx,
+                mirror_xy,
+                mirror_xz,
+                mirror_yx,
+                mirror_yy,
+                mirror_yz,
+            ) = plane_parts(piece.mirror_plane.as_ref());
+            tx.execute(
+                "INSERT INTO piece (
+                    guid, ordinal, id, name, description,
+                    plane_origin_x, plane_origin_y, plane_origin_z,
+                    plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+                    plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+                    center_x, center_y, center_z, scale,
+                    mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+                    mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+                    mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+                    hidden, locked, color, type_guid, design_ref_guid, design_guid
+                 ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5,
+                    ?6, ?7, ?8,
+                    ?9, ?10, ?11,
+                    ?12, ?13, ?14,
+                    ?15, ?16, ?17, ?18,
+                    ?19, ?20, ?21,
+                    ?22, ?23, ?24,
+                    ?25, ?26, ?27,
+                    ?28, ?29, ?30, ?31, ?32, ?33
+                 )",
+                params![
+                    piece.guid.as_str(),
+                    ordinal as i64,
+                    piece.id,
+                    piece.name,
+                    piece.description,
+                    plane_ox,
+                    plane_oy,
+                    plane_oz,
+                    plane_xx,
+                    plane_xy,
+                    plane_xz,
+                    plane_yx,
+                    plane_yy,
+                    plane_yz,
+                    center_x,
+                    center_y,
+                    center_z,
+                    piece.scale,
+                    mirror_ox,
+                    mirror_oy,
+                    mirror_oz,
+                    mirror_xx,
+                    mirror_xy,
+                    mirror_xz,
+                    mirror_yx,
+                    mirror_yy,
+                    mirror_yz,
+                    opt_bool_to_int(piece.hidden),
+                    opt_bool_to_int(piece.locked),
+                    piece.color,
+                    piece.r#type.as_ref().map(|typ| typ.guid.as_str()),
+                    piece.design.as_ref().map(|design| design.guid.as_str()),
+                    design_guid.as_str(),
+                ],
+            )?;
+            for (prop_ordinal, prop) in piece.props.iter().enumerate() {
+                insert_prop(
+                    tx,
+                    prop,
+                    prop_ordinal,
+                    ScopeRefs {
+                        piece: Some(&piece.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in piece.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        piece: Some(&piece.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_group(tx: &Transaction<'_>, design_guid: &Guid, group: &GroupFullDto, ordinal: usize) -> Result<()> {
+            tx.execute(
+                "INSERT INTO \"group\" (guid, ordinal, name, description, color, icon, design_guid)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    group.guid.as_str(),
+                    ordinal as i64,
+                    group.name,
+                    group.description,
+                    group.color,
+                    group.icon,
+                    design_guid.as_str(),
+                ],
+            )?;
+            for (piece_ordinal, piece) in group.pieces.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO group_piece (group_guid, piece_guid, ordinal) VALUES (?1, ?2, ?3)",
+                    params![group.guid.as_str(), piece.guid.as_str(), piece_ordinal as i64],
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_connection(
+            tx: &Transaction<'_>,
+            design_guid: &Guid,
+            connection: &ConnectionFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
+            tx.execute(
+                "INSERT INTO connection (
+                    guid, ordinal,
+                    connected_side_guid, connected_piece_guid, connected_port_guid, connected_design_piece_guid,
+                    connecting_side_guid, connecting_piece_guid, connecting_port_guid, connecting_design_piece_guid,
+                    gap, shift, rise, rotation, turn, tilt, x, y, description, design_guid
+                 ) VALUES (
+                    ?1, ?2,
+                    ?3, ?4, ?5, ?6,
+                    ?7, ?8, ?9, ?10,
+                    ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20
+                 )",
+                params![
+                    connection.guid.as_str(),
+                    ordinal as i64,
+                    connection.connected.guid.as_str(),
+                    connection.connected.piece.guid.as_str(),
+                    connection.connected.port.as_ref().map(|port| port.guid.as_str()),
+                    connection
+                        .connected
+                        .design_piece
+                        .as_ref()
+                        .map(|piece| piece.guid.as_str()),
+                    connection.connecting.guid.as_str(),
+                    connection.connecting.piece.guid.as_str(),
+                    connection.connecting.port.as_ref().map(|port| port.guid.as_str()),
+                    connection
+                        .connecting
+                        .design_piece
+                        .as_ref()
+                        .map(|piece| piece.guid.as_str()),
+                    connection.gap,
+                    connection.shift,
+                    connection.rise,
+                    connection.rotation,
+                    connection.turn,
+                    connection.tilt,
+                    connection.x,
+                    connection.y,
+                    connection.description,
+                    design_guid.as_str(),
+                ],
+            )?;
+            for (attribute_ordinal, attribute) in connection.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        connection: Some(&connection.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn insert_design(tx: &Transaction<'_>, kit_guid: &Guid, design: &DesignFullDto, ordinal: usize) -> Result<()> {
+            let (location_x, location_y) = location_parts(design.location.as_ref());
+            let (
+                camera_px,
+                camera_py,
+                camera_pz,
+                camera_tx,
+                camera_ty,
+                camera_tz,
+                camera_ux,
+                camera_uy,
+                camera_uz,
+                camera_fov,
+            ) = camera_parts(design.camera.as_ref());
+            tx.execute(
+                "INSERT INTO design (
+                    guid, ordinal, name, description, icon, image, variant, view,
+                    location_x, location_y,
+                    camera_position_x, camera_position_y, camera_position_z,
+                    camera_target_x, camera_target_y, camera_target_z,
+                    camera_up_x, camera_up_y, camera_up_z, camera_fov,
+                    unit, created_at, updated_at, kit_guid
+                 ) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8,
+                    ?9, ?10,
+                    ?11, ?12, ?13,
+                    ?14, ?15, ?16,
+                    ?17, ?18, ?19, ?20,
+                    ?21, ?22, ?23, ?24
+                 )",
+                params![
+                    design.guid.as_str(),
+                    ordinal as i64,
+                    design.name,
+                    design.description,
+                    design.icon,
+                    design.image,
+                    design.variant,
+                    design.view,
+                    location_x,
+                    location_y,
+                    camera_px,
+                    camera_py,
+                    camera_pz,
+                    camera_tx,
+                    camera_ty,
+                    camera_tz,
+                    camera_ux,
+                    camera_uy,
+                    camera_uz,
+                    camera_fov,
+                    design.unit,
+                    design.created,
+                    design.updated,
+                    kit_guid.as_str(),
+                ],
+            )?;
+            for (layer_ordinal, layer) in design.layers.iter().enumerate() {
+                insert_layer(tx, &design.guid, layer, layer_ordinal)?;
+            }
+            for (piece_ordinal, piece) in design.pieces.iter().enumerate() {
+                insert_piece(tx, &design.guid, piece, piece_ordinal)?;
+            }
+            for (group_ordinal, group) in design.groups.iter().enumerate() {
+                insert_group(tx, &design.guid, group, group_ordinal)?;
+            }
+            for (connection_ordinal, connection) in design.connections.iter().enumerate() {
+                insert_connection(tx, &design.guid, connection, connection_ordinal)?;
+            }
+            for (stat_ordinal, stat) in design.stats.iter().enumerate() {
+                tx.execute(
+                    "INSERT INTO stat (guid, ordinal, key, value, unit, description, design_guid)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    params![
+                        stat.guid.as_str(),
+                        stat_ordinal as i64,
+                        stat.key,
+                        stat.value,
+                        stat.unit,
+                        stat.description,
+                        design.guid.as_str(),
+                    ],
+                )?;
+            }
+            for (author_ordinal, author) in design.authors.iter().enumerate() {
+                insert_author(
+                    tx,
+                    author,
+                    author_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (concept_ordinal, concept) in design.concepts.iter().enumerate() {
+                insert_concept(
+                    tx,
+                    concept,
+                    concept_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (tag_ordinal, tag) in design.tags.iter().enumerate() {
+                insert_tag(
+                    tx,
+                    tag,
+                    tag_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (quality_ordinal, quality) in design.qualities.iter().enumerate() {
+                insert_quality(
+                    tx,
+                    quality,
+                    quality_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (prop_ordinal, prop) in design.props.iter().enumerate() {
+                insert_prop(
+                    tx,
+                    prop,
+                    prop_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            for (attribute_ordinal, attribute) in design.attributes.iter().enumerate() {
+                insert_attribute(
+                    tx,
+                    attribute,
+                    attribute_ordinal,
+                    ScopeRefs {
+                        design: Some(&design.guid),
+                        ..ScopeRefs::default()
+                    },
+                )?;
+            }
+            Ok(())
+        }
+
+        fn load_authors_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<AuthorFullDto>> {
+            let sql = format!(
+                "SELECT guid, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(AuthorFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    name: row.get(1)?,
+                    email: row.get(2)?,
+                    role: row.get(3)?,
+                    rank: row.get(4)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_concepts_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<ConceptFullDto>> {
+            let sql = format!(
+                "SELECT guid, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(ConceptFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    order: row.get(3)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_tags_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<TagFullDto>> {
+            let sql = format!(
+                "SELECT guid, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(TagFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    name: row.get(1)?,
+                    order: row.get(2)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_benchmarks(conn: &SqlConnection, quality_guid: &Guid) -> Result<Vec<BenchmarkFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, min_value, max_value, min_excluded, max_excluded
+                 FROM benchmark WHERE quality_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([quality_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(BenchmarkFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    name: row.get(1)?,
+                    min: row.get(2)?,
+                    max: row.get(3)?,
+                    min_excluded: opt_int_to_bool(row.get(4)?),
+                    max_excluded: opt_int_to_bool(row.get(5)?),
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_qualities_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<QualityFullDto>> {
+            let sql = format!(
+                "SELECT guid, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let quality_guid = Guid::from(row.get::<_, String>(0)?);
+                values.push(QualityFullDto {
+                    guid: quality_guid.clone(),
+                    key: row.get(1)?,
+                    value: row.get(2)?,
+                    unit: row.get(3)?,
+                    definition: row.get(4)?,
+                    description: row.get(5)?,
+                    benchmarks: load_benchmarks(conn, &quality_guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_props_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<PropFullDto>> {
+            let sql = format!(
+                "SELECT guid, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(PropFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    key: row.get(1)?,
+                    value: row.get(2)?,
+                    unit: row.get(3)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_attributes_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<AttributeFullDto>> {
+            let sql = format!(
+                "SELECT guid, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal"
+            );
+            let mut stmt = conn.prepare(&sql)?;
+            let mut rows = stmt.query([guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(AttributeFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    key: row.get(1)?,
+                    value: row.get(2)?,
+                    definition: row.get(3)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_ports(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<PortFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, id, family, mandatory, t, description,
+                        point_x, point_y, point_z, direction_x, direction_y, direction_z
+                 FROM port WHERE type_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let mut compatibility_stmt = conn.prepare(
+                    "SELECT family FROM port_compatible_family WHERE port_guid = ?1 ORDER BY ordinal",
+                )?;
+                let mut compatibility_rows = compatibility_stmt.query([guid.as_str()])?;
+                let mut compatible_families = Vec::new();
+                while let Some(compatibility_row) = compatibility_rows.next()? {
+                    compatible_families.push(compatibility_row.get(0)?);
+                }
+                values.push(PortFullDto {
+                    guid: guid.clone(),
+                    id: row.get(1)?,
+                    family: row.get(2)?,
+                    compatible_families,
+                    mandatory: opt_int_to_bool(row.get(3)?),
+                    t: row.get(4)?,
+                    description: row.get(5)?,
+                    point: coordinate_from_parts(row.get(6)?, row.get(7)?, row.get(8)?),
+                    direction: coordinate_from_parts(row.get(9)?, row.get(10)?, row.get(11)?),
+                    qualities: load_qualities_for_scope(conn, "port_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "port_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_connectors(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<ConnectorFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, code, description, port_guid FROM connector WHERE type_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let port_guid: Option<String> = row.get(3)?;
+                values.push(ConnectorFullDto {
+                    guid: guid.clone(),
+                    code: row.get(1)?,
+                    description: row.get(2)?,
+                    port: port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
+                    qualities: load_qualities_for_scope(conn, "connector_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "connector_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_representations(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<RepresentationFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, url, description, file_guid FROM representation WHERE type_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([type_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let file_guid: Option<String> = row.get(3)?;
+                values.push(RepresentationFullDto {
+                    guid: guid.clone(),
+                    url: row.get(1)?,
+                    description: row.get(2)?,
+                    file: file_guid.map(|value| FileIdDto { guid: Guid::from(value) }),
+                    tags: load_tags_for_scope(conn, "representation_guid", &guid)?,
+                    qualities: load_qualities_for_scope(conn, "representation_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "representation_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_types(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<TypeFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, description, icon, image, variant, stock, virtual, unit, location_x, location_y, created_at, updated_at
+                 FROM \"type\" WHERE kit_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                values.push(TypeFullDto {
+                    guid: guid.clone(),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    icon: row.get(3)?,
+                    image: row.get(4)?,
+                    variant: row.get(5)?,
+                    stock: row.get(6)?,
+                    virtual_: opt_int_to_bool(row.get(7)?),
+                    unit: row.get(8)?,
+                    location: location_from_parts(row.get(9)?, row.get(10)?),
+                    created: row.get(11)?,
+                    updated: row.get(12)?,
+                    ports: load_ports(conn, &guid)?,
+                    connectors: load_connectors(conn, &guid)?,
+                    representations: load_representations(conn, &guid)?,
+                    authors: load_authors_for_scope(conn, "type_guid", &guid)?,
+                    concepts: load_concepts_for_scope(conn, "type_guid", &guid)?,
+                    tags: load_tags_for_scope(conn, "type_guid", &guid)?,
+                    qualities: load_qualities_for_scope(conn, "type_guid", &guid)?,
+                    props: load_props_for_scope(conn, "type_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "type_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_layers(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<LayerFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, description, color, order_index, visible, locked
+                 FROM layer WHERE design_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(LayerFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    color: row.get(3)?,
+                    order: row.get(4)?,
+                    visible: opt_int_to_bool(row.get(5)?),
+                    locked: opt_int_to_bool(row.get(6)?),
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_pieces(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<PieceFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, id, name, description,
+                        plane_origin_x, plane_origin_y, plane_origin_z,
+                        plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
+                        plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+                        center_x, center_y, center_z, scale,
+                        mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+                        mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+                        mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+                        hidden, locked, color, type_guid, design_ref_guid
+                 FROM piece WHERE design_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let type_guid: Option<String> = row.get(29)?;
+                let design_ref_guid: Option<String> = row.get(30)?;
+                values.push(PieceFullDto {
+                    guid: guid.clone(),
+                    id: row.get(1)?,
+                    name: row.get(2)?,
+                    description: row.get(3)?,
+                    plane: plane_from_parts(
+                        row.get(4)?,
+                        row.get(5)?,
+                        row.get(6)?,
+                        row.get(7)?,
+                        row.get(8)?,
+                        row.get(9)?,
+                        row.get(10)?,
+                        row.get(11)?,
+                        row.get(12)?,
+                    ),
+                    center: coordinate_from_parts(row.get(13)?, row.get(14)?, row.get(15)?),
+                    scale: row.get(16)?,
+                    mirror_plane: plane_from_parts(
+                        row.get(17)?,
+                        row.get(18)?,
+                        row.get(19)?,
+                        row.get(20)?,
+                        row.get(21)?,
+                        row.get(22)?,
+                        row.get(23)?,
+                        row.get(24)?,
+                        row.get(25)?,
+                    ),
+                    hidden: opt_int_to_bool(row.get(26)?),
+                    locked: opt_int_to_bool(row.get(27)?),
+                    color: row.get(28)?,
+                    r#type: type_guid.map(|value| crate::typ::TypeIdDto { guid: Guid::from(value) }),
+                    design: design_ref_guid.map(|value| crate::design::DesignIdDto { guid: Guid::from(value) }),
+                    props: load_props_for_scope(conn, "piece_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "piece_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_groups(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<GroupFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, description, color, icon FROM \"group\" WHERE design_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let mut piece_stmt = conn.prepare(
+                    "SELECT piece_guid FROM group_piece WHERE group_guid = ?1 ORDER BY ordinal",
+                )?;
+                let mut piece_rows = piece_stmt.query([guid.as_str()])?;
+                let mut pieces = Vec::new();
+                while let Some(piece_row) = piece_rows.next()? {
+                    pieces.push(crate::piece::PieceIdDto {
+                        guid: Guid::from(piece_row.get::<_, String>(0)?),
+                    });
+                }
+                values.push(GroupFullDto {
+                    guid,
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    color: row.get(3)?,
+                    icon: row.get(4)?,
+                    pieces,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_connections(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<ConnectionFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid,
+                        connected_side_guid, connected_piece_guid, connected_port_guid, connected_design_piece_guid,
+                        connecting_side_guid, connecting_piece_guid, connecting_port_guid, connecting_design_piece_guid,
+                        gap, shift, rise, rotation, turn, tilt, x, y, description
+                 FROM connection WHERE design_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                let connected_port_guid: Option<String> = row.get(3)?;
+                let connected_design_piece_guid: Option<String> = row.get(4)?;
+                let connecting_port_guid: Option<String> = row.get(7)?;
+                let connecting_design_piece_guid: Option<String> = row.get(8)?;
+                values.push(ConnectionFullDto {
+                    guid: guid.clone(),
+                    connected: SideMetadataDto {
+                        guid: Guid::from(row.get::<_, String>(1)?),
+                        piece: crate::piece::PieceIdDto {
+                            guid: Guid::from(row.get::<_, String>(2)?),
+                        },
+                        port: connected_port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
+                        design_piece: connected_design_piece_guid
+                            .map(|value| crate::piece::PieceIdDto { guid: Guid::from(value) }),
+                    },
+                    connecting: SideMetadataDto {
+                        guid: Guid::from(row.get::<_, String>(5)?),
+                        piece: crate::piece::PieceIdDto {
+                            guid: Guid::from(row.get::<_, String>(6)?),
+                        },
+                        port: connecting_port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
+                        design_piece: connecting_design_piece_guid
+                            .map(|value| crate::piece::PieceIdDto { guid: Guid::from(value) }),
+                    },
+                    gap: row.get(9)?,
+                    shift: row.get(10)?,
+                    rise: row.get(11)?,
+                    rotation: row.get(12)?,
+                    turn: row.get(13)?,
+                    tilt: row.get(14)?,
+                    x: row.get(15)?,
+                    y: row.get(16)?,
+                    description: row.get(17)?,
+                    attributes: load_attributes_for_scope(conn, "connection_guid", &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_stats(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<StatFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, key, value, unit, description FROM stat WHERE design_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([design_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(StatFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    key: row.get(1)?,
+                    value: row.get(2)?,
+                    unit: row.get(3)?,
+                    description: row.get(4)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_designs(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<DesignFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, description, icon, image, variant, view,
+                        location_x, location_y,
+                        camera_position_x, camera_position_y, camera_position_z,
+                        camera_target_x, camera_target_y, camera_target_z,
+                        camera_up_x, camera_up_y, camera_up_z, camera_fov,
+                        unit, created_at, updated_at
+                 FROM design WHERE kit_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                let guid = Guid::from(row.get::<_, String>(0)?);
+                values.push(DesignFullDto {
+                    guid: guid.clone(),
+                    name: row.get(1)?,
+                    description: row.get(2)?,
+                    icon: row.get(3)?,
+                    image: row.get(4)?,
+                    variant: row.get(5)?,
+                    view: row.get(6)?,
+                    location: location_from_parts(row.get(7)?, row.get(8)?),
+                    camera: camera_from_parts(
+                        row.get(9)?,
+                        row.get(10)?,
+                        row.get(11)?,
+                        row.get(12)?,
+                        row.get(13)?,
+                        row.get(14)?,
+                        row.get(15)?,
+                        row.get(16)?,
+                        row.get(17)?,
+                        row.get(18)?,
+                    ),
+                    unit: row.get(19)?,
+                    created: row.get(20)?,
+                    updated: row.get(21)?,
+                    kit: Some(crate::kit::KitIdDto { guid: kit_guid.clone() }),
+                    pieces: load_pieces(conn, &guid)?,
+                    connections: load_connections(conn, &guid)?,
+                    layers: load_layers(conn, &guid)?,
+                    groups: load_groups(conn, &guid)?,
+                    authors: load_authors_for_scope(conn, "design_guid", &guid)?,
+                    concepts: load_concepts_for_scope(conn, "design_guid", &guid)?,
+                    tags: load_tags_for_scope(conn, "design_guid", &guid)?,
+                    qualities: load_qualities_for_scope(conn, "design_guid", &guid)?,
+                    props: load_props_for_scope(conn, "design_guid", &guid)?,
+                    attributes: load_attributes_for_scope(conn, "design_guid", &guid)?,
+                    stats: load_stats(conn, &guid)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_files(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<FileFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, url, mime, size, hash, description, created_at, updated_at
+                 FROM file WHERE kit_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(FileFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    url: row.get(1)?,
+                    mime: row.get(2)?,
+                    size: row.get(3)?,
+                    hash: row.get(4)?,
+                    description: row.get(5)?,
+                    created: row.get(6)?,
+                    updated: row.get(7)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_folders(conn: &SqlConnection, kit_guid: &Guid) -> Result<Vec<FolderFullDto>> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, path, description FROM folder WHERE kit_guid = ?1 ORDER BY ordinal",
+            )?;
+            let mut rows = stmt.query([kit_guid.as_str()])?;
+            let mut values = Vec::new();
+            while let Some(row) = rows.next()? {
+                values.push(FolderFullDto {
+                    guid: Guid::from(row.get::<_, String>(0)?),
+                    path: row.get(1)?,
+                    description: row.get(2)?,
+                });
+            }
+            Ok(values)
+        }
+
+        fn load_kit_dto(conn: &SqlConnection) -> Result<KitFullDto> {
+            let mut stmt = conn.prepare(
+                "SELECT guid, name, description, icon, image, preview, version, remote, homepage, license, uri, created_at, updated_at
+                 FROM kit LIMIT 1",
+            )?;
+            let mut rows = stmt.query([])?;
+            let row = rows.next()?.expect("kit row must exist in sqlite persistence");
+            let guid = Guid::from(row.get::<_, String>(0)?);
+            Ok(KitFullDto {
+                guid: guid.clone(),
+                name: row.get(1)?,
+                description: row.get(2)?,
+                icon: row.get(3)?,
+                image: row.get(4)?,
+                preview: row.get(5)?,
+                version: row.get(6)?,
+                remote: row.get(7)?,
+                homepage: row.get(8)?,
+                license: row.get(9)?,
+                uri: row.get(10)?,
+                created: row.get(11)?,
+                updated: row.get(12)?,
+                types: load_types(conn, &guid)?,
+                designs: load_designs(conn, &guid)?,
+                files: load_files(conn, &guid)?,
+                folders: load_folders(conn, &guid)?,
+                authors: load_authors_for_scope(conn, "kit_guid", &guid)?,
+                concepts: load_concepts_for_scope(conn, "kit_guid", &guid)?,
+                tags: load_tags_for_scope(conn, "kit_guid", &guid)?,
+                qualities: load_qualities_for_scope(conn, "kit_guid", &guid)?,
+                props: load_props_for_scope(conn, "kit_guid", &guid)?,
+                attributes: load_attributes_for_scope(conn, "kit_guid", &guid)?,
+            })
+        }
 
         impl KitStore {
-            /// Preferred API (plan): write kit JSON snapshot to `path`.
+            /// Write the full kit graph to a normalized SQLite database at `path`.
             pub fn save_sqlite(&self, path: &Path) -> Result<()> {
-                let conn = Connection::open(path)?;
-                conn.execute_batch(
-                    "CREATE TABLE IF NOT EXISTS semio_kit_snapshot (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
-                payload TEXT NOT NULL
-            );",
+                let mut conn = SqlConnection::open(path)?;
+                init_schema(&mut conn)?;
+                let tx = conn.transaction()?;
+                clear_schema(&tx)?;
+
+                let dto = self.to_full_dto();
+                tx.execute(
+                    "INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))",
+                    params![SCHEMA_VERSION, SCHEMA_ENGINE],
                 )?;
-                let payload = self.to_json()?;
-                conn.execute(
-                    "INSERT OR REPLACE INTO semio_kit_snapshot (id, payload) VALUES (1, ?1)",
-                    [&payload],
+                tx.execute(
+                    "INSERT INTO kit (
+                        guid, name, description, icon, image, preview, version,
+                        remote, homepage, license, uri, created_at, updated_at
+                     ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+                    params![
+                        dto.guid.as_str(),
+                        dto.name,
+                        dto.description,
+                        dto.icon,
+                        dto.image,
+                        dto.preview,
+                        dto.version,
+                        dto.remote,
+                        dto.homepage,
+                        dto.license,
+                        dto.uri,
+                        dto.created,
+                        dto.updated,
+                    ],
                 )?;
+
+                for (ordinal, folder) in dto.folders.iter().enumerate() {
+                    tx.execute(
+                        "INSERT INTO folder (guid, ordinal, path, description, kit_guid) VALUES (?1, ?2, ?3, ?4, ?5)",
+                        params![folder.guid.as_str(), ordinal as i64, folder.path, folder.description, dto.guid.as_str()],
+                    )?;
+                }
+                for (ordinal, file) in dto.files.iter().enumerate() {
+                    tx.execute(
+                        "INSERT INTO file (guid, ordinal, url, mime, size, hash, description, created_at, updated_at, kit_guid)
+                         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+                        params![
+                            file.guid.as_str(),
+                            ordinal as i64,
+                            file.url,
+                            file.mime,
+                            file.size,
+                            file.hash,
+                            file.description,
+                            file.created,
+                            file.updated,
+                            dto.guid.as_str(),
+                        ],
+                    )?;
+                }
+                for (ordinal, typ) in dto.types.iter().enumerate() {
+                    insert_type(&tx, &dto.guid, typ, ordinal)?;
+                }
+                for (ordinal, design) in dto.designs.iter().enumerate() {
+                    insert_design(&tx, &dto.guid, design, ordinal)?;
+                }
+                for (ordinal, author) in dto.authors.iter().enumerate() {
+                    insert_author(
+                        &tx,
+                        author,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+                for (ordinal, concept) in dto.concepts.iter().enumerate() {
+                    insert_concept(
+                        &tx,
+                        concept,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+                for (ordinal, tag) in dto.tags.iter().enumerate() {
+                    insert_tag(
+                        &tx,
+                        tag,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+                for (ordinal, quality) in dto.qualities.iter().enumerate() {
+                    insert_quality(
+                        &tx,
+                        quality,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+                for (ordinal, prop) in dto.props.iter().enumerate() {
+                    insert_prop(
+                        &tx,
+                        prop,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+                for (ordinal, attribute) in dto.attributes.iter().enumerate() {
+                    insert_attribute(
+                        &tx,
+                        attribute,
+                        ordinal,
+                        ScopeRefs {
+                            kit: Some(&dto.guid),
+                            ..ScopeRefs::default()
+                        },
+                    )?;
+                }
+
+                tx.commit()?;
                 Ok(())
             }
 
-            /// Preferred API (plan): load kit from JSON snapshot stored in SQLite.
+            /// Load a full kit graph from a normalized SQLite database at `path`.
             pub fn load_sqlite(path: &Path) -> Result<KitStoreRef> {
-                let conn = Connection::open(path)?;
-                let payload: String = conn.query_row(
-                    "SELECT payload FROM semio_kit_snapshot WHERE id = 1",
-                    [],
-                    |r| r.get(0),
-                )?;
-                KitStore::from_json_str(&payload)
+                let mut conn = SqlConnection::open(path)?;
+                init_schema(&mut conn)?;
+                let dto = load_kit_dto(&conn)?;
+                Ok(KitStore::from_full_dto(dto))
             }
 
             /// Back-compat alias for [`KitStore::load_sqlite`].
@@ -12387,7 +14954,7 @@ pub mod wasm {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids).map_err(|e| {
                     JsValue::from_str(&format!("clusterPieces piece_guids: {e}"))
                 })?;
-                js_settle_set(crate::kit_domain::cluster_pieces_cmd(
+                js_settle_set(KitStore::cluster_pieces(
                     &inner, &dg, guids, cn,
                 ))
             })
@@ -12406,7 +14973,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
                     .map_err(|e| JsValue::from_str(&format!("dragPieces piece_guids: {e}")))?;
-                js_settle_set(crate::kit_domain::drag_pieces_cmd(
+                js_settle_set(KitStore::drag_pieces(
                     &inner, &dg, guids, du, dv,
                 ))
             })
@@ -12426,7 +14993,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
                     .map_err(|e| JsValue::from_str(&format!("movePieces piece_guids: {e}")))?;
-                js_settle_set(crate::kit_domain::move_pieces_cmd(
+                js_settle_set(KitStore::move_pieces(
                     &inner, &dg, guids, gap, shift, rise,
                 ))
             })
@@ -12439,7 +15006,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
                     .map_err(|e| JsValue::from_str(&format!("fixPieces piece_guids: {e}")))?;
-                js_settle_set(crate::kit_domain::fix_pieces_cmd(&inner, &dg, guids))
+                js_settle_set(KitStore::fix_pieces(&inner, &dg, guids))
             })
         }
 
@@ -12448,7 +15015,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(crate::kit_domain::flatten_design_cmd(&inner, &dg))
+                js_settle_set(KitStore::flatten_design_apply(&inner, &dg))
             })
         }
 
@@ -12462,7 +15029,7 @@ pub mod wasm {
             let pg = parent_design_guid.to_string();
             let ng = nested_design_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(crate::kit_domain::expand_design_cmd(&inner, &pg, &ng))
+                js_settle_set(KitStore::expand_nested_design(&inner, &pg, &ng))
             })
         }
 
@@ -12472,7 +15039,7 @@ pub mod wasm {
             let dg = design_guid.to_string();
             let cg = connection_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(crate::kit_domain::delete_connection_cmd(
+                js_settle_set(KitStore::delete_connection_in_design(
                     &inner, &dg, &cg,
                 ))
             })
@@ -12490,7 +15057,7 @@ pub mod wasm {
             let pg = piece_guid.to_string();
             let tg = new_type_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(crate::kit_domain::change_piece_type_cmd(
+                js_settle_set(KitStore::change_piece_type(
                     &inner, &dg, &pg, &tg,
                 ))
             })
@@ -12516,7 +15083,7 @@ pub mod wasm {
                         JsValue::from_str(&format!("pasteDesignSelection plane: {e}"))
                     })?)
                 };
-                js_settle_set(crate::kit_domain::paste_design_selection_cmd(
+                js_settle_set(KitStore::paste_design_selection(
                     &inner, &dg, sel, pl,
                 ))
             })
@@ -12538,7 +15105,7 @@ pub mod wasm {
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
                     JsValue::from_str(&format!("createHangingPieces plane: {e}"))
                 })?;
-                js_settle_set(crate::kit_domain::create_hanging_pieces_cmd(
+                js_settle_set(KitStore::create_hanging_pieces(
                     &inner, &dg, tgs, pl,
                 ))
             })
@@ -12560,7 +15127,7 @@ pub mod wasm {
             let ct = child_type.to_string();
             let cport = child_port.to_string();
             future_to_promise(async move {
-                js_settle_set(crate::kit_domain::create_connected_piece_cmd(
+                js_settle_set(KitStore::create_connected_piece(
                     &inner, &dg, &pp, &pport, &ct, &cport,
                 ))
             })
@@ -12580,7 +15147,7 @@ pub mod wasm {
                 let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
                     JsValue::from_str(&format!("createFixedPiece plane: {e}"))
                 })?;
-                js_settle_set(crate::kit_domain::create_fixed_piece_cmd(
+                js_settle_set(KitStore::create_fixed_piece(
                     &inner, &dg, &tg, pl,
                 ))
             })
@@ -12591,7 +15158,10 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_pieces_metadata_json(&inner, &dg)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_pieces_metadata_json(&dg)
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12602,7 +15172,10 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_pieces_json(&inner, &dg)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_pieces_json(&dg)
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12613,7 +15186,10 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_connections_json(&inner, &dg)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_connections_json(&dg)
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12623,7 +15199,10 @@ pub mod wasm {
         pub fn get_designs_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_designs_json(&inner)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_designs_json()
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12633,7 +15212,10 @@ pub mod wasm {
         pub fn get_types_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_types_json(&inner)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_types_json()
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12643,7 +15225,10 @@ pub mod wasm {
         pub fn get_authors_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_authors_json(&inner)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_authors_json()
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12653,7 +15238,10 @@ pub mod wasm {
         pub fn get_kit_metadata_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = crate::kit_queries::get_kit_json(&inner)
+                let v = inner
+                    .read()
+                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
+                    .get_kit_json()
                     .map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
@@ -12943,6 +15531,91 @@ mod tests {
             assert_eq!(leaf_parent, Some(middle_guid));
             assert!(leaf_read.parent_connection.is_some());
         }
+
+        #[test]
+        fn piece_path_walks_from_fixed_piece_to_self() {
+            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+                kit_with_flatten_chain(None);
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read.design(design_guid.as_str()).expect("design").clone()
+            };
+            let design_read = design.read().expect("design read");
+            let root = design_read.piece(root_guid.as_str()).expect("root").clone();
+            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+
+            let root_path = root.read().expect("root read").path();
+            assert_eq!(
+                root_path,
+                vec![PieceIdDto {
+                    guid: root_guid.clone(),
+                }]
+            );
+
+            let middle_path = middle.read().expect("middle read").path();
+            assert_eq!(
+                middle_path,
+                vec![
+                    PieceIdDto {
+                        guid: root_guid.clone(),
+                    },
+                    PieceIdDto {
+                        guid: middle_guid.clone(),
+                    },
+                ]
+            );
+
+            let leaf_path = leaf.read().expect("leaf read").path();
+            assert_eq!(
+                leaf_path,
+                vec![
+                    PieceIdDto { guid: root_guid },
+                    PieceIdDto {
+                        guid: middle_guid,
+                    },
+                    PieceIdDto { guid: leaf_guid },
+                ]
+            );
+        }
+
+        #[test]
+        fn piece_path_after_parent_detach_starts_at_self() {
+            let (kit, design_guid, root_guid, middle_guid, leaf_guid) =
+                kit_with_flatten_chain(None);
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read.design(design_guid.as_str()).expect("design").clone()
+            };
+
+            design
+                .write()
+                .expect("design write")
+                .delete_pieces(&[root_guid]);
+
+            let design_read = design.read().expect("design read after delete");
+            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
+
+            let middle_path = middle.read().expect("middle read").path();
+            assert_eq!(
+                middle_path,
+                vec![PieceIdDto {
+                    guid: middle_guid.clone(),
+                }]
+            );
+
+            let leaf_path = leaf.read().expect("leaf read").path();
+            assert_eq!(
+                leaf_path,
+                vec![
+                    PieceIdDto {
+                        guid: middle_guid,
+                    },
+                    PieceIdDto { guid: leaf_guid },
+                ]
+            );
+        }
     }
 
     mod invalidation {
@@ -13017,23 +15690,70 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     mod io_sqlite {
-        use std::sync::{Arc, RwLock};
-
+        use rusqlite::Connection;
         use tempfile::tempdir;
 
-        use crate::kit::KitStore;
+        use crate::design::DesignFullDto;
+        use crate::guid::Guid;
+        use crate::kit::{KitFullDto, KitStore};
+        use crate::piece::PieceFullDto;
+        use crate::port::PortFullDto;
+        use crate::typ::TypeFullDto;
 
         #[test]
-        fn sqlite_snapshot_roundtrip() {
-            let kit = Arc::new(RwLock::new(KitStore::new("sqlite-roundtrip")));
+        fn sqlite_schema_roundtrip() {
+            let type_guid = Guid::new_v7();
+            let piece_guid = Guid::new_v7();
+            let kit = KitStore::from_full_dto(KitFullDto {
+                guid: Guid::new_v7(),
+                name: "sqlite-roundtrip".into(),
+                types: vec![TypeFullDto {
+                    guid: type_guid.clone(),
+                    name: "Wall".into(),
+                    ports: vec![PortFullDto {
+                        guid: Guid::new_v7(),
+                        id: Some("top".into()),
+                        family: Some("stack".into()),
+                        compatible_families: vec!["stack".into()],
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                designs: vec![DesignFullDto {
+                    guid: Guid::new_v7(),
+                    name: "Plan".into(),
+                    pieces: vec![PieceFullDto {
+                        guid: piece_guid,
+                        r#type: Some(crate::typ::TypeIdDto { guid: type_guid }),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            });
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.db");
             kit.read().expect("read").save_sqlite(&path).expect("save");
+
+            let conn = Connection::open(&path).expect("open sqlite");
+            let snapshot_table_count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'semio_kit_snapshot'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("query snapshot table count");
+            assert_eq!(snapshot_table_count, 0, "legacy snapshot table must not exist");
+            let port_rows: i64 = conn
+                .query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0))
+                .expect("count port rows");
+            assert_eq!(port_rows, 1, "normalized port rows should be persisted");
+
             let kit2 = KitStore::load_sqlite(&path).expect("load");
             assert_eq!(
                 kit.read().expect("r1").hash(),
                 kit2.read().expect("r2").hash(),
-                "SQLite JSON snapshot preserves hash"
+                "normalized SQLite roundtrip preserves hash"
             );
         }
     }

@@ -744,6 +744,11 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 ### 🦀rs
 
 semio/rs:
+
+Make sure drag (invalidates center cache of child pieces), move (invalidates plane cache of child pieces), fix (takes flat pose, removes the parent connection, sets pose to children and removes the child connections) are piece methods.
+
+Add a path method which returns an array of piece references which is the path from the fixed piece until the piece (starting with the fixed piece). The path is computed by calling the the path of the parent piece and adding itself.
+
 pub fn flat_plane(&self) -> Plane
 MUST not call the flatten map but instead calculate the flat plane (either when plane is set then return flat plane or otherwise calculate it based on the parent piece type connector and parent piece flat plane. Make sure to cache it according the dependency).
 E.g. when the parent flat plane changes then the cache gets invalided.

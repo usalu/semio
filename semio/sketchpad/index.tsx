@@ -34,7 +34,6 @@ import {
   ConnectionDiff,
   ConnectionId,
   Coordinate,
-  createClusteredDesign,
   createFolderKitStore,
   createJsonFileKitStore,
   createSessionKitStore,
@@ -42,15 +41,12 @@ import {
   DesignDiff,
   DesignShallow,
   DiffStatus,
-  dragPiecesInDesign,
-  expandDesignPieces,
   exportKit,
   FileDiff,
   findDesignInKit,
   findRepresentation,
   findPieceInDesign,
   findTypeInKit,
-  fixPiecesInDesign,
   flattenFileTree,
   Folder,
   FolderDiff,
@@ -81,14 +77,12 @@ import {
   Piece,
   PieceDiff,
   PieceId,
-  piecesMetadata,
   Plane,
   planeToMatrix,
   Point,
   PortDiff,
   Quality,
   QualityDiff,
-  replaceClusterWithDesign,
   selectBestRepresentation,
   File as SemioFile,
   sqliteToKit,
@@ -7745,12 +7739,12 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   return useMemo(() => {
     if (!kit || !designScope) return new Map<string, PieceMetadata>();
     try {
-      const result = piecesMetadata(kit, designScope.guid);
+      const result = kit.piecesMetadataFor(designScope.guid);
       if (!result.ok) {
         console.error("[PiecesMetadata] piecesMetadata failed:", result.errors);
         return new Map<string, PieceMetadata>();
       }
-      const metadata = result.change;
+      const metadata = result.diff;
       if (typeof window !== "undefined") {
         (window as any).__SEMIO_PIECES_METADATA__ = Object.fromEntries(metadata);
       }
@@ -28347,8 +28341,8 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     }
     const existingNames = (context.kit.designs || []).map((d) => d.name);
     const clusterName = generateUniqueName(`${context.design.name} Cluster`, existingNames);
-    const { clusteredDesign, externalConnections } = createClusteredDesign(context.design, validPieceGuids, clusterName);
-    const designChange = replaceClusterWithDesign(context.design, validPieceGuids, clusteredDesign, externalConnections);
+    const { clusteredDesign, externalConnections } = context.kit.createClusteredDesignFromDesign(context.design, validPieceGuids, clusterName);
+    const designChange = context.kit.replaceClusterWithDesignChange(context.design, validPieceGuids, clusteredDesign, externalConnections);
     const currentSelection = context.designApp.selection || {};
     const piecesRemoved = currentSelection.pieces || [];
     const connectionsRemoved = currentSelection.connections || [];
@@ -28386,7 +28380,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
       return {};
     }
 
-    const expandedReferencedDesign = expandDesignPieces(referencedDesign, context.kit);
+    const expandedReferencedDesign = context.kit.expandDesignPiecesFrom(referencedDesign);
     const existingPieceGuids = new Set((context.design.pieces || []).map((piece) => piece.guid));
     const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece) => !existingPieceGuids.has(piece.guid));
     const existingConnections = context.design.connections || [];
@@ -32472,7 +32466,7 @@ const PiecesSectionForm: FC = () => {
     if (!design || !kit) return;
     const pieceGuids = pieces.filter(isRealPiece).map((p) => getPieceId(p));
     if (pieceGuids.length === 0) return;
-    const diff = fixPiecesInDesign(kit, design.guid, pieceGuids);
+    const diff = kit.fixPiecesInDesignDiff(design.guid, pieceGuids);
     transaction?.start();
     kitCommands?.updateDesign(design.guid, diff);
     transaction?.finalize();
@@ -36628,7 +36622,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           connections: [] as typeof design.connections,
         };
         const piecesDesign = { guid: "", name: "", pieces: pieceIdsToUpdate.map((g) => ({ guid: g })) } as Design;
-        const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, { u: offsetU, v: offsetV });
+        const dragDiff = kit!.dragPiecesInDesignDiff(flatDesign as Design, piecesDesign, { u: offsetU, v: offsetV });
         // With connections=[] all selected pieces are fixed → only piece center updates, no connection updates.
         const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
         if (pieceDiffUpdates.length > 0) {

@@ -22,7 +22,7 @@ todos:
    status: completed
  - id: react_tests
    content: "semio/react: extend embedded vitest region with worker stub for new RPCs, assert command rollback, query invalidation, useOptimistic/useWriteIndicator over a command hook."
-   status: pending
+   status: completed
  - id: sketchpad_hook_delete
    content: "semio/sketchpad: delete #region Granular Hook Types (HookResult/Field/helpers), all local entity/derived kit hooks, KitScopeProvider/Context, SketchpadStore kit paths, useKitTransaction, Sync helpers (useSync*/usePath/useDerived)."
    status: pending
@@ -37,7 +37,7 @@ todos:
    status: pending
  - id: sketchpad_provider_tree
    content: "semio/sketchpad: rewrite root provider tree (SketchpadActorProvider > KitRegistryProvider > SketchpadScopeProvider > RouterShell with KitProvider kitGuid route wrapper) and wire KIT.OPEN/CLOSE events to registry open/close."
-   status: in_progress
+   status: completed
  - id: sketchpad_playwright
    content: "semio/sketchpad: extend Playwright spec for pending/error/readonly affordances, illegal-name preserved draft, concurrent writes keep independent pending counters."
    status: pending

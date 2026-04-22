@@ -5516,8 +5516,6 @@ export const fixPieceInDesign = (kit: KitLike, designId: string, pieceId: string
 
 /**
  **/
-export const fixPiecesInDesign = (kit: KitLike, designId: string, pieceIds: string[]): DesignDiff => asKitInstance(kit).fixPiecesInDesignDiff(designId, pieceIds);
-
 /**
  **/
 export const isFixedPiece = (piece: Piece): boolean => {
@@ -7663,98 +7661,6 @@ export type FlatMerkleCacheEntry = {
 // #endregion ­ƒî│Flatten Merkle Hashes
 
 /**
- **/
-export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
-  if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
-    throw new Error("Original design has no pieces to cluster");
-  }
-  if (!clusterPieceIds || clusterPieceIds.length === 0) {
-    throw new Error("No piece IDs provided for clustering");
-  }
-
-  const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.guid));
-
-  if (clusteredPieces.length === 0) {
-    throw new Error("No pieces found matching the provided IDs");
-  }
-
-  const internalConnections = (originalDesign._connections || []).filter((connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid));
-
-  const externalConnections = (originalDesign._connections || []).filter((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
-    return connectedInCluster !== connectingInCluster;
-  });
-
-  const clusteredDesign = new Design(
-    {
-      guid: guid(),
-      name: designName,
-      unit: originalDesign.unit,
-      description: `Clustered design with ${clusteredPieces.length} pieces`,
-      pieces: clusteredPieces.map((p) => p.toPlain()),
-      connections: internalConnections.map((c) => c.toPlain()),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    originalDesign.getKit(),
-  );
-
-  return { clusteredDesign, externalConnections };
-};
-
-/**
- **/
-export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignChange => {
-  const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
-
-  const connectionsToRemove = (originalDesign._connections || [])
-    .filter((connection) => {
-      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
-      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
-      return connectedInCluster || connectingInCluster;
-    })
-    .map((c) => ({ guid: c.guid }));
-
-  const updatedExternalConnections = externalConnections.map((connection) => {
-    const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
-    const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
-
-    if (connectedInCluster) {
-      return {
-        ...connection,
-        connected: {
-          ...connection.connected,
-          designPiece: { guid: clusteredDesign.guid },
-        },
-      };
-    } else if (connectingInCluster) {
-      return {
-        ...connection,
-        connecting: {
-          ...connection.connecting,
-          designPiece: { guid: clusteredDesign.guid },
-        },
-      };
-    }
-
-    return connection;
-  });
-
-  const forward: DesignDiff = {
-    pieces: {
-      removed: piecesToRemove,
-    },
-    connections: {
-      removed: connectionsToRemove,
-      added: updatedExternalConnections,
-    },
-  };
-  const backward = inverseDesignDiff(originalDesign, forward);
-  return { forward, backward };
-};
-
-/**
  * Retrieves the ClusterableGroups value.
  **/
 export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
@@ -7806,83 +7712,6 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
   }
 
   return [];
-};
-
-/**
- **/
-export const expandDesignPieces = (design: Design, kit: KitImpl): Design => {
-  const hasDesignConnections = design._connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
-  if (!hasDesignConnections) {
-    return design;
-  }
-
-  let expandedDesign: Design = design;
-
-  const designIds = new Set<string>();
-  toArray(design._connections).forEach((conn) => {
-    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
-    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
-  });
-
-  if (designIds.size === 0) {
-    return expandedDesign;
-  }
-
-  for (const designName of Array.from(designIds)) {
-    const referencedDesign = asKitInstance(kit).findDesign(designName);
-    if (!referencedDesign) continue;
-
-    const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
-
-    const transformedPieces: Piece[] = (expandedReferencedDesign.pieces || []).map(
-      (piece) =>
-        new Piece(
-          PieceSchema.parse({
-            ...piece.toPlain(),
-            center: piece.center ? piece.center.toPlain() : { u: 0, v: 0 },
-          }),
-          expandedDesign,
-          asKitInstance(kit),
-        ),
-    );
-
-    const transformedConnections = expandedReferencedDesign._connections || [];
-
-    const updatedExternalConnections = (expandedDesign._connections || []).map((connection) => {
-      if (connection.connected.designPiece?.guid === designName) {
-        return {
-          ...connection,
-          connected: {
-            ...connection.connected,
-            designPiece: undefined,
-          },
-        };
-      }
-
-      if (connection.connecting.designPiece?.guid === designName) {
-        return {
-          ...connection,
-          connecting: {
-            ...connection.connecting,
-            designPiece: undefined,
-          },
-        };
-      }
-
-      return connection;
-    });
-
-    expandedDesign = new Design(
-      DesignSchema.parse({
-        ...(expandedDesign as unknown as DesignPlain),
-        pieces: [...(expandedDesign.pieces || []).map((p) => p.toPlain()), ...transformedPieces.map((p) => p.toPlain())],
-        connections: [...updatedExternalConnections.map((c) => c.toPlain()), ...transformedConnections.map((c) => c.toPlain())],
-      }),
-      asKitInstance(kit),
-    );
-  }
-
-  return expandedDesign;
 };
 
 /**
@@ -8200,36 +8029,6 @@ const connectionDiffFromStructuralMoveVector = (parentPlane: Plane, parentConnec
 };
 
 /**
- * Like {@link dragPiecesInDesign}: same fixed vs connected selection and descendant suppression.
- * Root movers get plane origin translation from {@link moveTranslationWorldFromPiecePlane}.
- * Connected movers need {@link KitImpl.buildConnectorResolver}: world delta from the child plane is split across * gap, shift, rise, rotation, turn, tilt (via Jacobian of {@link computeChildPlane}) and residual u/v on the parent plane.
- **/
-export const movePiecesInDesign = (kit: KitLike, design: Design, pieces: Design, vector: MoveVector): DesignDiff => asKitInstance(kit).movePiecesInDesignOp(design, pieces, vector);
-
-export const dragPiecesInDesign = (design: Design, pieces: Design, offset: Coordinate): DesignDiff => {
-  const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
-  const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
-  for (const guid of fixedGuids) {
-    const currentCenter = pieceMap.get(guid)?.center;
-    if (currentCenter !== undefined) {
-      pieceUpdates.push({ piece: { guid }, diff: { center: { u: currentCenter.u + offset.u, v: currentCenter.v + offset.v } } });
-    }
-  }
-  const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
-  for (const guid of selectedGuids) {
-    if (fixedGuids.has(guid)) continue;
-    if (pieceHasSelectedAncestorInDragMoveTree(guid, selectedGuids, parentMap)) continue;
-    const parent = parentMap.get(guid);
-    if (!parent) continue;
-    connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: { u: offset.u, v: offset.v } });
-  }
-  const diff: DesignDiff = {};
-  if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
-  if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
-  return diff;
-};
-
-/**
  * ­ƒôïExtracts selected pieces and connections from a design into a new Design (clipboard).
  * Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
  * Internal pieces are copied as-is. Pp-excl-pc-incl pieces get semio.center and semio.plane attributes.
@@ -8253,135 +8052,6 @@ export type PasteDesignAnchoringKind = (typeof PASTE_DESIGN_ANCHORING_KINDS)[num
  * (coordinate + (anchor ÔêÆ child flat center)). Descendant internal connections keep deep-cloned u/v.
  **/
 export const pasteDesign = (kit: KitLike, source: Design, target: Design, anchoring: string = "bottomLeft", coordinate?: Coordinate): DesignDiff => asKitInstance(kit).pasteDesignOp(source, target, anchoring, coordinate);
-
-/**
- * Finds replaceable types and designs for the selected pieces in a design.
- * Specs: A candidate is valid only when the whole selection boundary requirement multiset can be
- * injectively matched to distinct compatible candidate connectors. Boundary requirements use the
- * actual opposite-side connector ports, isolated selections use the selected pieces' own kind
- * connectors with multiplicity, and candidate designs only expose connectors not already consumed by
- * internal design connections.
- **/
-export const findReplaceableTypesInDesignsForPiecesInDesign = (design: Design, designs: Design[], types: Type[], ports: Port[], selection: { pieces: string[] }): { types: string[]; designs: string[] } => {
-  const selectedPieceSet = new Set(selection.pieces);
-  const pieces = design.pieces ?? [];
-  const connections = design._connections ?? [];
-
-  const pieceMap = new Map<string, Piece>();
-  for (const piece of pieces) pieceMap.set(piece.guid, piece);
-
-  const portMap = new Map<string, Port>();
-  for (const p of ports) portMap.set(p.guid, p);
-
-  const typeMap = new Map<string, Type>();
-  for (const t of types) typeMap.set(t.guid, t);
-
-  const checkPortCompatibility = (candidatePortGuid: string, requiredPortGuid: string): boolean => {
-    if (!candidatePortGuid || !requiredPortGuid) return false;
-    if (candidatePortGuid === requiredPortGuid) return true;
-    const candidatePort = portMap.get(candidatePortGuid);
-    const requiredPort = portMap.get(requiredPortGuid);
-    if (!candidatePort || !requiredPort) return false;
-    return (candidatePort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === requiredPortGuid) || (requiredPort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === candidatePortGuid);
-  };
-
-  const getConnectorPortGuid = (typeGuid: string | undefined, connectorGuid: string | undefined): string => {
-    if (!typeGuid || !connectorGuid) return "";
-    const type = typeMap.get(typeGuid);
-    const connector = type?.connectors?.find((candidateConnector) => candidateConnector.guid === connectorGuid);
-    return connector?.port?.guid ?? "";
-  };
-
-  const getOwnRequirementPortGuids = (pieceGuid: string): string[] => {
-    const piece = pieceMap.get(pieceGuid);
-    const type = piece?.type?.guid ? typeMap.get(piece.type.guid) : undefined;
-    return (type?.connectors ?? []).map((connector) => connector.port?.guid ?? "");
-  };
-
-  const getBoundaryRequirementPortGuids = (): string[] => {
-    const requirementPortGuids: string[] = [];
-    for (const connection of connections) {
-      const connectedSelected = selectedPieceSet.has(connection.connected.piece.guid);
-      const connectingSelected = selectedPieceSet.has(connection.connecting.piece.guid);
-      if (connectedSelected === connectingSelected) continue;
-
-      const otherSide = connectedSelected ? connection.connecting : connection.connected;
-
-      const otherPiece = pieceMap.get(otherSide.piece.guid);
-      requirementPortGuids.push(getConnectorPortGuid(otherPiece?.type?.guid, otherSide.connector?.guid));
-    }
-    return requirementPortGuids;
-  };
-
-  const getSelectionOwnRequirementPortGuids = (): string[] => selection.pieces.flatMap((pieceGuid) => getOwnRequirementPortGuids(pieceGuid));
-
-  const canSatisfyRequirements = (requiredPortGuids: string[], availablePortGuids: string[]): boolean => {
-    if (requiredPortGuids.length === 0) return true;
-    if (availablePortGuids.length < requiredPortGuids.length) return false;
-
-    const requirementOptions = requiredPortGuids
-      .map((requiredPortGuid) => ({
-        connectorIndexes: availablePortGuids.flatMap((availablePortGuid, connectorIndex) => (checkPortCompatibility(availablePortGuid, requiredPortGuid) ? [connectorIndex] : [])),
-      }))
-      .sort((leftRequirement, rightRequirement) => leftRequirement.connectorIndexes.length - rightRequirement.connectorIndexes.length);
-
-    if (requirementOptions.some((requirementOption) => requirementOption.connectorIndexes.length === 0)) return false;
-
-    const usedConnectorIndexes = new Array(availablePortGuids.length).fill(false);
-    const matchRequirement = (requirementOptionIndex: number): boolean => {
-      if (requirementOptionIndex >= requirementOptions.length) return true;
-      for (const connectorIndex of requirementOptions[requirementOptionIndex].connectorIndexes) {
-        if (usedConnectorIndexes[connectorIndex]) continue;
-        usedConnectorIndexes[connectorIndex] = true;
-        if (matchRequirement(requirementOptionIndex + 1)) return true;
-        usedConnectorIndexes[connectorIndex] = false;
-      }
-      return false;
-    };
-
-    return matchRequirement(0);
-  };
-
-  const candidateTypeAvailablePortGuids = (candidateType: Type): string[] => (candidateType.connectors ?? []).map((connector) => connector.port?.guid ?? "");
-
-  const candidateDesignAvailablePortGuids = (candidateDesign: Design): string[] => {
-    const consumedConnectorKeys = new Set<string>();
-    for (const connection of candidateDesign._connections ?? []) {
-      for (const side of [connection.connected, connection.connecting]) {
-        if (side.piece.guid && side.connector?.guid) consumedConnectorKeys.add(`${side.piece.guid}::${side.connector.guid}`);
-      }
-    }
-
-    const availablePortGuids: string[] = [];
-    for (const piece of candidateDesign.pieces ?? []) {
-      const type = piece.type?.guid ? typeMap.get(piece.type.guid) : undefined;
-      for (const connector of type?.connectors ?? []) {
-        if (consumedConnectorKeys.has(`${piece.guid}::${connector.guid}`)) continue;
-        availablePortGuids.push(connector.port?.guid ?? "");
-      }
-    }
-    return availablePortGuids;
-  };
-
-  if (selection.pieces.length === 0) {
-    return {
-      types: types.filter((candidateType) => candidateTypeAvailablePortGuids(candidateType).length === 0).map((candidateType) => candidateType.guid),
-      designs: designs.filter((candidateDesign) => candidateDesignAvailablePortGuids(candidateDesign).length === 0).map((candidateDesign) => candidateDesign.guid),
-    };
-  }
-
-  const requiredPortGuids = (() => {
-    const boundaryRequirementPortGuids = getBoundaryRequirementPortGuids();
-    return boundaryRequirementPortGuids.length > 0 ? boundaryRequirementPortGuids : getSelectionOwnRequirementPortGuids();
-  })();
-
-  const isValidCandidate = (availablePortGuids: string[]): boolean => canSatisfyRequirements(requiredPortGuids, availablePortGuids);
-
-  return {
-    types: types.filter((candidateType) => isValidCandidate(candidateTypeAvailablePortGuids(candidateType))).map((candidateType) => candidateType.guid),
-    designs: designs.filter((candidateDesign) => isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign))).map((candidateDesign) => candidateDesign.guid),
-  };
-};
 
 // #endregion ­ƒôÉDesign
 
@@ -11123,6 +10793,253 @@ export class KitImpl {
     const familiesB = b.families ?? [];
     if (familiesA.length === 0 && familiesB.length === 0) return a.guid === b.guid;
     return familiesA.some((f) => familiesB.some((fb) => fb.guid === f.guid));
+  }
+
+  createClusteredDesignFromDesign(originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } {
+    if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
+      throw new Error("Original design has no pieces to cluster");
+    }
+    if (!clusterPieceIds || clusterPieceIds.length === 0) {
+      throw new Error("No piece IDs provided for clustering");
+    }
+    const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.guid));
+    if (clusteredPieces.length === 0) {
+      throw new Error("No pieces found matching the provided IDs");
+    }
+    const internalConnections = (originalDesign._connections || []).filter(
+      (connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid),
+    );
+    const externalConnections = (originalDesign._connections || []).filter((connection) => {
+      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
+      return connectedInCluster !== connectingInCluster;
+    });
+    const clusteredDesign = new Design(
+      {
+        guid: guid(),
+        name: designName,
+        unit: originalDesign.unit,
+        description: `Clustered design with ${clusteredPieces.length} pieces`,
+        pieces: clusteredPieces.map((p) => p.toPlain()),
+        connections: internalConnections.map((c) => c.toPlain()),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      originalDesign.getKit(),
+    );
+    return { clusteredDesign, externalConnections };
+  }
+
+  replaceClusterWithDesignChange(originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignChange {
+    const piecesToRemove = clusterPieceIds.map((g) => ({ guid: g }));
+    const connectionsToRemove = (originalDesign._connections || [])
+      .filter((connection) => {
+        const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+        const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
+        return connectedInCluster || connectingInCluster;
+      })
+      .map((c) => ({ guid: c.guid }));
+    const updatedExternalConnections = externalConnections.map((connection) => {
+      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
+      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
+      if (connectedInCluster) {
+        return { ...connection, connected: { ...connection.connected, designPiece: { guid: clusteredDesign.guid } } };
+      } else if (connectingInCluster) {
+        return { ...connection, connecting: { ...connection.connecting, designPiece: { guid: clusteredDesign.guid } } };
+      }
+      return connection;
+    });
+    const forward: DesignDiff = {
+      pieces: { removed: piecesToRemove },
+      connections: { removed: connectionsToRemove, added: updatedExternalConnections },
+    };
+    const backward = inverseDesignDiff(originalDesign, forward);
+    return { forward, backward };
+  }
+
+  expandDesignPiecesFrom(design: Design): Design {
+    const hasDesignConnections = design._connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
+    if (!hasDesignConnections) {
+      return design;
+    }
+    let expandedDesign: Design = design;
+    const designIds = new Set<string>();
+    toArray(design._connections).forEach((conn) => {
+      if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
+      if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
+    });
+    if (designIds.size === 0) {
+      return expandedDesign;
+    }
+    const kit = asKitInstance(this);
+    for (const designName of Array.from(designIds)) {
+      const referencedDesign = kit.findDesign(designName);
+      if (!referencedDesign) continue;
+      const expandedReferencedDesign = this.expandDesignPiecesFrom(referencedDesign);
+      const transformedPieces: Piece[] = (expandedReferencedDesign.pieces || []).map(
+        (piece) =>
+          new Piece(
+            PieceSchema.parse({
+              ...piece.toPlain(),
+              center: piece.center ? piece.center.toPlain() : { u: 0, v: 0 },
+            }),
+            expandedDesign,
+            kit,
+          ),
+      );
+      const transformedConnections = expandedReferencedDesign._connections || [];
+      const updatedExternalConnections = (expandedDesign._connections || []).map((connection) => {
+        if (connection.connected.designPiece?.guid === designName) {
+          return { ...connection, connected: { ...connection.connected, designPiece: undefined } };
+        }
+        if (connection.connecting.designPiece?.guid === designName) {
+          return { ...connection, connecting: { ...connection.connecting, designPiece: undefined } };
+        }
+        return connection;
+      });
+      expandedDesign = new Design(
+        DesignSchema.parse({
+          ...(expandedDesign as unknown as DesignPlain),
+          pieces: [...(expandedDesign.pieces || []).map((p) => p.toPlain()), ...transformedPieces.map((p) => p.toPlain())],
+          connections: [...updatedExternalConnections.map((c) => c.toPlain()), ...transformedConnections.map((c) => c.toPlain())],
+        }),
+        kit,
+      );
+    }
+    return expandedDesign;
+  }
+
+  dragPiecesInDesignDiff(design: Design, pieces: Design, offset: Coordinate): DesignDiff {
+    const { selectedGuids, parentMap, pieceMap, fixedGuids } = buildDragMoveStructuralContext(design, pieces);
+    const pieceUpdates: { piece: { guid: string }; diff: PieceDiff }[] = [];
+    for (const g of fixedGuids) {
+      const currentCenter = pieceMap.get(g)?.center;
+      if (currentCenter !== undefined) {
+        pieceUpdates.push({ piece: { guid: g }, diff: { center: { u: currentCenter.u + offset.u, v: currentCenter.v + offset.v } } });
+      }
+    }
+    const connectionUpdates: { connection: { guid: string }; diff: ConnectionDiff }[] = [];
+    for (const g of selectedGuids) {
+      if (fixedGuids.has(g)) continue;
+      if (pieceHasSelectedAncestorInDragMoveTree(g, selectedGuids, parentMap)) continue;
+      const parent = parentMap.get(g);
+      if (!parent) continue;
+      connectionUpdates.push({ connection: { guid: parent.connectionGuid }, diff: { u: offset.u, v: offset.v } });
+    }
+    const diff: DesignDiff = {};
+    if (pieceUpdates.length > 0) diff.pieces = { updated: pieceUpdates };
+    if (connectionUpdates.length > 0) diff.connections = { updated: connectionUpdates };
+    return diff;
+  }
+
+  findReplaceableTypesInDesignsForPiecesInDesignOp(
+    design: Design,
+    designs: Design[],
+    types: Type[],
+    ports: Port[],
+    selection: { pieces: string[] },
+  ): { types: string[]; designs: string[] } {
+    const selectedPieceSet = new Set(selection.pieces);
+    const pieces = design.pieces ?? [];
+    const connections = design._connections ?? [];
+    const pieceMap = new Map<string, Piece>();
+    for (const piece of pieces) pieceMap.set(piece.guid, piece);
+    const portMap = new Map<string, Port>();
+    for (const p of ports) portMap.set(p.guid, p);
+    const typeMap = new Map<string, Type>();
+    for (const t of types) typeMap.set(t.guid, t);
+    const checkPortCompatibility = (candidatePortGuid: string, requiredPortGuid: string): boolean => {
+      if (!candidatePortGuid || !requiredPortGuid) return false;
+      if (candidatePortGuid === requiredPortGuid) return true;
+      const candidatePort = portMap.get(candidatePortGuid);
+      const requiredPort = portMap.get(requiredPortGuid);
+      if (!candidatePort || !requiredPort) return false;
+      return (
+        (candidatePort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === requiredPortGuid) ||
+        (requiredPort.compatiblePorts ?? []).some((compatiblePort) => compatiblePort.guid === candidatePortGuid)
+      );
+    };
+    const getConnectorPortGuid = (typeGuid: string | undefined, connectorGuid: string | undefined): string => {
+      if (!typeGuid || !connectorGuid) return "";
+      const type = typeMap.get(typeGuid);
+      const connector = type?.connectors?.find((candidateConnector) => candidateConnector.guid === connectorGuid);
+      return connector?.port?.guid ?? "";
+    };
+    const getOwnRequirementPortGuids = (pieceGuid: string): string[] => {
+      const piece = pieceMap.get(pieceGuid);
+      const type = piece?.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+      return (type?.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+    };
+    const getBoundaryRequirementPortGuids = (): string[] => {
+      const requirementPortGuids: string[] = [];
+      for (const connection of connections) {
+        const connectedSelected = selectedPieceSet.has(connection.connected.piece.guid);
+        const connectingSelected = selectedPieceSet.has(connection.connecting.piece.guid);
+        if (connectedSelected === connectingSelected) continue;
+        const otherSide = connectedSelected ? connection.connecting : connection.connected;
+        const otherPiece = pieceMap.get(otherSide.piece.guid);
+        requirementPortGuids.push(getConnectorPortGuid(otherPiece?.type?.guid, otherSide.connector?.guid));
+      }
+      return requirementPortGuids;
+    };
+    const getSelectionOwnRequirementPortGuids = (): string[] => selection.pieces.flatMap((pieceGuid) => getOwnRequirementPortGuids(pieceGuid));
+    const canSatisfyRequirements = (requiredPortGuids: string[], availablePortGuids: string[]): boolean => {
+      if (requiredPortGuids.length === 0) return true;
+      if (availablePortGuids.length < requiredPortGuids.length) return false;
+      const requirementOptions = requiredPortGuids
+        .map((requiredPortGuid) => ({
+          connectorIndexes: availablePortGuids.flatMap((availablePortGuid, connectorIndex) =>
+            checkPortCompatibility(availablePortGuid, requiredPortGuid) ? [connectorIndex] : [],
+          ),
+        }))
+        .sort((leftRequirement, rightRequirement) => leftRequirement.connectorIndexes.length - rightRequirement.connectorIndexes.length);
+      if (requirementOptions.some((requirementOption) => requirementOption.connectorIndexes.length === 0)) return false;
+      const usedConnectorIndexes = new Array(availablePortGuids.length).fill(false);
+      const matchRequirement = (requirementOptionIndex: number): boolean => {
+        if (requirementOptionIndex >= requirementOptions.length) return true;
+        for (const connectorIndex of requirementOptions[requirementOptionIndex].connectorIndexes) {
+          if (usedConnectorIndexes[connectorIndex]) continue;
+          usedConnectorIndexes[connectorIndex] = true;
+          if (matchRequirement(requirementOptionIndex + 1)) return true;
+          usedConnectorIndexes[connectorIndex] = false;
+        }
+        return false;
+      };
+      return matchRequirement(0);
+    };
+    const candidateTypeAvailablePortGuids = (candidateType: Type): string[] => (candidateType.connectors ?? []).map((connector) => connector.port?.guid ?? "");
+    const candidateDesignAvailablePortGuids = (candidateDesign: Design): string[] => {
+      const consumedConnectorKeys = new Set<string>();
+      for (const connection of candidateDesign._connections ?? []) {
+        for (const side of [connection.connected, connection.connecting]) {
+          if (side.piece.guid && side.connector?.guid) consumedConnectorKeys.add(`${side.piece.guid}::${side.connector.guid}`);
+        }
+      }
+      const availablePortGuids: string[] = [];
+      for (const piece of candidateDesign.pieces ?? []) {
+        const type = piece.type?.guid ? typeMap.get(piece.type.guid) : undefined;
+        for (const connector of type?.connectors ?? []) {
+          if (consumedConnectorKeys.has(`${piece.guid}::${connector.guid}`)) continue;
+          availablePortGuids.push(connector.port?.guid ?? "");
+        }
+      }
+      return availablePortGuids;
+    };
+    if (selection.pieces.length === 0) {
+      return {
+        types: types.filter((candidateType) => candidateTypeAvailablePortGuids(candidateType).length === 0).map((candidateType) => candidateType.guid),
+        designs: designs.filter((candidateDesign) => candidateDesignAvailablePortGuids(candidateDesign).length === 0).map((candidateDesign) => candidateDesign.guid),
+      };
+    }
+    const requiredPortGuids = (() => {
+      const boundaryRequirementPortGuids = getBoundaryRequirementPortGuids();
+      return boundaryRequirementPortGuids.length > 0 ? boundaryRequirementPortGuids : getSelectionOwnRequirementPortGuids();
+    })();
+    const isValidCandidate = (availablePortGuids: string[]): boolean => canSatisfyRequirements(requiredPortGuids, availablePortGuids);
+    return {
+      types: types.filter((candidateType) => isValidCandidate(candidateTypeAvailablePortGuids(candidateType))).map((candidateType) => candidateType.guid),
+      designs: designs.filter((candidateDesign) => isValidCandidate(candidateDesignAvailablePortGuids(candidateDesign))).map((candidateDesign) => candidateDesign.guid),
+    };
   }
 
   /**
@@ -19956,8 +19873,8 @@ export class FallbackKitStoreClient implements KitStoreClient {
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
-      const { clusteredDesign, externalConnections } = createClusteredDesign(design, pieceGuids, clusterName);
-      const designChange = replaceClusterWithDesign(design, pieceGuids, clusteredDesign, externalConnections);
+      const { clusteredDesign, externalConnections } = kit.createClusteredDesignFromDesign(design, pieceGuids, clusterName);
+      const designChange = kit.replaceClusterWithDesignChange(design, pieceGuids, clusteredDesign, externalConnections);
       kit._applyDiff(
         {
           designs: {
@@ -19981,7 +19898,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       const subPieces = pieceGuids.map((g) => design.requirePiece(g).toPlain());
       const piecesDesign = new Design({ guid: guid(), name: "__drag_selection", pieces: subPieces }, kit);
-      const diff = dragPiecesInDesign(design, piecesDesign, { u: du, v: dv });
+      const diff = kit.dragPiecesInDesignDiff(design, piecesDesign, { u: du, v: dv });
       design.applyDiff(diff);
       this.emit({ ValidationInvalidated: null });
       return { ok: true } as const;
@@ -19997,7 +19914,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       const subPieces = pieceGuids.map((g) => design.requirePiece(g).toPlain());
       const piecesDesign = new Design({ guid: guid(), name: "__move_selection", pieces: subPieces }, kit);
-      const diff = movePiecesInDesign(kit, design, piecesDesign, { gap, shift, rise });
+      const diff = kit.movePiecesInDesignOp(design, piecesDesign, { gap, shift, rise });
       design.applyDiff(diff);
       this.emit({ ValidationInvalidated: null });
       return { ok: true } as const;
@@ -20009,7 +19926,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
   async fixPieces(designGuid: string, pieceGuids: string[]): Promise<SetResult> {
     try {
       const kit = asKitInstance(this.dto);
-      const diff = fixPiecesInDesign(kit, designGuid, pieceGuids);
+      const diff = kit.fixPiecesInDesignDiff(designGuid, pieceGuids);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       design.applyDiff(diff);
@@ -20041,7 +19958,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
       if (!contextDesign || !referencedDesign) {
         return { ok: false, error: { kind: "NotFound", message: "design" } };
       }
-      const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
+      const expandedReferencedDesign = kit.expandDesignPiecesFrom(referencedDesign);
       const existingPieceGuids = new Set((contextDesign.pieces || []).map((piece: any) => piece.guid));
       const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece: any) => !existingPieceGuids.has(piece.guid));
       const existingConnections = contextDesign.connections || [];
@@ -20116,7 +20033,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async getPiecesMetadata(designGuid: string) {
     const kit = asKitInstance(this.dto);
-    const r = piecesMetadata(kit, designGuid);
+    const r = kit.piecesMetadataFor(designGuid);
     if (!r.ok) {
       throw new Error((r.errors ?? []).map((e: any) => e.message).join("; "));
     }
@@ -20796,14 +20713,8 @@ export type PiecePlacementMetadata = {
   path: string[];
 };
 
-export const piecesMetadata = (kit: KitLike, designGuid: string): OperationResult<Map<string, PiecePlacementMetadata>> => asKitInstance(kit).piecesMetadataFor(designGuid);
-
 // #region ­ƒºáPieces Metadata Cached
-/**
- * ­ƒºáIncremental version of {@link piecesMetadata}: reuses an optional {@link FlatMerkleCacheEntry} cache across calls so sketchpad renders (and any other host holding piece placement data) only pay the matrix-math + attribute bookkeeping cost for pieces whose merkle inputs actually changed. Returns both the metadata map (same shape as {@link piecesMetadata}) and the new cache to thread into the next call.
- **/
-export const piecesMetadataCached = (kit: KitLike, designGuid: string, cache?: { [pieceGuid: string]: FlatMerkleCacheEntry }): { result: OperationResult<Map<string, PiecePlacementMetadata>>; cache: { [pieceGuid: string]: FlatMerkleCacheEntry } } =>
-  asKitInstance(kit).piecesMetadataCachedFor(designGuid, cache);
+// Use {@link KitImpl#piecesMetadataFor} and {@link KitImpl#piecesMetadataCachedFor} on the kit instance.
 // #endregion ­ƒºáPieces Metadata Cached
 
 /**
@@ -22069,8 +21980,9 @@ if (shouldRunEmbeddedJsTests) {
         updatedAt: "2025-01-01T00:00:00.000Z",
       } as Design;
 
-      const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
-      const change = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
+      const hostKit = asKitInstance(MetabolismKit as unknown as KitImpl);
+      const { clusteredDesign, externalConnections } = hostKit.createClusteredDesignFromDesign(design as Design, ["piece-a", "piece-b"], "Cluster");
+      const change = hostKit.replaceClusterWithDesignChange(design as Design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
       const updatedDesign = detachDesignForLocalMutation(design);
       updatedDesign.applyDiff(change.forward);
 
@@ -22091,7 +22003,7 @@ if (shouldRunEmbeddedJsTests) {
       const pieces = DragPieces as unknown as Design;
       const offset = DragOffset as { u: number; v: number };
       const expectedDiff = DragDiffDesign as any;
-      const computedDiff = dragPiecesInDesign(design, pieces, offset);
+      const computedDiff = asKitInstance(MetabolismKit as unknown as KitImpl).dragPiecesInDesignDiff(design, pieces, offset);
       const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
@@ -22123,7 +22035,7 @@ if (shouldRunEmbeddedJsTests) {
       const flatPiece = flatDesign.pieces!.find((p) => p.guid === pieceGuid)!;
       const pieces = { ...flatDesign, pieces: [flatPiece] } as Design;
       const offset = { u: 3, v: -1 };
-      const diff = dragPiecesInDesign(flatDesign, pieces, offset);
+      const diff = kit.dragPiecesInDesignDiff(flatDesign, pieces, offset);
       expect(diff.connections).toBeUndefined();
       expect(diff.pieces?.updated?.length).toBe(1);
       expect(diff.pieces!.updated![0].piece.guid).toBe(pieceGuid);
@@ -22139,7 +22051,7 @@ if (shouldRunEmbeddedJsTests) {
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata (simulates usePiecesMetadataMap)
-      const metaResult = piecesMetadata(kit, design.guid);
+      const metaResult = kit.piecesMetadataFor(design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
       const metadata = metaResult.diff;
@@ -22193,7 +22105,7 @@ if (shouldRunEmbeddedJsTests) {
       // Step 4: Call dragPiecesInDesign (same as sketchpad onNodeDragStop)
       const offset = { u: 5, v: -3 };
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: rootGuid! }] } as Design;
-      const dragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+      const dragDiff = kit.dragPiecesInDesignDiff(sketchpadFlatDesign, piecesDesign, offset);
 
       // Root should get a center update (it's fixed - no parent)
       expect(dragDiff.pieces?.updated?.length).toBe(1);
@@ -22210,7 +22122,7 @@ if (shouldRunEmbeddedJsTests) {
 
       // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
       const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
-      const postMetaResult = piecesMetadata(updatedKit, design.guid);
+      const postMetaResult = updatedKit.piecesMetadataFor(design.guid);
       expect(postMetaResult.ok).toBe(true);
       if (!postMetaResult.ok) return;
       const postMetadata = postMetaResult.diff;
@@ -22242,7 +22154,7 @@ if (shouldRunEmbeddedJsTests) {
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
-      const metaResult = piecesMetadata(kit, design.guid);
+      const metaResult = kit.piecesMetadataFor(design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
       const metadata = metaResult.diff;
@@ -22294,7 +22206,7 @@ if (shouldRunEmbeddedJsTests) {
       // Step 4: Compute drag diff
       const offset = { u: 5, v: -3 };
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: rootGuid! }] } as Design;
-      const dragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+      const dragDiff = kit.dragPiecesInDesignDiff(sketchpadFlatDesign, piecesDesign, offset);
       const pieceDiffUpdates = dragDiff.pieces?.updated ?? [];
       const connectionDiffUpdates = dragDiff.connections?.updated ?? [];
 
@@ -22326,7 +22238,7 @@ if (shouldRunEmbeddedJsTests) {
       applyKitDiff(storeKit, kitDiff);
 
       // Step 7: Recompute metadata (same as usePiecesMetadataMap)
-      const postMetaResult = piecesMetadata(storeKit, design.guid);
+      const postMetaResult = storeKit.piecesMetadataFor(design.guid);
       expect(postMetaResult.ok).toBe(true);
       if (!postMetaResult.ok) {
         console.error("piecesMetadata failed:", postMetaResult.errors);
@@ -22352,7 +22264,7 @@ if (shouldRunEmbeddedJsTests) {
       const localUpdatedDesign = detachDesignForLocalMutation(design);
       localUpdatedDesign.applyDiff(dragDiff);
       const localUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
-      const localMetaResult = piecesMetadata(localUpdatedKit, design.guid);
+      const localMetaResult = localUpdatedKit.piecesMetadataFor(design.guid);
       expect(localMetaResult.ok).toBe(true);
       if (!localMetaResult.ok) return;
       const localMetadata = localMetaResult.diff;
@@ -22372,7 +22284,7 @@ if (shouldRunEmbeddedJsTests) {
       expect((design._connections ?? []).length).toBeGreaterThan(0);
 
       // Step 1: Compute metadata
-      const metaResult = piecesMetadata(kit, design.guid);
+      const metaResult = kit.piecesMetadataFor(design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
       const metadata = metaResult.diff;
@@ -22411,7 +22323,7 @@ if (shouldRunEmbeddedJsTests) {
         })),
       };
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
-      const sketchpadDragDiff = dragPiecesInDesign(sketchpadFlatDesign, piecesDesign, offset);
+      const sketchpadDragDiff = kit.dragPiecesInDesignDiff(sketchpadFlatDesign, piecesDesign, offset);
 
       // Leaf has a parent ÔåÆ should produce connection update, NOT piece update
       expect(sketchpadDragDiff.pieces?.updated?.length ?? 0).toBe(0);
@@ -22424,7 +22336,7 @@ if (shouldRunEmbeddedJsTests) {
       const nativeFlatDesign = detachDesignForLocalMutation(design);
       nativeFlatDesign.applyDiff({ pieces: fc.diff.forward.pieces });
       const nativePiecesDesign: Design = { guid: nativeFlatDesign.guid, name: nativeFlatDesign.name, pieces: (nativeFlatDesign.pieces ?? []).filter((p) => p.guid === leafGuid) };
-      const nativeDragDiff = dragPiecesInDesign(nativeFlatDesign, nativePiecesDesign, offset);
+      const nativeDragDiff = kit.dragPiecesInDesignDiff(nativeFlatDesign, nativePiecesDesign, offset);
 
       // Both flows should produce the same connection diff
       expect(nativeDragDiff.pieces?.updated?.length ?? 0).toBe(0);
@@ -22437,7 +22349,7 @@ if (shouldRunEmbeddedJsTests) {
       const sketchpadUpdatedDesign = detachDesignForLocalMutation(design);
       sketchpadUpdatedDesign.applyDiff(sketchpadDragDiff);
       const sketchpadUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
-      const sketchpadPostMeta = piecesMetadata(sketchpadUpdatedKit, design.guid);
+      const sketchpadPostMeta = sketchpadUpdatedKit.piecesMetadataFor(design.guid);
       expect(sketchpadPostMeta.ok).toBe(true);
       if (!sketchpadPostMeta.ok) return;
 
@@ -22445,7 +22357,7 @@ if (shouldRunEmbeddedJsTests) {
       const nativeUpdatedDesign = detachDesignForLocalMutation(design);
       nativeUpdatedDesign.applyDiff(nativeDragDiff);
       const nativeUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
-      const nativePostMeta = piecesMetadata(nativeUpdatedKit, design.guid);
+      const nativePostMeta = nativeUpdatedKit.piecesMetadataFor(design.guid);
       expect(nativePostMeta.ok).toBe(true);
       if (!nativePostMeta.ok) return;
 
@@ -22472,7 +22384,7 @@ if (shouldRunEmbeddedJsTests) {
       };
       const storeKit = duplicateKitForIsolation(kit);
       applyKitDiff(storeKit, kitDiff);
-      const storeMetaResult = piecesMetadata(storeKit, design.guid);
+      const storeMetaResult = storeKit.piecesMetadataFor(design.guid);
       expect(storeMetaResult.ok).toBe(true);
       if (!storeMetaResult.ok) return;
       // Store re-flatten must match local re-flatten
@@ -22487,7 +22399,7 @@ if (shouldRunEmbeddedJsTests) {
     it("Nakagin center-space to connection-space scaling: pixel offset scales by horizontalScale for horizontal connections", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
-      const metaResult = piecesMetadata(kit, design.guid);
+      const metaResult = kit.piecesMetadataFor(design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
       const metadata = metaResult.diff;
@@ -22529,7 +22441,7 @@ if (shouldRunEmbeddedJsTests) {
 
       // Get dragPiecesInDesign result (unscaled ÔÇö in center-space)
       const piecesDesign = { guid: "", name: "", pieces: [{ guid: leafGuid! }] } as Design;
-      const dragDiff = dragPiecesInDesign(flatDesign, piecesDesign, { u: centerOffsetU, v: centerOffsetV });
+      const dragDiff = kit.dragPiecesInDesignDiff(flatDesign, piecesDesign, { u: centerOffsetU, v: centerOffsetV });
       expect(dragDiff.connections?.updated?.length).toBe(1);
       const rawConnDiff = dragDiff.connections!.updated![0].diff;
 
@@ -22562,7 +22474,7 @@ if (shouldRunEmbeddedJsTests) {
       const updatedDesign = detachDesignForLocalMutation(design);
       updatedDesign.applyDiff(scaledDragDiff);
       const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
-      const postMeta = piecesMetadata(updatedKit, design.guid);
+      const postMeta = updatedKit.piecesMetadataFor(design.guid);
       expect(postMeta.ok).toBe(true);
       if (!postMeta.ok) return;
 
@@ -22581,7 +22493,7 @@ if (shouldRunEmbeddedJsTests) {
         const unscaledDesign = detachDesignForLocalMutation(design);
         unscaledDesign.applyDiff(unscaledDragDiff);
         const unscaledKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
-        const unscaledMeta = piecesMetadata(unscaledKit, design.guid);
+        const unscaledMeta = unscaledKit.piecesMetadataFor(design.guid);
         expect(unscaledMeta.ok).toBe(true);
         if (!unscaledMeta.ok) return;
         const unscaledLeaf = unscaledMeta.diff.get(leafGuid!)!;
@@ -22594,7 +22506,7 @@ if (shouldRunEmbeddedJsTests) {
     it("findParentConnectionForPieceInDesign and fixPieceInDesign use the connection to the parent piece, not the parent piece id as connection id", () => {
       const kit = asKitInstance(MetabolismKit as unknown as KitImpl);
       const design = kit.designs!.find((d) => d.name === "Nakagin Capsule Tower")!;
-      const metaResult = piecesMetadata(kit, design.guid);
+      const metaResult = kit.piecesMetadataFor(design.guid);
       expect(metaResult.ok).toBe(true);
       if (!metaResult.ok) return;
       const metadata = metaResult.diff;
@@ -22626,7 +22538,7 @@ if (shouldRunEmbeddedJsTests) {
       const pieces = DragPieces as unknown as Design;
       const vector = MoveVector as { gap: number; shift: number; rise: number };
       const expectedDiff = MoveDiffDesign as any;
-      const computedDiff = movePiecesInDesign(kit, design, pieces, vector);
+      const computedDiff = kit.movePiecesInDesignOp(design, pieces, vector);
       const computedPieceUpdates = (computedDiff.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
       const expectedPieceUpdates = (expectedDiff.pieces?.updated ?? []).sort((a: any, b: any) => a.piece.guid.localeCompare(b.piece.guid));
       expect(computedPieceUpdates.length).toBe(expectedPieceUpdates.length);
@@ -22649,7 +22561,7 @@ if (shouldRunEmbeddedJsTests) {
           if (ed[key] !== undefined) expect(cd[key]).toBeCloseTo(ed[key] as number, 8);
         }
       }
-      const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
+      const dragParity = kit.dragPiecesInDesignDiff(design, pieces, { u: vector.shift, v: vector.gap });
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(computedConnUpdates.map((c) => c.connection.guid)).toEqual(dragConn.map((c) => c.connection.guid));
       const dragPiecesUp = (dragParity.pieces?.updated ?? []).sort((a, b) => a.piece.guid.localeCompare(b.piece.guid));
@@ -22661,8 +22573,8 @@ if (shouldRunEmbeddedJsTests) {
       const design = DragDesign as unknown as Design;
       const pieces = DragPieces as unknown as Design;
       const vector = { gap: 2, shift: -1, rise: 0.5 };
-      const diff = movePiecesInDesign(kit, design, pieces, vector);
-      const dragParity = dragPiecesInDesign(design, pieces, { u: vector.shift, v: vector.gap });
+      const diff = kit.movePiecesInDesignOp(design, pieces, vector);
+      const dragParity = kit.dragPiecesInDesignDiff(design, pieces, { u: vector.shift, v: vector.gap });
       const moveConn = (diff.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       const dragConn = (dragParity.connections?.updated ?? []).sort((a, b) => a.connection.guid.localeCompare(b.connection.guid));
       expect(moveConn.length).toBe(dragConn.length);
@@ -23014,9 +22926,10 @@ if (shouldRunEmbeddedJsTests) {
       expect(syntheticRootDesignGuid).toBeDefined();
       const designs = (syntheticKit.designs as Design[]).filter((d: Design) => d.guid !== syntheticRootDesignGuid);
       const design = (syntheticKit.designs as Design[]).find((d: Design) => d.guid === syntheticRootDesignGuid)!;
+      const synKit = asKitInstance(syntheticKit as unknown as KitImpl);
 
       for (const sc of findReplCases.syntheticCases) {
-        const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: sc.pieceGuids });
+        const result = synKit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: sc.pieceGuids });
         for (const t of sc.expectedContainsTypes ?? []) expect(result.types, `${sc.name}: types should contain ${t}`).toContain(t);
         for (const t of sc.expectedNotContainsTypes ?? []) expect(result.types, `${sc.name}: types should not contain ${t}`).not.toContain(t);
         for (const d of sc.expectedContainsDesigns ?? []) expect(result.designs, `${sc.name}: designs should contain ${d}`).toContain(d);
@@ -23035,7 +22948,7 @@ if (shouldRunEmbeddedJsTests) {
       const forbiddenSingleConnectorFamilies = new Set(bc.forbiddenFamilies as string[]);
       const typeNamesForSelection = (pieceNames: string[]): string[] => {
         const pieceGuids = pieceNames.map((pieceName) => nameToGuid.get(pieceName) ?? "");
-        const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
+        const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: pieceGuids });
         return types.filter((candidateType) => result.types.includes(candidateType.guid)).map((candidateType) => candidateType.name);
       };
       const uniqueTypeNamesForSelection = (pieceNames: string[]): string[] => [...new Set(typeNamesForSelection(pieceNames))].sort((leftName, rightName) => leftName.localeCompare(rightName));
@@ -23045,7 +22958,7 @@ if (shouldRunEmbeddedJsTests) {
       const fourCapsuleNames = typeNamesForSelection(bc.fourCapsulePieces);
       const eightCapsuleNames = typeNamesForSelection(bc.eightCapsulePieces);
       const tambourPieceGuid = nameToGuid.get(bc.tambourPieceName)!;
-      const tambourResult = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPieceGuid] });
+      const tambourResult = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: [tambourPieceGuid] });
 
       expect(singleCapsuleNames.length).toBeGreaterThan(twoCapsuleNames.length);
       expect(twoCapsuleNames.length).toBeGreaterThanOrEqual(fourCapsuleNames.length);
@@ -23082,7 +22995,7 @@ if (shouldRunEmbeddedJsTests) {
 
       expect(pieceGuids.length).toBeGreaterThan(0);
 
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(rootPlan, allPlans, kindItems, linkItems, { pieces: pieceGuids });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(rootPlan, allPlans, kindItems, linkItems, { pieces: pieceGuids });
 
       expect(result.types).toEqual(selAssetCase.expectedTypeGuids);
       expect(result.designs).toEqual(selAssetCase.expectedDesignGuids);
@@ -23097,7 +23010,7 @@ if (shouldRunEmbeddedJsTests) {
       const designs = kit.designs ?? [];
 
       const tambourPiece = design.pieces!.find((p) => p.name === connCase.pieceNames[0])!;
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [tambourPiece.guid] });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: [tambourPiece.guid] });
 
       expect(result.types.length).toBe(connCase.expectedTypeGuidCount);
       expect(result.designs).toEqual(connCase.expectedDesignGuids);
@@ -23112,7 +23025,7 @@ if (shouldRunEmbeddedJsTests) {
       const designs = kit.designs ?? [];
 
       const piece = flatDesign.pieces![isoCase.usePieceIndex];
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(flatDesign, designs, types, ports, { pieces: [piece.guid] });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(flatDesign, designs, types, ports, { pieces: [piece.guid] });
 
       expect(result.types.length).toBeGreaterThan(0);
       if (isoCase.expectOwnTypeInResults && piece.type?.guid) {
@@ -23130,7 +23043,7 @@ if (shouldRunEmbeddedJsTests) {
 
       const capitalType = types.find((t) => t.name === capCase.lookupTypeName)!;
       const capitalPiece = design.pieces!.find((p) => p.type?.guid === capitalType.guid)!;
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [capitalPiece.guid] });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: [capitalPiece.guid] });
 
       expect(result.types.length).toBeGreaterThan(0);
       for (const forbidden of capCase.forbiddenTypeNames) {
@@ -23148,7 +23061,7 @@ if (shouldRunEmbeddedJsTests) {
       const designs = kit.designs ?? [];
 
       const pieceGuids = (multiCase.pieceNames as string[]).map((n) => design.pieces!.find((p) => p.name === n)!.guid);
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: pieceGuids });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: pieceGuids });
 
       expect(result.types.length).toBe(multiCase.expectedTypeGuidCount);
       expect(result.designs).toEqual(multiCase.expectedDesignGuids);
@@ -23162,7 +23075,7 @@ if (shouldRunEmbeddedJsTests) {
       const ports = kit.ports ?? [];
       const designs = kit.designs ?? [];
 
-      const result = findReplaceableTypesInDesignsForPiecesInDesign(design, designs, types, ports, { pieces: [] });
+      const result = kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design, designs, types, ports, { pieces: [] });
 
       const typesWithNoConnectors = types.filter((t) => (t.connectors ?? []).length === 0);
       expect(result.types.length).toBe(typesWithNoConnectors.length);

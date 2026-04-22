@@ -17,6 +17,7 @@ import {
 	createKitStoreClient,
 	createSessionKitStore,
 	Design,
+	getIncludedDesigns,
 	guid,
 	InMemoryKitStore,
 	KitImpl,
@@ -2021,6 +2022,130 @@ export function useRpcAuthors(): SchemaHookTriad<any[]> {
 				? { kind: "pending", pending }
 				: { kind: "idle", pending: 0 };
 	return [value, noopAsyncSet, status] as const;
+}
+
+/** Alias for {@link useRpcPieces}. */
+export function usePieces(designGuid?: string): SchemaHookTriad<any[]> {
+	return useRpcPieces(designGuid);
+}
+
+/** Alias for {@link useRpcConnections}. */
+export function useConnections(designGuid?: string): SchemaHookTriad<any[]> {
+	return useRpcConnections(designGuid);
+}
+
+/** Alias for {@link useRpcDesigns}. */
+export function useDesigns(): SchemaHookTriad<any[]> {
+	return useRpcDesigns();
+}
+
+/** Alias for {@link useRpcTypes}. */
+export function useTypes(): SchemaHookTriad<any[]> {
+	return useRpcTypes();
+}
+
+/** Alias for {@link useRpcAuthors}. */
+export function useAuthors(): SchemaHookTriad<any[]> {
+	return useRpcAuthors();
+}
+
+export function usePieceMetadata(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
+	const [map, , status] = usePiecesMetadataMap(designGuid);
+	const value = React.useMemo(() => (pieceGuid ? map[pieceGuid] : undefined), [map, pieceGuid]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useFlatPiecePlane(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => meta?.plane, [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useFlatPieceCenter(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => meta?.center, [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useIsConnectedPiece(designGuid?: string, pieceGuid?: string): SchemaHookTriad<boolean> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => !!(meta?.parentPieceId), [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function usePieceDepth(designGuid?: string, pieceGuid?: string): SchemaHookTriad<number> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => (typeof meta?.depth === "number" ? meta.depth : 0), [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useFixedPieceId(designGuid?: string, pieceGuid?: string): SchemaHookTriad<string | undefined> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => meta?.fixedPieceId, [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useParentPieceId(designGuid?: string, pieceGuid?: string): SchemaHookTriad<string | undefined> {
+	const [meta, , status] = usePieceMetadata(designGuid, pieceGuid);
+	const value = React.useMemo(() => meta?.parentPieceId ?? undefined, [meta]);
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function usePieceParentConnection(designGuid?: string, pieceGuid?: string): SchemaHookTriad<any | undefined> {
+	const [conns, , st] = useRpcConnections(designGuid);
+	const value = React.useMemo(() => {
+		if (!pieceGuid || !Array.isArray(conns)) return undefined;
+		return conns.find((c: any) => c?.connecting?.piece?.guid === pieceGuid);
+	}, [conns, pieceGuid]);
+	return [value, noopAsyncSet, st] as const;
+}
+
+export function useIncludedDesigns(designGuid?: string): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const value = React.useMemo(() => {
+		if (!designGuid || !runtime.state?.kit) return [];
+		const d = runtime.state.kit.designs?.find((x: any) => x.guid === designGuid);
+		return d ? getIncludedDesigns(d as Design) : [];
+	}, [runtime.state.kit, designGuid]);
+	return [value, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
+}
+
+export function useReplacableTypes(designGuid?: string, pieceGuids?: string[]): SchemaHookTriad<string[]> {
+	const runtime = useKitRuntime();
+	const [, , metaStatus] = usePiecesMetadataMap(designGuid);
+	const value = React.useMemo(() => {
+		if (!designGuid || !pieceGuids?.length || !runtime.state?.kit) return [];
+		const kit = runtime.state.kit;
+		const design = kit.designs?.find((d: any) => d.guid === designGuid);
+		if (!design) return [];
+		const designs = kit.designs ?? [];
+		const types = kit.types ?? [];
+		const ports = kit.ports ?? [];
+		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceGuids }).types;
+	}, [runtime.state.kit, designGuid, pieceGuids]);
+	return [value, noopAsyncSet, metaStatus] as const;
+}
+
+export function useReplacableDesigns(designGuid?: string, pieceGuids?: string[]): SchemaHookTriad<string[]> {
+	const runtime = useKitRuntime();
+	const [, , metaStatus] = usePiecesMetadataMap(designGuid);
+	const value = React.useMemo(() => {
+		if (!designGuid || !pieceGuids?.length || !runtime.state?.kit) return [];
+		const kit = runtime.state.kit;
+		const design = kit.designs?.find((d: any) => d.guid === designGuid);
+		if (!design) return [];
+		const designs = kit.designs ?? [];
+		const types = kit.types ?? [];
+		const ports = kit.ports ?? [];
+		return kit.findReplaceableTypesInDesignsForPiecesInDesignOp(design as Design, designs as Design[], types as any, ports as any, { pieces: pieceGuids }).designs;
+	}, [runtime.state.kit, designGuid, pieceGuids]);
+	return [value, noopAsyncSet, metaStatus] as const;
+}
+
+export function useExplodeableDesignNodes(designGuid?: string): SchemaHookTriad<string[]> {
+	const [included, , st] = useIncludedDesigns(designGuid);
+	const value = React.useMemo(() => (included ?? []).map((x: any) => x.guid).filter(Boolean), [included]);
+	return [value, noopAsyncSet, st] as const;
 }
 
 // #endregion 🎛️KitStoreClient command hooks
