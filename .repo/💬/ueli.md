@@ -20,13 +20,45 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
-## [👤semio]
+## 🧩semio
 
-## [👤semio📚js]()
+###
 
-## [👤semio📚js🗃️sketchpad]()
+### 🦀 rs
 
-## [👤semio📚js🗃️sketchpad💻designtsx](repo://file/semio/js/sketchpad/Design.tsx)
+---
+
+Testing every single command of the store in every order is not an option.
+We want to have a small dev test ui where we can check every single feature of the store manually.
+
+- Every single command MUST be testable and have clean ui (dropdowns, etc)
+- An events notification, so we see if the correct events are fired.
+- Inspection that the commands produce correct diffs.
+- Materialized kit snapshots
+  What are the options?
+  We want to minimal tooling so mistake surface is minimal.
+
+Here are the specs of our system:
+
+- `kit store` is a complete in-memory graph and offers the api to do everything.
+- `kit backbone` is an async storage layer that persists the kit store to a storage layer. It is not only sink but also source.
+- `kit tree` is the tree of all checkpoints.
+- `initial kit` is a kit snapshot.
+- `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
+- `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
+- `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
+- `kit diff` is a diff to a kit snapshot.
+- `kit command` is a command to a `kit store`
+- `kit read command` is a read-only command to a `kit store`
+- `kit change command` is a command that changes part of the kit within a `kit transaction`
+- `kit snapshot` is a point-in-time representation of a kit.
+- `materialized kit` is a computed kit snapshot that is computed from an initial kit
+- `the kit` means the the last materlialized from non-alternative
+- `kit release` is checkpoint that is marked for released and is additionally stored as materialized kit.
+
+---
 
 ## 🧰repo
 
@@ -745,6 +777,13 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
+The way commands work is not clean.
+Every command MUST return a kit diff and then every entity MUST implement one central method where a kit diff is applied to the entity in-memory. The order is always, deleted first, then updated, then added. This way pointer modification, events, cache invalidation are handeled centrally.
+
+First, Every `kit change command` MUST return a diff.
+
+Then, introduce a new `compact` method for a list of changes that tries to compact the changes into the least amount of changes.
+
 Previously kit changes were stored as forward (kit diff) + backward diff (kit diff).
 From now on, a `kit change` is forward (list of kit change commands) + inverse (list of kit change commands).
 This means that changes are no longer actual data that changed but just the parameters for the command.
@@ -796,9 +835,9 @@ Kits MUST be extended with a version-control-like system:
 - `initial kit` is a kit snapshot.
 - `kit checkpoint` is a compressed list of kit changes with an optional message, timestamp and authors.
 - `kit session` is a stateful session that a client can open (e.g. when sketchpad opens a kit for the first time a kit session is opened).
-- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support.
+- `kit draft` is a draft is a stack of kit transactions for a checkpoint within a session. Undo/redo support. A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`.
 - `kit transaction` is a raw list of kit changes for a draft. Undo/redo support.
-- `kit alternative` is a named line of checkpoints since a `checkpoint` from `the kit`.
+- `kit alternative` is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
 - `kit diff` is a diff to a kit snapshot.
 - `kit command` is a command to a `kit store`
 - `kit read command` is a read-only command to a `kit store`

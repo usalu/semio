@@ -348,10 +348,39 @@ pub mod change_command {
     //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
     // Granular change commands: run against `KitStoreRef`, inverses for undo.
     use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
     use std::sync::Arc;
+    use std::sync::RwLock;
 
     use crate::attribute::AttributeFullDto;
     use crate::attribute::AttributeIdDto;
+    use crate::attribute::AttributeStore;
+    use crate::attribute::AttributeStoreRef;
+    use crate::author::AuthorStore;
+    use crate::author::AuthorStoreRef;
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
+    use crate::concept::ConceptStore;
+    use crate::concept::ConceptStoreRef;
+    use crate::connector::ConnectorStore;
+    use crate::connector::ConnectorStoreRef;
+    use crate::design::DesignStore;
+    use crate::event_wire;
+    use crate::file::FileStoreRef;
+    use crate::folder::FolderStoreRef;
+    use crate::group::GroupStore;
+    use crate::layer::LayerStore;
+    use crate::piece::PieceStoreRef;
+    use crate::piece::PieceStoreWeak;
+    use crate::stat::StatStore;
+    use crate::port::{PortStore, PortStoreRef};
+    use crate::prop::PropStore;
+    use crate::prop::PropStoreRef;
+    use crate::quality::QualityStore;
+    use crate::quality::QualityStoreRef;
+    use crate::representation::RepresentationStore;
+    use crate::representation::RepresentationStoreRef;
+    use crate::side::SideStoreRef;
+    use crate::tag::TagStore;
     use crate::author::AuthorFullDto;
     use crate::author::AuthorIdDto;
     use crate::concept::ConceptFullDto;
@@ -401,6 +430,53 @@ pub mod change_command {
 
     fn se(e: crate::error::SetError) -> SemioError {
         SemioError::InvalidOperation(e.to_string())
+    }
+
+    fn build_piece_index(d: &DesignStore) -> HashMap<Id, PieceStoreRef> {
+        d.pieces.iter().filter_map(|p| p.read().ok().map(|r| (r.id.clone(), p.clone()))).collect()
+    }
+
+    /// Match [`crate::design::connection_from_full_dto`] / `wire_side_from_dto` for one side.
+    fn rewire_side_from_metadata(d: &DesignStore, side: &SideStoreRef, meta: &SideMetadataDto) -> Result<()> {
+        let index = build_piece_index(d);
+        {
+            let mut w = side.write().map_err(|_| SemioError::LockPoisoned("side"))?;
+            w.apply_metadata_dto(meta.clone());
+            let Some(pref) = index.get(&meta.piece.id) else {
+                return Err(SemioError::NotFound { kind: "Piece", id: meta.piece.id.clone() });
+            };
+            let _ = w.set_piece_weak(Arc::downgrade(pref));
+            if let Some(port_id) = &meta.port {
+                if let Ok(pc) = pref.read() {
+                    if let Some(tw) = &pc.type_ref {
+                        if let Some(t) = tw.upgrade() {
+                            if let Ok(tr) = t.read() {
+                                for pr in &tr.ports {
+                                    if let Ok(prr) = pr.read() {
+                                        if prr.id == port_id.id {
+                                            let _ = w.set_port_weak(Some(Arc::downgrade(pr)));
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                let _ = w.set_port_weak(None);
+            }
+            if let Some(dp) = &meta.design_piece {
+                if let Some(dpref) = index.get(&dp.id) {
+                    let _ = w.set_design_piece_weak(Some(Arc::downgrade(dpref)));
+                } else {
+                    return Err(SemioError::NotFound { kind: "Piece", id: dp.id.clone() });
+                }
+            } else {
+                let _ = w.set_design_piece_weak(None);
+            }
+        }
+        Ok(())
     }
 
     /// Batch-style forward step: apply a structural [`KitDiff`]; inverse is a matching backward diff
@@ -509,6 +585,31 @@ pub mod change_command {
         RemoveKitAttribute {
             id: AttributeIdDto,
         },
+        // --- in-place field edits (mirrors per-entity set_*; ids scope to this kit) ---
+        ChangeFileCommands {
+            file_id: FileIdDto,
+            commands: Vec<ChangeFileCommand>,
+        },
+        ChangeFolderCommands {
+            folder_id: FolderIdDto,
+            commands: Vec<ChangeFolderCommand>,
+        },
+        ChangeAuthorCommands {
+            author_id: AuthorIdDto,
+            commands: Vec<ChangeAuthorCommand>,
+        },
+        ChangeConceptCommands {
+            concept_id: ConceptIdDto,
+            commands: Vec<ChangeConceptCommand>,
+        },
+        ChangeTagCommands {
+            tag_id: TagIdDto,
+            commands: Vec<ChangeTagCommand>,
+        },
+        ChangeKitQualityCommands {
+            quality_id: QualityIdDto,
+            commands: Vec<ChangeKitQualityCommand>,
+        },
         // --- nested scoping ---
         ChangeTypeCommands {
             type_id: TypeIdDto,
@@ -518,8 +619,141 @@ pub mod change_command {
             design_id: DesignIdDto,
             commands: Vec<ChangeDesignCommand>,
         },
-        #[serde(other)]
-        Other,
+    }
+
+    /// Per-field on [`crate::file::FileStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeFileCommand {
+        Url {
+            url: String,
+        },
+        Mime {
+            mime: Option<String>,
+        },
+        Size {
+            size: Option<i64>,
+        },
+        Hash {
+            hash: Option<String>,
+        },
+        Description {
+            description: Option<String>,
+        },
+        Created {
+            created: Option<String>,
+        },
+        Updated {
+            updated: Option<String>,
+        },
+    }
+
+    /// Per-field on [`crate::folder::FolderStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeFolderCommand {
+        Path {
+            path: String,
+        },
+        Description {
+            description: Option<String>,
+        },
+    }
+
+    /// Per-field on kit-level [`crate::author::AuthorStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeAuthorCommand {
+        Name {
+            name: String,
+        },
+        Email {
+            email: String,
+        },
+        Role {
+            role: Option<String>,
+        },
+        Rank {
+            rank: Option<i64>,
+        },
+    }
+
+    /// Per-field on kit-level [`crate::concept::ConceptStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeConceptCommand {
+        Name {
+            name: String,
+        },
+        Description {
+            description: Option<String>,
+        },
+        Order {
+            order: Option<i64>,
+        },
+    }
+
+    /// Per-field on kit-level [`crate::tag::TagStore`].
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeTagCommand {
+        Name {
+            name: String,
+        },
+        Order {
+            order: Option<i64>,
+        },
+    }
+
+    /// Quality on the kit (not on a type/port), including benchmarks.
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeKitQualityCommand {
+        Key {
+            key: String,
+        },
+        Value {
+            value: Option<String>,
+        },
+        Unit {
+            unit: Option<String>,
+        },
+        Definition {
+            definition: Option<String>,
+        },
+        Description {
+            description: Option<String>,
+        },
+        AddBenchmark {
+            benchmark: BenchmarkFullDto,
+        },
+        RemoveBenchmark {
+            benchmark_id: BenchmarkIdDto,
+        },
+        ChangeBenchmarkCommands {
+            benchmark_id: BenchmarkIdDto,
+            commands: Vec<ChangeBenchmarkCommand>,
+        },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeBenchmarkCommand {
+        Name {
+            name: String,
+        },
+        Min {
+            min: Option<f64>,
+        },
+        Max {
+            max: Option<f64>,
+        },
+        MinExcluded {
+            min_excluded: Option<bool>,
+        },
+        MaxExcluded {
+            max_excluded: Option<bool>,
+        },
     }
 
     /// Per-field commands on a [`crate::typ::TypeStore`].
@@ -626,8 +860,6 @@ pub mod change_command {
         RemoveTypeAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     /// Per-field on [`crate::port::PortStore`].
@@ -670,8 +902,6 @@ pub mod change_command {
         RemovePortAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -686,11 +916,11 @@ pub mod change_command {
         Port {
             port: Option<PortIdDto>,
         },
-        AddProp {
-            prop: PropFullDto,
+        AddConnectorQuality {
+            quality: QualityFullDto,
         },
-        RemoveProp {
-            prop_id: PropIdDto,
+        RemoveConnectorQuality {
+            quality_id: QualityIdDto,
         },
         AddAttribute {
             attribute: AttributeFullDto,
@@ -698,8 +928,6 @@ pub mod change_command {
         RemoveAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -714,11 +942,11 @@ pub mod change_command {
         File {
             file: Option<FileIdDto>,
         },
-        AddTag {
-            tag: TagIdDto,
+        AddRepresentationTag {
+            tag: TagFullDto,
         },
-        RemoveTag {
-            tag: TagIdDto,
+        RemoveRepresentationTag {
+            tag_id: TagIdDto,
         },
         AddQuality {
             quality: QualityFullDto,
@@ -732,8 +960,6 @@ pub mod change_command {
         RemoveAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -858,8 +1084,6 @@ pub mod change_command {
         RemoveDesignAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -883,14 +1107,6 @@ pub mod change_command {
         Locked {
             locked: Option<bool>,
         },
-        AddLayerAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveLayerAttribute {
-            id: AttributeIdDto,
-        },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -911,14 +1127,6 @@ pub mod change_command {
         Pieces {
             pieces: Vec<PieceIdDto>,
         },
-        AddGroupAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemoveGroupAttribute {
-            id: AttributeIdDto,
-        },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -936,8 +1144,6 @@ pub mod change_command {
         Description {
             description: Option<String>,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -982,8 +1188,6 @@ pub mod change_command {
         RemoveConnectionAttribute {
             id: AttributeIdDto,
         },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1043,8 +1247,6 @@ pub mod change_command {
             commands: Vec<ChangeAttributeCommand>,
         },
         Fix,
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1059,14 +1261,6 @@ pub mod change_command {
         Unit {
             unit: Option<String>,
         },
-        AddPropAttribute {
-            attribute: AttributeFullDto,
-        },
-        RemovePropAttribute {
-            id: AttributeIdDto,
-        },
-        #[serde(other)]
-        Other,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1081,8 +1275,357 @@ pub mod change_command {
         Definition {
             definition: Option<String>,
         },
-        #[serde(other)]
-        Other,
+    }
+
+    impl ChangeFileCommand {
+        pub fn apply(&self, f: &FileStoreRef) -> Result<Vec<ChangeFileCommand>> {
+            match self {
+                ChangeFileCommand::Url { url } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.url.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_url(url.clone()).map_err(se)?;
+                    if old == *url {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Url { url: old }])
+                    }
+                }
+                ChangeFileCommand::Mime { mime } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.mime.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_mime(mime.clone()).map_err(se)?;
+                    if old == *mime {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Mime { mime: old }])
+                    }
+                }
+                ChangeFileCommand::Size { size } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.size;
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_size(*size).map_err(se)?;
+                    if old == *size {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Size { size: old }])
+                    }
+                }
+                ChangeFileCommand::Hash { hash } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.hash.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_hash(hash.clone()).map_err(se)?;
+                    if old == *hash {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Hash { hash: old }])
+                    }
+                }
+                ChangeFileCommand::Description { description } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.description.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Description { description: old }])
+                    }
+                }
+                ChangeFileCommand::Created { created } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.created.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_created(created.clone()).map_err(se)?;
+                    if old == *created {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Created { created: old }])
+                    }
+                }
+                ChangeFileCommand::Updated { updated } => {
+                    let old = f.read().map_err(|_| SemioError::LockPoisoned("file"))?.updated.clone();
+                    f.write().map_err(|_| SemioError::LockPoisoned("file"))?.set_updated(updated.clone()).map_err(se)?;
+                    if old == *updated {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFileCommand::Updated { updated: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeFolderCommand {
+        pub fn apply(&self, folder: &FolderStoreRef) -> Result<Vec<ChangeFolderCommand>> {
+            match self {
+                ChangeFolderCommand::Path { path } => {
+                    let old = folder.read().map_err(|_| SemioError::LockPoisoned("folder"))?.path.clone();
+                    folder.write().map_err(|_| SemioError::LockPoisoned("folder"))?.set_path(path.clone()).map_err(se)?;
+                    if old == *path {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFolderCommand::Path { path: old }])
+                    }
+                }
+                ChangeFolderCommand::Description { description } => {
+                    let old = folder.read().map_err(|_| SemioError::LockPoisoned("folder"))?.description.clone();
+                    folder.write().map_err(|_| SemioError::LockPoisoned("folder"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeFolderCommand::Description { description: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeAuthorCommand {
+        pub fn apply(&self, a: &AuthorStoreRef) -> Result<Vec<ChangeAuthorCommand>> {
+            match self {
+                ChangeAuthorCommand::Name { name } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.name.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("author"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAuthorCommand::Name { name: old }])
+                    }
+                }
+                ChangeAuthorCommand::Email { email } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.email.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("author"))?.set_email(email.clone()).map_err(se)?;
+                    if old == *email {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAuthorCommand::Email { email: old }])
+                    }
+                }
+                ChangeAuthorCommand::Role { role } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.role.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("author"))?.set_role(role.clone()).map_err(se)?;
+                    if old == *role {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAuthorCommand::Role { role: old }])
+                    }
+                }
+                ChangeAuthorCommand::Rank { rank } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.rank;
+                    a.write().map_err(|_| SemioError::LockPoisoned("author"))?.set_rank(*rank).map_err(se)?;
+                    if old == *rank {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeAuthorCommand::Rank { rank: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeConceptCommand {
+        pub fn apply(&self, c: &ConceptStoreRef) -> Result<Vec<ChangeConceptCommand>> {
+            match self {
+                ChangeConceptCommand::Name { name } => {
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.name.clone();
+                    c.write().map_err(|_| SemioError::LockPoisoned("concept"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConceptCommand::Name { name: old }])
+                    }
+                }
+                ChangeConceptCommand::Description { description } => {
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.description.clone();
+                    c.write().map_err(|_| SemioError::LockPoisoned("concept"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConceptCommand::Description { description: old }])
+                    }
+                }
+                ChangeConceptCommand::Order { order } => {
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.order;
+                    c.write().map_err(|_| SemioError::LockPoisoned("concept"))?.set_order(*order).map_err(se)?;
+                    if old == *order {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeConceptCommand::Order { order: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeTagCommand {
+        pub fn apply(&self, t: &crate::tag::TagStoreRef) -> Result<Vec<ChangeTagCommand>> {
+            match self {
+                ChangeTagCommand::Name { name } => {
+                    let old = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.name.clone();
+                    t.write().map_err(|_| SemioError::LockPoisoned("tag"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeTagCommand::Name { name: old }])
+                    }
+                }
+                ChangeTagCommand::Order { order } => {
+                    let old = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.order;
+                    t.write().map_err(|_| SemioError::LockPoisoned("tag"))?.set_order(*order).map_err(se)?;
+                    if old == *order {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeTagCommand::Order { order: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeBenchmarkCommand {
+        pub fn apply(&self, b: &crate::benchmark::BenchmarkStoreRef) -> Result<Vec<ChangeBenchmarkCommand>> {
+            match self {
+                ChangeBenchmarkCommand::Name { name } => {
+                    let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.name.clone();
+                    b.write().map_err(|_| SemioError::LockPoisoned("benchmark"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeBenchmarkCommand::Name { name: old }])
+                    }
+                }
+                ChangeBenchmarkCommand::Min { min } => {
+                    let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.min;
+                    b.write().map_err(|_| SemioError::LockPoisoned("benchmark"))?.set_min(*min).map_err(se)?;
+                    if old == *min {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeBenchmarkCommand::Min { min: old }])
+                    }
+                }
+                ChangeBenchmarkCommand::Max { max } => {
+                    let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.max;
+                    b.write().map_err(|_| SemioError::LockPoisoned("benchmark"))?.set_max(*max).map_err(se)?;
+                    if old == *max {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeBenchmarkCommand::Max { max: old }])
+                    }
+                }
+                ChangeBenchmarkCommand::MinExcluded { min_excluded } => {
+                    let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.min_excluded;
+                    b.write().map_err(|_| SemioError::LockPoisoned("benchmark"))?.set_min_excluded(*min_excluded).map_err(se)?;
+                    if old == *min_excluded {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeBenchmarkCommand::MinExcluded { min_excluded: old }])
+                    }
+                }
+                ChangeBenchmarkCommand::MaxExcluded { max_excluded } => {
+                    let old = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.max_excluded;
+                    b.write().map_err(|_| SemioError::LockPoisoned("benchmark"))?.set_max_excluded(*max_excluded).map_err(se)?;
+                    if old == *max_excluded {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeBenchmarkCommand::MaxExcluded { max_excluded: old }])
+                    }
+                }
+            }
+        }
+    }
+
+    impl ChangeKitQualityCommand {
+        pub fn apply(&self, kit: &KitStoreRef, q: &QualityStoreRef) -> Result<Vec<ChangeKitQualityCommand>> {
+            match self {
+                ChangeKitQualityCommand::Key { key } => {
+                    let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.key.clone();
+                    q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.set_key(key.clone()).map_err(se)?;
+                    if old == *key {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeKitQualityCommand::Key { key: old }])
+                    }
+                }
+                ChangeKitQualityCommand::Value { value } => {
+                    let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.value.clone();
+                    q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.set_value(value.clone()).map_err(se)?;
+                    if old == *value {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeKitQualityCommand::Value { value: old }])
+                    }
+                }
+                ChangeKitQualityCommand::Unit { unit } => {
+                    let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.unit.clone();
+                    q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.set_unit(unit.clone()).map_err(se)?;
+                    if old == *unit {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeKitQualityCommand::Unit { unit: old }])
+                    }
+                }
+                ChangeKitQualityCommand::Definition { definition } => {
+                    let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.definition.clone();
+                    q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.set_definition(definition.clone()).map_err(se)?;
+                    if old == *definition {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeKitQualityCommand::Definition { definition: old }])
+                    }
+                }
+                ChangeKitQualityCommand::Description { description } => {
+                    let old = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.description.clone();
+                    q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description {
+                        Ok(vec![])
+                    } else {
+                        Ok(vec![ChangeKitQualityCommand::Description { description: old }])
+                    }
+                }
+                ChangeKitQualityCommand::AddBenchmark { benchmark } => {
+                    let id = benchmark.id.clone();
+                    {
+                        let mut qg = q.write().map_err(|_| SemioError::LockPoisoned("quality"))?;
+                        if qg.benchmarks.iter().any(|b| b.read().map(|r| r.id == id).unwrap_or(false)) {
+                            return Err(SemioError::InvalidOperation("duplicate benchmark id on quality".into()));
+                        }
+                        let mut b = BenchmarkStore::empty_shell(benchmark.id.clone());
+                        b.apply_metadata_dto(BenchmarkMetadataDto {
+                            id: benchmark.id.clone(),
+                            name: benchmark.name.clone(),
+                            min: benchmark.min,
+                            max: benchmark.max,
+                            min_excluded: benchmark.min_excluded,
+                            max_excluded: benchmark.max_excluded,
+                        });
+                        b.parent_quality = Some(Arc::downgrade(q));
+                        qg.benchmarks.push(Arc::new(RwLock::new(b)));
+                    }
+                    q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeKitQualityCommand::RemoveBenchmark { benchmark_id: BenchmarkIdDto { id } }])
+                }
+                ChangeKitQualityCommand::RemoveBenchmark { benchmark_id } => {
+                    let pos = { q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.iter().position(|b| b.read().map(|r| r.id == benchmark_id.id).unwrap_or(false)) };
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() });
+                    };
+                    let b = { q.write().map_err(|_| SemioError::LockPoisoned("quality"))?.benchmarks.remove(pos) };
+                    let dto = b.read().map_err(|_| SemioError::LockPoisoned("benchmark"))?.to_full_dto();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeKitQualityCommand::AddBenchmark { benchmark: dto }])
+                }
+                ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id, commands } => {
+                    let b: BenchmarkStoreRef = {
+                        let qg = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?;
+                        qg.benchmarks
+                            .iter()
+                            .find(|x| x.read().map(|r| r.id == benchmark_id.id).unwrap_or(false))
+                            .cloned()
+                            .ok_or_else(|| SemioError::NotFound { kind: "Benchmark", id: benchmark_id.id.clone() })?
+                    };
+                    let mut inv: Vec<ChangeBenchmarkCommand> = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&b)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeKitQualityCommand::ChangeBenchmarkCommands { benchmark_id: benchmark_id.clone(), commands: inv }])
+                }
+            }
+        }
     }
 
     // --- impl: ChangeKitCommand ---
@@ -1270,15 +1813,160 @@ pub mod change_command {
                         Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })
                     }
                 }
-                ChangeKitCommand::AddKitProp { prop: _ } => {
-                    // Kit-level free props (if used): append to kit.props
-                    return Err(SemioError::InvalidOperation("AddKitProp: use a concrete owner scope (piece/type/design) or extend KitStore".into()));
+                ChangeKitCommand::AddKitProp { prop } => {
+                    let id = prop.id.clone();
+                    {
+                        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        if g.props.iter().any(|p| p.read().map(|r| r.id == id).unwrap_or(false)) {
+                            return Err(SemioError::InvalidOperation("duplicate prop id on kit".into()));
+                        }
+                        let mut p = PropStore::from_full_dto(prop.clone());
+                        p.parent_kit = Some(Arc::downgrade(kit));
+                        g.props.push(Arc::new(RwLock::new(p)));
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveKitProp { prop_id: PropIdDto { id } }]))
                 }
-                ChangeKitCommand::RemoveKitProp { .. } => {
-                    return Err(SemioError::InvalidOperation("RemoveKitProp: not yet wired to KitStore::props".into()));
+                ChangeKitCommand::RemoveKitProp { prop_id } => {
+                    let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false)) };
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
+                    };
+                    let p = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.props.remove(pos) };
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    {
+                        let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddKitProp { prop: dto }]))
                 }
-                ChangeKitCommand::AddKitAttribute { .. } | ChangeKitCommand::RemoveKitAttribute { .. } => {
-                    return Err(SemioError::InvalidOperation("kit-level attribute add/remove not yet wired".into()));
+                ChangeKitCommand::AddKitAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        if g.attributes.iter().any(|a| a.read().map(|r| r.id == id).unwrap_or(false)) {
+                            return Err(SemioError::InvalidOperation("duplicate attribute id on kit".into()));
+                        }
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_kit = Some(Arc::downgrade(kit));
+                        g.attributes.push(Arc::new(RwLock::new(a)));
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeIdDto { id } }]))
+                }
+                ChangeKitCommand::RemoveKitAttribute { id } => {
+                    let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)) };
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: id.id.clone() });
+                    };
+                    let a = { kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.remove(pos) };
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    {
+                        let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddKitAttribute { attribute: dto }]))
+                }
+                ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
+                    let f: FileStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .file(file_id.id.as_str())
+                        .ok_or_else(|| SemioError::NotFound { kind: "File", id: file_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&f)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }]))
+                }
+                ChangeKitCommand::ChangeFolderCommands { folder_id, commands } => {
+                    let f: FolderStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .folder(folder_id.id.as_str())
+                        .ok_or_else(|| SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&f)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeFolderCommands { folder_id: folder_id.clone(), commands: inv }]))
+                }
+                ChangeKitCommand::ChangeAuthorCommands { author_id, commands } => {
+                    let a: AuthorStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .authors
+                        .iter()
+                        .find(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Author", id: author_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&a)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeAuthorCommands { author_id: author_id.clone(), commands: inv }]))
+                }
+                ChangeKitCommand::ChangeConceptCommands { concept_id, commands } => {
+                    let c: ConceptStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .concepts
+                        .iter()
+                        .find(|x| x.read().map(|r| r.id == concept_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for cmd in commands {
+                        let v = cmd.apply(&c)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }]))
+                }
+                ChangeKitCommand::ChangeTagCommands { tag_id, commands } => {
+                    let t: crate::tag::TagStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .tags
+                        .iter()
+                        .find(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(&t)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }]))
+                }
+                ChangeKitCommand::ChangeKitQualityCommands { quality_id, commands } => {
+                    let q: QualityStoreRef = kit
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("kit"))?
+                        .quality(quality_id.id.as_str())
+                        .ok_or_else(|| SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })?;
+                    let mut inv = Vec::new();
+                    for c in commands {
+                        let v = c.apply(kit, &q)?;
+                        inv.extend(v);
+                    }
+                    inv.reverse();
+                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: quality_id.clone(), commands: inv }]))
                 }
                 ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
                     let mut inv_nested = Vec::new();
@@ -1298,7 +1986,6 @@ pub mod change_command {
                     let inv_nested: Vec<ChangeDesignCommand> = inv_nested.into_iter().rev().collect();
                     Ok((KitChangeKind::ModifyDesign, vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }]))
                 }
-                ChangeKitCommand::Other => Ok((KitChangeKind::Other("changeKit".into()), vec![])),
             }
         }
 
@@ -1422,26 +2109,264 @@ pub mod change_command {
                     }
                     Ok(vec![ChangeTypeCommand::Updated { updated: old }])
                 }
-                ChangeTypeCommand::AddPort { .. } => Err(SemioError::InvalidOperation("ChangeTypeCommand::AddPort: use extend TypeStore.ports in a follow-up".into())),
-                ChangeTypeCommand::RemovePort { .. } => Err(SemioError::InvalidOperation("ChangeTypeCommand::RemovePort: not yet wired".into())),
-                ChangeTypeCommand::ChangePortCommands { .. } => Err(SemioError::InvalidOperation("ChangeTypeCommand::ChangePortCommands: not yet wired".into())),
-                ChangeTypeCommand::AddConnector { .. } | ChangeTypeCommand::RemoveConnector { .. } | ChangeTypeCommand::ChangeConnectorCommands { .. } => Err(SemioError::InvalidOperation("connector change commands: not yet wired".into())),
-                ChangeTypeCommand::AddRepresentation { .. } | ChangeTypeCommand::RemoveRepresentation { .. } | ChangeTypeCommand::ChangeRepresentationCommands { .. } => {
-                    Err(SemioError::InvalidOperation("representation change commands: not yet wired".into()))
+                ChangeTypeCommand::AddPort { port: pdto } => {
+                    let id = pdto.id.clone();
+                    {
+                        let tw = Arc::downgrade(&t);
+                        let mut p = PortStore::from_full_dto(pdto.clone());
+                        p.parent_type = tw.clone();
+                        let pref = Arc::new(RwLock::new(p));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.ports.push(pref);
+                        m.invalidate_hash();
+                        m.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemovePort { port_id: PortIdDto { id } }])
                 }
-                ChangeTypeCommand::AddTypeAuthor { .. }
-                | ChangeTypeCommand::RemoveTypeAuthor { .. }
-                | ChangeTypeCommand::AddTypeConcept { .. }
-                | ChangeTypeCommand::RemoveTypeConcept { .. }
-                | ChangeTypeCommand::AddTypeTag { .. }
-                | ChangeTypeCommand::RemoveTypeTag { .. }
-                | ChangeTypeCommand::AddTypeQuality { .. }
-                | ChangeTypeCommand::RemoveTypeQuality { .. }
-                | ChangeTypeCommand::AddTypeProp { .. }
-                | ChangeTypeCommand::RemoveTypeProp { .. }
-                | ChangeTypeCommand::AddTypeAttribute { .. }
-                | ChangeTypeCommand::RemoveTypeAttribute { .. } => Err(SemioError::InvalidOperation("type-embedded child entity commands: not yet wired (push onto TypeStore child vecs)".into())),
-                ChangeTypeCommand::Other => Ok(vec![]),
+                ChangeTypeCommand::RemovePort { port_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.ports.iter().position(|p| p.read().map(|r| r.id == port_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Port", id: port_id.id.clone() });
+                    };
+                    let p = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.ports.remove(pos);
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddPort { port: dto }])
+                }
+                ChangeTypeCommand::ChangePortCommands { port_id, commands } => {
+                    let pref = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(port_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Port", id: port_id.id.clone() })?;
+                    let mut inv: Vec<ChangePortCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(&pref)?);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeTypeCommand::ChangePortCommands { port_id: port_id.clone(), commands: inv }])
+                }
+                ChangeTypeCommand::AddConnector { connector: cdto } => {
+                    let id = cdto.id.clone();
+                    {
+                        let mut c = ConnectorStore::from_full_dto(cdto.clone());
+                        c.parent_type = Arc::downgrade(&t);
+                        if let Some(pidd) = &cdto.port {
+                            if let Some(pr) = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(pidd.id.as_str()) {
+                                c.port = Some(Arc::downgrade(&pr));
+                            }
+                        }
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.connectors.push(Arc::new(RwLock::new(c)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveConnector { connector_id: ConnectorIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveConnector { connector_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.iter().position(|c| c.read().map(|r| r.id == connector_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Connector", id: connector_id.id.clone() });
+                    };
+                    let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.connectors.remove(pos);
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddConnector { connector: dto }])
+                }
+                ChangeTypeCommand::ChangeConnectorCommands { connector_id, commands } => {
+                    let cref = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.connector(connector_id.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Connector", id: connector_id.id.clone() })?;
+                    let mut inv: Vec<ChangeConnectorCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(&cref)?);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeTypeCommand::ChangeConnectorCommands { connector_id: connector_id.clone(), commands: inv }])
+                }
+                ChangeTypeCommand::AddRepresentation { representation: rdto } => {
+                    let id = rdto.id.clone();
+                    {
+                        let files: Vec<FileStoreRef> = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.files.clone();
+                        let mut r = RepresentationStore::from_full_dto(rdto.clone());
+                        r.parent_type = Arc::downgrade(&t);
+                        if let Some(fidd) = &rdto.file {
+                            if let Some(fref) = files.iter().find(|f| f.read().map(|r| r.id == fidd.id).unwrap_or(false)) {
+                                r.file = Some(Arc::downgrade(fref));
+                            }
+                        }
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.representations.push(Arc::new(RwLock::new(r)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveRepresentation { id: RepresentationIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveRepresentation { id: rid } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.representations.iter().position(|r| r.read().map(|r| r.id == rid.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Representation", id: rid.id.clone() });
+                    };
+                    let r = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.representations.remove(pos);
+                    let dto = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddRepresentation { representation: dto }])
+                }
+                ChangeTypeCommand::ChangeRepresentationCommands { id: rid, commands } => {
+                    let rref = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.representation(rid.id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Representation", id: rid.id.clone() })?;
+                    let mut inv: Vec<ChangeRepresentationCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(kit, &rref)?);
+                    }
+                    inv.reverse();
+                    Ok(vec![ChangeTypeCommand::ChangeRepresentationCommands { id: rid.clone(), commands: inv }])
+                }
+                ChangeTypeCommand::AddTypeAuthor { author } => {
+                    let id = author.id.clone();
+                    {
+                        let mut a = AuthorStore::from_full_dto(author.clone());
+                        a.parent_type = Some(Arc::downgrade(&t));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.authors.push(Arc::new(RwLock::new(a)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAuthor { author_id: AuthorIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeAuthor { author_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.authors.iter().position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() });
+                    };
+                    let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.authors.remove(pos);
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeAuthor { author: dto }])
+                }
+                ChangeTypeCommand::AddTypeConcept { concept } => {
+                    let id = concept.id.clone();
+                    {
+                        let mut c = ConceptStore::from_full_dto(concept.clone());
+                        c.parent_type = Some(Arc::downgrade(&t));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.concepts.push(Arc::new(RwLock::new(c)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeConcept { concept_id: ConceptIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeConcept { concept_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.iter().position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() });
+                    };
+                    let c = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.concepts.remove(pos);
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeConcept { concept: dto }])
+                }
+                ChangeTypeCommand::AddTypeTag { tag } => {
+                    let id = tag.id.clone();
+                    {
+                        let mut tg = TagStore::from_full_dto(tag.clone());
+                        tg.parent_type = Some(Arc::downgrade(&t));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.tags.push(Arc::new(RwLock::new(tg)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeTag { tag_id: TagIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeTag { tag_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.tags.iter().position(|x| x.read().map(|r| r.id == tag_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
+                    };
+                    let x = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.tags.remove(pos);
+                    let dto = x.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeTag { tag: dto }])
+                }
+                ChangeTypeCommand::AddTypeQuality { quality } => {
+                    let id = quality.id.clone();
+                    {
+                        let qref = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        {
+                            let twq = Arc::downgrade(&qref);
+                            if let Ok(mut qg) = qref.write() {
+                                qg.parent_type = Some(Arc::downgrade(&t));
+                                for b in &qg.benchmarks {
+                                    if let Ok(mut bw) = b.write() {
+                                        bw.parent_quality = Some(twq.clone());
+                                    }
+                                }
+                            }
+                        }
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.qualities.push(qref);
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeQuality { quality_id: QualityIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeQuality { quality_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
+                    };
+                    let q = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.qualities.remove(pos);
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeQuality { quality: dto }])
+                }
+                ChangeTypeCommand::AddTypeProp { prop } => {
+                    let id = prop.id.clone();
+                    {
+                        let mut p = PropStore::from_full_dto(prop.clone());
+                        p.parent_type = Some(Arc::downgrade(&t));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.props.push(Arc::new(RwLock::new(p)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeProp { prop_id: PropIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeProp { prop_id } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
+                    };
+                    let p = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.props.remove(pos);
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeProp { prop: dto }])
+                }
+                ChangeTypeCommand::AddTypeAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_type = Some(Arc::downgrade(&t));
+                        let mut m = t.write().map_err(|_| SemioError::LockPoisoned("type"))?;
+                        m.attributes.push(Arc::new(RwLock::new(a)));
+                        m.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::RemoveTypeAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangeTypeCommand::RemoveTypeAttribute { id: aid } => {
+                    let pos = t.read().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = t.write().map_err(|_| SemioError::LockPoisoned("type"))?.attributes.remove(pos);
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    t.read().map_err(|_| SemioError::LockPoisoned("type"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeTypeCommand::AddTypeAttribute { attribute: dto }])
+                }
             }
         }
     }
@@ -1629,24 +2554,271 @@ pub mod change_command {
                     inv.reverse();
                     Ok(vec![ChangeDesignCommand::ChangeConnectionCommands { connection_id: connection_id.clone(), commands: inv }])
                 }
-                ChangeDesignCommand::AddLayer { layer: _ } => Err(SemioError::InvalidOperation("AddLayer: wire to DesignStore.layers + LayerStore::from_full_dto".into())),
-                ChangeDesignCommand::RemoveLayer { .. } => Err(SemioError::InvalidOperation("RemoveLayer: not yet wired".into())),
-                ChangeDesignCommand::ChangeLayerCommands { .. } => Err(SemioError::InvalidOperation("ChangeLayerCommands: not yet wired".into())),
-                ChangeDesignCommand::AddGroup { .. } | ChangeDesignCommand::RemoveGroup { .. } | ChangeDesignCommand::ChangeGroupCommands { .. } => Err(SemioError::InvalidOperation("Group change: not yet wired".into())),
-                ChangeDesignCommand::AddStat { .. } | ChangeDesignCommand::RemoveStat { .. } | ChangeDesignCommand::ChangeStatCommands { .. } => Err(SemioError::InvalidOperation("Stat change: not yet wired".into())),
-                ChangeDesignCommand::AddDesignAuthor { .. }
-                | ChangeDesignCommand::RemoveDesignAuthor { .. }
-                | ChangeDesignCommand::AddDesignConcept { .. }
-                | ChangeDesignCommand::RemoveDesignConcept { .. }
-                | ChangeDesignCommand::AddDesignTag { .. }
-                | ChangeDesignCommand::RemoveDesignTag { .. }
-                | ChangeDesignCommand::AddDesignQuality { .. }
-                | ChangeDesignCommand::RemoveDesignQuality { .. }
-                | ChangeDesignCommand::AddDesignProp { .. }
-                | ChangeDesignCommand::RemoveDesignProp { .. }
-                | ChangeDesignCommand::AddDesignAttribute { .. }
-                | ChangeDesignCommand::RemoveDesignAttribute { .. } => Err(SemioError::InvalidOperation("design-scoped child entity: not yet wired (push on DesignStore vectors)".into())),
-                ChangeDesignCommand::Other => Ok(vec![]),
+                ChangeDesignCommand::AddLayer { layer } => {
+                    let id = layer.id.clone();
+                    {
+                        let mut l = LayerStore::from_full_dto(layer.clone());
+                        l.parent_design = Arc::downgrade(&d);
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.push(Arc::new(RwLock::new(l)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveLayer { layer_id: LayerIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveLayer { layer_id } => {
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.layers.iter().position(|l| l.read().map(|r| r.id == layer_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Layer", id: layer_id.id.clone() });
+                    };
+                    let l = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.layers.remove(pos);
+                    let dto = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddLayer { layer: dto }])
+                }
+                ChangeDesignCommand::ChangeLayerCommands { layer_id, commands } => {
+                    let mut inv: Vec<ChangeLayerCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(kit, design_id, &layer_id.id)?);
+                    }
+                    inv.reverse();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::ChangeLayerCommands { layer_id: layer_id.clone(), commands: inv }])
+                }
+                ChangeDesignCommand::AddGroup { group } => {
+                    let id = group.id.clone();
+                    {
+                        let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                        let mut g = GroupStore::from_full_dto(group.clone());
+                        g.parent_design = Arc::downgrade(&d);
+                        let mut weaks = Vec::with_capacity(group.pieces.len());
+                        for pid in &group.pieces {
+                            let pr = dr
+                                .piece(pid.id.as_str())
+                                .ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })?;
+                            weaks.push(Arc::downgrade(&pr));
+                        }
+                        g.pieces = weaks;
+                        drop(dr);
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.groups.push(Arc::new(RwLock::new(g)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveGroup { group_id: GroupIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveGroup { group_id } => {
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.groups.iter().position(|g| g.read().map(|r| r.id == group_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Group", id: group_id.id.clone() });
+                    };
+                    let g = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.groups.remove(pos);
+                    let dto = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddGroup { group: dto }])
+                }
+                ChangeDesignCommand::ChangeGroupCommands { group_id, commands } => {
+                    let mut inv: Vec<ChangeGroupCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(kit, design_id, &group_id.id)?);
+                    }
+                    inv.reverse();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::ChangeGroupCommands { group_id: group_id.clone(), commands: inv }])
+                }
+                ChangeDesignCommand::AddStat { stat } => {
+                    let id = stat.id.clone();
+                    {
+                        let mut s = StatStore::from_full_dto(stat.clone());
+                        s.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.push(Arc::new(RwLock::new(s)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveStat { stat_id: StatIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveStat { stat_id } => {
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.stats.iter().position(|s| s.read().map(|r| r.id == stat_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Stat", id: stat_id.id.clone() });
+                    };
+                    let s = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.stats.remove(pos);
+                    let dto = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddStat { stat: dto }])
+                }
+                ChangeDesignCommand::ChangeStatCommands { stat_id, commands } => {
+                    let mut inv: Vec<ChangeStatCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(kit, design_id, &stat_id.id)?);
+                    }
+                    inv.reverse();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::ChangeStatCommands { stat_id: stat_id.clone(), commands: inv }])
+                }
+                ChangeDesignCommand::AddDesignAuthor { author } => {
+                    let id = author.id.clone();
+                    {
+                        let mut a = AuthorStore::from_full_dto(author.clone());
+                        a.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.push(Arc::new(RwLock::new(a)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAuthor { author_id: AuthorIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignAuthor { author_id } => {
+                    let pos = d
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("design"))?
+                        .authors
+                        .iter()
+                        .position(|a| a.read().map(|r| r.id == author_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() });
+                    };
+                    let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.authors.remove(pos);
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignAuthor { author: dto }])
+                }
+                ChangeDesignCommand::AddDesignConcept { concept } => {
+                    let id = concept.id.clone();
+                    {
+                        let mut c = ConceptStore::from_full_dto(concept.clone());
+                        c.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.push(Arc::new(RwLock::new(c)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignConcept { concept_id: ConceptIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignConcept { concept_id } => {
+                    let pos = d
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("design"))?
+                        .concepts
+                        .iter()
+                        .position(|c| c.read().map(|r| r.id == concept_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() });
+                    };
+                    let c = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.concepts.remove(pos);
+                    let dto = c.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignConcept { concept: dto }])
+                }
+                ChangeDesignCommand::AddDesignTag { tag } => {
+                    let id = tag.id.clone();
+                    {
+                        let mut t = TagStore::from_full_dto(tag.clone());
+                        t.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.push(Arc::new(RwLock::new(t)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignTag { tag_id: TagIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignTag { tag_id } => {
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.tags.iter().position(|t| t.read().map(|r| r.id == tag_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
+                    };
+                    let t = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.tags.remove(pos);
+                    let dto = t.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignTag { tag: dto }])
+                }
+                ChangeDesignCommand::AddDesignQuality { quality } => {
+                    let id = quality.id.clone();
+                    {
+                        let qref = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        {
+                            let twq = Arc::downgrade(&qref);
+                            if let Ok(mut qg) = qref.write() {
+                                qg.parent_design = Some(Arc::downgrade(&d));
+                                for b in &qg.benchmarks {
+                                    if let Ok(mut bw) = b.write() {
+                                        bw.parent_quality = Some(twq.clone());
+                                    }
+                                }
+                            }
+                        }
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.push(qref);
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignQuality { quality_id: QualityIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignQuality { quality_id } => {
+                    let pos = d
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("design"))?
+                        .qualities
+                        .iter()
+                        .position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
+                    };
+                    let q = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.qualities.remove(pos);
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignQuality { quality: dto }])
+                }
+                ChangeDesignCommand::AddDesignProp { prop } => {
+                    let id = prop.id.clone();
+                    {
+                        let mut p = PropStore::from_full_dto(prop.clone());
+                        p.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.push(Arc::new(RwLock::new(p)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignProp { prop_id: PropIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignProp { prop_id } => {
+                    let pos = d.read().map_err(|_| SemioError::LockPoisoned("design"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
+                    };
+                    let p = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.props.remove(pos);
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignProp { prop: dto }])
+                }
+                ChangeDesignCommand::AddDesignAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_design = Some(Arc::downgrade(&d));
+                        d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.push(Arc::new(RwLock::new(a)));
+                        d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::RemoveDesignAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangeDesignCommand::RemoveDesignAttribute { id: aid } => {
+                    let pos = d
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("design"))?
+                        .attributes
+                        .iter()
+                        .position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = d.write().map_err(|_| SemioError::LockPoisoned("design"))?.attributes.remove(pos);
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    d.read().map_err(|_| SemioError::LockPoisoned("design"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeDesignCommand::AddDesignAttribute { attribute: dto }])
+                }
             }
         }
     }
@@ -1761,15 +2933,88 @@ pub mod change_command {
                         Ok(vec![ChangePieceCommand::Id { id: old }])
                     }
                 }
-                ChangePieceCommand::AddProp { .. } | ChangePieceCommand::RemoveProp { .. } | ChangePieceCommand::ChangePropCommands { .. } => {
-                    Err(SemioError::InvalidOperation("piece prop batch: not yet fully wired; use a DesignDiff on modified_pieces for now".into()))
+                ChangePieceCommand::AddProp { prop } => {
+                    let id = prop.id.clone();
+                    {
+                        let mut p = PropStore::from_full_dto(prop.clone());
+                        p.parent_piece = Some(Arc::downgrade(&pref));
+                        pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.push(Arc::new(RwLock::new(p)));
+                        pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::RemoveProp { prop_id: PropIdDto { id } }])
                 }
-                ChangePieceCommand::AddAttribute { .. } | ChangePieceCommand::RemoveAttribute { .. } | ChangePieceCommand::ChangeAttributeCommands { .. } => Err(SemioError::InvalidOperation("piece attribute: not yet wired".into())),
+                ChangePieceCommand::RemoveProp { prop_id } => {
+                    let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() });
+                    };
+                    let p = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.props.remove(pos);
+                    let dto = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                    pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::AddProp { prop: dto }])
+                }
+                ChangePieceCommand::ChangePropCommands { prop_id, commands } => {
+                    let p = pref
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("piece"))?
+                        .props
+                        .iter()
+                        .find(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Prop", id: prop_id.id.clone() })?;
+                    let mut inv: Vec<ChangePropCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(&p)?);
+                    }
+                    inv.reverse();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::ChangePropCommands { prop_id: prop_id.clone(), commands: inv }])
+                }
+                ChangePieceCommand::AddAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_piece = Some(Arc::downgrade(&pref));
+                        pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.push(Arc::new(RwLock::new(a)));
+                        pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangePieceCommand::RemoveAttribute { id: aid } => {
+                    let pos = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.attributes.remove(pos);
+                    let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                    pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.invalidate_hash();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::AddAttribute { attribute: dto }])
+                }
+                ChangePieceCommand::ChangeAttributeCommands { id: aid, commands } => {
+                    let a = pref
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("piece"))?
+                        .attributes
+                        .iter()
+                        .find(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound { kind: "Attribute", id: aid.id.clone() })?;
+                    let mut inv: Vec<ChangeAttributeCommand> = Vec::new();
+                    for c in commands {
+                        inv.extend(c.apply(&a)?);
+                    }
+                    inv.reverse();
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangePieceCommand::ChangeAttributeCommands { id: aid.clone(), commands: inv }])
+                }
                 ChangePieceCommand::Fix => {
                     pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?.fix()?;
-                    Err(SemioError::InvalidOperation("ChangePieceCommand::Fix: no parametric inverse; re-materialize from DTO for undo if needed".into()))
+                    Ok(vec![])
                 }
-                ChangePieceCommand::Other => Ok(vec![]),
             }
         }
     }
@@ -1868,76 +3113,537 @@ pub mod change_command {
                         Ok(vec![ChangeConnectionCommand::Description { value: old }])
                     }
                 }
-                ChangeConnectionCommand::ReplaceConnected { side: _ } | ChangeConnectionCommand::ReplaceConnecting { side: _ } => Err(SemioError::InvalidOperation("Replace side: requires SideStore rewire; use DesignDiff for now".into())),
-                ChangeConnectionCommand::AddConnectionAttribute { .. } | ChangeConnectionCommand::RemoveConnectionAttribute { .. } => Err(SemioError::InvalidOperation("connection attribute: not yet wired".into())),
-                ChangeConnectionCommand::Other => Ok(vec![]),
+                ChangeConnectionCommand::ReplaceConnected { side: new_meta } => {
+                    let d_arc = {
+                        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?
+                    };
+                    let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                    let d_ref: &DesignStore = &*d_read;
+                    let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connected.clone();
+                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata_dto();
+                    rewire_side_from_metadata(d_ref, &side, new_meta)?;
+                    drop(d_read);
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeConnectionCommand::ReplaceConnected { side: old_meta }])
+                }
+                ChangeConnectionCommand::ReplaceConnecting { side: new_meta } => {
+                    let d_arc = {
+                        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        g.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?
+                    };
+                    let d_read = d_arc.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                    let d_ref: &DesignStore = &*d_read;
+                    let side = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.connecting.clone();
+                    let old_meta = side.read().map_err(|_| SemioError::LockPoisoned("side"))?.to_metadata_dto();
+                    rewire_side_from_metadata(d_ref, &side, new_meta)?;
+                    drop(d_read);
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeConnectionCommand::ReplaceConnecting { side: old_meta }])
+                }
+                ChangeConnectionCommand::AddConnectionAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_connection = Some(Arc::downgrade(&cref));
+                        let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
+                        c.attributes.push(Arc::new(RwLock::new(a)));
+                        c.notify_aggregate_change();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeConnectionCommand::RemoveConnectionAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangeConnectionCommand::RemoveConnectionAttribute { id: aid } => {
+                    let pos = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.attributes.iter().position(|a| a.read().map(|r| r.id == aid.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let dto = {
+                        let mut c = cref.write().map_err(|_| SemioError::LockPoisoned("connection"))?;
+                        let a = c.attributes.remove(pos);
+                        let dto = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                        c.notify_aggregate_change();
+                        dto
+                    };
+                    event_wire::wire_graph_bus(kit);
+                    Ok(vec![ChangeConnectionCommand::AddConnectionAttribute { attribute: dto }])
+                }
             }
         }
     }
 
-    // Empty impls to satisfy the type graph for serde: callers use [`ChangeLayerCommand`], etc. in JSON.
     impl ChangeLayerCommand {
-        pub fn run(&self, _kit: &KitStoreRef, _design_id: &Id, _layer_id: &Id) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeLayerCommand: not yet wired".into()))
+        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, layer_id: &Id) -> Result<()> {
+            self.apply(kit, design_id, layer_id)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef, _design_id: &Id, _layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
-            Err(SemioError::InvalidOperation("ChangeLayerCommand: not yet wired".into()))
+        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, layer_id: &Id) -> Result<Vec<ChangeLayerCommand>> {
+            let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+            let l = d
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("design"))?
+                .layers
+                .iter()
+                .find(|l| l.read().map(|r| r.id == *layer_id).unwrap_or(false))
+                .cloned()
+                .ok_or_else(|| SemioError::NotFound { kind: "Layer", id: layer_id.clone() })?;
+            match self {
+                ChangeLayerCommand::Name { name } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.name.clone();
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Name { name: old }]) }
+                }
+                ChangeLayerCommand::Description { description } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.description.clone();
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Description { description: old }]) }
+                }
+                ChangeLayerCommand::Color { color } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.color.clone();
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_color(color.clone()).map_err(se)?;
+                    if old == *color { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Color { color: old }]) }
+                }
+                ChangeLayerCommand::Order { order } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.order;
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_order(*order).map_err(se)?;
+                    if old == *order { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Order { order: old }]) }
+                }
+                ChangeLayerCommand::Visible { visible } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.visible;
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_visible(*visible).map_err(se)?;
+                    if old == *visible { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Visible { visible: old }]) }
+                }
+                ChangeLayerCommand::Locked { locked } => {
+                    let old = l.read().map_err(|_| SemioError::LockPoisoned("layer"))?.locked;
+                    l.write().map_err(|_| SemioError::LockPoisoned("layer"))?.set_locked(*locked).map_err(se)?;
+                    if old == *locked { Ok(vec![]) } else { Ok(vec![ChangeLayerCommand::Locked { locked: old }]) }
+                }
+            }
         }
     }
     impl ChangeGroupCommand {
-        pub fn run(&self, _kit: &KitStoreRef, _design_id: &Id, _group_id: &Id) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeGroupCommand: not yet wired".into()))
+        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, group_id: &Id) -> Result<()> {
+            self.apply(kit, design_id, group_id)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef, _design_id: &Id, _group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
-            Err(SemioError::InvalidOperation("ChangeGroupCommand: not yet wired".into()))
+        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, group_id: &Id) -> Result<Vec<ChangeGroupCommand>> {
+            let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+            let g = d
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("design"))?
+                .groups
+                .iter()
+                .find(|g| g.read().map(|r| r.id == *group_id).unwrap_or(false))
+                .cloned()
+                .ok_or_else(|| SemioError::NotFound { kind: "Group", id: group_id.clone() })?;
+            match self {
+                ChangeGroupCommand::Name { name } => {
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.name.clone();
+                    g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_name(name.clone()).map_err(se)?;
+                    if old == *name { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Name { name: old }]) }
+                }
+                ChangeGroupCommand::Description { description } => {
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.description.clone();
+                    g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Description { description: old }]) }
+                }
+                ChangeGroupCommand::Color { color } => {
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.color.clone();
+                    g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_color(color.clone()).map_err(se)?;
+                    if old == *color { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Color { color: old }]) }
+                }
+                ChangeGroupCommand::Icon { icon } => {
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.icon.clone();
+                    g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_icon(icon.clone()).map_err(se)?;
+                    if old == *icon { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Icon { icon: old }]) }
+                }
+                ChangeGroupCommand::Pieces { pieces } => {
+                    let dr = d.read().map_err(|_| SemioError::LockPoisoned("design"))?;
+                    let old = g.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto().pieces;
+                    let weaks: Result<Vec<PieceStoreWeak>> = pieces
+                        .iter()
+                        .map(|pid| {
+                            dr.piece(pid.id.as_str())
+                                .map(|p| Arc::downgrade(&p))
+                                .ok_or_else(|| SemioError::NotFound { kind: "Piece", id: pid.id.clone() })
+                        })
+                        .collect();
+                    let weaks = weaks?;
+                    g.write().map_err(|_| SemioError::LockPoisoned("group"))?.set_pieces(weaks).map_err(se)?;
+                    if old == *pieces { Ok(vec![]) } else { Ok(vec![ChangeGroupCommand::Pieces { pieces: old }]) }
+                }
+            }
         }
     }
     impl ChangeStatCommand {
-        pub fn run(&self, _kit: &KitStoreRef, _design_id: &Id, _stat_id: &Id) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeStatCommand: not yet wired".into()))
+        pub fn run(&self, kit: &KitStoreRef, design_id: &Id, stat_id: &Id) -> Result<()> {
+            self.apply(kit, design_id, stat_id)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef, _design_id: &Id, _stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
-            Err(SemioError::InvalidOperation("ChangeStatCommand: not yet wired".into()))
+        pub fn apply(&self, kit: &KitStoreRef, design_id: &Id, stat_id: &Id) -> Result<Vec<ChangeStatCommand>> {
+            let d = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+            let s = d
+                .read()
+                .map_err(|_| SemioError::LockPoisoned("design"))?
+                .stats
+                .iter()
+                .find(|s| s.read().map(|r| r.id == *stat_id).unwrap_or(false))
+                .cloned()
+                .ok_or_else(|| SemioError::NotFound { kind: "Stat", id: stat_id.clone() })?;
+            match self {
+                ChangeStatCommand::Key { key } => {
+                    let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.key.clone();
+                    s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_key(key.clone()).map_err(se)?;
+                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Key { key: old }]) }
+                }
+                ChangeStatCommand::Value { value } => {
+                    let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.value.clone();
+                    s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_value(value.clone()).map_err(se)?;
+                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Value { value: old }]) }
+                }
+                ChangeStatCommand::Unit { unit } => {
+                    let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.unit.clone();
+                    s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_unit(unit.clone()).map_err(se)?;
+                    if old == *unit { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Unit { unit: old }]) }
+                }
+                ChangeStatCommand::Description { description } => {
+                    let old = s.read().map_err(|_| SemioError::LockPoisoned("stat"))?.description.clone();
+                    s.write().map_err(|_| SemioError::LockPoisoned("stat"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeStatCommand::Description { description: old }]) }
+                }
+            }
         }
     }
     impl ChangePropCommand {
-        pub fn run(&self, _kit: &KitStoreRef) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangePropCommand: not yet wired".into()))
+        pub fn run(&self, p: &PropStoreRef) -> Result<()> {
+            self.apply(p)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef) -> Result<Vec<ChangePropCommand>> {
-            Err(SemioError::InvalidOperation("ChangePropCommand: not yet wired".into()))
+        pub fn apply(&self, p: &PropStoreRef) -> Result<Vec<ChangePropCommand>> {
+            match self {
+                ChangePropCommand::Key { key } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.key.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_key(key.clone()).map_err(se)?;
+                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Key { key: old }]) }
+                }
+                ChangePropCommand::Value { value } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.value.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_value(value.clone()).map_err(se)?;
+                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Value { value: old }]) }
+                }
+                ChangePropCommand::Unit { unit } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("prop"))?.unit.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("prop"))?.set_unit(unit.clone()).map_err(se)?;
+                    if old == *unit { Ok(vec![]) } else { Ok(vec![ChangePropCommand::Unit { unit: old }]) }
+                }
+            }
         }
     }
     impl ChangeAttributeCommand {
-        pub fn run(&self, _kit: &KitStoreRef) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeAttributeCommand: not yet wired".into()))
+        pub fn run(&self, a: &AttributeStoreRef) -> Result<()> {
+            self.apply(a)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef) -> Result<Vec<ChangeAttributeCommand>> {
-            Err(SemioError::InvalidOperation("ChangeAttributeCommand: not yet wired".into()))
+        pub fn apply(&self, a: &AttributeStoreRef) -> Result<Vec<ChangeAttributeCommand>> {
+            match self {
+                ChangeAttributeCommand::Key { key } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.key.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_key(key.clone()).map_err(se)?;
+                    if old == *key { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Key { key: old }]) }
+                }
+                ChangeAttributeCommand::Value { value } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.value.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_value(value.clone()).map_err(se)?;
+                    if old == *value { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Value { value: old }]) }
+                }
+                ChangeAttributeCommand::Definition { definition } => {
+                    let old = a.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.definition.clone();
+                    a.write().map_err(|_| SemioError::LockPoisoned("attribute"))?.set_definition(definition.clone()).map_err(se)?;
+                    if old == *definition { Ok(vec![]) } else { Ok(vec![ChangeAttributeCommand::Definition { definition: old }]) }
+                }
+            }
         }
     }
     impl ChangePortCommand {
-        pub fn run(&self, _kit: &KitStoreRef) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangePortCommand: not yet wired".into()))
+        pub fn run(&self, p: &PortStoreRef) -> Result<()> {
+            self.apply(p)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef) -> Result<Vec<ChangePortCommand>> {
-            Err(SemioError::InvalidOperation("ChangePortCommand: not yet wired".into()))
+        pub fn apply(&self, p: &PortStoreRef) -> Result<Vec<ChangePortCommand>> {
+            match self {
+                ChangePortCommand::Id { id } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.id.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_id(id.clone()).map_err(se)?;
+                    if old == *id { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Id { id: old }]) }
+                }
+                ChangePortCommand::Family { family } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.family.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_family(family.clone()).map_err(se)?;
+                    if old == *family { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Family { family: old }]) }
+                }
+                ChangePortCommand::CompatibleFamilies { families } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.compatible_families.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_compatible_families(families.clone()).map_err(se)?;
+                    if old == *families { Ok(vec![]) } else { Ok(vec![ChangePortCommand::CompatibleFamilies { families: old }]) }
+                }
+                ChangePortCommand::Mandatory { mandatory } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.mandatory;
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_mandatory(*mandatory).map_err(se)?;
+                    if old == *mandatory { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Mandatory { mandatory: old }]) }
+                }
+                ChangePortCommand::T { t } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.t;
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_t(*t).map_err(se)?;
+                    if old == *t { Ok(vec![]) } else { Ok(vec![ChangePortCommand::T { t: old }]) }
+                }
+                ChangePortCommand::Description { description } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.description.clone();
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Description { description: old }]) }
+                }
+                ChangePortCommand::Point { point } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.point;
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_point(*point).map_err(se)?;
+                    if old == *point { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Point { point: old }]) }
+                }
+                ChangePortCommand::Direction { direction } => {
+                    let old = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.direction;
+                    p.write().map_err(|_| SemioError::LockPoisoned("port"))?.set_direction(*direction).map_err(se)?;
+                    if old == *direction { Ok(vec![]) } else { Ok(vec![ChangePortCommand::Direction { direction: old }]) }
+                }
+                ChangePortCommand::AddPortQuality { quality } => {
+                    let id = quality.id.clone();
+                    {
+                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        {
+                            let wq = Arc::downgrade(&q);
+                            if let Ok(mut qg) = q.write() {
+                                qg.parent_port = Some(Arc::downgrade(p));
+                                for b in &qg.benchmarks {
+                                    if let Ok(mut bw) = b.write() {
+                                        bw.parent_quality = Some(wq.clone());
+                                    }
+                                }
+                            }
+                        }
+                        let mut w = p.write().map_err(|_| SemioError::LockPoisoned("port"))?;
+                        w.qualities.push(q);
+                        w.invalidate_hash();
+                    }
+                    Ok(vec![ChangePortCommand::RemovePortQuality { quality_id: QualityIdDto { id } }])
+                }
+                ChangePortCommand::RemovePortQuality { quality_id } => {
+                    let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
+                    };
+                    let q = p.write().map_err(|_| SemioError::LockPoisoned("port"))?.qualities.remove(pos);
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
+                    Ok(vec![ChangePortCommand::AddPortQuality { quality: dto }])
+                }
+                ChangePortCommand::AddPortAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        let mut a = AttributeStore::from_full_dto(attribute.clone());
+                        a.parent_port = Some(Arc::downgrade(p));
+                        p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.push(a);
+                        p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
+                    }
+                    Ok(vec![ChangePortCommand::RemovePortAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangePortCommand::RemovePortAttribute { id: aid } => {
+                    let pos = p.read().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = p.write().map_err(|_| SemioError::LockPoisoned("port"))?.attributes.remove(pos);
+                    let dto = a.to_full_dto();
+                    p.read().map_err(|_| SemioError::LockPoisoned("port"))?.invalidate_hash();
+                    Ok(vec![ChangePortCommand::AddPortAttribute { attribute: dto }])
+                }
+            }
         }
     }
     impl ChangeConnectorCommand {
-        pub fn run(&self, _kit: &KitStoreRef) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeConnectorCommand: not yet wired".into()))
+        pub fn run(&self, c: &ConnectorStoreRef) -> Result<()> {
+            self.apply(c)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef) -> Result<Vec<ChangeConnectorCommand>> {
-            Err(SemioError::InvalidOperation("ChangeConnectorCommand: not yet wired".into()))
+        pub fn apply(&self, c: &ConnectorStoreRef) -> Result<Vec<ChangeConnectorCommand>> {
+            match self {
+                ChangeConnectorCommand::Code { code } => {
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.code.clone();
+                    c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_code(code.clone()).map_err(se)?;
+                    if old == *code { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Code { code: old }]) }
+                }
+                ChangeConnectorCommand::Description { description } => {
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.description.clone();
+                    c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Description { description: old }]) }
+                }
+                ChangeConnectorCommand::Port { port: pid } => {
+                    let t = c
+                        .read()
+                        .map_err(|_| SemioError::LockPoisoned("connector"))?
+                        .parent_type
+                        .upgrade()
+                        .ok_or_else(|| SemioError::InvalidOperation("connector has no parent type".into()))?;
+                    let old = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.port.as_ref().and_then(|w| w.upgrade()).and_then(|pr| pr.read().ok().map(|r| r.to_id_dto()));
+                    let new_port = if let Some(pid) = pid {
+                        t.read().map_err(|_| SemioError::LockPoisoned("type"))?.port(pid.id.as_str()).map(|x| Arc::downgrade(&x))
+                    } else {
+                        None
+                    };
+                    c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.set_port_weak(new_port).map_err(se)?;
+                    if &old == pid { Ok(vec![]) } else { Ok(vec![ChangeConnectorCommand::Port { port: old }]) }
+                }
+                ChangeConnectorCommand::AddConnectorQuality { quality } => {
+                    let id = quality.id.clone();
+                    {
+                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        {
+                            let wq = Arc::downgrade(&q);
+                            if let Ok(mut qg) = q.write() {
+                                qg.parent_connector = Some(Arc::downgrade(c));
+                                for b in &qg.benchmarks {
+                                    if let Ok(mut bw) = b.write() {
+                                        bw.parent_quality = Some(wq.clone());
+                                    }
+                                }
+                            }
+                        }
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.push(q);
+                        c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
+                    }
+                    Ok(vec![ChangeConnectorCommand::RemoveConnectorQuality { quality_id: QualityIdDto { id } }])
+                }
+                ChangeConnectorCommand::RemoveConnectorQuality { quality_id } => {
+                    let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
+                    };
+                    let q = c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.qualities.remove(pos);
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
+                    Ok(vec![ChangeConnectorCommand::AddConnectorQuality { quality: dto }])
+                }
+                ChangeConnectorCommand::AddAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.push(AttributeStore::from_full_dto(attribute.clone()));
+                        c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
+                    }
+                    Ok(vec![ChangeConnectorCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangeConnectorCommand::RemoveAttribute { id: aid } => {
+                    let pos = c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = c.write().map_err(|_| SemioError::LockPoisoned("connector"))?.attributes.remove(pos);
+                    let dto = a.to_full_dto();
+                    c.read().map_err(|_| SemioError::LockPoisoned("connector"))?.invalidate_hash();
+                    Ok(vec![ChangeConnectorCommand::AddAttribute { attribute: dto }])
+                }
+            }
         }
     }
     impl ChangeRepresentationCommand {
-        pub fn run(&self, _kit: &KitStoreRef) -> Result<()> {
-            Err(SemioError::InvalidOperation("ChangeRepresentationCommand: not yet wired".into()))
+        pub fn run(&self, kit: &KitStoreRef, r: &RepresentationStoreRef) -> Result<()> {
+            self.apply(kit, r)?;
+            Ok(())
         }
-        pub fn apply(&self, _kit: &KitStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
-            Err(SemioError::InvalidOperation("ChangeRepresentationCommand: not yet wired".into()))
+        pub fn apply(&self, kit: &KitStoreRef, r: &RepresentationStoreRef) -> Result<Vec<ChangeRepresentationCommand>> {
+            match self {
+                ChangeRepresentationCommand::Url { url } => {
+                    let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.url.clone();
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_url(url.clone()).map_err(se)?;
+                    if old == *url { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::Url { url: old }]) }
+                }
+                ChangeRepresentationCommand::Description { description } => {
+                    let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.description.clone();
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_description(description.clone()).map_err(se)?;
+                    if old == *description { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::Description { description: old }]) }
+                }
+                ChangeRepresentationCommand::File { file: fidd } => {
+                    let old = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.to_metadata_dto().file;
+                    let w = if let Some(fid) = fidd {
+                        kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.file(fid.id.as_str()).map(|x| Arc::downgrade(&x))
+                    } else {
+                        None
+                    };
+                    r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.set_file(w).map_err(se)?;
+                    if &old == fidd { Ok(vec![]) } else { Ok(vec![ChangeRepresentationCommand::File { file: old }]) }
+                }
+                ChangeRepresentationCommand::AddRepresentationTag { tag } => {
+                    let id = tag.id.clone();
+                    r.write()
+                        .map_err(|_| SemioError::LockPoisoned("representation"))?
+                        .tags
+                        .push(TagStore::from_full_dto(tag.clone()));
+                    r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    Ok(vec![ChangeRepresentationCommand::RemoveRepresentationTag { tag_id: TagIdDto { id } }])
+                }
+                ChangeRepresentationCommand::RemoveRepresentationTag { tag_id } => {
+                    let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.iter().position(|t| t.id == tag_id.id);
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() });
+                    };
+                    let t = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.tags.remove(pos);
+                    let dto = t.to_full_dto();
+                    r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    Ok(vec![ChangeRepresentationCommand::AddRepresentationTag { tag: dto }])
+                }
+                ChangeRepresentationCommand::AddQuality { quality } => {
+                    let id = quality.id.clone();
+                    {
+                        let q = Arc::new(RwLock::new(QualityStore::from_full_dto(quality.clone())));
+                        {
+                            if let Ok(mut qg) = q.write() {
+                                qg.parent_representation = Some(Arc::downgrade(r));
+                                let twq = Arc::downgrade(&q);
+                                for b in &qg.benchmarks {
+                                    if let Ok(mut bw) = b.write() {
+                                        bw.parent_quality = Some(twq.clone());
+                                    }
+                                }
+                            }
+                        }
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.push(q);
+                        r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    }
+                    Ok(vec![ChangeRepresentationCommand::RemoveQuality { quality_id: QualityIdDto { id } }])
+                }
+                ChangeRepresentationCommand::RemoveQuality { quality_id } => {
+                    let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.iter().position(|q| q.read().map(|r| r.id == quality_id.id).unwrap_or(false));
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() });
+                    };
+                    let q = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.qualities.remove(pos);
+                    let dto = q.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                    r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    Ok(vec![ChangeRepresentationCommand::AddQuality { quality: dto }])
+                }
+                ChangeRepresentationCommand::AddAttribute { attribute } => {
+                    let id = attribute.id.clone();
+                    {
+                        r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.push(AttributeStore::from_full_dto(attribute.clone()));
+                        r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    }
+                    Ok(vec![ChangeRepresentationCommand::RemoveAttribute { id: AttributeIdDto { id } }])
+                }
+                ChangeRepresentationCommand::RemoveAttribute { id: aid } => {
+                    let pos = r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.iter().position(|a| a.id == aid.id);
+                    let Some(pos) = pos else {
+                        return Err(SemioError::NotFound { kind: "Attribute", id: aid.id.clone() });
+                    };
+                    let a = r.write().map_err(|_| SemioError::LockPoisoned("representation"))?.attributes.remove(pos);
+                    let dto = a.to_full_dto();
+                    r.read().map_err(|_| SemioError::LockPoisoned("representation"))?.invalidate_hash();
+                    Ok(vec![ChangeRepresentationCommand::AddAttribute { attribute: dto }])
+                }
+            }
         }
     }
 }
@@ -6957,7 +8663,7 @@ pub mod events {
     event_field_enum!(PortField { Id, Family, CompatibleFamilies, Mandatory, T, Description, Point, Direction });
     event_field_enum!(PropField { Key, Value, Unit, Description });
     event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
-    event_field_enum!(RepresentationField { Url, Description });
+    event_field_enum!(RepresentationField { Url, Description, File });
     event_field_enum!(SideField { Piece, Port, DesignPiece });
     event_field_enum!(StatField { Key, Value, Unit, Definition, Description });
     event_field_enum!(TagField { Name, Order });
@@ -13078,6 +14784,13 @@ pub mod representation {
             Ok(())
         }
 
+        /// Wire an optional file reference; pass `None` to clear.
+        pub fn set_file(&mut self, file: Option<crate::file::FileStoreWeak>) -> crate::error::SetResult {
+            self.file = file;
+            self.invalidate_hash();
+            Ok(())
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -15943,6 +17656,8 @@ pub mod wasm {
     use crate::error::SetError;
     use crate::id::Id;
     use crate::kit::{KitStore, KitStoreRef};
+    use crate::read_command::ReadKitCommand;
+    use serde::Serialize;
 
     fn js_settle_set(r: crate::error::SetResult) -> Result<JsValue, JsValue> {
         match r {
@@ -16065,6 +17780,74 @@ pub mod wasm {
             };
             let r = KitStore::execute_vcs(&self.inner, c).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&r).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// Apply [`ChangeKitCommand`] batch via `apply_many` and return `kind` + `inverse` (undo) commands.
+        #[wasm_bindgen(js_name = executeChangeKitCommands)]
+        pub fn execute_change_kit_commands(&self, cmds: JsValue) -> Result<JsValue, JsValue> {
+            use crate::change_command::ChangeKitCommand;
+            let cmds: Vec<ChangeKitCommand> = serde_wasm_bindgen::from_value(cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let (kind, inverse) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            #[derive(Serialize)]
+            struct Out {
+                kind: crate::kit_change::KitChangeKind,
+                inverse: Vec<ChangeKitCommand>,
+            }
+            serde_wasm_bindgen::to_value(&Out { kind, inverse }).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// Run [`ReadKitCommand`]s against the **live** graph (`to_full_dto`) — not `the_kit` materialization.
+        #[wasm_bindgen(js_name = executeReadKitCommands)]
+        pub fn execute_read_kit_commands(&self, cmds: JsValue) -> Result<JsValue, JsValue> {
+            let commands: Vec<ReadKitCommand> = serde_wasm_bindgen::from_value(cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
+            let dto = g.to_full_dto();
+            let results = ReadKitCommand::execute_many(&dto, &commands).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&results).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// [`KitStore::materialize_at`]: `at` = checkpoint id string, or `undefined` / empty for `initial` only.
+        #[wasm_bindgen(js_name = materializeAt)]
+        pub fn materialize_at_wasm(&self, at: JsValue) -> Result<JsValue, JsValue> {
+            let opt: Option<Id> = if at.is_undefined() || at.is_null() {
+                None
+            } else {
+                let s: String = serde_wasm_bindgen::from_value(at).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                if s.is_empty() {
+                    None
+                } else {
+                    Some(Id::from(s.as_str()))
+                }
+            };
+            let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock"))?;
+            let dto = g.materialize_at(opt.as_ref());
+            serde_wasm_bindgen::to_value(&dto).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// Debug view of the VCS tree: checkpoint ids, `theKitHead`, alternatives, sessions.
+        #[wasm_bindgen(js_name = vcsState)]
+        pub fn vcs_state_wasm(&self) -> Result<JsValue, JsValue> {
+            let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock"))?;
+            let mut checkpoint_ids: Vec<String> = g.checkpoints.keys().map(|i| i.to_string()).collect();
+            checkpoint_ids.sort();
+            let mut alt_ids: Vec<String> = g.alternatives.keys().map(|i| i.to_string()).collect();
+            alt_ids.sort();
+            let mut session_ids: Vec<String> = g.sessions.keys().map(|i| i.to_string()).collect();
+            session_ids.sort();
+            #[derive(Serialize)]
+            struct VcsState {
+                the_kit_head: Option<String>,
+                checkpoint_ids: Vec<String>,
+                alternative_ids: Vec<String>,
+                session_ids: Vec<String>,
+            }
+            let out = VcsState {
+                the_kit_head: g.the_kit_head.as_ref().map(|i| i.to_string()),
+                checkpoint_ids,
+                alternative_ids: alt_ids,
+                session_ids,
+            };
+            serde_wasm_bindgen::to_value(&out).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         /// Main-line `the kit` (materialized committed checkpoints; live graph may include session draft edits).

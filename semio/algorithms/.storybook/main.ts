@@ -25,6 +25,7 @@ const repoRootPath = resolve(__dirname, "../../..");
 const elementsUiDir = resolve(__dirname, "../../../elements/ui");
 const elementsUiEntryPath = resolve(elementsUiDir, "index.tsx");
 const algorithmsEntryPath = resolve(__dirname, "../index.ts");
+const semioRsWasmPath = resolve(__dirname, "../../rs/pkg");
 const semioUiEntryPath = resolve(__dirname, "../../ui/index.tsx");
 const semioJsEntryPath = resolve(__dirname, "../../js/index.ts");
 
@@ -194,9 +195,11 @@ const config: StorybookConfig = {
       "@elements/ui": elementsUiDir,
       "@semio/ui": semioUiEntryPath,
       "@semio/js": semioJsEntryPath,
+      "@semio/rs-wasm": semioRsWasmPath,
       "@semio/assets": resolve(__dirname, "../../assets"),
       "@semio/algorithms": algorithmsEntryPath,
     };
+    config.assetsInclude = [...(config.assetsInclude ?? []), "**/*.wasm"];
     config.server = config.server || {};
     config.server.proxy = config.server.proxy || {};
     config.server.fs = {
