@@ -2,21 +2,21 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-use crate::attribute::{AttributeFullDto, AttributeIdDto};
+use crate::attribute::AttributeIdDto;
 use crate::author::{AuthorFullDto, AuthorIdDto};
-use crate::concept::{ConceptFullDto, ConceptIdDto};
+use crate::concept::ConceptIdDto;
 use crate::design::{DesignFullDto, DesignIdDto};
 use crate::diff::{
     merge_opt, merge_opt_nested, AttributesDiff, AuthorsDiff, ConceptsDiff, DesignDiff, FilesDiff, FoldersDiff, PropsDiff, QualitiesDiff, TagsDiff, TypesDiff,
 };
-use crate::file::{FileFullDto, FileIdDto};
-use crate::folder::{FolderFullDto, FolderIdDto};
+use crate::file::FileIdDto;
+use crate::folder::FolderIdDto;
 use crate::id::Id;
 use crate::kit::KitFullDto;
-use crate::prop::{PropFullDto, PropIdDto};
-use crate::quality::{QualityFullDto, QualityIdDto};
-use crate::tag::{TagFullDto, TagIdDto};
-use crate::typ::{TypeFullDto, TypeIdDto};
+use crate::prop::PropIdDto;
+use crate::quality::QualityIdDto;
+use crate::tag::TagIdDto;
+use crate::typ::TypeIdDto;
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase")]

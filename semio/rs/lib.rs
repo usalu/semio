@@ -403,10 +403,10 @@ pub mod change_command {
     use crate::group::GroupFullDto;
     use crate::group::GroupIdDto;
     use crate::id::Id;
+    use crate::kit::KitFullDto;
     use crate::kit::KitStore;
     use crate::kit::KitStoreRef;
     use crate::kit_change::KitChangeKind;
-    use crate::kit_diff::KitDiff;
     use crate::layer::LayerFullDto;
     use crate::layer::LayerIdDto;
     use crate::piece::PieceFullDto;
@@ -479,14 +479,9 @@ pub mod change_command {
         Ok(())
     }
 
-    /// Batch-style forward step: apply a structural [`KitDiff`]; inverse is a matching backward diff
-    /// (produced with [`KitChange::from_dto_pair`] in [`crate::kit_change`]).
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ChangeKitCommand {
-        FromKitDiff {
-            diff: KitDiff,
-        },
         // --- kit metadata (mirrors set_* on [`KitStore`]) ---
         Name {
             name: String,
@@ -523,6 +518,10 @@ pub mod change_command {
         },
         Updated {
             updated: Option<String>,
+        },
+        /// Replace the entire kit graph from a snapshot (inverse is the previous [`KitFullDto`]).
+        ReplaceKitFromFullDto {
+            dto: KitFullDto,
         },
         // --- life-cycle (kit-scoped) ---
         AddType {
@@ -1639,14 +1638,6 @@ pub mod change_command {
         /// Apply and return the inverse command list to undo this step.
         pub fn apply(&self, kit: &KitStoreRef) -> Result<(KitChangeKind, Vec<ChangeKitCommand>)> {
             match self {
-                ChangeKitCommand::FromKitDiff { diff } => {
-                    let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    diff.apply(kit).map_err(se)?;
-                    let after = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
-                    let backward = KitDiff::between(&after, &before);
-                    let inv = if backward.is_empty() { vec![] } else { vec![ChangeKitCommand::FromKitDiff { diff: backward }] };
-                    Ok((KitChangeKind::Inferred, inv))
-                }
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_name(name.clone()).map_err(se)?;
@@ -1706,6 +1697,11 @@ pub mod change_command {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.updated.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_updated(updated.clone()).map_err(se)?;
                     Ok((KitChangeKind::SetKitMetadata, if old == *updated { vec![] } else { vec![ChangeKitCommand::Updated { updated: old }] }))
+                }
+                ChangeKitCommand::ReplaceKitFromFullDto { dto } => {
+                    let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+                    KitStore::replace_from_full_dto(kit, dto.clone()).map_err(se)?;
+                    Ok((KitChangeKind::Inferred, if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] }))
                 }
                 ChangeKitCommand::AddType { r#type } => {
                     let id = r#type.id.clone();
@@ -2484,8 +2480,10 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let mut diff = DesignDiff::default();
-                        diff.added_pieces.push(piece.clone());
+                        let diff = DesignDiff {
+                            pieces: Some(crate::diff::PiecesDiff { added: vec![piece.clone()], ..Default::default() }),
+                            ..Default::default()
+                        };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::RemovePiece { piece_id: PieceIdDto { id } }])
@@ -2502,8 +2500,10 @@ pub mod change_command {
                     };
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let mut diff = DesignDiff::default();
-                        diff.removed_pieces.push(piece_id.clone());
+                        let diff = DesignDiff {
+                            pieces: Some(crate::diff::PiecesDiff { removed: vec![piece_id.clone()], ..Default::default() }),
+                            ..Default::default()
+                        };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::AddPiece { piece: snap }])
@@ -2522,8 +2522,10 @@ pub mod change_command {
                     let did = design_id.to_string();
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let mut diff = DesignDiff::default();
-                        diff.added_connections.push(connection.clone());
+                        let diff = DesignDiff {
+                            connections: Some(crate::diff::ConnectionsDiff { added: vec![connection.clone()], ..Default::default() }),
+                            ..Default::default()
+                        };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::RemoveConnection { connection_id: ConnectionIdDto { id } }])
@@ -2539,8 +2541,10 @@ pub mod change_command {
                     .ok_or_else(|| SemioError::NotFound { kind: "Connection", id: connection_id.id.clone() })?;
                     {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let mut diff = DesignDiff::default();
-                        diff.removed_connections.push(connection_id.clone());
+                        let diff = DesignDiff {
+                            connections: Some(crate::diff::ConnectionsDiff { removed: vec![connection_id.clone()], ..Default::default() }),
+                            ..Default::default()
+                        };
                         g.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(vec![ChangeDesignCommand::AddConnection { connection: snap }])
@@ -3654,7 +3658,7 @@ pub mod kit_checkpoint {
 
     use crate::hash::HashWriter;
     use crate::id::Id;
-    use crate::kit::KitFullDto;
+    use crate::kit::{KitFullDto, KitStore};
     use crate::kit_change::KitChange;
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -3667,10 +3671,12 @@ pub mod kit_checkpoint {
 
     impl MaterializedKit {
         pub fn compute(&self) -> KitFullDto {
-            self.change_list.iter().fold(self.initial.clone(), |acc, c| {
-                // Prefer fast path when a checkpoint is a single pure diff; otherwise re-hydrate.
-                crate::kit_change::KitChange::apply_forward_dto(&acc, c)
-            })
+            let k = KitStore::from_full_dto(self.initial.clone());
+            for c in &self.change_list {
+                let _ = KitChange::apply_forward(c, &k);
+            }
+            let out = k.read().expect("kit read").to_full_dto();
+            out
         }
     }
 
@@ -3758,15 +3764,16 @@ pub mod kit_checkpoint {
                 return initial.clone();
             };
             let path = Self::chain_root_to_leaf_from(at_id, map);
-            let mut s = initial.clone();
+            let k = KitStore::from_full_dto(initial.clone());
             for cid in &path {
                 if let Some(cp) = map.get(cid) {
                     for ch in &cp.changes {
-                        s = crate::kit_change::KitChange::apply_forward_dto(&s, ch);
+                        let _ = KitChange::apply_forward(ch, &k);
                     }
                 }
             }
-            s
+            let out = k.read().expect("kit read").to_full_dto();
+            out
         }
 
         /// Mark this checkpoint as a release by snapshotting the materialized kit.
@@ -4132,6 +4139,7 @@ pub mod kit_store_command {
     //! in-memory graph (`KitStore`) is the host object they act upon.
     use serde::{Deserialize, Serialize};
 
+    use crate::change_command::ChangeKitCommand;
     use crate::id::Id;
     use crate::kit::KitStore;
     use crate::kit::KitStoreRef;
@@ -4422,17 +4430,36 @@ pub mod kit_store_command {
         }
 
         fn finalize_draft(kit: &KitStoreRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
-            let (parent, alt, before, after) = {
+            let (parent, alt, kc) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g.sessions.get(sid).and_then(|s| s.draft(did)).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
                 if d.has_open_transaction() {
                     return Err(SemioError::InvalidOperation("open transaction must be closed before FinalizeToKitCheckpoint".into()));
                 }
-                let after = g.to_full_dto();
-                (d.parent_checkpoint.clone(), d.target_alternative.clone(), d.before.clone(), after)
+                let mut forward: Vec<crate::change_command::ChangeKitCommand> = Vec::new();
+                let mut inverse: Vec<crate::change_command::ChangeKitCommand> = Vec::new();
+                for tx in &d.transactions {
+                    for ch in &tx.changes {
+                        forward.extend(ch.forward.iter().cloned());
+                    }
+                }
+                for tx in d.transactions.iter().rev() {
+                    for ch in tx.changes.iter().rev() {
+                        inverse.extend(ch.inverse.iter().cloned());
+                    }
+                }
+                if forward.is_empty() {
+                    return Err(SemioError::InvalidOperation("no change to finalize in draft".into()));
+                }
+                let kc = KitChange {
+                    forward,
+                    inverse,
+                    kind: KitChangeKind::Inferred,
+                    author: None,
+                    time: None,
+                };
+                (d.parent_checkpoint.clone(), d.target_alternative.clone(), kc)
             };
-            let mut kc = KitChange::from_dto_pair(&before, &after).ok_or_else(|| SemioError::InvalidOperation("no change to finalize in draft".into()))?;
-            kc.kind = KitChangeKind::Inferred;
             let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
             let new_id = cp.id.clone();
             {
@@ -4639,8 +4666,13 @@ pub mod kit_store_command {
                         let b = g.materialize_at(Some(&t));
                         (r, a, b)
                     };
-                    let mut ch = KitChange::from_dto_pair(&before_dto, &after_dto).ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
-                    ch.kind = KitChangeKind::UnifyCheckpoints;
+                    let ch = KitChange {
+                        forward: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: after_dto.clone() }],
+                        inverse: vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: before_dto.clone() }],
+                        kind: KitChangeKind::UnifyCheckpoints,
+                        author: None,
+                        time: None,
+                    };
                     let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
                     let new_id = cp.id.clone();
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -6167,7 +6199,9 @@ pub mod design {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
+    use crate::error::SemioError;
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
+    use crate::benchmark::BenchmarkFullDto;
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
@@ -7286,72 +7320,744 @@ pub mod design {
             before - self.pieces.len()
         }
 
-        pub fn diff_from(&self, other: &DesignStore) -> crate::diff::DesignDiff {
-            crate::diff::DesignDiff::between(&self.to_full_dto(), &other.to_full_dto())
+fn merge_piece_sparse_into_full(dto: &mut PieceFullDto, d: &crate::diff::PieceDiff) {
+            if let Some(v) = &d.name {
+                dto.name = v.clone();
+            }
+            if let Some(v) = &d.description {
+                dto.description = v.clone();
+            }
+            if let Some(v) = &d.plane {
+                dto.plane = *v;
+            }
+            if let Some(v) = &d.center {
+                dto.center = *v;
+            }
+            if let Some(v) = &d.scale {
+                dto.scale = *v;
+            }
+            if let Some(v) = &d.mirror_plane {
+                dto.mirror_plane = *v;
+            }
+            if let Some(v) = &d.hidden {
+                dto.hidden = *v;
+            }
+            if let Some(v) = &d.locked {
+                dto.locked = *v;
+            }
+            if let Some(v) = &d.color {
+                dto.color = v.clone();
+            }
+            if let Some(v) = &d.r#type {
+                dto.r#type = v.clone();
+            }
+            if let Some(v) = &d.design {
+                dto.design = v.clone();
+            }
+            if let Some(ref pd) = d.props {
+                Self::apply_props_coll_dto(&mut dto.props, pd);
+            }
+            if let Some(ref ad) = d.attributes {
+                Self::apply_attrs_coll_dto(&mut dto.attributes, ad);
+            }
+        }
+
+        fn apply_props_coll_dto(props: &mut Vec<PropFullDto>, pd: &crate::diff::PropsDiff) {
+            for id in &pd.removed {
+                props.retain(|p| p.id != id.id);
+            }
+            for u in &pd.updated {
+                if let Some(p) = props.iter_mut().find(|p| p.id == u.id.id) {
+                    if let Some(k) = &u.diff.key {
+                        p.key = k.clone();
+                    }
+                    if let Some(v) = &u.diff.value {
+                        p.value = v.clone();
+                    }
+                    if let Some(unit) = &u.diff.unit {
+                        p.unit = unit.clone();
+                    }
+                }
+            }
+            for a in &pd.added {
+                props.push(a.clone());
+            }
+        }
+
+        fn apply_attrs_coll_dto(attrs: &mut Vec<AttributeFullDto>, ad: &crate::diff::AttributesDiff) {
+            for id in &ad.removed {
+                attrs.retain(|a| a.id != id.id);
+            }
+            for u in &ad.updated {
+                if let Some(a) = attrs.iter_mut().find(|a| a.id == u.id.id) {
+                    if let Some(k) = &u.diff.key {
+                        a.key = k.clone();
+                    }
+                    if let Some(v) = &u.diff.value {
+                        a.value = v.clone();
+                    }
+                    if let Some(d) = &u.diff.definition {
+                        a.definition = d.clone();
+                    }
+                }
+            }
+            for a in &ad.added {
+                attrs.push(a.clone());
+            }
+        }
+
+        fn merge_connection_sparse_into_full(dto: &mut ConnectionFullDto, d: &crate::diff::ConnectionDiff) {
+            if let Some(v) = &d.connected {
+                dto.connected = v.clone();
+            }
+            if let Some(v) = &d.connecting {
+                dto.connecting = v.clone();
+            }
+            if let Some(v) = &d.gap {
+                dto.gap = *v;
+            }
+            if let Some(v) = &d.shift {
+                dto.shift = *v;
+            }
+            if let Some(v) = &d.rise {
+                dto.rise = *v;
+            }
+            if let Some(v) = &d.rotation {
+                dto.rotation = *v;
+            }
+            if let Some(v) = &d.turn {
+                dto.turn = *v;
+            }
+            if let Some(v) = &d.tilt {
+                dto.tilt = *v;
+            }
+            if let Some(v) = &d.x {
+                dto.x = *v;
+            }
+            if let Some(v) = &d.y {
+                dto.y = *v;
+            }
+            if let Some(v) = &d.description {
+                dto.description = v.clone();
+            }
+            if let Some(ref ad) = d.attributes {
+                Self::apply_attrs_coll_dto(&mut dto.attributes, ad);
+            }
+        }
+
+        fn merge_layer_sparse_into_full(fd: &mut LayerFullDto, d: &crate::diff::LayerDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(v) = &d.color {
+                fd.color = v.clone();
+            }
+            if let Some(v) = &d.order {
+                fd.order = *v;
+            }
+            if let Some(v) = &d.visible {
+                fd.visible = *v;
+            }
+            if let Some(v) = &d.locked {
+                fd.locked = *v;
+            }
+        }
+
+        fn merge_group_sparse_into_full(fd: &mut GroupFullDto, d: &crate::diff::GroupDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(v) = &d.color {
+                fd.color = v.clone();
+            }
+            if let Some(v) = &d.icon {
+                fd.icon = v.clone();
+            }
+            if let Some(ref ps) = d.pieces {
+                fd.pieces = ps.clone();
+            }
+        }
+
+        fn merge_author_sparse_into_full(fd: &mut AuthorFullDto, d: &crate::diff::AuthorDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(e) = &d.email {
+                fd.email = e.clone();
+            }
+            if let Some(v) = &d.role {
+                fd.role = v.clone();
+            }
+            if let Some(v) = &d.rank {
+                fd.rank = *v;
+            }
+        }
+
+        fn merge_concept_sparse_into_full(fd: &mut ConceptFullDto, d: &crate::diff::ConceptDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(v) = &d.order {
+                fd.order = *v;
+            }
+        }
+
+        fn merge_tag_sparse_into_full(fd: &mut TagFullDto, d: &crate::diff::TagDiff) {
+            if let Some(n) = &d.name {
+                fd.name = n.clone();
+            }
+            if let Some(v) = &d.order {
+                fd.order = *v;
+            }
+        }
+
+        fn apply_benchmarks_coll_dto(bm: &mut Vec<BenchmarkFullDto>, bd: &crate::diff::BenchmarksDiff) {
+            for id in &bd.removed {
+                bm.retain(|b| b.id != id.id);
+            }
+            for u in &bd.updated {
+                if let Some(b) = bm.iter_mut().find(|b| b.id == u.id.id) {
+                    if let Some(n) = &u.diff.name {
+                        b.name = n.clone();
+                    }
+                    if let Some(v) = &u.diff.min {
+                        b.min = *v;
+                    }
+                    if let Some(v) = &u.diff.max {
+                        b.max = *v;
+                    }
+                    if let Some(v) = &u.diff.min_excluded {
+                        b.min_excluded = *v;
+                    }
+                    if let Some(v) = &u.diff.max_excluded {
+                        b.max_excluded = *v;
+                    }
+                }
+            }
+            for a in &bd.added {
+                bm.push(a.clone());
+            }
+        }
+
+        fn merge_quality_sparse_into_full(fd: &mut QualityFullDto, d: &crate::diff::QualityDiff) {
+            if let Some(k) = &d.key {
+                fd.key = k.clone();
+            }
+            if let Some(v) = &d.value {
+                fd.value = v.clone();
+            }
+            if let Some(v) = &d.unit {
+                fd.unit = v.clone();
+            }
+            if let Some(v) = &d.definition {
+                fd.definition = v.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
+            if let Some(ref bd) = d.benchmarks {
+                Self::apply_benchmarks_coll_dto(&mut fd.benchmarks, bd);
+            }
+        }
+
+        fn merge_stat_sparse_into_full(fd: &mut StatFullDto, d: &crate::diff::StatDiff) {
+            if let Some(k) = &d.key {
+                fd.key = k.clone();
+            }
+            if let Some(v) = &d.value {
+                fd.value = v.clone();
+            }
+            if let Some(v) = &d.unit {
+                fd.unit = v.clone();
+            }
+            if let Some(v) = &d.description {
+                fd.description = v.clone();
+            }
         }
 
         pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
-            for id in &diff.removed_connections {
-                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, id.id.clone()) });
+            if let Some(n) = &diff.name {
+                self.set_name(n.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
-            for id in &diff.removed_connections {
-                self.connections.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
+            if let Some(d) = &diff.description {
+                self.set_description(d.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
-            let removed_piece_ids: Vec<Id> = diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
-            if !removed_piece_ids.is_empty() {
-                self.delete_pieces_inner(&removed_piece_ids, false);
+            if let Some(i) = &diff.icon {
+                self.set_icon(i.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
-            for p in &diff.added_pieces {
-                let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.id.clone())));
-                if let Ok(mut pw) = pref.write() {
-                    pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
+            if let Some(i) = &diff.image {
+                self.set_image(i.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(v) = &diff.variant {
+                self.set_variant(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(v) = &diff.view {
+                self.set_view(v.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(v) = &diff.location {
+                self.set_location(*v).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(v) = &diff.camera {
+                self.set_camera(*v).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(u) = &diff.unit {
+                self.set_unit(u.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(c) = &diff.created {
+                self.set_created(c.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(u) = &diff.updated {
+                self.set_updated(u.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            if let Some(k) = &diff.kit {
+                let mut m = self.to_metadata_dto();
+                m.kit = k.clone();
+                self.apply_metadata_fields(m);
+            }
+
+            if let Some(pc) = &diff.pieces {
+                for id in &pc.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, id.id.clone()) });
                 }
-                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, p.id.clone()) });
-                self.pieces.push(pref);
-            }
-            for p in &diff.modified_pieces {
-                if let Some(pref) = self.piece(p.id.as_str()) {
-                    if let Ok(mut pw) = pref.write() {
-                        pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
+                let rids: Vec<Id> = pc.removed.iter().map(|p| p.id.clone()).collect();
+                if !rids.is_empty() {
+                    self.delete_pieces_inner(&rids, false);
+                }
+                for u in &pc.updated {
+                    if let Some(pref) = self.piece(u.id.id.as_str()) {
+                        let mut dto = pref.read().map_err(|_| SemioError::LockPoisoned("piece"))?.to_full_dto();
+                        Self::merge_piece_sparse_into_full(&mut dto, &u.diff);
+                        let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
+                        pw.apply_full_dto(dto, design_weak.clone(), type_index);
                     }
                 }
-            }
-            let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
-            for p in &self.pieces {
-                if let Ok(pr) = p.read() {
-                    piece_index.insert(pr.id.clone(), p.clone());
+                for p in &pc.added {
+                    let pref = Arc::new(RwLock::new(PieceStore::empty_shell(p.id.clone())));
+                    {
+                        let mut pw = pref.write().map_err(|_| SemioError::LockPoisoned("piece"))?;
+                        pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
+                    }
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, p.id.clone()) });
+                    self.pieces.push(pref);
                 }
             }
-            for c in &diff.added_connections {
-                self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
-                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+
+            if let Some(cc) = &diff.connections {
+                for id in &cc.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, id.id.clone()) });
+                }
+                for id in &cc.removed {
+                    self.connections.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
+                }
+                let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
+                for p in &self.pieces {
+                    if let Ok(pr) = p.read() {
+                        piece_index.insert(pr.id.clone(), p.clone());
+                    }
+                }
+                for u in &cc.updated {
+                    if self.connections.iter().any(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)) {
+                        let cref = self
+                            .connections
+                            .iter()
+                            .find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false))
+                            .cloned()
+                            .expect("connection");
+                        let mut dto = cref.read().map_err(|_| SemioError::LockPoisoned("connection"))?.to_full_dto();
+                        Self::merge_connection_sparse_into_full(&mut dto, &u.diff);
+                        self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                        self.connections.retain(|x| x.read().map(|x| x.id != u.id.id).unwrap_or(true));
+                        self.connections.push(connection_from_full_dto(dto, &piece_index, design_weak.clone()));
+                        self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, u.id.id.clone()) });
+                    }
+                }
+                for c in &cc.added {
+                    self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+                }
             }
-            for c in &diff.modified_connections {
-                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
-                self.connections.retain(|x| x.read().map(|x| x.id != c.id).unwrap_or(true));
-                self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
-                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+
+            if let Some(ld) = &diff.layers {
+                for id in &ld.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, id.id.clone()) });
+                }
+                for id in &ld.removed {
+                    self.layers.retain(|l| l.read().map(|l| l.id != id.id).unwrap_or(true));
+                }
+                for u in &ld.updated {
+                    if let Some(lr) = self.layers.iter().find(|l| l.read().map(|l| l.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = lr.read().map_err(|_| SemioError::LockPoisoned("layer"))?.to_full_dto();
+                        Self::merge_layer_sparse_into_full(&mut fd, &u.diff);
+                        let mut lw = lr.write().map_err(|_| SemioError::LockPoisoned("layer"))?;
+                        let pd = lw.parent_design.clone();
+                        let eb = lw.event_bus.clone();
+                        *lw = LayerStore::from_full_dto(fd);
+                        lw.parent_design = pd;
+                        lw.event_bus = eb;
+                    }
+                }
+                for ldto in &ld.added {
+                    let mut layer = LayerStore::from_full_dto(ldto.clone());
+                    layer.parent_design = design_weak.clone();
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Layer, ldto.id.clone()) });
+                    self.layers.push(Arc::new(RwLock::new(layer)));
+                }
             }
+
+            if let Some(gd) = &diff.groups {
+                for id in &gd.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, id.id.clone()) });
+                }
+                for id in &gd.removed {
+                    self.groups.retain(|g| g.read().map(|g| g.id != id.id).unwrap_or(true));
+                }
+                for u in &gd.updated {
+                    if let Some(gr) = self.groups.iter().find(|g| g.read().map(|g| g.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = gr.read().map_err(|_| SemioError::LockPoisoned("group"))?.to_full_dto();
+                        Self::merge_group_sparse_into_full(&mut fd, &u.diff);
+                        let mut gw = gr.write().map_err(|_| SemioError::LockPoisoned("group"))?;
+                        let pd = gw.parent_design.clone();
+                        let eb = gw.event_bus.clone();
+                        *gw = GroupStore::from_full_dto(fd.clone());
+                        gw.parent_design = pd;
+                        gw.event_bus = eb;
+                        let mut weaks = Vec::with_capacity(fd.pieces.len());
+                        for pid in &fd.pieces {
+                            if let Some(pr) = self.piece(pid.id.as_str()) {
+                                weaks.push(Arc::downgrade(&pr));
+                            }
+                        }
+                        gw.pieces = weaks;
+                    }
+                }
+                for gdto in &gd.added {
+                    let mut g = GroupStore::from_full_dto(gdto.clone());
+                    g.parent_design = design_weak.clone();
+                    let mut weaks = Vec::with_capacity(gdto.pieces.len());
+                    for pid in &gdto.pieces {
+                        if let Some(pr) = self.piece(pid.id.as_str()) {
+                            weaks.push(Arc::downgrade(&pr));
+                        }
+                    }
+                    g.pieces = weaks;
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Group, gdto.id.clone()) });
+                    self.groups.push(Arc::new(RwLock::new(g)));
+                }
+            }
+
+            if let Some(ad) = &diff.authors {
+                for id in &ad.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, id.id.clone()) });
+                }
+                for id in &ad.removed {
+                    self.authors.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
+                }
+                for u in &ad.updated {
+                    if let Some(ar) = self.authors.iter().find(|a| a.read().map(|a| a.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("author"))?.to_full_dto();
+                        Self::merge_author_sparse_into_full(&mut fd, &u.diff);
+                        let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("author"))?;
+                        let pk = aw.parent_kit.clone();
+                        let pd = aw.parent_design.clone();
+                        let pt = aw.parent_type.clone();
+                        let eb = aw.event_bus.clone();
+                        *aw = AuthorStore::from_full_dto(fd);
+                        aw.parent_kit = pk;
+                        aw.parent_design = pd;
+                        aw.parent_type = pt;
+                        aw.event_bus = eb;
+                    }
+                }
+                for adto in &ad.added {
+                    let mut s = AuthorStore::from_full_dto(adto.clone());
+                    s.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Author, adto.id.clone()) });
+                    self.authors.push(Arc::new(RwLock::new(s)));
+                }
+            }
+
+            if let Some(cd) = &diff.concepts {
+                for id in &cd.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, id.id.clone()) });
+                }
+                for id in &cd.removed {
+                    self.concepts.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
+                }
+                for u in &cd.updated {
+                    if let Some(cr) = self.concepts.iter().find(|c| c.read().map(|c| c.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = cr.read().map_err(|_| SemioError::LockPoisoned("concept"))?.to_full_dto();
+                        Self::merge_concept_sparse_into_full(&mut fd, &u.diff);
+                        let mut cw = cr.write().map_err(|_| SemioError::LockPoisoned("concept"))?;
+                        let pk = cw.parent_kit.clone();
+                        let pd = cw.parent_design.clone();
+                        let pt = cw.parent_type.clone();
+                        let eb = cw.event_bus.clone();
+                        *cw = ConceptStore::from_full_dto(fd);
+                        cw.parent_kit = pk;
+                        cw.parent_design = pd;
+                        cw.parent_type = pt;
+                        cw.event_bus = eb;
+                    }
+                }
+                for cdto in &cd.added {
+                    let mut s = ConceptStore::from_full_dto(cdto.clone());
+                    s.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Concept, cdto.id.clone()) });
+                    self.concepts.push(Arc::new(RwLock::new(s)));
+                }
+            }
+
+            if let Some(td) = &diff.tags {
+                for id in &td.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, id.id.clone()) });
+                }
+                for id in &td.removed {
+                    self.tags.retain(|t| t.read().map(|t| t.id != id.id).unwrap_or(true));
+                }
+                for u in &td.updated {
+                    if let Some(tr) = self.tags.iter().find(|t| t.read().map(|t| t.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = tr.read().map_err(|_| SemioError::LockPoisoned("tag"))?.to_full_dto();
+                        Self::merge_tag_sparse_into_full(&mut fd, &u.diff);
+                        let mut tw = tr.write().map_err(|_| SemioError::LockPoisoned("tag"))?;
+                        let pk = tw.parent_kit.clone();
+                        let pd = tw.parent_design.clone();
+                        let pt = tw.parent_type.clone();
+                        let eb = tw.event_bus.clone();
+                        *tw = TagStore::from_full_dto(fd);
+                        tw.parent_kit = pk;
+                        tw.parent_design = pd;
+                        tw.parent_type = pt;
+                        tw.event_bus = eb;
+                    }
+                }
+                for tdto in &td.added {
+                    let mut s = TagStore::from_full_dto(tdto.clone());
+                    s.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Tag, tdto.id.clone()) });
+                    self.tags.push(Arc::new(RwLock::new(s)));
+                }
+            }
+
+            if let Some(qd) = &diff.qualities {
+                for id in &qd.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, id.id.clone()) });
+                }
+                for id in &qd.removed {
+                    self.qualities.retain(|q| q.read().map(|q| q.id != id.id).unwrap_or(true));
+                }
+                for u in &qd.updated {
+                    if let Some(qr) = self.qualities.iter().find(|q| q.read().map(|q| q.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = qr.read().map_err(|_| SemioError::LockPoisoned("quality"))?.to_full_dto();
+                        Self::merge_quality_sparse_into_full(&mut fd, &u.diff);
+                        let mut qw = qr.write().map_err(|_| SemioError::LockPoisoned("quality"))?;
+                        let pk = qw.parent_kit.clone();
+                        let pd = qw.parent_design.clone();
+                        let pt = qw.parent_type.clone();
+                        let pp = qw.parent_port.clone();
+                        let pc = qw.parent_connector.clone();
+                        let pr = qw.parent_representation.clone();
+                        let eb = qw.event_bus.clone();
+                        *qw = QualityStore::from_full_dto(fd);
+                        qw.parent_kit = pk;
+                        qw.parent_design = pd;
+                        qw.parent_type = pt;
+                        qw.parent_port = pp;
+                        qw.parent_connector = pc;
+                        qw.parent_representation = pr;
+                        qw.event_bus = eb;
+                    }
+                }
+                for qdto in &qd.added {
+                    let mut s = QualityStore::from_full_dto(qdto.clone());
+                    s.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Quality, qdto.id.clone()) });
+                    self.qualities.push(Arc::new(RwLock::new(s)));
+                }
+            }
+
+            if let Some(pd) = &diff.props {
+                for id in &pd.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, id.id.clone()) });
+                }
+                for id in &pd.removed {
+                    self.props.retain(|p| p.read().map(|p| p.id != id.id).unwrap_or(true));
+                }
+                for u in &pd.updated {
+                    if let Some(pr) = self.props.iter().find(|p| p.read().map(|p| p.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = pr.read().map_err(|_| SemioError::LockPoisoned("prop"))?.to_full_dto();
+                        if let Some(k) = &u.diff.key {
+                            fd.key = k.clone();
+                        }
+                        if let Some(v) = &u.diff.value {
+                            fd.value = v.clone();
+                        }
+                        if let Some(unit) = &u.diff.unit {
+                            fd.unit = unit.clone();
+                        }
+                        let mut pw = pr.write().map_err(|_| SemioError::LockPoisoned("prop"))?;
+                        let pk = pw.parent_kit.clone();
+                        let pd = pw.parent_design.clone();
+                        let pt = pw.parent_type.clone();
+                        let pp = pw.parent_piece.clone();
+                        let eb = pw.event_bus.clone();
+                        *pw = PropStore::from_full_dto(fd);
+                        pw.parent_kit = pk;
+                        pw.parent_design = pd;
+                        pw.parent_type = pt;
+                        pw.parent_piece = pp;
+                        pw.event_bus = eb;
+                    }
+                }
+                for pdto in &pd.added {
+                    let mut p = PropStore::from_full_dto(pdto.clone());
+                    p.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Prop, pdto.id.clone()) });
+                    self.props.push(Arc::new(RwLock::new(p)));
+                }
+            }
+
+            if let Some(ad) = &diff.attributes {
+                for id in &ad.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, id.id.clone()) });
+                }
+                for id in &ad.removed {
+                    self.attributes.retain(|a| a.read().map(|a| a.id != id.id).unwrap_or(true));
+                }
+                for u in &ad.updated {
+                    if let Some(ar) = self.attributes.iter().find(|a| a.read().map(|a| a.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = ar.read().map_err(|_| SemioError::LockPoisoned("attribute"))?.to_full_dto();
+                        if let Some(k) = &u.diff.key {
+                            fd.key = k.clone();
+                        }
+                        if let Some(v) = &u.diff.value {
+                            fd.value = v.clone();
+                        }
+                        if let Some(d) = &u.diff.definition {
+                            fd.definition = d.clone();
+                        }
+                        let mut aw = ar.write().map_err(|_| SemioError::LockPoisoned("attribute"))?;
+                        let pk = aw.parent_kit.clone();
+                        let pd = aw.parent_design.clone();
+                        let pt = aw.parent_type.clone();
+                        let pp = aw.parent_piece.clone();
+                        let pport = aw.parent_port.clone();
+                        let pconn = aw.parent_connection.clone();
+                        let prep = aw.parent_representation.clone();
+                        let pcon = aw.parent_connector.clone();
+                        let eb = aw.event_bus.clone();
+                        *aw = AttributeStore::from_full_dto(fd);
+                        aw.parent_kit = pk;
+                        aw.parent_design = pd;
+                        aw.parent_type = pt;
+                        aw.parent_piece = pp;
+                        aw.parent_port = pport;
+                        aw.parent_connection = pconn;
+                        aw.parent_representation = prep;
+                        aw.parent_connector = pcon;
+                        aw.event_bus = eb;
+                    }
+                }
+                for adto in &ad.added {
+                    let mut a = AttributeStore::from_full_dto(adto.clone());
+                    a.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Attribute, adto.id.clone()) });
+                    self.attributes.push(Arc::new(RwLock::new(a)));
+                }
+            }
+
+            if let Some(sd) = &diff.stats {
+                for id in &sd.removed {
+                    self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, id.id.clone()) });
+                }
+                for id in &sd.removed {
+                    self.stats.retain(|s| s.read().map(|s| s.id != id.id).unwrap_or(true));
+                }
+                for u in &sd.updated {
+                    if let Some(sr) = self.stats.iter().find(|s| s.read().map(|s| s.id == u.id.id).unwrap_or(false)) {
+                        let mut fd = sr.read().map_err(|_| SemioError::LockPoisoned("stat"))?.to_full_dto();
+                        Self::merge_stat_sparse_into_full(&mut fd, &u.diff);
+                        let mut sw = sr.write().map_err(|_| SemioError::LockPoisoned("stat"))?;
+                        let pk = sw.parent_kit.clone();
+                        let pd = sw.parent_design.clone();
+                        let eb = sw.event_bus.clone();
+                        *sw = StatStore::from_full_dto(fd);
+                        sw.parent_kit = pk;
+                        sw.parent_design = pd;
+                        sw.event_bus = eb;
+                    }
+                }
+                for sdto in &sd.added {
+                    let mut s = StatStore::from_full_dto(sdto.clone());
+                    s.parent_design = Some(design_weak.clone());
+                    self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Stat, sdto.id.clone()) });
+                    self.stats.push(Arc::new(RwLock::new(s)));
+                }
+            }
+
             self.rewire_piece_flatten_parents();
-            // Do not bubble hash/validation to kit here: [`KitStore::apply_design_diff`] may hold the
-            // kit write lock. Flatten events are design-local.
             self.invalidate_hash_local();
             self.invalidate_flatten();
             Ok(())
         }
 
-        pub fn invert_change(change: &crate::diff::DesignChange) -> crate::diff::DesignChange {
-            crate::diff::DesignChange { forward: change.backward.clone(), backward: change.forward.clone(), author: change.author.clone(), time: change.time.clone(), before: change.after.clone(), after: change.before.clone() }
-        }
+        /// Compute a forward/backward sparse [`crate::diff::DesignChange`] by baking implicit poses
+        /// (see [`crate::piece::PieceStore::fix_on_design`]) until stable.
+        pub fn flatten_change(&mut self) -> crate::report::SemioReport<crate::diff::DesignChange> {
+            use crate::diff::DesignChange;
+            use crate::error::SetError;
+            use crate::report::SemioReport;
 
-        pub fn validate_change(&self, change: &crate::diff::DesignChange) -> crate::report::ValidationResult {
-            let mut r = crate::report::ValidationResult::valid();
-            if change.before.as_ref().map(|b| b.id.clone()) != change.after.as_ref().map(|a| a.id.clone()) {
-                r.is_valid = false;
-                r.errors.push("DesignChange before/after snapshots must refer to the same design id".into());
+            let before = self.to_full_dto();
+            let prefs: Vec<PieceStoreRef> = self.pieces.clone();
+            let max_pass = prefs.len().saturating_add(8);
+            for _ in 0..max_pass {
+                let mut any = false;
+                for pref in &prefs {
+                    let needs = match pref.read() {
+                        Ok(r) => r.parent_connection.is_some(),
+                        Err(_) => false,
+                    };
+                    if !needs {
+                        continue;
+                    }
+                    let mut pw = match pref.write() {
+                        Ok(w) => w,
+                        Err(_) => return SemioReport::err("piece lock poisoned during flatten"),
+                    };
+                    if pw.parent_connection.is_some() {
+                        match pw.fix_on_design(self) {
+                            Ok(()) => any = true,
+                            Err(SetError::LockPoisoned(m)) => return SemioReport::err(m),
+                            Err(e) => return SemioReport::err(e.to_string()),
+                        }
+                    }
+                }
+                if !any {
+                    break;
+                }
             }
-            r
+            self.rewire_piece_flatten_parents();
+            let after = self.to_full_dto();
+            let forward = crate::diff::DesignDiff::between(&before, &after);
+            let backward = crate::diff::DesignDiff::between(&after, &before);
+            SemioReport::ok(DesignChange {
+                forward,
+                backward,
+                author: None,
+                time: None,
+                before: Some(before),
+                after: Some(after),
+            })
         }
 
         pub fn to_id_dto(&self) -> DesignIdDto {
@@ -7618,9 +8324,6 @@ pub mod kit_change {
     use serde::{Deserialize, Serialize};
 
     use crate::change_command::ChangeKitCommand;
-    use crate::kit::KitFullDto;
-    use crate::kit::KitStore;
-    use crate::kit_diff::{apply_to_dto, KitDiff};
 
     /// Semantic kind for a [`KitChange`] (VCS and UI; replaces the old `KitOperation` wrapper).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
@@ -7664,68 +8367,15 @@ pub mod kit_change {
     }
 
     impl KitChange {
-        /// Build a [`KitChange`] from two snapshots using a single [`FromKitDiff`] on each leg.
-        pub fn from_dto_pair(before: &KitFullDto, after: &KitFullDto) -> Option<Self> {
-            if before == after {
-                return None;
-            }
-            let forward = KitDiff::between(before, after);
-            let backward = KitDiff::between(after, before);
-            Some(KitChange { forward: vec![ChangeKitCommand::FromKitDiff { diff: forward }], inverse: vec![ChangeKitCommand::FromKitDiff { diff: backward }], kind: KitChangeKind::Inferred, author: None, time: None })
-        }
-
-        /// Apply forward commands in order, materializing a new kit DTO (full re-hydration per step).
-        pub fn apply_forward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
-            if c.forward.len() == 1 {
-                if let ChangeKitCommand::FromKitDiff { diff } = &c.forward[0] {
-                    return apply_to_dto(s, diff);
-                }
-            }
-            let k = KitStore::from_full_dto(s.clone());
-            for cmd in &c.forward {
-                if let Err(e) = cmd.run(&k) {
-                    // Best-effort: on error return original snapshot; callers should apply on a live ref for reporting.
-                    let _ = e;
-                }
-            }
-            let kr = k.read().expect("kit read");
-            let out = kr.to_full_dto();
-            drop(kr);
-            out
-        }
-
-        /// Apply inverse commands in order on a DTO (same strategy as forward).
-        pub fn apply_backward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
-            if c.inverse.len() == 1 {
-                if let ChangeKitCommand::FromKitDiff { diff } = &c.inverse[0] {
-                    return apply_to_dto(s, diff);
-                }
-            }
-            let k = KitStore::from_full_dto(s.clone());
-            for cmd in &c.inverse {
-                if let Err(e) = cmd.run(&k) {
-                    let _ = e;
-                }
-            }
-            let kr = k.read().expect("kit read");
-            let out = kr.to_full_dto();
-            drop(kr);
-            out
-        }
-
         /// Apply the forward step to a store.
         pub fn apply_forward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
-            for cmd in &c.forward {
-                cmd.run(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
-            }
+            ChangeKitCommand::apply_many(kit, &c.forward).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
             Ok(())
         }
 
         /// Apply the backward (undo) step to a store.
         pub fn apply_backward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
-            for cmd in &c.inverse {
-                cmd.run(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
-            }
+            ChangeKitCommand::apply_many(kit, &c.inverse).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
             Ok(())
         }
     }
@@ -10227,11 +10877,8 @@ pub mod kit {
         /// Flatten a design by id: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
         pub fn flatten_design(&self, design_id: &str) -> Result<SemioReport<crate::diff::DesignChange>> {
             let d = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
-            let report = match d.read() {
-                Ok(dr) => dr.flatten_change(),
-                Err(_) => return Err(SemioError::LockPoisoned("design")),
-            };
-            Ok(report)
+            let mut dw = d.write().map_err(|_| SemioError::LockPoisoned("design"))?;
+            Ok(dw.flatten_change())
         }
 
         /// Apply a structural [`crate::diff::DesignDiff`] to the named design (mutable kit).
@@ -10626,26 +11273,6 @@ pub mod kit {
             kit.read().map(|g| g.tx_depth == 0 && !g.undo_future.is_empty()).unwrap_or(false)
         }
 
-        /// Apply a structural design diff through the same path as [`KitStore::apply_design_diff`], returning [`SetResult`].
-        pub fn apply_design_diff_rpc(kit: &KitStoreRef, design_id: &str, diff: serde_json::Value) -> SetResult {
-            let dg = design_id.to_string();
-            let diff: DesignDiff = serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-            Self::with_undo(kit, || {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
-            })
-        }
-
-        /// Apply a kit-wide [`crate::kit_diff::KitDiff`] to the current snapshot in Rust.
-        pub fn apply_kit_diff_rpc(kit: &KitStoreRef, diff: serde_json::Value) -> SetResult {
-            let diff: crate::kit_diff::KitDiff = serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-            Self::with_undo(kit, || {
-                let before = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto();
-                let next = crate::kit_diff::apply_to_dto(&before, &diff);
-                Self::replace_from_full_dto(kit, next)
-            })
-        }
-
         /// Add a child entity under `parent` (currently `Design → Piece` only).
         pub fn add_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let pg = parent_id.to_string();
@@ -10653,8 +11280,10 @@ pub mod kit {
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                     Self::with_undo(kit, || {
-                        let mut diff = DesignDiff::default();
-                        diff.added_pieces.push(piece);
+                        let diff = DesignDiff {
+                            pieces: Some(crate::diff::PiecesDiff { added: vec![piece], ..Default::default() }),
+                            ..Default::default()
+                        };
                         let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                         g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                     })
@@ -10669,8 +11298,10 @@ pub mod kit {
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => Self::with_undo(kit, || {
-                    let mut diff = DesignDiff::default();
-                    diff.removed_pieces.push(PieceIdDto { id: Id::from(cg.as_str()) });
+                    let diff = DesignDiff {
+                        pieces: Some(crate::diff::PiecesDiff { removed: vec![PieceIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }),
+                        ..Default::default()
+                    };
                     let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                 }),
@@ -11468,7 +12099,11 @@ pub mod kit {
 
             let removed_pieces: Vec<PieceIdDto> = piece_ids.iter().filter(|g| cluster_set.contains(g.as_str())).map(|g| PieceIdDto { id: Id::from(g.as_str()) }).collect();
 
-            let forward = DesignDiff { removed_pieces, removed_connections, added_connections, ..Default::default() };
+            let forward = DesignDiff {
+                pieces: Some(crate::diff::PiecesDiff { removed: removed_pieces, ..Default::default() }),
+                connections: Some(crate::diff::ConnectionsDiff { removed: removed_connections, added: added_connections, ..Default::default() }),
+                ..Default::default()
+            };
 
             let dg = design_id.to_string();
             Self::with_undo(kit, || {
@@ -11593,7 +12228,10 @@ pub mod kit {
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
             Self::with_undo(kit, || {
-                let diff = DesignDiff { removed_connections: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() };
+                let diff = DesignDiff {
+                    connections: Some(crate::diff::ConnectionsDiff { removed: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() }),
+                    ..Default::default()
+                };
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
@@ -11723,7 +12361,16 @@ pub mod kit {
                 };
                 let mut np = p;
                 np.r#type = Some(TypeIdDto { id: Id::from(ntg.as_str()) });
-                let diff = DesignDiff { modified_pieces: vec![np], ..Default::default() };
+                let diff = DesignDiff {
+                    pieces: Some(crate::diff::PiecesDiff {
+                        updated: vec![crate::diff::PieceDiffUpdate {
+                            id: PieceIdDto { id: np.id.clone() },
+                            diff: crate::diff::PieceDiff { r#type: Some(np.r#type.clone()), ..Default::default() },
+                        }],
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
@@ -12841,6 +13488,23 @@ pub mod piece {
         /// 📌Fix this piece and its immediate children at their current flat poses, then detach the
         /// parent and child connections that made those poses implicit.
         pub fn fix(&mut self) -> SetResult {
+            let Some(design_ref) = self.parent_design.upgrade() else {
+                let (flat_plane, flat_center) = self.detach_flat_pose();
+                self.pose.plane = Some(flat_plane);
+                self.pose.center = Some(flat_center);
+                self.parent_piece = None;
+                self.parent_connection = None;
+                self.hash_cache.invalidate();
+                self.invalidate_flat_pose();
+                return Ok(());
+            };
+            let mut design = design_ref.write().map_err(|_| SetError::LockPoisoned("design".into()))?;
+            self.fix_on_design(&mut *design)
+        }
+
+        /// Same as [`Self::fix`], but uses an already-write-locked [`crate::design::DesignStore`] to
+        /// avoid re-entrant `RwLock` deadlocks (e.g. [`crate::design::DesignStore::flatten_change`]).
+        pub(crate) fn fix_on_design(&mut self, design: &mut crate::design::DesignStore) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
             let parent_connection_id = self.parent_connection.as_ref().and_then(|connection| connection.upgrade()).and_then(|connection| connection.read().ok().map(|connection| connection.id.clone()));
 
@@ -12851,10 +13515,6 @@ pub mod piece {
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
 
-            let Some(design_ref) = self.parent_design.upgrade() else {
-                return Ok(());
-            };
-            let mut design = design_ref.write().map_err(|_| SetError::LockPoisoned("design".into()))?;
             let design_entity = design.entity_ref();
             let child_connections: Vec<_> = design.connections.iter().filter(|connection| Self::connection_connected_matches_self(connection, &self.id)).cloned().collect();
 
@@ -17262,35 +17922,6 @@ pub mod wasm {
             })
         }
 
-        #[wasm_bindgen(js_name = applyDesignDiff)]
-        pub fn apply_design_diff(&self, design_id: &str, diff: JsValue) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            let dg = design_id.to_string();
-            future_to_promise(async move {
-                let diff: serde_json::Value = match serde_wasm_bindgen::from_value(diff) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
-                    }
-                };
-                js_settle_set(KitStore::apply_design_diff_rpc(&inner, &dg, diff))
-            })
-        }
-
-        #[wasm_bindgen(js_name = applyKitDiff)]
-        pub fn apply_kit_diff(&self, diff: JsValue) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            future_to_promise(async move {
-                let diff: serde_json::Value = match serde_wasm_bindgen::from_value(diff) {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
-                    }
-                };
-                js_settle_set(KitStore::apply_kit_diff_rpc(&inner, diff))
-            })
-        }
-
         #[wasm_bindgen(js_name = clusterPieces)]
         pub fn cluster_pieces(&self, design_id: &str, piece_ids: JsValue, cluster_name: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
@@ -17564,8 +18195,7 @@ mod tests {
         use crate::design::DesignIdDto;
         use crate::id::Id;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
-        use crate::kit_change::KitChange;
-        use crate::kit_diff::KitDiff;
+        use crate::kit_change::{KitChange, KitChangeKind};
         use crate::piece::PieceFullDto;
         use crate::piece::PieceIdDto;
         use crate::typ::TypeFullDto;
@@ -17629,16 +18259,12 @@ mod tests {
         }
 
         #[test]
-        fn roundtrip_from_kit_diff_command() {
+        fn roundtrip_replace_kit_from_full_dto_command() {
             let (kit, _, _, _) = small_kit();
             let before = kit.read().expect("read").to_full_dto();
-            let after = {
-                let mut a = before.clone();
-                a.name = "patched".into();
-                a
-            };
-            let diff = KitDiff::between(&before, &after);
-            let cmd = ChangeKitCommand::FromKitDiff { diff };
+            let mut after = before.clone();
+            after.name = "patched".into();
+            let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: after };
             let (_, inv) = cmd.apply(&kit).expect("apply");
             assert_eq!(kit.read().expect("read").name, "patched");
             undo_inverses(&kit, &inv);
@@ -17649,9 +18275,10 @@ mod tests {
         fn roundtrip_kit_change_apply_forward_backward_on_store() {
             let (kit, _, _, _) = small_kit();
             let before = kit.read().expect("read").to_full_dto();
-            let mut after = before.clone();
-            after.name = "via-change".into();
-            let kc = KitChange::from_dto_pair(&before, &after).expect("delta");
+            let cmds = vec![ChangeKitCommand::Name { name: "via-change".into() }];
+            let tmp = KitStore::from_full_dto(before.clone());
+            let (_, inv) = ChangeKitCommand::apply_many(&tmp, &cmds).expect("apply_many tmp");
+            let kc = KitChange { forward: cmds, inverse: inv, kind: KitChangeKind::Inferred, author: None, time: None };
             KitChange::apply_forward(&kc, &kit).expect("forward");
             assert_eq!(kit.read().expect("read").name, "via-change");
             KitChange::apply_backward(&kc, &kit).expect("backward");
@@ -17680,12 +18307,7 @@ mod tests {
             let da = a.to_full_dto();
             let db = b.to_full_dto();
             let d = DesignDiff::between(&da, &db);
-            assert!(d.added_pieces.is_empty());
-            assert!(d.removed_pieces.is_empty());
-            assert!(d.modified_pieces.is_empty());
-            assert!(d.added_connections.is_empty());
-            assert!(d.removed_connections.is_empty());
-            assert!(d.modified_connections.is_empty());
+            assert!(d.is_empty());
         }
     }
 
@@ -19054,7 +19676,13 @@ mod tests {
             fn apply_design_diff_add_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
-                let diff = DesignDiff { added_pieces: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }], ..Default::default() };
+                let diff = DesignDiff {
+                    pieces: Some(crate::diff::PiecesDiff {
+                        added: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }],
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                };
                 let mut rx = kit.read().unwrap().subscribe();
                 kit.write().unwrap().apply_design_diff(dg.as_str(), &diff).unwrap();
                 let evs = super::common::drain(&mut rx);
@@ -19633,11 +20261,11 @@ mod tests {
     mod vcs_command_tests {
         use std::sync::{Arc, RwLock};
 
+        use crate::change_command::ChangeKitCommand;
         use crate::id::Id;
         use crate::kit::KitStore;
         use crate::kit_alternative::KitAlternativeCommand;
         use crate::kit_checkpoint::KitCheckpointCommand;
-        use crate::kit_diff::KitDiff;
         use crate::kit_draft::KitDraftCommand;
         use crate::kit_session::SessionCommand;
         use crate::kit_store_command::{self, KitStoreCommand};
@@ -19674,13 +20302,13 @@ mod tests {
         }
 
         #[test]
-        fn kit_diff_apply_round_trip() {
+        fn kit_replace_command_matches_renamed_snapshot() {
             let a = KitStore::new("a");
             let mut b = KitStore::new("b");
             b.set_name("renamed".into()).unwrap();
-            let d = KitDiff::between(&a.to_full_dto(), &b.to_full_dto());
+            let cmd = ChangeKitCommand::ReplaceKitFromFullDto { dto: b.to_full_dto() };
             let ka = KitStore::from_full_dto(a.to_full_dto());
-            d.apply(&ka).unwrap();
+            cmd.apply(&ka).expect("apply");
             assert_eq!(ka.read().unwrap().name, "renamed");
         }
 
@@ -20425,7 +21053,7 @@ pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, Kit
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_change::{KitChange, KitChangeKind};
 pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
-pub use kit_diff::{apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff};
+pub use kit_diff::KitDiff;
 pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};

@@ -40,27 +40,52 @@ const DEFAULT_LAYOUT = {
     kind: "row" as const,
     children: [
       {
-        kind: "stack" as const,
+        // Two separate stacks so Entity + VCS are visible at once (a single stack = tabbed panes; VCS was hidden behind the default "Entity ids" tab).
+        kind: "column" as const,
         size: 30,
         children: [
-          { kind: "window" as const, windowKindId: "ks-ent", title: "Entity ids" },
-          { kind: "window" as const, windowKindId: "ks-hist", title: "VCS + legacy tx" },
+          {
+            kind: "stack" as const,
+            size: 52,
+            children: [{ kind: "window" as const, windowKindId: "ks-ent", title: "Entity ids" }],
+          },
+          {
+            kind: "stack" as const,
+            size: 48,
+            children: [{ kind: "window" as const, windowKindId: "ks-hist", title: "VCS + legacy tx" }],
+          },
         ],
       },
       {
-        kind: "stack" as const,
+        kind: "column" as const,
         size: 38,
         children: [
-          { kind: "window" as const, windowKindId: "ks-cmd", title: "Commands" },
-          { kind: "window" as const, windowKindId: "ks-diff", title: "Last result" },
+          {
+            kind: "stack" as const,
+            size: 55,
+            children: [{ kind: "window" as const, windowKindId: "ks-cmd", title: "Commands" }],
+          },
+          {
+            kind: "stack" as const,
+            size: 45,
+            children: [{ kind: "window" as const, windowKindId: "ks-diff", title: "Last result" }],
+          },
         ],
       },
       {
-        kind: "stack" as const,
+        kind: "column" as const,
         size: 32,
         children: [
-          { kind: "window" as const, windowKindId: "ks-snap", title: "Snapshot / theKit" },
-          { kind: "window" as const, windowKindId: "ks-evt", title: "Events" },
+          {
+            kind: "stack" as const,
+            size: 55,
+            children: [{ kind: "window" as const, windowKindId: "ks-snap", title: "Snapshot / theKit" }],
+          },
+          {
+            kind: "stack" as const,
+            size: 45,
+            children: [{ kind: "window" as const, windowKindId: "ks-evt", title: "Events" }],
+          },
         ],
       },
     ],

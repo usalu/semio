@@ -4,10 +4,10 @@ overview: 'Refactor [semio/rs/lib.rs](semio/rs/lib.rs) so every `Change{Entity}C
 todos:
  - id: diff_rewrite
    content: Rewrite `pub mod diff` + `pub mod kit_diff` with sparse per-entity XDiff + nested XsDiff{removed,updated,added}, `is_empty`, `merge`
-   status: in_progress
+   status: completed
  - id: apply_diff_on_stores
    content: Add `pub fn apply_diff(&mut self, &XDiff) -> Result<()>` to every entity store (attribute, author, benchmark, concept, connection, connector, design, file, folder, group, kit, layer, piece, port, prop, quality, representation, side, stat, tag, typ), centralizing event emission, cache invalidation, and pointer rewiring in strict remove->update->add order
-   status: pending
+   status: in_progress
  - id: commands_return_diff
    content: Change every Change*Command::apply to return (XDiff, Vec<Self> /*inverse*/), route all mutations through store.apply_diff, delete direct set_*/insert_*/remove_* usage and the FromKitDiff variant
    status: pending

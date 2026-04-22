@@ -80,7 +80,10 @@ export const HistoryControls: React.FC<{
   onMsg: (s: string) => void;
 }> = ({ handle, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg }) => {
   const ex = (label: string, o: object) => {
-    if (!handle) return;
+    if (!handle) {
+      onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
+      return;
+    }
     try {
       const r = handle.execute(o);
       onLog(`execute ${label} → ${JSON.stringify(r).slice(0, 12_000)}`);
@@ -96,22 +99,33 @@ export const HistoryControls: React.FC<{
     }
   };
 
+  const canVcs = Boolean(handle);
+
   return (
     <div className="text-foreground min-h-0 space-y-1.5 overflow-auto p-2 text-[10px]">
+      {!canVcs ? <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div> : null}
       <div className="text-muted-foreground font-medium">VCS (KitStoreCommand)</div>
       <div className="grid grid-cols-2 gap-1">
-        <B onClick={() => ex("newSession", { newSession: null })}>New session</B>
-        <B onClick={() => ex("end", { endSession: { id: sessionId } })}>End session</B>
-        <B onClick={() => ex("readKit", { readKitCommands: { commands: [{ name: null }] } })}>Read kit name</B>
-        <B onClick={() => ex("readKit full", { readKitCommands: { commands: [{ everything: {} }] } })}>Read kit everything</B>
-        <B onClick={() => ex("newAlt", { newAlternative: { fromCheckpoint: cpId, name: "alt-story" } })} disabled={!cpId.trim()}>
+        <B disabled={!canVcs} onClick={() => ex("newSession", { newSession: null })}>
+          New session
+        </B>
+        <B disabled={!canVcs} onClick={() => ex("end", { endSession: { id: sessionId } })}>
+          End session
+        </B>
+        <B disabled={!canVcs} onClick={() => ex("readKit", { readKitCommands: { commands: [{ name: null }] } })}>
+          Read kit name
+        </B>
+        <B disabled={!canVcs} onClick={() => ex("readKit full", { readKitCommands: { commands: [{ everything: {} }] } })}>
+          Read kit everything
+        </B>
+        <B onClick={() => ex("newAlt", { newAlternative: { fromCheckpoint: cpId, name: "alt-story" } })} disabled={!canVcs || !cpId.trim()}>
           New alt (from cp)
         </B>
         <B
           onClick={() =>
             ex("newDraft", { executeSessionCommands: { id: sessionId, commands: [{ newDraft: { checkpointId: null, alternativeId: null } }] } })
           }
-          disabled={!sessionId.trim()}
+          disabled={!canVcs || !sessionId.trim()}
         >
           New draft
         </B>
@@ -121,7 +135,7 @@ export const HistoryControls: React.FC<{
               executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ startTransaction: null }] } }] },
             })
           }
-          disabled={!sessionId.trim() || !draftId.trim()}
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
         >
           Start tx
         </B>
@@ -134,11 +148,11 @@ export const HistoryControls: React.FC<{
               },
             })
           }
-          disabled={!sessionId.trim() || !draftId.trim()}
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
         >
           Finalize → cp
         </B>
-        <B onClick={() => ex("markRel", { executeKitCheckpointCommands: { id: cpId, commands: [{ markAsRelease: null }] } })} disabled={!cpId.trim()}>
+        <B onClick={() => ex("markRel", { executeKitCheckpointCommands: { id: cpId, commands: [{ markAsRelease: null }] } })} disabled={!canVcs || !cpId.trim()}>
           Mark cp release
         </B>
         <B
@@ -147,7 +161,7 @@ export const HistoryControls: React.FC<{
               executeKitAlternativeCommands: { id: altId, commands: [{ unifyKitCheckpointsToSingleKitCheckpoint: { message: "unify story" } }] },
             })
           }
-          disabled={!altId.trim()}
+          disabled={!canVcs || !altId.trim()}
         >
           Unify alt checkpoints
         </B>
@@ -155,7 +169,7 @@ export const HistoryControls: React.FC<{
           onClick={() =>
             ex("draftUndo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ undo: { count: 1 } }] } }] } })
           }
-          disabled={!sessionId.trim() || !draftId.trim()}
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
         >
           Draft undo
         </B>
@@ -163,7 +177,7 @@ export const HistoryControls: React.FC<{
           onClick={() =>
             ex("draftRedo", { executeSessionCommands: { id: sessionId, commands: [{ executeKitDraftCommands: { id: draftId, commands: [{ redo: { count: 1 } }] } }] } })
           }
-          disabled={!sessionId.trim() || !draftId.trim()}
+          disabled={!canVcs || !sessionId.trim() || !draftId.trim()}
         >
           Draft redo
         </B>

@@ -74,7 +74,7 @@ impl AttributeDiff {
         self.key.is_none() && self.value.is_none() && self.definition.is_none()
     }
     pub fn merge(&self, b: &Self) -> Self {
-        Self { key: merge_opt(&self.key, &b.key), value: merge_opt(&self.value, &b.value), definition: merge_opt_nested(&self.definition, &b.definition, |x, y| y.clone()) }
+        Self { key: merge_opt(&self.key, &b.key), value: merge_opt(&self.value, &b.value), definition: merge_opt_nested(&self.definition, &b.definition, |_x, y| y.clone()) }
     }
 }
 
