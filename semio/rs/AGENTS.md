@@ -17,21 +17,21 @@ bundle:
 
 ### Layout
 
-One concept per file under [`src/`](src/). Every parent owns its children
-through `Arc<RwLock<T>>`; every child keeps a `Weak<RwLock<T>>` back-reference
-to its parent. Derived data (content-addressable hashes, flatten caches) lives
-in `OnceLock` fields invalidated by the owning entity's setters.
+The library is a single crate root file, [`lib.rs`](lib.rs) (no `src/` tree). It uses inline
+`pub mod … { … }` for each domain. Every parent owns its children through
+`Arc<RwLock<T>>`; every child keeps a `Weak<RwLock<T>>` back-reference to its
+parent. Derived data (content-addressable hashes, flatten caches) lives in
+`OnceLock` fields invalidated by the owning entity's setters.
 
-- Primitives: [`id`](src/id.rs), [`hash`](src/hash.rs), [`error`](src/error.rs), [`report`](src/report.rs), [`geom`](src/geom.rs).
-- Value objects: [`attribute`](src/attribute.rs), [`prop`](src/prop.rs), [`benchmark`](src/benchmark.rs), [`stat`](src/stat.rs), [`tag`](src/tag.rs), [`concept`](src/concept.rs), [`author`](src/author.rs).
-- Kit-scoped entities: [`file`](src/file.rs), [`folder`](src/folder.rs), [`quality`](src/quality.rs).
-- Type-scoped children: [`port`](src/port.rs), [`connector`](src/connector.rs), [`representation`](src/representation.rs).
-- Design-scoped children: [`piece`](src/piece.rs), [`connection`](src/connection.rs), [`side`](src/side.rs), [`layer`](src/layer.rs), [`group`](src/group.rs).
-- Aggregates: [`typ`](src/typ.rs) (Type), [`design`](src/design.rs), [`kit`](src/kit.rs).
-- Change flow: [`diff`](src/diff.rs) (`DesignDiff`/`DesignChange`), [`session`](src/session.rs) (`KitGraphSession` owns `Arc<RwLock<Kit>>` + [`KitHistory`](src/lib.rs) version graph).
-- Kit versioning: `kit_diff`, `kit_change`, `kit_operation`, `kit_command`, `history` in [`lib.rs`](src/lib.rs) (`KitCheckpoint` / `KitHistory` / alternatives / materialize).
-- I/O backends: [`io::json`](src/io/json.rs); SQLite/ZIP stubs under [`io`](src/io/mod.rs).
-- WASM surface: [`wasm`](src/wasm.rs) (identical JS names, delegates to OO API).
+- Primitives: `id`, `hash`, `error`, `report`, `geom` modules in `lib.rs`.
+- Value objects: `attribute`, `prop`, `benchmark`, `stat`, `tag`, `concept`, `author`.
+- Kit-scoped entities: `file`, `folder`, `quality`.
+- Type-scoped children: `port`, `connector`, `representation`.
+- Design-scoped children: `piece`, `connection`, `side`, `layer`, `group`.
+- Aggregates: `typ` (Type), `design`, `kit`.
+- Change flow: `diff` (`DesignDiff`/`DesignChange`); VCS: `read_command`, `change_command`, `kit_store_command`, `kit_session`, and related `kit_*` modules.
+- I/O: `io::json` and native-only SQLite/ZIP under `io` in `lib.rs`.
+- WASM surface: `pub mod wasm` in `lib.rs` (identical JS names, delegates to OO API).
 
 ## 📛 Entities
 

@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-path = "src/lib.rs"
+path = "lib.rs"
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
