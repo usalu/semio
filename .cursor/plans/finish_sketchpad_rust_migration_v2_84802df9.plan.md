@@ -16,7 +16,7 @@ todos:
    status: completed
  - id: sketchpad_delete_kit_state
    content: "Sketchpad: delete Granular Hook Types, Entity Data Hooks, Piece/Design Derived Hooks, Targeted Kit Hooks, useKit, useKitCommands, useKitTransaction, useKitScope/KitScopeProvider, kitCommands map, executeKitCommand, KitWasmRuntimeBridge, createJsonFileKitStore/createFolderKitStore/createSessionKitStore re-exports."
-   status: pending
+   status: in_progress
  - id: sketchpad_ui_providers
    content: "Sketchpad: delete OriginProvider/FooterItemProvider/DragDropProvider/FocusProvider/PanelSectionProvider/SidePanelTabProvider; promote slices into sketchpadMachine context with typed events and fromCallback/fromPromise actors."
    status: pending

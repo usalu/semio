@@ -14457,6 +14457,7 @@ const (
 	BreachSketchpadImportThirdParty                    Statute = "sketchpad/import/third-party-outside-elements"
 	BreachSketchpadStateMultipleMachines               Statute = "sketchpad/state/multiple-machines"
 	BreachSketchpadStateCreateActor                    Statute = "sketchpad/state/create-actor-usage"
+	BreachSketchpadStateYjsAppState                    Statute = "sketchpad/state/yjs-app-state"
 	BreachSketchpadStateForbiddenStore                 Statute = "sketchpad/state/forbidden-store"
 	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hooks/non-triadic"
 	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
@@ -14807,6 +14808,13 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "createActor is forbidden in sketchpad",
 		Solution:    "Remove createActor usage and use the single state machine instead",
+		Autofixable: false,
+	},
+	BreachSketchpadStateYjsAppState: {
+		Kind:        BreachSketchpadStateYjsAppState,
+		Priority:    BreachPriorityHigh,
+		Reason:      "Yjs app state is forbidden in sketchpad state management",
+		Solution:    "Keep app state in the single state machine and use Yjs only for synchronized document data",
 		Autofixable: false,
 	},
 	BreachSketchpadStateForbiddenStore: {

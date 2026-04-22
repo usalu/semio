@@ -27785,7 +27785,7 @@ const revokeKitFileObjectUrl = (kitStore: KitStore, fileId: string): void => {
   }
 };
 
-const createKitFileObjectUrl = (kitStore: KitStore, fileId: string, blob: Blob): string => {
+export const createKitFileObjectUrl = (kitStore: KitStore, fileId: string, blob: Blob): string => {
   const fileState = getOrCreateKitFileState(kitStore);
   revokeKitFileObjectUrl(kitStore, fileId);
   const objectUrl = URL.createObjectURL(blob);
@@ -27793,11 +27793,11 @@ const createKitFileObjectUrl = (kitStore: KitStore, fileId: string, blob: Blob):
   return objectUrl;
 };
 
-const getExistingKitFileProvider = (kitStore: KitStore): FileProvider | null => {
+export const getExistingKitFileProvider = (kitStore: KitStore): FileProvider | null => {
   return getOrCreateKitFileState(kitStore).provider ?? null;
 };
 
-const getKitFileProvider = async (kitStore: KitStore, kitId: string): Promise<FileProvider | null> => {
+export const getKitFileProvider = async (kitStore: KitStore, kitId: string): Promise<FileProvider | null> => {
   const fileState = getOrCreateKitFileState(kitStore);
   if (fileState.provider && fileState.providerKitId === kitId) {
     return fileState.provider;
@@ -27812,7 +27812,7 @@ const getKitFileProvider = async (kitStore: KitStore, kitId: string): Promise<Fi
   return fileState.provider;
 };
 
-const fetchReadableKitFileBlob = async (url: string): Promise<Blob | null> => {
+export const fetchReadableKitFileBlob = async (url: string): Promise<Blob | null> => {
   try {
     const response = await fetch(url);
     if (!response.ok) {

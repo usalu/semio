@@ -1,9 +1,0 @@
-{
-  "title": "Rename Guid To Id Across Semio",
-  "status": "open",
-  "description": "Rename guid to id everywhere within semio: code, assets, tests, specs, schemas, docs, and bindings. This is a breaking rename with no backwards compatibility. Update runtime models, DTOs, APIs, OpenAPI/JSON Schema/OWL/XMI/docs, shared assets, and tests so the semio subtree consistently uses id instead of guid. Validate affected builds/tests and close out with the files changed.",
-  "goal": "🎯🎯semio",
-  "sessions": [
-    "⚪2db8860d228e4e11bf69b41ddcd0be64"
-  ]
-}

@@ -10796,7 +10796,6 @@ pub mod piece {
             }
             let previous_id = self.id.clone();
             let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
-            let previous_pose_entity = EntityRef::new(EntityKind::Pose, previous_id.clone());
             self.id = id;
             self.emit_ev(KitEvent::FieldChanged {
                 entity: previous_entity.clone(),
@@ -10804,9 +10803,6 @@ pub mod piece {
             });
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: previous_pose_entity,
-            });
             self.emit_ev(KitEvent::HashInvalidated {
                 entity: previous_entity,
             });
@@ -19990,6 +19986,81 @@ mod tests {
                 );
             }
 
+            pub fn assert_piece_pose_change(
+                evs: &[KitEvent],
+                piece_er: EntityRef,
+                design_er: EntityRef,
+                kit_er: EntityRef,
+                piece_g: &Id,
+                field: &'static str,
+            ) {
+                let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
+                assert_eq!(evs.len(), 9, "{evs:?}");
+                assert!(
+                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == pose_er && *f == field),
+                    "ev0 {:?}",
+                    evs.get(0)
+                );
+                assert!(
+                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == pose_er),
+                    "ev1 {:?}",
+                    evs.get(1)
+                );
+                assert!(
+                    matches!(&evs[2], KitEvent::FieldChanged { entity, field: "pose" } if *entity == piece_er),
+                    "ev2 {:?}",
+                    evs.get(2)
+                );
+                assert!(
+                    matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == piece_er),
+                    "ev3 {:?}",
+                    evs.get(3)
+                );
+                assert!(
+                    matches!(&evs[4], KitEvent::HashInvalidated { entity } if *entity == design_er),
+                    "ev4 {:?}",
+                    evs.get(4)
+                );
+                assert!(
+                    matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er),
+                    "ev5 {:?}",
+                    evs.get(5)
+                );
+                assert!(
+                    matches!(&evs[6], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)),
+                    "ev6 {:?}",
+                    evs.get(6)
+                );
+                assert!(
+                    matches!(&evs[7], KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g),
+                    "ev7 {:?}",
+                    evs.get(7)
+                );
+                assert!(
+                    matches!(&evs[8], KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g),
+                    "ev8 {:?}",
+                    evs.get(8)
+                );
+                assert!(
+                    !evs.iter().any(|event| {
+                        matches!(
+                            event,
+                            KitEvent::FieldChanged {
+                                entity,
+                                field: "plane"
+                            } if *entity == piece_er
+                        ) || matches!(
+                            event,
+                            KitEvent::FieldChanged {
+                                entity,
+                                field: "center"
+                            } if *entity == piece_er
+                        )
+                    }),
+                    "piece should only bubble pose for pose edits: {evs:?}"
+                );
+            }
+
             pub fn assert_piece_scalar_hash_only(
                 evs: &[KitEvent],
                 piece_er: EntityRef,
@@ -20590,6 +20661,31 @@ mod tests {
             use crate::events::{EntityKind, EntityRef};
             use crate::geom::{Coordinate, Plane};
 
+            macro_rules! piece_pose_test {
+                ($fn:ident, $field:literal, $op:expr) => {
+                    #[test]
+                    fn $fn() {
+                        let (kit, _, dg, pg) = super::common::kit_with_piece();
+                        let pre = EntityRef::new(EntityKind::Piece, pg.clone());
+                        let dre = EntityRef::new(EntityKind::Design, dg.clone());
+                        let kre = super::common::kit_entity_ref(&kit);
+                        let mut rx = kit.read().unwrap().subscribe();
+                        let p = {
+                            let kr = kit.read().unwrap();
+                            let d = kr.design(dg.as_str()).unwrap();
+                            let dr = d.read().unwrap();
+                            dr.piece(pg.as_str()).unwrap().clone()
+                        };
+                        let mut pw = p.write().unwrap();
+                        $op(&mut *pw).unwrap();
+                        let evs = super::common::drain(&mut rx);
+                        super::common::assert_piece_pose_change(
+                            &evs, pre, dre, kre, &pg, $field,
+                        );
+                    }
+                };
+            }
+
             macro_rules! piece_geom_test {
                 ($fn:ident, $field:literal, $op:expr) => {
                     #[test]
@@ -20615,10 +20711,10 @@ mod tests {
                 };
             }
 
-            piece_geom_test!(piece_set_plane, "plane", |p: &mut crate::PieceStore| {
+            piece_pose_test!(piece_set_plane, "plane", |p: &mut crate::PieceStore| {
                 p.set_plane(Some(Plane::world_xy()))
             });
-            piece_geom_test!(piece_set_center, "center", |p: &mut crate::PieceStore| {
+            piece_pose_test!(piece_set_center, "center", |p: &mut crate::PieceStore| {
                 p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0)))
             });
             piece_geom_test!(

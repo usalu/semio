@@ -1043,6 +1043,20 @@ func TestStatutesNonEmpty(t *testing.T) {
 	}
 }
 
+func TestPolicyStatutesHaveMetadata(t *testing.T) {
+	for _, policy := range GetPolicies() {
+		for _, statute := range policy.AllKinds() {
+			info, ok := statuteInfoTable[statute]
+			if !ok {
+				t.Fatalf("policy %q statute %q is missing metadata", policy.ID, statute)
+			}
+			if info.Kind != statute {
+				t.Fatalf("policy %q statute %q metadata kind = %q", policy.ID, statute, info.Kind)
+			}
+		}
+	}
+}
+
 func TestFoldersNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
@@ -12529,8 +12543,9 @@ func TestToolFileCRUD(t *testing.T) {
 
 func TestToolTicketLifecycle(t *testing.T) {
 	setupToolTest(t)
+	title := fmt.Sprintf("Test Lifecycle Ticket %d", time.Now().UnixNano())
 
-	result := ToolTicketOpen("🎫", "Test Lifecycle Ticket", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", title, "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
