@@ -9,1846 +9,2031 @@
 #![allow(clippy::new_without_default)]
 
 pub mod read_command {
-//! Read-only kit graph commands. Each enum variant is a message; each command type
-//! has an inherent `execute` method against its owning snapshot object
-//! (`KitFullDto`, `TypeFullDto`, `DesignFullDto`, ...).
-use serde::{Deserialize, Serialize};
+    //! Read-only kit graph commands. Each enum variant is a message; each command type
+    //! has an inherent `execute` method against its owning snapshot object
+    //! (`KitFullDto`, `TypeFullDto`, `DesignFullDto`, ...).
+    use serde::{Deserialize, Serialize};
 
-use crate::connection::ConnectionFullDto;
-use crate::connection::ConnectionIdDto;
-use crate::connector::ConnectorFullDto;
-use crate::connector::ConnectorIdDto;
-use crate::design::DesignFullDto;
-use crate::design::DesignIdDto;
-use crate::kit::KitFullDto;
-use crate::piece::PieceFullDto;
-use crate::piece::PieceIdDto;
-use crate::port::PortFullDto;
-use crate::port::PortIdDto;
-use crate::representation::RepresentationFullDto;
-use crate::representation::RepresentationIdDto;
-use crate::typ::TypeFullDto;
-use crate::typ::TypeIdDto;
-use crate::{error::SemioError, error::Result};
+    use crate::connection::ConnectionFullDto;
+    use crate::connection::ConnectionIdDto;
+    use crate::connector::ConnectorFullDto;
+    use crate::connector::ConnectorIdDto;
+    use crate::design::DesignFullDto;
+    use crate::design::DesignIdDto;
+    use crate::kit::KitFullDto;
+    use crate::piece::PieceFullDto;
+    use crate::piece::PieceIdDto;
+    use crate::port::PortFullDto;
+    use crate::port::PortIdDto;
+    use crate::representation::RepresentationFullDto;
+    use crate::representation::RepresentationIdDto;
+    use crate::typ::TypeFullDto;
+    use crate::typ::TypeIdDto;
+    use crate::{error::Result, error::SemioError};
 
-// --- Read command enums (mirrors plan; extensible) ---
+    // --- Read command enums (mirrors plan; extensible) ---
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectorCommand {
-    Everything,
-    Name,
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectorCommandResult {
-    Everything { dto: ConnectorFullDto },
-    Name { name: String },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadRepresentationCommand {
-    Everything,
-    Name,
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadRepresentationCommandResult {
-    Everything { dto: RepresentationFullDto },
-    Name { name: String },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPortCommand {
-    Everything,
-    Name,
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPortCommandResult {
-    Everything { dto: PortFullDto },
-    Name { name: String },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPieceCommand {
-    Everything,
-    Name,
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadPieceCommandResult {
-    Everything { dto: PieceFullDto },
-    Name { name: String },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectionCommand {
-    Everything,
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadConnectionCommandResult {
-    Everything { dto: ConnectionFullDto },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTypeCommand {
-    Everything,
-    Name,
-    Connectors,
-    Representations,
-    ReadConnectorCommands { id: ConnectorIdDto, commands: Vec<ReadConnectorCommand> },
-    ReadRepresentationCommands { id: RepresentationIdDto, commands: Vec<ReadRepresentationCommand> },
-    ReadPortCommands { id: PortIdDto, commands: Vec<ReadPortCommand> },
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadTypeCommandResult {
-    Everything { dto: TypeFullDto },
-    Name { name: String },
-    Connectors { list: Vec<ConnectorFullDto> },
-    Representations { list: Vec<RepresentationFullDto> },
-    ReadConnectorCommands { results: Vec<ReadConnectorCommandResult> },
-    ReadRepresentationCommands { results: Vec<ReadRepresentationCommandResult> },
-    ReadPortCommands { results: Vec<ReadPortCommandResult> },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadDesignCommand {
-    Everything,
-    Name,
-    ReadPieceCommands { id: PieceIdDto, commands: Vec<ReadPieceCommand> },
-    ReadConnectionCommands { id: ConnectionIdDto, commands: Vec<ReadConnectionCommand> },
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadDesignCommandResult {
-    Everything { dto: DesignFullDto },
-    Name { name: String },
-    ReadPieceCommands { results: Vec<ReadPieceCommandResult> },
-    ReadConnectionCommands { results: Vec<ReadConnectionCommandResult> },
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadKitCommand {
-    /// Use empty object `{}` in JSON (camelCase `everything`) so the WASM/JSON spec shape works.
-    Everything {},
-    Name,
-    Description,
-    Types,
-    Designs,
-    Files,
-    ReadTypeCommands { id: TypeIdDto, commands: Vec<ReadTypeCommand> },
-    ReadDesignCommands { id: DesignIdDto, commands: Vec<ReadDesignCommand> },
-    #[serde(other)]
-    Other,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ReadKitCommandResult {
-    Everything { dto: KitFullDto },
-    Name { name: String },
-    Description { description: Option<String> },
-    Types { list: Vec<TypeFullDto> },
-    Designs { list: Vec<DesignFullDto> },
-    ReadTypeCommands { results: Vec<ReadTypeCommandResult> },
-    ReadDesignCommands { results: Vec<ReadDesignCommandResult> },
-    Other,
-}
-
-/// OO surface: read commands are methods on the command enum, taking the DTO snapshot
-/// object they read against. `ReadKitCommand::execute(kit)` is the canonical entrypoint.
-impl ReadConnectorCommand {
-    pub fn execute(&self, c: &ConnectorFullDto) -> ReadConnectorCommandResult {
-        match self {
-            ReadConnectorCommand::Everything => ReadConnectorCommandResult::Everything { dto: c.clone() },
-            ReadConnectorCommand::Name => ReadConnectorCommandResult::Name { name: c.code.clone() },
-            ReadConnectorCommand::Other => ReadConnectorCommandResult::Other,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectorCommand {
+        Everything,
+        Name,
+        #[serde(other)]
+        Other,
     }
-}
 
-impl ReadRepresentationCommand {
-    pub fn execute(&self, r: &RepresentationFullDto) -> ReadRepresentationCommandResult {
-        match self {
-            ReadRepresentationCommand::Everything => {
-                ReadRepresentationCommandResult::Everything { dto: r.clone() }
-            }
-            ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name {
-                name: r.description.clone().unwrap_or_else(|| r.url.clone()),
-            },
-            ReadRepresentationCommand::Other => ReadRepresentationCommandResult::Other,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectorCommandResult {
+        Everything { dto: ConnectorFullDto },
+        Name { name: String },
+        Other,
     }
-}
 
-impl ReadPortCommand {
-    pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
-        match self {
-            ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
-            ReadPortCommand::Name => ReadPortCommandResult::Name {
-                name: p.family.clone().unwrap_or_default(),
-            },
-            ReadPortCommand::Other => ReadPortCommandResult::Other,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadRepresentationCommand {
+        Everything,
+        Name,
+        #[serde(other)]
+        Other,
     }
-}
 
-impl ReadPieceCommand {
-    pub fn execute(&self, p: &PieceFullDto) -> ReadPieceCommandResult {
-        match self {
-            ReadPieceCommand::Everything => ReadPieceCommandResult::Everything { dto: p.clone() },
-            ReadPieceCommand::Name => ReadPieceCommandResult::Name {
-                name: p.name.clone().unwrap_or_default(),
-            },
-            ReadPieceCommand::Other => ReadPieceCommandResult::Other,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadRepresentationCommandResult {
+        Everything { dto: RepresentationFullDto },
+        Name { name: String },
+        Other,
     }
-}
 
-impl ReadConnectionCommand {
-    pub fn execute(&self, c: &ConnectionFullDto) -> ReadConnectionCommandResult {
-        match self {
-            ReadConnectionCommand::Everything => ReadConnectionCommandResult::Everything { dto: c.clone() },
-            ReadConnectionCommand::Other => ReadConnectionCommandResult::Other,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPortCommand {
+        Everything,
+        Name,
+        #[serde(other)]
+        Other,
     }
-}
 
-impl ReadTypeCommand {
-    pub fn execute(&self, t: &TypeFullDto) -> Result<ReadTypeCommandResult> {
-        match self {
-            ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
-            ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name { name: t.name.clone() }),
-            ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors {
-                list: t.connectors.clone(),
-            }),
-            ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations {
-                list: t.representations.clone(),
-            }),
-            ReadTypeCommand::ReadConnectorCommands { id, commands } => {
-                let c = t
-                    .connectors
-                    .iter()
-                    .find(|x| x.id == id.id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Connector",
-                        id: id.id.clone(),
-                    })?;
-                Ok(ReadTypeCommandResult::ReadConnectorCommands {
-                    results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
-                })
-            }
-            ReadTypeCommand::ReadRepresentationCommands { id, commands } => {
-                let r = t
-                    .representations
-                    .iter()
-                    .find(|x| x.id == id.id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Representation",
-                        id: id.id.clone(),
-                    })?;
-                Ok(ReadTypeCommandResult::ReadRepresentationCommands {
-                    results: commands.iter().map(|cmd| cmd.execute(r)).collect(),
-                })
-            }
-            ReadTypeCommand::ReadPortCommands { id, commands } => {
-                let p = t
-                    .ports
-                    .iter()
-                    .find(|x| x.id == id.id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Port",
-                        id: id.id.clone(),
-                    })?;
-                Ok(ReadTypeCommandResult::ReadPortCommands {
-                    results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
-                })
-            }
-            ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPortCommandResult {
+        Everything { dto: PortFullDto },
+        Name { name: String },
+        Other,
     }
-}
 
-impl ReadDesignCommand {
-    pub fn execute(&self, d: &DesignFullDto) -> Result<ReadDesignCommandResult> {
-        match self {
-            ReadDesignCommand::Everything => Ok(ReadDesignCommandResult::Everything { dto: d.clone() }),
-            ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name { name: d.name.clone() }),
-            ReadDesignCommand::ReadPieceCommands { id, commands } => {
-                let p = d
-                    .pieces
-                    .iter()
-                    .find(|x| x.id == id.id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Piece",
-                        id: id.id.clone(),
-                    })?;
-                Ok(ReadDesignCommandResult::ReadPieceCommands {
-                    results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
-                })
-            }
-            ReadDesignCommand::ReadConnectionCommands { id, commands } => {
-                let c = d
-                    .connections
-                    .iter()
-                    .find(|x| x.id == id.id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Connection",
-                        id: id.id.clone(),
-                    })?;
-                Ok(ReadDesignCommandResult::ReadConnectionCommands {
-                    results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
-                })
-            }
-            ReadDesignCommand::Other => Ok(ReadDesignCommandResult::Other),
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommand {
+        Everything,
+        Name,
+        #[serde(other)]
+        Other,
     }
-}
 
-impl ReadKitCommand {
-    /// Execute this read command against a materialized kit DTO.
-    pub fn execute(&self, kit: &KitFullDto) -> Result<ReadKitCommandResult> {
-        match self {
-            ReadKitCommand::Everything {} => Ok(ReadKitCommandResult::Everything { dto: kit.clone() }),
-            ReadKitCommand::Name => Ok(ReadKitCommandResult::Name { name: kit.name.clone() }),
-            ReadKitCommand::Description => Ok(ReadKitCommandResult::Description {
-                description: kit.description.clone(),
-            }),
-            ReadKitCommand::Types => Ok(ReadKitCommandResult::Types {
-                list: kit.types.clone(),
-            }),
-            ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs {
-                list: kit.designs.clone(),
-            }),
-            ReadKitCommand::ReadTypeCommands { id, commands } => {
-                let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| {
-                    SemioError::NotFound {
-                        kind: "Type",
-                        id: id.id.clone(),
-                    }
-                })?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(t)?);
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadPieceCommandResult {
+        Everything { dto: PieceFullDto },
+        Name { name: String },
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectionCommand {
+        Everything,
+        #[serde(other)]
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadConnectionCommandResult {
+        Everything { dto: ConnectionFullDto },
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommand {
+        Everything,
+        Name,
+        Connectors,
+        Representations,
+        ReadConnectorCommands {
+            id: ConnectorIdDto,
+            commands: Vec<ReadConnectorCommand>,
+        },
+        ReadRepresentationCommands {
+            id: RepresentationIdDto,
+            commands: Vec<ReadRepresentationCommand>,
+        },
+        ReadPortCommands {
+            id: PortIdDto,
+            commands: Vec<ReadPortCommand>,
+        },
+        #[serde(other)]
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadTypeCommandResult {
+        Everything {
+            dto: TypeFullDto,
+        },
+        Name {
+            name: String,
+        },
+        Connectors {
+            list: Vec<ConnectorFullDto>,
+        },
+        Representations {
+            list: Vec<RepresentationFullDto>,
+        },
+        ReadConnectorCommands {
+            results: Vec<ReadConnectorCommandResult>,
+        },
+        ReadRepresentationCommands {
+            results: Vec<ReadRepresentationCommandResult>,
+        },
+        ReadPortCommands {
+            results: Vec<ReadPortCommandResult>,
+        },
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadDesignCommand {
+        Everything,
+        Name,
+        ReadPieceCommands {
+            id: PieceIdDto,
+            commands: Vec<ReadPieceCommand>,
+        },
+        ReadConnectionCommands {
+            id: ConnectionIdDto,
+            commands: Vec<ReadConnectionCommand>,
+        },
+        #[serde(other)]
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadDesignCommandResult {
+        Everything {
+            dto: DesignFullDto,
+        },
+        Name {
+            name: String,
+        },
+        ReadPieceCommands {
+            results: Vec<ReadPieceCommandResult>,
+        },
+        ReadConnectionCommands {
+            results: Vec<ReadConnectionCommandResult>,
+        },
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadKitCommand {
+        /// Use empty object `{}` in JSON (camelCase `everything`) so the WASM/JSON spec shape works.
+        Everything {},
+        Name,
+        Description,
+        Types,
+        Designs,
+        Files,
+        ReadTypeCommands {
+            id: TypeIdDto,
+            commands: Vec<ReadTypeCommand>,
+        },
+        ReadDesignCommands {
+            id: DesignIdDto,
+            commands: Vec<ReadDesignCommand>,
+        },
+        #[serde(other)]
+        Other,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ReadKitCommandResult {
+        Everything {
+            dto: KitFullDto,
+        },
+        Name {
+            name: String,
+        },
+        Description {
+            description: Option<String>,
+        },
+        Types {
+            list: Vec<TypeFullDto>,
+        },
+        Designs {
+            list: Vec<DesignFullDto>,
+        },
+        ReadTypeCommands {
+            results: Vec<ReadTypeCommandResult>,
+        },
+        ReadDesignCommands {
+            results: Vec<ReadDesignCommandResult>,
+        },
+        Other,
+    }
+
+    /// OO surface: read commands are methods on the command enum, taking the DTO snapshot
+    /// object they read against. `ReadKitCommand::execute(kit)` is the canonical entrypoint.
+    impl ReadConnectorCommand {
+        pub fn execute(&self, c: &ConnectorFullDto) -> ReadConnectorCommandResult {
+            match self {
+                ReadConnectorCommand::Everything => {
+                    ReadConnectorCommandResult::Everything { dto: c.clone() }
                 }
-                Ok(ReadKitCommandResult::ReadTypeCommands { results })
+                ReadConnectorCommand::Name => ReadConnectorCommandResult::Name {
+                    name: c.code.clone(),
+                },
+                ReadConnectorCommand::Other => ReadConnectorCommandResult::Other,
             }
-            ReadKitCommand::ReadDesignCommands { id, commands } => {
-                let d = kit.designs.iter().find(|x| x.id == id.id).ok_or_else(|| {
-                    SemioError::NotFound {
-                        kind: "Design",
-                        id: id.id.clone(),
-                    }
-                })?;
-                let mut results = Vec::with_capacity(commands.len());
-                for c in commands {
-                    results.push(c.execute(d)?);
-                }
-                Ok(ReadKitCommandResult::ReadDesignCommands { results })
-            }
-            ReadKitCommand::Files => Ok(ReadKitCommandResult::Other),
-            ReadKitCommand::Other => Ok(ReadKitCommandResult::Other),
         }
     }
 
-    /// Run many read commands against the same snapshot, preserving order.
-    pub fn execute_many(kit: &KitFullDto, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandResult>> {
-        commands.iter().map(|c| c.execute(kit)).collect()
+    impl ReadRepresentationCommand {
+        pub fn execute(&self, r: &RepresentationFullDto) -> ReadRepresentationCommandResult {
+            match self {
+                ReadRepresentationCommand::Everything => {
+                    ReadRepresentationCommandResult::Everything { dto: r.clone() }
+                }
+                ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name {
+                    name: r.description.clone().unwrap_or_else(|| r.url.clone()),
+                },
+                ReadRepresentationCommand::Other => ReadRepresentationCommandResult::Other,
+            }
+        }
     }
-}
 
+    impl ReadPortCommand {
+        pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
+            match self {
+                ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
+                ReadPortCommand::Name => ReadPortCommandResult::Name {
+                    name: p.family.clone().unwrap_or_default(),
+                },
+                ReadPortCommand::Other => ReadPortCommandResult::Other,
+            }
+        }
+    }
+
+    impl ReadPieceCommand {
+        pub fn execute(&self, p: &PieceFullDto) -> ReadPieceCommandResult {
+            match self {
+                ReadPieceCommand::Everything => {
+                    ReadPieceCommandResult::Everything { dto: p.clone() }
+                }
+                ReadPieceCommand::Name => ReadPieceCommandResult::Name {
+                    name: p.name.clone().unwrap_or_default(),
+                },
+                ReadPieceCommand::Other => ReadPieceCommandResult::Other,
+            }
+        }
+    }
+
+    impl ReadConnectionCommand {
+        pub fn execute(&self, c: &ConnectionFullDto) -> ReadConnectionCommandResult {
+            match self {
+                ReadConnectionCommand::Everything => {
+                    ReadConnectionCommandResult::Everything { dto: c.clone() }
+                }
+                ReadConnectionCommand::Other => ReadConnectionCommandResult::Other,
+            }
+        }
+    }
+
+    impl ReadTypeCommand {
+        pub fn execute(&self, t: &TypeFullDto) -> Result<ReadTypeCommandResult> {
+            match self {
+                ReadTypeCommand::Everything => {
+                    Ok(ReadTypeCommandResult::Everything { dto: t.clone() })
+                }
+                ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name {
+                    name: t.name.clone(),
+                }),
+                ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors {
+                    list: t.connectors.clone(),
+                }),
+                ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations {
+                    list: t.representations.clone(),
+                }),
+                ReadTypeCommand::ReadConnectorCommands { id, commands } => {
+                    let c = t.connectors.iter().find(|x| x.id == id.id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Connector",
+                            id: id.id.clone(),
+                        }
+                    })?;
+                    Ok(ReadTypeCommandResult::ReadConnectorCommands {
+                        results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
+                    })
+                }
+                ReadTypeCommand::ReadRepresentationCommands { id, commands } => {
+                    let r = t
+                        .representations
+                        .iter()
+                        .find(|x| x.id == id.id)
+                        .ok_or_else(|| SemioError::NotFound {
+                            kind: "Representation",
+                            id: id.id.clone(),
+                        })?;
+                    Ok(ReadTypeCommandResult::ReadRepresentationCommands {
+                        results: commands.iter().map(|cmd| cmd.execute(r)).collect(),
+                    })
+                }
+                ReadTypeCommand::ReadPortCommands { id, commands } => {
+                    let p = t.ports.iter().find(|x| x.id == id.id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Port",
+                            id: id.id.clone(),
+                        }
+                    })?;
+                    Ok(ReadTypeCommandResult::ReadPortCommands {
+                        results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
+                    })
+                }
+                ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
+            }
+        }
+    }
+
+    impl ReadDesignCommand {
+        pub fn execute(&self, d: &DesignFullDto) -> Result<ReadDesignCommandResult> {
+            match self {
+                ReadDesignCommand::Everything => {
+                    Ok(ReadDesignCommandResult::Everything { dto: d.clone() })
+                }
+                ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name {
+                    name: d.name.clone(),
+                }),
+                ReadDesignCommand::ReadPieceCommands { id, commands } => {
+                    let p = d.pieces.iter().find(|x| x.id == id.id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Piece",
+                            id: id.id.clone(),
+                        }
+                    })?;
+                    Ok(ReadDesignCommandResult::ReadPieceCommands {
+                        results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
+                    })
+                }
+                ReadDesignCommand::ReadConnectionCommands { id, commands } => {
+                    let c = d
+                        .connections
+                        .iter()
+                        .find(|x| x.id == id.id)
+                        .ok_or_else(|| SemioError::NotFound {
+                            kind: "Connection",
+                            id: id.id.clone(),
+                        })?;
+                    Ok(ReadDesignCommandResult::ReadConnectionCommands {
+                        results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
+                    })
+                }
+                ReadDesignCommand::Other => Ok(ReadDesignCommandResult::Other),
+            }
+        }
+    }
+
+    impl ReadKitCommand {
+        /// Execute this read command against a materialized kit DTO.
+        pub fn execute(&self, kit: &KitFullDto) -> Result<ReadKitCommandResult> {
+            match self {
+                ReadKitCommand::Everything {} => {
+                    Ok(ReadKitCommandResult::Everything { dto: kit.clone() })
+                }
+                ReadKitCommand::Name => Ok(ReadKitCommandResult::Name {
+                    name: kit.name.clone(),
+                }),
+                ReadKitCommand::Description => Ok(ReadKitCommandResult::Description {
+                    description: kit.description.clone(),
+                }),
+                ReadKitCommand::Types => Ok(ReadKitCommandResult::Types {
+                    list: kit.types.clone(),
+                }),
+                ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs {
+                    list: kit.designs.clone(),
+                }),
+                ReadKitCommand::ReadTypeCommands { id, commands } => {
+                    let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Type",
+                            id: id.id.clone(),
+                        }
+                    })?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(t)?);
+                    }
+                    Ok(ReadKitCommandResult::ReadTypeCommands { results })
+                }
+                ReadKitCommand::ReadDesignCommands { id, commands } => {
+                    let d = kit.designs.iter().find(|x| x.id == id.id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Design",
+                            id: id.id.clone(),
+                        }
+                    })?;
+                    let mut results = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        results.push(c.execute(d)?);
+                    }
+                    Ok(ReadKitCommandResult::ReadDesignCommands { results })
+                }
+                ReadKitCommand::Files => Ok(ReadKitCommandResult::Other),
+                ReadKitCommand::Other => Ok(ReadKitCommandResult::Other),
+            }
+        }
+
+        /// Run many read commands against the same snapshot, preserving order.
+        pub fn execute_many(
+            kit: &KitFullDto,
+            commands: &[ReadKitCommand],
+        ) -> Result<Vec<ReadKitCommandResult>> {
+            commands.iter().map(|c| c.execute(kit)).collect()
+        }
+    }
 }
 pub mod change_command {
-//! Structural change commands; applied to a [`KitStore`] during an open transaction.
-use serde::{Deserialize, Serialize};
+    //! Structural change commands; applied to a [`KitStore`] during an open transaction.
+    use serde::{Deserialize, Serialize};
 
-use crate::design::DesignIdDto;
-use crate::diff::DesignDiff;
-use crate::id::Id;
-use crate::kit::KitStore;
-use crate::kit_change::KitChangeKind;
-use crate::piece::PieceFullDto;
-use crate::piece::PieceIdDto;
-use crate::typ::TypeIdDto;
-use crate::{error::Result, error::SemioError};
+    use crate::design::DesignIdDto;
+    use crate::diff::DesignDiff;
+    use crate::id::Id;
+    use crate::kit::KitStore;
+    use crate::kit_change::KitChangeKind;
+    use crate::piece::PieceFullDto;
+    use crate::piece::PieceIdDto;
+    use crate::typ::TypeIdDto;
+    use crate::{error::Result, error::SemioError};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ChangePieceCommand {
-    Name { name: String },
-    Fix,
-    #[serde(other)]
-    Other,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangePieceCommand {
+        Name {
+            name: String,
+        },
+        Fix,
+        #[serde(other)]
+        Other,
+    }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ChangeDesignCommand {
-    Name { name: String },
-    ChangePieceCommands {
-        piece_id: PieceIdDto,
-        commands: Vec<ChangePieceCommand>,
-    },
-    #[serde(other)]
-    Other,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeDesignCommand {
+        Name {
+            name: String,
+        },
+        ChangePieceCommands {
+            piece_id: PieceIdDto,
+            commands: Vec<ChangePieceCommand>,
+        },
+        #[serde(other)]
+        Other,
+    }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ChangeTypeCommand {
-    Name { name: String },
-    #[serde(other)]
-    Other,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeTypeCommand {
+        Name {
+            name: String,
+        },
+        #[serde(other)]
+        Other,
+    }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ChangeKitCommand {
-    Name { name: String },
-    Description { description: Option<String> },
-    ChangeTypeCommands {
-        type_id: TypeIdDto,
-        commands: Vec<ChangeTypeCommand>,
-    },
-    ChangeDesignCommands {
-        design_id: DesignIdDto,
-        commands: Vec<ChangeDesignCommand>,
-    },
-    #[serde(other)]
-    Other,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum ChangeKitCommand {
+        Name {
+            name: String,
+        },
+        Description {
+            description: Option<String>,
+        },
+        ChangeTypeCommands {
+            type_id: TypeIdDto,
+            commands: Vec<ChangeTypeCommand>,
+        },
+        ChangeDesignCommands {
+            design_id: DesignIdDto,
+            commands: Vec<ChangeDesignCommand>,
+        },
+        #[serde(other)]
+        Other,
+    }
 
-impl KitStore {
-    /// Find the id of the owning design for a piece id.
-    pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
-        for d in &self.designs {
-            if let Ok(dr) = d.read() {
-                if dr.piece(piece_id.as_str()).is_some() {
-                    return Some(dr.id.to_string());
+    impl KitStore {
+        /// Find the id of the owning design for a piece id.
+        pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
+            for d in &self.designs {
+                if let Ok(dr) = d.read() {
+                    if dr.piece(piece_id.as_str()).is_some() {
+                        return Some(dr.id.to_string());
+                    }
                 }
             }
-        }
-        None
-    }
-}
-
-impl ChangePieceCommand {
-    /// Apply this piece change under the given design; mutates the live memory graph.
-    pub fn apply(&self, kit: &mut KitStore, piece_id: &Id) -> Result<()> {
-        match self {
-            ChangePieceCommand::Name { name } => {
-                let did = kit
-                    .find_design_id_for_piece(piece_id)
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Piece",
-                        id: piece_id.clone(),
-                    })?;
-                let full = kit.to_full_dto();
-                let mut p = full
-                    .designs
-                    .iter()
-                    .find(|d| d.id.as_str() == did.as_str())
-                    .and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id))
-                    .cloned()
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Piece",
-                        id: piece_id.clone(),
-                    })?;
-                p.name = Some(name.clone());
-                let mut diff = DesignDiff::default();
-                diff.modified_pieces.push(p);
-                kit.apply_design_diff(&did, &diff)
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                Ok(())
-            }
-            ChangePieceCommand::Fix | ChangePieceCommand::Other => Ok(()),
+            None
         }
     }
-}
 
-impl ChangeDesignCommand {
-    /// Apply this design-level change against the live kit memory graph.
-    pub fn apply(&self, kit: &mut KitStore, design_id: &Id) -> Result<()> {
-        match self {
-            ChangeDesignCommand::Name { name } => {
-                let d = kit
-                    .design(design_id.as_str())
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Design",
-                        id: design_id.clone(),
+    impl ChangePieceCommand {
+        /// Apply this piece change under the given design; mutates the live memory graph.
+        pub fn apply(&self, kit: &mut KitStore, piece_id: &Id) -> Result<()> {
+            match self {
+                ChangePieceCommand::Name { name } => {
+                    let did = kit.find_design_id_for_piece(piece_id).ok_or_else(|| {
+                        SemioError::NotFound {
+                            kind: "Piece",
+                            id: piece_id.clone(),
+                        }
                     })?;
-                d.write()
-                    .map_err(|_| SemioError::LockPoisoned("design"))?
-                    .set_name(name.clone())
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                Ok(())
-            }
-            ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
-                for pc in commands {
-                    pc.apply(kit, &piece_id.id)?;
+                    let full = kit.to_full_dto();
+                    let mut p = full
+                        .designs
+                        .iter()
+                        .find(|d| d.id.as_str() == did.as_str())
+                        .and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id))
+                        .cloned()
+                        .ok_or_else(|| SemioError::NotFound {
+                            kind: "Piece",
+                            id: piece_id.clone(),
+                        })?;
+                    p.name = Some(name.clone());
+                    let mut diff = DesignDiff::default();
+                    diff.modified_pieces.push(p);
+                    kit.apply_design_diff(&did, &diff)
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    Ok(())
                 }
-                Ok(())
+                ChangePieceCommand::Fix | ChangePieceCommand::Other => Ok(()),
             }
-            ChangeDesignCommand::Other => Ok(()),
         }
     }
-}
 
-impl ChangeTypeCommand {
-    /// Apply this type-level change against the live kit memory graph.
-    pub fn apply(&self, kit: &mut KitStore, type_id: &Id) -> Result<()> {
-        match self {
-            ChangeTypeCommand::Name { name } => {
-                let t = kit
-                    .semio_type(type_id.as_str())
-                    .ok_or_else(|| SemioError::NotFound {
-                        kind: "Type",
-                        id: type_id.clone(),
-                    })?;
-                t.write()
-                    .map_err(|_| SemioError::LockPoisoned("type"))?
-                    .set_name(name.clone())
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                Ok(())
-            }
-            ChangeTypeCommand::Other => Ok(()),
-        }
-    }
-}
-
-impl ChangeKitCommand {
-    /// Apply one change command to a live [`KitStore`].
-    ///
-    /// Callers that want a `KitChange` record should snapshot before/after and diff.
-    pub fn apply(&self, kit: &mut KitStore) -> Result<KitChangeKind> {
-        match self {
-            ChangeKitCommand::Name { name } => {
-                kit.set_name(name.clone())
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                Ok(KitChangeKind::SetKitMetadata)
-            }
-            ChangeKitCommand::Description { description } => {
-                kit.set_description(description.clone())
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                Ok(KitChangeKind::SetKitMetadata)
-            }
-            ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
-                for c in commands {
-                    c.apply(kit, &type_id.id)?;
+    impl ChangeDesignCommand {
+        /// Apply this design-level change against the live kit memory graph.
+        pub fn apply(&self, kit: &mut KitStore, design_id: &Id) -> Result<()> {
+            match self {
+                ChangeDesignCommand::Name { name } => {
+                    let d = kit
+                        .design(design_id.as_str())
+                        .ok_or_else(|| SemioError::NotFound {
+                            kind: "Design",
+                            id: design_id.clone(),
+                        })?;
+                    d.write()
+                        .map_err(|_| SemioError::LockPoisoned("design"))?
+                        .set_name(name.clone())
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    Ok(())
                 }
-                Ok(KitChangeKind::ModifyType)
-            }
-            ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
-                for c in commands {
-                    c.apply(kit, &design_id.id)?;
+                ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
+                    for pc in commands {
+                        pc.apply(kit, &piece_id.id)?;
+                    }
+                    Ok(())
                 }
-                Ok(KitChangeKind::ModifyDesign)
+                ChangeDesignCommand::Other => Ok(()),
             }
-            ChangeKitCommand::Other => Ok(KitChangeKind::Other("changeKit".into())),
         }
     }
-}
 
-impl KitStore {
-    /// Apply a raw design diff and return the high-level `KitChangeKind`.
-    #[allow(dead_code)]
-    pub fn apply_design_diff_as_change(
-        &mut self,
-        design_id: &str,
-        diff: &DesignDiff,
-    ) -> Result<KitChangeKind> {
-        self.apply_design_diff(design_id, diff)
-            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-        Ok(KitChangeKind::ApplyDesignDiff)
+    impl ChangeTypeCommand {
+        /// Apply this type-level change against the live kit memory graph.
+        pub fn apply(&self, kit: &mut KitStore, type_id: &Id) -> Result<()> {
+            match self {
+                ChangeTypeCommand::Name { name } => {
+                    let t =
+                        kit.semio_type(type_id.as_str())
+                            .ok_or_else(|| SemioError::NotFound {
+                                kind: "Type",
+                                id: type_id.clone(),
+                            })?;
+                    t.write()
+                        .map_err(|_| SemioError::LockPoisoned("type"))?
+                        .set_name(name.clone())
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    Ok(())
+                }
+                ChangeTypeCommand::Other => Ok(()),
+            }
+        }
     }
 
-    /// Add a single piece to a design via a design diff, returning the `KitChangeKind`.
-    #[allow(dead_code)]
-    pub fn add_piece_as_change(
-        &mut self,
-        design_id: &str,
-        piece: PieceFullDto,
-    ) -> Result<KitChangeKind> {
-        let mut d = DesignDiff::default();
-        d.added_pieces.push(piece);
-        self.apply_design_diff(design_id, &d)
-            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-        Ok(KitChangeKind::AddPiece)
+    impl ChangeKitCommand {
+        /// Apply one change command to a live [`KitStore`].
+        ///
+        /// Callers that want a `KitChange` record should snapshot before/after and diff.
+        pub fn apply(&self, kit: &mut KitStore) -> Result<KitChangeKind> {
+            match self {
+                ChangeKitCommand::Name { name } => {
+                    kit.set_name(name.clone())
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    Ok(KitChangeKind::SetKitMetadata)
+                }
+                ChangeKitCommand::Description { description } => {
+                    kit.set_description(description.clone())
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    Ok(KitChangeKind::SetKitMetadata)
+                }
+                ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
+                    for c in commands {
+                        c.apply(kit, &type_id.id)?;
+                    }
+                    Ok(KitChangeKind::ModifyType)
+                }
+                ChangeKitCommand::ChangeDesignCommands {
+                    design_id,
+                    commands,
+                } => {
+                    for c in commands {
+                        c.apply(kit, &design_id.id)?;
+                    }
+                    Ok(KitChangeKind::ModifyDesign)
+                }
+                ChangeKitCommand::Other => Ok(KitChangeKind::Other("changeKit".into())),
+            }
+        }
     }
-}
 
+    impl KitStore {
+        /// Apply a raw design diff and return the high-level `KitChangeKind`.
+        #[allow(dead_code)]
+        pub fn apply_design_diff_as_change(
+            &mut self,
+            design_id: &str,
+            diff: &DesignDiff,
+        ) -> Result<KitChangeKind> {
+            self.apply_design_diff(design_id, diff)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            Ok(KitChangeKind::ApplyDesignDiff)
+        }
+
+        /// Add a single piece to a design via a design diff, returning the `KitChangeKind`.
+        #[allow(dead_code)]
+        pub fn add_piece_as_change(
+            &mut self,
+            design_id: &str,
+            piece: PieceFullDto,
+        ) -> Result<KitChangeKind> {
+            let mut d = DesignDiff::default();
+            d.added_pieces.push(piece);
+            self.apply_design_diff(design_id, &d)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            Ok(KitChangeKind::AddPiece)
+        }
+    }
 }
 pub mod kit_checkpoint {
-//! Checkpoints and materialized kit snapshots on the main / shared tree.
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+    //! Checkpoints and materialized kit snapshots on the main / shared tree.
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
-use crate::hash::HashWriter;
-use crate::id::Id;
-use crate::kit::KitFullDto;
-use crate::kit_change::KitChange;
+    use crate::hash::HashWriter;
+    use crate::id::Id;
+    use crate::kit::KitFullDto;
+    use crate::kit_change::KitChange;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct MaterializedKit {
-    pub initial: KitFullDto,
-    pub change_list: Vec<KitChange>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub computed: Option<KitFullDto>,
-}
-
-impl MaterializedKit {
-    pub fn compute(&self) -> KitFullDto {
-        self.change_list.iter().fold(self.initial.clone(), |acc, c| {
-            crate::kit_change::KitChange::apply_forward_dto(&acc, c)
-        })
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct KitCheckpoint {
-    pub id: Id,
-    pub parent: Option<Id>,
-    pub changes: Vec<KitChange>,
-    pub message: Option<String>,
-    pub time: Option<String>,
-    pub authors: Vec<Id>,
-    pub hash: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub release: Option<MaterializedKit>,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitCheckpointCommand {
-    ReadKitCommands {
-        commands: Vec<crate::read_command::ReadKitCommand>,
-    },
-    MarkAsRelease,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitCheckpointCommandResult {
-    ReadKitCommands {
-        results: Vec<crate::read_command::ReadKitCommandResult>,
-    },
-    MarkAsRelease { ok: bool },
-    Nothing,
-}
-
-impl KitCheckpoint {
-    /// Build a new checkpoint object with a content-addressed hash.
-    pub fn new(
-        parent: Option<Id>,
-        changes: Vec<KitChange>,
-        message: Option<String>,
-    ) -> Self {
-        let id = Id::new_v7();
-        let hash = Self::compute_hash(parent.as_ref(), &id, &changes);
-        Self {
-            id,
-            parent,
-            changes,
-            message,
-            time: None,
-            authors: Vec::new(),
-            hash,
-            release: None,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct MaterializedKit {
+        pub initial: KitFullDto,
+        pub change_list: Vec<KitChange>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub computed: Option<KitFullDto>,
     }
 
-    /// Content-addressed hash of this checkpoint.
-    pub fn compute_hash(parent: Option<&Id>, new_id: &Id, changes: &[KitChange]) -> String {
-        let mut w = HashWriter::new();
-        w.tag("kit_cp");
-        match parent {
-            Some(p) => {
-                w.str(p.as_str());
-            }
-            None => {
-                w.str("");
-            }
-        }
-        w.str(new_id.as_str());
-        w.str(
-            &changes
+    impl MaterializedKit {
+        pub fn compute(&self) -> KitFullDto {
+            self.change_list
                 .iter()
-                .map(|c| serde_json::to_string(c).unwrap_or_default())
-                .collect::<Vec<_>>()
-                .join("\n"),
-        );
-        w.finalize()
+                .fold(self.initial.clone(), |acc, c| {
+                    crate::kit_change::KitChange::apply_forward_dto(&acc, c)
+                })
+        }
     }
 
-    /// Walk `self -> root` via `parent` links in `map`, returning ids from root to leaf.
-    pub fn chain_root_to_leaf(&self, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
-        Self::chain_root_to_leaf_from(&self.id, map)
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitCheckpoint {
+        pub id: Id,
+        pub parent: Option<Id>,
+        pub changes: Vec<KitChange>,
+        pub message: Option<String>,
+        pub time: Option<String>,
+        pub authors: Vec<Id>,
+        pub hash: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub release: Option<MaterializedKit>,
     }
 
-    /// Walk `at -> root` via `parent` links in `map`, returning ids from root to leaf.
-    pub fn chain_root_to_leaf_from(at: &Id, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
-        let mut out = vec![at.clone()];
-        let mut cur = at.clone();
-        loop {
-            let parent = map.get(&cur).and_then(|c| c.parent.as_ref().cloned());
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitCheckpointCommand {
+        ReadKitCommands {
+            commands: Vec<crate::read_command::ReadKitCommand>,
+        },
+        MarkAsRelease,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitCheckpointCommandResult {
+        ReadKitCommands {
+            results: Vec<crate::read_command::ReadKitCommandResult>,
+        },
+        MarkAsRelease {
+            ok: bool,
+        },
+        Nothing,
+    }
+
+    impl KitCheckpoint {
+        /// Build a new checkpoint object with a content-addressed hash.
+        pub fn new(parent: Option<Id>, changes: Vec<KitChange>, message: Option<String>) -> Self {
+            let id = Id::new_v7();
+            let hash = Self::compute_hash(parent.as_ref(), &id, &changes);
+            Self {
+                id,
+                parent,
+                changes,
+                message,
+                time: None,
+                authors: Vec::new(),
+                hash,
+                release: None,
+            }
+        }
+
+        /// Content-addressed hash of this checkpoint.
+        pub fn compute_hash(parent: Option<&Id>, new_id: &Id, changes: &[KitChange]) -> String {
+            let mut w = HashWriter::new();
+            w.tag("kit_cp");
             match parent {
-                None => break,
-                Some(p) if out.contains(&p) => break,
                 Some(p) => {
-                    out.push(p.clone());
-                    cur = p;
+                    w.str(p.as_str());
+                }
+                None => {
+                    w.str("");
                 }
             }
+            w.str(new_id.as_str());
+            w.str(
+                &changes
+                    .iter()
+                    .map(|c| serde_json::to_string(c).unwrap_or_default())
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+            w.finalize()
         }
-        out.reverse();
-        out
-    }
 
-    /// Materialize the kit DTO at `at` (inclusive) by replaying all checkpoint changes
-    /// from `initial` along the parent chain.
-    pub fn materialize(
-        initial: &KitFullDto,
-        map: &HashMap<Id, KitCheckpoint>,
-        at: Option<&Id>,
-    ) -> KitFullDto {
-        let Some(at_id) = at else { return initial.clone(); };
-        let path = Self::chain_root_to_leaf_from(at_id, map);
-        let mut s = initial.clone();
-        for cid in &path {
-            if let Some(cp) = map.get(cid) {
-                for ch in &cp.changes {
-                    s = crate::kit_change::KitChange::apply_forward_dto(&s, ch);
+        /// Walk `self -> root` via `parent` links in `map`, returning ids from root to leaf.
+        pub fn chain_root_to_leaf(&self, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
+            Self::chain_root_to_leaf_from(&self.id, map)
+        }
+
+        /// Walk `at -> root` via `parent` links in `map`, returning ids from root to leaf.
+        pub fn chain_root_to_leaf_from(at: &Id, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
+            let mut out = vec![at.clone()];
+            let mut cur = at.clone();
+            loop {
+                let parent = map.get(&cur).and_then(|c| c.parent.as_ref().cloned());
+                match parent {
+                    None => break,
+                    Some(p) if out.contains(&p) => break,
+                    Some(p) => {
+                        out.push(p.clone());
+                        cur = p;
+                    }
                 }
             }
+            out.reverse();
+            out
         }
-        s
-    }
 
-    /// Mark this checkpoint as a release by snapshotting the materialized kit.
-    pub fn mark_as_release(
-        &mut self,
-        initial: KitFullDto,
-        all_checkpoints: &HashMap<Id, KitCheckpoint>,
-    ) {
-        let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
-        let mut change_list: Vec<KitChange> = Vec::new();
-        for id in &path {
-            if let Some(c) = all_checkpoints.get(id) {
-                change_list.extend(c.changes.iter().cloned());
+        /// Materialize the kit DTO at `at` (inclusive) by replaying all checkpoint changes
+        /// from `initial` along the parent chain.
+        pub fn materialize(
+            initial: &KitFullDto,
+            map: &HashMap<Id, KitCheckpoint>,
+            at: Option<&Id>,
+        ) -> KitFullDto {
+            let Some(at_id) = at else {
+                return initial.clone();
+            };
+            let path = Self::chain_root_to_leaf_from(at_id, map);
+            let mut s = initial.clone();
+            for cid in &path {
+                if let Some(cp) = map.get(cid) {
+                    for ch in &cp.changes {
+                        s = crate::kit_change::KitChange::apply_forward_dto(&s, ch);
+                    }
+                }
             }
+            s
         }
-        let computed = Some(Self::materialize(&initial, all_checkpoints, Some(&self.id)));
-        self.release = Some(MaterializedKit {
-            initial,
-            change_list,
-            computed,
-        });
-    }
-}
 
+        /// Mark this checkpoint as a release by snapshotting the materialized kit.
+        pub fn mark_as_release(
+            &mut self,
+            initial: KitFullDto,
+            all_checkpoints: &HashMap<Id, KitCheckpoint>,
+        ) {
+            let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
+            let mut change_list: Vec<KitChange> = Vec::new();
+            for id in &path {
+                if let Some(c) = all_checkpoints.get(id) {
+                    change_list.extend(c.changes.iter().cloned());
+                }
+            }
+            let computed = Some(Self::materialize(&initial, all_checkpoints, Some(&self.id)));
+            self.release = Some(MaterializedKit {
+                initial,
+                change_list,
+                computed,
+            });
+        }
+    }
 }
 pub mod kit_alternative {
-//! Named ordered list of checkpoints branching from the main kit line.
-use serde::{Deserialize, Serialize};
+    //! Named ordered list of checkpoints branching from the main kit line.
+    use serde::{Deserialize, Serialize};
 
-use crate::id::Id;
+    use crate::id::Id;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct KitAlternative {
-    pub id: Id,
-    pub name: String,
-    /// First checkpoint on the main (or shared) line this line extends from.
-    pub root: Id,
-    /// Ordered checkpoint ids (may share ids with other alternatives).
-    pub checkpoints: Vec<Id>,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct KitAlternative {
+        pub id: Id,
+        pub name: String,
+        /// First checkpoint on the main (or shared) line this line extends from.
+        pub root: Id,
+        /// Ordered checkpoint ids (may share ids with other alternatives).
+        pub checkpoints: Vec<Id>,
+    }
 
-impl KitAlternative {
-    /// Create a new alternative branching from `from_checkpoint`.
-    pub fn new(name: String, from_checkpoint: Id) -> Self {
-        Self {
-            id: Id::new_v7(),
-            name,
-            root: from_checkpoint.clone(),
-            checkpoints: vec![from_checkpoint],
+    impl KitAlternative {
+        /// Create a new alternative branching from `from_checkpoint`.
+        pub fn new(name: String, from_checkpoint: Id) -> Self {
+            Self {
+                id: Id::new_v7(),
+                name,
+                root: from_checkpoint.clone(),
+                checkpoints: vec![from_checkpoint],
+            }
+        }
+
+        /// Latest checkpoint id on this alternative (the working tip).
+        pub fn tip(&self) -> Option<&Id> {
+            self.checkpoints.last()
+        }
+
+        /// Append a new checkpoint id to this alternative's line.
+        pub fn append(&mut self, cp: Id) {
+            self.checkpoints.push(cp);
+        }
+
+        /// Collapse this alternative to `[root, new_tip]`.
+        pub fn collapse_to(&mut self, new_tip: Id) {
+            self.checkpoints = vec![self.root.clone(), new_tip];
         }
     }
 
-    /// Latest checkpoint id on this alternative (the working tip).
-    pub fn tip(&self) -> Option<&Id> {
-        self.checkpoints.last()
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitAlternativeCommand {
+        ReadKitCommands {
+            commands: Vec<crate::read_command::ReadKitCommand>,
+        },
+        UnifyKitCheckpointsToSingleKitCheckpoint {
+            message: String,
+        },
     }
 
-    /// Append a new checkpoint id to this alternative's line.
-    pub fn append(&mut self, cp: Id) {
-        self.checkpoints.push(cp);
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitAlternativeCommandResult {
+        ReadKitCommands {
+            results: Vec<crate::read_command::ReadKitCommandResult>,
+        },
+        UnifyKitCheckpointsToSingleKitCheckpoint {
+            new_checkpoint_id: Id,
+        },
+        Nothing,
     }
-
-    /// Collapse this alternative to `[root, new_tip]`.
-    pub fn collapse_to(&mut self, new_tip: Id) {
-        self.checkpoints = vec![self.root.clone(), new_tip];
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitAlternativeCommand {
-    ReadKitCommands {
-        commands: Vec<crate::read_command::ReadKitCommand>,
-    },
-    UnifyKitCheckpointsToSingleKitCheckpoint { message: String },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitAlternativeCommandResult {
-    ReadKitCommands {
-        results: Vec<crate::read_command::ReadKitCommandResult>,
-    },
-    UnifyKitCheckpointsToSingleKitCheckpoint { new_checkpoint_id: Id },
-    Nothing,
-}
-
 }
 pub mod kit_transaction {
-//! One transaction: a stack of [`crate::kit_change::KitChange`] with undo/redo.
-use serde::{Deserialize, Serialize};
+    //! One transaction: a stack of [`crate::kit_change::KitChange`] with undo/redo.
+    use serde::{Deserialize, Serialize};
 
-use crate::id::Id;
-use crate::kit_change::KitChange;
-use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
+    use crate::id::Id;
+    use crate::kit_change::KitChange;
+    use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
 
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionState {
-    Open,
-    Finalized,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+    #[serde(rename_all = "camelCase")]
+    pub enum TransactionState {
+        Open,
+        Finalized,
+    }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Transaction {
-    pub id: Id,
-    pub changes: Vec<KitChange>,
-    pub redo_changes: Vec<KitChange>,
-    pub state: TransactionState,
-}
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct Transaction {
+        pub id: Id,
+        pub changes: Vec<KitChange>,
+        pub redo_changes: Vec<KitChange>,
+        pub state: TransactionState,
+    }
 
-impl Transaction {
-    pub fn new(id: Id) -> Self {
-        Self {
-            id,
-            changes: Vec::new(),
-            redo_changes: Vec::new(),
-            state: TransactionState::Open,
+    impl Transaction {
+        pub fn new(id: Id) -> Self {
+            Self {
+                id,
+                changes: Vec::new(),
+                redo_changes: Vec::new(),
+                state: TransactionState::Open,
+            }
+        }
+
+        /// True while more [`KitChange`]s can be appended via [`Transaction::record`].
+        pub fn is_open(&self) -> bool {
+            matches!(self.state, TransactionState::Open)
+        }
+
+        /// Record a new change (clears redo stack, as in a standard undo/redo tree).
+        pub fn record(&mut self, change: KitChange) {
+            self.changes.push(change);
+            self.redo_changes.clear();
+        }
+
+        /// Pop the last recorded change for an undo step.
+        pub fn undo_last(&mut self) -> Option<KitChange> {
+            let ch = self.changes.pop()?;
+            self.redo_changes.push(ch.clone());
+            Some(ch)
+        }
+
+        /// Pop the last undone change for a redo step.
+        pub fn redo_last(&mut self) -> Option<KitChange> {
+            let ch = self.redo_changes.pop()?;
+            self.changes.push(ch.clone());
+            Some(ch)
+        }
+
+        /// Move this transaction to the `Finalized` state.
+        pub fn mark_finalized(&mut self) {
+            self.state = TransactionState::Finalized;
         }
     }
 
-    /// True while more [`KitChange`]s can be appended via [`Transaction::record`].
-    pub fn is_open(&self) -> bool {
-        matches!(self.state, TransactionState::Open)
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum TransactionCommand {
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
+        ChangeKitCommands {
+            commands: Vec<crate::change_command::ChangeKitCommand>,
+        },
+        Finalize,
+        Abort,
+        Undo,
+        UndoAll,
+        CanUndo,
+        Redo,
+        RedoAll,
+        CanRedo,
     }
 
-    /// Record a new change (clears redo stack, as in a standard undo/redo tree).
-    pub fn record(&mut self, change: KitChange) {
-        self.changes.push(change);
-        self.redo_changes.clear();
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum TransactionCommandResult {
+        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        ChangeKitCommands { count: usize },
+        Finalize { ok: bool },
+        Abort { ok: bool },
+        Undo { ok: bool },
+        UndoAll { ok: bool },
+        CanUndo { can: bool },
+        Redo { ok: bool },
+        RedoAll { ok: bool },
+        CanRedo { can: bool },
+        Nothing,
     }
 
-    /// Pop the last recorded change for an undo step.
-    pub fn undo_last(&mut self) -> Option<KitChange> {
-        let ch = self.changes.pop()?;
-        self.redo_changes.push(ch.clone());
-        Some(ch)
+    impl Transaction {
+        pub fn can_undo(&self) -> bool {
+            !self.changes.is_empty()
+        }
+
+        pub fn can_redo(&self) -> bool {
+            !self.redo_changes.is_empty()
+        }
     }
-
-    /// Pop the last undone change for a redo step.
-    pub fn redo_last(&mut self) -> Option<KitChange> {
-        let ch = self.redo_changes.pop()?;
-        self.changes.push(ch.clone());
-        Some(ch)
-    }
-
-    /// Move this transaction to the `Finalized` state.
-    pub fn mark_finalized(&mut self) {
-        self.state = TransactionState::Finalized;
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionCommand {
-    ReadKitCommands { commands: Vec<ReadKitCommand> },
-    ChangeKitCommands {
-        commands: Vec<crate::change_command::ChangeKitCommand>,
-    },
-    Finalize,
-    Abort,
-    Undo,
-    UndoAll,
-    CanUndo,
-    Redo,
-    RedoAll,
-    CanRedo,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionCommandResult {
-    ReadKitCommands { results: Vec<ReadKitCommandResult> },
-    ChangeKitCommands { count: usize },
-    Finalize { ok: bool },
-    Abort { ok: bool },
-    Undo { ok: bool },
-    UndoAll { ok: bool },
-    CanUndo { can: bool },
-    Redo { ok: bool },
-    RedoAll { ok: bool },
-    CanRedo { can: bool },
-    Nothing,
-}
-
-impl Transaction {
-    pub fn can_undo(&self) -> bool {
-        !self.changes.is_empty()
-    }
-
-    pub fn can_redo(&self) -> bool {
-        !self.redo_changes.is_empty()
-    }
-}
-
 }
 pub mod kit_draft {
-//! Draft: stack of finalized transactions on top of a checkpoint tip, plus optional open transaction.
-use serde::{Deserialize, Serialize};
+    //! Draft: stack of finalized transactions on top of a checkpoint tip, plus optional open transaction.
+    use serde::{Deserialize, Serialize};
 
-use crate::id::Id;
-use crate::kit::KitFullDto;
-use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
-use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
+    use crate::id::Id;
+    use crate::kit::KitFullDto;
+    use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult};
+    use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Draft {
-    pub id: Id,
-    /// `None` = base is [`KitStore.initial`] only (no checkpoint yet on that line).
-    pub parent_checkpoint: Option<Id>,
-    /// When set, commits extend this alternative's checkpoint list instead of `the_kit_head`.
-    pub target_alternative: Option<Id>,
-    pub before: KitFullDto,
-    pub transactions: Vec<Transaction>,
-    pub redo_transactions: Vec<Transaction>,
-    /// Open transaction for `ChangeKitCommands` (at most one).
-    pub open_transaction: Option<Transaction>,
-}
-
-impl Draft {
-    /// Build a new draft rooted at a materialized `before` snapshot.
-    pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFullDto) -> Self {
-        Self {
-            id: Id::new_v7(),
-            parent_checkpoint,
-            target_alternative,
-            before,
-            transactions: Vec::new(),
-            redo_transactions: Vec::new(),
-            open_transaction: None,
-        }
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct Draft {
+        pub id: Id,
+        /// `None` = base is [`KitStore.initial`] only (no checkpoint yet on that line).
+        pub parent_checkpoint: Option<Id>,
+        /// When set, commits extend this alternative's checkpoint list instead of `the_kit_head`.
+        pub target_alternative: Option<Id>,
+        pub before: KitFullDto,
+        pub transactions: Vec<Transaction>,
+        pub redo_transactions: Vec<Transaction>,
+        /// Open transaction for `ChangeKitCommands` (at most one).
+        pub open_transaction: Option<Transaction>,
     }
 
-    /// Id of the currently-open transaction (if any).
-    pub fn open_tx_id(&self) -> Option<&Id> {
-        self.open_transaction.as_ref().map(|t| &t.id)
-    }
-
-    /// True if a transaction is currently open on this draft.
-    pub fn has_open_transaction(&self) -> bool {
-        self.open_transaction.is_some()
-    }
-
-    /// Start a new transaction; fails if one is already open.
-    pub fn start_transaction(&mut self) -> crate::error::Result<Id> {
-        if self.open_transaction.is_some() {
-            return Err(crate::error::SemioError::InvalidOperation(
-                "transaction already open".into(),
-            ));
-        }
-        let tid = Id::new_v7();
-        self.open_transaction = Some(Transaction::new(tid.clone()));
-        Ok(tid)
-    }
-
-    /// Borrow the open transaction matching `txid` (if any).
-    pub fn open_transaction_mut(&mut self, txid: &Id) -> Option<&mut Transaction> {
-        self.open_transaction.as_mut().filter(|t| t.id == *txid)
-    }
-
-    /// Borrow the open transaction matching `txid` (if any).
-    pub fn open_transaction_ref(&self, txid: &Id) -> Option<&Transaction> {
-        self.open_transaction.as_ref().filter(|t| t.id == *txid)
-    }
-
-    /// Move the open transaction (if it matches `txid`) to finalized and onto the stack.
-    pub fn finalize_transaction(&mut self, txid: &Id) -> crate::error::Result<()> {
-        let mut tx = self
-            .open_transaction
-            .take()
-            .filter(|t| t.id == *txid)
-            .ok_or_else(|| crate::error::SemioError::InvalidOperation(
-                "no tx to finalize".into(),
-            ))?;
-        tx.mark_finalized();
-        self.transactions.push(tx);
-        Ok(())
-    }
-
-    /// Take the currently-open transaction without pushing it onto the stack.
-    pub fn take_open_transaction(&mut self, txid: &Id) -> crate::error::Result<Transaction> {
-        self.open_transaction
-            .take()
-            .filter(|t| t.id == *txid)
-            .ok_or_else(|| crate::error::SemioError::InvalidOperation(
-                "tx id mismatch".into(),
-            ))
-    }
-
-    /// Pop the most recent finalized transaction (for draft-level undo).
-    pub fn pop_finalized(&mut self) -> Option<Transaction> {
-        self.transactions.pop()
-    }
-
-    /// Push a transaction onto the redo stack.
-    pub fn push_redo_transaction(&mut self, tx: Transaction) {
-        self.redo_transactions.push(tx);
-    }
-
-    /// Pop the most recent entry from the redo stack.
-    pub fn pop_redo_transaction(&mut self) -> Option<Transaction> {
-        self.redo_transactions.pop()
-    }
-
-    /// Push a finalized transaction onto the main stack.
-    pub fn push_finalized(&mut self, tx: Transaction) {
-        self.transactions.push(tx);
-    }
-
-    pub fn can_undo_draft(&self) -> bool {
-        !self.transactions.is_empty()
-    }
-
-    pub fn can_redo_draft(&self) -> bool {
-        !self.redo_transactions.is_empty()
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitDraftCommand {
-    ReadKitCommands { commands: Vec<ReadKitCommand> },
-    StartTransaction,
-    FinalizeToKitCheckpoint { message: String },
-    Abort,
-    Undo { count: i32 },
-    CanUndo { count: i32 },
-    Redo { count: i32 },
-    CanRedo { count: i32 },
-    ExecuteTransactionCommands {
-        id: Id,
-        commands: Vec<TransactionCommand>,
-    },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitDraftCommandResult {
-    ReadKitCommands { results: Vec<ReadKitCommandResult> },
-    StartTransaction { transaction_id: Id },
-    FinalizeToKitCheckpoint { checkpoint_id: Id },
-    Abort { ok: bool },
-    Undo { ok: bool },
-    CanUndo { can: bool },
-    Redo { ok: bool },
-    CanRedo { can: bool },
-    ExecuteTransactionCommands { results: Vec<TransactionCommandResult> },
-    Nothing,
-}
-
-}
-pub mod kit_session {
-//! Client session: owns drafts.
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use crate::id::Id;
-use crate::kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
-use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Session {
-    pub id: Id,
-    pub drafts: HashMap<Id, Draft>,
-}
-
-impl Session {
-    pub fn new() -> Self {
-        Self {
-            id: Id::new_v7(),
-            drafts: HashMap::new(),
-        }
-    }
-
-    pub fn with_id(id: Id) -> Self {
-        Self { id, drafts: HashMap::new() }
-    }
-
-    pub fn add_draft(&mut self, d: Draft) -> Id {
-        let did = d.id.clone();
-        self.drafts.insert(did.clone(), d);
-        did
-    }
-
-    pub fn remove_draft(&mut self, did: &Id) -> Option<Draft> {
-        self.drafts.remove(did)
-    }
-
-    pub fn draft(&self, did: &Id) -> Option<&Draft> {
-        self.drafts.get(did)
-    }
-
-    pub fn draft_mut(&mut self, did: &Id) -> Option<&mut Draft> {
-        self.drafts.get_mut(did)
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum SessionCommand {
-    ReadKitCommands { commands: Vec<ReadKitCommand> },
-    NewDraft {
-        checkpoint_id: Option<Id>,
-        alternative_id: Option<Id>,
-    },
-    ExecuteKitDraftCommands {
-        id: Id,
-        commands: Vec<KitDraftCommand>,
-    },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum SessionCommandResult {
-    ReadKitCommands { results: Vec<ReadKitCommandResult> },
-    NewDraft { draft_id: Id },
-    ExecuteKitDraftCommands { results: Vec<KitDraftCommandResult> },
-    Nothing,
-}
-
-}
-pub mod kit_store_command {
-//! Top-level kit store command dispatch. Commands are methods on the command
-//! types (`KitStoreCommand::execute`, `SessionCommand::execute`, ...); the
-//! in-memory graph (`KitStore`) is the host object they act upon.
-use serde::{Deserialize, Serialize};
-
-use crate::id::Id;
-use crate::kit::KitStore;
-use crate::kit::KitStoreRef;
-use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
-use crate::kit_change::{KitChange, KitChangeKind};
-use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
-use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
-use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
-use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
-use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
-use crate::{error::Result, error::SemioError};
-
-type KitFullDto = crate::kit::KitFullDto;
-
-impl KitStore {
-    /// Materialize the DTO view of the main `the_kit` line.
-    pub fn the_kit_dto(&self) -> KitFullDto {
-        KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
-    }
-
-    /// Materialize a DTO at an arbitrary checkpoint (or the initial snapshot).
-    pub fn materialize_at(&self, at: Option<&Id>) -> KitFullDto {
-        KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
-    }
-
-    /// Latest checkpoint id of a given alternative, if any.
-    pub fn alternative_tip(&self, aid: &Id) -> Option<Id> {
-        self.alternatives
-            .get(aid)
-            .and_then(|a| a.tip().cloned())
-    }
-
-    /// Validate a draft base (`checkpoint`, `alternative`) pair against the live tree.
-    pub fn is_valid_draft_base(&self, cp: Option<&Id>, alt: Option<&Id>) -> bool {
-        match (alt, cp) {
-            (None, None) => self.the_kit_head.is_none(),
-            (None, Some(c)) => self.the_kit_head.as_ref() == Some(c),
-            (Some(a), Some(c)) => self.alternative_tip(a).as_ref() == Some(c),
-            (Some(_), None) => false,
-        }
-    }
-
-    /// Replace the live graph from a full DTO while preserving the VCS tree,
-    /// event bus, and legacy undo/transaction state.
-    pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
-        KitStore::replace_from_full_dto(kit, d)
-            .map_err(|e| SemioError::InvalidOperation(e.to_string()))
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitStoreCommand {
-    ReadKitCommands { commands: Vec<ReadKitCommand> },
-    NewSession,
-    EndSession { id: Id },
-    /// Branch: first checkpoint in the new alternative list.
-    NewAlternative { from_checkpoint: Id, name: String },
-    ExecuteSessionCommands { id: Id, commands: Vec<SessionCommand> },
-    ExecuteKitCheckpointCommands { id: Id, commands: Vec<KitCheckpointCommand> },
-    ExecuteKitAlternativeCommands { id: Id, commands: Vec<KitAlternativeCommand> },
-    /// Run many commands in order (e.g. JSON array at WASM boundary).
-    Batch { commands: Vec<KitStoreCommand> },
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum KitStoreCommandResult {
-    ReadKitCommands { results: Vec<ReadKitCommandResult> },
-    NewSession { id: Id },
-    EndSession { ok: bool },
-    NewAlternative { id: Id },
-    ExecuteSessionCommands { results: Vec<SessionCommandResult> },
-    ExecuteKitCheckpointCommands { results: Vec<KitCheckpointCommandResult> },
-    ExecuteKitAlternativeCommands { results: Vec<KitAlternativeCommandResult> },
-    Batch { results: Vec<KitStoreCommandResult> },
-    Nothing,
-}
-
-impl KitStoreCommand {
-    /// Top-level VCS / CRUD command dispatch.
-    ///
-    /// Locks the kit store internally as needed.
-    pub fn execute(self, kit: &KitStoreRef) -> Result<KitStoreCommandResult> {
-        match self {
-            KitStoreCommand::Batch { commands } => {
-                let mut out = Vec::with_capacity(commands.len());
-                for c in commands {
-                    out.push(c.execute(kit)?);
-                }
-                Ok(KitStoreCommandResult::Batch { results: out })
-            }
-            KitStoreCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let dto = g.the_kit_dto();
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(KitStoreCommandResult::ReadKitCommands { results })
-            }
-            KitStoreCommand::NewSession => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let session = Session::new();
-                let id = session.id.clone();
-                g.sessions.insert(id.clone(), session);
-                Ok(KitStoreCommandResult::NewSession { id })
-            }
-            KitStoreCommand::EndSession { id } => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.sessions.remove(&id);
-                Ok(KitStoreCommandResult::EndSession { ok: true })
-            }
-            KitStoreCommand::NewAlternative { from_checkpoint, name } => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if !g.checkpoints.contains_key(&from_checkpoint) {
-                    return Err(SemioError::NotFound {
-                        kind: "KitCheckpoint",
-                        id: from_checkpoint,
-                    });
-                }
-                let alt = KitAlternative::new(name, from_checkpoint);
-                let aid = alt.id.clone();
-                g.alternatives.insert(aid.clone(), alt);
-                Ok(KitStoreCommandResult::NewAlternative { id: aid })
-            }
-            KitStoreCommand::ExecuteSessionCommands { id, commands } => {
-                let mut results = Vec::new();
-                for c in commands {
-                    results.push(c.execute(kit, &id)?);
-                }
-                Ok(KitStoreCommandResult::ExecuteSessionCommands { results })
-            }
-            KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
-                let mut results = Vec::new();
-                for c in commands {
-                    results.push(c.execute(kit, &id)?);
-                }
-                Ok(KitStoreCommandResult::ExecuteKitCheckpointCommands { results })
-            }
-            KitStoreCommand::ExecuteKitAlternativeCommands { id, commands } => {
-                let mut results = Vec::new();
-                for c in commands {
-                    results.push(c.execute(kit, &id)?);
-                }
-                Ok(KitStoreCommandResult::ExecuteKitAlternativeCommands { results })
+    impl Draft {
+        /// Build a new draft rooted at a materialized `before` snapshot.
+        pub fn new(
+            parent_checkpoint: Option<Id>,
+            target_alternative: Option<Id>,
+            before: KitFullDto,
+        ) -> Self {
+            Self {
+                id: Id::new_v7(),
+                parent_checkpoint,
+                target_alternative,
+                before,
+                transactions: Vec::new(),
+                redo_transactions: Vec::new(),
+                open_transaction: None,
             }
         }
-    }
-}
 
-impl SessionCommand {
-    /// Execute a session-scoped command against `kit[sid]`.
-    pub fn execute(self, kit: &KitStoreRef, sid: &Id) -> Result<SessionCommandResult> {
-        match self {
-            SessionCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let dto = g.the_kit_dto();
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(SessionCommandResult::ReadKitCommands { results })
-            }
-            SessionCommand::NewDraft {
-                checkpoint_id,
-                alternative_id,
-            } => {
-                let base = {
-                    let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    if !g.sessions.contains_key(sid) {
-                        return Err(SemioError::InvalidOperation("unknown session".into()));
-                    }
-                    if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
-                        return Err(SemioError::InvalidOperation(
-                            "stale or invalid draft base".into(),
-                        ));
-                    }
-                    g.materialize_at(checkpoint_id.as_ref())
-                };
-                KitStore::replace_live_graph(kit, base.clone())?;
-                let draft = crate::kit_draft::Draft::new(
-                    checkpoint_id,
-                    alternative_id,
-                    base,
-                );
-                let aid = draft.id.clone();
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.sessions
-                    .get_mut(sid)
-                    .expect("session")
-                    .add_draft(draft);
-                Ok(SessionCommandResult::NewDraft { draft_id: aid })
-            }
-            SessionCommand::ExecuteKitDraftCommands { id: did, commands } => {
-                let mut results = Vec::new();
-                for c in commands {
-                    results.push(c.execute(kit, sid, &did)?);
-                }
-                Ok(SessionCommandResult::ExecuteKitDraftCommands { results })
-            }
+        /// Id of the currently-open transaction (if any).
+        pub fn open_tx_id(&self) -> Option<&Id> {
+            self.open_transaction.as_ref().map(|t| &t.id)
         }
-    }
-}
 
-impl KitDraftCommand {
-    /// Execute a draft-scoped command against `kit[sid][did]`.
-    pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
-        match self {
-            KitDraftCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let dto = g.to_full_dto();
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(KitDraftCommandResult::ReadKitCommands { results })
-            }
-            KitDraftCommand::StartTransaction => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g
-                    .sessions
-                    .get_mut(sid)
-                    .ok_or_else(|| SemioError::InvalidOperation("unknown session for draft tx".into()))?
-                    .draft_mut(did)
-                    .ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
-                let tid = d.start_transaction()?;
-                Ok(KitDraftCommandResult::StartTransaction { transaction_id: tid })
-            }
-            KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
-                let mut results = Vec::new();
-                for c in commands {
-                    results.push(c.execute(kit, sid, did, &txid)?);
-                }
-                Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
-            }
-            KitDraftCommand::FinalizeToKitCheckpoint { message } => {
-                Self::finalize_draft(kit, sid, did, message)
-            }
-            KitDraftCommand::Abort => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if let Some(session) = g.sessions.get_mut(sid) {
-                    session.remove_draft(did);
-                }
-                Ok(KitDraftCommandResult::Abort { ok: true })
-            }
-            KitDraftCommand::Undo { count } => Self::draft_undo(kit, sid, did, count),
-            KitDraftCommand::Redo { count } => Self::draft_redo(kit, sid, did, count),
-            KitDraftCommand::CanUndo { count: _ } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let can = g
-                    .sessions
-                    .get(sid)
-                    .and_then(|s| s.draft(did))
-                    .map(|d| d.can_undo_draft())
-                    .unwrap_or(false);
-                Ok(KitDraftCommandResult::CanUndo { can })
-            }
-            KitDraftCommand::CanRedo { count: _ } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let can = g
-                    .sessions
-                    .get(sid)
-                    .and_then(|s| s.draft(did))
-                    .map(|d| d.can_redo_draft())
-                    .unwrap_or(false);
-                Ok(KitDraftCommandResult::CanRedo { can })
-            }
+        /// True if a transaction is currently open on this draft.
+        pub fn has_open_transaction(&self) -> bool {
+            self.open_transaction.is_some()
         }
-    }
 
-    fn draft_undo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
-        let n = if count < 0 { i32::MAX } else { count } as usize;
-        for _ in 0..n {
-            let tx_opt = {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-                d.pop_finalized()
-            };
-            let Some(tx) = tx_opt else { break; };
-            for ch in tx.changes.iter().rev() {
-                KitChange::apply_backward(ch, kit)
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            }
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
-                d.push_redo_transaction(tx);
-            }
-        }
-        Ok(KitDraftCommandResult::Undo { ok: true })
-    }
-
-    fn draft_redo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
-        let n = if count < 0 { i32::MAX } else { count } as usize;
-        for _ in 0..n {
-            let tx_opt = {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-                d.pop_redo_transaction()
-            };
-            let Some(tx) = tx_opt else { break; };
-            for ch in &tx.changes {
-                KitChange::apply_forward(ch, kit)
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            }
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
-                d.push_finalized(tx);
-            }
-        }
-        Ok(KitDraftCommandResult::Redo { ok: true })
-    }
-
-    fn finalize_draft(
-        kit: &KitStoreRef,
-        sid: &Id,
-        did: &Id,
-        message: String,
-    ) -> Result<KitDraftCommandResult> {
-        let (parent, alt, before, after) = {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get(sid)
-                .and_then(|s| s.draft(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
-            if d.has_open_transaction() {
-                return Err(SemioError::InvalidOperation(
-                    "open transaction must be closed before FinalizeToKitCheckpoint".into(),
+        /// Start a new transaction; fails if one is already open.
+        pub fn start_transaction(&mut self) -> crate::error::Result<Id> {
+            if self.open_transaction.is_some() {
+                return Err(crate::error::SemioError::InvalidOperation(
+                    "transaction already open".into(),
                 ));
             }
-            let after = g.to_full_dto();
-            (
-                d.parent_checkpoint.clone(),
-                d.target_alternative.clone(),
-                d.before.clone(),
-                after,
-            )
-        };
-        let mut kc = KitChange::between(&before, &after).ok_or_else(|| {
-            SemioError::InvalidOperation("no change to finalize in draft".into())
-        })?;
-        kc.kind = KitChangeKind::Inferred;
-        let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
-        let new_id = cp.id.clone();
-        {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            g.checkpoints.insert(new_id.clone(), cp);
-            g.children
-                .entry(parent.clone())
-                .or_default()
-                .push(new_id.clone());
-            if let Some(aid) = alt {
-                if let Some(a) = g.alternatives.get_mut(&aid) {
-                    a.append(new_id.clone());
-                } else {
-                    return Err(SemioError::InvalidOperation("target alternative missing".into()));
-                }
-            } else {
-                g.the_kit_head = Some(new_id.clone());
-            }
-            g.sessions
-                .get_mut(sid)
-                .expect("s")
-                .remove_draft(did);
+            let tid = Id::new_v7();
+            self.open_transaction = Some(Transaction::new(tid.clone()));
+            Ok(tid)
         }
-        Ok(KitDraftCommandResult::FinalizeToKitCheckpoint {
-            checkpoint_id: new_id,
-        })
+
+        /// Borrow the open transaction matching `txid` (if any).
+        pub fn open_transaction_mut(&mut self, txid: &Id) -> Option<&mut Transaction> {
+            self.open_transaction.as_mut().filter(|t| t.id == *txid)
+        }
+
+        /// Borrow the open transaction matching `txid` (if any).
+        pub fn open_transaction_ref(&self, txid: &Id) -> Option<&Transaction> {
+            self.open_transaction.as_ref().filter(|t| t.id == *txid)
+        }
+
+        /// Move the open transaction (if it matches `txid`) to finalized and onto the stack.
+        pub fn finalize_transaction(&mut self, txid: &Id) -> crate::error::Result<()> {
+            let mut tx = self
+                .open_transaction
+                .take()
+                .filter(|t| t.id == *txid)
+                .ok_or_else(|| {
+                    crate::error::SemioError::InvalidOperation("no tx to finalize".into())
+                })?;
+            tx.mark_finalized();
+            self.transactions.push(tx);
+            Ok(())
+        }
+
+        /// Take the currently-open transaction without pushing it onto the stack.
+        pub fn take_open_transaction(&mut self, txid: &Id) -> crate::error::Result<Transaction> {
+            self.open_transaction
+                .take()
+                .filter(|t| t.id == *txid)
+                .ok_or_else(|| crate::error::SemioError::InvalidOperation("tx id mismatch".into()))
+        }
+
+        /// Pop the most recent finalized transaction (for draft-level undo).
+        pub fn pop_finalized(&mut self) -> Option<Transaction> {
+            self.transactions.pop()
+        }
+
+        /// Push a transaction onto the redo stack.
+        pub fn push_redo_transaction(&mut self, tx: Transaction) {
+            self.redo_transactions.push(tx);
+        }
+
+        /// Pop the most recent entry from the redo stack.
+        pub fn pop_redo_transaction(&mut self) -> Option<Transaction> {
+            self.redo_transactions.pop()
+        }
+
+        /// Push a finalized transaction onto the main stack.
+        pub fn push_finalized(&mut self, tx: Transaction) {
+            self.transactions.push(tx);
+        }
+
+        pub fn can_undo_draft(&self) -> bool {
+            !self.transactions.is_empty()
+        }
+
+        pub fn can_redo_draft(&self) -> bool {
+            !self.redo_transactions.is_empty()
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitDraftCommand {
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
+        StartTransaction,
+        FinalizeToKitCheckpoint {
+            message: String,
+        },
+        Abort,
+        Undo {
+            count: i32,
+        },
+        CanUndo {
+            count: i32,
+        },
+        Redo {
+            count: i32,
+        },
+        CanRedo {
+            count: i32,
+        },
+        ExecuteTransactionCommands {
+            id: Id,
+            commands: Vec<TransactionCommand>,
+        },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitDraftCommandResult {
+        ReadKitCommands {
+            results: Vec<ReadKitCommandResult>,
+        },
+        StartTransaction {
+            transaction_id: Id,
+        },
+        FinalizeToKitCheckpoint {
+            checkpoint_id: Id,
+        },
+        Abort {
+            ok: bool,
+        },
+        Undo {
+            ok: bool,
+        },
+        CanUndo {
+            can: bool,
+        },
+        Redo {
+            ok: bool,
+        },
+        CanRedo {
+            can: bool,
+        },
+        ExecuteTransactionCommands {
+            results: Vec<TransactionCommandResult>,
+        },
+        Nothing,
     }
 }
+pub mod kit_session {
+    //! Client session: owns drafts.
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
 
-impl TransactionCommand {
-    /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
-    pub fn execute(
-        self,
-        kit: &KitStoreRef,
-        sid: &Id,
-        did: &Id,
-        txid: &Id,
-    ) -> Result<TransactionCommandResult> {
-        match self {
-            TransactionCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let dto = g.to_full_dto();
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(TransactionCommandResult::ReadKitCommands { results })
+    use crate::id::Id;
+    use crate::kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+    use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    pub struct Session {
+        pub id: Id,
+        pub drafts: HashMap<Id, Draft>,
+    }
+
+    impl Session {
+        pub fn new() -> Self {
+            Self {
+                id: Id::new_v7(),
+                drafts: HashMap::new(),
             }
-            TransactionCommand::ChangeKitCommands { commands: chs } => {
-                let mut n = 0usize;
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                {
-                    let ot = g
+        }
+
+        pub fn with_id(id: Id) -> Self {
+            Self {
+                id,
+                drafts: HashMap::new(),
+            }
+        }
+
+        pub fn add_draft(&mut self, d: Draft) -> Id {
+            let did = d.id.clone();
+            self.drafts.insert(did.clone(), d);
+            did
+        }
+
+        pub fn remove_draft(&mut self, did: &Id) -> Option<Draft> {
+            self.drafts.remove(did)
+        }
+
+        pub fn draft(&self, did: &Id) -> Option<&Draft> {
+            self.drafts.get(did)
+        }
+
+        pub fn draft_mut(&mut self, did: &Id) -> Option<&mut Draft> {
+            self.drafts.get_mut(did)
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum SessionCommand {
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
+        NewDraft {
+            checkpoint_id: Option<Id>,
+            alternative_id: Option<Id>,
+        },
+        ExecuteKitDraftCommands {
+            id: Id,
+            commands: Vec<KitDraftCommand>,
+        },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum SessionCommandResult {
+        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        NewDraft { draft_id: Id },
+        ExecuteKitDraftCommands { results: Vec<KitDraftCommandResult> },
+        Nothing,
+    }
+}
+pub mod kit_store_command {
+    //! Top-level kit store command dispatch. Commands are methods on the command
+    //! types (`KitStoreCommand::execute`, `SessionCommand::execute`, ...); the
+    //! in-memory graph (`KitStore`) is the host object they act upon.
+    use serde::{Deserialize, Serialize};
+
+    use crate::id::Id;
+    use crate::kit::KitStore;
+    use crate::kit::KitStoreRef;
+    use crate::kit_alternative::{
+        KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult,
+    };
+    use crate::kit_change::{KitChange, KitChangeKind};
+    use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
+    use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
+    use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
+    use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
+    use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
+    use crate::{error::Result, error::SemioError};
+
+    type KitFullDto = crate::kit::KitFullDto;
+
+    impl KitStore {
+        /// Materialize the DTO view of the main `the_kit` line.
+        pub fn the_kit_dto(&self) -> KitFullDto {
+            KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
+        }
+
+        /// Materialize a DTO at an arbitrary checkpoint (or the initial snapshot).
+        pub fn materialize_at(&self, at: Option<&Id>) -> KitFullDto {
+            KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
+        }
+
+        /// Latest checkpoint id of a given alternative, if any.
+        pub fn alternative_tip(&self, aid: &Id) -> Option<Id> {
+            self.alternatives.get(aid).and_then(|a| a.tip().cloned())
+        }
+
+        /// Validate a draft base (`checkpoint`, `alternative`) pair against the live tree.
+        pub fn is_valid_draft_base(&self, cp: Option<&Id>, alt: Option<&Id>) -> bool {
+            match (alt, cp) {
+                (None, None) => self.the_kit_head.is_none(),
+                (None, Some(c)) => self.the_kit_head.as_ref() == Some(c),
+                (Some(a), Some(c)) => self.alternative_tip(a).as_ref() == Some(c),
+                (Some(_), None) => false,
+            }
+        }
+
+        /// Replace the live graph from a full DTO while preserving the VCS tree,
+        /// event bus, and legacy undo/transaction state.
+        pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
+            KitStore::replace_from_full_dto(kit, d)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitStoreCommand {
+        ReadKitCommands {
+            commands: Vec<ReadKitCommand>,
+        },
+        NewSession,
+        EndSession {
+            id: Id,
+        },
+        /// Branch: first checkpoint in the new alternative list.
+        NewAlternative {
+            from_checkpoint: Id,
+            name: String,
+        },
+        ExecuteSessionCommands {
+            id: Id,
+            commands: Vec<SessionCommand>,
+        },
+        ExecuteKitCheckpointCommands {
+            id: Id,
+            commands: Vec<KitCheckpointCommand>,
+        },
+        ExecuteKitAlternativeCommands {
+            id: Id,
+            commands: Vec<KitAlternativeCommand>,
+        },
+        /// Run many commands in order (e.g. JSON array at WASM boundary).
+        Batch {
+            commands: Vec<KitStoreCommand>,
+        },
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitStoreCommandResult {
+        ReadKitCommands {
+            results: Vec<ReadKitCommandResult>,
+        },
+        NewSession {
+            id: Id,
+        },
+        EndSession {
+            ok: bool,
+        },
+        NewAlternative {
+            id: Id,
+        },
+        ExecuteSessionCommands {
+            results: Vec<SessionCommandResult>,
+        },
+        ExecuteKitCheckpointCommands {
+            results: Vec<KitCheckpointCommandResult>,
+        },
+        ExecuteKitAlternativeCommands {
+            results: Vec<KitAlternativeCommandResult>,
+        },
+        Batch {
+            results: Vec<KitStoreCommandResult>,
+        },
+        Nothing,
+    }
+
+    impl KitStoreCommand {
+        /// Top-level VCS / CRUD command dispatch.
+        ///
+        /// Locks the kit store internally as needed.
+        pub fn execute(self, kit: &KitStoreRef) -> Result<KitStoreCommandResult> {
+            match self {
+                KitStoreCommand::Batch { commands } => {
+                    let mut out = Vec::with_capacity(commands.len());
+                    for c in commands {
+                        out.push(c.execute(kit)?);
+                    }
+                    Ok(KitStoreCommandResult::Batch { results: out })
+                }
+                KitStoreCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let dto = g.the_kit_dto();
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(KitStoreCommandResult::ReadKitCommands { results })
+                }
+                KitStoreCommand::NewSession => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let session = Session::new();
+                    let id = session.id.clone();
+                    g.sessions.insert(id.clone(), session);
+                    Ok(KitStoreCommandResult::NewSession { id })
+                }
+                KitStoreCommand::EndSession { id } => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    g.sessions.remove(&id);
+                    Ok(KitStoreCommandResult::EndSession { ok: true })
+                }
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint,
+                    name,
+                } => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    if !g.checkpoints.contains_key(&from_checkpoint) {
+                        return Err(SemioError::NotFound {
+                            kind: "KitCheckpoint",
+                            id: from_checkpoint,
+                        });
+                    }
+                    let alt = KitAlternative::new(name, from_checkpoint);
+                    let aid = alt.id.clone();
+                    g.alternatives.insert(aid.clone(), alt);
+                    Ok(KitStoreCommandResult::NewAlternative { id: aid })
+                }
+                KitStoreCommand::ExecuteSessionCommands { id, commands } => {
+                    let mut results = Vec::new();
+                    for c in commands {
+                        results.push(c.execute(kit, &id)?);
+                    }
+                    Ok(KitStoreCommandResult::ExecuteSessionCommands { results })
+                }
+                KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
+                    let mut results = Vec::new();
+                    for c in commands {
+                        results.push(c.execute(kit, &id)?);
+                    }
+                    Ok(KitStoreCommandResult::ExecuteKitCheckpointCommands { results })
+                }
+                KitStoreCommand::ExecuteKitAlternativeCommands { id, commands } => {
+                    let mut results = Vec::new();
+                    for c in commands {
+                        results.push(c.execute(kit, &id)?);
+                    }
+                    Ok(KitStoreCommandResult::ExecuteKitAlternativeCommands { results })
+                }
+            }
+        }
+    }
+
+    impl SessionCommand {
+        /// Execute a session-scoped command against `kit[sid]`.
+        pub fn execute(self, kit: &KitStoreRef, sid: &Id) -> Result<SessionCommandResult> {
+            match self {
+                SessionCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let dto = g.the_kit_dto();
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(SessionCommandResult::ReadKitCommands { results })
+                }
+                SessionCommand::NewDraft {
+                    checkpoint_id,
+                    alternative_id,
+                } => {
+                    let base = {
+                        let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        if !g.sessions.contains_key(sid) {
+                            return Err(SemioError::InvalidOperation("unknown session".into()));
+                        }
+                        if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
+                            return Err(SemioError::InvalidOperation(
+                                "stale or invalid draft base".into(),
+                            ));
+                        }
+                        g.materialize_at(checkpoint_id.as_ref())
+                    };
+                    KitStore::replace_live_graph(kit, base.clone())?;
+                    let draft = crate::kit_draft::Draft::new(checkpoint_id, alternative_id, base);
+                    let aid = draft.id.clone();
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    g.sessions.get_mut(sid).expect("session").add_draft(draft);
+                    Ok(SessionCommandResult::NewDraft { draft_id: aid })
+                }
+                SessionCommand::ExecuteKitDraftCommands { id: did, commands } => {
+                    let mut results = Vec::new();
+                    for c in commands {
+                        results.push(c.execute(kit, sid, &did)?);
+                    }
+                    Ok(SessionCommandResult::ExecuteKitDraftCommands { results })
+                }
+            }
+        }
+    }
+
+    impl KitDraftCommand {
+        /// Execute a draft-scoped command against `kit[sid][did]`.
+        pub fn execute(
+            self,
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+        ) -> Result<KitDraftCommandResult> {
+            match self {
+                KitDraftCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let dto = g.to_full_dto();
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(KitDraftCommandResult::ReadKitCommands { results })
+                }
+                KitDraftCommand::StartTransaction => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let d = g
+                        .sessions
+                        .get_mut(sid)
+                        .ok_or_else(|| {
+                            SemioError::InvalidOperation("unknown session for draft tx".into())
+                        })?
+                        .draft_mut(did)
+                        .ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
+                    let tid = d.start_transaction()?;
+                    Ok(KitDraftCommandResult::StartTransaction {
+                        transaction_id: tid,
+                    })
+                }
+                KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
+                    let mut results = Vec::new();
+                    for c in commands {
+                        results.push(c.execute(kit, sid, did, &txid)?);
+                    }
+                    Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
+                }
+                KitDraftCommand::FinalizeToKitCheckpoint { message } => {
+                    Self::finalize_draft(kit, sid, did, message)
+                }
+                KitDraftCommand::Abort => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    if let Some(session) = g.sessions.get_mut(sid) {
+                        session.remove_draft(did);
+                    }
+                    Ok(KitDraftCommandResult::Abort { ok: true })
+                }
+                KitDraftCommand::Undo { count } => Self::draft_undo(kit, sid, did, count),
+                KitDraftCommand::Redo { count } => Self::draft_redo(kit, sid, did, count),
+                KitDraftCommand::CanUndo { count: _ } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let can = g
                         .sessions
                         .get(sid)
                         .and_then(|s| s.draft(did))
-                        .and_then(|d| d.open_transaction_ref(txid))
-                        .ok_or_else(|| {
-                            SemioError::InvalidOperation("no open matching transaction".into())
-                        })?;
-                    if !ot.is_open() {
-                        return Err(SemioError::InvalidOperation(
-                            "transaction is not open".into(),
-                        ));
-                    }
+                        .map(|d| d.can_undo_draft())
+                        .unwrap_or(false);
+                    Ok(KitDraftCommandResult::CanUndo { can })
                 }
-                for c in &chs {
-                    let before = g.to_full_dto();
-                    let kind = c.apply(&mut g)?;
-                    let after = g.to_full_dto();
-                    if let Some(mut kc) = KitChange::between(&before, &after) {
-                        kc.kind = kind;
-                        if let Some(tx) = g
-                            .sessions
-                            .get_mut(sid)
-                            .and_then(|s| s.draft_mut(did))
-                            .and_then(|d| d.open_transaction_mut(txid))
-                        {
-                            tx.record(kc);
-                            n += 1;
-                        }
-                    }
+                KitDraftCommand::CanRedo { count: _ } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let can = g
+                        .sessions
+                        .get(sid)
+                        .and_then(|s| s.draft(did))
+                        .map(|d| d.can_redo_draft())
+                        .unwrap_or(false);
+                    Ok(KitDraftCommandResult::CanRedo { can })
                 }
-                Ok(TransactionCommandResult::ChangeKitCommands { count: n })
             }
-            TransactionCommand::Finalize => {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-                d.finalize_transaction(txid)?;
-                Ok(TransactionCommandResult::Finalize { ok: true })
-            }
-            TransactionCommand::Abort => {
-                let tx = {
+        }
+
+        fn draft_undo(
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            count: i32,
+        ) -> Result<KitDraftCommandResult> {
+            let n = if count < 0 { i32::MAX } else { count } as usize;
+            for _ in 0..n {
+                let tx_opt = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     let d = g
                         .sessions
                         .get_mut(sid)
                         .and_then(|s| s.draft_mut(did))
                         .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-                    d.take_open_transaction(txid)?
+                    d.pop_finalized()
+                };
+                let Some(tx) = tx_opt else {
+                    break;
                 };
                 for ch in tx.changes.iter().rev() {
                     KitChange::apply_backward(ch, kit)
                         .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 }
-                Ok(TransactionCommandResult::Abort { ok: true })
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                    d.push_redo_transaction(tx);
+                }
             }
-            TransactionCommand::Undo => Self::tx_undo(kit, sid, did, txid, false),
-            TransactionCommand::UndoAll => Self::tx_undo(kit, sid, did, txid, true),
-            TransactionCommand::Redo => Self::tx_redo(kit, sid, did, txid, false),
-            TransactionCommand::RedoAll => Self::tx_redo(kit, sid, did, txid, true),
-            TransactionCommand::CanUndo => {
+            Ok(KitDraftCommandResult::Undo { ok: true })
+        }
+
+        fn draft_redo(
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            count: i32,
+        ) -> Result<KitDraftCommandResult> {
+            let n = if count < 0 { i32::MAX } else { count } as usize;
+            for _ in 0..n {
+                let tx_opt = {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let d = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    d.pop_redo_transaction()
+                };
+                let Some(tx) = tx_opt else {
+                    break;
+                };
+                for ch in &tx.changes {
+                    KitChange::apply_forward(ch, kit)
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                }
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                    d.push_finalized(tx);
+                }
+            }
+            Ok(KitDraftCommandResult::Redo { ok: true })
+        }
+
+        fn finalize_draft(
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            message: String,
+        ) -> Result<KitDraftCommandResult> {
+            let (parent, alt, before, after) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let can = g
+                let d = g
                     .sessions
                     .get(sid)
                     .and_then(|s| s.draft(did))
-                    .and_then(|d| d.open_transaction_ref(txid))
-                    .map(|t| t.can_undo())
-                    .unwrap_or(false);
-                Ok(TransactionCommandResult::CanUndo { can })
-            }
-            TransactionCommand::CanRedo => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let can = g
-                    .sessions
-                    .get(sid)
-                    .and_then(|s| s.draft(did))
-                    .and_then(|d| d.open_transaction_ref(txid))
-                    .map(|t| t.can_redo())
-                    .unwrap_or(false);
-                Ok(TransactionCommandResult::CanRedo { can })
-            }
-        }
-    }
-
-    fn tx_undo(
-        kit: &KitStoreRef,
-        sid: &Id,
-        did: &Id,
-        txid: &Id,
-        all: bool,
-    ) -> Result<TransactionCommandResult> {
-        loop {
-            let done = {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let tx = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .and_then(|d| d.open_transaction_mut(txid))
-                    .ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
-                if !tx.can_undo() {
-                    return Ok(if all {
-                        TransactionCommandResult::UndoAll { ok: true }
-                    } else {
-                        TransactionCommandResult::Undo { ok: true }
-                    });
+                    .ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
+                if d.has_open_transaction() {
+                    return Err(SemioError::InvalidOperation(
+                        "open transaction must be closed before FinalizeToKitCheckpoint".into(),
+                    ));
                 }
-                tx.changes.pop()
+                let after = g.to_full_dto();
+                (
+                    d.parent_checkpoint.clone(),
+                    d.target_alternative.clone(),
+                    d.before.clone(),
+                    after,
+                )
             };
-            let Some(ch) = done else { break; };
-            KitChange::apply_backward(&ch, kit)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            let mut kc = KitChange::between(&before, &after).ok_or_else(|| {
+                SemioError::InvalidOperation("no change to finalize in draft".into())
+            })?;
+            kc.kind = KitChangeKind::Inferred;
+            let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
+            let new_id = cp.id.clone();
             {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let tx = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .and_then(|d| d.open_transaction_mut(txid))
-                    .expect("tx");
-                tx.redo_changes.push(ch);
-            }
-            if !all {
-                return Ok(TransactionCommandResult::Undo { ok: true });
-            }
-        }
-        Ok(TransactionCommandResult::UndoAll { ok: true })
-    }
-
-    fn tx_redo(
-        kit: &KitStoreRef,
-        sid: &Id,
-        did: &Id,
-        txid: &Id,
-        all: bool,
-    ) -> Result<TransactionCommandResult> {
-        loop {
-            let done = {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let tx = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .and_then(|d| d.open_transaction_mut(txid))
-                    .ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
-                if !tx.can_redo() {
-                    return Ok(if all {
-                        TransactionCommandResult::RedoAll { ok: true }
-                    } else {
-                        TransactionCommandResult::Redo { ok: true }
-                    });
-                }
-                tx.redo_changes.pop()
-            };
-            let Some(ch) = done else { break; };
-            KitChange::apply_forward(&ch, kit)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            {
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let tx = g
-                    .sessions
-                    .get_mut(sid)
-                    .and_then(|s| s.draft_mut(did))
-                    .and_then(|d| d.open_transaction_mut(txid))
-                    .expect("tx");
-                tx.changes.push(ch);
-            }
-            if !all {
-                return Ok(TransactionCommandResult::Redo { ok: true });
-            }
-        }
-        Ok(TransactionCommandResult::RedoAll { ok: true })
-    }
-}
-
-impl KitCheckpointCommand {
-    /// Execute a checkpoint-scoped command.
-    pub fn execute(self, kit: &KitStoreRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
-        match self {
-            KitCheckpointCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let dto = g.materialize_at(Some(cpid));
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(KitCheckpointCommandResult::ReadKitCommands { results })
-            }
-            KitCheckpointCommand::MarkAsRelease => {
-                let init = {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    g.initial.clone()
-                };
-                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                if !g.checkpoints.contains_key(cpid) {
-                    return Err(SemioError::NotFound {
-                        kind: "KitCheckpoint",
-                        id: cpid.clone(),
-                    });
-                }
-                let map_snapshot = g.checkpoints.clone();
-                let cp = g.checkpoints.get_mut(cpid).expect("checked");
-                cp.mark_as_release(init, &map_snapshot);
-                Ok(KitCheckpointCommandResult::MarkAsRelease { ok: true })
-            }
-        }
-    }
-}
-
-impl KitAlternativeCommand {
-    /// Execute an alternative-scoped command.
-    pub fn execute(self, kit: &KitStoreRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
-        match self {
-            KitAlternativeCommand::ReadKitCommands { commands } => {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let tip = g.alternative_tip(aid);
-                let dto = match tip.as_ref() {
-                    Some(t) => g.materialize_at(Some(t)),
-                    None => g.the_kit_dto(),
-                };
-                let results = ReadKitCommand::execute_many(&dto, &commands)?;
-                Ok(KitAlternativeCommandResult::ReadKitCommands { results })
-            }
-            KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
-                let (root, before_dto, after_dto) = {
-                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let alt = g.alternatives.get(aid).ok_or_else(|| SemioError::NotFound {
-                        kind: "KitAlternative",
-                        id: aid.clone(),
-                    })?;
-                    if alt.checkpoints.is_empty() {
-                        return Err(SemioError::InvalidOperation("empty alternative".into()));
-                    }
-                    let r = alt.root.clone();
-                    let t = alt.tip().cloned().expect("len checked");
-                    let a = g.materialize_at(Some(&r));
-                    let b = g.materialize_at(Some(&t));
-                    (r, a, b)
-                };
-                let mut ch = KitChange::between(&before_dto, &after_dto)
-                    .ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
-                ch.kind = KitChangeKind::UnifyCheckpoints;
-                let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
-                let new_id = cp.id.clone();
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.checkpoints.insert(new_id.clone(), cp);
                 g.children
-                    .entry(Some(root.clone()))
+                    .entry(parent.clone())
                     .or_default()
                     .push(new_id.clone());
-                if let Some(alt) = g.alternatives.get_mut(aid) {
-                    alt.collapse_to(new_id.clone());
+                if let Some(aid) = alt {
+                    if let Some(a) = g.alternatives.get_mut(&aid) {
+                        a.append(new_id.clone());
+                    } else {
+                        return Err(SemioError::InvalidOperation(
+                            "target alternative missing".into(),
+                        ));
+                    }
+                } else {
+                    g.the_kit_head = Some(new_id.clone());
                 }
-                Ok(KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint {
-                    new_checkpoint_id: new_id,
-                })
+                g.sessions.get_mut(sid).expect("s").remove_draft(did);
+            }
+            Ok(KitDraftCommandResult::FinalizeToKitCheckpoint {
+                checkpoint_id: new_id,
+            })
+        }
+    }
+
+    impl TransactionCommand {
+        /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
+        pub fn execute(
+            self,
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            txid: &Id,
+        ) -> Result<TransactionCommandResult> {
+            match self {
+                TransactionCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let dto = g.to_full_dto();
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(TransactionCommandResult::ReadKitCommands { results })
+                }
+                TransactionCommand::ChangeKitCommands { commands: chs } => {
+                    let mut n = 0usize;
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    {
+                        let ot = g
+                            .sessions
+                            .get(sid)
+                            .and_then(|s| s.draft(did))
+                            .and_then(|d| d.open_transaction_ref(txid))
+                            .ok_or_else(|| {
+                                SemioError::InvalidOperation("no open matching transaction".into())
+                            })?;
+                        if !ot.is_open() {
+                            return Err(SemioError::InvalidOperation(
+                                "transaction is not open".into(),
+                            ));
+                        }
+                    }
+                    for c in &chs {
+                        let before = g.to_full_dto();
+                        let kind = c.apply(&mut g)?;
+                        let after = g.to_full_dto();
+                        if let Some(mut kc) = KitChange::between(&before, &after) {
+                            kc.kind = kind;
+                            if let Some(tx) = g
+                                .sessions
+                                .get_mut(sid)
+                                .and_then(|s| s.draft_mut(did))
+                                .and_then(|d| d.open_transaction_mut(txid))
+                            {
+                                tx.record(kc);
+                                n += 1;
+                            }
+                        }
+                    }
+                    Ok(TransactionCommandResult::ChangeKitCommands { count: n })
+                }
+                TransactionCommand::Finalize => {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let d = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    d.finalize_transaction(txid)?;
+                    Ok(TransactionCommandResult::Finalize { ok: true })
+                }
+                TransactionCommand::Abort => {
+                    let tx = {
+                        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        let d = g
+                            .sessions
+                            .get_mut(sid)
+                            .and_then(|s| s.draft_mut(did))
+                            .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                        d.take_open_transaction(txid)?
+                    };
+                    for ch in tx.changes.iter().rev() {
+                        KitChange::apply_backward(ch, kit)
+                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    }
+                    Ok(TransactionCommandResult::Abort { ok: true })
+                }
+                TransactionCommand::Undo => Self::tx_undo(kit, sid, did, txid, false),
+                TransactionCommand::UndoAll => Self::tx_undo(kit, sid, did, txid, true),
+                TransactionCommand::Redo => Self::tx_redo(kit, sid, did, txid, false),
+                TransactionCommand::RedoAll => Self::tx_redo(kit, sid, did, txid, true),
+                TransactionCommand::CanUndo => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let can = g
+                        .sessions
+                        .get(sid)
+                        .and_then(|s| s.draft(did))
+                        .and_then(|d| d.open_transaction_ref(txid))
+                        .map(|t| t.can_undo())
+                        .unwrap_or(false);
+                    Ok(TransactionCommandResult::CanUndo { can })
+                }
+                TransactionCommand::CanRedo => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let can = g
+                        .sessions
+                        .get(sid)
+                        .and_then(|s| s.draft(did))
+                        .and_then(|d| d.open_transaction_ref(txid))
+                        .map(|t| t.can_redo())
+                        .unwrap_or(false);
+                    Ok(TransactionCommandResult::CanRedo { can })
+                }
+            }
+        }
+
+        fn tx_undo(
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            txid: &Id,
+            all: bool,
+        ) -> Result<TransactionCommandResult> {
+            loop {
+                let done = {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let tx = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .and_then(|d| d.open_transaction_mut(txid))
+                        .ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
+                    if !tx.can_undo() {
+                        return Ok(if all {
+                            TransactionCommandResult::UndoAll { ok: true }
+                        } else {
+                            TransactionCommandResult::Undo { ok: true }
+                        });
+                    }
+                    tx.changes.pop()
+                };
+                let Some(ch) = done else {
+                    break;
+                };
+                KitChange::apply_backward(&ch, kit)
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let tx = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .and_then(|d| d.open_transaction_mut(txid))
+                        .expect("tx");
+                    tx.redo_changes.push(ch);
+                }
+                if !all {
+                    return Ok(TransactionCommandResult::Undo { ok: true });
+                }
+            }
+            Ok(TransactionCommandResult::UndoAll { ok: true })
+        }
+
+        fn tx_redo(
+            kit: &KitStoreRef,
+            sid: &Id,
+            did: &Id,
+            txid: &Id,
+            all: bool,
+        ) -> Result<TransactionCommandResult> {
+            loop {
+                let done = {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let tx = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .and_then(|d| d.open_transaction_mut(txid))
+                        .ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
+                    if !tx.can_redo() {
+                        return Ok(if all {
+                            TransactionCommandResult::RedoAll { ok: true }
+                        } else {
+                            TransactionCommandResult::Redo { ok: true }
+                        });
+                    }
+                    tx.redo_changes.pop()
+                };
+                let Some(ch) = done else {
+                    break;
+                };
+                KitChange::apply_forward(&ch, kit)
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let tx = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .and_then(|d| d.open_transaction_mut(txid))
+                        .expect("tx");
+                    tx.changes.push(ch);
+                }
+                if !all {
+                    return Ok(TransactionCommandResult::Redo { ok: true });
+                }
+            }
+            Ok(TransactionCommandResult::RedoAll { ok: true })
+        }
+    }
+
+    impl KitCheckpointCommand {
+        /// Execute a checkpoint-scoped command.
+        pub fn execute(self, kit: &KitStoreRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
+            match self {
+                KitCheckpointCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let dto = g.materialize_at(Some(cpid));
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(KitCheckpointCommandResult::ReadKitCommands { results })
+                }
+                KitCheckpointCommand::MarkAsRelease => {
+                    let init = {
+                        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        g.initial.clone()
+                    };
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    if !g.checkpoints.contains_key(cpid) {
+                        return Err(SemioError::NotFound {
+                            kind: "KitCheckpoint",
+                            id: cpid.clone(),
+                        });
+                    }
+                    let map_snapshot = g.checkpoints.clone();
+                    let cp = g.checkpoints.get_mut(cpid).expect("checked");
+                    cp.mark_as_release(init, &map_snapshot);
+                    Ok(KitCheckpointCommandResult::MarkAsRelease { ok: true })
+                }
             }
         }
     }
-}
 
+    impl KitAlternativeCommand {
+        /// Execute an alternative-scoped command.
+        pub fn execute(self, kit: &KitStoreRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
+            match self {
+                KitAlternativeCommand::ReadKitCommands { commands } => {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let tip = g.alternative_tip(aid);
+                    let dto = match tip.as_ref() {
+                        Some(t) => g.materialize_at(Some(t)),
+                        None => g.the_kit_dto(),
+                    };
+                    let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                    Ok(KitAlternativeCommandResult::ReadKitCommands { results })
+                }
+                KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
+                    let (root, before_dto, after_dto) = {
+                        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                        let alt = g
+                            .alternatives
+                            .get(aid)
+                            .ok_or_else(|| SemioError::NotFound {
+                                kind: "KitAlternative",
+                                id: aid.clone(),
+                            })?;
+                        if alt.checkpoints.is_empty() {
+                            return Err(SemioError::InvalidOperation("empty alternative".into()));
+                        }
+                        let r = alt.root.clone();
+                        let t = alt.tip().cloned().expect("len checked");
+                        let a = g.materialize_at(Some(&r));
+                        let b = g.materialize_at(Some(&t));
+                        (r, a, b)
+                    };
+                    let mut ch = KitChange::between(&before_dto, &after_dto)
+                        .ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
+                    ch.kind = KitChangeKind::UnifyCheckpoints;
+                    let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
+                    let new_id = cp.id.clone();
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    g.checkpoints.insert(new_id.clone(), cp);
+                    g.children
+                        .entry(Some(root.clone()))
+                        .or_default()
+                        .push(new_id.clone());
+                    if let Some(alt) = g.alternatives.get_mut(aid) {
+                        alt.collapse_to(new_id.clone());
+                    }
+                    Ok(
+                        KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint {
+                            new_checkpoint_id: new_id,
+                        },
+                    )
+                }
+            }
+        }
+    }
 }
 pub mod attribute {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
 
@@ -1967,8 +2152,8 @@ pub mod attribute {
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::attribute_key(&key, "key") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "key".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Key,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -1978,8 +2163,8 @@ pub mod attribute {
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "key",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Key,
             });
             self.invalidate_local_and_bubble();
             Ok(())
@@ -1988,8 +2173,8 @@ pub mod attribute {
         pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&value, "value") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "value".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Value,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -1999,8 +2184,8 @@ pub mod attribute {
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "value",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Value,
             });
             self.invalidate_local_and_bubble();
             Ok(())
@@ -2012,8 +2197,8 @@ pub mod attribute {
             }
             self.definition = definition;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "definition",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Definition,
             });
             self.invalidate_local_and_bubble();
             Ok(())
@@ -2152,9 +2337,9 @@ pub mod author {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
 
@@ -2258,8 +2443,8 @@ pub mod author {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "name".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Name,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -2269,8 +2454,8 @@ pub mod author {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.bubble();
             Ok(())
@@ -2279,8 +2464,8 @@ pub mod author {
         pub fn set_email(&mut self, email: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::email_basic(&email, "email") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "email".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Email,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -2290,8 +2475,8 @@ pub mod author {
             }
             self.email = email;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "email",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Email,
             });
             self.bubble();
             Ok(())
@@ -2303,8 +2488,8 @@ pub mod author {
             }
             self.role = role;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "role",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Role,
             });
             self.bubble();
             Ok(())
@@ -2316,8 +2501,8 @@ pub mod author {
             }
             self.rank = rank;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "rank",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Rank,
             });
             self.bubble();
             Ok(())
@@ -2426,9 +2611,9 @@ pub mod benchmark {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::quality::QualityStoreWeak;
 
     pub type BenchmarkStoreRef = std::sync::Arc<RwLock<BenchmarkStore>>;
@@ -2559,8 +2744,8 @@ pub mod benchmark {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.bubble();
             Ok(())
@@ -2572,8 +2757,8 @@ pub mod benchmark {
             }
             self.min = min;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "min",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Min,
             });
             self.bubble();
             Ok(())
@@ -2585,8 +2770,8 @@ pub mod benchmark {
             }
             self.max = max;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "max",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Max,
             });
             self.bubble();
             Ok(())
@@ -2598,8 +2783,8 @@ pub mod benchmark {
             }
             self.min_excluded = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "minExcluded",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::MinExcluded,
             });
             self.bubble();
             Ok(())
@@ -2611,8 +2796,8 @@ pub mod benchmark {
             }
             self.max_excluded = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "maxExcluded",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::MaxExcluded,
             });
             self.bubble();
             Ok(())
@@ -2702,9 +2887,9 @@ pub mod concept {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
 
@@ -2804,8 +2989,8 @@ pub mod concept {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.bubble();
             Ok(())
@@ -2817,8 +3002,8 @@ pub mod concept {
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.bubble();
             Ok(())
@@ -2830,8 +3015,8 @@ pub mod concept {
             }
             self.order = order;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "order",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Order,
             });
             self.bubble();
             Ok(())
@@ -2938,11 +3123,11 @@ pub mod connection {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
     use crate::connector::ConnectorStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::side::{SideMetadataDto, SideStore, SideStoreRef};
 
     pub type ConnectionStoreRef = Arc<RwLock<ConnectionStore>>;
@@ -3110,6 +3295,28 @@ pub mod connection {
             EntityRef::new(EntityKind::Connection, self.id.clone())
         }
 
+        fn event_path(&self) -> crate::events::EventPath {
+            let connection = self.entity_ref();
+            let Some(design_ref) = self.parent_design.upgrade() else {
+                return crate::events::EventPath::of(connection);
+            };
+            let Ok(design) = design_ref.read() else {
+                return crate::events::EventPath::of(connection);
+            };
+            let design_entity = EntityRef::new(EntityKind::Design, design.id.clone());
+            let Some(kit_ref) = design.parent_kit.upgrade() else {
+                return crate::events::EventPath::from_root(vec![design_entity, connection]);
+            };
+            let Ok(kit) = kit_ref.read() else {
+                return crate::events::EventPath::from_root(vec![design_entity, connection]);
+            };
+            crate::events::EventPath::from_root(vec![
+                EntityRef::new(EntityKind::Kit, kit.id.clone()),
+                design_entity,
+                connection,
+            ])
+        }
+
         /// Invalidate this connection and all design-level aggregates (flatten, validation).
         pub(crate) fn notify_aggregate_change(&self) {
             self.hash_cache.invalidate();
@@ -3172,8 +3379,8 @@ pub mod connection {
             }
             self.gap = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "gap",
+                path: self.event_path(),
+                field: EventField::Gap,
             });
             self.bubble();
             Ok(())
@@ -3184,8 +3391,8 @@ pub mod connection {
             }
             self.shift = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "shift",
+                path: self.event_path(),
+                field: EventField::Shift,
             });
             self.bubble();
             Ok(())
@@ -3196,8 +3403,8 @@ pub mod connection {
             }
             self.rise = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "rise",
+                path: self.event_path(),
+                field: EventField::Rise,
             });
             self.bubble();
             Ok(())
@@ -3208,8 +3415,8 @@ pub mod connection {
             }
             self.rotation = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "rotation",
+                path: self.event_path(),
+                field: EventField::Rotation,
             });
             self.bubble();
             Ok(())
@@ -3220,8 +3427,8 @@ pub mod connection {
             }
             self.turn = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "turn",
+                path: self.event_path(),
+                field: EventField::Turn,
             });
             self.bubble();
             Ok(())
@@ -3232,8 +3439,8 @@ pub mod connection {
             }
             self.tilt = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "tilt",
+                path: self.event_path(),
+                field: EventField::Tilt,
             });
             self.bubble();
             Ok(())
@@ -3244,8 +3451,8 @@ pub mod connection {
             }
             self.x = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "x",
+                path: self.event_path(),
+                field: EventField::X,
             });
             self.bubble();
             Ok(())
@@ -3256,8 +3463,8 @@ pub mod connection {
             }
             self.y = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "y",
+                path: self.event_path(),
+                field: EventField::Y,
             });
             self.bubble();
             Ok(())
@@ -3268,8 +3475,8 @@ pub mod connection {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: self.event_path(),
+                field: EventField::Description,
             });
             self.bubble();
             Ok(())
@@ -3451,9 +3658,9 @@ pub mod connector {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::port::{PortIdDto, PortStoreWeak};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
 
@@ -3673,8 +3880,8 @@ pub mod connector {
         pub fn set_code(&mut self, code: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&code, "code") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "code".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Code,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -3684,8 +3891,8 @@ pub mod connector {
             }
             self.code = code;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "code",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Code,
             });
             self.invalidate_hash();
             Ok(())
@@ -3697,8 +3904,8 @@ pub mod connector {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -3707,8 +3914,8 @@ pub mod connector {
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "port",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Port,
             });
             self.invalidate_hash();
             Ok(())
@@ -3773,14 +3980,16 @@ pub mod design {
         ConnectionStoreRef,
     };
     use crate::connector::ConnectorStoreRef;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::{Camera, Coordinate, Location, Plane};
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStore;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
-    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
+    use crate::piece::{
+        PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef,
+    };
     use crate::port::PortStoreRef;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -4161,8 +4370,7 @@ pub mod design {
                         .upgrade()
                         .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
                 });
-                let (Some(connected_id), Some(connecting_id)) =
-                    (connected_id, connecting_id)
+                let (Some(connected_id), Some(connecting_id)) = (connected_id, connecting_id)
                 else {
                     continue;
                 };
@@ -4291,12 +4499,18 @@ pub mod design {
             }
             for gid in &piece_ids {
                 self.emit_ev(KitEvent::DerivedChanged {
-                    entity: EntityRef::new(EntityKind::Piece, gid.clone()),
-                    field: "flat_plane",
+                    path: crate::events::EventPath::of(EntityRef::new(
+                        EntityKind::Piece,
+                        gid.clone(),
+                    )),
+                    field: EventField::FlatPlane,
                 });
                 self.emit_ev(KitEvent::DerivedChanged {
-                    entity: EntityRef::new(EntityKind::Piece, gid.clone()),
-                    field: "flat_center",
+                    path: crate::events::EventPath::of(EntityRef::new(
+                        EntityKind::Piece,
+                        gid.clone(),
+                    )),
+                    field: EventField::FlatCenter,
                 });
             }
         }
@@ -4322,8 +4536,8 @@ pub mod design {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "name".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Name,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -4333,8 +4547,8 @@ pub mod design {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4356,8 +4570,8 @@ pub mod design {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4374,8 +4588,8 @@ pub mod design {
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "icon",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Icon,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4392,8 +4606,8 @@ pub mod design {
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "image",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Image,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4410,8 +4624,8 @@ pub mod design {
             }
             self.variant = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "variant",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Variant,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4428,8 +4642,8 @@ pub mod design {
             }
             self.view = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "view",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::View,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4446,8 +4660,8 @@ pub mod design {
             }
             self.location = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "location",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Location,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4464,8 +4678,8 @@ pub mod design {
             }
             self.camera = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "camera",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Camera,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4482,8 +4696,8 @@ pub mod design {
             }
             self.unit = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "unit",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Unit,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4500,8 +4714,8 @@ pub mod design {
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "created",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Created,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4518,8 +4732,8 @@ pub mod design {
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "updated",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Updated,
             });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated {
@@ -4847,7 +5061,9 @@ pub mod design {
                 .and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn candidate_type_available_ports(candidate_type: &TypeStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_type_available_ports(
+            candidate_type: &TypeStoreRef,
+        ) -> Option<Vec<PortStoreRef>> {
             let candidate_type = candidate_type.read().ok()?;
             let mut available_ports = Vec::with_capacity(candidate_type.connectors.len());
             for connector in &candidate_type.connectors {
@@ -4856,7 +5072,9 @@ pub mod design {
             Some(available_ports)
         }
 
-        fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
+        fn candidate_design_available_ports(
+            candidate_design: &DesignStoreRef,
+        ) -> Option<Vec<PortStoreRef>> {
             let candidate_design = candidate_design.read().ok()?;
             let mut consumed_by_piece_port: HashMap<(Id, Id), usize> = HashMap::new();
             for connection in &candidate_design.connections {
@@ -4865,7 +5083,9 @@ pub mod design {
                     let piece_id = Self::side_piece_id(side)?;
                     let port_id = Self::side_port_ref(side)
                         .and_then(|port| port.read().ok().map(|port| port.id.clone()))?;
-                    *consumed_by_piece_port.entry((piece_id, port_id)).or_default() += 1;
+                    *consumed_by_piece_port
+                        .entry((piece_id, port_id))
+                        .or_default() += 1;
                 }
             }
 
@@ -4873,7 +5093,10 @@ pub mod design {
             for piece in &candidate_design.pieces {
                 let piece = piece.read().ok()?;
                 let piece_id = piece.id.clone();
-                let type_ref = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade())?;
+                let type_ref = piece
+                    .type_ref
+                    .as_ref()
+                    .and_then(|type_ref| type_ref.upgrade())?;
                 drop(piece);
 
                 let mut piece_ports = Self::candidate_type_available_ports(&type_ref)?;
@@ -4881,7 +5104,9 @@ pub mod design {
                     let Some(port_id) = port.read().ok().map(|port| port.id.clone()) else {
                         return false;
                     };
-                    let consumed = consumed_by_piece_port.entry((piece_id.clone(), port_id)).or_default();
+                    let consumed = consumed_by_piece_port
+                        .entry((piece_id.clone(), port_id))
+                        .or_default();
                     if *consumed == 0 {
                         return true;
                     }
@@ -4891,13 +5116,19 @@ pub mod design {
                 available_ports.extend(piece_ports);
             }
 
-            if consumed_by_piece_port.values().any(|remaining| *remaining > 0) {
+            if consumed_by_piece_port
+                .values()
+                .any(|remaining| *remaining > 0)
+            {
                 return None;
             }
             Some(available_ports)
         }
 
-        fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
+        fn ports_are_compatible(
+            candidate_port: &PortStoreRef,
+            required_port: &PortStoreRef,
+        ) -> bool {
             let Ok(candidate_port) = candidate_port.read() else {
                 return false;
             };
@@ -5020,7 +5251,11 @@ pub mod design {
             let Ok(piece) = piece_ref.read() else {
                 return vec![None];
             };
-            let Some(type_ref) = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade()) else {
+            let Some(type_ref) = piece
+                .type_ref
+                .as_ref()
+                .and_then(|type_ref| type_ref.upgrade())
+            else {
                 return vec![None];
             };
             let Ok(type_ref) = type_ref.read() else {
@@ -5108,11 +5343,7 @@ pub mod design {
             self.delete_pieces_inner(piece_ids, true)
         }
 
-        pub(crate) fn delete_pieces_inner(
-            &mut self,
-            piece_ids: &[Id],
-            invalidate: bool,
-        ) -> usize {
+        pub(crate) fn delete_pieces_inner(&mut self, piece_ids: &[Id], invalidate: bool) -> usize {
             let parent = self.entity_ref();
             for g in piece_ids {
                 self.emit_ev(KitEvent::ChildRemoved {
@@ -5132,9 +5363,9 @@ pub mod design {
                         s.read()
                             .ok()
                             .and_then(|side| {
-                                side.piece.upgrade().and_then(|p| {
-                                    p.read().ok().map(|p| piece_ids.contains(&p.id))
-                                })
+                                side.piece
+                                    .upgrade()
+                                    .and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))
                             })
                             .unwrap_or(false)
                     };
@@ -5273,9 +5504,9 @@ pub mod design {
 
         pub fn to_metadata_dto(&self) -> DesignMetadataDto {
             let kit = self.parent_kit.upgrade().and_then(|k| {
-                k.read().ok().map(|k| crate::kit::KitIdDto {
-                    id: k.id.clone(),
-                })
+                k.read()
+                    .ok()
+                    .map(|k| crate::kit::KitIdDto { id: k.id.clone() })
             });
             DesignMetadataDto {
                 id: self.id.clone(),
@@ -5825,15 +6056,11 @@ pub mod diff {
             let forward = DesignDiff {
                 removed_pieces: removed_pieces
                     .iter()
-                    .map(|p| PieceIdDto {
-                        id: p.id.clone(),
-                    })
+                    .map(|p| PieceIdDto { id: p.id.clone() })
                     .collect(),
                 removed_connections: removed_connections
                     .iter()
-                    .map(|c| ConnectionIdDto {
-                        id: c.id.clone(),
-                    })
+                    .map(|c| ConnectionIdDto { id: c.id.clone() })
                     .collect(),
                 ..DesignDiff::default()
             };
@@ -5891,12 +6118,12 @@ pub mod kit_diff {
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
 
-    use crate::attribute::AttributeIdDto;
-    use crate::author::AuthorIdDto;
     use crate::attribute::AttributeFullDto;
+    use crate::attribute::AttributeIdDto;
     use crate::author::AuthorFullDto;
-    use crate::concept::ConceptIdDto;
+    use crate::author::AuthorIdDto;
     use crate::concept::ConceptFullDto;
+    use crate::concept::ConceptIdDto;
     use crate::design::DesignFullDto;
     use crate::design::DesignIdDto;
     use crate::diff::DesignDiff;
@@ -5930,7 +6157,11 @@ pub mod kit_diff {
         pub kit_metadata: Option<KitMetadataDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedTypes")]
         pub added_types: Vec<TypeFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTypes")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedTypes"
+        )]
         pub removed_types: Vec<TypeIdDto>,
         #[serde(
             default,
@@ -5938,7 +6169,11 @@ pub mod kit_diff {
             rename = "modifiedTypes"
         )]
         pub modified_types: Vec<TypeFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedDesigns")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedDesigns"
+        )]
         pub added_designs: Vec<DesignFullDto>,
         #[serde(
             default,
@@ -5960,7 +6195,11 @@ pub mod kit_diff {
         pub patched_designs: Vec<DesignDiffPatch>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFiles")]
         pub added_files: Vec<FileFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedFiles")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedFiles"
+        )]
         pub removed_files: Vec<FileIdDto>,
         #[serde(
             default,
@@ -5968,7 +6207,11 @@ pub mod kit_diff {
             rename = "modifiedFiles"
         )]
         pub modified_files: Vec<FileFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFolders")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedFolders"
+        )]
         pub added_folders: Vec<FolderFullDto>,
         #[serde(
             default,
@@ -5982,7 +6225,11 @@ pub mod kit_diff {
             rename = "modifiedFolders"
         )]
         pub modified_folders: Vec<FolderFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedAuthors")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedAuthors"
+        )]
         pub added_authors: Vec<AuthorFullDto>,
         #[serde(
             default,
@@ -5996,7 +6243,11 @@ pub mod kit_diff {
             rename = "modifiedAuthors"
         )]
         pub modified_authors: Vec<AuthorFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedConcepts")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "addedConcepts"
+        )]
         pub added_concepts: Vec<ConceptFullDto>,
         #[serde(
             default,
@@ -6014,7 +6265,11 @@ pub mod kit_diff {
         pub added_tags: Vec<TagFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTags")]
         pub removed_tags: Vec<TagIdDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedTags")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedTags"
+        )]
         pub modified_tags: Vec<TagFullDto>,
         #[serde(
             default,
@@ -6036,9 +6291,17 @@ pub mod kit_diff {
         pub modified_qualities: Vec<QualityFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedProps")]
         pub added_props: Vec<PropFullDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedProps")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "removedProps"
+        )]
         pub removed_props: Vec<PropIdDto>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedProps")]
+        #[serde(
+            default,
+            skip_serializing_if = "Vec::is_empty",
+            rename = "modifiedProps"
+        )]
         pub modified_props: Vec<PropFullDto>,
         #[serde(
             default,
@@ -6064,8 +6327,7 @@ pub mod kit_diff {
     /// (not including rewire/flatten; sufficient for `between` / replay round-trips from snapshots).
     pub fn apply_design_full_dto(d: &mut DesignFullDto, diff: &DesignDiff) {
         for r in &diff.removed_connections {
-            d.connections
-                .retain(|c| c.id != r.id);
+            d.connections.retain(|c| c.id != r.id);
         }
         let rpid: HashSet<Id> = diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
         d.pieces.retain(|p| !rpid.contains(&p.id));
@@ -6081,8 +6343,7 @@ pub mod kit_diff {
             d.connections.push(c.clone());
         }
         for c in &diff.modified_connections {
-            d.connections
-                .retain(|x| x.id != c.id);
+            d.connections.retain(|x| x.id != c.id);
             d.connections.push(c.clone());
         }
     }
@@ -6168,17 +6429,16 @@ pub mod kit_diff {
     fn diff_designs(
         before: &KitFullDto,
         after: &KitFullDto,
-    ) -> (Vec<DesignFullDto>, Vec<DesignIdDto>, Vec<DesignFullDto>, Vec<DesignDiffPatch>) {
-        let bm: HashMap<Id, &DesignFullDto> = before
-            .designs
-            .iter()
-            .map(|d| (d.id.clone(), d))
-            .collect();
-        let am: HashMap<Id, &DesignFullDto> = after
-            .designs
-            .iter()
-            .map(|d| (d.id.clone(), d))
-            .collect();
+    ) -> (
+        Vec<DesignFullDto>,
+        Vec<DesignIdDto>,
+        Vec<DesignFullDto>,
+        Vec<DesignDiffPatch>,
+    ) {
+        let bm: HashMap<Id, &DesignFullDto> =
+            before.designs.iter().map(|d| (d.id.clone(), d)).collect();
+        let am: HashMap<Id, &DesignFullDto> =
+            after.designs.iter().map(|d| (d.id.clone(), d)).collect();
         let kb: HashSet<Id> = bm.keys().cloned().collect();
         let ka: HashSet<Id> = am.keys().cloned().collect();
         let mut added: Vec<DesignFullDto> = Vec::new();
@@ -6330,11 +6590,7 @@ pub mod kit_diff {
         }
         // full design replacements
         for nd in &d.replaced_full_designs {
-            if let Some(i) = out
-                .designs
-                .iter()
-                .position(|dsgn| dsgn.id == nd.id)
-            {
+            if let Some(i) = out.designs.iter().position(|dsgn| dsgn.id == nd.id) {
                 out.designs[i] = nd.clone();
             } else {
                 out.designs.push(nd.clone());
@@ -6469,17 +6725,13 @@ pub mod kit_diff {
             d.modified_tags = m_ta;
             let (a_q, r_q, m_q) = diff_id_list(&before.qualities, &after.qualities, |t| &t.id);
             d.added_qualities = a_q;
-            d.removed_qualities = r_q
-                .iter()
-                .map(|i| QualityIdDto { id: i.clone() })
-                .collect();
+            d.removed_qualities = r_q.iter().map(|i| QualityIdDto { id: i.clone() }).collect();
             d.modified_qualities = m_q;
             let (a_p, r_p, m_p) = diff_id_list(&before.props, &after.props, |t| &t.id);
             d.added_props = a_p;
             d.removed_props = r_p.iter().map(|i| PropIdDto { id: i.clone() }).collect();
             d.modified_props = m_p;
-            let (a_at, r_at, m_at) =
-                diff_id_list(&before.attributes, &after.attributes, |t| &t.id);
+            let (a_at, r_at, m_at) = diff_id_list(&before.attributes, &after.attributes, |t| &t.id);
             d.added_attributes = a_at;
             d.removed_attributes = r_at
                 .iter()
@@ -6606,7 +6858,6 @@ pub mod kit_change {
         }
     }
 }
-
 
 pub mod error {
     use serde::{Deserialize, Serialize};
@@ -6820,7 +7071,7 @@ pub mod events {
 
     use crate::id::Id;
 
-    /// Entity discriminator for [`KitEvent`].
+    /// 🧭Entity discriminator for [`KitEvent`] payloads.
     #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub enum EntityKind {
         Kit,
@@ -6847,7 +7098,7 @@ pub mod events {
         Benchmark,
     }
 
-    /// Stable identity for event payloads.
+    /// 🪪Stable identity for event payloads.
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
     pub struct EntityRef {
         pub kind: EntityKind,
@@ -6860,12 +7111,205 @@ pub mod events {
         }
     }
 
-    /// All observable changes on a kit graph.
+    /// 🧩Typed field discriminator for observable store mutations.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+    pub enum EventField {
+        Camera,
+        Center,
+        Code,
+        Color,
+        CompatibleFamilies,
+        Created,
+        Definition,
+        Description,
+        DesignPiece,
+        Direction,
+        Email,
+        Family,
+        FlatCenter,
+        FlatPlane,
+        Gap,
+        Hash,
+        Hidden,
+        Homepage,
+        Icon,
+        Id,
+        Image,
+        Key,
+        Kind,
+        License,
+        Location,
+        Locked,
+        Mandatory,
+        Max,
+        MaxExcluded,
+        Mime,
+        Min,
+        MinExcluded,
+        MirrorPlane,
+        Name,
+        Order,
+        Path,
+        Piece,
+        Pieces,
+        Plane,
+        Point,
+        Port,
+        Pose,
+        Preview,
+        Rank,
+        Remote,
+        Rise,
+        Role,
+        Rotation,
+        Scale,
+        Shift,
+        Size,
+        Stock,
+        T,
+        Tilt,
+        Turn,
+        Unit,
+        Updated,
+        Uri,
+        Url,
+        Value,
+        Variant,
+        Version,
+        View,
+        Virtual,
+        Visible,
+        X,
+        Y,
+    }
+
+    impl EventField {
+        pub const fn as_str(self) -> &'static str {
+            match self {
+                Self::Camera => "camera",
+                Self::Center => "center",
+                Self::Code => "code",
+                Self::Color => "color",
+                Self::CompatibleFamilies => "compatibleFamilies",
+                Self::Created => "created",
+                Self::Definition => "definition",
+                Self::Description => "description",
+                Self::DesignPiece => "designPiece",
+                Self::Direction => "direction",
+                Self::Email => "email",
+                Self::Family => "family",
+                Self::FlatCenter => "flat_center",
+                Self::FlatPlane => "flat_plane",
+                Self::Gap => "gap",
+                Self::Hash => "hash",
+                Self::Hidden => "hidden",
+                Self::Homepage => "homepage",
+                Self::Icon => "icon",
+                Self::Id => "id",
+                Self::Image => "image",
+                Self::Key => "key",
+                Self::Kind => "type",
+                Self::License => "license",
+                Self::Location => "location",
+                Self::Locked => "locked",
+                Self::Mandatory => "mandatory",
+                Self::Max => "max",
+                Self::MaxExcluded => "maxExcluded",
+                Self::Mime => "mime",
+                Self::Min => "min",
+                Self::MinExcluded => "minExcluded",
+                Self::MirrorPlane => "mirrorPlane",
+                Self::Name => "name",
+                Self::Order => "order",
+                Self::Path => "path",
+                Self::Piece => "piece",
+                Self::Pieces => "pieces",
+                Self::Plane => "plane",
+                Self::Point => "point",
+                Self::Port => "port",
+                Self::Pose => "pose",
+                Self::Preview => "preview",
+                Self::Rank => "rank",
+                Self::Remote => "remote",
+                Self::Rise => "rise",
+                Self::Role => "role",
+                Self::Rotation => "rotation",
+                Self::Scale => "scale",
+                Self::Shift => "shift",
+                Self::Size => "size",
+                Self::Stock => "stock",
+                Self::T => "t",
+                Self::Tilt => "tilt",
+                Self::Turn => "turn",
+                Self::Unit => "unit",
+                Self::Updated => "updated",
+                Self::Uri => "uri",
+                Self::Url => "url",
+                Self::Value => "value",
+                Self::Variant => "variant",
+                Self::Version => "version",
+                Self::View => "view",
+                Self::Virtual => "virtual",
+                Self::Visible => "visible",
+                Self::X => "x",
+                Self::Y => "y",
+            }
+        }
+    }
+
+    impl std::fmt::Display for EventField {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str(self.as_str())
+        }
+    }
+
+    impl serde::Serialize for EventField {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            serializer.serialize_str(self.as_str())
+        }
+    }
+
+    /// 🌲Typed ancestry for event cascades from kit root to changed entity.
+    #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
+    pub struct EventPath {
+        entities: Vec<EntityRef>,
+    }
+
+    impl EventPath {
+        pub fn of(entity: EntityRef) -> Self {
+            Self {
+                entities: vec![entity],
+            }
+        }
+
+        pub fn from_root(entities: Vec<EntityRef>) -> Self {
+            debug_assert!(!entities.is_empty());
+            Self { entities }
+        }
+
+        pub fn entities(&self) -> &[EntityRef] {
+            &self.entities
+        }
+
+        pub fn leaf(&self) -> &EntityRef {
+            self.entities
+                .last()
+                .expect("event paths are constructed with at least one entity")
+        }
+    }
+
+    /// 📣All observable changes on a kit graph.
     #[derive(Clone, Debug, PartialEq, serde::Serialize)]
     pub enum KitEvent {
-        FieldChanged {
+        Changed {
             entity: EntityRef,
-            field: &'static str,
+        },
+        FieldChanged {
+            path: EventPath,
+            field: EventField,
         },
         ChildAdded {
             parent: EntityRef,
@@ -6884,17 +7328,35 @@ pub mod events {
         },
         ValidationInvalidated,
         DerivedChanged {
-            entity: EntityRef,
-            field: &'static str,
+            path: EventPath,
+            field: EventField,
         },
         SetRejected {
-            entity: EntityRef,
-            field: String,
+            path: EventPath,
+            field: EventField,
             error: crate::error::SetError,
         },
     }
 
-    /// Broadcast channel wrapper; cloneable [`Sender`] shares one channel.
+    impl KitEvent {
+        pub fn cascade(&self) -> Vec<KitEvent> {
+            match self {
+                Self::FieldChanged { path, .. } | Self::DerivedChanged { path, .. }
+                    if path.entities().len() > 1 =>
+                {
+                    path.entities()
+                        .iter()
+                        .cloned()
+                        .map(|entity| Self::Changed { entity })
+                        .chain(std::iter::once(self.clone()))
+                        .collect()
+                }
+                _ => vec![self.clone()],
+            }
+        }
+    }
+
+    /// 🛰️Broadcast channel wrapper; cloneable [`Sender`] shares one channel.
     #[derive(Debug)]
     pub struct EventBus {
         sender: Sender<KitEvent>,
@@ -6920,7 +7382,9 @@ pub mod events {
         }
 
         pub fn emit(&self, event: KitEvent) {
-            let _ = self.sender.try_broadcast(event);
+            for event in event.cascade() {
+                let _ = self.sender.try_broadcast(event);
+            }
         }
     }
 
@@ -7541,9 +8005,9 @@ pub mod file {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
 
     pub type FileStoreRef = Arc<RwLock<FileStore>>;
@@ -7758,8 +8222,8 @@ pub mod file {
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "url".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Url,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -7769,8 +8233,8 @@ pub mod file {
             }
             self.url = url;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "url",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Url,
             });
             self.invalidate_hash();
             Ok(())
@@ -7782,8 +8246,8 @@ pub mod file {
             }
             self.mime = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "mime",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Mime,
             });
             self.invalidate_hash();
             Ok(())
@@ -7795,8 +8259,8 @@ pub mod file {
             }
             self.size = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "size",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Size,
             });
             self.invalidate_hash();
             Ok(())
@@ -7808,8 +8272,8 @@ pub mod file {
             }
             self.hash = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "hash",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Hash,
             });
             self.invalidate_hash();
             Ok(())
@@ -7821,8 +8285,8 @@ pub mod file {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -7834,8 +8298,8 @@ pub mod file {
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "created",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Created,
             });
             self.invalidate_hash();
             Ok(())
@@ -7847,8 +8311,8 @@ pub mod file {
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "updated",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Updated,
             });
             self.invalidate_hash();
             Ok(())
@@ -7896,9 +8360,9 @@ pub mod folder {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
 
     pub type FolderStoreRef = Arc<RwLock<FolderStore>>;
@@ -8041,8 +8505,8 @@ pub mod folder {
             }
             self.path = path;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "path",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Path,
             });
             self.invalidate_hash();
             Ok(())
@@ -8054,8 +8518,8 @@ pub mod folder {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -8221,9 +8685,9 @@ pub mod group {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::piece::{PieceIdDto, PieceStoreWeak};
 
     pub type GroupStoreRef = Arc<RwLock<GroupStore>>;
@@ -8416,8 +8880,8 @@ pub mod group {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.invalidate_hash();
             Ok(())
@@ -8429,8 +8893,8 @@ pub mod group {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -8442,8 +8906,8 @@ pub mod group {
             }
             self.color = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "color",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Color,
             });
             self.invalidate_hash();
             Ok(())
@@ -8455,8 +8919,8 @@ pub mod group {
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "icon",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Icon,
             });
             self.invalidate_hash();
             Ok(())
@@ -8465,8 +8929,8 @@ pub mod group {
         pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) -> crate::error::SetResult {
             self.pieces = pieces;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "pieces",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Pieces,
             });
             self.invalidate_hash();
             Ok(())
@@ -8741,12 +9205,12 @@ pub mod kit {
     use crate::diff::DesignDiff;
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
-    use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::piece::{PieceFullDto, PieceIdDto, PieceStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -9033,8 +9497,8 @@ pub mod kit {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "name".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Name,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -9044,8 +9508,8 @@ pub mod kit {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9063,8 +9527,8 @@ pub mod kit {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9077,8 +9541,8 @@ pub mod kit {
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "icon",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Icon,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9091,8 +9555,8 @@ pub mod kit {
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "image",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Image,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9105,8 +9569,8 @@ pub mod kit {
             }
             self.preview = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "preview",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Preview,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9119,8 +9583,8 @@ pub mod kit {
             }
             self.version = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "version",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Version,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9133,8 +9597,8 @@ pub mod kit {
             }
             self.remote = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "remote",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Remote,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9144,8 +9608,8 @@ pub mod kit {
         pub fn set_homepage(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_url(&v, "homepage") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "homepage".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Homepage,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -9155,8 +9619,8 @@ pub mod kit {
             }
             self.homepage = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "homepage",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Homepage,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9169,8 +9633,8 @@ pub mod kit {
             }
             self.license = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "license",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::License,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9180,8 +9644,8 @@ pub mod kit {
         pub fn set_uri(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_opaque_uri(&v, "uri") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "uri".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Uri,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -9191,8 +9655,8 @@ pub mod kit {
             }
             self.uri = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "uri",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Uri,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9205,8 +9669,8 @@ pub mod kit {
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "created",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Created,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9219,8 +9683,8 @@ pub mod kit {
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "updated",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Updated,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -9336,12 +9800,10 @@ pub mod kit {
             &self,
             design_id: &str,
         ) -> Result<SemioReport<crate::diff::DesignChange>> {
-            let d = self
-                .design(design_id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Design",
-                    id: Id::from(design_id),
-                })?;
+            let d = self.design(design_id).ok_or_else(|| SemioError::NotFound {
+                kind: "Design",
+                id: Id::from(design_id),
+            })?;
             let report = match d.read() {
                 Ok(dr) => dr.flatten_change(),
                 Err(_) => return Err(SemioError::LockPoisoned("design")),
@@ -9355,12 +9817,10 @@ pub mod kit {
             design_id: &str,
             diff: &crate::diff::DesignDiff,
         ) -> Result<()> {
-            let dref = self
-                .design(design_id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Design",
-                    id: Id::from(design_id),
-                })?;
+            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound {
+                kind: "Design",
+                id: Id::from(design_id),
+            })?;
             let type_index: HashMap<Id, TypeStoreRef> = self
                 .types
                 .iter()
@@ -9413,109 +9873,107 @@ pub mod kit {
         ) -> SetResult {
             let id = id.to_string();
             let field = field.to_string();
-            Self::with_undo(kit, || {
-                match entity_kind {
-                    EntityKind::Kit => {
-                        let mut g = kit
-                            .write()
+            Self::with_undo(kit, || match entity_kind {
+                EntityKind::Kit => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    if g.id.as_str() != id {
+                        return Err(SetError::NotFound(format!("kit {id}")));
+                    }
+                    match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            g.set_name(s)
+                        }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown kit field '{field}'"
+                        ))),
+                    }
+                }
+                EntityKind::Design => {
+                    let d = {
+                        let g = kit
+                            .read()
                             .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        if g.id.as_str() != id {
-                            return Err(SetError::NotFound(format!("kit {id}")));
+                        g.design(id.as_str())
+                            .ok_or_else(|| SetError::NotFound(format!("design {id}")))?
+                    };
+                    let mut dw = d
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            dw.set_name(s)
                         }
-                        match field.as_str() {
-                            "name" => {
-                                let s: String = serde_json::from_value(value)
-                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                                g.set_name(s)
-                            }
-                            _ => Err(SetError::InvalidValue(format!(
-                                "unknown kit field '{field}'"
-                            ))),
-                        }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown design field '{field}'"
+                        ))),
                     }
-                    EntityKind::Design => {
-                        let d = {
-                            let g = kit
-                                .read()
-                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                            g.design(id.as_str())
-                                .ok_or_else(|| SetError::NotFound(format!("design {id}")))?
-                        };
-                        let mut dw = d
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                        match field.as_str() {
-                            "name" => {
-                                let s: String = serde_json::from_value(value)
-                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                                dw.set_name(s)
-                            }
-                            _ => Err(SetError::InvalidValue(format!(
-                                "unknown design field '{field}'"
-                            ))),
+                }
+                EntityKind::Type => {
+                    let t = {
+                        let g = kit
+                            .read()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.semio_type(id.as_str())
+                            .ok_or_else(|| SetError::NotFound(format!("type {id}")))?
+                    };
+                    let mut tw = t
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                    match field.as_str() {
+                        "name" => {
+                            let s: String = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            tw.set_name(s)
                         }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown type field '{field}'"
+                        ))),
                     }
-                    EntityKind::Type => {
-                        let t = {
-                            let g = kit
-                                .read()
-                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                            g.semio_type(id.as_str())
-                                .ok_or_else(|| SetError::NotFound(format!("type {id}")))?
-                        };
-                        let mut tw = t
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("type".into()))?;
-                        match field.as_str() {
-                            "name" => {
-                                let s: String = serde_json::from_value(value)
-                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                                tw.set_name(s)
-                            }
-                            _ => Err(SetError::InvalidValue(format!(
-                                "unknown type field '{field}'"
-                            ))),
-                        }
-                    }
-                    EntityKind::Piece => {
-                        let pref = {
-                            let g = kit
-                                .read()
-                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                            let mut found: Option<PieceStoreRef> = None;
-                            for d in &g.designs {
-                                if let Ok(dr) = d.read() {
-                                    if let Some(p) = dr.piece(id.as_str()) {
-                                        found = Some(p);
-                                        break;
-                                    }
+                }
+                EntityKind::Piece => {
+                    let pref = {
+                        let g = kit
+                            .read()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let mut found: Option<PieceStoreRef> = None;
+                        for d in &g.designs {
+                            if let Ok(dr) = d.read() {
+                                if let Some(p) = dr.piece(id.as_str()) {
+                                    found = Some(p);
+                                    break;
                                 }
                             }
-                            found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
-                        };
-                        let mut pw = pref
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("piece".into()))?;
-                        match field.as_str() {
-                            "name" => {
-                                let v: Option<String> = serde_json::from_value(value)
-                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                                pw.set_name(v)
-                            }
-                            "color" => {
-                                let v: Option<String> = serde_json::from_value(value)
-                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                                pw.set_color(v)
-                            }
-                            _ => Err(SetError::InvalidValue(format!(
-                                "unknown piece field '{field}'"
-                            ))),
                         }
+                        found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
+                    };
+                    let mut pw = pref
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?;
+                    match field.as_str() {
+                        "name" => {
+                            let v: Option<String> = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            pw.set_name(v)
+                        }
+                        "color" => {
+                            let v: Option<String> = serde_json::from_value(value)
+                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            pw.set_color(v)
+                        }
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown piece field '{field}'"
+                        ))),
                     }
-                    _ => Err(SetError::InvalidValue(format!(
-                        "set_field_rpc not implemented for {entity_kind:?}"
-                    ))),
                 }
+                _ => Err(SetError::InvalidValue(format!(
+                    "set_field_rpc not implemented for {entity_kind:?}"
+                ))),
             })
         }
 
@@ -9625,12 +10083,16 @@ pub mod kit {
                 }
             };
             let bus = {
-                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let g = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.event_bus.clone()
             };
             merged.event_bus = bus;
             {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let preserve = (
                     g.undo_past.clone(),
                     g.undo_future.clone(),
@@ -9660,7 +10122,9 @@ pub mod kit {
             event_wire::rewire_parent_kits(kit);
             event_wire::wire_graph_bus(kit);
             {
-                let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.invalidate_hash();
                 g.invalidate_validation();
             }
@@ -9698,11 +10162,19 @@ pub mod kit {
             if in_tx {
                 return f();
             }
-            let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto())
-                .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let before = serde_json::to_value(
+                kit.read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
+                    .to_full_dto(),
+            )
+            .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             f()?;
-            let after = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto())
-                .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let after = serde_json::to_value(
+                kit.read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
+                    .to_full_dto(),
+            )
+            .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             if before == after {
                 return Ok(());
             }
@@ -9723,9 +10195,10 @@ pub mod kit {
                 .write()
                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tx_depth == 0 {
-                g.tx_before = Some(serde_json::to_value(g.to_full_dto()).map_err(
-                    |e| SetError::Internal(format!("begin_tx snapshot: {e}")),
-                )?);
+                g.tx_before = Some(
+                    serde_json::to_value(g.to_full_dto())
+                        .map_err(|e| SetError::Internal(format!("begin_tx snapshot: {e}")))?,
+                );
             }
             g.tx_depth += 1;
             Ok(())
@@ -9740,10 +10213,9 @@ pub mod kit {
             }
             g.tx_depth -= 1;
             if g.tx_depth == 0 {
-                let before = g
-                    .tx_before
-                    .take()
-                    .ok_or_else(|| SetError::Internal("transaction missing before snapshot".into()))?;
+                let before = g.tx_before.take().ok_or_else(|| {
+                    SetError::Internal("transaction missing before snapshot".into())
+                })?;
                 let after = serde_json::to_value(g.to_full_dto())
                     .map_err(|e| SetError::Internal(format!("commit_tx snapshot: {e}")))?;
                 if before != after {
@@ -9780,8 +10252,8 @@ pub mod kit {
             let Some(bv) = bv else {
                 return Ok(());
             };
-            let bf: KitFullDto =
-                serde_json::from_value(bv).map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
+            let bf: KitFullDto = serde_json::from_value(bv)
+                .map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
             Self::replace_from_full_dto(kit, bf)
         }
 
@@ -9914,10 +10386,7 @@ pub mod kit {
         }
 
         /// Apply a kit-wide [`crate::kit_diff::KitDiff`] to the current snapshot in Rust.
-        pub fn apply_kit_diff_rpc(
-            kit: &KitStoreRef,
-            diff: serde_json::Value,
-        ) -> SetResult {
+        pub fn apply_kit_diff_rpc(kit: &KitStoreRef, diff: serde_json::Value) -> SetResult {
             let diff: crate::kit_diff::KitDiff =
                 serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
             Self::with_undo(kit, || {
@@ -9970,19 +10439,17 @@ pub mod kit {
             let pg = parent_id.to_string();
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
-                (EntityKind::Design, EntityKind::Piece) => {
-                    Self::with_undo(kit, || {
-                        let mut diff = DesignDiff::default();
-                        diff.removed_pieces.push(PieceIdDto {
-                            id: Id::from(cg.as_str()),
-                        });
-                        let mut g = kit
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.apply_design_diff(pg.as_str(), &diff)
-                            .map_err(Self::map_semio_err)
-                    })
-                }
+                (EntityKind::Design, EntityKind::Piece) => Self::with_undo(kit, || {
+                    let mut diff = DesignDiff::default();
+                    diff.removed_pieces.push(PieceIdDto {
+                        id: Id::from(cg.as_str()),
+                    });
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.apply_design_diff(pg.as_str(), &diff)
+                        .map_err(Self::map_semio_err)
+                }),
                 _ => Err(SetError::InvalidValue(format!(
                     "remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
                 ))),
@@ -10008,9 +10475,7 @@ pub mod kit {
                 if let Ok(t) = t.read() {
                     if t.name.trim().is_empty() {
                         result.is_valid = false;
-                        result
-                            .errors
-                            .push(format!("type {} has empty name", t.id));
+                        result.errors.push(format!("type {} has empty name", t.id));
                     }
                     ids.push(t.id.as_str().to_string());
                     for p in &t.ports {
@@ -10652,13 +11117,9 @@ pub mod kit {
                 let connected_in = cluster_set.contains(c.connected.piece.id.as_str());
                 let connecting_in = cluster_set.contains(c.connecting.piece.id.as_str());
                 if connected_in {
-                    c.connected.design_piece = Some(PieceIdDto {
-                        id: new_id.clone(),
-                    });
+                    c.connected.design_piece = Some(PieceIdDto { id: new_id.clone() });
                 } else if connecting_in {
-                    c.connecting.design_piece = Some(PieceIdDto {
-                        id: new_id.clone(),
-                    });
+                    c.connecting.design_piece = Some(PieceIdDto { id: new_id.clone() });
                 }
                 added_connections.push(c);
             }
@@ -10670,9 +11131,7 @@ pub mod kit {
                     cluster_set.contains(c.connected.piece.id.as_str())
                         || cluster_set.contains(c.connecting.piece.id.as_str())
                 })
-                .map(|c| ConnectionIdDto {
-                    id: c.id.clone(),
-                })
+                .map(|c| ConnectionIdDto { id: c.id.clone() })
                 .collect();
 
             let removed_pieces: Vec<PieceIdDto> = piece_ids
@@ -10839,11 +11298,7 @@ pub mod kit {
             })
         }
 
-        pub fn fix_pieces(
-            kit: &KitStoreRef,
-            design_id: &str,
-            piece_ids: Vec<String>,
-        ) -> SetResult {
+        pub fn fix_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -10904,9 +11359,7 @@ pub mod kit {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let report = g
-                    .flatten_design(dg.as_str())
-                    .map_err(Self::map_semio_err)?;
+                let report = g.flatten_design(dg.as_str()).map_err(Self::map_semio_err)?;
                 if !report.ok {
                     return Err(SetError::Internal("flatten_design failed".into()));
                 }
@@ -11051,14 +11504,12 @@ pub mod kit {
                     let kg = kit
                         .read()
                         .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
+                    expanded_child =
+                        Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
                 }
 
-                let existing_piece: HashSet<String> = before
-                    .pieces
-                    .iter()
-                    .map(|p| p.id.to_string())
-                    .collect();
+                let existing_piece: HashSet<String> =
+                    before.pieces.iter().map(|p| p.id.to_string()).collect();
                 let add_pieces: Vec<PieceFullDto> = expanded_child
                     .pieces
                     .into_iter()
@@ -11116,8 +11567,7 @@ pub mod kit {
                         .read()
                         .map_err(|_| SetError::LockPoisoned("design".into()))?;
                     let dto = dr.to_full_dto();
-                    dto
-                        .pieces
+                    dto.pieces
                         .into_iter()
                         .find(|p| p.id.as_str() == piece_id.as_str())
                         .ok_or_else(|| SetError::NotFound(format!("piece {piece_id}")))?
@@ -11352,9 +11802,9 @@ pub mod layer {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
 
     pub type LayerStoreRef = Arc<RwLock<LayerStore>>;
     pub type LayerStoreWeak = Weak<RwLock<LayerStore>>;
@@ -11556,8 +12006,8 @@ pub mod layer {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.invalidate_hash();
             Ok(())
@@ -11569,8 +12019,8 @@ pub mod layer {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -11582,8 +12032,8 @@ pub mod layer {
             }
             self.color = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "color",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Color,
             });
             self.invalidate_hash();
             Ok(())
@@ -11595,8 +12045,8 @@ pub mod layer {
             }
             self.order = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "order",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Order,
             });
             self.invalidate_hash();
             Ok(())
@@ -11608,8 +12058,8 @@ pub mod layer {
             }
             self.visible = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "visible",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Visible,
             });
             self.invalidate_hash();
             Ok(())
@@ -11621,8 +12071,8 @@ pub mod layer {
             }
             self.locked = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "locked",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Locked,
             });
             self.invalidate_hash();
             Ok(())
@@ -11675,10 +12125,10 @@ pub mod piece {
     use crate::connection::ConnectionStoreWeak;
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::{Coordinate, Plane};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::typ::{TypeIdDto, TypeStoreRef, TypeStoreWeak};
 
@@ -12055,13 +12505,15 @@ pub mod piece {
             let pose_entity = self.pose_entity_ref();
             self.pose.plane = plane;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: pose_entity.clone(),
-                field: "plane",
+                path: crate::events::EventPath::of(pose_entity.clone()),
+                field: EventField::Plane,
             });
-            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
+            self.emit_ev(KitEvent::HashInvalidated {
+                entity: pose_entity,
+            });
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "pose",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Pose,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12075,13 +12527,15 @@ pub mod piece {
             let pose_entity = self.pose_entity_ref();
             self.pose.center = center;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: pose_entity.clone(),
-                field: "center",
+                path: crate::events::EventPath::of(pose_entity.clone()),
+                field: EventField::Center,
             });
-            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
+            self.emit_ev(KitEvent::HashInvalidated {
+                entity: pose_entity,
+            });
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "pose",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Pose,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12094,8 +12548,8 @@ pub mod piece {
             }
             self.color = color;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "color",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Color,
             });
             self.invalidate_hash();
             Ok(())
@@ -12107,8 +12561,8 @@ pub mod piece {
         ) -> crate::error::SetResult {
             self.type_ref = type_ref;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "type",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Kind,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12123,8 +12577,8 @@ pub mod piece {
             let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: previous_entity.clone(),
-                field: "id",
+                path: crate::events::EventPath::of(previous_entity.clone()),
+                field: EventField::Id,
             });
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
@@ -12148,8 +12602,8 @@ pub mod piece {
             };
             if let Err(e) = crate::validate::optional_display_name(&name, "name") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "name".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Name,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -12159,8 +12613,8 @@ pub mod piece {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12178,8 +12632,8 @@ pub mod piece {
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12192,8 +12646,8 @@ pub mod piece {
             }
             self.scale = scale;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "scale",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Scale,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12206,8 +12660,8 @@ pub mod piece {
             }
             self.mirror_plane = mirror_plane;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "mirrorPlane",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::MirrorPlane,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12220,8 +12674,8 @@ pub mod piece {
             }
             self.hidden = hidden;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "hidden",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Hidden,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12234,8 +12688,8 @@ pub mod piece {
             }
             self.locked = locked;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "locked",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Locked,
             });
             self.invalidate_hash();
             self.bubble_design_flatten();
@@ -12245,7 +12699,8 @@ pub mod piece {
         /// World-space plane from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_plane(&self) -> Plane {
             self.flat_plane.get_or_init(|| {
-                self.pose.plane
+                self.pose
+                    .plane
                     .or_else(|| self.computed_flat_plane())
                     .unwrap_or_else(Plane::world_xy)
             })
@@ -12254,7 +12709,8 @@ pub mod piece {
         /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coordinate {
             self.flat_center.get_or_init(|| {
-                self.pose.center
+                self.pose
+                    .center
                     .or_else(|| self.computed_flat_center())
                     .unwrap_or_default()
             })
@@ -12672,9 +13128,7 @@ pub mod piece {
             let child_connections: Vec<_> = design
                 .connections
                 .iter()
-                .filter(|connection| {
-                    Self::connection_connected_matches_self(connection, &self.id)
-                })
+                .filter(|connection| Self::connection_connected_matches_self(connection, &self.id))
                 .cloned()
                 .collect();
 
@@ -12775,15 +13229,11 @@ pub mod piece {
                 .type_ref
                 .as_ref()
                 .and_then(|t| t.upgrade())
-                .and_then(|t| {
-                    t.read().ok().map(|t| TypeIdDto {
-                        id: t.id.clone(),
-                    })
-                });
+                .and_then(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() }));
             let design = self.parent_design.upgrade().and_then(|d| {
-                d.read().ok().map(|d| crate::design::DesignIdDto {
-                    id: d.id.clone(),
-                })
+                d.read()
+                    .ok()
+                    .map(|d| crate::design::DesignIdDto { id: d.id.clone() })
             });
             PieceMetadataDto {
                 id: self.id.clone(),
@@ -12870,10 +13320,10 @@ pub mod port {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::{Coordinate, Vector};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::typ::TypeStoreWeak;
 
@@ -13165,8 +13615,8 @@ pub mod port {
             }
             self.id = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "id",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Id,
             });
             self.invalidate_hash();
             Ok(())
@@ -13178,8 +13628,8 @@ pub mod port {
             }
             self.family = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "family",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Family,
             });
             self.invalidate_hash();
             Ok(())
@@ -13191,8 +13641,8 @@ pub mod port {
             }
             self.compatible_families = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "compatibleFamilies",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::CompatibleFamilies,
             });
             self.invalidate_hash();
             Ok(())
@@ -13204,8 +13654,8 @@ pub mod port {
             }
             self.mandatory = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "mandatory",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Mandatory,
             });
             self.invalidate_hash();
             Ok(())
@@ -13217,8 +13667,8 @@ pub mod port {
             }
             self.t = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "t",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::T,
             });
             self.invalidate_hash();
             Ok(())
@@ -13230,8 +13680,8 @@ pub mod port {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -13243,8 +13693,8 @@ pub mod port {
             }
             self.point = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "point",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Point,
             });
             self.invalidate_hash();
             Ok(())
@@ -13256,8 +13706,8 @@ pub mod port {
             }
             self.direction = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "direction",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Direction,
             });
             self.invalidate_hash();
             Ok(())
@@ -13322,9 +13772,9 @@ pub mod prop {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::piece::PieceStoreWeak;
     use crate::typ::TypeStoreWeak;
@@ -13425,8 +13875,8 @@ pub mod prop {
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "key",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Key,
             });
             self.bubble();
             Ok(())
@@ -13438,8 +13888,8 @@ pub mod prop {
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "value",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Value,
             });
             self.bubble();
             Ok(())
@@ -13451,8 +13901,8 @@ pub mod prop {
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "unit",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Unit,
             });
             self.bubble();
             Ok(())
@@ -13567,9 +14017,9 @@ pub mod quality {
     };
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::port::PortStoreWeak;
     use crate::representation::RepresentationStoreWeak;
@@ -13695,8 +14145,8 @@ pub mod quality {
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "key",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Key,
             });
             self.bubble();
             Ok(())
@@ -13708,8 +14158,8 @@ pub mod quality {
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "value",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Value,
             });
             self.bubble();
             Ok(())
@@ -13721,8 +14171,8 @@ pub mod quality {
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "unit",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Unit,
             });
             self.bubble();
             Ok(())
@@ -13734,8 +14184,8 @@ pub mod quality {
             }
             self.definition = definition;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "definition",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Definition,
             });
             self.bubble();
             Ok(())
@@ -13747,8 +14197,8 @@ pub mod quality {
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.bubble();
             Ok(())
@@ -14056,10 +14506,10 @@ pub mod representation {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::file::{FileIdDto, FileStoreWeak};
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::tag::{TagFullDto, TagShallowDto, TagStore};
 
@@ -14290,8 +14740,8 @@ pub mod representation {
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "url".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Url,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -14301,8 +14751,8 @@ pub mod representation {
             }
             self.url = url;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "url",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Url,
             });
             self.invalidate_hash();
             Ok(())
@@ -14314,8 +14764,8 @@ pub mod representation {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             Ok(())
@@ -14373,9 +14823,9 @@ pub mod side {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::connection::ConnectionStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::piece::PieceStoreWeak;
     use crate::port::PortStoreWeak;
 
@@ -14472,8 +14922,8 @@ pub mod side {
         pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
             self.piece = piece;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "piece",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Piece,
             });
             self.bubble();
             Ok(())
@@ -14482,8 +14932,8 @@ pub mod side {
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "port",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Port,
             });
             self.bubble();
             Ok(())
@@ -14495,8 +14945,8 @@ pub mod side {
         ) -> crate::error::SetResult {
             self.design_piece = design_piece;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "designPiece",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::DesignPiece,
             });
             self.bubble();
             Ok(())
@@ -14618,9 +15068,9 @@ pub mod stat {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
 
     pub type StatStoreRef = std::sync::Arc<RwLock<StatStore>>;
@@ -14723,8 +15173,8 @@ pub mod stat {
             }
             self.key = key;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "key",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Key,
             });
             self.bubble();
             Ok(())
@@ -14736,8 +15186,8 @@ pub mod stat {
             }
             self.value = value;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "value",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Value,
             });
             self.bubble();
             Ok(())
@@ -14749,8 +15199,8 @@ pub mod stat {
             }
             self.unit = unit;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "unit",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Unit,
             });
             self.bubble();
             Ok(())
@@ -14762,8 +15212,8 @@ pub mod stat {
             }
             self.description = description;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.bubble();
             Ok(())
@@ -14864,9 +15314,9 @@ pub mod tag {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
-    use crate::id::Id;
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::kit::KitStoreWeak;
     use crate::typ::TypeStoreWeak;
 
@@ -14965,8 +15415,8 @@ pub mod tag {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.bubble();
             Ok(())
@@ -14978,8 +15428,8 @@ pub mod tag {
             }
             self.order = order;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "order",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Order,
             });
             self.bubble();
             Ok(())
@@ -15086,10 +15536,10 @@ pub mod typ {
     use crate::connector::{
         ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef,
     };
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::Location;
-    use crate::id::Id;
     use crate::hash::{Cache, HashWriter};
+    use crate::id::Id;
     use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -15313,8 +15763,8 @@ pub mod typ {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
                 self.emit_ev(KitEvent::SetRejected {
-                    entity: self.entity_ref(),
-                    field: "name".into(),
+                    path: crate::events::EventPath::of(self.entity_ref()),
+                    field: EventField::Name,
                     error: e.clone(),
                 });
                 return Err(e);
@@ -15324,8 +15774,8 @@ pub mod typ {
             }
             self.name = name;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "name",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Name,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15343,8 +15793,8 @@ pub mod typ {
             }
             self.description = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "description",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Description,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15357,8 +15807,8 @@ pub mod typ {
             }
             self.icon = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "icon",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Icon,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15371,8 +15821,8 @@ pub mod typ {
             }
             self.image = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "image",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Image,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15385,8 +15835,8 @@ pub mod typ {
             }
             self.variant = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "variant",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Variant,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15399,8 +15849,8 @@ pub mod typ {
             }
             self.stock = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "stock",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Stock,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15413,8 +15863,8 @@ pub mod typ {
             }
             self.virtual_ = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "virtual",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Virtual,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15427,8 +15877,8 @@ pub mod typ {
             }
             self.unit = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "unit",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Unit,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15441,8 +15891,8 @@ pub mod typ {
             }
             self.location = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "location",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Location,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15455,8 +15905,8 @@ pub mod typ {
             }
             self.created = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "created",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Created,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -15469,8 +15919,8 @@ pub mod typ {
             }
             self.updated = v;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
-                field: "updated",
+                path: crate::events::EventPath::of(self.entity_ref()),
+                field: EventField::Updated,
             });
             self.invalidate_hash();
             self.invalidate_validation();
@@ -17014,11 +17464,7 @@ pub mod io {
             for (piece_ordinal, piece) in group.pieces.iter().enumerate() {
                 tx.execute(
                     "INSERT INTO group_piece (group_id, piece_id, ordinal) VALUES (?1, ?2, ?3)",
-                    params![
-                        group.id.as_str(),
-                        piece.id.as_str(),
-                        piece_ordinal as i64
-                    ],
+                    params![group.id.as_str(), piece.id.as_str(), piece_ordinal as i64],
                 )?;
             }
             Ok(())
@@ -17311,10 +17757,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_benchmarks(
-            conn: &SqlConnection,
-            quality_id: &Id,
-        ) -> Result<Vec<BenchmarkFullDto>> {
+        fn load_benchmarks(conn: &SqlConnection, quality_id: &Id) -> Result<Vec<BenchmarkFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT id, name, min_value, max_value, min_excluded, max_excluded
                  FROM benchmark WHERE quality_id = ?1 ORDER BY ordinal",
@@ -17438,10 +17881,7 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_connectors(
-            conn: &SqlConnection,
-            type_id: &Id,
-        ) -> Result<Vec<ConnectorFullDto>> {
+        fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal",
             )?;
@@ -17761,9 +18201,7 @@ pub mod io {
                     unit: row.get(19)?,
                     created: row.get(20)?,
                     updated: row.get(21)?,
-                    kit: Some(crate::kit::KitIdDto {
-                        id: kit_id.clone(),
-                    }),
+                    kit: Some(crate::kit::KitIdDto { id: kit_id.clone() }),
                     pieces: load_pieces(conn, &id)?,
                     connections: load_connections(conn, &id)?,
                     layers: load_layers(conn, &id)?,
@@ -18772,11 +19210,7 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = deleteConnection)]
-        pub fn delete_connection(
-            &self,
-            design_id: &str,
-            connection_id: &str,
-        ) -> js_sys::Promise {
+        pub fn delete_connection(&self, design_id: &str, connection_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
@@ -19251,14 +19685,10 @@ mod tests {
 
         #[test]
         fn delete_piece_rewires_flatten_parent_refs() {
-            let (kit, design_id, root_id, middle_id, leaf_id) =
-                kit_with_flatten_chain(None);
+            let (kit, design_id, root_id, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(design_id.as_str())
-                    .expect("design")
-                    .clone()
+                kit_read.design(design_id.as_str()).expect("design").clone()
             };
 
             {
@@ -19313,14 +19743,10 @@ mod tests {
 
         #[test]
         fn piece_path_walks_from_fixed_piece_to_self() {
-            let (kit, design_id, root_id, middle_id, leaf_id) =
-                kit_with_flatten_chain(None);
+            let (kit, design_id, root_id, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(design_id.as_str())
-                    .expect("design")
-                    .clone()
+                kit_read.design(design_id.as_str()).expect("design").clone()
             };
             let design_read = design.read().expect("design read");
             let root = design_read.piece(root_id.as_str()).expect("root").clone();
@@ -19364,14 +19790,10 @@ mod tests {
 
         #[test]
         fn piece_path_after_parent_detach_starts_at_self() {
-            let (kit, design_id, root_id, middle_id, leaf_id) =
-                kit_with_flatten_chain(None);
+            let (kit, design_id, root_id, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(design_id.as_str())
-                    .expect("design")
-                    .clone()
+                kit_read.design(design_id.as_str()).expect("design").clone()
             };
 
             design
@@ -19397,10 +19819,7 @@ mod tests {
             let leaf_path = leaf.read().expect("leaf read").path();
             assert_eq!(
                 leaf_path,
-                vec![
-                    PieceIdDto { id: middle_id },
-                    PieceIdDto { id: leaf_id },
-                ]
+                vec![PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]
             );
         }
 
@@ -19464,10 +19883,7 @@ mod tests {
             let (kit, design_id, _, middle_id, leaf_id) = kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(design_id.as_str())
-                    .expect("design")
-                    .clone()
+                kit_read.design(design_id.as_str()).expect("design").clone()
             };
             let (middle, leaf) = {
                 let design_read = design.read().expect("design read");
@@ -19479,11 +19895,12 @@ mod tests {
                     design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
                 )
             };
-            let flat_map = design.read().expect("design read for flat map").flatten_map();
-            let (middle_plane, middle_center) = flat_map
-                .get(&middle_id)
-                .copied()
-                .expect("middle flat pose");
+            let flat_map = design
+                .read()
+                .expect("design read for flat map")
+                .flatten_map();
+            let (middle_plane, middle_center) =
+                flat_map.get(&middle_id).copied().expect("middle flat pose");
             let (leaf_plane, leaf_center) =
                 flat_map.get(&leaf_id).copied().expect("leaf flat pose");
 
@@ -19647,7 +20064,10 @@ mod tests {
             let make_port = |id: Id, family: &str, compatible_families: Vec<&str>| PortFullDto {
                 id,
                 family: Some(family.to_string()),
-                compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
+                compatible_families: compatible_families
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect(),
                 point: Some(Coordinate::ZERO),
                 direction: Some(Vector::new(1.0, 0.0, 0.0)),
                 ..Default::default()
@@ -19656,20 +20076,22 @@ mod tests {
             let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto {
                 id: Id::from(id),
                 code: code.to_string(),
-                port: Some(PortIdDto { id: port_id.clone() }),
+                port: Some(PortIdDto {
+                    id: port_id.clone(),
+                }),
                 ..Default::default()
             };
 
-            let make_type = |id: Id,
-                             name: &str,
-                             ports: Vec<PortFullDto>,
-                             connectors: Vec<ConnectorFullDto>| TypeFullDto {
-                id,
-                name: name.to_string(),
-                ports,
-                connectors,
-                ..Default::default()
-            };
+            let make_type =
+                |id: Id, name: &str, ports: Vec<PortFullDto>, connectors: Vec<ConnectorFullDto>| {
+                    TypeFullDto {
+                        id,
+                        name: name.to_string(),
+                        ports,
+                        connectors,
+                        ..Default::default()
+                    }
+                };
 
             let dto = KitFullDto {
                 id: Id::from("synthetic-kit"),
@@ -19757,31 +20179,41 @@ mod tests {
                             PieceFullDto {
                                 id: piece_external_lg.clone(),
                                 name: Some("piece-external-lg".to_string()),
-                                r#type: Some(TypeIdDto { id: selected_external_lg.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: selected_external_lg.clone(),
+                                }),
                                 ..Default::default()
                             },
                             PieceFullDto {
                                 id: piece_isolated_lg.clone(),
                                 name: Some("piece-isolated-lg".to_string()),
-                                r#type: Some(TypeIdDto { id: selected_isolated_lg.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: selected_isolated_lg.clone(),
+                                }),
                                 ..Default::default()
                             },
                             PieceFullDto {
                                 id: piece_external_ll.clone(),
                                 name: Some("piece-external-ll".to_string()),
-                                r#type: Some(TypeIdDto { id: selected_external_ll.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: selected_external_ll.clone(),
+                                }),
                                 ..Default::default()
                             },
                             PieceFullDto {
                                 id: piece_neighbor_l.clone(),
                                 name: Some("piece-neighbor-l".to_string()),
-                                r#type: Some(TypeIdDto { id: neighbor_l.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: neighbor_l.clone(),
+                                }),
                                 ..Default::default()
                             },
                             PieceFullDto {
                                 id: piece_neighbor_g.clone(),
                                 name: Some("piece-neighbor-g".to_string()),
-                                r#type: Some(TypeIdDto { id: neighbor_g.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: neighbor_g.clone(),
+                                }),
                                 ..Default::default()
                             },
                         ],
@@ -19790,13 +20222,17 @@ mod tests {
                                 id: Id::from("root-lg-left"),
                                 connected: SideMetadataDto {
                                     id: Id::from("root-lg-left-selected"),
-                                    piece: PieceIdDto { id: piece_external_lg.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_external_lg.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
                                     id: Id::from("root-lg-left-neighbor"),
-                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_neighbor_l.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
@@ -19806,13 +20242,17 @@ mod tests {
                                 id: Id::from("root-lg-gable"),
                                 connected: SideMetadataDto {
                                     id: Id::from("root-lg-gable-selected"),
-                                    piece: PieceIdDto { id: piece_external_lg.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_external_lg.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_g.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
                                     id: Id::from("root-lg-gable-neighbor"),
-                                    piece: PieceIdDto { id: piece_neighbor_g.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_neighbor_g.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_g.clone() }),
                                     design_piece: None,
                                 },
@@ -19822,13 +20262,17 @@ mod tests {
                                 id: Id::from("root-ll-left-0"),
                                 connected: SideMetadataDto {
                                     id: Id::from("root-ll-left-0-selected"),
-                                    piece: PieceIdDto { id: piece_external_ll.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_external_ll.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
                                     id: Id::from("root-ll-left-0-neighbor"),
-                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_neighbor_l.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
@@ -19838,13 +20282,17 @@ mod tests {
                                 id: Id::from("root-ll-left-1"),
                                 connected: SideMetadataDto {
                                     id: Id::from("root-ll-left-1-selected"),
-                                    piece: PieceIdDto { id: piece_external_ll.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_external_ll.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
                                 connecting: SideMetadataDto {
                                     id: Id::from("root-ll-left-1-neighbor"),
-                                    piece: PieceIdDto { id: piece_neighbor_l.clone() },
+                                    piece: PieceIdDto {
+                                        id: piece_neighbor_l.clone(),
+                                    },
                                     port: Some(PortIdDto { id: port_l.clone() }),
                                     design_piece: None,
                                 },
@@ -19859,7 +20307,9 @@ mod tests {
                         pieces: vec![PieceFullDto {
                             id: piece_candidate_free_lg.clone(),
                             name: Some("piece-candidate-free-lg".to_string()),
-                            r#type: Some(TypeIdDto { id: candidate_lg.clone() }),
+                            r#type: Some(TypeIdDto {
+                                id: candidate_lg.clone(),
+                            }),
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -19871,13 +20321,17 @@ mod tests {
                             PieceFullDto {
                                 id: piece_candidate_consumed_lg.clone(),
                                 name: Some("piece-candidate-consumed-lg".to_string()),
-                                r#type: Some(TypeIdDto { id: candidate_lg.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: candidate_lg.clone(),
+                                }),
                                 ..Default::default()
                             },
                             PieceFullDto {
                                 id: piece_candidate_consumed_neighbor.clone(),
                                 name: Some("piece-candidate-consumed-neighbor".to_string()),
-                                r#type: Some(TypeIdDto { id: neighbor_l.clone() }),
+                                r#type: Some(TypeIdDto {
+                                    id: neighbor_l.clone(),
+                                }),
                                 ..Default::default()
                             },
                         ],
@@ -19885,13 +20339,19 @@ mod tests {
                             id: Id::from("candidate-consumed-lg-left"),
                             connected: SideMetadataDto {
                                 id: Id::from("candidate-consumed-lg-left-primary"),
-                                piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() },
-                                port: Some(PortIdDto { id: port_l_compatible.clone() }),
+                                piece: PieceIdDto {
+                                    id: piece_candidate_consumed_lg.clone(),
+                                },
+                                port: Some(PortIdDto {
+                                    id: port_l_compatible.clone(),
+                                }),
                                 design_piece: None,
                             },
                             connecting: SideMetadataDto {
                                 id: Id::from("candidate-consumed-lg-left-neighbor"),
-                                piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() },
+                                piece: PieceIdDto {
+                                    id: piece_candidate_consumed_neighbor.clone(),
+                                },
                                 port: Some(PortIdDto { id: port_l.clone() }),
                                 design_piece: None,
                             },
@@ -19905,7 +20365,9 @@ mod tests {
                         pieces: vec![PieceFullDto {
                             id: piece_candidate_empty.clone(),
                             name: Some("piece-candidate-empty".to_string()),
-                            r#type: Some(TypeIdDto { id: connectorless.clone() }),
+                            r#type: Some(TypeIdDto {
+                                id: connectorless.clone(),
+                            }),
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -19924,12 +20386,12 @@ mod tests {
             ids.insert("candidate-l", candidate_l.clone());
             ids.insert("candidate-empty", connectorless.clone());
             ids.insert("candidate-design-free-lg", candidate_design_free_lg.clone());
-            ids.insert("candidate-design-consumed-lg", candidate_design_consumed_lg.clone());
+            ids.insert(
+                "candidate-design-consumed-lg",
+                candidate_design_consumed_lg.clone(),
+            );
             ids.insert("candidate-design-empty", candidate_design_empty.clone());
-            (
-                KitStore::from_full_dto(dto),
-                ids,
-            )
+            (KitStore::from_full_dto(dto), ids)
         }
 
         fn contains_id<T>(items: &[T], expected_id: &str, id_of: impl Fn(&T) -> Id) -> bool {
@@ -20011,9 +20473,11 @@ mod tests {
                 .read()
                 .expect("design read")
                 .replaceable_catalog_candidates(&[ids["piece-isolated-lg"].clone()]);
-            assert!(contains_id(&alternatives.types, "selected-isolated-lg", |item| {
-                item.read().expect("type read").id.clone()
-            }));
+            assert!(contains_id(
+                &alternatives.types,
+                "selected-isolated-lg",
+                |item| { item.read().expect("type read").id.clone() }
+            ));
             assert!(contains_id(&alternatives.types, "candidate-lg", |item| {
                 item.read().expect("type read").id.clone()
             }));
@@ -20054,7 +20518,8 @@ mod tests {
 
         #[test]
         fn synthetic_cases_from_shared_asset_match_manual_fixture_contract() {
-            let asset: FindReplaceableCasesAsset = load_asset("find-replaceable-types.cases.semio.json");
+            let asset: FindReplaceableCasesAsset =
+                load_asset("find-replaceable-types.cases.semio.json");
             let fixture = load_asset_json(&asset.synthetic_kit);
             let synthetic_cases = asset.synthetic_cases;
             let (kit, ids) = synthetic_replaceable_kit();
@@ -20079,24 +20544,44 @@ mod tests {
                     .replaceable_catalog_candidates(&selected_piece_ids);
 
                 for expected in &case.expected_contains_types {
-                    assert!(contains_id(&alternatives.types, expected, |item| {
-                        item.read().expect("type read").id.clone()
-                    }), "{} should include type {}", case.name, expected);
+                    assert!(
+                        contains_id(&alternatives.types, expected, |item| {
+                            item.read().expect("type read").id.clone()
+                        }),
+                        "{} should include type {}",
+                        case.name,
+                        expected
+                    );
                 }
                 for forbidden in &case.expected_not_contains_types {
-                    assert!(!contains_id(&alternatives.types, forbidden, |item| {
-                        item.read().expect("type read").id.clone()
-                    }), "{} should exclude type {}", case.name, forbidden);
+                    assert!(
+                        !contains_id(&alternatives.types, forbidden, |item| {
+                            item.read().expect("type read").id.clone()
+                        }),
+                        "{} should exclude type {}",
+                        case.name,
+                        forbidden
+                    );
                 }
                 for expected in &case.expected_contains_designs {
-                    assert!(contains_id(&alternatives.designs, expected, |item| {
-                        item.read().expect("design read").id.clone()
-                    }), "{} should include design {}", case.name, expected);
+                    assert!(
+                        contains_id(&alternatives.designs, expected, |item| {
+                            item.read().expect("design read").id.clone()
+                        }),
+                        "{} should include design {}",
+                        case.name,
+                        expected
+                    );
                 }
                 for forbidden in &case.expected_not_contains_designs {
-                    assert!(!contains_id(&alternatives.designs, forbidden, |item| {
-                        item.read().expect("design read").id.clone()
-                    }), "{} should exclude design {}", case.name, forbidden);
+                    assert!(
+                        !contains_id(&alternatives.designs, forbidden, |item| {
+                            item.read().expect("design read").id.clone()
+                        }),
+                        "{} should exclude design {}",
+                        case.name,
+                        forbidden
+                    );
                 }
             }
 
@@ -20485,7 +20970,7 @@ mod tests {
             use crate::connection::ConnectionFullDto;
             use crate::connector::ConnectorFullDto;
             use crate::design::DesignFullDto;
-            use crate::events::{EntityKind, EntityRef, KitEvent};
+            use crate::events::{EntityKind, EntityRef, EventField, KitEvent};
             use crate::file::FileFullDto;
             use crate::group::GroupFullDto;
             use crate::id::Id;
@@ -20781,11 +21266,11 @@ mod tests {
                 design_er: EntityRef,
                 kit_er: EntityRef,
                 piece_g: &Id,
-                field: &'static str,
+                field: EventField,
             ) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
                 assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == design_er && *f == field),
+                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == design_er && *f == field),
                     "ev0 {:?}",
                     evs.get(0)
                 );
@@ -20806,7 +21291,7 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[3],
-                        KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g
+                        KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g
                     ),
                     "ev3 {:?}",
                     evs.get(3)
@@ -20814,7 +21299,7 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[4],
-                        KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g
+                        KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g
                     ),
                     "ev4 {:?}",
                     evs.get(4)
@@ -20837,11 +21322,11 @@ mod tests {
                 design_er: EntityRef,
                 kit_er: EntityRef,
                 piece_g: &Id,
-                field: &'static str,
+                field: EventField,
             ) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
                 assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == piece_er && *f == field)
+                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field)
                 );
                 assert!(
                     matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er)
@@ -20858,10 +21343,10 @@ mod tests {
                     evs.get(4)
                 );
                 assert!(
-                    matches!(&evs[5], KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g)
+                    matches!(&evs[5], KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g)
                 );
                 assert!(
-                    matches!(&evs[6], KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g)
+                    matches!(&evs[6], KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g)
                 );
             }
 
@@ -20871,12 +21356,12 @@ mod tests {
                 design_er: EntityRef,
                 kit_er: EntityRef,
                 piece_g: &Id,
-                field: &'static str,
+                field: EventField,
             ) {
                 let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
                 assert_eq!(evs.len(), 9, "{evs:?}");
                 assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == pose_er && *f == field),
+                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == pose_er && *f == field),
                     "ev0 {:?}",
                     evs.get(0)
                 );
@@ -20886,7 +21371,7 @@ mod tests {
                     evs.get(1)
                 );
                 assert!(
-                    matches!(&evs[2], KitEvent::FieldChanged { entity, field: "pose" } if *entity == piece_er),
+                    matches!(&evs[2], KitEvent::FieldChanged { path, field: EventField::Pose } if *path.leaf() == piece_er),
                     "ev2 {:?}",
                     evs.get(2)
                 );
@@ -20911,12 +21396,12 @@ mod tests {
                     evs.get(6)
                 );
                 assert!(
-                    matches!(&evs[7], KitEvent::DerivedChanged { entity, field: "flat_plane" } if entity.id == *piece_g),
+                    matches!(&evs[7], KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g),
                     "ev7 {:?}",
                     evs.get(7)
                 );
                 assert!(
-                    matches!(&evs[8], KitEvent::DerivedChanged { entity, field: "flat_center" } if entity.id == *piece_g),
+                    matches!(&evs[8], KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g),
                     "ev8 {:?}",
                     evs.get(8)
                 );
@@ -20925,15 +21410,15 @@ mod tests {
                         matches!(
                             event,
                             KitEvent::FieldChanged {
-                                entity,
-                                field: "plane"
-                            } if *entity == piece_er
+                                path,
+                                field: EventField::Plane
+                            } if *path.leaf() == piece_er
                         ) || matches!(
                             event,
                             KitEvent::FieldChanged {
-                                entity,
-                                field: "center"
-                            } if *entity == piece_er
+                                path,
+                                field: EventField::Center
+                            } if *path.leaf() == piece_er
                         )
                     }),
                     "piece should only bubble pose for pose edits: {evs:?}"
@@ -20945,11 +21430,11 @@ mod tests {
                 piece_er: EntityRef,
                 design_er: EntityRef,
                 kit_er: EntityRef,
-                field: &'static str,
+                field: EventField,
             ) {
                 assert_eq!(evs.len(), 4, "{evs:?}");
                 assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == piece_er && *f == field)
+                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field)
                 );
                 assert!(
                     matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er)
@@ -20966,11 +21451,11 @@ mod tests {
                 evs: &[KitEvent],
                 typ_er: EntityRef,
                 kit_er: EntityRef,
-                field: &'static str,
+                field: EventField,
             ) {
                 assert_eq!(evs.len(), 4, "{evs:?}");
                 assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { entity, field: f } if *entity == typ_er && *f == field)
+                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == typ_er && *f == field)
                 );
                 assert!(
                     matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == typ_er)
@@ -20985,14 +21470,14 @@ mod tests {
             pub fn assert_kit_metadata_core(
                 evs: &[KitEvent],
                 kit_ref: EntityRef,
-                field: &'static str,
+                field: EventField,
             ) {
                 assert!(evs.len() >= 3, "expected at least 3 events, got {:?}", evs);
                 assert!(
                     matches!(
                         &evs[0],
-                        KitEvent::FieldChanged { entity, field: f }
-                            if *entity == kit_ref && *f == field
+                        KitEvent::FieldChanged { path, field: f }
+                            if *path.leaf() == kit_ref && *f == field
                     ),
                     "ev[0] want FieldChanged {{ field: {} }}, got {:?}",
                     field,
@@ -21013,7 +21498,7 @@ mod tests {
 
         mod attribute {
             use crate::attribute::AttributeFullDto;
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -21038,15 +21523,19 @@ mod tests {
                 };
                 a.write().unwrap().set_value("v2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "value", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Value,
+                        ..
+                    }
+                )));
             }
         }
 
         mod author {
             use crate::author::AuthorFullDto;
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -21072,9 +21561,13 @@ mod tests {
                 };
                 a.write().unwrap().set_email("e2@x".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "email", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Email,
+                        ..
+                    }
+                )));
             }
         }
 
@@ -21123,7 +21616,7 @@ mod tests {
 
         mod benchmark {
             use crate::benchmark::BenchmarkFullDto;
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::port::PortFullDto;
@@ -21173,15 +21666,19 @@ mod tests {
                 };
                 b.write().unwrap().set_min(Some(1.0));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "min", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Min,
+                        ..
+                    }
+                )));
             }
         }
 
         mod concept {
             use crate::concept::ConceptFullDto;
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -21206,14 +21703,18 @@ mod tests {
                 };
                 c.write().unwrap().set_name("c2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "name", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Name,
+                        ..
+                    }
+                )));
             }
         }
 
         mod connection {
-            use crate::events::KitEvent;
+            use crate::events::{EntityKind, EntityRef, EventField, KitEvent};
 
             #[test]
             fn connection_set_gap_triggers_flatten_and_validation() {
@@ -21227,9 +21728,41 @@ mod tests {
                 };
                 c.write().unwrap().set_gap(Some(1.0));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "gap", .. })));
+                let kit_er = super::common::kit_entity_ref(&kit);
+                let design_er = EntityRef::new(EntityKind::Design, dg.clone());
+                let connection_er = EntityRef::new(EntityKind::Connection, cg.clone());
+                assert!(
+                    matches!(&evs[0], KitEvent::Changed { entity } if *entity == kit_er),
+                    "ev0 {:?}",
+                    evs.get(0)
+                );
+                assert!(
+                    matches!(&evs[1], KitEvent::Changed { entity } if *entity == design_er),
+                    "ev1 {:?}",
+                    evs.get(1)
+                );
+                assert!(
+                    matches!(&evs[2], KitEvent::Changed { entity } if *entity == connection_er),
+                    "ev2 {:?}",
+                    evs.get(2)
+                );
+                assert!(
+                    matches!(
+                        &evs[3],
+                        KitEvent::FieldChanged { path, field: EventField::Gap }
+                            if *path.leaf() == connection_er
+                                && path.entities() == [kit_er.clone(), design_er.clone(), connection_er.clone()]
+                    ),
+                    "ev3 {:?}",
+                    evs.get(3)
+                );
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Gap,
+                        ..
+                    }
+                )));
                 assert!(evs
                     .iter()
                     .any(|e| matches!(e, KitEvent::FlattenInvalidated { .. })));
@@ -21279,7 +21812,7 @@ mod tests {
         }
 
         mod connector {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn connector_set_code_emits() {
@@ -21293,18 +21826,22 @@ mod tests {
                 };
                 c.write().unwrap().set_code("C2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "code", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Code,
+                        ..
+                    }
+                )));
             }
         }
 
         mod design {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityRef, EventField};
             use crate::geom::{Camera, Coordinate, Location};
 
             macro_rules! design_meta_test {
-                ($fn:ident, $field:literal, $op:expr) => {
+                ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
@@ -21325,55 +21862,69 @@ mod tests {
                 };
             }
 
-            design_meta_test!(design_set_name, "name", |d: &mut crate::DesignStore| {
-                d.set_name("x".into())
-            });
+            design_meta_test!(
+                design_set_name,
+                EventField::Name,
+                |d: &mut crate::DesignStore| { d.set_name("x".into()) }
+            );
             design_meta_test!(
                 design_set_description,
-                "description",
+                EventField::Description,
                 |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) }
             );
-            design_meta_test!(design_set_icon, "icon", |d: &mut crate::DesignStore| {
-                d.set_icon(Some("i".into()))
-            });
-            design_meta_test!(design_set_image, "image", |d: &mut crate::DesignStore| {
-                d.set_image(Some("m".into()))
-            });
+            design_meta_test!(
+                design_set_icon,
+                EventField::Icon,
+                |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) }
+            );
+            design_meta_test!(
+                design_set_image,
+                EventField::Image,
+                |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) }
+            );
             design_meta_test!(
                 design_set_variant,
-                "variant",
+                EventField::Variant,
                 |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) }
             );
-            design_meta_test!(design_set_view, "view", |d: &mut crate::DesignStore| {
-                d.set_view(Some("vw".into()))
-            });
+            design_meta_test!(
+                design_set_view,
+                EventField::View,
+                |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) }
+            );
             design_meta_test!(
                 design_set_location,
-                "location",
+                EventField::Location,
                 |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) }
             );
-            design_meta_test!(design_set_camera, "camera", |d: &mut crate::DesignStore| {
-                let mut cam = Camera::default();
-                cam.position = Coordinate::new(0.0, 0.0, 1.0);
-                d.set_camera(Some(cam))
-            });
-            design_meta_test!(design_set_unit, "unit", |d: &mut crate::DesignStore| {
-                d.set_unit(Some("mm".into()))
-            });
+            design_meta_test!(
+                design_set_camera,
+                EventField::Camera,
+                |d: &mut crate::DesignStore| {
+                    let mut cam = Camera::default();
+                    cam.position = Coordinate::new(0.0, 0.0, 1.0);
+                    d.set_camera(Some(cam))
+                }
+            );
+            design_meta_test!(
+                design_set_unit,
+                EventField::Unit,
+                |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) }
+            );
             design_meta_test!(
                 design_set_created,
-                "created",
+                EventField::Created,
                 |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) }
             );
             design_meta_test!(
                 design_set_updated,
-                "updated",
+                EventField::Updated,
                 |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) }
             );
         }
 
         mod file {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn file_set_mime_emits() {
@@ -21385,14 +21936,18 @@ mod tests {
                 };
                 f.write().unwrap().set_mime(Some("image/png".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "mime", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Mime,
+                        ..
+                    }
+                )));
             }
         }
 
         mod folder {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::folder::FolderFullDto;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
@@ -21420,7 +21975,7 @@ mod tests {
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::FieldChanged {
-                        field: "description",
+                        field: EventField::Description,
                         ..
                     }
                 )));
@@ -21428,7 +21983,7 @@ mod tests {
         }
 
         mod group {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn group_set_color_emits() {
@@ -21442,15 +21997,21 @@ mod tests {
                 };
                 g.write().unwrap().set_color(Some("#000".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "color", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Color,
+                        ..
+                    }
+                )));
             }
         }
 
         mod kit {
+            use crate::events::EventField;
+
             macro_rules! kit_meta_test {
-                ($fn:ident, $field:literal, $op:expr) => {
+                ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let kit =
@@ -21467,44 +22028,60 @@ mod tests {
                 };
             }
 
-            kit_meta_test!(kit_set_name, "name", |k: &mut crate::KitStore| {
+            kit_meta_test!(kit_set_name, EventField::Name, |k: &mut crate::KitStore| {
                 k.set_name("a".into())
             });
             kit_meta_test!(
                 kit_set_description,
-                "description",
+                EventField::Description,
                 |k: &mut crate::KitStore| { k.set_description(Some("d".into())) }
             );
-            kit_meta_test!(kit_set_icon, "icon", |k: &mut crate::KitStore| {
+            kit_meta_test!(kit_set_icon, EventField::Icon, |k: &mut crate::KitStore| {
                 k.set_icon(Some("ic".into()))
             });
-            kit_meta_test!(kit_set_image, "image", |k: &mut crate::KitStore| {
-                k.set_image(Some("im".into()))
-            });
-            kit_meta_test!(kit_set_preview, "preview", |k: &mut crate::KitStore| {
-                k.set_preview(Some("pr".into()))
-            });
-            kit_meta_test!(kit_set_version, "version", |k: &mut crate::KitStore| {
-                k.set_version(Some("1".into()))
-            });
-            kit_meta_test!(kit_set_remote, "remote", |k: &mut crate::KitStore| {
-                k.set_remote(Some("r".into()))
-            });
-            kit_meta_test!(kit_set_homepage, "homepage", |k: &mut crate::KitStore| {
-                k.set_homepage(Some("https://example.com".into()))
-            });
-            kit_meta_test!(kit_set_license, "license", |k: &mut crate::KitStore| {
-                k.set_license(Some("l".into()))
-            });
-            kit_meta_test!(kit_set_uri, "uri", |k: &mut crate::KitStore| {
+            kit_meta_test!(
+                kit_set_image,
+                EventField::Image,
+                |k: &mut crate::KitStore| { k.set_image(Some("im".into())) }
+            );
+            kit_meta_test!(
+                kit_set_preview,
+                EventField::Preview,
+                |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) }
+            );
+            kit_meta_test!(
+                kit_set_version,
+                EventField::Version,
+                |k: &mut crate::KitStore| { k.set_version(Some("1".into())) }
+            );
+            kit_meta_test!(
+                kit_set_remote,
+                EventField::Remote,
+                |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) }
+            );
+            kit_meta_test!(
+                kit_set_homepage,
+                EventField::Homepage,
+                |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) }
+            );
+            kit_meta_test!(
+                kit_set_license,
+                EventField::License,
+                |k: &mut crate::KitStore| { k.set_license(Some("l".into())) }
+            );
+            kit_meta_test!(kit_set_uri, EventField::Uri, |k: &mut crate::KitStore| {
                 k.set_uri(Some("u".into()))
             });
-            kit_meta_test!(kit_set_created, "created", |k: &mut crate::KitStore| {
-                k.set_created(Some("c".into()))
-            });
-            kit_meta_test!(kit_set_updated, "updated", |k: &mut crate::KitStore| {
-                k.set_updated(Some("u2".into()))
-            });
+            kit_meta_test!(
+                kit_set_created,
+                EventField::Created,
+                |k: &mut crate::KitStore| { k.set_created(Some("c".into())) }
+            );
+            kit_meta_test!(
+                kit_set_updated,
+                EventField::Updated,
+                |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) }
+            );
 
             #[test]
             fn kit_set_name_idempotent_no_events() {
@@ -21516,7 +22093,7 @@ mod tests {
         }
 
         mod layer {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn layer_set_order_emits() {
@@ -21530,18 +22107,22 @@ mod tests {
                 };
                 l.write().unwrap().set_order(Some(2));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "order", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Order,
+                        ..
+                    }
+                )));
             }
         }
 
         mod piece {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityRef, EventField};
             use crate::geom::{Coordinate, Plane};
 
             macro_rules! piece_pose_test {
-                ($fn:ident, $field:literal, $op:expr) => {
+                ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
@@ -21558,15 +22139,13 @@ mod tests {
                         let mut pw = p.write().unwrap();
                         $op(&mut *pw).unwrap();
                         let evs = super::common::drain(&mut rx);
-                        super::common::assert_piece_pose_change(
-                            &evs, pre, dre, kre, &pg, $field,
-                        );
+                        super::common::assert_piece_pose_change(&evs, pre, dre, kre, &pg, $field);
                     }
                 };
             }
 
             macro_rules! piece_geom_test {
-                ($fn:ident, $field:literal, $op:expr) => {
+                ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let (kit, _, dg, pg) = super::common::kit_with_piece();
@@ -21590,35 +22169,47 @@ mod tests {
                 };
             }
 
-            piece_pose_test!(piece_set_plane, "plane", |p: &mut crate::PieceStore| {
-                p.set_plane(Some(Plane::world_xy()))
-            });
-            piece_pose_test!(piece_set_center, "center", |p: &mut crate::PieceStore| {
-                p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0)))
-            });
+            piece_pose_test!(
+                piece_set_plane,
+                EventField::Plane,
+                |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) }
+            );
+            piece_pose_test!(
+                piece_set_center,
+                EventField::Center,
+                |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) }
+            );
             piece_geom_test!(
                 piece_set_mirror_plane,
-                "mirrorPlane",
+                EventField::MirrorPlane,
                 |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) }
             );
-            piece_geom_test!(piece_set_scale, "scale", |p: &mut crate::PieceStore| {
-                p.set_scale(Some(2.0))
-            });
-            piece_geom_test!(piece_set_hidden, "hidden", |p: &mut crate::PieceStore| {
-                p.set_hidden(Some(true))
-            });
-            piece_geom_test!(piece_set_locked, "locked", |p: &mut crate::PieceStore| {
-                p.set_locked(Some(true))
-            });
-            piece_geom_test!(piece_set_id, "id", |p: &mut crate::PieceStore| {
+            piece_geom_test!(
+                piece_set_scale,
+                EventField::Scale,
+                |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) }
+            );
+            piece_geom_test!(
+                piece_set_hidden,
+                EventField::Hidden,
+                |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) }
+            );
+            piece_geom_test!(
+                piece_set_locked,
+                EventField::Locked,
+                |p: &mut crate::PieceStore| { p.set_locked(Some(true)) }
+            );
+            piece_geom_test!(piece_set_id, EventField::Id, |p: &mut crate::PieceStore| {
                 p.set_id("id1".into())
             });
-            piece_geom_test!(piece_set_name, "name", |p: &mut crate::PieceStore| {
-                p.set_name(Some("p".into()))
-            });
+            piece_geom_test!(
+                piece_set_name,
+                EventField::Name,
+                |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) }
+            );
             piece_geom_test!(
                 piece_set_description,
-                "description",
+                EventField::Description,
                 |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) }
             );
 
@@ -21638,7 +22229,13 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_color(Some("#fff".into()));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_scalar_hash_only(&evs, pre, dre, kre, "color");
+                super::common::assert_piece_scalar_hash_only(
+                    &evs,
+                    pre,
+                    dre,
+                    kre,
+                    EventField::Color,
+                );
             }
 
             #[test]
@@ -21663,12 +22260,19 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_type_weak(Some(tw));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, "type");
+                super::common::assert_piece_geometry_change(
+                    &evs,
+                    pre,
+                    dre,
+                    kre,
+                    &pg,
+                    EventField::Kind,
+                );
             }
         }
 
         mod port {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn port_set_family_emits_field_changed() {
@@ -21685,7 +22289,7 @@ mod tests {
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::FieldChanged {
-                        field: "family",
+                        field: EventField::Family,
                         ..
                     }
                 )));
@@ -21693,7 +22297,7 @@ mod tests {
         }
 
         mod prop {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::prop::PropFullDto;
@@ -21719,14 +22323,18 @@ mod tests {
                 };
                 p.write().unwrap().set_unit(Some("u".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "unit", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Unit,
+                        ..
+                    }
+                )));
             }
         }
 
         mod quality {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::quality::QualityFullDto;
@@ -21751,14 +22359,18 @@ mod tests {
                 };
                 q.write().unwrap().set_key("k2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "key", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Key,
+                        ..
+                    }
+                )));
             }
         }
 
         mod representation {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::file::{FileFullDto, FileIdDto};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
@@ -21800,14 +22412,18 @@ mod tests {
                 };
                 r.write().unwrap().set_url("https://r2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "url", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Url,
+                        ..
+                    }
+                )));
             }
         }
 
         mod side {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
 
             #[test]
             fn side_set_design_piece_emits() {
@@ -21836,7 +22452,7 @@ mod tests {
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::FieldChanged {
-                        field: "designPiece",
+                        field: EventField::DesignPiece,
                         ..
                     }
                 )));
@@ -21845,7 +22461,7 @@ mod tests {
 
         mod stat {
             use crate::design::DesignFullDto;
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::piece::PieceFullDto;
@@ -21899,7 +22515,7 @@ mod tests {
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::FieldChanged {
-                        field: "description",
+                        field: EventField::Description,
                         ..
                     }
                 )));
@@ -21907,7 +22523,7 @@ mod tests {
         }
 
         mod tag {
-            use crate::events::KitEvent;
+            use crate::events::{EventField, KitEvent};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::tag::TagFullDto;
@@ -21932,17 +22548,21 @@ mod tests {
                 };
                 t.write().unwrap().set_order(Some(1));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FieldChanged { field: "order", .. })));
+                assert!(evs.iter().any(|e| matches!(
+                    e,
+                    KitEvent::FieldChanged {
+                        field: EventField::Order,
+                        ..
+                    }
+                )));
             }
         }
 
         mod type_ {
-            use crate::events::{EntityKind, EntityRef};
+            use crate::events::{EntityKind, EntityRef, EventField};
 
             macro_rules! type_meta_test {
-                ($fn:ident, $field:literal, $op:expr) => {
+                ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
                         let (kit, tg) = super::common::kit_with_type_only();
@@ -21961,41 +22581,63 @@ mod tests {
                 };
             }
 
-            type_meta_test!(type_set_name, "name", |t: &mut crate::TypeStore| {
-                t.set_name("tn".into())
-            });
+            type_meta_test!(
+                type_set_name,
+                EventField::Name,
+                |t: &mut crate::TypeStore| { t.set_name("tn".into()) }
+            );
             type_meta_test!(
                 type_set_description,
-                "description",
+                EventField::Description,
                 |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) }
             );
-            type_meta_test!(type_set_icon, "icon", |t: &mut crate::TypeStore| {
-                t.set_icon(Some("i".into()))
-            });
-            type_meta_test!(type_set_image, "image", |t: &mut crate::TypeStore| {
-                t.set_image(Some("m".into()))
-            });
-            type_meta_test!(type_set_variant, "variant", |t: &mut crate::TypeStore| {
-                t.set_variant(Some("v".into()))
-            });
-            type_meta_test!(type_set_stock, "stock", |t: &mut crate::TypeStore| {
-                t.set_stock(Some(3))
-            });
-            type_meta_test!(type_set_virtual, "virtual", |t: &mut crate::TypeStore| {
-                t.set_virtual(Some(true))
-            });
-            type_meta_test!(type_set_unit, "unit", |t: &mut crate::TypeStore| {
-                t.set_unit(Some("u".into()))
-            });
-            type_meta_test!(type_set_location, "location", |t: &mut crate::TypeStore| {
-                t.set_location(Some(crate::geom::Location::new(1.0, 2.0)))
-            });
-            type_meta_test!(type_set_created, "created", |t: &mut crate::TypeStore| {
-                t.set_created(Some("c".into()))
-            });
-            type_meta_test!(type_set_updated, "updated", |t: &mut crate::TypeStore| {
-                t.set_updated(Some("u".into()))
-            });
+            type_meta_test!(
+                type_set_icon,
+                EventField::Icon,
+                |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) }
+            );
+            type_meta_test!(
+                type_set_image,
+                EventField::Image,
+                |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) }
+            );
+            type_meta_test!(
+                type_set_variant,
+                EventField::Variant,
+                |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) }
+            );
+            type_meta_test!(
+                type_set_stock,
+                EventField::Stock,
+                |t: &mut crate::TypeStore| { t.set_stock(Some(3)) }
+            );
+            type_meta_test!(
+                type_set_virtual,
+                EventField::Virtual,
+                |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) }
+            );
+            type_meta_test!(
+                type_set_unit,
+                EventField::Unit,
+                |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) }
+            );
+            type_meta_test!(
+                type_set_location,
+                EventField::Location,
+                |t: &mut crate::TypeStore| {
+                    t.set_location(Some(crate::geom::Location::new(1.0, 2.0)))
+                }
+            );
+            type_meta_test!(
+                type_set_created,
+                EventField::Created,
+                |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) }
+            );
+            type_meta_test!(
+                type_set_updated,
+                EventField::Updated,
+                |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) }
+            );
         }
     }
 
@@ -22067,12 +22709,7 @@ mod tests {
             // VCS base materialization replays from `initial`; keep it in sync with the live graph.
             inner.initial = inner.to_full_dto();
             let k = Arc::new(RwLock::new(inner));
-            let sid = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::NewSession,
-            )
-            .expect("ns")
-            {
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
@@ -22378,19 +23015,19 @@ mod tests {
                 )
                 .expect("st")
                 {
-                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                        match &results[0] {
-                            crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                                results,
-                            } => match &results[0] {
-                                crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                    transaction_id,
-                                } => transaction_id.clone(),
-                                _ => panic!(),
-                            },
+                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands {
+                        results,
+                    } => match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
                             _ => panic!(),
-                        }
-                    }
+                        },
+                        _ => panic!(),
+                    },
                     _ => panic!(),
                 };
                 KitStore::execute_vcs(
@@ -22754,10 +23391,7 @@ mod tests {
             assert_eq!(a.checkpoints.len(), 2);
             let tip = a.checkpoints.last().expect("tip");
             let alt_dto = g.materialize_at(Some(tip));
-            assert_eq!(
-                read_type_name(&g.the_kit_dto(), &tid),
-                "Main1"
-            );
+            assert_eq!(read_type_name(&g.the_kit_dto(), &tid), "Main1");
             assert_eq!(read_type_name(&alt_dto, &tid), "Alt1");
         }
 
@@ -23109,22 +23743,38 @@ mod tests {
             };
             let before_unify = {
                 let g = k.read().expect("g");
-                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
+                let t = g
+                    .alternatives
+                    .get(&alt)
+                    .expect("a")
+                    .checkpoints
+                    .last()
+                    .expect("l")
+                    .clone();
                 g.materialize_at(Some(&t))
             };
             let _ = KitStore::execute_vcs(
                 &k,
                 KitStoreCommand::ExecuteKitAlternativeCommands {
                     id: alt.clone(),
-                    commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint {
-                        message: "u".into(),
-                    }],
+                    commands: vec![
+                        KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint {
+                            message: "u".into(),
+                        },
+                    ],
                 },
             )
             .expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
-                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
+                let t = g
+                    .alternatives
+                    .get(&alt)
+                    .expect("a")
+                    .checkpoints
+                    .last()
+                    .expect("l2")
+                    .clone();
                 g.materialize_at(Some(&t))
             };
             assert_eq!(before_unify, after_unify);
@@ -23263,21 +23913,24 @@ mod tests {
             let dto = k.read().expect("g").to_full_dto();
             let cmd = ReadKitCommand::ReadTypeCommands {
                 id: TypeIdDto { id: tid },
-                commands: vec![
-                    ReadTypeCommand::Everything,
-                    ReadTypeCommand::Name,
-                ],
+                commands: vec![ReadTypeCommand::Everything, ReadTypeCommand::Name],
             };
             let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
-                    assert!(matches!(&results[0], ReadTypeCommandResult::Everything { .. }));
+                    assert!(matches!(
+                        &results[0],
+                        ReadTypeCommandResult::Everything { .. }
+                    ));
                     assert!(matches!(&results[1], ReadTypeCommandResult::Name { .. }));
                 }
                 _ => panic!(),
             }
             let r2 = ReadKitCommand::Everything {}.execute(&dto).expect("r2");
-            assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Everything { .. }));
+            assert!(matches!(
+                r2,
+                crate::read_command::ReadKitCommandResult::Everything { .. }
+            ));
         }
     }
 }
@@ -23312,6 +23965,9 @@ pub use benchmark::{
     BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore,
     BenchmarkStoreRef, BenchmarkStoreWeak,
 };
+pub use change_command::{
+    ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
+};
 pub use concept::{
     ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore,
     ConceptStoreRef, ConceptStoreWeak,
@@ -23329,28 +23985,8 @@ pub use design::{
     DesignStoreWeak,
 };
 pub use diff::{DesignChange, DesignDiff};
-pub use change_command::{
-    ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
-};
-pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
-pub use kit_change::{KitChange, KitChangeKind};
-pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
-pub use kit_diff::{
-    apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,
-};
-pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
-pub use kit_session::{Session, SessionCommand, SessionCommandResult};
-pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-pub use kit_transaction::{
-    Transaction, TransactionCommand, TransactionCommandResult, TransactionState,
-};
-pub use read_command::{
-    ReadConnectionCommand, ReadConnectionCommandResult, ReadDesignCommand, ReadDesignCommandResult,
-    ReadKitCommand, ReadKitCommandResult, ReadPieceCommand, ReadPieceCommandResult, ReadPortCommand,
-    ReadPortCommandResult, ReadTypeCommand, ReadTypeCommandResult,
-};
 pub use error::{Result, SemioError, SetError, SetResult};
-pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
+pub use events::{EntityKind, EntityRef, EventBus, EventField, EventPath, KitEvent};
 pub use file::{
     FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak,
 };
@@ -23363,10 +23999,24 @@ pub use group::{
     GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef,
     GroupStoreWeak,
 };
-pub use id::Id;
 pub use hash::{Cache, HashWriter};
+pub use id::Id;
 pub use kit::{
     KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak,
+};
+pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
+pub use kit_change::{KitChange, KitChangeKind};
+pub use kit_checkpoint::{
+    KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit,
+};
+pub use kit_diff::{
+    apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,
+};
+pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+pub use kit_session::{Session, SessionCommand, SessionCommandResult};
+pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+pub use kit_transaction::{
+    Transaction, TransactionCommand, TransactionCommandResult, TransactionState,
 };
 pub use layer::{
     LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef,
@@ -23385,6 +24035,11 @@ pub use prop::{
 pub use quality::{
     QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore,
     QualityStoreRef, QualityStoreWeak,
+};
+pub use read_command::{
+    ReadConnectionCommand, ReadConnectionCommandResult, ReadDesignCommand, ReadDesignCommandResult,
+    ReadKitCommand, ReadKitCommandResult, ReadPieceCommand, ReadPieceCommandResult,
+    ReadPortCommand, ReadPortCommandResult, ReadTypeCommand, ReadTypeCommandResult,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
 pub use representation::{

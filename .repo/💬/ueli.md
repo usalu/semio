@@ -745,6 +745,13 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
+Previously kit changes were stored as forward (kit diff) + backward diff (kit diff).
+From now on, a `kit change` is forward (list of kit change commands) + inverse (list of kit change commands).
+This means that changes are no longer actual data that changed but just the parameters for the command.
+The actual materialized kit is then computed on the fly by applying all forward command.
+
+e.g.
+
 ```rs
  pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
             if self.gap == v {
@@ -776,6 +783,8 @@ should be:
             Ok(())
         }
 ```
+
+There MUST be granular commands for every single property of every single entity. Currently it is very incomplete. See the schema (just as a reference, dont leak graphql into the code).
 
 Alternative is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`. An alternative is different to git (which is just a named pointer). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
 

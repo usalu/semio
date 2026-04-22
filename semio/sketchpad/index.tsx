@@ -49810,19 +49810,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Kit] Debug messages from app:");
       messages.filter((m) => m.includes("DEBUG")).forEach((m) => console.log(m));
 
-      await expect
-        .poll(
-          async () => {
-            const names = await page.evaluate(() => {
-              const store = (window as any).__SEMIO_STORE__;
-              if (!store) return [] as string[];
-              return (store.kitShallows?.() ?? []).map((kit: any) => String(kit?.name ?? ""));
-            });
-            return names.some((name) => name.toLowerCase().includes("metabolism"));
-          },
-          { timeout: 30000, message: "Kit store should contain Metabolism kit" },
-        )
-        .toBe(true);
+      await expect(page.getByText(/metabolism/i).first()).toBeVisible({ timeout: 30000 });
       const invalidAccessWarnings = warnings.filter((w) => w.includes("Invalid access"));
       if (invalidAccessWarnings.length > 0) {
         console.log(`[Kit] Invalid access warning count: ${invalidAccessWarnings.length}`);
@@ -49835,18 +49823,21 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         await page.waitForTimeout(1000);
       }
 
-      const tableBody = page.locator("tbody").first();
-      await expect(tableBody).toBeVisible({ timeout: 30000 });
+      await page.waitForTimeout(8000);
+      const initialKitRowCount = await page.locator("tr[data-row-id]").count().catch(() => 0);
+      console.log(`[Kit] Initial row count after settle wait: ${initialKitRowCount}`);
+      expect(initialKitRowCount).toBeGreaterThan(0);
 
       await page.waitForTimeout(2000);
-      const clickedTambour = await page.evaluate(() => {
-        const row = document.querySelector('[data-row-id^="type-"][data-row-id*="cc3cbc26"]');
-        if (row) {
-          (row as HTMLElement).click();
+      const tambourRow = page.locator('[data-row-id^="type-"][data-row-id*="cc3cbc26"]').first();
+      const clickedTambour = await tambourRow
+        .isVisible({ timeout: 2000 })
+        .then(async (visible) => {
+          if (!visible) return false;
+          await tambourRow.click({ force: true });
           return true;
-        }
-        return false;
-      });
+        })
+        .catch(() => false);
       console.log(`[Kit] Tambour row clicked via JS: ${clickedTambour}`);
       await page.waitForTimeout(500);
 
