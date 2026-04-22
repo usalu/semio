@@ -6,13 +6,20 @@ import * as Comlink from "comlink";
 
 let handle: any = null;
 
+async function importWasmModule(specifier: string) {
+  if (specifier === "@semio/rs-wasm") {
+    return import("@semio/rs-wasm");
+  }
+  return import(/* @vite-ignore */ specifier);
+}
+
 function settle(p: Promise<any>): Promise<any> {
   return p.catch((e) => ({ ok: false, error: { kind: "Internal", message: String(e) } }));
 }
 
 const api = {
   async init(wasmSpecifier: string, dto: unknown) {
-    const mod = await import(/* @vite-ignore */ wasmSpecifier);
+    const mod = await importWasmModule(wasmSpecifier);
     if (typeof mod.default === "function") {
       await mod.default();
     }

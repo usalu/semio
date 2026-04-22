@@ -12474,6 +12474,7 @@ const AppContent: FC = () => {
       if (importedFolderPaths.has(storagePath)) return false;
       return importedFilePaths.has(storagePath);
     });
+    const filteredKitFileIds = new Set(filteredKitFiles.map((file) => file.id));
 
     kitDesigns?.forEach((d: Design) => {
       const parentKey = d.parent?.id;
@@ -20174,6 +20175,11 @@ export function useGetKitKind(): (kitId: string) => KitKind | undefined {
 export function useAvailableKitKinds(): SketchpadKitKindAvailability {
   const store = useSketchpadStore();
   return useMemo(() => store.supportedKitKinds(), [store]);
+}
+
+export function useOpenableKitKinds(): SketchpadKitKindAvailability {
+  const store = useSketchpadStore();
+  return useMemo(() => store.availableKitKinds(), [store]);
 }
 
 /**
@@ -46295,7 +46301,7 @@ const HomeToolbarCreate: FC = () => {
  * Each kind is only shown when the corresponding factory is available.
  **/
 const HomeToolbarOpen: FC = () => {
-  const availableKitKinds = useAvailableKitKinds();
+  const availableKitKinds = useOpenableKitKinds();
   const { openKit, navigateToKit } = useSketchpadCommands();
 
   const handleOpenFolder = useCallback(async () => {

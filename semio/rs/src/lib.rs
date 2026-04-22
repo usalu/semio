@@ -8,6 +8,15 @@
 
 #![allow(clippy::new_without_default)]
 
+mod read_command;
+mod change_command;
+mod kit_checkpoint;
+mod kit_alternative;
+mod kit_transaction;
+mod kit_draft;
+mod kit_session;
+mod kit_store_command;
+
 pub mod attribute {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
@@ -4685,6 +4694,30 @@ pub mod kit_change {
     use crate::kit::KitFullDto;
     use crate::kit_diff::KitDiff;
 
+    /// Semantic kind for a [`KitChange`] (VCS and UI; replaces the old `KitOperation` wrapper).
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
+    #[serde(rename_all = "camelCase")]
+    pub enum KitChangeKind {
+        #[default]
+        Inferred,
+        SetKitMetadata,
+        AddType,
+        RemoveType,
+        ModifyType,
+        AddDesign,
+        RemoveDesign,
+        ModifyDesign,
+        AddPiece,
+        RemovePiece,
+        Connect,
+        Disconnect,
+        ApplyDesignDiff,
+        ApplyKitDiff,
+        UnifyCheckpoints,
+        MarkRelease,
+        Other(String),
+    }
+
     #[derive(Clone, Debug, Serialize, Deserialize, Default)]
     pub struct KitChange {
         pub forward: KitDiff,
@@ -4693,10 +4726,17 @@ pub mod kit_change {
         pub before: Option<KitFullDto>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub after: Option<KitFullDto>,
+        /// Semantic label; defaults to [`KitChangeKind::Inferred`].
+        #[serde(default, skip_serializing_if = "is_default_change_kind")]
+        pub kind: KitChangeKind,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub author: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub time: Option<String>,
+    }
+
+    fn is_default_change_kind(k: &KitChangeKind) -> bool {
+        *k == KitChangeKind::Inferred
     }
 
     impl KitChange {
@@ -4711,6 +4751,7 @@ pub mod kit_change {
                 backward,
                 before: Some(before.clone()),
                 after: Some(after.clone()),
+                kind: KitChangeKind::Inferred,
                 author: None,
                 time: None,
             })
@@ -4742,668 +4783,6 @@ pub mod kit_change {
     }
 }
 
-/// Semantics label for a [`kit_operation::KitOperation`].
-pub mod kit_operation {
-    use serde::{Deserialize, Serialize};
-
-    use crate::kit_change::KitChange;
-
-    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
-    #[serde(rename_all = "camelCase")]
-    pub enum KitOperationKind {
-        SetKitMetadata,
-        AddType,
-        RemoveType,
-        ModifyType,
-        AddDesign,
-        RemoveDesign,
-        ModifyDesign,
-        AddPiece,
-        RemovePiece,
-        Connect,
-        Disconnect,
-        ApplyDesignDiff,
-        ApplyKitDiff,
-        Other(String),
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct KitOperation {
-        pub kind: KitOperationKind,
-        pub change: KitChange,
-    }
-}
-
-/// Commands to a [`kit::KitStore`] (may or may not produce a [`kit_operation::KitOperation`]).
-pub mod kit_command {
-    use serde::Deserialize;
-
-    use crate::diff::DesignDiff;
-    use crate::error::Result;
-    use crate::id::Id;
-    use crate::kit::{KitStore, KitStoreRef};
-    use crate::kit_diff::KitDiff;
-    use crate::kit_operation::{KitOperation, KitOperationKind};
-    use crate::piece::PieceFullDto;
-    use crate::events::EntityKind;
-
-    pub trait KitCommand: Send {
-        /// Mutate the kit, then return an operation to record, or `None` if the graph is unchanged.
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>>;
-    }
-
-    /// Wire-friendly commands wrapping existing RPC entry points.
-    pub enum BuiltinKitCommand {
-        ApplyDesignDiff {
-            design_id: String,
-            diff: DesignDiff,
-        },
-        ApplyKitDiff {
-            diff: KitDiff,
-        },
-        AddChildPiece {
-            design_id: String,
-            piece: PieceFullDto,
-        },
-        RemoveChildPiece {
-            design_id: String,
-            piece_id: String,
-        },
-    }
-
-    impl KitCommand for BuiltinKitCommand {
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
-            match self {
-                BuiltinKitCommand::ApplyDesignDiff { design_id, diff } => {
-                    let before = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    KitStore::with_undo(kit, || {
-                        let mut g = kit
-                            .write()
-                            .map_err(|_| {
-                                crate::error::SetError::LockPoisoned("kit".into())
-                            })?;
-                        g.apply_design_diff(design_id, diff)
-                            .map_err(|e| {
-                                crate::error::SetError::Internal(
-                                    e.to_string(),
-                                )
-                            })
-                    })
-                    .map_err(|e| {
-                        crate::error::SemioError::InvalidOperation(e.to_string())
-                    })?;
-                    let after = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    if before == after {
-                        return Ok(None);
-                    }
-                    let change = crate::kit_change::KitChange::between(&before, &after)
-                        .ok_or_else(|| {
-                            crate::error::SemioError::InvalidOperation(
-                                "empty kit change after apply design diff".into(),
-                            )
-                        })?;
-                    Ok(Some(KitOperation {
-                        kind: KitOperationKind::ApplyDesignDiff,
-                        change,
-                    }))
-                }
-                BuiltinKitCommand::ApplyKitDiff { diff } => {
-                    let before = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    let next = crate::kit_diff::apply_to_dto(&before, diff);
-                    KitStore::with_undo(kit, || KitStore::replace_from_full_dto(kit, next))
-                        .map_err(|e| {
-                            crate::error::SemioError::InvalidOperation(e.to_string())
-                        })?;
-                    let after = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    if before == after {
-                        return Ok(None);
-                    }
-                    let change = crate::kit_change::KitChange::between(&before, &after)
-                        .ok_or_else(|| {
-                            crate::error::SemioError::InvalidOperation(
-                                "empty kit change after apply kit diff".into(),
-                            )
-                        })?;
-                    Ok(Some(KitOperation {
-                        kind: KitOperationKind::ApplyKitDiff,
-                        change,
-                    }))
-                }
-                BuiltinKitCommand::AddChildPiece { design_id, piece } => {
-                    let before = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    let diff = {
-                        let mut d = DesignDiff::default();
-                        d.added_pieces.push(piece.clone());
-                        d
-                    };
-                    KitStore::with_undo(kit, || {
-                        let mut g = kit
-                            .write()
-                            .map_err(|_| {
-                                crate::error::SetError::LockPoisoned("kit".into())
-                            })?;
-                        g.apply_design_diff(design_id, &diff)
-                            .map_err(|e| {
-                                crate::error::SetError::Internal(
-                                    e.to_string(),
-                                )
-                            })
-                    })
-                    .map_err(|e| {
-                        crate::error::SemioError::InvalidOperation(e.to_string())
-                    })?;
-                    let after = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    if before == after {
-                        return Ok(None);
-                    }
-                    let change = crate::kit_change::KitChange::between(&before, &after)
-                        .ok_or_else(|| {
-                            crate::error::SemioError::InvalidOperation(
-                                "empty kit change after add piece".into(),
-                            )
-                        })?;
-                    Ok(Some(KitOperation {
-                        kind: KitOperationKind::AddPiece,
-                        change,
-                    }))
-                }
-                BuiltinKitCommand::RemoveChildPiece {
-                    design_id,
-                    piece_id,
-                } => {
-                    let before = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    let diff = {
-                        use crate::piece::PieceIdDto;
-                        let mut d = DesignDiff::default();
-                        d.removed_pieces
-                            .push(PieceIdDto {
-                                id: Id::from(piece_id.as_str()),
-                            });
-                        d
-                    };
-                    KitStore::with_undo(kit, || {
-                        let mut g = kit
-                            .write()
-                            .map_err(|_| {
-                                crate::error::SetError::LockPoisoned("kit".into())
-                            })?;
-                        g.apply_design_diff(design_id, &diff)
-                            .map_err(|e| {
-                                crate::error::SetError::Internal(
-                                    e.to_string(),
-                                )
-                            })
-                    })
-                    .map_err(|e| {
-                        crate::error::SemioError::InvalidOperation(e.to_string())
-                    })?;
-                    let after = kit
-                        .read()
-                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
-                        .to_full_dto();
-                    if before == after {
-                        return Ok(None);
-                    }
-                    let change = crate::kit_change::KitChange::between(&before, &after)
-                        .ok_or_else(|| {
-                            crate::error::SemioError::InvalidOperation(
-                                "empty kit change after remove piece".into(),
-                            )
-                        })?;
-                    Ok(Some(KitOperation {
-                        kind: KitOperationKind::RemovePiece,
-                        change,
-                    }))
-                }
-            }
-        }
-    }
-
-    /// Adapter for [`KitStore::apply_design_diff_rpc`].
-    #[derive(Debug, Deserialize)]
-    pub struct ApplyDesignDiffRpc {
-        #[serde(rename = "designId", default)]
-        pub design_id: String,
-        pub diff: serde_json::Value,
-    }
-
-    impl KitCommand for ApplyDesignDiffRpc {
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
-            let diff: DesignDiff = serde_json::from_value(self.diff.clone())
-                .map_err(crate::error::SemioError::from)?;
-            BuiltinKitCommand::ApplyDesignDiff {
-                design_id: self.design_id.clone(),
-                diff,
-            }
-            .apply(kit)
-        }
-    }
-
-    /// Adapter for Rust-applied kit-wide diffs.
-    #[derive(Debug, Deserialize)]
-    pub struct ApplyKitDiffRpc {
-        pub diff: serde_json::Value,
-    }
-
-    impl KitCommand for ApplyKitDiffRpc {
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
-            let diff: KitDiff = serde_json::from_value(self.diff.clone())
-                .map_err(crate::error::SemioError::from)?;
-            BuiltinKitCommand::ApplyKitDiff { diff }.apply(kit)
-        }
-    }
-
-    /// Adapter for [`KitStore::add_child_rpc`].
-    pub struct AddChildRpc {
-        pub parent_kind: EntityKind,
-        pub parent_id: String,
-        pub child_kind: EntityKind,
-        pub dto: serde_json::Value,
-    }
-
-    impl KitCommand for AddChildRpc {
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
-            match (self.parent_kind, self.child_kind) {
-                (EntityKind::Design, EntityKind::Piece) => {
-                    let piece: PieceFullDto = serde_json::from_value(self.dto.clone())
-                        .map_err(crate::error::SemioError::from)?;
-                    BuiltinKitCommand::AddChildPiece {
-                        design_id: self.parent_id.clone(),
-                        piece,
-                    }
-                    .apply(kit)
-                }
-                _ => Err(crate::error::SemioError::InvalidOperation(format!(
-                    "add_child not implemented for {:?} -> {:?}",
-                    self.parent_kind, self.child_kind
-                ))),
-            }
-        }
-    }
-
-    /// Adapter for [`KitStore::remove_child_rpc`].
-    pub struct RemoveChildRpc {
-        pub parent_kind: EntityKind,
-        pub parent_id: String,
-        pub child_kind: EntityKind,
-        pub child_id: String,
-    }
-
-    impl KitCommand for RemoveChildRpc {
-        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
-            match (self.parent_kind, self.child_kind) {
-                (EntityKind::Design, EntityKind::Piece) => {
-                    BuiltinKitCommand::RemoveChildPiece {
-                        design_id: self.parent_id.clone(),
-                        piece_id: self.child_id.clone(),
-                    }
-                    .apply(kit)
-                }
-                _ => Err(crate::error::SemioError::InvalidOperation(format!(
-                    "remove_child not implemented for {:?} -> {:?}",
-                    self.parent_kind, self.child_kind
-                ))),
-            }
-        }
-    }
-}
-
-/// Checkpoints, alternatives, and materialization of versioned kit state.
-pub mod history {
-    use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
-
-    use crate::hash::HashWriter;
-    use crate::id::Id;
-    use crate::kit::KitFullDto;
-    use crate::kit_diff::KitDiff;
-    use crate::kit_operation::KitOperation;
-
-    /// Serializable snapshot of `initial + operations` on that path.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct MaterializedKit {
-        pub initial: KitFullDto,
-        pub operations: Vec<KitOperation>,
-        /// Same as calling [`Self::compute`] after construction.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub computed: Option<KitFullDto>,
-    }
-
-    impl MaterializedKit {
-        /// Fold all operations' forward diffs on top of `initial`.
-        pub fn compute(&self) -> KitFullDto {
-            self.operations.iter().fold(self.initial.clone(), |acc, op| {
-                crate::kit_change::KitChange::apply_forward_dto(&acc, &op.change)
-            })
-        }
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct KitCheckpoint {
-        pub id: Id,
-        pub parent: Option<Id>,
-        pub operations: Vec<KitOperation>,
-        pub message: Option<String>,
-        pub author: Option<String>,
-        pub time: Option<String>,
-        pub hash: String,
-    }
-
-    /// Ordered checkpoint DTOs + head + active alternative buffer for persist/reload.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct KitHistoryFullDto {
-        pub initial: KitFullDto,
-        pub checkpoints: Vec<KitCheckpoint>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub head: Option<Id>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub active_alternative: Option<Id>,
-        pub alternatives: Vec<(Id, Vec<KitOperation>)>,
-    }
-
-    /// Tree of checkpoints; operations after `head` live in per-alternative buffers.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    pub struct KitHistory {
-        pub initial: KitFullDto,
-        /// Checkpoint id -> node.
-        pub checkpoints: HashMap<Id, KitCheckpoint>,
-        /// Parent checkpoint id (None = from initial) to child ids.
-        pub children: HashMap<Option<Id>, Vec<Id>>,
-        /// Tip of the main committed line, or `None` if there are no checkpoints.
-        pub head: Option<Id>,
-        /// Named alternative op buffers after `head`.
-        pub alternatives: HashMap<Id, Vec<KitOperation>>,
-        /// Current alternative that receives new operations.
-        pub active_alternative: Option<Id>,
-    }
-
-    fn checkpoint_chain_tips_to_root(head: &Id, cps: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
-        let mut out = vec![head.clone()];
-        let mut cur = head.clone();
-        loop {
-            let p = cps
-                .get(&cur)
-                .and_then(|c| c.parent.as_ref().cloned());
-            match p {
-                Some(id) if out.contains(&id) => break,
-                Some(id) => {
-                    out.push(id.clone());
-                    cur = id;
-                }
-                None => break,
-            }
-        }
-        out.reverse();
-        out
-    }
-
-    impl KitHistory {
-        pub fn new(initial: KitFullDto) -> Self {
-            let first_alt = Id::new_v7();
-            let mut alts = HashMap::new();
-            alts.insert(first_alt.clone(), Vec::new());
-            Self {
-                initial,
-                checkpoints: HashMap::new(),
-                children: HashMap::new(),
-                head: None,
-                alternatives: alts,
-                active_alternative: Some(first_alt),
-            }
-        }
-
-        /// Serialize a stable wire shape (topo order is checkpoint depth-first from initial).
-        pub fn to_full_dto(&self) -> KitHistoryFullDto {
-            let mut cps: Vec<KitCheckpoint> = self
-                .checkpoints
-                .values()
-                .cloned()
-                .collect();
-            cps.sort_by_key(|c| c.id.to_string());
-            let alts: Vec<(Id, Vec<KitOperation>)> = self
-                .alternatives
-                .iter()
-                .map(|(k, v)| (k.clone(), v.clone()))
-                .collect();
-            KitHistoryFullDto {
-                initial: self.initial.clone(),
-                checkpoints: cps,
-                head: self.head.clone(),
-                active_alternative: self.active_alternative.clone(),
-                alternatives: alts,
-            }
-        }
-
-        /// Restore from [`KitHistoryFullDto`]. Does not re-validate the graph.
-        pub fn from_full_dto(d: KitHistoryFullDto) -> Self {
-            let map: HashMap<Id, KitCheckpoint> = d
-                .checkpoints
-                .into_iter()
-                .map(|c| (c.id.clone(), c))
-                .collect();
-            let mut children: HashMap<Option<Id>, Vec<Id>> = HashMap::new();
-            for c in map.values() {
-                children
-                    .entry(c.parent.clone())
-                    .or_default()
-                    .push(c.id.clone());
-            }
-            let alts: HashMap<Id, Vec<KitOperation>> = d
-                .alternatives
-                .into_iter()
-                .collect();
-            Self {
-                initial: d.initial,
-                checkpoints: map,
-                children,
-                head: d.head,
-                alternatives: alts,
-                active_alternative: d.active_alternative,
-            }
-        }
-
-        /// Ordered checkpoints from the root (first) to `head` (last), inclusive.
-        pub fn path_to_head(&self) -> Vec<Id> {
-            let Some(h) = &self.head else {
-                return Vec::new();
-            };
-            checkpoint_chain_tips_to_root(h, &self.checkpoints)
-        }
-
-        /// DTO for the last committed state on the main line (excludes uncommitted alternatives).
-        pub fn the_kit_dto(&self) -> KitFullDto {
-            self.materialize_dto(self.head.as_ref())
-        }
-
-        /// Full kit state at `at` checkpoint, or `initial` for `None`.
-        pub fn materialize_dto(&self, at: Option<&Id>) -> KitFullDto {
-            let Some(at_id) = at else {
-                return self.initial.clone();
-            };
-            let path = checkpoint_chain_tips_to_root(at_id, &self.checkpoints);
-            let mut s = self.initial.clone();
-            for id in &path {
-                if let Some(cp) = self.checkpoints.get(id) {
-                    for op in &cp.operations {
-                        s = crate::kit_change::KitChange::apply_forward_dto(&s, &op.change);
-                    }
-                }
-            }
-            s
-        }
-
-        /// Committed `head` plus all uncommitted operations in `alt` (if any).
-        pub fn materialize_with_alternative(&self, alt: Option<&Id>) -> KitFullDto {
-            let mut s = self.materialize_dto(self.head.as_ref());
-            if let Some(a) = alt {
-                if let Some(ops) = self.alternatives.get(a) {
-                    for op in ops {
-                        s = crate::kit_change::KitChange::apply_forward_dto(&s, &op.change);
-                    }
-                }
-            }
-            s
-        }
-
-        /// Diff between two materialized points (commits only; pass head ids).
-        pub fn diff_checkpoints(
-            &self,
-            a: Option<&Id>,
-            b: Option<&Id>,
-        ) -> KitDiff {
-            let da = self.materialize_dto(a);
-            let db = self.materialize_dto(b);
-            KitDiff::between(&da, &db)
-        }
-
-        /// Record an op in the current alternative (does not change committed history).
-        pub fn record_operation(&mut self, op: KitOperation) {
-            let id = self
-                .active_alternative
-                .as_ref()
-                .expect("active alternative")
-                .clone();
-            self.alternatives
-                .entry(id)
-                .or_default()
-                .push(op);
-        }
-
-        /// New empty alternative, becomes active. Resets the live buffer index only.
-        pub fn open_alternative(&mut self) -> Id {
-            let n = Id::new_v7();
-            self.alternatives.insert(n.clone(), Vec::new());
-            self.active_alternative = Some(n.clone());
-            n
-        }
-
-        /// Select which buffer receives new operations.
-        pub fn switch_alternative(&mut self, id: Option<Id>) {
-            self.active_alternative = id;
-        }
-
-        /// Clear an alternative's pending ops.
-        pub fn discard_alternative(&mut self, alt: Id) {
-            if let Some(e) = self.alternatives.get_mut(&alt) {
-                e.clear();
-            }
-        }
-
-        /// Move `alt`'s ops into a new checkpoint, parent the previous `head`, advance `head`.
-        pub fn promote_alternative(
-            &mut self,
-            alt: Id,
-            message: Option<String>,
-            author: Option<String>,
-            time: Option<String>,
-        ) -> Option<Id> {
-            let ops = self
-                .alternatives
-                .get(&alt)
-                .cloned()
-                .unwrap_or_default();
-            if ops.is_empty() {
-                return None;
-            }
-            let new_id = Id::new_v7();
-            let h = self.hash_for_new_checkpoint(self.head.as_ref(), &new_id, &ops);
-            let was_active = self.active_alternative.as_ref() == Some(&alt);
-            let parent = self.head.clone();
-            let cp = KitCheckpoint {
-                id: new_id.clone(),
-                parent: parent,
-                operations: ops,
-                message,
-                author,
-                time,
-                hash: h,
-            };
-            self.children
-                .entry(self.head.clone())
-                .or_default()
-                .push(new_id.clone());
-            self.checkpoints.insert(new_id.clone(), cp);
-            self.head = Some(new_id);
-            self.alternatives.remove(&alt);
-            if was_active {
-                self.open_alternative();
-            }
-            self.head.clone()
-        }
-
-        /// Hash for a checkpoint (content-addressed over parent + new id + op list).
-        fn hash_for_new_checkpoint(
-            &self,
-            parent: Option<&Id>,
-            new_id: &Id,
-            ops: &[KitOperation],
-        ) -> String {
-            let mut w = HashWriter::new();
-            w.tag("kit_cp");
-            if let Some(p) = parent {
-                w.str(p.as_str());
-            } else {
-                w.str("");
-            }
-            w.str(new_id.as_str());
-            w.str(
-                &ops
-                    .iter()
-                    .map(|o| {
-                        serde_json::to_string(o).unwrap_or_default()
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            );
-            w.finalize()
-        }
-
-        /// [`MaterializedKit`] for the committed `head` line (no pending alternatives).
-        pub fn materialized_the_kit(&self) -> MaterializedKit {
-            let path = self.path_to_head();
-            let mut ops: Vec<KitOperation> = Vec::new();
-            for i in path {
-                if let Some(cp) = self.checkpoints.get(&i) {
-                    for o in &cp.operations {
-                        ops.push(o.clone());
-                    }
-                }
-            }
-            let mk = MaterializedKit {
-                initial: self.initial.clone(),
-                operations: ops,
-                computed: None,
-            };
-            let c = mk.compute();
-            MaterializedKit {
-                initial: mk.initial,
-                operations: mk.operations,
-                computed: Some(c),
-            }
-        }
-    }
-}
 
 pub mod error {
     use serde::{Deserialize, Serialize};
@@ -7600,6 +6979,16 @@ pub mod kit {
         tx_depth: u32,
         /// Snapshot at outermost `begin_tx` for batched undo (JSON `KitFullDto`).
         tx_before: Option<serde_json::Value>,
+        // --- Kit version control (see `kit_store_command`, `kit_checkpoint`, …) ---
+        /// Root snapshot; materialization replays `checkpoints` from here.
+        pub initial: KitFullDto,
+        pub checkpoints: std::collections::HashMap<Id, crate::kit_checkpoint::KitCheckpoint>,
+        pub alternatives: std::collections::HashMap<Id, crate::kit_alternative::KitAlternative>,
+        /// Tip of the main (non-alternative) committed line.
+        pub the_kit_head: Option<Id>,
+        pub sessions: std::collections::HashMap<Id, crate::kit_session::Session>,
+        /// Reverse index: parent checkpoint id -> child ids.
+        pub children: std::collections::HashMap<Option<Id>, Vec<Id>>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -7745,7 +7134,7 @@ pub mod kit {
 
     impl KitStore {
         pub fn new(name: impl Into<String>) -> Self {
-            Self {
+            let mut s = Self {
                 id: Id::new_v7(),
                 name: name.into(),
                 description: None,
@@ -7777,7 +7166,15 @@ pub mod kit {
                 undo_inhibit: 0,
                 tx_depth: 0,
                 tx_before: None,
-            }
+                initial: KitFullDto::default(),
+                checkpoints: std::collections::HashMap::new(),
+                alternatives: std::collections::HashMap::new(),
+                the_kit_head: None,
+                sessions: std::collections::HashMap::new(),
+                children: std::collections::HashMap::new(),
+            };
+            s.initial = s.to_full_dto();
+            s
         }
 
         const MAX_UNDO_STEPS: usize = 100;
@@ -8416,6 +7813,12 @@ pub mod kit {
                     g.undo_inhibit,
                     g.tx_depth,
                     g.tx_before.clone(),
+                    g.initial.clone(),
+                    g.checkpoints.clone(),
+                    g.alternatives.clone(),
+                    g.the_kit_head.clone(),
+                    g.sessions.clone(),
+                    g.children.clone(),
                 );
                 *g = merged;
                 g.undo_past = preserve.0;
@@ -8423,6 +7826,12 @@ pub mod kit {
                 g.undo_inhibit = preserve.2;
                 g.tx_depth = preserve.3;
                 g.tx_before = preserve.4;
+                g.initial = preserve.5;
+                g.checkpoints = preserve.6;
+                g.alternatives = preserve.7;
+                g.the_kit_head = preserve.8;
+                g.sessions = preserve.9;
+                g.children = preserve.10;
             }
             event_wire::rewire_parent_kits(kit);
             event_wire::wire_graph_bus(kit);
@@ -8432,6 +7841,14 @@ pub mod kit {
                 g.invalidate_validation();
             }
             Ok(())
+        }
+
+        /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
+        pub fn execute_vcs(
+            kit: &KitStoreRef,
+            cmd: crate::kit_store_command::KitStoreCommand,
+        ) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+            crate::kit_store_command::execute(kit, cmd)
         }
 
         /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit` or active `tx` batch).
@@ -8912,6 +8329,12 @@ pub mod kit {
                 undo_inhibit: 0,
                 tx_depth: 0,
                 tx_before: None,
+                initial: KitFullDto::default(),
+                checkpoints: std::collections::HashMap::new(),
+                alternatives: std::collections::HashMap::new(),
+                the_kit_head: None,
+                sessions: std::collections::HashMap::new(),
+                children: std::collections::HashMap::new(),
             }
         }
 
@@ -8948,11 +8371,18 @@ pub mod kit {
                 undo_inhibit: 0,
                 tx_depth: 0,
                 tx_before: None,
+                initial: KitFullDto::default(),
+                checkpoints: std::collections::HashMap::new(),
+                alternatives: std::collections::HashMap::new(),
+                the_kit_head: None,
+                sessions: std::collections::HashMap::new(),
+                children: std::collections::HashMap::new(),
             }
         }
 
         /// Hydrate the full kit graph from a [`KitFullDto`].
         pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
+            let vcs_root = d.clone();
             let KitFullDto {
                 id,
                 name,
@@ -9029,6 +8459,12 @@ pub mod kit {
                 undo_inhibit: 0,
                 tx_depth: 0,
                 tx_before: None,
+                initial: vcs_root,
+                checkpoints: std::collections::HashMap::new(),
+                alternatives: std::collections::HashMap::new(),
+                the_kit_head: None,
+                sessions: std::collections::HashMap::new(),
+                children: std::collections::HashMap::new(),
             }));
 
             let kw = Arc::downgrade(&kit);
@@ -13102,344 +12538,6 @@ pub mod representation {
             for a in &self.attributes {
                 a.hash_into(w);
             }
-        }
-    }
-}
-
-pub mod session {
-    use std::sync::{Arc, Mutex, RwLock};
-
-    use crate::diff::DesignChange;
-    use crate::error::{Result, SemioError};
-    use crate::history::KitHistory;
-    use crate::id::Id;
-    use crate::kit::{KitFullDto, KitStore, KitStoreRef};
-    use crate::kit_command::KitCommand;
-    use crate::kit_operation::{KitOperation, KitOperationKind};
-
-    /// In-memory transaction boundary around a [`KitStore`] and [`KitHistory`].
-    pub struct KitGraphSession {
-        inner: Mutex<Inner>,
-    }
-
-    struct Inner {
-        kit: KitStoreRef,
-        history: Arc<RwLock<KitHistory>>,
-        /// Legacy design-level undo stack (kept for [`Self::commit`] shim).
-        undo: Vec<DesignChange>,
-        redo: Vec<DesignChange>,
-    }
-
-    impl KitGraphSession {
-        pub fn new(kit: KitStore) -> Self {
-            let initial = kit.to_full_dto();
-            Self {
-                inner: Mutex::new(Inner {
-                    kit: Arc::new(RwLock::new(kit)),
-                    history: Arc::new(RwLock::new(KitHistory::new(initial))),
-                    undo: Vec::new(),
-                    redo: Vec::new(),
-                }),
-            }
-        }
-
-        pub fn from_ref(kit: KitStoreRef) -> Self {
-            let initial = kit
-                .read()
-                .expect("kit from_ref: read for initial history snapshot")
-                .to_full_dto();
-            Self {
-                inner: Mutex::new(Inner {
-                    kit,
-                    history: Arc::new(RwLock::new(KitHistory::new(initial))),
-                    undo: Vec::new(),
-                    redo: Vec::new(),
-                }),
-            }
-        }
-
-        /// Wire a pre-built [`KitHistory`] (e.g. deserialized) to a kit handle.
-        pub fn from_kit_and_history(kit: KitStoreRef, history: Arc<RwLock<KitHistory>>) -> Self {
-            Self {
-                inner: Mutex::new(Inner {
-                    kit,
-                    history,
-                    undo: Vec::new(),
-                    redo: Vec::new(),
-                }),
-            }
-        }
-
-        fn sync_kit_to_history(kit: &KitStoreRef, hist: &KitHistory) -> Result<()> {
-            let dto = hist.materialize_with_alternative(hist.active_alternative.as_ref());
-            KitStore::replace_from_full_dto(kit, dto)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))
-        }
-
-        pub fn kit_handle(&self) -> Result<KitStoreRef> {
-            self.inner
-                .lock()
-                .map(|g| g.kit.clone())
-                .map_err(|_| SemioError::LockPoisoned("session"))
-        }
-
-        pub fn history_handle(&self) -> Result<Arc<RwLock<KitHistory>>> {
-            self.inner
-                .lock()
-                .map(|g| g.history.clone())
-                .map_err(|_| SemioError::LockPoisoned("session"))
-        }
-
-        pub fn map_kit<T, F: FnOnce(&KitStore) -> T>(&self, f: F) -> Result<T> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let kit = g.kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            Ok(f(&kit))
-        }
-
-        pub fn map_kit_mut<T, F: FnOnce(&mut KitStore) -> T>(&self, f: F) -> Result<T> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let mut kit = g.kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            Ok(f(&mut kit))
-        }
-
-        /// Run a [`KitCommand`]; on success record a [`KitOperation`] in the active alternative.
-        pub fn execute<C: KitCommand>(&self, cmd: C) -> Result<Option<KitOperation>> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let op = cmd.apply(&g.kit)?;
-            if let Some(ref o) = op {
-                g.history
-                    .write()
-                    .map_err(|_| SemioError::LockPoisoned("history"))?
-                    .record_operation(o.clone());
-            }
-            Ok(op)
-        }
-
-        /// Promote the given alternative into a checkpoint (see [`KitHistory::promote_alternative`]).
-        pub fn checkpoint(
-            &self,
-            alt: Id,
-            message: Option<String>,
-            author: Option<String>,
-            time: Option<String>,
-        ) -> Result<Option<Id>> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let new_id = g
-                .history
-                .write()
-                .map_err(|_| SemioError::LockPoisoned("history"))?
-                .promote_alternative(alt, message, author, time);
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Self::sync_kit_to_history(&g.kit, &*h)?;
-            Ok(new_id)
-        }
-
-        /// Alias: promote the active alternative.
-        pub fn checkpoint_active(
-            &self,
-            message: Option<String>,
-            author: Option<String>,
-            time: Option<String>,
-        ) -> Result<Option<Id>> {
-            let alt = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?
-                .active_alternative
-                .clone()
-                .ok_or_else(|| SemioError::InvalidOperation("no active alternative".into()))?;
-            self.checkpoint(alt, message, author, time)
-        }
-
-        /// Last committed main-line [`KitFullDto`] (no uncommitted alternatives).
-        pub fn the_kit(&self) -> Result<KitFullDto> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Ok(h.the_kit_dto())
-        }
-
-        /// Materialize at a checkpoint id, or `initial` when `None`.
-        pub fn materialize_at(&self, at: Option<Id>) -> Result<KitFullDto> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Ok(h.materialize_dto(at.as_ref()))
-        }
-
-        pub fn open_alternative(&self) -> Result<Id> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let id = g
-                .history
-                .write()
-                .map_err(|_| SemioError::LockPoisoned("history"))?
-                .open_alternative();
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Self::sync_kit_to_history(&g.kit, &*h)?;
-            Ok(id)
-        }
-
-        pub fn switch_alternative(&self, id: Option<Id>) -> Result<()> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            g.history
-                .write()
-                .map_err(|_| SemioError::LockPoisoned("history"))?
-                .switch_alternative(id);
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Self::sync_kit_to_history(&g.kit, &*h)?;
-            Ok(())
-        }
-
-        pub fn promote_alternative(
-            &self,
-            alt: Id,
-            message: Option<String>,
-            author: Option<String>,
-            time: Option<String>,
-        ) -> Result<Option<Id>> {
-            self.checkpoint(alt, message, author, time)
-        }
-
-        pub fn diff_checkpoints(&self, a: Option<Id>, b: Option<Id>) -> Result<crate::kit_diff::KitDiff> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            Ok(h.diff_checkpoints(a.as_ref(), b.as_ref()))
-        }
-
-        /// Deprecated: use [`Self::execute`]. Lifts a design-scoped change into a kit-scoped
-        /// [`KitChange`] and records it in the active alternative.
-        pub fn commit(&self, change: DesignChange) -> Result<()> {
-            let mut g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let author = change.author.clone();
-            let time = change.time.clone();
-            g.undo.push(change.clone());
-            g.redo.clear();
-            let current = g
-                .kit
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("kit"))?
-                .to_full_dto();
-            let op = if let (Some(b), Some(_a)) = (change.before, change.after) {
-                let mut before_k = current.clone();
-                if let Some(i) = before_k.designs.iter().position(|d| d.id == b.id) {
-                    before_k.designs[i] = b;
-                } else {
-                    before_k.designs.push(b);
-                }
-                let mut kc = crate::kit_change::KitChange::between(&before_k, &current)
-                    .ok_or_else(|| {
-                        SemioError::InvalidOperation(
-                            "commit: no kit delta between before and current kit".into(),
-                        )
-                    })?;
-                kc.author = author;
-                kc.time = time;
-                KitOperation {
-                    kind: KitOperationKind::ApplyDesignDiff,
-                    change: kc,
-                }
-            } else {
-                KitOperation {
-                    kind: KitOperationKind::Other("legacy-DesignChange-without-snapshots".into()),
-                    change: crate::kit_change::KitChange {
-                        forward: crate::kit_diff::KitDiff::default(),
-                        backward: crate::kit_diff::KitDiff::default(),
-                        before: None,
-                        after: None,
-                        author,
-                        time,
-                    },
-                }
-            };
-            g.history
-                .write()
-                .map_err(|_| SemioError::LockPoisoned("history"))?
-                .record_operation(op);
-            Ok(())
-        }
-
-        /// Length of the active alternative's pending operations (primary "depth" for branching).
-        pub fn undo_depth(&self) -> Result<usize> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            let h = g
-                .history
-                .read()
-                .map_err(|_| SemioError::LockPoisoned("history"))?;
-            let aid = h
-                .active_alternative
-                .as_ref()
-                .ok_or_else(|| SemioError::InvalidOperation("no active alternative".into()))?;
-            Ok(h
-                .alternatives
-                .get(aid)
-                .map(|v| v.len())
-                .unwrap_or(0))
-        }
-
-        /// Always zero in this VCS model (alternatives are not a redo stack).
-        pub fn redo_depth(&self) -> Result<usize> {
-            Ok(0)
-        }
-
-        /// Last op in the active alternative, if any.
-        pub fn last_change(&self) -> Result<Option<DesignChange>> {
-            let g = self
-                .inner
-                .lock()
-                .map_err(|_| SemioError::LockPoisoned("session"))?;
-            Ok(g.undo.last().cloned())
         }
     }
 }
@@ -17583,157 +16681,6 @@ pub mod wasm {
             .replace(|c: char| c.is_whitespace(), "-")
     }
 
-    #[wasm_bindgen(js_name = kitHistoryNew)]
-    pub fn wasm_kit_history_new(dto: JsValue) -> Result<JsValue, JsValue> {
-        let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h = crate::history::KitHistory::new(dto);
-        serde_wasm_bindgen::to_value(&h.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryTheKit)]
-    pub fn wasm_kit_history_the_kit(dto: JsValue) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h = crate::history::KitHistory::from_full_dto(wire);
-        let k = h.the_kit_dto();
-        serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryMaterializeAt)]
-    pub fn wasm_kit_history_materialize_at(dto: JsValue, at: Option<String>) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h = crate::history::KitHistory::from_full_dto(wire);
-        let at_id = at.map(crate::id::Id::from);
-        let k = h.materialize_dto(at_id.as_ref());
-        serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryDiff)]
-    pub fn wasm_kit_history_diff(
-        dto: JsValue,
-        a: Option<String>,
-        b: Option<String>,
-    ) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h = crate::history::KitHistory::from_full_dto(wire);
-        let aid = a.map(crate::id::Id::from);
-        let bid = b.map(crate::id::Id::from);
-        let d = h.diff_checkpoints(aid.as_ref(), bid.as_ref());
-        serde_wasm_bindgen::to_value(&d).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryOpenAlternative)]
-    pub fn wasm_kit_history_open_alternative(dto: JsValue) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let mut h = crate::history::KitHistory::from_full_dto(wire);
-        let id = h.open_alternative();
-        let wire = h.to_full_dto();
-        serde_wasm_bindgen::to_value(&serde_json::json!({
-            "history": wire,
-            "alternativeId": id,
-        }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistorySwitchAlternative)]
-    pub fn wasm_kit_history_switch_alternative(
-        dto: JsValue,
-        active: Option<String>,
-    ) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let mut h = crate::history::KitHistory::from_full_dto(wire);
-        h.switch_alternative(active.map(crate::id::Id::from));
-        let wire = h.to_full_dto();
-        serde_wasm_bindgen::to_value(&wire).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryCheckpoint)]
-    pub fn wasm_kit_history_checkpoint(
-        dto: JsValue,
-        message: Option<String>,
-        author: Option<String>,
-        time: Option<String>,
-    ) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let mut h = crate::history::KitHistory::from_full_dto(wire);
-        let alt = h
-            .active_alternative
-            .clone()
-            .ok_or_else(|| JsValue::from_str("no active alternative"))?;
-        let new_id = h.promote_alternative(alt, message, author, time);
-        let wire = h.to_full_dto();
-        serde_wasm_bindgen::to_value(&serde_json::json!({
-            "history": wire,
-            "checkpointId": new_id,
-        }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryPromoteAlternative)]
-    pub fn wasm_kit_history_promote_alternative(
-        dto: JsValue,
-        alt: String,
-        message: Option<String>,
-        author: Option<String>,
-        time: Option<String>,
-    ) -> Result<JsValue, JsValue> {
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(dto)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let mut h = crate::history::KitHistory::from_full_dto(wire);
-        let new_id = h.promote_alternative(
-            crate::id::Id::from(alt.as_str()),
-            message,
-            author,
-            time,
-        );
-        let wire = h.to_full_dto();
-        serde_wasm_bindgen::to_value(&serde_json::json!({
-            "history": wire,
-            "checkpointId": new_id,
-        }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = kitHistoryExecute)]
-    pub fn wasm_kit_history_execute(kit: JsValue, history: JsValue, cmd: JsValue) -> Result<JsValue, JsValue> {
-        use std::sync::{Arc, RwLock};
-
-        let kit_dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let wire: crate::history::KitHistoryFullDto = serde_wasm_bindgen::from_value(history)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h = Arc::new(RwLock::new(crate::history::KitHistory::from_full_dto(wire)));
-        let kit_ref = KitStore::from_full_dto(kit_dto);
-        let apply: crate::kit_command::ApplyDesignDiffRpc = serde_wasm_bindgen::from_value(cmd)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let sess = crate::session::KitGraphSession::from_kit_and_history(kit_ref.clone(), h);
-        let op = sess
-            .execute(apply)
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let h_out = sess
-            .history_handle()
-            .map_err(|e| JsValue::from_str(&e.to_string()))?
-            .read()
-            .map_err(|_| JsValue::from_str("history lock"))?
-            .to_full_dto();
-        let g = kit_ref
-            .read()
-            .map_err(|_| JsValue::from_str("kit lock"))?
-            .to_full_dto();
-        serde_wasm_bindgen::to_value(&serde_json::json!({
-            "kit": g,
-            "history": h_out,
-            "op": op,
-        }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
     /// 🌐 Stateful [`KitStoreRef`] for web-worker-hosted mutations + event stream.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
@@ -17759,6 +16706,35 @@ pub mod wasm {
                 .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
             serde_wasm_bindgen::to_value(&g.to_full_dto())
                 .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// Structured VCS + CRUD command dispatch ([`crate::kit_store_command::KitStoreCommand`]).
+        /// A JSON **array** of commands is treated as a synthetic [`KitStoreCommand::Batch`].
+        #[wasm_bindgen(js_name = execute)]
+        pub fn execute(&self, cmd: JsValue) -> Result<JsValue, JsValue> {
+            let c: crate::kit_store_command::KitStoreCommand = if js_sys::Array::is_array(&cmd) {
+                let v: Vec<crate::kit_store_command::KitStoreCommand> =
+                    serde_wasm_bindgen::from_value(cmd)
+                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                crate::kit_store_command::KitStoreCommand::Batch { commands: v }
+            } else {
+                serde_wasm_bindgen::from_value(cmd)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?
+            };
+            let r = KitStore::execute_vcs(&self.inner, c)
+                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            serde_wasm_bindgen::to_value(&r).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        /// Main-line `the kit` (materialized committed checkpoints; live graph may include session draft edits).
+        #[wasm_bindgen(js_name = theKitDto)]
+        pub fn the_kit_dto_wasm(&self) -> Result<JsValue, JsValue> {
+            let g = self
+                .inner
+                .read()
+                .map_err(|_| JsValue::from_str("kit lock"))?;
+            let k = crate::kit_store_command::the_kit_dto(&*g);
+            serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = getField)]
@@ -21197,19 +20173,55 @@ mod tests {
         }
     }
 
-    mod history_tests {
-        use crate::history::KitHistory;
+    mod vcs_command_tests {
+        use std::sync::{Arc, RwLock};
+
+        use crate::id::Id;
         use crate::kit::KitStore;
-        use crate::kit_change::KitChange;
+        use crate::kit_alternative::KitAlternativeCommand;
+        use crate::kit_checkpoint::KitCheckpointCommand;
         use crate::kit_diff::KitDiff;
-        use crate::kit_operation::{KitOperation, KitOperationKind};
+        use crate::kit_draft::KitDraftCommand;
+        use crate::kit_session::SessionCommand;
+        use crate::kit_store_command::{self, KitStoreCommand};
+        use crate::kit_transaction::TransactionCommand;
+        use crate::read_command::{ReadKitCommand, ReadTypeCommand, ReadTypeCommandResult};
+        use crate::typ::TypeIdDto;
+        use crate::typ::TypeStore;
+
+        fn make_kit_with_type() -> (Arc<RwLock<KitStore>>, Id) {
+            let mut inner = KitStore::new("k");
+            let t = Arc::new(RwLock::new(TypeStore::new("T0")));
+            let tid = t.read().expect("tr").id.clone();
+            inner.types.push(t);
+            inner.initial = inner.to_full_dto();
+            (Arc::new(RwLock::new(inner)), tid)
+        }
+
+        fn read_type_name(dto: &crate::kit::KitFullDto, tid: &Id) -> String {
+            let r = crate::read_command::read_kit(
+                dto,
+                &ReadKitCommand::ReadTypeCommands {
+                    id: TypeIdDto { id: tid.clone() },
+                    commands: vec![ReadTypeCommand::Name],
+                },
+            )
+            .expect("read type");
+            match r {
+                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
+                    match &results[0] {
+                        ReadTypeCommandResult::Name { name } => name.clone(),
+                        _ => panic!("expected name"),
+                    }
+                }
+                _ => panic!("expected ReadTypeCommands"),
+            }
+        }
 
         #[test]
-        fn empty_history_the_kit_is_initial() {
+        fn the_kit_starts_as_initial() {
             let k = KitStore::new("h");
-            let initial = k.to_full_dto();
-            let h = KitHistory::new(initial.clone());
-            assert_eq!(h.the_kit_dto(), initial);
+            assert_eq!(kit_store_command::the_kit_dto(&k), k.initial);
         }
 
         #[test]
@@ -21224,73 +20236,1239 @@ mod tests {
         }
 
         #[test]
-        fn promote_creates_head_and_persists_ops() {
-            let initial = KitStore::new("p").to_full_dto();
-            let mut h = KitHistory::new(initial.clone());
-            let alt = h.active_alternative.as_ref().unwrap().clone();
-            let after = {
-                let mut d = initial.clone();
-                d.name = "ck".into();
-                d
+        fn vcs_session_draft_checkpoint_roundtrip() {
+            let mut inner = KitStore::new("p");
+            let t = Arc::new(RwLock::new(TypeStore::new("T")));
+            let tid = t.read().expect("tr").id.clone();
+            inner.types.push(t);
+            // VCS base materialization replays from `initial`; keep it in sync with the live graph.
+            inner.initial = inner.to_full_dto();
+            let k = Arc::new(RwLock::new(inner));
+            let sid = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::NewSession,
+            )
+            .expect("ns")
+            {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
             };
-            let c = KitChange::between(&initial, &after).unwrap();
-            h.record_operation(KitOperation {
-                kind: KitOperationKind::SetKitMetadata,
-                change: c,
-            });
-            h.promote_alternative(alt, Some("m".into()), None, None)
-                .expect("checkpoint");
-            assert_eq!(h.the_kit_dto().name, "ck");
-            let back = h.materialize_dto(h.head.as_ref());
-            assert_eq!(back.name, "ck");
-            assert!(h.head.is_some());
-        }
-
-        #[test]
-        fn materialize_at_is_replay() {
-            let initial = KitStore::new("r").to_full_dto();
-            let mut h = KitHistory::new(initial);
-            let alt = h.active_alternative.as_ref().unwrap().clone();
-            let mut a = KitStore::new("r");
-            let before = a.to_full_dto();
-            a.set_name("two".into()).unwrap();
-            let kc = KitChange::between(&before, &a.to_full_dto()).unwrap();
-            h.record_operation(KitOperation {
-                kind: KitOperationKind::SetKitMetadata,
-                change: kc,
-            });
-            h.promote_alternative(alt, None, None, None)
-                .expect("ck");
-            let m1 = h.materialize_dto(h.head.as_ref());
-            let mut s = h.initial.clone();
-            for o in h.path_to_head().iter().filter_map(|x| h.checkpoints.get(x)) {
-                for op in &o.operations {
-                    s = KitChange::apply_forward_dto(&s, &op.change);
-                }
-            }
-            assert_eq!(m1, s);
-        }
-
-        #[test]
-        fn alternative_buffers_are_independent() {
-            let h0 = KitStore::new("alt").to_full_dto();
-            let mut his = KitHistory::new(h0);
-            let a1 = his.active_alternative.as_ref().unwrap().clone();
-            his.record_operation(KitOperation {
-                kind: KitOperationKind::SetKitMetadata,
-                change: {
-                    let mut d = his.initial.clone();
-                    d.name = "fromA".into();
-                    KitChange::between(&his.initial, &d).unwrap()
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
                 },
-            });
-            let a2 = his.open_alternative();
-            his.switch_alternative(Some(a1.clone()));
-            let m = his.materialize_with_alternative(Some(&a1));
-            assert_eq!(m.name, "fromA");
-            his.switch_alternative(Some(a2.clone()));
-            let m2 = his.materialize_with_alternative(Some(&a2));
-            assert_eq!(m2.name, "alt");
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let txid = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                            type_id: TypeIdDto { id: tid },
+                                            commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                name: "RenT".into(),
+                                            }],
+                                        }],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "m".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("fin");
+            let g = k.read().expect("g");
+            assert_eq!(g.the_kit_head.is_some(), true);
+            assert_eq!(kit_store_command::the_kit_dto(&g).types[0].name, "RenT");
+        }
+
+        #[test]
+        fn read_command_nested_type() {
+            let k = Arc::new(RwLock::new(KitStore::new("rk")));
+            let mut inner = k.write().expect("w");
+            let t = Arc::new(RwLock::new(TypeStore::new("Ty")));
+            let tid = t.read().expect("tr").id.clone();
+            inner.types.push(t);
+            drop(inner);
+            let dto = k.read().unwrap().to_full_dto();
+            let r = crate::read_command::read_kit(
+                &dto,
+                &ReadKitCommand::ReadTypeCommands {
+                    id: TypeIdDto { id: tid },
+                    commands: vec![ReadTypeCommand::Name],
+                },
+            )
+            .expect("r");
+            match r {
+                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
+                    assert!(matches!(results[0], ReadTypeCommandResult::Name { .. }));
+                }
+                _ => panic!("unexpected"),
+            }
+        }
+
+        #[test]
+        fn kit_store_command_json_batch_roundtrip() {
+            let v = serde_json::json!([{
+                "readKitCommands": { "commands": [{ "everything": {} }] }
+            }]);
+            let cmds: Vec<KitStoreCommand> = serde_json::from_value(v).expect("de");
+            assert!(matches!(&cmds[0], KitStoreCommand::ReadKitCommands { .. }));
+        }
+
+        #[test]
+        fn transaction_change_undo_redo() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let txid = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let res = KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                            id: txid,
+                            commands: vec![
+                                TransactionCommand::ChangeKitCommands {
+                                    commands: vec![
+                                        crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                            type_id: TypeIdDto { id: tid.clone() },
+                                            commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                name: "Mid".into(),
+                                            }],
+                                        },
+                                    ],
+                                },
+                                TransactionCommand::ReadKitCommands {
+                                    commands: vec![ReadKitCommand::ReadTypeCommands {
+                                        id: TypeIdDto { id: tid.clone() },
+                                        commands: vec![ReadTypeCommand::Name],
+                                    }],
+                                },
+                                TransactionCommand::Undo,
+                                TransactionCommand::ReadKitCommands {
+                                    commands: vec![ReadKitCommand::ReadTypeCommands {
+                                        id: TypeIdDto { id: tid.clone() },
+                                        commands: vec![ReadTypeCommand::Name],
+                                    }],
+                                },
+                            ],
+                        }],
+                    }],
+                },
+            )
+            .expect("seq");
+            match res {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    let tr = match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results: dr,
+                        } => match &dr[0] {
+                            crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands {
+                                results: tr,
+                            } => tr,
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    };
+                    // [change, read Mid, undo, read T0]
+                    let (read1, read2) = (&tr[1], &tr[3]);
+                    match (read1, read2) {
+                        (
+                            crate::kit_transaction::TransactionCommandResult::ReadKitCommands {
+                                results: a,
+                            },
+                            crate::kit_transaction::TransactionCommandResult::ReadKitCommands {
+                                results: b,
+                            },
+                        ) => {
+                            let n1 = match &a[0] {
+                                crate::read_command::ReadKitCommandResult::ReadTypeCommands {
+                                    results: r,
+                                } => match &r[0] {
+                                    ReadTypeCommandResult::Name { name } => name.as_str(),
+                                    _ => panic!(),
+                                },
+                                _ => panic!(),
+                            };
+                            let n2 = match &b[0] {
+                                crate::read_command::ReadKitCommandResult::ReadTypeCommands {
+                                    results: r,
+                                } => match &r[0] {
+                                    ReadTypeCommandResult::Name { name } => name.as_str(),
+                                    _ => panic!(),
+                                },
+                                _ => panic!(),
+                            };
+                            assert_eq!(n1, "Mid");
+                            assert_eq!(n2, "T0");
+                        }
+                        _ => panic!("expected reads"),
+                    }
+                }
+                _ => panic!(),
+            }
+        }
+
+        #[test]
+        fn draft_undo_across_transactions() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let run_tx = |name: &str| {
+                let txid = match KitStore::execute_vcs(
+                    &k,
+                    KitStoreCommand::ExecuteSessionCommands {
+                        id: sid.clone(),
+                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                            id: did.clone(),
+                            commands: vec![KitDraftCommand::StartTransaction],
+                        }],
+                    },
+                )
+                .expect("st")
+                {
+                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                        match &results[0] {
+                            crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                                results,
+                            } => match &results[0] {
+                                crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                    transaction_id,
+                                } => transaction_id.clone(),
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        }
+                    }
+                    _ => panic!(),
+                };
+                KitStore::execute_vcs(
+                    &k,
+                    KitStoreCommand::ExecuteSessionCommands {
+                        id: sid.clone(),
+                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                            id: did.clone(),
+                            commands: vec![KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid.clone() },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: name.into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            }],
+                        }],
+                    },
+                )
+                .expect("tx");
+            };
+            run_tx("A1");
+            run_tx("A2");
+            let dto_b = k.read().expect("g").to_full_dto();
+            assert_eq!(read_type_name(&dto_b, &tid), "A2");
+            KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::Undo { count: 1 }],
+                    }],
+                },
+            )
+            .expect("undo dr");
+            let dto_a = k.read().expect("g").to_full_dto();
+            assert_eq!(read_type_name(&dto_a, &tid), "A1");
+        }
+
+        #[test]
+        fn finalize_to_checkpoint_first_has_none_parent() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let txid = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let cp = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: txid,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "H".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "m".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("fin")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let g = k.read().expect("g");
+            let head = g.the_kit_head.as_ref().expect("head");
+            assert_eq!(head, &cp);
+            let cp_rec = g.checkpoints.get(&cp).expect("cp");
+            assert_eq!(cp_rec.parent, None);
+        }
+
+        #[test]
+        fn alternative_new_extend_leaves_the_kit_head_on_main_line() {
+            let (k, tid) = make_kit_with_type();
+            // First checkpoint on main
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did0.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let cp_main = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did0,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx0,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid.clone() },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "Main1".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "m0".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("f0")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let main_head = k.read().expect("g").the_kit_head.clone();
+            // Branch from cp_main
+            let alt_id = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint: cp_main.clone(),
+                    name: "br".into(),
+                },
+            )
+            .expect("alt")
+            {
+                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+                _ => panic!(),
+            };
+            // Draft on alternative tip
+            let did1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: Some(cp_main.clone()),
+                        alternative_id: Some(alt_id.clone()),
+                    }],
+                },
+            )
+            .expect("nd1")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did1.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st1")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let _ = KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did1,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx1,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid.clone() },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "Alt1".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "a".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("fa");
+            let g = k.read().expect("g");
+            assert_eq!(g.the_kit_head, main_head);
+            let a = g.alternatives.get(&alt_id).expect("alt");
+            assert_eq!(a.checkpoints.len(), 2);
+            let tip = a.checkpoints.last().expect("tip");
+            let alt_dto = crate::kit_checkpoint::materialize_dto(
+                &g.initial,
+                &g.checkpoints,
+                Some(tip),
+            );
+            assert_eq!(
+                read_type_name(&kit_store_command::the_kit_dto(&g), &tid),
+                "Main1"
+            );
+            assert_eq!(read_type_name(&alt_dto, &tid), "Alt1");
+        }
+
+        #[test]
+        fn alternative_share_checkpoints() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let cp0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "C0".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "m".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("f")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let a1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint: cp0.clone(),
+                    name: "a1".into(),
+                },
+            )
+            .expect("a1")
+            {
+                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+                _ => panic!(),
+            };
+            let a2 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint: cp0,
+                    name: "a2".into(),
+                },
+            )
+            .expect("a2")
+            {
+                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+                _ => panic!(),
+            };
+            let g = k.read().expect("g");
+            let v1 = g.alternatives.get(&a1).expect("a1").checkpoints[0].clone();
+            let v2 = g.alternatives.get(&a2).expect("a2").checkpoints[0].clone();
+            assert_eq!(v1, v2);
+        }
+
+        #[test]
+        fn unify_alternative_replaces_list_with_root_and_new() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            // cp0 on main: T0->M
+            let did0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did0.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let cp0 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did0,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx0,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid.clone() },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "M".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "c0".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("f0")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let alt = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::NewAlternative {
+                    from_checkpoint: cp0.clone(),
+                    name: "a".into(),
+                },
+            )
+            .expect("na")
+            {
+                kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
+                _ => panic!(),
+            };
+            // extend alt: cp0 -> cp1
+            let did1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: Some(cp0.clone()),
+                        alternative_id: Some(alt.clone()),
+                    }],
+                },
+            )
+            .expect("nd1")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did1.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st1")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let _cp1 = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did1,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx1,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "AltEnd".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "c1".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("f1")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let before_unify = {
+                let g = k.read().expect("g");
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l");
+                crate::kit_checkpoint::materialize_dto(&g.initial, &g.checkpoints, Some(t))
+            };
+            let _ = KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteKitAlternativeCommands {
+                    id: alt.clone(),
+                    commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint {
+                        message: "u".into(),
+                    }],
+                },
+            )
+            .expect("unify");
+            let after_unify = {
+                let g = k.read().expect("g");
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2");
+                crate::kit_checkpoint::materialize_dto(&g.initial, &g.checkpoints, Some(t))
+            };
+            assert_eq!(before_unify, after_unify);
+            let g = k.read().expect("g");
+            let al = g.alternatives.get(&alt).expect("a");
+            assert_eq!(al.checkpoints.len(), 2);
+        }
+
+        #[test]
+        fn release_caches_materialized_kit() {
+            let (k, tid) = make_kit_with_type();
+            let sid = match KitStore::execute_vcs(&k, KitStoreCommand::NewSession).expect("ns") {
+                kit_store_command::KitStoreCommandResult::NewSession { id } => id,
+                _ => panic!(),
+            };
+            let did = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::NewDraft {
+                        checkpoint_id: None,
+                        alternative_id: None,
+                    }],
+                },
+            )
+            .expect("nd")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
+                            draft_id.clone()
+                        }
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let tx = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid.clone(),
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did.clone(),
+                        commands: vec![KitDraftCommand::StartTransaction],
+                    }],
+                },
+            )
+            .expect("st")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
+                                transaction_id,
+                            } => transaction_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let cp = match KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteSessionCommands {
+                    id: sid,
+                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
+                        id: did,
+                        commands: vec![
+                            KitDraftCommand::ExecuteTransactionCommands {
+                                id: tx,
+                                commands: vec![
+                                    TransactionCommand::ChangeKitCommands {
+                                        commands: vec![
+                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
+                                                type_id: TypeIdDto { id: tid },
+                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
+                                                    name: "RelT".into(),
+                                                }],
+                                            },
+                                        ],
+                                    },
+                                    TransactionCommand::Finalize,
+                                ],
+                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint {
+                                message: "r".into(),
+                            },
+                        ],
+                    }],
+                },
+            )
+            .expect("f")
+            {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
+                    match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
+                            results,
+                        } => match &results[1] {
+                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
+                                checkpoint_id,
+                            } => checkpoint_id.clone(),
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+                _ => panic!(),
+            };
+            let _ = KitStore::execute_vcs(
+                &k,
+                KitStoreCommand::ExecuteKitCheckpointCommands {
+                    id: cp.clone(),
+                    commands: vec![KitCheckpointCommand::MarkAsRelease],
+                },
+            )
+            .expect("rel");
+            let g = k.read().expect("g");
+            let mk = g
+                .checkpoints
+                .get(&cp)
+                .expect("cp")
+                .release
+                .as_ref()
+                .expect("mk");
+            let computed = mk.compute();
+            let cached = mk.computed.as_ref().expect("cached");
+            assert_eq!(&computed, cached);
+        }
+
+        #[test]
+        fn read_command_tree_returns_nested_results() {
+            let (k, tid) = make_kit_with_type();
+            let dto = k.read().expect("g").to_full_dto();
+            let r = crate::read_command::read_kit(
+                &dto,
+                &ReadKitCommand::ReadTypeCommands {
+                    id: TypeIdDto { id: tid },
+                    commands: vec![
+                        ReadTypeCommand::Everything,
+                        ReadTypeCommand::Name,
+                    ],
+                },
+            )
+            .expect("r");
+            match r {
+                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
+                    assert!(matches!(&results[0], ReadTypeCommandResult::Everything { .. }));
+                    assert!(matches!(&results[1], ReadTypeCommandResult::Name { .. }));
+                }
+                _ => panic!(),
+            }
+            let r2 = crate::read_command::read_kit(
+                &dto,
+                &ReadKitCommand::Everything {},
+            )
+            .expect("r2");
+            assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Everything { .. }));
         }
     }
 }
@@ -21342,16 +21520,26 @@ pub use design::{
     DesignStoreWeak,
 };
 pub use diff::{DesignChange, DesignDiff};
-pub use history::{KitCheckpoint, KitHistory, KitHistoryFullDto, MaterializedKit};
-pub use kit_change::KitChange;
-pub use kit_command::{
-    AddChildRpc, ApplyDesignDiffRpc, ApplyKitDiffRpc, BuiltinKitCommand, KitCommand,
-    RemoveChildRpc,
+pub use change_command::{
+    ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
 };
+pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
+pub use kit_change::{KitChange, KitChangeKind};
+pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
 pub use kit_diff::{
     apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,
 };
-pub use kit_operation::{KitOperation, KitOperationKind};
+pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+pub use kit_session::{Session, SessionCommand, SessionCommandResult};
+pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
+pub use kit_transaction::{
+    Transaction, TransactionCommand, TransactionCommandResult, TransactionState,
+};
+pub use read_command::{
+    ReadConnectionCommand, ReadConnectionCommandResult, ReadDesignCommand, ReadDesignCommandResult,
+    ReadKitCommand, ReadKitCommandResult, ReadPieceCommand, ReadPieceCommandResult, ReadPortCommand,
+    ReadPortCommandResult, ReadTypeCommand, ReadTypeCommandResult,
+};
 pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{
@@ -21394,7 +21582,6 @@ pub use representation::{
     RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto,
     RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak,
 };
-pub use session::KitGraphSession;
 pub use side::{
     SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak,
 };

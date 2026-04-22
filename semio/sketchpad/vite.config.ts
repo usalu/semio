@@ -169,6 +169,9 @@ export default defineConfig(async ({ mode }) => {
         external: ["@playwright/test", "node:fs/promises", "node:path", "node:url", "@semio/assets/semio/metabolism.kit.semio.json", "fs", "path", "url"],
       },
     },
+    worker: {
+      format: "es",
+    },
     ssr: {
       noExternal: ["golden-layout"],
     },

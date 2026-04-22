@@ -20487,6 +20487,13 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
   const timeoutMs = opts.timeoutMs ?? 60_000;
   const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
 
+  const importWasmModule = async (specifier: string) => {
+    if (specifier === "@semio/rs-wasm") {
+      return import("@semio/rs-wasm");
+    }
+    return import(/* @vite-ignore */ specifier);
+  };
+
   const initWasmModule = async (mod: any): Promise<void> => {
     if (typeof mod.default !== "function") return;
     if (typeof Worker === "undefined") {
@@ -20503,7 +20510,7 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
   };
 
   if (useFallback) {
-    const mod = await import(/* @vite-ignore */ wasmSpecifier);
+    const mod = await importWasmModule(wasmSpecifier);
     await initWasmModule(mod);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
@@ -20516,7 +20523,7 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     await api.init(wasmSpecifier, dto);
     return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
   } catch {
-    const mod = await import(/* @vite-ignore */ wasmSpecifier);
+    const mod = await importWasmModule(wasmSpecifier);
     await initWasmModule(mod);
     return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
@@ -27654,9 +27661,11 @@ const uploadKitFileToProvider = async (kitStore: KitStore, kit: Kit, file: Semio
   // 🔖EmbedInJsonFileKit
   // For file kits, embed the blob as a data URL in file.blob so everything
   // stays inside the single *.kit.semio.json file on save.
-  // Specs: Use embedFileBlob presence, not instanceof JsonFileKitStore — desktop may load two bundle copies of the class so instanceof would skip embedding. kitStore may be a CollaborativeKitStore wrapper, so also check the inner store exposed via `.store`.
+  // Specs: Prefer the inner store exposed by wrappers like CollaborativeKitStore.
+  // The wrapper itself always exposes embedFileBlob as a pass-through, even for
+  // folder kits where filesystem writes must still happen.
   const innerCandidate = (kitStore as { store?: unknown }).store;
-  const embedTarget = typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : null;
+  const embedTarget = typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : null;
   if (embedTarget) {
     try {
       await embedTarget.embedFileBlob(file.id, blob);
