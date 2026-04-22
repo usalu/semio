@@ -93,9 +93,7 @@ const configuration: UserConfig = {
       "tailwind-merge",
       "three",
       "three/addons/loaders/OBJLoader.js",
-      "xstate",
-      "y-indexeddb",
-      "yjs",
+      "xstate"
     ],
   },
   resolve: {

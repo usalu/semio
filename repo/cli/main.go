@@ -14457,7 +14457,6 @@ const (
 	BreachSketchpadImportThirdParty                    Statute = "sketchpad/import/third-party-outside-elements"
 	BreachSketchpadStateMultipleMachines               Statute = "sketchpad/state/multiple-machines"
 	BreachSketchpadStateCreateActor                    Statute = "sketchpad/state/create-actor-usage"
-	BreachSketchpadStateYjsAppState                    Statute = "sketchpad/state/yjs-app-state"
 	BreachSketchpadStateForbiddenStore                 Statute = "sketchpad/state/forbidden-store"
 	BreachSketchpadHooksNonTriadic                     Statute = "sketchpad/hooks/non-triadic"
 	BreachCodeUnicodeEmojiVariation                    Statute = "code/unicode/emoji-variation"
@@ -14808,13 +14807,6 @@ var statuteInfoTable = map[Statute]StatuteMeta{
 		Priority:    BreachPriorityHigh,
 		Reason:      "createActor is forbidden in sketchpad",
 		Solution:    "Remove createActor usage and use the single state machine instead",
-		Autofixable: false,
-	},
-	BreachSketchpadStateYjsAppState: {
-		Kind:        BreachSketchpadStateYjsAppState,
-		Priority:    BreachPriorityHigh,
-		Reason:      "Yjs should only be used for kit data synchronization, not app state",
-		Solution:    "Move app state to the state machine and use Yjs only for kit data sync",
 		Autofixable: false,
 	},
 	BreachSketchpadStateForbiddenStore: {
@@ -18935,18 +18927,6 @@ func sketchpadPolicy(ctx *PolicyContext) []Breach {
 					"createActor is forbidden in sketchpad",
 					BreachSketchpadStateCreateActor,
 					file, lineNumber, 0, strings.TrimSpace(line)))
-			}
-			yjsAppStatePatterns := []string{"Y.Doc(", "new Doc(", "Y.Map(", "Y.Array(", "Y.Text("}
-			for _, pattern := range yjsAppStatePatterns {
-				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
-					if !strings.Contains(strings.ToLower(file), "kit") &&
-						!strings.Contains(strings.ToLower(file), "sync") {
-						breachs = append(breachs, ctx.CreateBreach(
-							"Yjs should only be used for kit data synchronization, not app state",
-							BreachSketchpadStateYjsAppState,
-							file, lineNumber, 0, strings.TrimSpace(line)))
-					}
-				}
 			}
 			storePatterns := []string{"create(", "createStore(", "useStore("}
 			for _, pattern := range storePatterns {

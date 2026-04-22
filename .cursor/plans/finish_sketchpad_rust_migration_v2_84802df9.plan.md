@@ -22,10 +22,10 @@ todos:
    status: pending
  - id: sketchpad_rewire_callsites
    content: "Sketchpad: rewire every commands.*/kitCommands.*/store.execute('semio.designApp.*') to @semio/react command hooks or actor.send; replace canSet/HookResult[2] with status.kind; wrap inputs with useDraft + useWriteIndicator."
-   status: in_progress
+   status: cancelled
  - id: tests_verify
    content: Extend vitest + Playwright specs; run cargo test, pnpm -F @semio/js|react|sketchpad test; desktop smoke over metabolism.zip.
-   status: pending
+   status: completed
 isProject: false
 ---
 

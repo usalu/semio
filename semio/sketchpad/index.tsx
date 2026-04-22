@@ -282,7 +282,6 @@ import {
   KitProvider,
   KitRegistryProvider,
   useActiveKitId,
-  useCreateAuthor,
   useCreateDesign,
   useCreateFolder,
   useCreatePort,
@@ -291,7 +290,6 @@ import {
   useKitRegistrySafe,
   useKitRuntimeSafe,
   useMoveKitArtifactToFolder,
-  useUpdateAuthor,
   useUpdateDesign,
   useUpdateType,
 } from "@semio/react";
@@ -12957,7 +12955,6 @@ const DroppableTableWrapper: FC<{ children: React.ReactNode }> = ({ children }) 
  **/
 const KitDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const kitCommands = useKitCommands();
   const { t } = useTranslation();
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -41395,14 +41392,12 @@ export const AuthorsSection: FC = () => {
 /**
  **/
 const AuthorsSectionForm: FC = () => {
-  const { run: runUpdateType } = useUpdateType();
-  const { run: runCreateAuthor } = useCreateAuthor();
-  const { run: runUpdateAuthor } = useUpdateAuthor();
+  const kitCommands = useKitCommands();
   const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit | null;
 
   const updateAuthors = (authors: string[]) => {
-    void runUpdateType(type.id, { authors: authors.map((a) => ({ id: a })) });
+    kitCommands?.updateType(type.id, { authors: authors.map((a) => ({ id: a })) });
   };
 
   const hasAuthors = type?.authors && type.authors.length > 0;
@@ -41416,14 +41411,12 @@ const AuthorsSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const newAuthorId = id();
-              void (async () => {
-                const r = await runCreateAuthor({
-                  id: newAuthorId,
-                  name: "",
-                  email: "",
-                });
-                if (r.ok) updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
-              })();
+              kitCommands?.createAuthor({
+                id: newAuthorId,
+                name: "",
+                email: "",
+              });
+              updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
             },
             id: "semio.sketchpad.common.add",
           },
@@ -41470,7 +41463,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.name"
                     value={item.name}
                     onChange={(e) => {
-                      void runUpdateAuthor(item.authorId, { name: e.target.value });
+                      kitCommands?.updateAuthor(item.authorId, { name: e.target.value });
                     }}
                     showLabel
                   />
@@ -41480,7 +41473,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.email"
                     value={item.email}
                     onChange={(e) => {
-                      void runUpdateAuthor(item.authorId, { email: e.target.value });
+                      kitCommands?.updateAuthor(item.authorId, { email: e.target.value });
                     }}
                     showLabel
                   />

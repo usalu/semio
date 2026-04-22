@@ -11414,9 +11414,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       const labelRect = labelElement.getBoundingClientRect();
       const controlRect = controlElement.getBoundingClientRect();
       const overlaps = labelRect.right + detailPanelPropertyInlineGapPx > controlRect.left;
-      const shouldStack = propertyRowStacked
-        ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx
-        : overlaps || minimumInlineWidthPx > rowWidthPx;
+      const shouldStack = propertyRowStacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
       setPropertyRowStacked((current) => (current === shouldStack ? current : shouldStack));
     };
 
@@ -11526,12 +11524,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
     >
       {propertyLabelElement}
-      <div
-        ref={propertyControlRef}
-        data-slot="property-control"
-        className={detailPanelPropertyControlClassName}
-        style={propertyRowStacked ? { paddingLeft: `${detailPanelPropertyLabelColumnWidthPx + detailPanelPropertyInlineGapPx}px` } : undefined}
-      >
+      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingLeft: `${detailPanelPropertyLabelColumnWidthPx + detailPanelPropertyInlineGapPx}px` } : undefined}>
         <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
       </div>
     </div>
@@ -14569,7 +14562,10 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       }
     };
     const onUp = (e: PointerEvent) => {
-      if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = 0; }
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = 0;
+      }
       const newT = angleFromEvent(e);
       setLocalT(null);
       onOrbChange?.(draggingOrbId, dragStartT.current, newT);
@@ -14577,7 +14573,10 @@ function Ring({ id, orbs, radius = 40, size = 100, onOrbChange, onOrbSelect, onO
       transaction?.finalize?.();
     };
     const onCancel = () => {
-      if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = 0; }
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+        rafId.current = 0;
+      }
       setLocalT(null);
       setDraggingOrbId(null);
       transaction?.abort?.();
@@ -22123,10 +22122,6 @@ export { de as dateFnsDe, enUS as dateFnsEnUS } from "date-fns/locale";
 export { default as Fuse } from "fuse.js";
 export type { FuseResult } from "fuse.js";
 // #endregion 🔔Search
-
-// #region 🎍Collaboration
-export * as Y from "yjs";
-// #endregion 🎍Collaboration
 
 // #region 🧵MDX
 export { MDXProvider } from "@mdx-js/react";

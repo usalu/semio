@@ -14252,6 +14252,59 @@ if (shouldRunReactEmbeddedTests) {
 			expect(r.ok).toBe(false);
 			expect(snap!.value).toBe("reject");
 		});
+
+		it("clears draft when commit succeeds", async () => {
+			const triad: HookTriad<string> = [
+				"server",
+				async (next) => {
+					const v = typeof next === "function" ? (next as (p: string) => string)("server") : next;
+					return { ok: true } as const;
+				},
+				{ kind: "idle", pending: 0 },
+			];
+			let snap: ReturnType<typeof useDraft<string>> | null = null;
+			function P() {
+				snap = useDraft(triad);
+				return null;
+			}
+			render(React.createElement(P));
+			await waitFor(() => expect(snap).not.toBeNull());
+			await act(async () => {
+				snap!.setDraft("edited");
+			});
+			expect(snap!.value).toBe("edited");
+			const r = await act(async () => snap!.commit());
+			expect(r.ok).toBe(true);
+			expect(snap!.value).toBe("server");
+		});
+
+		it("two useDraft instances do not share draft state", async () => {
+			const triadA: HookTriad<string> = [
+				"a",
+				async () => ({ ok: true } as const),
+				{ kind: "idle", pending: 0 },
+			];
+			const triadB: HookTriad<string> = [
+				"b",
+				async () => ({ ok: true } as const),
+				{ kind: "idle", pending: 0 },
+			];
+			let sa: ReturnType<typeof useDraft<string>> | null = null;
+			let sb: ReturnType<typeof useDraft<string>> | null = null;
+			function P() {
+				sa = useDraft(triadA);
+				sb = useDraft(triadB);
+				return null;
+			}
+			render(React.createElement(P));
+			await waitFor(() => expect(sa && sb).toBeTruthy());
+			await act(async () => {
+				sa!.setDraft("only-a");
+				sb!.setDraft("only-b");
+			});
+			expect(sa!.value).toBe("only-a");
+			expect(sb!.value).toBe("only-b");
+		});
 	});
 }
 // #endregion ⚛️Embedded tests

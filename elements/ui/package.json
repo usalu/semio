@@ -76,8 +76,7 @@
     "storybook": "^10.3.5",
     "tailwind-merge": "^3.4.0",
     "three": "^0.182.0",
-    "xstate": "^5.25.0",
-    "yjs": "^13.6.28"
+    "xstate": "^5.25.0"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",
