@@ -1,35 +1,131 @@
-# ZRS Ingenieure – Early-Stage Integrated Engineering Practice
+# ZRS Ingenieure – Integrierte Tragwerksplanung im Reuse-Kontext
 
-Tags: #engineering #reuse #interview-source #priority-medium
+Tags: #engineering #design #reuse #interview-source #priority-high
 
 ---
 
-## Type
-Ingenieurpraxis mit integrierter, früher Einbindung von Tragwerk, Nachhaltigkeit, Brandschutz und Bauphysik.
+## Einordnung im Forschungskontext
 
-## Why this is a strong interview pick
-Neben einzelnen Projekten ist ZRS auch als Praxis interessant, weil hier **strukturelles Denken früh in den Entwurfsprozess** eingebracht wird.  
-Das ist besonders relevant für Reuse, weil der Entwurf nicht mit einem idealen System beginnt, sondern mit vorhandenen Elementen.
+ZRS steht für eine Praxis, in der **Tragwerk, Nachhaltigkeit und Entwurf frühzeitig integriert** werden.  
+Im Reuse-Kontext wird dadurch ein Planungsmodell sichtbar, in dem **strukturelle Entscheidungen nicht nachgelagert**, sondern **entwurfsleitend** getroffen werden.
 
-## What this source can contribute
-- Wie Tragwerksdenken früh in den Entwurf einfließt
-- Wie sich Reuse-Prozesse von konventionellem Neubau unterscheiden
-- Welche Informationen Ingenieur:innen früh brauchen
-- Wie integrierte Planung die Zahl später Iterationen reduziert
-- Wo digitale Unterstützung für frühe Plausibilitätsprüfungen sinnvoll wäre
+Für die Forschung ist ZRS zentral für:
+- Integration von **Tragwerkslogik in frühe Entwurfsphasen**
+- Umgang mit **Unsicherheit und variablen Bauteileigenschaften**
+- Entwicklung von **Plausibilitätslogiken statt klassischer Vordimensionierung**
 
-## Research relevance
-Direkt relevant für:
-- Verbindung von **Entwurf und Tragwerk**
-- frühe **strukturelle Plausibilität**
-- Anforderungen an Tools für reuse-basiertes Entwerfen
-- integrierte Planung statt nachträglicher Prüfung
+---
+
+## Relevante Beispiele
+
+### 1. ZRS Engineering Leistungen
+https://www.zrs.berlin/en/engineering/
+
+**Relevanz**  
+Es wird eine integrierte Planung beschrieben, bei der Tragwerk, Bauphysik und Nachhaltigkeit gemeinsam gedacht werden.
+
+**Beitrag zur Forschung**  
+Es wird deutlich, dass für Reuse eine **frühe Kopplung von Entwurf und Tragwerk** notwendig ist.
+
+**Verbindungen**
+- [[zrs-crclr-house]]
+- [[be-ware-engineering]]
+- [[concular]]
+
+---
+
+### 2. Integrierte Planung (Tragwerk + Nachhaltigkeit)
+https://www.zrs.berlin/en/
+
+**Relevanz**  
+ZRS positioniert sich explizit als interdisziplinäre Praxis.
+
+**Beitrag zur Forschung**  
+Dies bestätigt die Notwendigkeit, dass eine Plattform **mehrere Bewertungsebenen gleichzeitig** abbilden muss:
+- Tragwerk
+- Ökologie
+- Entwurf
+
+**Verbindungen**
+- [[madaster]]
+- [[concular]]
+- [[reallabor-zirkulaeres-bauen-design]]
+
+---
+
+### 3. Projekte mit Reuse-Ansatz (z.B. CRCLR House)
+https://www.zrs.berlin/project/crclr-house/
+
+**Relevanz**  
+Konkrete Umsetzung von reuse-basiertem Tragwerk.
+
+**Beitrag zur Forschung**  
+Zeigt, wie strukturelle Entscheidungen aus **bestehenden Bauteilen abgeleitet** werden.
+
+**Verbindungen**
+- [[bim-berlin-data-model]]
+- [[be-ware-engineering]]
+- [[arup-reuse]]
+
+---
+
+## Zentrale Erkenntnisse
+
+- Tragwerk wird im Reuse-Kontext zu einem **selektiven und kombinatorischen Prozess**
+- Klassische Vordimensionierung verliert an Bedeutung
+- Entscheidend sind:
+  - Bauteilzustand
+  - Geometrie
+  - Kombinierbarkeit
+
+---
+
+## Ableitung für die Plattform
+
+- Integration von **Tragwerkslogik in frühe Entwurfsphasen**
+- Entwicklung von:
+  - **vereinfachten strukturellen Checks**
+  - **Plausibilitätsbewertungen**
+- Verknüpfung von:
+  - Geometrie
+  - Materialdaten
+  - Tragfähigkeit
+
+---
+
+## Interviewfragen
+
+### Tragwerksintegration
+- Ab wann wird Tragwerk im Reuse-Prozess berücksichtigt?
+- Wie verändert sich die Planung im Vergleich zu Neubau?
+
+### Daten
+- Welche Bauteildaten sind für strukturelle Entscheidungen notwendig?
+- Welche Unsicherheiten bestehen?
+
+### Workflow
+- Wie erfolgt die Abstimmung mit Architekt:innen?
+- Wo entstehen Iterationen?
+
+### Digitalisierung
+- Welche Tools fehlen für reuse-basiertes Tragwerksdesign?
+
+---
+
+## Relevante Hinweise
+
+- ZRS zeigt exemplarisch den Übergang von:
+  - **Top-down Tragwerksplanung**
+  - zu **Bottom-up Bauteilselektion**
+
+---
 
 ## Connections
-- [[zrs-crclr-house]]
-- [[arup-reuse]]
-- [[iyhcc-berlin]]
-- [[museums-pavilion]]
 
-## External Links
-- https://www.zrs.berlin/en/engineering/
+- [[zrs-crclr-house]]
+- [[zrs-crclr-house-design]]
+- [[be-ware-engineering]]
+- [[arup-reuse]]
+- [[concular]]
+- [[madaster]]
+- [[bim-berlin-data-model]]

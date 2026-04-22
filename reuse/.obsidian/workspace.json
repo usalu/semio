@@ -11,10 +11,14 @@
             "id": "98e5dd2c0b43ebdf",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Graph view"
+              "type": "markdown",
+              "state": {
+                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "zusammenkunft-berlin"
             }
           }
         ]
@@ -49,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "tag:#material-passport",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -74,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 365.5
   },
   "right": {
     "id": "445e91c4afc10260",
@@ -90,6 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -99,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks"
+              "title": "Backlinks for zusammenkunft-berlin"
             }
           },
           {
@@ -108,11 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links"
+              "title": "Outgoing links from zusammenkunft-berlin"
             }
           },
           {
@@ -150,12 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of zusammenkunft-berlin"
             }
           }
         ]
@@ -178,36 +185,36 @@
   },
   "active": "98e5dd2c0b43ebdf",
   "lastOpenFiles": [
-    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin-data-model.md",
-    "research/Interviews/interview-sources/05_design/zrs-crclr-house-design.md",
-    "research/Interviews/interview-sources/05_design/reallabor-zirkulaeres-bauen-design.md",
-    "research/Interviews/interview-sources/05_design/haus-der-materialisierung-design.md",
-    "research/Interviews/interview-sources/02_urban-mining/bim-berlin-reuse-pilots.md",
-    "research/Interviews/interview-sources/04_engineering/be-ware-engineering.md",
-    "research/Interviews/interview-sources/04_engineering/zrs-engineering.md",
-    "research/Interviews/interview-sources/02_urban-mining/concular-urban-mining.md",
-    "research/Interviews/interview-sources/03_material-supply/concular-supply.md",
-    "research/Interviews/interview-sources/03_material-supply/bim-berlin-supply.md",
-    "research/Interviews/interview-sources/02_urban-mining/bim-berlin-reuse-pilot.md",
-    "research/Interviews/interview-sources/00_index.md",
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
     "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
     "research/Interviews/interview-sources/05_design/museums-pavilion.md",
-    "research/Interviews/interview-sources/05_design",
+    "research/Interviews/interview-sources/05_design/museums-pavilion-enhanced.md",
     "research/Interviews/interview-sources/04_engineering/iyhcc-berlin.md",
+    "research/Interviews/interview-sources/04_engineering/iyhcc-berlin-enhanced.md",
+    "research/Interviews/interview-sources/04_engineering/zrs-engineering.md",
+    "research/Interviews/interview-sources/04_engineering/zrs-engineering-enhanced.md",
+    "research/Interviews/interview-sources/04_engineering/zrs-crclr-house-enhanced.md",
     "research/Interviews/interview-sources/04_engineering/arup-reuse.md",
-    "research/Interviews/interview-sources/04_engineering/zrs-crclr-house.md",
-    "research/Interviews/interview-sources/04_engineering",
-    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-hdm.md",
-    "research/Interviews/interview-sources/01_digital-platforms/madaster.md",
+    "research/Interviews/interview-sources/04_engineering/arup-reuse.md",
+    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-berlin-enhanced.md",
     "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-pankow.md",
-    "research/Interviews/interview-sources/03_material-supply",
-    "research/Interviews/interview-sources/02_urban-mining/be-ware.md",
-    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin-bauteilauktion.md",
-    "be-ware.md",
+    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-hdm.md",
     "research/Interviews/interview-sources/02_urban-mining/kunst-stoffe-berlin.md",
+    "research/Interviews/interview-sources/02_urban-mining/hdm-research-note.md",
     "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
-    "research/Interviews/interview-sources/02_urban-mining",
+    "research/Interviews/interview-sources/02_urban-mining/bim-berlin-reuse-pilots.md",
+    "research/Interviews/interview-sources/02_urban-mining/be-ware-nbl.md",
+    "research/Interviews/interview-sources/01_digital-platforms/madaster.md",
+    "research/Interviews/interview-sources/01_digital-platforms/concular.md",
     "research/Interviews/interview-sources/01_digital-platforms/biz-reallabor-zirkulaeres-bauen.md",
+    "research/Interviews/interview-sources/01_digital-platforms/biz-berlin-enhanced.md",
+    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin-research-note.md",
+    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin.md",
+    "research/Interviews/interview-sources/02_urban-mining/be-ware.md",
+    "research/Interviews/interview-sources/05_design",
+    "research/Interviews/interview-sources/04_engineering",
+    "research/Interviews/interview-sources/03_material-supply",
+    "research/Interviews/interview-sources/02_urban-mining",
     "research/Interviews/interview-sources/01_digital-platforms",
     "research/Interviews/interview-sources",
     "research/Interviews"
