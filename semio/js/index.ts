@@ -19696,6 +19696,13 @@ export interface KitStoreClient {
   getTypes(): Promise<any>;
   getAuthors(): Promise<any>;
   getKitMetadata(): Promise<any>;
+  undo(): Promise<SetResult>;
+  redo(): Promise<SetResult>;
+  canUndo(): Promise<boolean>;
+  canRedo(): Promise<boolean>;
+  beginTx(): Promise<SetResult>;
+  commitTx(): Promise<SetResult>;
+  abortTx(): Promise<SetResult>;
   subscribe(cb: (ev: any) => void): () => void;
   dispose(): void;
 }
@@ -19731,9 +19738,23 @@ function validateOptionalDisplayName(name: string | null | undefined, label: str
 export class FallbackKitStoreClient implements KitStoreClient {
   private dto: any;
   private listeners: Set<(ev: any) => void> = new Set();
+  private static readonly _maxUndo = 100;
+  private _undoPast: { before: any; after: any }[] = [];
+  private _undoFuture: { before: any; after: any }[] = [];
+  private _txDepth = 0;
+  private _txSnapshot: any = null;
 
   constructor(initialDto: any) {
     this.dto = initialDto;
+  }
+
+  private recordAfterMutation(before: any) {
+    if (this._txDepth > 0) return;
+    const after = structuredClone(this.dto);
+    if (JSON.stringify(before) === JSON.stringify(after)) return;
+    this._undoPast.push({ before, after });
+    if (this._undoPast.length > FallbackKitStoreClient._maxUndo) this._undoPast.shift();
+    this._undoFuture = [];
   }
 
   getDto() {
@@ -19775,6 +19796,11 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async setField(kind: string, guid: string, field: string, value: unknown): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
+      const fin = (r: SetResult): SetResult => {
+        if (r.ok) this.recordAfterMutation(before);
+        return r;
+      };
       if (kind === "Kit") {
         if (this.dto.guid !== guid) return { ok: false, error: { kind: "NotFound", message: `kit ${guid}` } };
         if (field === "name") {
@@ -19784,10 +19810,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
             this.emit({ SetRejected: { entity: { kind: "Kit", guid }, field: "name", error: v.error } });
             return v;
           }
-          if (this.dto.name === s.trim()) return { ok: true } as const;
+          if (this.dto.name === s.trim()) return fin({ ok: true } as const);
           this.dto.name = s.trim();
           this.emit({ FieldChanged: { entity: { kind: "Kit", guid }, field: "name" } });
-          return { ok: true } as const;
+          return fin({ ok: true } as const);
         }
         return { ok: false, error: { kind: "InvalidValue", message: `unknown kit field '${field}'` } };
       }
@@ -19801,10 +19827,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
             this.emit({ SetRejected: { entity: { kind: "Design", guid }, field: "name", error: v.error } });
             return v;
           }
-          if (d.name === s.trim()) return { ok: true } as const;
+          if (d.name === s.trim()) return fin({ ok: true } as const);
           d.name = s.trim();
           this.emit({ FieldChanged: { entity: { kind: "Design", guid }, field: "name" } });
-          return { ok: true } as const;
+          return fin({ ok: true } as const);
         }
         return { ok: false, error: { kind: "InvalidValue", message: `unknown design field '${field}'` } };
       }
@@ -19818,10 +19844,10 @@ export class FallbackKitStoreClient implements KitStoreClient {
             this.emit({ SetRejected: { entity: { kind: "Type", guid }, field: "name", error: v.error } });
             return v;
           }
-          if (t.name === s.trim()) return { ok: true } as const;
+          if (t.name === s.trim()) return fin({ ok: true } as const);
           t.name = s.trim();
           this.emit({ FieldChanged: { entity: { kind: "Type", guid }, field: "name" } });
-          return { ok: true } as const;
+          return fin({ ok: true } as const);
         }
         return { ok: false, error: { kind: "InvalidValue", message: `unknown type field '${field}'` } };
       }
@@ -19837,17 +19863,17 @@ export class FallbackKitStoreClient implements KitStoreClient {
             this.emit({ SetRejected: { entity: { kind: "Piece", guid }, field: "name", error: v.error } });
             return v;
           }
-          if (hit.piece.name === next) return { ok: true } as const;
+          if (hit.piece.name === next) return fin({ ok: true } as const);
           hit.piece.name = next;
           this.emit({ FieldChanged: { entity: { kind: "Piece", guid }, field: "name" } });
-          return { ok: true } as const;
+          return fin({ ok: true } as const);
         }
         if (field === "color") {
           const next = value == null ? undefined : String(value);
-          if (hit.piece.color === next) return { ok: true } as const;
+          if (hit.piece.color === next) return fin({ ok: true } as const);
           hit.piece.color = next;
           this.emit({ FieldChanged: { entity: { kind: "Piece", guid }, field: "color" } });
-          return { ok: true } as const;
+          return fin({ ok: true } as const);
         }
         return { ok: false, error: { kind: "InvalidValue", message: `unknown piece field '${field}'` } };
       }
@@ -19858,6 +19884,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
   }
 
   async addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown): Promise<SetResult> {
+    const before = structuredClone(this.dto);
     if (parentKind !== "Design" || childKind !== "Piece") {
       return { ok: false, error: { kind: "InvalidValue", message: `addChild not implemented for ${parentKind} -> ${childKind}` } };
     }
@@ -19868,23 +19895,27 @@ export class FallbackKitStoreClient implements KitStoreClient {
     if (!d.pieces) d.pieces = [];
     d.pieces.push(piece);
     this.emit({ ChildAdded: { parent: { kind: "Design", guid: parentGuid }, child: { kind: "Piece", guid: piece.guid } } });
+    this.recordAfterMutation(before);
     return { ok: true } as const;
   }
 
   async removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string): Promise<SetResult> {
+    const before = structuredClone(this.dto);
     if (parentKind !== "Design" || childKind !== "Piece") {
       return { ok: false, error: { kind: "InvalidValue", message: `removeChild not implemented for ${parentKind} -> ${childKind}` } };
     }
     const d = this.dto.designs?.find((x: any) => x.guid === parentGuid);
     if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${parentGuid}` } };
-    const before = d.pieces?.length ?? 0;
+    const nBefore = d.pieces?.length ?? 0;
     d.pieces = (d.pieces ?? []).filter((p: any) => p.guid !== childGuid);
-    if (d.pieces.length === before) return { ok: false, error: { kind: "NotFound", message: `piece ${childGuid}` } };
+    if (d.pieces.length === nBefore) return { ok: false, error: { kind: "NotFound", message: `piece ${childGuid}` } };
     this.emit({ ChildRemoved: { parent: { kind: "Design", guid: parentGuid }, child: { kind: "Piece", guid: childGuid } } });
+    this.recordAfterMutation(before);
     return { ok: true } as const;
   }
 
   async applyDesignDiff(designGuid: string, diff: any): Promise<SetResult> {
+    const before = structuredClone(this.dto);
     const d = this.dto.designs?.find((x: any) => x.guid === designGuid);
     if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
     try {
@@ -19901,6 +19932,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
         if (idx >= 0) d.pieces[idx] = p;
       }
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19909,6 +19941,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async clusterPieces(designGuid: string, pieceGuids: string[], clusterName: string): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
@@ -19923,7 +19956,9 @@ export class FallbackKitStoreClient implements KitStoreClient {
         },
         {},
       );
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19932,6 +19967,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async dragPieces(designGuid: string, pieceGuids: string[], du: number, dv: number): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
@@ -19939,7 +19975,9 @@ export class FallbackKitStoreClient implements KitStoreClient {
       const piecesDesign = new Design({ guid: guid(), name: "__drag_selection", pieces: subPieces }, kit);
       const diff = kit.dragPiecesInDesignDiff(design, piecesDesign, { u: du, v: dv });
       design.applyDiff(diff);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19948,6 +19986,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async movePieces(designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
@@ -19955,7 +19994,9 @@ export class FallbackKitStoreClient implements KitStoreClient {
       const piecesDesign = new Design({ guid: guid(), name: "__move_selection", pieces: subPieces }, kit);
       const diff = kit.movePiecesInDesignOp(design, piecesDesign, { gap, shift, rise });
       design.applyDiff(diff);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19964,12 +20005,15 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async fixPieces(designGuid: string, pieceGuids: string[]): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const diff = kit.fixPiecesInDesignDiff(designGuid, pieceGuids);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       design.applyDiff(diff);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19978,11 +20022,14 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async flattenDesign(designGuid: string): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       design.flatten();
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -19991,6 +20038,7 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async expandDesign(parentDesignGuid: string, nestedDesignGuid: string): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const contextDesign = kit.findDesign(parentDesignGuid);
       const referencedDesign = kit.findDesign(nestedDesignGuid);
@@ -20020,7 +20068,9 @@ export class FallbackKitStoreClient implements KitStoreClient {
       };
       const designDiff = getDesignDiff(contextDesign, expandedDesign as any);
       contextDesign.applyDiff(designDiff);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -20029,11 +20079,14 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async deleteConnection(designGuid: string, connectionGuid: string): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
       design.applyDiff({ connections: { removed: [{ guid: connectionGuid }] } } as any);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -20042,12 +20095,15 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async changePieceType(designGuid: string, pieceGuid: string, newTypeGuid: string): Promise<SetResult> {
     try {
+      const before = structuredClone(this.dto);
       const kit = asKitInstance(this.dto);
       const design = kit.findDesign(designGuid);
       const typ = kit.findType(newTypeGuid);
       if (!design || !typ) return { ok: false, error: { kind: "NotFound", message: "design or type" } };
       design.requirePiece(pieceGuid).changeType(typ);
+      this.dto = kit.toJSON() as any;
       this.emit({ ValidationInvalidated: null });
+      this.recordAfterMutation(before);
       return { ok: true } as const;
     } catch (e: any) {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
@@ -20068,6 +20124,76 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   async createFixedPiece(_designGuid: string, _typeGuid: string, _plane: unknown): Promise<SetResult> {
     return { ok: false, error: { kind: "InvalidValue", message: "createFixedPiece not implemented in FallbackKitStoreClient" } };
+  }
+
+  async undo(): Promise<SetResult> {
+    if (this._txDepth > 0) {
+      return { ok: false, error: { kind: "Internal", message: "cannot undo while a transaction is open" } };
+    }
+    const s = this._undoPast.pop();
+    if (!s) return { ok: false, error: { kind: "Internal", message: "nothing to undo" } };
+    this.dto = structuredClone(s.before);
+    this._undoFuture.push(s);
+    this.emit({ ValidationInvalidated: null });
+    return { ok: true } as const;
+  }
+
+  async redo(): Promise<SetResult> {
+    if (this._txDepth > 0) {
+      return { ok: false, error: { kind: "Internal", message: "cannot redo while a transaction is open" } };
+    }
+    const s = this._undoFuture.pop();
+    if (!s) return { ok: false, error: { kind: "Internal", message: "nothing to redo" } };
+    this.dto = structuredClone(s.after);
+    this._undoPast.push(s);
+    this.emit({ ValidationInvalidated: null });
+    return { ok: true } as const;
+  }
+
+  async canUndo(): Promise<boolean> {
+    return this._txDepth === 0 && this._undoPast.length > 0;
+  }
+
+  async canRedo(): Promise<boolean> {
+    return this._txDepth === 0 && this._undoFuture.length > 0;
+  }
+
+  async beginTx(): Promise<SetResult> {
+    this._txDepth += 1;
+    if (this._txDepth === 1) this._txSnapshot = structuredClone(this.dto);
+    return { ok: true } as const;
+  }
+
+  async commitTx(): Promise<SetResult> {
+    if (this._txDepth === 0) {
+      return { ok: false, error: { kind: "Internal", message: "no active transaction" } };
+    }
+    this._txDepth -= 1;
+    if (this._txDepth === 0) {
+      const start = this._txSnapshot;
+      this._txSnapshot = null;
+      if (start !== null) {
+        const after = structuredClone(this.dto);
+        if (JSON.stringify(start) !== JSON.stringify(after)) {
+          this._undoPast.push({ before: start, after });
+          if (this._undoPast.length > FallbackKitStoreClient._maxUndo) this._undoPast.shift();
+          this._undoFuture = [];
+        }
+      }
+    }
+    return { ok: true } as const;
+  }
+
+  async abortTx(): Promise<SetResult> {
+    if (this._txDepth === 0) {
+      return { ok: false, error: { kind: "Internal", message: "no active transaction" } };
+    }
+    this._txDepth -= 1;
+    if (this._txDepth === 0) {
+      if (this._txSnapshot !== null) this.dto = this._txSnapshot;
+      this._txSnapshot = null;
+    }
+    return { ok: true } as const;
   }
 
   async getPiecesMetadata(designGuid: string) {
@@ -20452,6 +20578,59 @@ export class WorkerKitStoreClient implements KitStoreClient {
     } catch {
       return { ok: false, error: { kind: "Timeout", message: "timeout" } };
     }
+  }
+
+  private async settleMutateAndRefresh(raw: Promise<unknown>): Promise<SetResult> {
+    try {
+      const got = await withTimeout(raw, this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(got));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async undo(): Promise<SetResult> {
+    return this.settleMutateAndRefresh(Promise.resolve(this.api.undo()));
+  }
+
+  async redo(): Promise<SetResult> {
+    return this.settleMutateAndRefresh(Promise.resolve(this.api.redo()));
+  }
+
+  async canUndo(): Promise<boolean> {
+    try {
+      return await withTimeout(this.api.canUndo(), this.timeoutMs, "timeout");
+    } catch {
+      return false;
+    }
+  }
+
+  async canRedo(): Promise<boolean> {
+    try {
+      return await withTimeout(this.api.canRedo(), this.timeoutMs, "timeout");
+    } catch {
+      return false;
+    }
+  }
+
+  async beginTx(): Promise<SetResult> {
+    return this.settleMutateAndRefresh(Promise.resolve(this.api.beginTx()));
+  }
+
+  async commitTx(): Promise<SetResult> {
+    return this.settleMutateAndRefresh(Promise.resolve(this.api.commitTx()));
+  }
+
+  async abortTx(): Promise<SetResult> {
+    return this.settleMutateAndRefresh(Promise.resolve(this.api.abortTx()));
   }
 
   private unwrapQuery(raw: any) {

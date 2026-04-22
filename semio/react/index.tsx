@@ -233,6 +233,11 @@ async function noopAsyncSet(_next?: unknown): Promise<SetResult> {
 	return { ok: true } as const;
 }
 
+function kitGuidFromRuntime(runtime: KitRuntimeContextValue): string | null {
+	const g = runtime.kitGuid ?? (runtime.snapshot as { kit?: { guid?: string } }).kit?.guid;
+	return g != null && g !== "" ? String(g) : null;
+}
+
 function deepClone<T>(value: T): T {
 	return JSON.parse(JSON.stringify(value));
 }
@@ -1271,6 +1276,41 @@ export function useOptimistic<T>(triad: HookTriad<T>): {
 	};
 }
 
+/**
+ * Local draft over a {@link HookTriad}: mirror server value, edit locally, {@link commit} async-writes;
+ * on rejection the draft is kept; {@link status} comes from the triad for {@link useWriteIndicator}.
+ */
+export function useDraft<T>(triad: HookTriad<T>): {
+	value: T;
+	setDraft: (next: SetStateAction<T>) => void;
+	commit: () => Promise<SetResult>;
+	reset: () => void;
+	status: WriteStatus;
+	error: SetError | undefined;
+} {
+	const [server, setServer, status] = triad;
+	const [draft, setDraft] = React.useState<T | undefined>(undefined);
+	const value = (draft !== undefined ? draft : server) as T;
+	const setDraftFn = React.useCallback(
+		(next: SetStateAction<T>) => {
+			setDraft((d) => {
+				const base = (d !== undefined ? d : server) as T;
+				return typeof next === "function" ? (next as (p: T) => T)(base) : next;
+			});
+		},
+		[server],
+	);
+	const commit = React.useCallback(async () => {
+		if (draft === undefined) return { ok: true } as const;
+		const r = await setServer(draft);
+		if (r.ok) setDraft(undefined);
+		return r;
+	}, [draft, setServer]);
+	const reset = React.useCallback(() => setDraft(undefined), []);
+	const error = status.kind === "error" ? status.lastError : undefined;
+	return { value, setDraft: setDraftFn, commit, reset, status, error };
+}
+
 // #region 🎛️KitStoreClient command hooks (WASM / worker RPCs)
 
 export function useClusterPieces(): {
@@ -1494,6 +1534,626 @@ export function useChangePieceType(): {
 	return { run, status };
 }
 
+export function useUndo(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(async () => {
+		if (!runtime.kitClient || !runtime.canWrite) {
+			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+			setStatus({ kind: "error", pending: 0, lastError: e });
+			return { ok: false, error: e } as const;
+		}
+		setStatus({ kind: "pending", pending: 1 });
+		const r = await runtime.kitClient.undo();
+		if (!r.ok) {
+			runtime.pushSetRejection(r.error);
+			setStatus({ kind: "error", pending: 0, lastError: r.error });
+			return r;
+		}
+		setStatus({ kind: "idle", pending: 0 });
+		return r;
+	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
+	return { run, status };
+}
+
+export function useRedo(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(async () => {
+		if (!runtime.kitClient || !runtime.canWrite) {
+			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+			setStatus({ kind: "error", pending: 0, lastError: e });
+			return { ok: false, error: e } as const;
+		}
+		setStatus({ kind: "pending", pending: 1 });
+		const r = await runtime.kitClient.redo();
+		if (!r.ok) {
+			runtime.pushSetRejection(r.error);
+			setStatus({ kind: "error", pending: 0, lastError: r.error });
+			return r;
+		}
+		setStatus({ kind: "idle", pending: 0 });
+		return r;
+	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
+	return { run, status };
+}
+
+export function useCanUndo(): SchemaHookTriad<boolean> {
+	const runtime = useKitRuntime();
+	const [v, setV] = React.useState(false);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient) {
+			setV(false);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const b = await runtime.kitClient!.canUndo();
+				if (!cancelled) setV(!!b);
+			} catch {
+				if (!cancelled) setV(false);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient]);
+	const st: WriteStatus =
+		!runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [v, noopAsyncSet, st] as const;
+}
+
+export function useCanRedo(): SchemaHookTriad<boolean> {
+	const runtime = useKitRuntime();
+	const [v, setV] = React.useState(false);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient) {
+			setV(false);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const b = await runtime.kitClient!.canRedo();
+				if (!cancelled) setV(!!b);
+			} catch {
+				if (!cancelled) setV(false);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient]);
+	const st: WriteStatus =
+		!runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [v, noopAsyncSet, st] as const;
+}
+
+export function useTransaction(): {
+	begin: () => Promise<SetResult>;
+	commit: () => Promise<SetResult>;
+	abort: () => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const begin = React.useCallback(async () => {
+		if (!runtime.kitClient || !runtime.canWrite) {
+			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+			setStatus({ kind: "error", pending: 0, lastError: e });
+			return { ok: false, error: e } as const;
+		}
+		setStatus({ kind: "pending", pending: 1 });
+		const r = await runtime.kitClient.beginTx();
+		if (!r.ok) {
+			runtime.pushSetRejection(r.error);
+			setStatus({ kind: "error", pending: 0, lastError: r.error });
+			return r;
+		}
+		setStatus({ kind: "idle", pending: 0 });
+		return r;
+	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
+	const commit = React.useCallback(async () => {
+		if (!runtime.kitClient || !runtime.canWrite) {
+			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+			setStatus({ kind: "error", pending: 0, lastError: e });
+			return { ok: false, error: e } as const;
+		}
+		setStatus({ kind: "pending", pending: 1 });
+		const r = await runtime.kitClient.commitTx();
+		if (!r.ok) {
+			runtime.pushSetRejection(r.error);
+			setStatus({ kind: "error", pending: 0, lastError: r.error });
+			return r;
+		}
+		setStatus({ kind: "idle", pending: 0 });
+		return r;
+	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
+	const abort = React.useCallback(async () => {
+		if (!runtime.kitClient || !runtime.canWrite) {
+			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+			setStatus({ kind: "error", pending: 0, lastError: e });
+			return { ok: false, error: e } as const;
+		}
+		setStatus({ kind: "pending", pending: 1 });
+		const r = await runtime.kitClient.abortTx();
+		if (!r.ok) {
+			runtime.pushSetRejection(r.error);
+			setStatus({ kind: "error", pending: 0, lastError: r.error });
+			return r;
+		}
+		setStatus({ kind: "idle", pending: 0 });
+		return r;
+	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
+	return { begin, commit, abort, status };
+}
+
+function useKitAddToKit(childKind: string): {
+	run: (dto: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (dto: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			const kg = kitGuidFromRuntime(runtime);
+			if (!kg) {
+				const e: SetError = { kind: "NotFound", message: "no active kit" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.addChild("Kit", kg, childKind, dto);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime, childKind],
+	);
+	return { run, status };
+}
+
+function useKitRemoveFromKit(childKind: string): {
+	run: (childGuid: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (childGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			const kg = kitGuidFromRuntime(runtime);
+			if (!kg) {
+				const e: SetError = { kind: "NotFound", message: "no active kit" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.removeChild("Kit", kg, childKind, childGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime, childKind],
+	);
+	return { run, status };
+}
+
+export const useCreateAuthor = () => useKitAddToKit("Author");
+export const useDeleteAuthor = () => useKitRemoveFromKit("Author");
+export const useUpdateAuthor = (): {
+	run: (authorGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (authorGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Author", authorGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateType = () => useKitAddToKit("Type");
+export const useDeleteType = () => useKitRemoveFromKit("Type");
+export const useUpdateType = (): {
+	run: (typeGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (typeGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Type", typeGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateDesign = () => useKitAddToKit("Design");
+export const useDeleteDesign = () => useKitRemoveFromKit("Design");
+export const useUpdateDesign = (): {
+	run: (designGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Design", designGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateQuality = () => useKitAddToKit("Quality");
+export const useDeleteQuality = () => useKitRemoveFromKit("Quality");
+export const useUpdateQuality = (): {
+	run: (qualityGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (qualityGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Quality", qualityGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreatePort = () => useKitAddToKit("Port");
+export const useDeletePort = () => useKitRemoveFromKit("Port");
+export const useUpdatePort = (): {
+	run: (portGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (portGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Port", portGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateTag = () => useKitAddToKit("Tag");
+export const useDeleteTag = () => useKitRemoveFromKit("Tag");
+export const useUpdateTag = (): {
+	run: (tagGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (tagGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Tag", tagGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateConcept = () => useKitAddToKit("Concept");
+export const useDeleteConcept = () => useKitRemoveFromKit("Concept");
+
+export const useAddFile = () => useKitAddToKit("File");
+export const useRemoveFile = () => useKitRemoveFromKit("File");
+export const useUpdateFile = (): {
+	run: (fileGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (fileGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("File", fileGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export const useCreateFolder = () => useKitAddToKit("Folder");
+export const useDeleteFolder = () => useKitRemoveFromKit("Folder");
+export const useUpdateFolder = (): {
+	run: (folderGuid: string, patch: Record<string, unknown>) => Promise<SetResult>;
+	status: WriteStatus;
+} => {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (folderGuid: string, patch: Record<string, unknown>) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const [field, value] of Object.entries(patch)) {
+				const r = await runtime.kitClient.setField("Folder", folderGuid, field, value);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+};
+
+export function useMoveToFolder(): {
+	run: (fileGuid: string, targetFolderGuid: string | null) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (fileGuid: string, targetFolderGuid: string | null) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.setField("File", fileGuid, "folder", targetFolderGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime],
+	);
+	return { run, status };
+}
+
+export function useImportKit(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const [status] = React.useState<WriteStatus>({ kind: "readonly", pending: 0 });
+	const run = React.useCallback(async () => {
+		return {
+			ok: false,
+			error: { kind: "InvalidValue", message: "useImportKit is wired from sketchpadMachine / host; not a KitStoreClient RPC" },
+		} as const;
+	}, []);
+	return { run, status };
+}
+
+export function useExportKit(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const [status] = React.useState<WriteStatus>({ kind: "readonly", pending: 0 });
+	const run = React.useCallback(async () => {
+		return {
+			ok: false,
+			error: { kind: "InvalidValue", message: "useExportKit is wired from sketchpadMachine / host; not a KitStoreClient RPC" },
+		} as const;
+	}, []);
+	return { run, status };
+}
+
+export function useAddConnections(): {
+	run: (designGuid: string, connections: unknown[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const add = useAddConnection();
+	const run = React.useCallback(
+		async (designGuid: string, connections: unknown[]) => {
+			for (const c of connections) {
+				const r = await add.run(designGuid, c);
+				if (!r.ok) return r;
+			}
+			return { ok: true } as const;
+		},
+		[add],
+	);
+	return { run, status: add.status };
+}
+
+export const useRemoveConnection = useDeleteConnection;
+
+export function useRemoveConnections(): {
+	run: (designGuid: string, connectionGuids: string[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, connectionGuids: string[]) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			for (const cg of connectionGuids) {
+				const r = await runtime.kitClient.deleteConnection(designGuid, cg);
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return { ok: true } as const;
+		},
+		[runtime],
+	);
+	return { run, status };
+}
+
+export function useDeleteSelected(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const [status] = React.useState<WriteStatus>({ kind: "readonly", pending: 0 });
+	const run = React.useCallback(async () => {
+		return { ok: false, error: { kind: "InvalidValue", message: "useDeleteSelected is UI/selection; use sketchpad actor" } } as const;
+	}, []);
+	return { run, status };
+}
+
+export function useDeselectAll(): { run: () => Promise<SetResult>; status: WriteStatus } {
+	const [status] = React.useState<WriteStatus>({ kind: "readonly", pending: 0 });
+	const run = React.useCallback(async () => {
+		return { ok: false, error: { kind: "InvalidValue", message: "useDeselectAll is UI/selection; use sketchpad actor" } } as const;
+	}, []);
+	return { run, status };
+}
+
 export function usePasteDesignSelection(): {
 	run: (designGuid: string, selection: unknown, plane?: unknown) => Promise<SetResult>;
 	status: WriteStatus;
@@ -1660,6 +2320,48 @@ export function useCreatePiece(): {
 		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
 	);
 	return { run, status };
+}
+
+/** @alias {@link useCreatePiece} */
+export const useAddPiece = useCreatePiece;
+
+export function useAddPieces(): {
+	run: (designGuid: string, pieces: unknown[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const c = useCreatePiece();
+	const run = React.useCallback(
+		async (designGuid: string, pieces: unknown[]) => {
+			for (const p of pieces) {
+				const r = await c.run(designGuid, p);
+				if (!r.ok) return r;
+			}
+			return { ok: true } as const;
+		},
+		[c],
+	);
+	return { run, status: c.status };
+}
+
+/** @alias {@link useDeletePiece} */
+export const useRemovePiece = useDeletePiece;
+
+export function useRemovePieces(): {
+	run: (designGuid: string, pieceGuids: string[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const del = useDeletePiece();
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuids: string[]) => {
+			for (const g of pieceGuids) {
+				const r = await del.run(designGuid, g);
+				if (!r.ok) return r;
+			}
+			return { ok: true } as const;
+		},
+		[del],
+	);
+	return { run, status: del.status };
 }
 
 export function useAddConnection(): {

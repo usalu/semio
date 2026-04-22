@@ -9751,6 +9751,7 @@ export const sketchpadMachine = setup({
       if (event.type !== "NAVIGATE") return {};
       const currentNav = context.sketchpad.navigation;
       const index = context.sketchpad.navigationHistoryIndex ?? 0;
+      const history = context.sketchpad.navigationHistory;
       if (currentNav === event.path) {
         return { sketchpad: { ...context.sketchpad, navigation: event.path } };
       }
@@ -10770,6 +10771,14 @@ export function selectIsFullscreen(context: SketchpadContext): boolean {
  **/
 export function selectPanelSizes(context: SketchpadContext): PanelSizes {
   return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
+}
+
+export function selectActiveInteraction(context: SketchpadContext): string | undefined {
+  return context.sketchpad.activeInteraction;
+}
+
+export function selectIsMobile(context: SketchpadContext): boolean {
+  return context.sketchpad.isMobile ?? false;
 }
 
 /**
@@ -20585,14 +20594,16 @@ export function useIsFooterExpanded(): boolean {
  * Hook returning the currently active interaction identifier.
  **/
 export function useActiveInteraction(): string | undefined {
-  return useSketchpad((s) => s.activeInteraction) as string | undefined;
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectActiveInteraction(snapshot.context));
 }
 
 /**
  * Hook returning whether the current device is mobile.
  **/
 export function useIsMobile(): boolean {
-  return useSketchpad((s) => s.isMobile) as boolean;
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => selectIsMobile(snapshot.context));
 }
 
 /**
@@ -20604,14 +20615,21 @@ export function useNavigationHistory(): {
   canGoBack: boolean;
   canGoForward: boolean;
 } {
-  const history = useSketchpad((s) => s.navigationHistory) as string[];
-  const currentIndex = useSketchpad((s) => s.navigationHistoryIndex) as number;
-  return {
-    history,
-    currentIndex,
-    canGoBack: currentIndex > 0,
-    canGoForward: currentIndex < history.length - 1,
-  };
+  const actor = useSketchpadActor();
+  const history = useSelector(actor, (snapshot) => {
+    const h = snapshot.context.sketchpad.navigationHistory;
+    return h?.length ? h : ["/"];
+  });
+  const currentIndex = useSelector(actor, (snapshot) => snapshot.context.sketchpad.navigationHistoryIndex ?? 0);
+  return useMemo(
+    () => ({
+      history,
+      currentIndex,
+      canGoBack: currentIndex > 0,
+      canGoForward: currentIndex < history.length - 1,
+    }),
+    [history, currentIndex],
+  );
 }
 
 // #region 🛒XState Hooks
@@ -21019,7 +21037,7 @@ export function useFilteredKitShallows(kind?: KitKind): KitShallow[] {
  * Hook returning the current panel sizes.
  **/
 export function usePanelSizes(): PanelSizes {
-  return useSketchpad((state) => state.panelSizes) as PanelSizes;
+  return usePanelSizesXState();
 }
 
 /**

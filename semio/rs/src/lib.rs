@@ -4654,6 +4654,57 @@ pub(crate) mod event_wire {
             g.event_bus = w.clone();
         }
     }
+
+    /// Re-point all `parent_kit` weak links at `kit` after in-place graph replacement (undo/redo).
+    pub(crate) fn rewire_parent_kits(kit: &KitStoreRef) {
+        let kw = Arc::downgrade(kit);
+        let kg = kit.read().expect("kit read");
+        for a in &kg.authors {
+            if let Ok(mut aw) = a.write() {
+                aw.parent_kit = Some(kw.clone());
+            }
+        }
+        for c in &kg.concepts {
+            if let Ok(mut cw) = c.write() {
+                cw.parent_kit = Some(kw.clone());
+            }
+        }
+        for t in &kg.tags {
+            if let Ok(mut tw) = t.write() {
+                tw.parent_kit = Some(kw.clone());
+            }
+        }
+        for q in &kg.qualities {
+            if let Ok(mut qw) = q.write() {
+                qw.parent_kit = Some(kw.clone());
+            }
+        }
+        for p in &kg.props {
+            if let Ok(mut pw) = p.write() {
+                pw.parent_kit = Some(kw.clone());
+            }
+        }
+        for a in &kg.attributes {
+            if let Ok(mut aw) = a.write() {
+                aw.parent_kit = Some(kw.clone());
+            }
+        }
+        for d in &kg.designs {
+            if let Ok(mut dw) = d.write() {
+                dw.parent_kit = kw.clone();
+            }
+        }
+        for f in &kg.files {
+            if let Ok(mut fw) = f.write() {
+                fw.parent_kit = Some(kw.clone());
+            }
+        }
+        for f in &kg.folders {
+            if let Ok(mut fw) = f.write() {
+                fw.parent_kit = Some(kw.clone());
+            }
+        }
+    }
 }
 
 pub(crate) mod flatten_math {
@@ -6150,6 +6201,13 @@ pub mod kit {
     pub type KitStoreRef = Arc<RwLock<KitStore>>;
     pub type KitStoreWeak = Weak<RwLock<KitStore>>;
 
+    /// 🧾 One undo step as JSON `KitFullDto` values (keeps `KitStore` before `KitFullDto` in this module).
+    #[derive(Clone, Debug)]
+    struct UndoStep {
+        before: serde_json::Value,
+        after: serde_json::Value,
+    }
+
     /// Root aggregate: a kit owns all components of the system.
     #[derive(Debug)]
     pub struct KitStore {
@@ -6180,6 +6238,15 @@ pub mod kit {
         pub(crate) event_bus: Arc<EventBus>,
         hash_cache: Cache<String>,
         validation_cache: Cache<ValidationResult>,
+        /// Bounded undo history (before/after full snapshots; same wire shape as `KitFullDto`).
+        undo_past: Vec<UndoStep>,
+        undo_future: Vec<UndoStep>,
+        /// When &gt; 0, `with_undo` does not record and does not clear redo (replace/undo path).
+        undo_inhibit: u32,
+        /// Nested command transaction: batch one undo record on `commit_tx`.
+        tx_depth: u32,
+        /// Snapshot at outermost `begin_tx` for batched undo (JSON `KitFullDto`).
+        tx_before: Option<serde_json::Value>,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -6352,8 +6419,15 @@ pub mod kit {
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
+                undo_past: Vec::new(),
+                undo_future: Vec::new(),
+                undo_inhibit: 0,
+                tx_depth: 0,
+                tx_before: None,
             }
         }
+
+        const MAX_UNDO_STEPS: usize = 100;
 
         #[inline]
         fn emit_ev(&self, ev: KitEvent) {
@@ -6763,108 +6837,112 @@ pub mod kit {
             field: &str,
             value: serde_json::Value,
         ) -> SetResult {
-            match entity_kind {
-                EntityKind::Kit => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    if g.guid.as_str() != guid {
-                        return Err(SetError::NotFound(format!("kit {guid}")));
-                    }
-                    match field {
-                        "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            g.set_name(s)
-                        }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown kit field '{field}'"
-                        ))),
-                    }
-                }
-                EntityKind::Design => {
-                    let d = {
-                        let g = kit
-                            .read()
+            let guid = guid.to_string();
+            let field = field.to_string();
+            Self::with_undo(kit, || {
+                match entity_kind {
+                    EntityKind::Kit => {
+                        let mut g = kit
+                            .write()
                             .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.design(guid)
-                            .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?
-                    };
-                    let mut dw = d
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    match field {
-                        "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            dw.set_name(s)
+                        if g.guid.as_str() != guid {
+                            return Err(SetError::NotFound(format!("kit {guid}")));
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown design field '{field}'"
-                        ))),
-                    }
-                }
-                EntityKind::Type => {
-                    let t = {
-                        let g = kit
-                            .read()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.semio_type(guid)
-                            .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?
-                    };
-                    let mut tw = t
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
-                    match field {
-                        "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            tw.set_name(s)
+                        match field.as_str() {
+                            "name" => {
+                                let s: String = serde_json::from_value(value)
+                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                                g.set_name(s)
+                            }
+                            _ => Err(SetError::InvalidValue(format!(
+                                "unknown kit field '{field}'"
+                            ))),
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown type field '{field}'"
-                        ))),
                     }
-                }
-                EntityKind::Piece => {
-                    let pref = {
-                        let g = kit
-                            .read()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        let mut found: Option<PieceStoreRef> = None;
-                        for d in &g.designs {
-                            if let Ok(dr) = d.read() {
-                                if let Some(p) = dr.piece(guid) {
-                                    found = Some(p);
-                                    break;
+                    EntityKind::Design => {
+                        let d = {
+                            let g = kit
+                                .read()
+                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                            g.design(guid.as_str())
+                                .ok_or_else(|| SetError::NotFound(format!("design {guid}")))?
+                        };
+                        let mut dw = d
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                        match field.as_str() {
+                            "name" => {
+                                let s: String = serde_json::from_value(value)
+                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                                dw.set_name(s)
+                            }
+                            _ => Err(SetError::InvalidValue(format!(
+                                "unknown design field '{field}'"
+                            ))),
+                        }
+                    }
+                    EntityKind::Type => {
+                        let t = {
+                            let g = kit
+                                .read()
+                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                            g.semio_type(guid.as_str())
+                                .ok_or_else(|| SetError::NotFound(format!("type {guid}")))?
+                        };
+                        let mut tw = t
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                        match field.as_str() {
+                            "name" => {
+                                let s: String = serde_json::from_value(value)
+                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                                tw.set_name(s)
+                            }
+                            _ => Err(SetError::InvalidValue(format!(
+                                "unknown type field '{field}'"
+                            ))),
+                        }
+                    }
+                    EntityKind::Piece => {
+                        let pref = {
+                            let g = kit
+                                .read()
+                                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                            let mut found: Option<PieceStoreRef> = None;
+                            for d in &g.designs {
+                                if let Ok(dr) = d.read() {
+                                    if let Some(p) = dr.piece(guid.as_str()) {
+                                        found = Some(p);
+                                        break;
+                                    }
                                 }
                             }
+                            found.ok_or_else(|| SetError::NotFound(format!("piece {guid}")))?
+                        };
+                        let mut pw = pref
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("piece".into()))?;
+                        match field.as_str() {
+                            "name" => {
+                                let v: Option<String> = serde_json::from_value(value)
+                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                                pw.set_name(v)
+                            }
+                            "color" => {
+                                let v: Option<String> = serde_json::from_value(value)
+                                    .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                                pw.set_color(v)
+                            }
+                            _ => Err(SetError::InvalidValue(format!(
+                                "unknown piece field '{field}'"
+                            ))),
                         }
-                        found.ok_or_else(|| SetError::NotFound(format!("piece {guid}")))?
-                    };
-                    let mut pw = pref
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?;
-                    match field {
-                        "name" => {
-                            let v: Option<String> = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            pw.set_name(v)
-                        }
-                        "color" => {
-                            let v: Option<String> = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                            pw.set_color(v)
-                        }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown piece field '{field}'"
-                        ))),
                     }
+                    _ => Err(SetError::InvalidValue(format!(
+                        "set_field_rpc not implemented for {entity_kind:?}"
+                    ))),
                 }
-                _ => Err(SetError::InvalidValue(format!(
-                    "set_field_rpc not implemented for {entity_kind:?}"
-                ))),
-            }
+            })
         }
 
         /// 🌐 Read one field as JSON (read-only).
@@ -6958,19 +7036,285 @@ pub mod kit {
             }
         }
 
+        /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo/transaction state.
+        pub fn replace_from_full_dto(kit: &KitStoreRef, d: KitFullDto) -> SetResult {
+            let new_arc = Self::from_full_dto(d);
+            let mut merged = match Arc::try_unwrap(new_arc) {
+                Ok(rw) => match rw.into_inner() {
+                    Ok(s) => s,
+                    Err(_) => return Err(SetError::LockPoisoned("kit".into())),
+                },
+                Err(_) => {
+                    return Err(SetError::Internal(
+                        "replace_from_full_dto: expected single owner of new kit".into(),
+                    ));
+                }
+            };
+            let bus = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.event_bus.clone()
+            };
+            merged.event_bus = bus;
+            {
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let preserve = (
+                    g.undo_past.clone(),
+                    g.undo_future.clone(),
+                    g.undo_inhibit,
+                    g.tx_depth,
+                    g.tx_before.clone(),
+                );
+                *g = merged;
+                g.undo_past = preserve.0;
+                g.undo_future = preserve.1;
+                g.undo_inhibit = preserve.2;
+                g.tx_depth = preserve.3;
+                g.tx_before = preserve.4;
+            }
+            event_wire::rewire_parent_kits(kit);
+            event_wire::wire_graph_bus(kit);
+            {
+                let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.invalidate_hash();
+                g.invalidate_validation();
+            }
+            Ok(())
+        }
+
+        /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit` or active `tx` batch).
+        pub fn with_undo<F>(kit: &KitStoreRef, f: F) -> SetResult
+        where
+            F: FnOnce() -> SetResult,
+        {
+            let skip = kit
+                .read()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?
+                .undo_inhibit
+                > 0;
+            if skip {
+                return f();
+            }
+            let in_tx = kit
+                .read()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?
+                .tx_depth
+                > 0;
+            if in_tx {
+                return f();
+            }
+            let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto())
+                .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            f()?;
+            let after = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto())
+                .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            if before == after {
+                return Ok(());
+            }
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            g.undo_past.push(UndoStep { before, after });
+            if g.undo_past.len() > Self::MAX_UNDO_STEPS {
+                g.undo_past.remove(0);
+            }
+            g.undo_future.clear();
+            Ok(())
+        }
+
+        /// 🌐 WASM: run `begin_tx` / `commit_tx` / `abort_tx` around batched mutations; one undo step on commit.
+        pub fn begin_tx(kit: &KitStoreRef) -> SetResult {
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.tx_depth == 0 {
+                g.tx_before = Some(serde_json::to_value(g.to_full_dto()).map_err(
+                    |e| SetError::Internal(format!("begin_tx snapshot: {e}")),
+                )?);
+            }
+            g.tx_depth += 1;
+            Ok(())
+        }
+
+        pub fn commit_tx(kit: &KitStoreRef) -> SetResult {
+            let mut g = kit
+                .write()
+                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.tx_depth == 0 {
+                return Err(SetError::Internal("no active transaction".into()));
+            }
+            g.tx_depth -= 1;
+            if g.tx_depth == 0 {
+                let before = g
+                    .tx_before
+                    .take()
+                    .ok_or_else(|| SetError::Internal("transaction missing before snapshot".into()))?;
+                let after = serde_json::to_value(g.to_full_dto())
+                    .map_err(|e| SetError::Internal(format!("commit_tx snapshot: {e}")))?;
+                if before != after {
+                    g.undo_past.push(UndoStep { before, after });
+                    if g.undo_past.len() > Self::MAX_UNDO_STEPS {
+                        g.undo_past.remove(0);
+                    }
+                    g.undo_future.clear();
+                }
+            }
+            Ok(())
+        }
+
+        pub fn abort_tx(kit: &KitStoreRef) -> SetResult {
+            let need_restore = {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                if g.tx_depth == 0 {
+                    return Err(SetError::Internal("no active transaction".into()));
+                }
+                g.tx_depth -= 1;
+                g.tx_depth == 0
+            };
+            if !need_restore {
+                return Ok(());
+            }
+            let bv = {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.tx_before.take()
+            };
+            let Some(bv) = bv else {
+                return Ok(());
+            };
+            let bf: KitFullDto =
+                serde_json::from_value(bv).map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
+            Self::replace_from_full_dto(kit, bf)
+        }
+
+        /// Pop last applied state and restore `before` snapshot.
+        pub fn undo(kit: &KitStoreRef) -> SetResult {
+            let step = {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                if g.tx_depth > 0 {
+                    return Err(SetError::Internal(
+                        "cannot undo while a transaction is open".into(),
+                    ));
+                }
+                g.undo_past.pop()
+            };
+            let Some(step) = step else {
+                return Err(SetError::Internal("nothing to undo".into()));
+            };
+            let before: KitFullDto = serde_json::from_value(step.before.clone())
+                .map_err(|e| SetError::Internal(format!("undo: {e}")))?;
+            {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.undo_inhibit += 1;
+            }
+            let r = Self::replace_from_full_dto(kit, before);
+            {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
+            }
+            match r {
+                Ok(()) => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.undo_future.push(step);
+                    Ok(())
+                }
+                Err(e) => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.undo_past.push(step);
+                    Err(e)
+                }
+            }
+        }
+
+        /// Re-apply a popped redo step.
+        pub fn redo(kit: &KitStoreRef) -> SetResult {
+            let step = {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                if g.tx_depth > 0 {
+                    return Err(SetError::Internal(
+                        "cannot redo while a transaction is open".into(),
+                    ));
+                }
+                g.undo_future.pop()
+            };
+            let Some(step) = step else {
+                return Err(SetError::Internal("nothing to redo".into()));
+            };
+            let after: KitFullDto = serde_json::from_value(step.after.clone())
+                .map_err(|e| SetError::Internal(format!("redo: {e}")))?;
+            {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.undo_inhibit += 1;
+            }
+            let r = Self::replace_from_full_dto(kit, after);
+            {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
+            }
+            match r {
+                Ok(()) => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.undo_past.push(step);
+                    Ok(())
+                }
+                Err(e) => {
+                    let mut g = kit
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.undo_future.push(step);
+                    Err(e)
+                }
+            }
+        }
+
+        pub fn can_undo(kit: &KitStoreRef) -> bool {
+            kit.read()
+                .map(|g| g.tx_depth == 0 && !g.undo_past.is_empty())
+                .unwrap_or(false)
+        }
+
+        pub fn can_redo(kit: &KitStoreRef) -> bool {
+            kit.read()
+                .map(|g| g.tx_depth == 0 && !g.undo_future.is_empty())
+                .unwrap_or(false)
+        }
+
         /// Apply a structural design diff through the same path as [`KitStore::apply_design_diff`], returning [`SetResult`].
         pub fn apply_design_diff_rpc(
             kit: &KitStoreRef,
             design_guid: &str,
             diff: serde_json::Value,
         ) -> SetResult {
+            let dg = design_guid.to_string();
             let diff: DesignDiff =
                 serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+            Self::with_undo(kit, || {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &diff)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         /// Add a child entity under `parent` (currently `Design → Piece` only).
@@ -6981,17 +7325,20 @@ pub mod kit {
             child_kind: EntityKind,
             dto: serde_json::Value,
         ) -> SetResult {
+            let pg = parent_guid.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => {
                     let piece: PieceFullDto = serde_json::from_value(dto)
                         .map_err(|e| SetError::InvalidValue(e.to_string()))?;
-                    let mut diff = DesignDiff::default();
-                    diff.added_pieces.push(piece);
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.apply_design_diff(parent_guid, &diff)
-                        .map_err(Self::map_semio_err)
+                    Self::with_undo(kit, || {
+                        let mut diff = DesignDiff::default();
+                        diff.added_pieces.push(piece);
+                        let mut g = kit
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.apply_design_diff(pg.as_str(), &diff)
+                            .map_err(Self::map_semio_err)
+                    })
                 }
                 _ => Err(SetError::InvalidValue(format!(
                     "add_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
@@ -7007,17 +7354,21 @@ pub mod kit {
             child_kind: EntityKind,
             child_guid: &str,
         ) -> SetResult {
+            let pg = parent_guid.to_string();
+            let cg = child_guid.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => {
-                    let mut diff = DesignDiff::default();
-                    diff.removed_pieces.push(PieceIdDto {
-                        guid: Guid::from(child_guid),
-                    });
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.apply_design_diff(parent_guid, &diff)
-                        .map_err(Self::map_semio_err)
+                    Self::with_undo(kit, || {
+                        let mut diff = DesignDiff::default();
+                        diff.removed_pieces.push(PieceIdDto {
+                            guid: Guid::from(cg.as_str()),
+                        });
+                        let mut g = kit
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.apply_design_diff(pg.as_str(), &diff)
+                            .map_err(Self::map_semio_err)
+                    })
                 }
                 _ => Err(SetError::InvalidValue(format!(
                     "remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
@@ -7186,6 +7537,11 @@ pub mod kit {
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
+                undo_past: Vec::new(),
+                undo_future: Vec::new(),
+                undo_inhibit: 0,
+                tx_depth: 0,
+                tx_before: None,
             }
         }
 
@@ -7217,6 +7573,11 @@ pub mod kit {
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
+                undo_past: Vec::new(),
+                undo_future: Vec::new(),
+                undo_inhibit: 0,
+                tx_depth: 0,
+                tx_before: None,
             }
         }
 
@@ -7293,6 +7654,11 @@ pub mod kit {
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
+                undo_past: Vec::new(),
+                undo_future: Vec::new(),
+                undo_inhibit: 0,
+                tx_depth: 0,
+                tx_before: None,
             }));
 
             let kw = Arc::downgrade(&kit);
@@ -7692,12 +8058,15 @@ pub mod kit {
                 ..Default::default()
             };
 
-            Self::insert_design_ref(kit, clustered_dto)?;
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &forward)
-                .map_err(Self::map_semio_err)
+            let dg = design_guid.to_string();
+            Self::with_undo(kit, || {
+                Self::insert_design_ref(kit, clustered_dto)?;
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &forward)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         fn domain_has_selected_ancestor_drag(
@@ -7725,60 +8094,63 @@ pub mod kit {
             if piece_guids.is_empty() {
                 return Ok(());
             }
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
-                let dr = d
+            let dg = design_guid.to_string();
+            Self::with_undo(kit, || {
+                let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g
+                        .design(dg.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    (dr.to_full_dto(), d.clone())
+                };
+
+                let selected: HashSet<String> = piece_guids.clone().into_iter().collect();
+                let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+                for c in &dto.connections {
+                    let child = c.connecting.piece.guid.to_string();
+                    let parent = c.connected.piece.guid.to_string();
+                    parent_map.insert(child, (c.guid.to_string(), parent));
+                }
+
+                let fixed_guids: Vec<String> = selected
+                    .iter()
+                    .filter(|g| !parent_map.contains_key(*g))
+                    .cloned()
+                    .collect();
+
+                let design_read = design_ref
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                (dr.to_full_dto(), d.clone())
-            };
-
-            let selected: HashSet<String> = piece_guids.into_iter().collect();
-            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
-            for c in &dto.connections {
-                let child = c.connecting.piece.guid.to_string();
-                let parent = c.connected.piece.guid.to_string();
-                parent_map.insert(child, (c.guid.to_string(), parent));
-            }
-
-            let fixed_guids: Vec<String> = selected
-                .iter()
-                .filter(|g| !parent_map.contains_key(*g))
-                .cloned()
-                .collect();
-
-            let design_read = design_ref
-                .read()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
-            for g in &fixed_guids {
-                if let Some(piece) = design_read.piece(g.as_str()) {
-                    piece
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                        .drag(du, dv)?;
+                for g in &fixed_guids {
+                    if let Some(piece) = design_read.piece(g.as_str()) {
+                        piece
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                            .drag(du, dv)?;
+                    }
                 }
-            }
 
-            for g in &selected {
-                if fixed_guids.iter().any(|x| x == g) {
-                    continue;
+                for g in &selected {
+                    if fixed_guids.iter().any(|x| x == g) {
+                        continue;
+                    }
+                    if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                        continue;
+                    }
+                    if let Some(piece) = design_read.piece(g.as_str()) {
+                        piece
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                            .drag(du, dv)?;
+                    }
                 }
-                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
-                    continue;
-                }
-                if let Some(piece) = design_read.piece(g.as_str()) {
-                    piece
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                        .drag(du, dv)?;
-                }
-            }
-            Ok(())
+                Ok(())
+            })
         }
 
         pub fn move_pieces(
@@ -7792,43 +8164,47 @@ pub mod kit {
             if piece_guids.is_empty() {
                 return Ok(());
             }
-            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
-                let dr = d
+            let dg = design_guid.to_string();
+            let piece_guids = piece_guids;
+            Self::with_undo(kit, || {
+                let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g
+                        .design(dg.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    (dr.to_full_dto(), d.clone())
+                };
+
+                let selected: HashSet<String> = piece_guids.iter().cloned().collect();
+                let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
+                for c in &dto.connections {
+                    parent_map.insert(
+                        c.connecting.piece.guid.to_string(),
+                        (c.guid.to_string(), c.connected.piece.guid.to_string()),
+                    );
+                }
+
+                let design_read = design_ref
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                (dr.to_full_dto(), d.clone())
-            };
-
-            let selected: HashSet<String> = piece_guids.into_iter().collect();
-            let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
-            for c in &dto.connections {
-                parent_map.insert(
-                    c.connecting.piece.guid.to_string(),
-                    (c.guid.to_string(), c.connected.piece.guid.to_string()),
-                );
-            }
-
-            let design_read = design_ref
-                .read()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
-            for g in &selected {
-                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
-                    continue;
+                for g in &selected {
+                    if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                        continue;
+                    }
+                    if let Some(piece) = design_read.piece(g.as_str()) {
+                        piece
+                            .write()
+                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                            .r#move(gap, shift, rise)?;
+                    }
                 }
-                if let Some(piece) = design_read.piece(g.as_str()) {
-                    piece
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                        .r#move(gap, shift, rise)?;
-                }
-            }
-            Ok(())
+                Ok(())
+            })
         }
 
         pub fn fix_pieces(
@@ -7839,30 +8215,33 @@ pub mod kit {
             if piece_ids.is_empty() {
                 return Ok(());
             }
-            let design_ref = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?
-            };
+            let dg = design_guid.to_string();
+            Self::with_undo(kit, || {
+                let design_ref = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.design(dg.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
+                };
 
-            let pieces: Vec<PieceStoreRef> = {
-                let design = design_ref
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                piece_ids
-                    .iter()
-                    .filter_map(|piece_id| design.piece(piece_id.as_str()))
-                    .collect()
-            };
-            for piece in pieces {
-                piece
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                    .fix()?;
-            }
-            Ok(())
+                let pieces: Vec<PieceStoreRef> = {
+                    let design = design_ref
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    piece_ids
+                        .iter()
+                        .filter_map(|piece_id| design.piece(piece_id.as_str()))
+                        .collect()
+                };
+                for piece in pieces {
+                    piece
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                        .fix()?;
+                }
+                Ok(())
+            })
         }
 
         pub fn delete_connection_in_design(
@@ -7870,37 +8249,47 @@ pub mod kit {
             design_guid: &str,
             connection_guid: &str,
         ) -> SetResult {
-            let diff = DesignDiff {
-                removed_connections: vec![ConnectionIdDto {
-                    guid: Guid::from(connection_guid),
-                }],
-                ..Default::default()
-            };
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+            let dg = design_guid.to_string();
+            let cg = connection_guid.to_string();
+            Self::with_undo(kit, || {
+                let diff = DesignDiff {
+                    removed_connections: vec![ConnectionIdDto {
+                        guid: Guid::from(cg.as_str()),
+                    }],
+                    ..Default::default()
+                };
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &diff)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         pub fn flatten_design_apply(kit: &KitStoreRef, design_guid: &str) -> SetResult {
-            let report = {
+            let dg = design_guid.to_string();
+            let forward = {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.flatten_design(design_guid).map_err(Self::map_semio_err)?
+                let report = g
+                    .flatten_design(dg.as_str())
+                    .map_err(Self::map_semio_err)?;
+                if !report.ok {
+                    return Err(SetError::Internal("flatten_design failed".into()));
+                }
+                let Some(change) = report.value else {
+                    return Err(SetError::Internal("flatten_design missing value".into()));
+                };
+                change.forward
             };
-            if !report.ok {
-                return Err(SetError::Internal("flatten_design failed".into()));
-            }
-            let Some(change) = report.value else {
-                return Err(SetError::Internal("flatten_design missing value".into()));
-            };
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &change.forward)
-                .map_err(Self::map_semio_err)
+            Self::with_undo(kit, || {
+                let mut g = kit
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &forward)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         fn design_dto_by_guid(kit: &KitStore, guid: &str) -> Option<DesignFullDto> {
@@ -7997,74 +8386,81 @@ pub mod kit {
             parent_design_guid: &str,
             nested_design_guid: &str,
         ) -> SetResult {
-            let before: DesignFullDto = {
-                let g = kit
-                    .read()
+            let pg = parent_design_guid.to_string();
+            let ng = nested_design_guid.to_string();
+            Self::with_undo(kit, || {
+                let before: DesignFullDto = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g
+                        .design(pg.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    dr.to_full_dto()
+                };
+
+                let mut expanded_child: DesignFullDto = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g
+                        .design(ng.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    dr.to_full_dto()
+                };
+
+                {
+                    let kg = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
+                }
+
+                let existing_piece: HashSet<String> = before
+                    .pieces
+                    .iter()
+                    .map(|p| p.guid.to_string())
+                    .collect();
+                let add_pieces: Vec<PieceFullDto> = expanded_child
+                    .pieces
+                    .into_iter()
+                    .filter(|p| !existing_piece.contains(p.guid.as_str()))
+                    .collect();
+
+                let existing_conn_key: HashSet<String> = before
+                    .connections
+                    .iter()
+                    .map(Self::domain_connection_key)
+                    .collect();
+                let add_connections: Vec<ConnectionFullDto> = expanded_child
+                    .connections
+                    .into_iter()
+                    .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
+                    .collect();
+
+                let mut after = before.clone();
+                after.pieces.extend(add_pieces);
+                let mut conns: Vec<ConnectionFullDto> = after
+                    .connections
+                    .iter()
+                    .map(|c| Self::strip_design_piece_guid(c, ng.as_str()))
+                    .collect();
+                conns.extend(add_connections);
+                after.connections = conns;
+
+                let diff = DesignDiff::between(&before, &after);
+                let mut g = kit
+                    .write()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(parent_design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {parent_design_guid}")))?;
-                let dr = d
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
-            };
-
-            let mut expanded_child: DesignFullDto = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(nested_design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {nested_design_guid}")))?;
-                let dr = d
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
-            };
-
-            {
-                let kg = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
-            }
-
-            let existing_piece: HashSet<String> =
-                before.pieces.iter().map(|p| p.guid.to_string()).collect();
-            let add_pieces: Vec<PieceFullDto> = expanded_child
-                .pieces
-                .into_iter()
-                .filter(|p| !existing_piece.contains(p.guid.as_str()))
-                .collect();
-
-            let existing_conn_key: HashSet<String> = before
-                .connections
-                .iter()
-                .map(Self::domain_connection_key)
-                .collect();
-            let add_connections: Vec<ConnectionFullDto> = expanded_child
-                .connections
-                .into_iter()
-                .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
-                .collect();
-
-            let mut after = before.clone();
-            after.pieces.extend(add_pieces);
-            let mut conns: Vec<ConnectionFullDto> = after
-                .connections
-                .iter()
-                .map(|c| Self::strip_design_piece_guid(c, nested_design_guid))
-                .collect();
-            conns.extend(add_connections);
-            after.connections = conns;
-
-            let diff = DesignDiff::between(&before, &after);
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(parent_design_guid, &diff)
-                .map_err(Self::map_semio_err)
+                g.apply_design_diff(pg.as_str(), &diff)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         pub fn change_piece_type(
@@ -8073,35 +8469,41 @@ pub mod kit {
             piece_guid: &str,
             new_type_guid: &str,
         ) -> SetResult {
-            let p: PieceFullDto = {
-                let g = kit
-                    .read()
+            let dg = design_guid.to_string();
+            let piece_guid = piece_guid.to_string();
+            let ntg = new_type_guid.to_string();
+            Self::with_undo(kit, || {
+                let p: PieceFullDto = {
+                    let g = kit
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g
+                        .design(dg.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d
+                        .read()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let dto = dr.to_full_dto();
+                    dto
+                        .pieces
+                        .into_iter()
+                        .find(|p| p.guid.as_str() == piece_guid.as_str())
+                        .ok_or_else(|| SetError::NotFound(format!("piece {piece_guid}")))?
+                };
+                let mut np = p;
+                np.r#type = Some(TypeIdDto {
+                    guid: Guid::from(ntg.as_str()),
+                });
+                let diff = DesignDiff {
+                    modified_pieces: vec![np],
+                    ..Default::default()
+                };
+                let mut g = kit
+                    .write()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
-                let dr = d
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                let dto = dr.to_full_dto();
-                dto.pieces
-                    .into_iter()
-                    .find(|p| p.guid.as_str() == piece_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("piece {piece_guid}")))?
-            };
-            let mut np = p;
-            np.r#type = Some(TypeIdDto {
-                guid: Guid::from(new_type_guid),
-            });
-            let diff = DesignDiff {
-                modified_pieces: vec![np],
-                ..Default::default()
-            };
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+                g.apply_design_diff(dg.as_str(), &diff)
+                    .map_err(Self::map_semio_err)
+            })
         }
 
         pub fn paste_design_selection(
@@ -15896,6 +16298,46 @@ pub mod wasm {
                     .map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
                 js_settle_set(KitStore::create_fixed_piece(&inner, &dg, &tg, pl))
             })
+        }
+
+        #[wasm_bindgen(js_name = undo)]
+        pub fn undo_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move { js_settle_set(KitStore::undo(&inner)) })
+        }
+
+        #[wasm_bindgen(js_name = redo)]
+        pub fn redo_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move { js_settle_set(KitStore::redo(&inner)) })
+        }
+
+        #[wasm_bindgen(js_name = canUndo)]
+        pub fn can_undo_wasm(&self) -> bool {
+            KitStore::can_undo(&self.inner)
+        }
+
+        #[wasm_bindgen(js_name = canRedo)]
+        pub fn can_redo_wasm(&self) -> bool {
+            KitStore::can_redo(&self.inner)
+        }
+
+        #[wasm_bindgen(js_name = beginTx)]
+        pub fn begin_tx_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move { js_settle_set(KitStore::begin_tx(&inner)) })
+        }
+
+        #[wasm_bindgen(js_name = commitTx)]
+        pub fn commit_tx_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move { js_settle_set(KitStore::commit_tx(&inner)) })
+        }
+
+        #[wasm_bindgen(js_name = abortTx)]
+        pub fn abort_tx_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move { js_settle_set(KitStore::abort_tx(&inner)) })
         }
 
         #[wasm_bindgen(js_name = getPiecesMetadata)]

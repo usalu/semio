@@ -19,7 +19,7 @@ todos:
    status: in_progress
  - id: sketchpad_ui_machine
    content: Promote tutorial/panel/dnd/focus/origin/footer/sidePanel/openKit slices into sketchpadMachine context; reduce ad-hoc providers to useSelector reads; move I/O to fromPromise actors.
-   status: pending
+   status: completed
  - id: sketchpad_playwright
    content: Extend existing Playwright spec with pending/error/readonly affordances, illegal-name preserved draft, concurrent independent pending counters.
    status: pending

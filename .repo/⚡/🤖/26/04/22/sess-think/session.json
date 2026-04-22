@@ -22,6 +22,23 @@
         }
       },
       "response": {}
+    },
+    {
+      "event": {
+        "checkpoint": "bea1fde80153204a6428b8f6c0e8508ff3f4fb73",
+        "client": "cursor-chat",
+        "contributor": "unknown",
+        "kind": "agent.thinking.ended",
+        "second": "2026-04-22T11:22:49Z",
+        "session": "sess-think"
+      },
+      "native": {
+        "event": {
+          "session_id": "sess-think",
+          "text": "Planning repo modifications"
+        }
+      },
+      "response": {}
     }
   ]
 }
