@@ -7,22 +7,22 @@ todos:
    status: completed
  - id: enums
    content: Rewrite `pub mod change_command` with one command enum per entity and one variant per setter (scalars), plus Add/Remove/ChangeXCommands for every child collection
-   status: in_progress
+   status: completed
  - id: apply_inverse
    content: Change every `apply` to return the inverse command(s); implement scalar, add, remove, nested, and replace patterns
-   status: pending
+   status: completed
  - id: kit_change
    content: "Reshape `KitChange` to `{forward: Vec<ChangeKitCommand>, inverse: Vec<ChangeKitCommand>, kind, author, time}` and slim `KitChangeKind`"
-   status: pending
+   status: completed
  - id: callers
    content: Rewire `apply_design_diff` callers, `kit_transaction`, `kit_draft`, `kit_store_command`, io, and `wasm` to the new command-list model
-   status: pending
+   status: completed
  - id: tests
    content: "Add round-trip tests: forward+inverse returns kit to prior state for every command family"
-   status: pending
+   status: completed
  - id: agents_md
    content: Update [semio/rs/AGENTS.md](semio/rs/AGENTS.md) `Change flow` line
-   status: pending
+   status: completed
 isProject: false
 ---
 

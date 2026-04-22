@@ -18,7 +18,7 @@ bundle:
 ### Layout
 
 The library is a single crate root file, [`lib.rs`](lib.rs) (no `src/` tree). It uses inline
-`pub mod … { … }` for each domain. Every parent owns its children through
+`pub mod … { … }` for each domain (including a large [`change_command`](lib.rs) section). Every parent owns its children through
 `Arc<RwLock<T>>`; every child keeps a `Weak<RwLock<T>>` back-reference to its
 parent. Derived data (content-addressable hashes, flatten caches) lives in
 `OnceLock` fields invalidated by the owning entity's setters.
@@ -29,7 +29,7 @@ parent. Derived data (content-addressable hashes, flatten caches) lives in
 - Type-scoped children: `port`, `connector`, `representation`.
 - Design-scoped children: `piece`, `connection`, `side`, `layer`, `group`.
 - Aggregates: `typ` (Type), `design`, `kit`.
-- Change flow: `diff` (`DesignDiff` for patch materialization; `change_command` in [`change_command_ext.rs`](change_command_ext.rs) + [`change_command_ext2.rs`](change_command_ext2.rs) included from `lib.rs`); VCS: [`KitChange`](lib.rs) stores `Vec<ChangeKitCommand>` **forward** + **inverse** (command-list undo, not `KitDiff` snapshots); `read_command`, `kit_store_command`, `kit_session`, and related `kit_*` modules.
+- Change flow: `diff` (`DesignDiff` for patch materialization; `change_command` in [`lib.rs`](lib.rs)); VCS: [`KitChange`](lib.rs) stores `Vec<ChangeKitCommand>` **forward** + **inverse** (command-list undo, not `KitDiff` snapshots); `read_command`, `kit_store_command`, `kit_session`, and related `kit_*` modules.
 - I/O: `io::json` and native-only SQLite/ZIP under `io` in `lib.rs`.
 - WASM surface: `pub mod wasm` in `lib.rs` (identical JS names, delegates to OO API).
 
