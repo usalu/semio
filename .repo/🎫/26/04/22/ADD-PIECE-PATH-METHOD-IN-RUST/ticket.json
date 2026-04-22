@@ -1,7 +1,8 @@
 {
   "title": "Add Piece Path Method in Rust",
-  "status": "open",
+  "status": "closed",
   "description": "Add a `path` method on PieceStore (semio/rs/src/lib.rs) that returns a Vec\u003cPieceIdDto\u003e representing the path from the fixed piece (root of the parent chain) down to and including the piece itself. It is computed recursively by calling the parent piece's `path` method and appending the current piece's id. If there is no parent_piece, the path is just `[self]`.",
+  "summary": "Added `PieceStore::path()` in semio/rs/src/lib.rs that returns Vec\u003cPieceIdDto\u003e — the chain from the fixed (root) piece down to and including the current piece. Implemented recursively: upgrades `parent_piece` weak ref, reads the parent, calls `path()` on it, and appends `self.to_id_dto()`. When `parent_piece` is None (fixed piece or detached piece), the result is just `[self]`. Extended tests/flatten with two new tests: piece_path_walks_from_fixed_piece_to_self verifies root→middle→leaf chain produces the expected 1/2/3-element paths; piece_path_after_parent_detach_starts_at_self deletes the root and checks that middle (now detached) returns [middle] and leaf returns [middle, leaf]. cargo test --lib flatten: 6/6 pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1371"
   },

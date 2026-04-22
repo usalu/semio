@@ -7,10 +7,10 @@ todos:
    status: completed
  - id: js_helper_removal
    content: Move ex-helpers to instance methods on KitImpl; finish KitStoreClient methods (paste/createHanging/createConnected/createFixed); delete the free helper exports; rewrite vitest tests; clean up sketchpad imports.
-   status: in_progress
+   status: completed
  - id: react_queries
    content: Add the remaining derived/RPC query hooks in @semio/react using only useKitRuntime + useMemo + kitClient.subscribe (no new event bus). Add aliases usePieces/useConnections/etc.
-   status: pending
+   status: completed
  - id: sketchpad_strip
    content: Delete Granular Hook Types, Entity/Derived/Targeted Kit Hooks, useKitTransaction, useKitStore, useKit, useKitCommands, KitScopeProvider/Context, useKitScope, SketchpadStore kit paths, Sync helpers.
    status: pending

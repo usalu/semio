@@ -1297,24 +1297,16 @@ pub mod connection {
             &self,
             child_guid: &Guid,
         ) -> Option<(SideStoreRef, SideStoreRef)> {
-            let connected_guid = self
-                .connected
-                .read()
-                .ok()
-                .and_then(|side| {
-                    side.piece
-                        .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
-                });
-            let connecting_guid = self
-                .connecting
-                .read()
-                .ok()
-                .and_then(|side| {
-                    side.piece
-                        .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
-                });
+            let connected_guid = self.connected.read().ok().and_then(|side| {
+                side.piece
+                    .upgrade()
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+            });
+            let connecting_guid = self.connecting.read().ok().and_then(|side| {
+                side.piece
+                    .upgrade()
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+            });
             match (connected_guid, connecting_guid) {
                 (Some(_), Some(connecting_guid)) if &connecting_guid == child_guid => {
                     Some((self.connected.clone(), self.connecting.clone()))
@@ -1955,7 +1947,8 @@ pub mod design {
     use crate::hash::{Cache, HashWriter};
     use crate::kit::KitStore;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
-    use crate::piece::{PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
+    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
+    use crate::port::PortStoreRef;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
     use crate::side::{SideStore, SideStoreRef};
@@ -2325,24 +2318,16 @@ pub mod design {
                 let Ok(connection_read) = connection.read() else {
                     continue;
                 };
-                let connected_guid = connection_read
-                    .connected
-                    .read()
-                    .ok()
-                    .and_then(|side| {
-                        side.piece
-                            .upgrade()
-                            .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
-                    });
-                let connecting_guid = connection_read
-                    .connecting
-                    .read()
-                    .ok()
-                    .and_then(|side| {
-                        side.piece
-                            .upgrade()
-                            .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
-                    });
+                let connected_guid = connection_read.connected.read().ok().and_then(|side| {
+                    side.piece
+                        .upgrade()
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                });
+                let connecting_guid = connection_read.connecting.read().ok().and_then(|side| {
+                    side.piece
+                        .upgrade()
+                        .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+                });
                 let (Some(connected_guid), Some(connecting_guid)) =
                     (connected_guid, connecting_guid)
                 else {
@@ -3006,6 +2991,282 @@ pub mod design {
                 .find(|g| g.read().map(|g| g.guid.as_str() == guid).unwrap_or(false))
                 .cloned()
         }
+
+        // #region 🔁PieceAlternatives
+        fn side_piece_guid(side: &SideStoreRef) -> Option<Guid> {
+            side.read().ok().and_then(|side| {
+                side.piece
+                    .upgrade()
+                    .and_then(|piece| piece.read().ok().map(|piece| piece.guid.clone()))
+            })
+        }
+
+        fn side_port_ref(side: &SideStoreRef) -> Option<PortStoreRef> {
+            side.read()
+                .ok()
+                .and_then(|side| side.port.as_ref().and_then(|port| port.upgrade()))
+        }
+
+        fn connector_port_ref(connector: &ConnectorStoreRef) -> Option<PortStoreRef> {
+            connector
+                .read()
+                .ok()
+                .and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
+        }
+
+        fn candidate_type_available_ports(candidate_type: &TypeStoreRef) -> Option<Vec<PortStoreRef>> {
+            let candidate_type = candidate_type.read().ok()?;
+            let mut available_ports = Vec::with_capacity(candidate_type.connectors.len());
+            for connector in &candidate_type.connectors {
+                available_ports.push(Self::connector_port_ref(connector)?);
+            }
+            Some(available_ports)
+        }
+
+        fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
+            let candidate_design = candidate_design.read().ok()?;
+            let mut consumed_by_piece_port: HashMap<(Guid, Guid), usize> = HashMap::new();
+            for connection in &candidate_design.connections {
+                let connection = connection.read().ok()?;
+                for side in [&connection.connected, &connection.connecting] {
+                    let piece_guid = Self::side_piece_guid(side)?;
+                    let port_guid = Self::side_port_ref(side)
+                        .and_then(|port| port.read().ok().map(|port| port.guid.clone()))?;
+                    *consumed_by_piece_port.entry((piece_guid, port_guid)).or_default() += 1;
+                }
+            }
+
+            let mut available_ports = Vec::new();
+            for piece in &candidate_design.pieces {
+                let piece = piece.read().ok()?;
+                let piece_guid = piece.guid.clone();
+                let type_ref = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade())?;
+                drop(piece);
+
+                let mut piece_ports = Self::candidate_type_available_ports(&type_ref)?;
+                piece_ports.retain(|port| {
+                    let Some(port_guid) = port.read().ok().map(|port| port.guid.clone()) else {
+                        return false;
+                    };
+                    let consumed = consumed_by_piece_port.entry((piece_guid.clone(), port_guid)).or_default();
+                    if *consumed == 0 {
+                        return true;
+                    }
+                    *consumed -= 1;
+                    false
+                });
+                available_ports.extend(piece_ports);
+            }
+
+            if consumed_by_piece_port.values().any(|remaining| *remaining > 0) {
+                return None;
+            }
+            Some(available_ports)
+        }
+
+        fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
+            let Ok(candidate_port) = candidate_port.read() else {
+                return false;
+            };
+            let Ok(required_port) = required_port.read() else {
+                return false;
+            };
+            if candidate_port.guid == required_port.guid {
+                return true;
+            }
+            let Some(candidate_family) = candidate_port.family.as_deref() else {
+                return false;
+            };
+            let Some(required_family) = required_port.family.as_deref() else {
+                return false;
+            };
+            candidate_family == required_family
+                || candidate_port
+                    .compatible_families
+                    .iter()
+                    .any(|family| family == required_family)
+                || required_port
+                    .compatible_families
+                    .iter()
+                    .any(|family| family == candidate_family)
+        }
+
+        fn can_satisfy_port_requirements(
+            required_ports: &[Option<PortStoreRef>],
+            available_ports: &[PortStoreRef],
+        ) -> bool {
+            if required_ports.is_empty() {
+                return true;
+            }
+            if available_ports.len() < required_ports.len() {
+                return false;
+            }
+
+            let mut requirement_options: Vec<Vec<usize>> = Vec::with_capacity(required_ports.len());
+            for required_port in required_ports {
+                let Some(required_port) = required_port else {
+                    return false;
+                };
+                let matching_indexes: Vec<usize> = available_ports
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(index, candidate_port)| {
+                        Self::ports_are_compatible(candidate_port, required_port).then_some(index)
+                    })
+                    .collect();
+                if matching_indexes.is_empty() {
+                    return false;
+                }
+                requirement_options.push(matching_indexes);
+            }
+
+            requirement_options.sort_by_key(Vec::len);
+            let mut used_available_indexes = vec![false; available_ports.len()];
+
+            fn match_requirement(
+                requirement_index: usize,
+                requirement_options: &[Vec<usize>],
+                used_available_indexes: &mut [bool],
+            ) -> bool {
+                if requirement_index >= requirement_options.len() {
+                    return true;
+                }
+                for candidate_index in &requirement_options[requirement_index] {
+                    if used_available_indexes[*candidate_index] {
+                        continue;
+                    }
+                    used_available_indexes[*candidate_index] = true;
+                    if match_requirement(
+                        requirement_index + 1,
+                        requirement_options,
+                        used_available_indexes,
+                    ) {
+                        return true;
+                    }
+                    used_available_indexes[*candidate_index] = false;
+                }
+                false
+            }
+
+            match_requirement(0, &requirement_options, &mut used_available_indexes)
+        }
+
+        fn boundary_requirement_ports(
+            &self,
+            selected_piece_guids: &HashSet<Guid>,
+        ) -> Vec<Option<PortStoreRef>> {
+            let mut required_ports = Vec::new();
+            for connection in &self.connections {
+                let Ok(connection) = connection.read() else {
+                    required_ports.push(None);
+                    continue;
+                };
+                let connected_selected = Self::side_piece_guid(&connection.connected)
+                    .map(|guid| selected_piece_guids.contains(&guid))
+                    .unwrap_or(false);
+                let connecting_selected = Self::side_piece_guid(&connection.connecting)
+                    .map(|guid| selected_piece_guids.contains(&guid))
+                    .unwrap_or(false);
+                if connected_selected == connecting_selected {
+                    continue;
+                }
+                let other_side = if connected_selected {
+                    &connection.connecting
+                } else {
+                    &connection.connected
+                };
+                required_ports.push(Self::side_port_ref(other_side));
+            }
+            required_ports
+        }
+
+        fn own_requirement_ports_for_piece(&self, piece_guid: &Guid) -> Vec<Option<PortStoreRef>> {
+            let Some(piece_ref) = self.piece(piece_guid.as_str()) else {
+                return vec![None];
+            };
+            let Ok(piece) = piece_ref.read() else {
+                return vec![None];
+            };
+            let Some(type_ref) = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade()) else {
+                return vec![None];
+            };
+            let Ok(type_ref) = type_ref.read() else {
+                return vec![None];
+            };
+            if type_ref.connectors.is_empty() {
+                return Vec::new();
+            }
+            type_ref
+                .connectors
+                .iter()
+                .map(Self::connector_port_ref)
+                .collect()
+        }
+
+        /// 🔁Returns replacement kinds and designs for a piece selection while preserving connector-valid boundaries.
+        pub(crate) fn replaceable_catalog_candidates(
+            &self,
+            selection_piece_guids: &[Guid],
+        ) -> PieceAlternatives {
+            let Some(parent_kit) = self.parent_kit.upgrade() else {
+                return PieceAlternatives::default();
+            };
+            let Ok(parent_kit) = parent_kit.read() else {
+                return PieceAlternatives::default();
+            };
+
+            let selected_piece_guids: HashSet<Guid> = selection_piece_guids.iter().cloned().collect();
+            let mut required_ports = self.boundary_requirement_ports(&selected_piece_guids);
+            if required_ports.is_empty() {
+                for piece_guid in selection_piece_guids {
+                    required_ports.extend(self.own_requirement_ports_for_piece(piece_guid));
+                }
+            }
+
+            let mut alternatives = PieceAlternatives::default();
+            if selection_piece_guids.is_empty() {
+                alternatives.types = parent_kit
+                    .types
+                    .iter()
+                    .filter_map(|candidate_type| {
+                        Self::candidate_type_available_ports(candidate_type)
+                            .filter(|available_ports| available_ports.is_empty())
+                            .map(|_| candidate_type.clone())
+                    })
+                    .collect();
+                alternatives.designs = parent_kit
+                    .designs
+                    .iter()
+                    .filter_map(|candidate_design| {
+                        Self::candidate_design_available_ports(candidate_design)
+                            .filter(|available_ports| available_ports.is_empty())
+                            .map(|_| candidate_design.clone())
+                    })
+                    .collect();
+                return alternatives;
+            }
+
+            alternatives.types = parent_kit
+                .types
+                .iter()
+                .filter_map(|candidate_type| {
+                    let available_ports = Self::candidate_type_available_ports(candidate_type)?;
+                    Self::can_satisfy_port_requirements(&required_ports, &available_ports)
+                        .then_some(candidate_type.clone())
+                })
+                .collect();
+            alternatives.designs = parent_kit
+                .designs
+                .iter()
+                .filter_map(|candidate_design| {
+                    let available_ports = Self::candidate_design_available_ports(candidate_design)?;
+                    Self::can_satisfy_port_requirements(&required_ports, &available_ports)
+                        .then_some(candidate_design.clone())
+                })
+                .collect();
+            alternatives
+        }
+        // #endregion
 
         /// Remove pieces (and connections touching them). When `invalidate` is false, caller must
         /// finish with [`Self::invalidate_hash_local`], [`Self::invalidate_flatten`], and kit-level
@@ -3959,7 +4220,9 @@ pub mod validate {
                     return Ok(());
                 }
                 if t.len() > MAX_URL_LEN {
-                    return Err(SetError::InvalidUrl(format!("{label} exceeds {MAX_URL_LEN} chars")));
+                    return Err(SetError::InvalidUrl(format!(
+                        "{label} exceeds {MAX_URL_LEN} chars"
+                    )));
                 }
                 Ok(())
             }
@@ -5868,12 +6131,12 @@ pub mod kit {
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
     use crate::design::{DesignFullDto, DesignStore, DesignStoreRef};
+    use crate::diff::DesignDiff;
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
     use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
-    use crate::diff::DesignDiff;
     use crate::geom::{Coordinate, Plane};
     use crate::guid::Guid;
     use crate::hash::{Cache, HashWriter};
@@ -6514,7 +6777,9 @@ pub mod kit {
                                 .map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             g.set_name(s)
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown kit field '{field}'"
+                        ))),
                     }
                 }
                 EntityKind::Design => {
@@ -6556,7 +6821,9 @@ pub mod kit {
                                 .map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             tw.set_name(s)
                         }
-                        _ => Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown type field '{field}'"
+                        ))),
                     }
                 }
                 EntityKind::Piece => {
@@ -6617,7 +6884,9 @@ pub mod kit {
                     }
                     match field {
                         "name" => Ok(serde_json::json!(g.name)),
-                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
+                        _ => Err(SetError::InvalidValue(format!(
+                            "unknown kit field '{field}'"
+                        ))),
                     }
                 }
                 EntityKind::Piece => {
@@ -6695,8 +6964,8 @@ pub mod kit {
             design_guid: &str,
             diff: serde_json::Value,
         ) -> SetResult {
-            let diff: DesignDiff = serde_json::from_value(diff)
-                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+            let diff: DesignDiff =
+                serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
             let mut g = kit
                 .write()
                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -7403,7 +7672,9 @@ pub mod kit {
                     cluster_set.contains(c.connected.piece.guid.as_str())
                         || cluster_set.contains(c.connecting.piece.guid.as_str())
                 })
-                .map(|c| ConnectionIdDto { guid: c.guid.clone() })
+                .map(|c| ConnectionIdDto {
+                    guid: c.guid.clone(),
+                })
                 .collect();
 
             let removed_pieces: Vec<PieceIdDto> = piece_guids
@@ -7427,40 +7698,6 @@ pub mod kit {
                 .map_err(|_| SetError::LockPoisoned("kit".into()))?;
             g.apply_design_diff(design_guid, &forward)
                 .map_err(Self::map_semio_err)
-        }
-
-        fn domain_normalize_coord(v: Coordinate) -> Coordinate {
-            let n = v.length();
-            if n < 1e-12 {
-                Coordinate::ZERO
-            } else {
-                v.scale(1.0 / n)
-            }
-        }
-
-        fn domain_cross(a: Coordinate, b: Coordinate) -> Coordinate {
-            Coordinate::new(
-                a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x,
-            )
-        }
-
-        fn domain_move_translation_world(
-            plane: &Plane,
-            gap: f64,
-            shift: f64,
-            rise: f64,
-        ) -> Coordinate {
-            let x = Self::domain_normalize_coord(plane.x_axis);
-            let y = Self::domain_normalize_coord(plane.y_axis);
-            let z = Self::domain_cross(x, y);
-            let zn = z.length();
-            if zn < 1e-12 {
-                return Coordinate::ZERO;
-            }
-            let z = z.scale(1.0 / zn);
-            y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
         }
 
         fn domain_has_selected_ancestor_drag(
@@ -7488,7 +7725,7 @@ pub mod kit {
             if piece_guids.is_empty() {
                 return Ok(());
             }
-            let dto: DesignFullDto = {
+            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -7498,7 +7735,7 @@ pub mod kit {
                 let dr = d
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                (dr.to_full_dto(), d.clone())
             };
 
             let selected: HashSet<String> = piece_guids.into_iter().collect();
@@ -7515,19 +7752,18 @@ pub mod kit {
                 .cloned()
                 .collect();
 
-            let mut modified_pieces: Vec<PieceFullDto> = Vec::new();
+            let design_read = design_ref
+                .read()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
             for g in &fixed_guids {
-                if let Some(p) = dto.pieces.iter().find(|p| p.guid.as_str() == g) {
-                    let mut np = p.clone();
-                    if let Some(ce) = np.center.as_mut() {
-                        ce.x += du;
-                        ce.y += dv;
-                    }
-                    modified_pieces.push(np);
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                        .drag(du, dv)?;
                 }
             }
 
-            let mut modified_connections: Vec<ConnectionFullDto> = Vec::new();
             for g in &selected {
                 if fixed_guids.iter().any(|x| x == g) {
                     continue;
@@ -7535,31 +7771,14 @@ pub mod kit {
                 if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
                     continue;
                 }
-                if let Some((conn_guid, _)) = parent_map.get(g) {
-                    if let Some(c) = dto.connections.iter().find(|c| c.guid.as_str() == conn_guid) {
-                        let mut nc = c.clone();
-                        nc.x = Some(nc.x.unwrap_or(0.0) + du);
-                        nc.y = Some(nc.y.unwrap_or(0.0) + dv);
-                        modified_connections.push(nc);
-                    }
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                        .drag(du, dv)?;
                 }
             }
-
-            let mut diff = DesignDiff::default();
-            if !modified_pieces.is_empty() {
-                diff.modified_pieces = modified_pieces;
-            }
-            if !modified_connections.is_empty() {
-                diff.modified_connections = modified_connections;
-            }
-            if diff.modified_pieces.is_empty() && diff.modified_connections.is_empty() {
-                return Ok(());
-            }
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+            Ok(())
         }
 
         pub fn move_pieces(
@@ -7573,7 +7792,7 @@ pub mod kit {
             if piece_guids.is_empty() {
                 return Ok(());
             }
-            let dto: DesignFullDto = {
+            let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
@@ -7583,7 +7802,7 @@ pub mod kit {
                 let dr = d
                     .read()
                     .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                (dr.to_full_dto(), d.clone())
             };
 
             let selected: HashSet<String> = piece_guids.into_iter().collect();
@@ -7595,81 +7814,55 @@ pub mod kit {
                 );
             }
 
-            let fixed_guids: Vec<String> = selected
-                .iter()
-                .filter(|g| !parent_map.contains_key(*g))
-                .cloned()
-                .collect();
-
-            let mut modified_pieces: Vec<PieceFullDto> = Vec::new();
-            for g in fixed_guids {
-                if let Some(p) = dto.pieces.iter().find(|p| p.guid.as_str() == g) {
-                    let base = p.plane.unwrap_or_else(Plane::world_xy);
-                    let t = Self::domain_move_translation_world(&base, gap, shift, rise);
-                    let mut np = p.clone();
-                    let pl = np.plane.get_or_insert(base);
-                    pl.origin = pl.origin.add(&t);
-                    modified_pieces.push(np);
+            let design_read = design_ref
+                .read()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            for g in &selected {
+                if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
+                    continue;
+                }
+                if let Some(piece) = design_read.piece(g.as_str()) {
+                    piece
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                        .r#move(gap, shift, rise)?;
                 }
             }
-
-            if modified_pieces.is_empty() {
-                return Ok(());
-            }
-            let diff = DesignDiff {
-                modified_pieces,
-                ..Default::default()
-            };
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+            Ok(())
         }
 
-        pub fn fix_pieces(kit: &KitStoreRef, design_guid: &str, piece_ids: Vec<String>) -> SetResult {
+        pub fn fix_pieces(
+            kit: &KitStoreRef,
+            design_guid: &str,
+            piece_ids: Vec<String>,
+        ) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
-            let dto: DesignFullDto = {
+            let design_ref = {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(design_guid)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?;
-                let dr = d
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                dr.to_full_dto()
+                g.design(design_guid)
+                    .ok_or_else(|| SetError::NotFound(format!("design {design_guid}")))?
             };
 
-            let mut removed: Vec<ConnectionIdDto> = Vec::new();
-            let mut seen: HashSet<String> = HashSet::new();
-            for pid in &piece_ids {
-                for c in &dto.connections {
-                    if c.connecting.piece.guid.as_str() == pid.as_str() {
-                        let s = c.guid.to_string();
-                        if seen.insert(s.clone()) {
-                            removed.push(ConnectionIdDto {
-                                guid: Guid::from(s.as_str()),
-                            });
-                        }
-                    }
-                }
-            }
-            if removed.is_empty() {
-                return Ok(());
-            }
-            let diff = DesignDiff {
-                removed_connections: removed,
-                ..Default::default()
+            let pieces: Vec<PieceStoreRef> = {
+                let design = design_ref
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                piece_ids
+                    .iter()
+                    .filter_map(|piece_id| design.piece(piece_id.as_str()))
+                    .collect()
             };
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            g.apply_design_diff(design_guid, &diff)
-                .map_err(Self::map_semio_err)
+            for piece in pieces {
+                piece
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("piece".into()))?
+                    .fix()?;
+            }
+            Ok(())
         }
 
         pub fn delete_connection_in_design(
@@ -7695,8 +7888,7 @@ pub mod kit {
                 let g = kit
                     .read()
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.flatten_design(design_guid)
-                    .map_err(Self::map_semio_err)?
+                g.flatten_design(design_guid).map_err(Self::map_semio_err)?
             };
             if !report.ok {
                 return Err(SetError::Internal("flatten_design failed".into()));
@@ -7771,18 +7963,18 @@ pub mod kit {
                     continue;
                 };
                 let expanded = Self::expand_nested_design_pieces_in_dto(kit, child)?;
-                let existing: HashSet<String> = design
-                    .pieces
-                    .iter()
-                    .map(|p| p.guid.to_string())
-                    .collect();
+                let existing: HashSet<String> =
+                    design.pieces.iter().map(|p| p.guid.to_string()).collect();
                 let add_p: Vec<PieceFullDto> = expanded
                     .pieces
                     .into_iter()
                     .filter(|p| !existing.contains(p.guid.as_str()))
                     .collect();
-                let keys: HashSet<String> =
-                    design.connections.iter().map(Self::domain_connection_key).collect();
+                let keys: HashSet<String> = design
+                    .connections
+                    .iter()
+                    .map(Self::domain_connection_key)
+                    .collect();
                 let add_c: Vec<ConnectionFullDto> = expanded
                     .connections
                     .into_iter()
@@ -7838,11 +8030,8 @@ pub mod kit {
                 expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
             }
 
-            let existing_piece: HashSet<String> = before
-                .pieces
-                .iter()
-                .map(|p| p.guid.to_string())
-                .collect();
+            let existing_piece: HashSet<String> =
+                before.pieces.iter().map(|p| p.guid.to_string()).collect();
             let add_pieces: Vec<PieceFullDto> = expanded_child
                 .pieces
                 .into_iter()
@@ -7977,8 +8166,12 @@ pub mod kit {
             let mut is_child: HashSet<Guid> = HashSet::new();
             for c in &dr.connections {
                 let Ok(conn) = c.read() else { continue };
-                let Ok(s0) = conn.connected.read() else { continue };
-                let Ok(s1) = conn.connecting.read() else { continue };
+                let Ok(s0) = conn.connected.read() else {
+                    continue;
+                };
+                let Ok(s1) = conn.connecting.read() else {
+                    continue;
+                };
                 let Some(pg0) = s0
                     .piece
                     .upgrade()
@@ -8439,14 +8632,15 @@ pub mod layer {
 
 pub mod piece {
     use serde::{Deserialize, Serialize};
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{
         AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
     };
     use crate::connection::ConnectionStoreWeak;
-    use crate::design::DesignStoreWeak;
+    use crate::design::{DesignStoreRef, DesignStoreWeak};
+    use crate::error::{SetError, SetResult};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane};
     use crate::guid::Guid;
@@ -8456,6 +8650,13 @@ pub mod piece {
 
     pub type PieceStoreRef = Arc<RwLock<PieceStore>>;
     pub type PieceStoreWeak = Weak<RwLock<PieceStore>>;
+
+    /// 🔁Replacement catalog for one piece selection, grouped into compatible kinds and designs.
+    #[derive(Clone, Debug, Default)]
+    pub struct PieceAlternatives {
+        pub types: Vec<TypeStoreRef>,
+        pub designs: Vec<DesignStoreRef>,
+    }
 
     /// Placed instance of a [`crate::typ::TypeStore`] inside a [`crate::design::DesignStore`].
     #[derive(Debug)]
@@ -8772,10 +8973,10 @@ pub mod piece {
             let parent_connector =
                 crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
             let parent_connector = parent_connector.read().ok()?;
-            Some(parent_connection.compute_child_center_for_flatten(
-                parent_center,
-                &parent_connector,
-            ))
+            Some(
+                parent_connection
+                    .compute_child_center_for_flatten(parent_center, &parent_connector),
+            )
         }
 
         pub fn invalidate_hash(&self) {
@@ -9000,6 +9201,458 @@ pub mod piece {
             path.push(self.to_id_dto());
             path
         }
+
+        // #region 🔁PieceAlternatives
+        /// 🔁Returns connector-valid replacement kinds and designs for this piece inside its host design.
+        pub fn alternatives(&self) -> PieceAlternatives {
+            let Some(design_ref) = self.parent_design.upgrade() else {
+                return PieceAlternatives::default();
+            };
+            let Ok(design) = design_ref.read() else {
+                return PieceAlternatives::default();
+            };
+            design.replaceable_catalog_candidates(std::slice::from_ref(&self.guid))
+        }
+
+        /// 🔁Returns connector-valid replacement kinds for this piece inside its host design.
+        pub fn alternative_types(&self) -> Vec<TypeStoreRef> {
+            self.alternatives().types
+        }
+
+        /// 🔁Returns connector-valid replacement designs for this piece inside its host design.
+        pub fn alternative_designs(&self) -> Vec<DesignStoreRef> {
+            self.alternatives().designs
+        }
+        // #endregion
+
+        // #region 🔖PieceMovement
+        fn domain_normalize_coord(v: Coordinate) -> Coordinate {
+            let n = v.length();
+            if n < 1e-12 {
+                Coordinate::ZERO
+            } else {
+                v.scale(1.0 / n)
+            }
+        }
+
+        fn domain_cross(a: Coordinate, b: Coordinate) -> Coordinate {
+            Coordinate::new(
+                a.y * b.z - a.z * b.y,
+                a.z * b.x - a.x * b.z,
+                a.x * b.y - a.y * b.x,
+            )
+        }
+
+        fn domain_move_translation_world(
+            plane: &Plane,
+            gap: f64,
+            shift: f64,
+            rise: f64,
+        ) -> Coordinate {
+            let x = Self::domain_normalize_coord(plane.x_axis);
+            let y = Self::domain_normalize_coord(plane.y_axis);
+            let z = Self::domain_cross(x, y);
+            let zn = z.length();
+            if zn < 1e-12 {
+                return Coordinate::ZERO;
+            }
+            let z = z.scale(1.0 / zn);
+            y.scale(gap).add(&x.scale(shift)).add(&z.scale(rise))
+        }
+
+        fn piece_guid_from_side(side: &crate::side::SideStoreRef) -> Option<Guid> {
+            side.read().ok().and_then(|side| {
+                side.piece
+                    .upgrade()
+                    .and_then(|piece| piece.try_read().ok().map(|piece| piece.guid.clone()))
+            })
+        }
+
+        fn connection_child_piece(
+            connection: &crate::connection::ConnectionStoreRef,
+        ) -> Option<PieceStoreRef> {
+            connection.read().ok().and_then(|connection| {
+                connection
+                    .connecting
+                    .read()
+                    .ok()
+                    .and_then(|side| side.piece.upgrade())
+            })
+        }
+
+        fn connection_connected_matches_self(
+            connection: &crate::connection::ConnectionStoreRef,
+            self_guid: &Guid,
+        ) -> bool {
+            let Some(connected) = connection
+                .read()
+                .ok()
+                .map(|connection| connection.connected.clone())
+            else {
+                return false;
+            };
+            match Self::piece_guid_from_side(&connected) {
+                Some(guid) => guid == *self_guid,
+                None => true,
+            }
+        }
+
+        fn immediate_child_flat_pose(
+            &self,
+            connection_ref: &crate::connection::ConnectionStoreRef,
+            child: &PieceStore,
+            parent_plane: Plane,
+            parent_center: Coordinate,
+        ) -> (Plane, Coordinate) {
+            let Some(parent_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Some(child_type_ref) = child.type_ref.as_ref().and_then(|t| t.upgrade()) else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(connection) = connection_ref.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(parent_side) = connection.connected.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(child_side) = connection.connecting.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(parent_type) = parent_type_ref.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(child_type) = child_type_ref.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Some(parent_connector_ref) =
+                crate::design::resolve_connector_for_side(&parent_side, &parent_type)
+            else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Some(child_connector_ref) =
+                crate::design::resolve_connector_for_side(&child_side, &child_type)
+            else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(parent_connector) = parent_connector_ref.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            let Ok(child_connector) = child_connector_ref.read() else {
+                return (
+                    child.plane.unwrap_or_else(Plane::world_xy),
+                    child.center.unwrap_or_default(),
+                );
+            };
+            (
+                connection.compute_child_plane_for_flatten(
+                    &parent_plane,
+                    &parent_connector,
+                    &child_connector,
+                ),
+                connection.compute_child_center_for_flatten(parent_center, &parent_connector),
+            )
+        }
+
+        fn detach_flat_pose(&self) -> (Plane, Coordinate) {
+            let fallback = (
+                self.plane.unwrap_or_else(Plane::world_xy),
+                self.center.unwrap_or_default(),
+            );
+            let Some(parent_piece_ref) = self.parent_piece.as_ref().and_then(|p| p.upgrade())
+            else {
+                return fallback;
+            };
+            let Some(parent_connection_ref) =
+                self.parent_connection.as_ref().and_then(|c| c.upgrade())
+            else {
+                return fallback;
+            };
+            let Some(parent_type_ref) = parent_piece_ref
+                .read()
+                .ok()
+                .and_then(|parent| parent.type_ref.as_ref().and_then(|t| t.upgrade()))
+            else {
+                return fallback;
+            };
+            let Some(child_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
+                return fallback;
+            };
+            let Ok(parent_piece) = parent_piece_ref.read() else {
+                return fallback;
+            };
+            let parent_plane = parent_piece.flat_plane();
+            let parent_center = parent_piece.flat_center();
+            drop(parent_piece);
+            let Ok(connection) = parent_connection_ref.read() else {
+                return fallback;
+            };
+            let Ok(parent_side) = connection.connected.read() else {
+                return fallback;
+            };
+            let Ok(child_side) = connection.connecting.read() else {
+                return fallback;
+            };
+            let Ok(parent_type) = parent_type_ref.read() else {
+                return fallback;
+            };
+            let Ok(child_type) = child_type_ref.read() else {
+                return fallback;
+            };
+            let Some(parent_connector_ref) =
+                crate::design::resolve_connector_for_side(&parent_side, &parent_type)
+            else {
+                return fallback;
+            };
+            let Some(child_connector_ref) =
+                crate::design::resolve_connector_for_side(&child_side, &child_type)
+            else {
+                return fallback;
+            };
+            let Ok(parent_connector) = parent_connector_ref.read() else {
+                return fallback;
+            };
+            let Ok(child_connector) = child_connector_ref.read() else {
+                return fallback;
+            };
+            let plane = self.plane.unwrap_or_else(|| {
+                connection.compute_child_plane_for_flatten(
+                    &parent_plane,
+                    &parent_connector,
+                    &child_connector,
+                )
+            });
+            let center = self.center.unwrap_or_else(|| {
+                connection.compute_child_center_for_flatten(parent_center, &parent_connector)
+            });
+            (plane, center)
+        }
+
+        fn invalidate_flat_centers_below(&self) {
+            self.flat_center.invalidate();
+            let Some(design) = self.parent_design.upgrade() else {
+                return;
+            };
+            let Ok(design_read) = design.read() else {
+                return;
+            };
+            let mut queue = VecDeque::from([self.guid.clone()]);
+            let mut visited: HashSet<Guid> = HashSet::new();
+            while let Some(parent_guid) = queue.pop_front() {
+                if !visited.insert(parent_guid.clone()) {
+                    continue;
+                }
+                for connection in &design_read.connections {
+                    let Some(connected_guid) = connection
+                        .read()
+                        .ok()
+                        .and_then(|connection| Self::piece_guid_from_side(&connection.connected))
+                    else {
+                        continue;
+                    };
+                    if connected_guid != parent_guid {
+                        continue;
+                    }
+                    let Some(child_ref) = Self::connection_child_piece(connection) else {
+                        continue;
+                    };
+                    if let Ok(child) = child_ref.read() {
+                        child.flat_center.invalidate();
+                        queue.push_back(child.guid.clone());
+                    };
+                }
+            }
+        }
+
+        fn invalidate_flat_planes_below(&self) {
+            self.flat_plane.invalidate();
+            let Some(design) = self.parent_design.upgrade() else {
+                return;
+            };
+            let Ok(design_read) = design.read() else {
+                return;
+            };
+            let mut queue = VecDeque::from([self.guid.clone()]);
+            let mut visited: HashSet<Guid> = HashSet::new();
+            while let Some(parent_guid) = queue.pop_front() {
+                if !visited.insert(parent_guid.clone()) {
+                    continue;
+                }
+                for connection in &design_read.connections {
+                    let Some(connected_guid) = connection
+                        .read()
+                        .ok()
+                        .and_then(|connection| Self::piece_guid_from_side(&connection.connected))
+                    else {
+                        continue;
+                    };
+                    if connected_guid != parent_guid {
+                        continue;
+                    }
+                    let Some(child_ref) = Self::connection_child_piece(connection) else {
+                        continue;
+                    };
+                    if let Ok(child) = child_ref.read() {
+                        child.flat_plane.invalidate();
+                        queue.push_back(child.guid.clone());
+                    };
+                }
+            }
+        }
+
+        /// 🖐️Drag this piece in center-space; connected pieces update their parent connection while
+        /// fixed pieces update their own center and invalidate descendant center caches.
+        pub fn drag(&mut self, du: f64, dv: f64) -> SetResult {
+            if let Some(parent_connection) =
+                self.parent_connection.as_ref().and_then(|w| w.upgrade())
+            {
+                let mut connection = parent_connection
+                    .write()
+                    .map_err(|_| SetError::LockPoisoned("connection".into()))?;
+                let next_x = connection.x.unwrap_or(0.0) + du;
+                let next_y = connection.y.unwrap_or(0.0) + dv;
+                connection.set_x(Some(next_x))?;
+                connection.set_y(Some(next_y))?;
+                drop(connection);
+                self.invalidate_flat_centers_below();
+                return Ok(());
+            }
+
+            let next = self
+                .center
+                .unwrap_or_default()
+                .add(&Coordinate::new(du, dv, 0.0));
+            self.set_center(Some(next))?;
+            self.invalidate_flat_centers_below();
+            Ok(())
+        }
+
+        /// 🧭Move this piece in plane-space and invalidate descendant plane caches.
+        pub fn r#move(&mut self, gap: f64, shift: f64, rise: f64) -> SetResult {
+            let base = self.plane.unwrap_or_else(|| self.flat_plane());
+            let translation = Self::domain_move_translation_world(&base, gap, shift, rise);
+            let mut plane = base;
+            plane.origin = plane.origin.add(&translation);
+            self.set_plane(Some(plane))?;
+            self.invalidate_flat_planes_below();
+            Ok(())
+        }
+
+        /// 📌Fix this piece and its immediate children at their current flat poses, then detach the
+        /// parent and child connections that made those poses implicit.
+        pub fn fix(&mut self) -> SetResult {
+            let (flat_plane, flat_center) = self.detach_flat_pose();
+            let parent_connection_guid = self
+                .parent_connection
+                .as_ref()
+                .and_then(|connection| connection.upgrade())
+                .and_then(|connection| {
+                    connection
+                        .read()
+                        .ok()
+                        .map(|connection| connection.guid.clone())
+                });
+
+            self.plane = Some(flat_plane);
+            self.center = Some(flat_center);
+            self.parent_piece = None;
+            self.parent_connection = None;
+            self.hash_cache.invalidate();
+            self.invalidate_flat_pose();
+
+            let Some(design_ref) = self.parent_design.upgrade() else {
+                return Ok(());
+            };
+            let mut design = design_ref
+                .write()
+                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let design_entity = design.entity_ref();
+            let child_connections: Vec<_> = design
+                .connections
+                .iter()
+                .filter(|connection| {
+                    Self::connection_connected_matches_self(connection, &self.guid)
+                })
+                .cloned()
+                .collect();
+
+            let mut removed_connection_guids: HashSet<Guid> = HashSet::new();
+            if let Some(guid) = parent_connection_guid {
+                removed_connection_guids.insert(guid);
+            }
+            for connection in &child_connections {
+                if let Some(child_ref) = Self::connection_child_piece(connection) {
+                    if let Ok(mut child) = child_ref.try_write() {
+                        let (child_plane, child_center) = self.immediate_child_flat_pose(
+                            connection,
+                            &child,
+                            flat_plane,
+                            flat_center,
+                        );
+                        child.plane = Some(child_plane);
+                        child.center = Some(child_center);
+                        child.parent_piece = None;
+                        child.parent_connection = None;
+                        child.hash_cache.invalidate();
+                        child.invalidate_flat_pose();
+                    }
+                }
+                if let Ok(connection_read) = connection.read() {
+                    removed_connection_guids.insert(connection_read.guid.clone());
+                }
+            }
+
+            if removed_connection_guids.is_empty() {
+                return Ok(());
+            }
+            for guid in &removed_connection_guids {
+                design.emit_ev(KitEvent::ChildRemoved {
+                    parent: design_entity.clone(),
+                    child: EntityRef::new(EntityKind::Connection, guid.clone()),
+                });
+            }
+            design.connections.retain(|connection| {
+                connection
+                    .read()
+                    .map(|connection| !removed_connection_guids.contains(&connection.guid))
+                    .unwrap_or(true)
+            });
+            design.invalidate_hash();
+            design.invalidate_flatten_with_locked_piece(Some(self.guid.clone()));
+            design.invalidate_validation();
+            Ok(())
+        }
+        // #endregion
 
         pub fn hash(&self) -> String {
             self.hash_cache.get_or_init(|| {
@@ -12692,11 +13345,19 @@ pub mod io {
             }
         }
 
-        fn coordinate_from_parts(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Coordinate> {
+        fn coordinate_from_parts(
+            x: Option<f64>,
+            y: Option<f64>,
+            z: Option<f64>,
+        ) -> Option<Coordinate> {
             if x.is_none() && y.is_none() && z.is_none() {
                 return None;
             }
-            Some(Coordinate::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
+            Some(Coordinate::new(
+                x.unwrap_or(0.0),
+                y.unwrap_or(0.0),
+                z.unwrap_or(0.0),
+            ))
         }
 
         fn location_from_parts(x: Option<f64>, y: Option<f64>) -> Option<Location> {
@@ -12984,7 +13645,12 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(tx: &Transaction<'_>, type_guid: &Guid, port: &PortFullDto, ordinal: usize) -> Result<()> {
+        fn insert_port(
+            tx: &Transaction<'_>,
+            type_guid: &Guid,
+            port: &PortFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
             let (point_x, point_y, point_z) = coordinate_parts(port.point.as_ref());
             let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
             tx.execute(
@@ -13137,7 +13803,12 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_type(tx: &Transaction<'_>, kit_guid: &Guid, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
+        fn insert_type(
+            tx: &Transaction<'_>,
+            kit_guid: &Guid,
+            typ: &TypeFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
             let (location_x, location_y) = location_parts(typ.location.as_ref());
             tx.execute(
                 "INSERT INTO \"type\" (
@@ -13240,7 +13911,12 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_layer(tx: &Transaction<'_>, design_guid: &Guid, layer: &LayerFullDto, ordinal: usize) -> Result<()> {
+        fn insert_layer(
+            tx: &Transaction<'_>,
+            design_guid: &Guid,
+            layer: &LayerFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
             tx.execute(
                 "INSERT INTO layer (guid, ordinal, name, description, color, order_index, visible, locked, design_guid)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -13259,9 +13935,23 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_piece(tx: &Transaction<'_>, design_guid: &Guid, piece: &PieceFullDto, ordinal: usize) -> Result<()> {
-            let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) =
-                plane_parts(piece.plane.as_ref());
+        fn insert_piece(
+            tx: &Transaction<'_>,
+            design_guid: &Guid,
+            piece: &PieceFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
+            let (
+                plane_ox,
+                plane_oy,
+                plane_oz,
+                plane_xx,
+                plane_xy,
+                plane_xz,
+                plane_yx,
+                plane_yy,
+                plane_yz,
+            ) = plane_parts(piece.plane.as_ref());
             let (center_x, center_y, center_z) = coordinate_parts(piece.center.as_ref());
             let (
                 mirror_ox,
@@ -13357,7 +14047,12 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_group(tx: &Transaction<'_>, design_guid: &Guid, group: &GroupFullDto, ordinal: usize) -> Result<()> {
+        fn insert_group(
+            tx: &Transaction<'_>,
+            design_guid: &Guid,
+            group: &GroupFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
             tx.execute(
                 "INSERT INTO \"group\" (guid, ordinal, name, description, color, icon, design_guid)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -13374,7 +14069,11 @@ pub mod io {
             for (piece_ordinal, piece) in group.pieces.iter().enumerate() {
                 tx.execute(
                     "INSERT INTO group_piece (group_guid, piece_guid, ordinal) VALUES (?1, ?2, ?3)",
-                    params![group.guid.as_str(), piece.guid.as_str(), piece_ordinal as i64],
+                    params![
+                        group.guid.as_str(),
+                        piece.guid.as_str(),
+                        piece_ordinal as i64
+                    ],
                 )?;
             }
             Ok(())
@@ -13443,7 +14142,12 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_design(tx: &Transaction<'_>, kit_guid: &Guid, design: &DesignFullDto, ordinal: usize) -> Result<()> {
+        fn insert_design(
+            tx: &Transaction<'_>,
+            kit_guid: &Guid,
+            design: &DesignFullDto,
+            ordinal: usize,
+        ) -> Result<()> {
             let (location_x, location_y) = location_parts(design.location.as_ref());
             let (
                 camera_px,
@@ -13596,7 +14300,11 @@ pub mod io {
             Ok(())
         }
 
-        fn load_authors_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<AuthorFullDto>> {
+        fn load_authors_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<AuthorFullDto>> {
             let sql = format!(
                 "SELECT guid, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal"
             );
@@ -13615,7 +14323,11 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_concepts_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<ConceptFullDto>> {
+        fn load_concepts_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<ConceptFullDto>> {
             let sql = format!(
                 "SELECT guid, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal"
             );
@@ -13633,7 +14345,11 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_tags_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<TagFullDto>> {
+        fn load_tags_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<TagFullDto>> {
             let sql = format!(
                 "SELECT guid, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal"
             );
@@ -13650,7 +14366,10 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_benchmarks(conn: &SqlConnection, quality_guid: &Guid) -> Result<Vec<BenchmarkFullDto>> {
+        fn load_benchmarks(
+            conn: &SqlConnection,
+            quality_guid: &Guid,
+        ) -> Result<Vec<BenchmarkFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT guid, name, min_value, max_value, min_excluded, max_excluded
                  FROM benchmark WHERE quality_guid = ?1 ORDER BY ordinal",
@@ -13670,7 +14389,11 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_qualities_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<QualityFullDto>> {
+        fn load_qualities_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<QualityFullDto>> {
             let sql = format!(
                 "SELECT guid, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal"
             );
@@ -13692,7 +14415,11 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_props_for_scope(conn: &SqlConnection, column: &str, guid: &Guid) -> Result<Vec<PropFullDto>> {
+        fn load_props_for_scope(
+            conn: &SqlConnection,
+            column: &str,
+            guid: &Guid,
+        ) -> Result<Vec<PropFullDto>> {
             let sql = format!(
                 "SELECT guid, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal"
             );
@@ -13767,7 +14494,10 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_connectors(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<ConnectorFullDto>> {
+        fn load_connectors(
+            conn: &SqlConnection,
+            type_guid: &Guid,
+        ) -> Result<Vec<ConnectorFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT guid, code, description, port_guid FROM connector WHERE type_guid = ?1 ORDER BY ordinal",
             )?;
@@ -13780,7 +14510,9 @@ pub mod io {
                     guid: guid.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
+                    port: port_guid.map(|value| PortIdDto {
+                        guid: Guid::from(value),
+                    }),
                     qualities: load_qualities_for_scope(conn, "connector_guid", &guid)?,
                     attributes: load_attributes_for_scope(conn, "connector_guid", &guid)?,
                 });
@@ -13788,7 +14520,10 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_representations(conn: &SqlConnection, type_guid: &Guid) -> Result<Vec<RepresentationFullDto>> {
+        fn load_representations(
+            conn: &SqlConnection,
+            type_guid: &Guid,
+        ) -> Result<Vec<RepresentationFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT guid, url, description, file_guid FROM representation WHERE type_guid = ?1 ORDER BY ordinal",
             )?;
@@ -13801,7 +14536,9 @@ pub mod io {
                     guid: guid.clone(),
                     url: row.get(1)?,
                     description: row.get(2)?,
-                    file: file_guid.map(|value| FileIdDto { guid: Guid::from(value) }),
+                    file: file_guid.map(|value| FileIdDto {
+                        guid: Guid::from(value),
+                    }),
                     tags: load_tags_for_scope(conn, "representation_guid", &guid)?,
                     qualities: load_qualities_for_scope(conn, "representation_guid", &guid)?,
                     attributes: load_attributes_for_scope(conn, "representation_guid", &guid)?,
@@ -13918,8 +14655,12 @@ pub mod io {
                     hidden: opt_int_to_bool(row.get(26)?),
                     locked: opt_int_to_bool(row.get(27)?),
                     color: row.get(28)?,
-                    r#type: type_guid.map(|value| crate::typ::TypeIdDto { guid: Guid::from(value) }),
-                    design: design_ref_guid.map(|value| crate::design::DesignIdDto { guid: Guid::from(value) }),
+                    r#type: type_guid.map(|value| crate::typ::TypeIdDto {
+                        guid: Guid::from(value),
+                    }),
+                    design: design_ref_guid.map(|value| crate::design::DesignIdDto {
+                        guid: Guid::from(value),
+                    }),
                     props: load_props_for_scope(conn, "piece_guid", &guid)?,
                     attributes: load_attributes_for_scope(conn, "piece_guid", &guid)?,
                 });
@@ -13957,7 +14698,10 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_connections(conn: &SqlConnection, design_guid: &Guid) -> Result<Vec<ConnectionFullDto>> {
+        fn load_connections(
+            conn: &SqlConnection,
+            design_guid: &Guid,
+        ) -> Result<Vec<ConnectionFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT guid,
                         connected_side_guid, connected_piece_guid, connected_port_guid, connected_design_piece_guid,
@@ -13980,18 +14724,28 @@ pub mod io {
                         piece: crate::piece::PieceIdDto {
                             guid: Guid::from(row.get::<_, String>(2)?),
                         },
-                        port: connected_port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
-                        design_piece: connected_design_piece_guid
-                            .map(|value| crate::piece::PieceIdDto { guid: Guid::from(value) }),
+                        port: connected_port_guid.map(|value| PortIdDto {
+                            guid: Guid::from(value),
+                        }),
+                        design_piece: connected_design_piece_guid.map(|value| {
+                            crate::piece::PieceIdDto {
+                                guid: Guid::from(value),
+                            }
+                        }),
                     },
                     connecting: SideMetadataDto {
                         guid: Guid::from(row.get::<_, String>(5)?),
                         piece: crate::piece::PieceIdDto {
                             guid: Guid::from(row.get::<_, String>(6)?),
                         },
-                        port: connecting_port_guid.map(|value| PortIdDto { guid: Guid::from(value) }),
-                        design_piece: connecting_design_piece_guid
-                            .map(|value| crate::piece::PieceIdDto { guid: Guid::from(value) }),
+                        port: connecting_port_guid.map(|value| PortIdDto {
+                            guid: Guid::from(value),
+                        }),
+                        design_piece: connecting_design_piece_guid.map(|value| {
+                            crate::piece::PieceIdDto {
+                                guid: Guid::from(value),
+                            }
+                        }),
                     },
                     gap: row.get(9)?,
                     shift: row.get(10)?,
@@ -14064,7 +14818,9 @@ pub mod io {
                     unit: row.get(19)?,
                     created: row.get(20)?,
                     updated: row.get(21)?,
-                    kit: Some(crate::kit::KitIdDto { guid: kit_guid.clone() }),
+                    kit: Some(crate::kit::KitIdDto {
+                        guid: kit_guid.clone(),
+                    }),
                     pieces: load_pieces(conn, &guid)?,
                     connections: load_connections(conn, &guid)?,
                     layers: load_layers(conn, &guid)?,
@@ -14125,7 +14881,9 @@ pub mod io {
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
-            let row = rows.next()?.expect("kit row must exist in sqlite persistence");
+            let row = rows
+                .next()?
+                .expect("kit row must exist in sqlite persistence");
             let guid = Guid::from(row.get::<_, String>(0)?);
             Ok(KitFullDto {
                 guid: guid.clone(),
@@ -14319,8 +15077,8 @@ pub mod io {
         use std::fs;
         use std::path::{Component, Path, PathBuf};
 
-        use base64::Engine as _;
         use base64::engine::general_purpose::STANDARD;
+        use base64::Engine as _;
         use tempfile::NamedTempFile;
 
         use crate::error::{Result, SemioError};
@@ -14366,7 +15124,11 @@ pub mod io {
         }
 
         fn mime_from_extension(path: &Path) -> Option<&'static str> {
-            match path.extension().and_then(OsStr::to_str).map(|v| v.to_ascii_lowercase()) {
+            match path
+                .extension()
+                .and_then(OsStr::to_str)
+                .map(|v| v.to_ascii_lowercase())
+            {
                 Some(ext) => match ext.as_str() {
                     "txt" => Some("text/plain"),
                     "json" => Some("application/json"),
@@ -14554,9 +15316,7 @@ pub mod io {
                     let body = response
                         .into_string()
                         .unwrap_or_else(|_| String::from("<unreadable response body>"));
-                    SemioError::Other(format!(
-                        "hub request failed with status {status}: {body}"
-                    ))
+                    SemioError::Other(format!("hub request failed with status {status}: {body}"))
                 }
                 ureq::Error::Transport(error) => {
                     SemioError::Other(format!("hub transport error: {error}"))
@@ -14571,7 +15331,10 @@ pub mod io {
         }
 
         fn remote_snapshot_url(hub_url: &str, session_id: &str) -> String {
-            format!("{}/sessions/{session_id}/snapshot", normalize_hub_url(hub_url))
+            format!(
+                "{}/sessions/{session_id}/snapshot",
+                normalize_hub_url(hub_url)
+            )
         }
 
         impl KitStore {
@@ -14830,8 +15593,8 @@ pub mod wasm {
 
         #[wasm_bindgen(js_name = getField)]
         pub fn get_field(&self, kind: &str, guid: &str, field: &str) -> Result<JsValue, JsValue> {
-            let ek = KitStore::parse_entity_kind(kind)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ek =
+                KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let v = KitStore::get_field_rpc(&self.inner, ek, guid, field)
                 .map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
@@ -14891,9 +15654,7 @@ pub mod wasm {
                         return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
                     }
                 };
-                js_settle_set(KitStore::add_child_rpc(
-                    &inner, pk, &pg, ck, dto,
-                ))
+                js_settle_set(KitStore::add_child_rpc(&inner, pk, &pg, ck, dto))
             })
         }
 
@@ -14919,9 +15680,7 @@ pub mod wasm {
                     Ok(v) => v,
                     Err(e) => return js_settle_set(Err(e)),
                 };
-                js_settle_set(KitStore::remove_child_rpc(
-                    &inner, pk, &pg, ck, &cg,
-                ))
+                js_settle_set(KitStore::remove_child_rpc(&inner, pk, &pg, ck, &cg))
             })
         }
 
@@ -14951,12 +15710,9 @@ pub mod wasm {
             let dg = design_guid.to_string();
             let cn = cluster_name.to_string();
             future_to_promise(async move {
-                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids).map_err(|e| {
-                    JsValue::from_str(&format!("clusterPieces piece_guids: {e}"))
-                })?;
-                js_settle_set(KitStore::cluster_pieces(
-                    &inner, &dg, guids, cn,
-                ))
+                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
+                    .map_err(|e| JsValue::from_str(&format!("clusterPieces piece_guids: {e}")))?;
+                js_settle_set(KitStore::cluster_pieces(&inner, &dg, guids, cn))
             })
         }
 
@@ -14973,9 +15729,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
                     .map_err(|e| JsValue::from_str(&format!("dragPieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::drag_pieces(
-                    &inner, &dg, guids, du, dv,
-                ))
+                js_settle_set(KitStore::drag_pieces(&inner, &dg, guids, du, dv))
             })
         }
 
@@ -14993,9 +15747,7 @@ pub mod wasm {
             future_to_promise(async move {
                 let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
                     .map_err(|e| JsValue::from_str(&format!("movePieces piece_guids: {e}")))?;
-                js_settle_set(KitStore::move_pieces(
-                    &inner, &dg, guids, gap, shift, rise,
-                ))
+                js_settle_set(KitStore::move_pieces(&inner, &dg, guids, gap, shift, rise))
             })
         }
 
@@ -15014,9 +15766,9 @@ pub mod wasm {
         pub fn flatten_design_bind(&self, design_guid: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
-            future_to_promise(async move {
-                js_settle_set(KitStore::flatten_design_apply(&inner, &dg))
-            })
+            future_to_promise(
+                async move { js_settle_set(KitStore::flatten_design_apply(&inner, &dg)) },
+            )
         }
 
         #[wasm_bindgen(js_name = expandDesign)]
@@ -15034,14 +15786,16 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = deleteConnection)]
-        pub fn delete_connection(&self, design_guid: &str, connection_guid: &str) -> js_sys::Promise {
+        pub fn delete_connection(
+            &self,
+            design_guid: &str,
+            connection_guid: &str,
+        ) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             let cg = connection_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(KitStore::delete_connection_in_design(
-                    &inner, &dg, &cg,
-                ))
+                js_settle_set(KitStore::delete_connection_in_design(&inner, &dg, &cg))
             })
         }
 
@@ -15057,9 +15811,7 @@ pub mod wasm {
             let pg = piece_guid.to_string();
             let tg = new_type_guid.to_string();
             future_to_promise(async move {
-                js_settle_set(KitStore::change_piece_type(
-                    &inner, &dg, &pg, &tg,
-                ))
+                js_settle_set(KitStore::change_piece_type(&inner, &dg, &pg, &tg))
             })
         }
 
@@ -15073,9 +15825,10 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_guid.to_string();
             future_to_promise(async move {
-                let sel: serde_json::Value = serde_wasm_bindgen::from_value(selection).map_err(|e| {
-                    JsValue::from_str(&format!("pasteDesignSelection selection: {e}"))
-                })?;
+                let sel: serde_json::Value =
+                    serde_wasm_bindgen::from_value(selection).map_err(|e| {
+                        JsValue::from_str(&format!("pasteDesignSelection selection: {e}"))
+                    })?;
                 let pl: Option<crate::geom::Plane> = if plane.is_undefined() || plane.is_null() {
                     None
                 } else {
@@ -15083,9 +15836,7 @@ pub mod wasm {
                         JsValue::from_str(&format!("pasteDesignSelection plane: {e}"))
                     })?)
                 };
-                js_settle_set(KitStore::paste_design_selection(
-                    &inner, &dg, sel, pl,
-                ))
+                js_settle_set(KitStore::paste_design_selection(&inner, &dg, sel, pl))
             })
         }
 
@@ -15102,12 +15853,9 @@ pub mod wasm {
                 let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_guids).map_err(|e| {
                     JsValue::from_str(&format!("createHangingPieces type_guids: {e}"))
                 })?;
-                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
-                    JsValue::from_str(&format!("createHangingPieces plane: {e}"))
-                })?;
-                js_settle_set(KitStore::create_hanging_pieces(
-                    &inner, &dg, tgs, pl,
-                ))
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
+                    .map_err(|e| JsValue::from_str(&format!("createHangingPieces plane: {e}")))?;
+                js_settle_set(KitStore::create_hanging_pieces(&inner, &dg, tgs, pl))
             })
         }
 
@@ -15144,12 +15892,9 @@ pub mod wasm {
             let dg = design_guid.to_string();
             let tg = type_guid.to_string();
             future_to_promise(async move {
-                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
-                    JsValue::from_str(&format!("createFixedPiece plane: {e}"))
-                })?;
-                js_settle_set(KitStore::create_fixed_piece(
-                    &inner, &dg, &tg, pl,
-                ))
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
+                    .map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
+                js_settle_set(KitStore::create_fixed_piece(&inner, &dg, &tg, pl))
             })
         }
 
@@ -15467,8 +16212,7 @@ mod tests {
                 x_axis: Coordinate::new(0.0, 1.0, 0.0),
                 y_axis: Coordinate::new(-1.0, 0.0, 0.0),
             };
-            let (kit, design_guid, _, _, leaf_guid) =
-                kit_with_flatten_chain(Some(explicit_plane));
+            let (kit, design_guid, _, _, leaf_guid) = kit_with_flatten_chain(Some(explicit_plane));
             let leaf = {
                 let kit_read = kit.read().expect("kit read");
                 let design = kit_read.design(design_guid.as_str()).expect("design");
@@ -15485,12 +16229,18 @@ mod tests {
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read.design(design_guid.as_str()).expect("design").clone()
+                kit_read
+                    .design(design_guid.as_str())
+                    .expect("design")
+                    .clone()
             };
 
             {
                 let design_read = design.read().expect("design read");
-                let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+                let middle = design_read
+                    .piece(middle_guid.as_str())
+                    .expect("middle")
+                    .clone();
                 let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
                 let middle_parent = middle
                     .read()
@@ -15516,7 +16266,10 @@ mod tests {
                 .delete_pieces(&[root_guid.clone()]);
 
             let design_read = design.read().expect("design read after delete");
-            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let middle = design_read
+                .piece(middle_guid.as_str())
+                .expect("middle")
+                .clone();
             let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
             let middle_read = middle.read().expect("middle read after delete");
             let leaf_read = leaf.read().expect("leaf read after delete");
@@ -15538,11 +16291,17 @@ mod tests {
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read.design(design_guid.as_str()).expect("design").clone()
+                kit_read
+                    .design(design_guid.as_str())
+                    .expect("design")
+                    .clone()
             };
             let design_read = design.read().expect("design read");
             let root = design_read.piece(root_guid.as_str()).expect("root").clone();
-            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let middle = design_read
+                .piece(middle_guid.as_str())
+                .expect("middle")
+                .clone();
             let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
 
             let root_path = root.read().expect("root read").path();
@@ -15571,9 +16330,7 @@ mod tests {
                 leaf_path,
                 vec![
                     PieceIdDto { guid: root_guid },
-                    PieceIdDto {
-                        guid: middle_guid,
-                    },
+                    PieceIdDto { guid: middle_guid },
                     PieceIdDto { guid: leaf_guid },
                 ]
             );
@@ -15585,7 +16342,10 @@ mod tests {
                 kit_with_flatten_chain(None);
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read.design(design_guid.as_str()).expect("design").clone()
+                kit_read
+                    .design(design_guid.as_str())
+                    .expect("design")
+                    .clone()
             };
 
             design
@@ -15594,7 +16354,10 @@ mod tests {
                 .delete_pieces(&[root_guid]);
 
             let design_read = design.read().expect("design read after delete");
-            let middle = design_read.piece(middle_guid.as_str()).expect("middle").clone();
+            let middle = design_read
+                .piece(middle_guid.as_str())
+                .expect("middle")
+                .clone();
             let leaf = design_read.piece(leaf_guid.as_str()).expect("leaf").clone();
 
             let middle_path = middle.read().expect("middle read").path();
@@ -15609,12 +16372,111 @@ mod tests {
             assert_eq!(
                 leaf_path,
                 vec![
-                    PieceIdDto {
-                        guid: middle_guid,
-                    },
+                    PieceIdDto { guid: middle_guid },
                     PieceIdDto { guid: leaf_guid },
                 ]
             );
+        }
+
+        #[test]
+        fn piece_drag_invalidates_descendant_center_cache() {
+            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let (middle, leaf) = {
+                let kit_read = kit.read().expect("kit read");
+                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design_read = design.read().expect("design read");
+                (
+                    design_read
+                        .piece(middle_guid.as_str())
+                        .expect("middle")
+                        .clone(),
+                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                )
+            };
+            let before = leaf.read().expect("leaf read before").flat_center();
+
+            middle
+                .write()
+                .expect("middle write")
+                .drag(2.0, 3.0)
+                .expect("drag middle");
+
+            let after = leaf.read().expect("leaf read after").flat_center();
+            assert!((after.x - (before.x + 2.0)).abs() < 1e-9);
+            assert!((after.y - (before.y + 3.0)).abs() < 1e-9);
+        }
+
+        #[test]
+        fn piece_move_invalidates_descendant_plane_cache() {
+            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let (middle, leaf) = {
+                let kit_read = kit.read().expect("kit read");
+                let design = kit_read.design(design_guid.as_str()).expect("design");
+                let design_read = design.read().expect("design read");
+                (
+                    design_read
+                        .piece(middle_guid.as_str())
+                        .expect("middle")
+                        .clone(),
+                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                )
+            };
+            let before = leaf.read().expect("leaf read before").flat_plane();
+
+            middle
+                .write()
+                .expect("middle write")
+                .r#move(0.0, 2.0, 0.0)
+                .expect("move middle");
+
+            let after = leaf.read().expect("leaf read after").flat_plane();
+            assert_ne!(after, before);
+        }
+
+        #[test]
+        fn piece_fix_preserves_flat_pose_and_detaches_parent_and_children() {
+            let (kit, design_guid, _, middle_guid, leaf_guid) = kit_with_flatten_chain(None);
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read
+                    .design(design_guid.as_str())
+                    .expect("design")
+                    .clone()
+            };
+            let (middle, leaf) = {
+                let design_read = design.read().expect("design read");
+                (
+                    design_read
+                        .piece(middle_guid.as_str())
+                        .expect("middle")
+                        .clone(),
+                    design_read.piece(leaf_guid.as_str()).expect("leaf").clone(),
+                )
+            };
+            let flat_map = design.read().expect("design read for flat map").flatten_map();
+            let (middle_plane, middle_center) = flat_map
+                .get(&middle_guid)
+                .copied()
+                .expect("middle flat pose");
+            let (leaf_plane, leaf_center) =
+                flat_map.get(&leaf_guid).copied().expect("leaf flat pose");
+
+            middle
+                .write()
+                .expect("middle write")
+                .fix()
+                .expect("fix middle");
+
+            let design_read = design.read().expect("design read after fix");
+            assert!(design_read.connections.is_empty());
+            let middle_read = middle.read().expect("middle read after fix");
+            let leaf_read = leaf.read().expect("leaf read after fix");
+            assert!(middle_read.parent_connection.is_none());
+            assert!(leaf_read.parent_connection.is_none());
+            assert_eq!(middle_read.plane, Some(middle_plane));
+            assert_eq!(middle_read.center, Some(middle_center));
+            assert_eq!(leaf_read.plane, Some(leaf_plane));
+            assert_eq!(leaf_read.center, Some(leaf_center));
         }
     }
 
@@ -15665,6 +16527,557 @@ mod tests {
         }
     }
 
+    mod alternatives {
+        use std::collections::HashMap;
+        use std::fs;
+        use std::path::PathBuf;
+
+        use serde::Deserialize;
+        use serde_json::Value;
+
+        use crate::connection::ConnectionFullDto;
+        use crate::connector::ConnectorFullDto;
+        use crate::design::DesignFullDto;
+        use crate::geom::{Coordinate, Vector};
+        use crate::guid::Guid;
+        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::piece::{PieceFullDto, PieceIdDto};
+        use crate::port::{PortFullDto, PortIdDto};
+        use crate::side::SideMetadataDto;
+        use crate::typ::{TypeFullDto, TypeIdDto};
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct FindReplaceableCasesAsset {
+            synthetic_kit: String,
+            synthetic_cases: Vec<SyntheticCase>,
+        }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct SyntheticCase {
+            name: String,
+            design_guid: String,
+            piece_guids: Vec<String>,
+            #[serde(default)]
+            expected_contains_types: Vec<String>,
+            #[serde(default)]
+            expected_not_contains_types: Vec<String>,
+            #[serde(default)]
+            expected_contains_designs: Vec<String>,
+            #[serde(default)]
+            expected_not_contains_designs: Vec<String>,
+        }
+
+        fn assets_dir() -> PathBuf {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("..")
+                .join("assets")
+                .join("semio")
+        }
+
+        fn load_asset_text(name: &str) -> String {
+            fs::read_to_string(assets_dir().join(name)).expect("read asset")
+        }
+
+        fn load_asset_json(name: &str) -> Value {
+            serde_json::from_str(&load_asset_text(name)).expect("parse asset json")
+        }
+
+        fn load_asset<T: for<'de> Deserialize<'de>>(name: &str) -> T {
+            serde_json::from_str(&load_asset_text(name)).expect("parse typed asset")
+        }
+
+        fn synthetic_replaceable_kit() -> (KitStoreRef, HashMap<&'static str, Guid>) {
+            let port_l = Guid::from("port-L");
+            let port_l_compatible = Guid::from("port-L-compatible");
+            let port_g = Guid::from("port-G");
+
+            let selected_external_lg = Guid::from("selected-external-lg");
+            let selected_isolated_lg = Guid::from("selected-isolated-lg");
+            let selected_external_ll = Guid::from("selected-external-ll");
+            let neighbor_l = Guid::from("neighbor-l");
+            let neighbor_g = Guid::from("neighbor-g");
+            let candidate_l = Guid::from("candidate-l");
+            let candidate_lg = Guid::from("candidate-lg");
+            let candidate_ll = Guid::from("candidate-ll");
+            let connectorless = Guid::from("candidate-empty");
+
+            let root_design = Guid::from("root-design");
+            let candidate_design_free_lg = Guid::from("candidate-design-free-lg");
+            let candidate_design_consumed_lg = Guid::from("candidate-design-consumed-lg");
+            let candidate_design_empty = Guid::from("candidate-design-empty");
+
+            let piece_external_lg = Guid::from("piece-external-lg");
+            let piece_isolated_lg = Guid::from("piece-isolated-lg");
+            let piece_external_ll = Guid::from("piece-external-ll");
+            let piece_neighbor_l = Guid::from("piece-neighbor-l");
+            let piece_neighbor_g = Guid::from("piece-neighbor-g");
+            let piece_candidate_free_lg = Guid::from("piece-candidate-free-lg");
+            let piece_candidate_consumed_lg = Guid::from("piece-candidate-consumed-lg");
+            let piece_candidate_consumed_neighbor = Guid::from("piece-candidate-consumed-neighbor");
+            let piece_candidate_empty = Guid::from("piece-candidate-empty");
+
+            let make_port = |guid: Guid, family: &str, compatible_families: Vec<&str>| PortFullDto {
+                guid,
+                family: Some(family.to_string()),
+                compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
+                point: Some(Coordinate::ZERO),
+                direction: Some(Vector::new(1.0, 0.0, 0.0)),
+                ..Default::default()
+            };
+
+            let make_connector = |guid: &str, code: &str, port_guid: &Guid| ConnectorFullDto {
+                guid: Guid::from(guid),
+                code: code.to_string(),
+                port: Some(PortIdDto { guid: port_guid.clone() }),
+                ..Default::default()
+            };
+
+            let make_type = |guid: Guid,
+                             name: &str,
+                             ports: Vec<PortFullDto>,
+                             connectors: Vec<ConnectorFullDto>| TypeFullDto {
+                guid,
+                name: name.to_string(),
+                ports,
+                connectors,
+                ..Default::default()
+            };
+
+            let dto = KitFullDto {
+                guid: Guid::from("synthetic-kit"),
+                name: "synthetic-kit".to_string(),
+                types: vec![
+                    make_type(
+                        selected_external_lg.clone(),
+                        "selected-external-lg",
+                        vec![
+                            make_port(port_l.clone(), "L", vec![]),
+                            make_port(port_g.clone(), "G", vec![]),
+                        ],
+                        vec![
+                            make_connector("selected-external-lg-connector-0", "L", &port_l),
+                            make_connector("selected-external-lg-connector-1", "G", &port_g),
+                        ],
+                    ),
+                    make_type(
+                        selected_isolated_lg.clone(),
+                        "selected-isolated-lg",
+                        vec![
+                            make_port(port_l.clone(), "L", vec![]),
+                            make_port(port_g.clone(), "G", vec![]),
+                        ],
+                        vec![
+                            make_connector("selected-isolated-lg-connector-0", "L", &port_l),
+                            make_connector("selected-isolated-lg-connector-1", "G", &port_g),
+                        ],
+                    ),
+                    make_type(
+                        selected_external_ll.clone(),
+                        "selected-external-ll",
+                        vec![make_port(port_l.clone(), "L", vec![])],
+                        vec![
+                            make_connector("selected-external-ll-connector-0", "L0", &port_l),
+                            make_connector("selected-external-ll-connector-1", "L1", &port_l),
+                        ],
+                    ),
+                    make_type(
+                        neighbor_l.clone(),
+                        "neighbor-l",
+                        vec![make_port(port_l.clone(), "L", vec![])],
+                        vec![make_connector("neighbor-l-connector-0", "L", &port_l)],
+                    ),
+                    make_type(
+                        neighbor_g.clone(),
+                        "neighbor-g",
+                        vec![make_port(port_g.clone(), "G", vec![])],
+                        vec![make_connector("neighbor-g-connector-0", "G", &port_g)],
+                    ),
+                    make_type(
+                        candidate_l.clone(),
+                        "candidate-l",
+                        vec![make_port(port_l.clone(), "L", vec![])],
+                        vec![make_connector("candidate-l-connector-0", "L", &port_l)],
+                    ),
+                    make_type(
+                        candidate_lg.clone(),
+                        "candidate-lg",
+                        vec![
+                            make_port(port_l_compatible.clone(), "L-compatible", vec!["L"]),
+                            make_port(port_g.clone(), "G", vec![]),
+                        ],
+                        vec![
+                            make_connector("candidate-lg-connector-0", "LC", &port_l_compatible),
+                            make_connector("candidate-lg-connector-1", "G", &port_g),
+                        ],
+                    ),
+                    make_type(
+                        candidate_ll.clone(),
+                        "candidate-ll",
+                        vec![make_port(port_l.clone(), "L", vec![])],
+                        vec![
+                            make_connector("candidate-ll-connector-0", "L0", &port_l),
+                            make_connector("candidate-ll-connector-1", "L1", &port_l),
+                        ],
+                    ),
+                    make_type(connectorless.clone(), "candidate-empty", vec![], vec![]),
+                ],
+                designs: vec![
+                    DesignFullDto {
+                        guid: root_design.clone(),
+                        name: "root-design".to_string(),
+                        pieces: vec![
+                            PieceFullDto {
+                                guid: piece_external_lg.clone(),
+                                name: Some("piece-external-lg".to_string()),
+                                r#type: Some(TypeIdDto { guid: selected_external_lg.clone() }),
+                                ..Default::default()
+                            },
+                            PieceFullDto {
+                                guid: piece_isolated_lg.clone(),
+                                name: Some("piece-isolated-lg".to_string()),
+                                r#type: Some(TypeIdDto { guid: selected_isolated_lg.clone() }),
+                                ..Default::default()
+                            },
+                            PieceFullDto {
+                                guid: piece_external_ll.clone(),
+                                name: Some("piece-external-ll".to_string()),
+                                r#type: Some(TypeIdDto { guid: selected_external_ll.clone() }),
+                                ..Default::default()
+                            },
+                            PieceFullDto {
+                                guid: piece_neighbor_l.clone(),
+                                name: Some("piece-neighbor-l".to_string()),
+                                r#type: Some(TypeIdDto { guid: neighbor_l.clone() }),
+                                ..Default::default()
+                            },
+                            PieceFullDto {
+                                guid: piece_neighbor_g.clone(),
+                                name: Some("piece-neighbor-g".to_string()),
+                                r#type: Some(TypeIdDto { guid: neighbor_g.clone() }),
+                                ..Default::default()
+                            },
+                        ],
+                        connections: vec![
+                            ConnectionFullDto {
+                                guid: Guid::from("root-lg-left"),
+                                connected: SideMetadataDto {
+                                    guid: Guid::from("root-lg-left-selected"),
+                                    piece: PieceIdDto { guid: piece_external_lg.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                connecting: SideMetadataDto {
+                                    guid: Guid::from("root-lg-left-neighbor"),
+                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                ..Default::default()
+                            },
+                            ConnectionFullDto {
+                                guid: Guid::from("root-lg-gable"),
+                                connected: SideMetadataDto {
+                                    guid: Guid::from("root-lg-gable-selected"),
+                                    piece: PieceIdDto { guid: piece_external_lg.clone() },
+                                    port: Some(PortIdDto { guid: port_g.clone() }),
+                                    design_piece: None,
+                                },
+                                connecting: SideMetadataDto {
+                                    guid: Guid::from("root-lg-gable-neighbor"),
+                                    piece: PieceIdDto { guid: piece_neighbor_g.clone() },
+                                    port: Some(PortIdDto { guid: port_g.clone() }),
+                                    design_piece: None,
+                                },
+                                ..Default::default()
+                            },
+                            ConnectionFullDto {
+                                guid: Guid::from("root-ll-left-0"),
+                                connected: SideMetadataDto {
+                                    guid: Guid::from("root-ll-left-0-selected"),
+                                    piece: PieceIdDto { guid: piece_external_ll.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                connecting: SideMetadataDto {
+                                    guid: Guid::from("root-ll-left-0-neighbor"),
+                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                ..Default::default()
+                            },
+                            ConnectionFullDto {
+                                guid: Guid::from("root-ll-left-1"),
+                                connected: SideMetadataDto {
+                                    guid: Guid::from("root-ll-left-1-selected"),
+                                    piece: PieceIdDto { guid: piece_external_ll.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                connecting: SideMetadataDto {
+                                    guid: Guid::from("root-ll-left-1-neighbor"),
+                                    piece: PieceIdDto { guid: piece_neighbor_l.clone() },
+                                    port: Some(PortIdDto { guid: port_l.clone() }),
+                                    design_piece: None,
+                                },
+                                ..Default::default()
+                            },
+                        ],
+                        ..Default::default()
+                    },
+                    DesignFullDto {
+                        guid: candidate_design_free_lg.clone(),
+                        name: "candidate-design-free-lg".to_string(),
+                        pieces: vec![PieceFullDto {
+                            guid: piece_candidate_free_lg.clone(),
+                            name: Some("piece-candidate-free-lg".to_string()),
+                            r#type: Some(TypeIdDto { guid: candidate_lg.clone() }),
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    },
+                    DesignFullDto {
+                        guid: candidate_design_consumed_lg.clone(),
+                        name: "candidate-design-consumed-lg".to_string(),
+                        pieces: vec![
+                            PieceFullDto {
+                                guid: piece_candidate_consumed_lg.clone(),
+                                name: Some("piece-candidate-consumed-lg".to_string()),
+                                r#type: Some(TypeIdDto { guid: candidate_lg.clone() }),
+                                ..Default::default()
+                            },
+                            PieceFullDto {
+                                guid: piece_candidate_consumed_neighbor.clone(),
+                                name: Some("piece-candidate-consumed-neighbor".to_string()),
+                                r#type: Some(TypeIdDto { guid: neighbor_l.clone() }),
+                                ..Default::default()
+                            },
+                        ],
+                        connections: vec![ConnectionFullDto {
+                            guid: Guid::from("candidate-consumed-lg-left"),
+                            connected: SideMetadataDto {
+                                guid: Guid::from("candidate-consumed-lg-left-primary"),
+                                piece: PieceIdDto { guid: piece_candidate_consumed_lg.clone() },
+                                port: Some(PortIdDto { guid: port_l_compatible.clone() }),
+                                design_piece: None,
+                            },
+                            connecting: SideMetadataDto {
+                                guid: Guid::from("candidate-consumed-lg-left-neighbor"),
+                                piece: PieceIdDto { guid: piece_candidate_consumed_neighbor.clone() },
+                                port: Some(PortIdDto { guid: port_l.clone() }),
+                                design_piece: None,
+                            },
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    },
+                    DesignFullDto {
+                        guid: candidate_design_empty.clone(),
+                        name: "candidate-design-empty".to_string(),
+                        pieces: vec![PieceFullDto {
+                            guid: piece_candidate_empty.clone(),
+                            name: Some("piece-candidate-empty".to_string()),
+                            r#type: Some(TypeIdDto { guid: connectorless.clone() }),
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            };
+
+            let mut ids = HashMap::new();
+            ids.insert("root-design", root_design.clone());
+            ids.insert("piece-external-lg", piece_external_lg.clone());
+            ids.insert("piece-isolated-lg", piece_isolated_lg.clone());
+            ids.insert("piece-external-ll", piece_external_ll.clone());
+            ids.insert("candidate-lg", candidate_lg.clone());
+            ids.insert("candidate-ll", candidate_ll.clone());
+            ids.insert("candidate-l", candidate_l.clone());
+            ids.insert("candidate-empty", connectorless.clone());
+            ids.insert("candidate-design-free-lg", candidate_design_free_lg.clone());
+            ids.insert("candidate-design-consumed-lg", candidate_design_consumed_lg.clone());
+            ids.insert("candidate-design-empty", candidate_design_empty.clone());
+            (
+                KitStore::from_full_dto(dto),
+                ids,
+            )
+        }
+
+        fn contains_guid<T>(items: &[T], expected_guid: &str, guid_of: impl Fn(&T) -> Guid) -> bool {
+            items.iter().any(|item| guid_of(item).as_str() == expected_guid)
+        }
+
+        #[test]
+        fn piece_alternatives_return_valid_types_and_designs() {
+            let (kit, ids) = synthetic_replaceable_kit();
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read
+                    .design(ids["root-design"].as_str())
+                    .expect("root design")
+                    .clone()
+            };
+            let piece = {
+                let design_read = design.read().expect("design read");
+                design_read
+                    .piece(ids["piece-external-lg"].as_str())
+                    .expect("selected piece")
+                    .clone()
+            };
+
+            let alternatives = piece.read().expect("piece read").alternatives();
+            assert!(contains_guid(&alternatives.types, "candidate-lg", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+            assert!(contains_guid(
+                &alternatives.designs,
+                "candidate-design-free-lg",
+                |item| item.read().expect("design read").guid.clone()
+            ));
+            assert!(!contains_guid(
+                &alternatives.designs,
+                "candidate-design-consumed-lg",
+                |item| item.read().expect("design read").guid.clone()
+            ));
+        }
+
+        #[test]
+        fn replaceable_catalog_requires_distinct_boundary_connectors() {
+            let (kit, ids) = synthetic_replaceable_kit();
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read
+                    .design(ids["root-design"].as_str())
+                    .expect("root design")
+                    .clone()
+            };
+
+            let alternatives = design
+                .read()
+                .expect("design read")
+                .replaceable_catalog_candidates(&[ids["piece-external-ll"].clone()]);
+            assert!(contains_guid(&alternatives.types, "candidate-ll", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+        }
+
+        #[test]
+        fn replaceable_catalog_uses_own_connectors_for_isolated_piece() {
+            let (kit, ids) = synthetic_replaceable_kit();
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read
+                    .design(ids["root-design"].as_str())
+                    .expect("root design")
+                    .clone()
+            };
+
+            let alternatives = design
+                .read()
+                .expect("design read")
+                .replaceable_catalog_candidates(&[ids["piece-isolated-lg"].clone()]);
+            assert!(contains_guid(&alternatives.types, "selected-isolated-lg", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+            assert!(contains_guid(&alternatives.types, "candidate-lg", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+            assert!(!contains_guid(&alternatives.types, "candidate-l", |item| {
+                item.read().expect("type read").guid.clone()
+            }));
+        }
+
+        #[test]
+        fn empty_selection_returns_only_connectorless_candidates() {
+            let (kit, ids) = synthetic_replaceable_kit();
+            let design = {
+                let kit_read = kit.read().expect("kit read");
+                kit_read
+                    .design(ids["root-design"].as_str())
+                    .expect("root design")
+                    .clone()
+            };
+
+            let alternatives = design
+                .read()
+                .expect("design read")
+                .replaceable_catalog_candidates(&[]);
+            let type_guids: Vec<Guid> = alternatives
+                .types
+                .iter()
+                .map(|item| item.read().expect("type read").guid.clone())
+                .collect();
+            let design_guids: Vec<Guid> = alternatives
+                .designs
+                .iter()
+                .map(|item| item.read().expect("design read").guid.clone())
+                .collect();
+
+            assert_eq!(type_guids, vec![ids["candidate-empty"].clone()]);
+            assert_eq!(design_guids, vec![ids["candidate-design-empty"].clone()]);
+        }
+
+        #[test]
+        fn synthetic_cases_from_shared_asset_match_manual_fixture_contract() {
+            let asset: FindReplaceableCasesAsset = load_asset("find-replaceable-types.cases.semio.json");
+            let fixture = load_asset_json(&asset.synthetic_kit);
+            let synthetic_cases = asset.synthetic_cases;
+            let (kit, ids) = synthetic_replaceable_kit();
+
+            for case in synthetic_cases {
+                let design = {
+                    let kit_read = kit.read().expect("kit read");
+                    kit_read
+                        .design(&case.design_guid)
+                        .or_else(|| kit_read.design(ids["root-design"].as_str()))
+                        .expect("synthetic design")
+                        .clone()
+                };
+                let selected_piece_guids: Vec<Guid> = case
+                    .piece_guids
+                    .iter()
+                    .map(|piece_guid| Guid::from(piece_guid.as_str()))
+                    .collect();
+                let alternatives = design
+                    .read()
+                    .expect("design read")
+                    .replaceable_catalog_candidates(&selected_piece_guids);
+
+                for expected in &case.expected_contains_types {
+                    assert!(contains_guid(&alternatives.types, expected, |item| {
+                        item.read().expect("type read").guid.clone()
+                    }), "{} should include type {}", case.name, expected);
+                }
+                for forbidden in &case.expected_not_contains_types {
+                    assert!(!contains_guid(&alternatives.types, forbidden, |item| {
+                        item.read().expect("type read").guid.clone()
+                    }), "{} should exclude type {}", case.name, forbidden);
+                }
+                for expected in &case.expected_contains_designs {
+                    assert!(contains_guid(&alternatives.designs, expected, |item| {
+                        item.read().expect("design read").guid.clone()
+                    }), "{} should include design {}", case.name, expected);
+                }
+                for forbidden in &case.expected_not_contains_designs {
+                    assert!(!contains_guid(&alternatives.designs, forbidden, |item| {
+                        item.read().expect("design read").guid.clone()
+                    }), "{} should exclude design {}", case.name, forbidden);
+                }
+            }
+
+            assert!(fixture.get("designs").and_then(Value::as_array).is_some());
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     mod io_json_file {
         use std::sync::{Arc, RwLock};
@@ -15678,7 +17091,10 @@ mod tests {
             let kit = Arc::new(RwLock::new(KitStore::new("json-file-roundtrip")));
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.json");
-            kit.read().expect("read").save_json_file(&path).expect("save");
+            kit.read()
+                .expect("read")
+                .save_json_file(&path)
+                .expect("save");
             let kit2 = KitStore::load_json_file(&path).expect("load");
             assert_eq!(
                 kit.read().expect("r1").hash(),
@@ -15743,7 +17159,10 @@ mod tests {
                     |row| row.get(0),
                 )
                 .expect("query snapshot table count");
-            assert_eq!(snapshot_table_count, 0, "legacy snapshot table must not exist");
+            assert_eq!(
+                snapshot_table_count, 0,
+                "legacy snapshot table must not exist"
+            );
             let port_rows: i64 = conn
                 .query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0))
                 .expect("count port rows");
@@ -15857,7 +17276,9 @@ mod tests {
                 }
                 buffer.extend_from_slice(&chunk[..read]);
                 if header_end.is_none() {
-                    if let Some(position) = buffer.windows(4).position(|window| window == b"\r\n\r\n") {
+                    if let Some(position) =
+                        buffer.windows(4).position(|window| window == b"\r\n\r\n")
+                    {
                         header_end = Some(position + 4);
                         let headers_text = String::from_utf8_lossy(&buffer[..position + 4]);
                         for line in headers_text.lines().skip(1) {
@@ -15877,7 +17298,8 @@ mod tests {
             }
 
             let header_end = header_end.expect("request headers");
-            let header_text = String::from_utf8(buffer[..header_end].to_vec()).expect("header utf8");
+            let header_text =
+                String::from_utf8(buffer[..header_end].to_vec()).expect("header utf8");
             let mut lines = header_text.split("\r\n");
             let request_line = lines.next().expect("request line").to_string();
             let mut headers = HashMap::new();
@@ -15940,7 +17362,9 @@ mod tests {
                                 "owner_token": owner_token,
                             }),
                         );
-                    } else if request_line.starts_with(&format!("PUT /sessions/{session_id}/snapshot ")) {
+                    } else if request_line
+                        .starts_with(&format!("PUT /sessions/{session_id}/snapshot "))
+                    {
                         assert_eq!(
                             headers.get("authorization").map(String::as_str),
                             Some(format!("Bearer {owner_token}").as_str()),
@@ -15948,9 +17372,18 @@ mod tests {
                         );
                         let kit = payload.get("kit").cloned().expect("replace payload kit");
                         *persisted_kit_for_server.lock().expect("persist update") = kit;
-                        write_json_response(&mut stream, "200 OK", &serde_json::json!({"status": "ok"}));
-                    } else if request_line.starts_with(&format!("GET /sessions/{session_id}/snapshot ")) {
-                        let kit = persisted_kit_for_server.lock().expect("persisted snapshot").clone();
+                        write_json_response(
+                            &mut stream,
+                            "200 OK",
+                            &serde_json::json!({"status": "ok"}),
+                        );
+                    } else if request_line
+                        .starts_with(&format!("GET /sessions/{session_id}/snapshot "))
+                    {
+                        let kit = persisted_kit_for_server
+                            .lock()
+                            .expect("persisted snapshot")
+                            .clone();
                         write_json_response(
                             &mut stream,
                             "200 OK",
@@ -16798,9 +18231,7 @@ mod tests {
             design_meta_test!(
                 design_set_description,
                 "description",
-                |d: &mut crate::DesignStore| {
-                    d.set_description(Some("d".into()))
-                }
+                |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) }
             );
             design_meta_test!(design_set_icon, "icon", |d: &mut crate::DesignStore| {
                 d.set_icon(Some("i".into()))
@@ -16811,9 +18242,7 @@ mod tests {
             design_meta_test!(
                 design_set_variant,
                 "variant",
-                |d: &mut crate::DesignStore| {
-                    d.set_variant(Some("v".into()))
-                }
+                |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) }
             );
             design_meta_test!(design_set_view, "view", |d: &mut crate::DesignStore| {
                 d.set_view(Some("vw".into()))
@@ -16821,9 +18250,7 @@ mod tests {
             design_meta_test!(
                 design_set_location,
                 "location",
-                |d: &mut crate::DesignStore| {
-                    d.set_location(Some(Location::new(1.0, 2.0)))
-                }
+                |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) }
             );
             design_meta_test!(design_set_camera, "camera", |d: &mut crate::DesignStore| {
                 let mut cam = Camera::default();
@@ -16836,16 +18263,12 @@ mod tests {
             design_meta_test!(
                 design_set_created,
                 "created",
-                |d: &mut crate::DesignStore| {
-                    d.set_created(Some("c".into()))
-                }
+                |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) }
             );
             design_meta_test!(
                 design_set_updated,
                 "updated",
-                |d: &mut crate::DesignStore| {
-                    d.set_updated(Some("u".into()))
-                }
+                |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) }
             );
         }
 
@@ -16950,9 +18373,7 @@ mod tests {
             kit_meta_test!(
                 kit_set_description,
                 "description",
-                |k: &mut crate::KitStore| {
-                    k.set_description(Some("d".into()))
-                }
+                |k: &mut crate::KitStore| { k.set_description(Some("d".into())) }
             );
             kit_meta_test!(kit_set_icon, "icon", |k: &mut crate::KitStore| {
                 k.set_icon(Some("ic".into()))
@@ -17053,9 +18474,7 @@ mod tests {
             piece_geom_test!(
                 piece_set_mirror_plane,
                 "mirrorPlane",
-                |p: &mut crate::PieceStore| {
-                    p.set_mirror_plane(Some(Plane::world_xy()))
-                }
+                |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) }
             );
             piece_geom_test!(piece_set_scale, "scale", |p: &mut crate::PieceStore| {
                 p.set_scale(Some(2.0))
@@ -17075,9 +18494,7 @@ mod tests {
             piece_geom_test!(
                 piece_set_description,
                 "description",
-                |p: &mut crate::PieceStore| {
-                    p.set_description(Some("pd".into()))
-                }
+                |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) }
             );
 
             #[test]
@@ -17425,9 +18842,7 @@ mod tests {
             type_meta_test!(
                 type_set_description,
                 "description",
-                |t: &mut crate::TypeStore| {
-                    t.set_description(Some("td".into()))
-                }
+                |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) }
             );
             type_meta_test!(type_set_icon, "icon", |t: &mut crate::TypeStore| {
                 t.set_icon(Some("i".into()))

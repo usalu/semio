@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import type { Design } from "@semio/js";
+import { Kit as KitRuntime, type Design } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 
@@ -88,7 +88,8 @@ const CompatibleTypesAndDesignsWindow: React.FC = () => {
   const { kit, design, selectedPieceGuids } = useAlgorithm();
   const allTypes = (kit.types ?? []) as { guid: string; name?: string }[];
   const allDesigns = (kit.designs ?? []) as Design[];
-  const result = React.useMemo(() => design.replacableCatalogCandidates(allDesigns, kit.types ?? [], kit.ports ?? [], { pieces: selectedPieceGuids }), [allDesigns, design, kit.ports, selectedPieceGuids]);
+  const allPorts = React.useMemo(() => ((kit.families ?? kit.ports ?? []) as any[]).flatMap((entry) => entry.ports ?? [entry]), [kit]);
+  const result = React.useMemo(() => KitRuntime.ensure(kit).findReplaceableTypesInDesignsForPiecesInDesignOp(design, allDesigns, kit.types ?? [], allPorts, { pieces: selectedPieceGuids }), [allDesigns, allPorts, design, kit, selectedPieceGuids]);
   const typeByGuid = React.useMemo(() => new Map(allTypes.map((nextType) => [nextType.guid, nextType] as const)), [allTypes]);
   const visibleDesignGuids = React.useMemo(() => new Set(result.designs), [result.designs]);
   const designForest = React.useMemo(() => buildCompatibleDesignTree(allDesigns, visibleDesignGuids), [allDesigns, visibleDesignGuids]);

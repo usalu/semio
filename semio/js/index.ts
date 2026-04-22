@@ -7164,32 +7164,39 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
 
 const stripNullsJsonClone = <T>(x: T): T => JSON.parse(JSON.stringify(x), (_k, v) => (v === null ? undefined : v));
 
-const detachPieceForLocalMutation = (p: Piece): Piece => {
-  const plain = PieceSchema.parse(stripNullsJsonClone(p.toPlain()) as unknown);
+const detachPieceForLocalMutation = (p: Piece | PiecePlain): Piece => {
   const source = p as any;
+  const plain = PieceSchema.parse(
+    stripNullsJsonClone((typeof (p as Piece).toPlain === "function" ? (p as Piece).toPlain() : p) as unknown) as unknown,
+  );
   const type = plain.type ?? (source.type?.guid ? { guid: source.type.guid } : undefined);
   const design = plain.design ?? (source.design?.guid ? { guid: source.design.guid } : undefined);
+  const plane = source.plane
+    ? {
+        origin: { ...source.plane.origin },
+        xAxis: { ...source.plane.xAxis },
+        yAxis: { ...source.plane.yAxis },
+      }
+    : undefined;
+  const mirrorPlane = source.mirrorPlane
+    ? {
+        origin: { ...source.mirrorPlane.origin },
+        xAxis: { ...source.mirrorPlane.xAxis },
+        yAxis: { ...source.mirrorPlane.yAxis },
+      }
+    : undefined;
+  const attributesPlain = source.attributes?.map((a: any) =>
+    typeof a.toPlain === "function" ? a.toPlain() : AttributeSchema.parse(stripNullsJsonClone(a) as AttributePlain),
+  );
   return new Piece({
     ...plain,
     type,
     design,
-    plane: p.plane
-      ? {
-          origin: { ...p.plane.origin },
-          xAxis: { ...p.plane.xAxis },
-          yAxis: { ...p.plane.yAxis },
-        }
-      : undefined,
-    center: p.center ? { ...p.center } : undefined,
-    mirrorPlane: p.mirrorPlane
-      ? {
-          origin: { ...p.mirrorPlane.origin },
-          xAxis: { ...p.mirrorPlane.xAxis },
-          yAxis: { ...p.mirrorPlane.yAxis },
-        }
-      : undefined,
-    props: p.props?.map((x) => ({ ...PropSchema.parse(stripNullsJsonClone(x) as PropPlain) })),
-    attributes: p.attributes?.map((a) => a.toPlain()),
+    plane,
+    center: source.center ? { ...source.center } : undefined,
+    mirrorPlane,
+    props: source.props?.map((x: any) => ({ ...PropSchema.parse(stripNullsJsonClone(x) as PropPlain) })),
+    attributes: attributesPlain,
   });
 };
 
@@ -7734,15 +7741,17 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
 
   const designIds = new Set<string>();
   toArray(design._connections).forEach((conn: Connection) => {
-    if (conn.connected.designPiece) designIds.add(conn.connected.designPiece.guid);
-    if (conn.connecting.designPiece) designIds.add(conn.connecting.designPiece.guid);
+    const cStub = conn.connected.wireDesignPieceId()?.guid;
+    const gStub = conn.connecting.wireDesignPieceId()?.guid;
+    if (cStub) designIds.add(cStub);
+    if (gStub) designIds.add(gStub);
   });
 
   Array.from(designIds).forEach((designIdString) => {
     const externalConnections =
       design._connections?.filter((connection: Connection) => {
-        const connectedToDesign = connection.connected.designPiece?.guid === designIdString;
-        const connectingToDesign = connection.connecting.designPiece?.guid === designIdString;
+        const connectedToDesign = connection.connected.wireDesignPieceId()?.guid === designIdString;
+        const connectingToDesign = connection.connecting.wireDesignPieceId()?.guid === designIdString;
         return connectedToDesign || connectingToDesign;
       }) ?? [];
 
@@ -10796,43 +10805,58 @@ export class KitImpl {
   }
 
   createClusteredDesignFromDesign(originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } {
-    if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
+    const host = asKitInstance(this);
+    const source =
+      originalDesign instanceof Design
+        ? originalDesign
+        : new Design(DesignSchema.parse(stripNullsJsonClone(originalDesign) as unknown), host);
+    if (!source.pieces || source.pieces.length === 0) {
       throw new Error("Original design has no pieces to cluster");
     }
     if (!clusterPieceIds || clusterPieceIds.length === 0) {
       throw new Error("No piece IDs provided for clustering");
     }
-    const clusteredPieces = (originalDesign.pieces || []).filter((piece) => clusterPieceIds.includes(piece.guid));
+    const clusteredPieces = (source.pieces || []).filter((piece) => clusterPieceIds.includes(piece.guid));
     if (clusteredPieces.length === 0) {
       throw new Error("No pieces found matching the provided IDs");
     }
-    const internalConnections = (originalDesign._connections || []).filter(
+    const internalConnections = (source._connections || []).filter(
       (connection) => clusterPieceIds.includes(connection.connected.piece.guid) && clusterPieceIds.includes(connection.connecting.piece.guid),
     );
-    const externalConnections = (originalDesign._connections || []).filter((connection) => {
+    const externalConnections = (source._connections || []).filter((connection) => {
       const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
       const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
       return connectedInCluster !== connectingInCluster;
     });
+    const pieceRow = (p: Piece | PiecePlain): PiecePlain =>
+      typeof (p as Piece).toPlain === "function" ? (p as Piece).toPlain() : PieceSchema.parse(stripNullsJsonClone(p) as unknown);
+    const connectionRow = (c: Connection | ConnectionPlain): ConnectionPlain =>
+      typeof (c as Connection).toPlain === "function" ? (c as Connection).toPlain() : ConnectionSchema.parse(stripNullsJsonClone(c) as unknown);
+    const hostForNested = typeof source.getKit === "function" ? source.getKit()! : host;
     const clusteredDesign = new Design(
       {
         guid: guid(),
         name: designName,
-        unit: originalDesign.unit,
+        unit: source.unit,
         description: `Clustered design with ${clusteredPieces.length} pieces`,
-        pieces: clusteredPieces.map((p) => p.toPlain()),
-        connections: internalConnections.map((c) => c.toPlain()),
+        pieces: clusteredPieces.map((p) => pieceRow(p as Piece | PiecePlain)),
+        connections: internalConnections.map((c) => connectionRow(c as Connection | ConnectionPlain)),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
-      originalDesign.getKit(),
+      hostForNested,
     );
     return { clusteredDesign, externalConnections };
   }
 
   replaceClusterWithDesignChange(originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignChange {
+    const host = asKitInstance(this);
+    const orig =
+      originalDesign instanceof Design
+        ? originalDesign
+        : new Design(DesignSchema.parse(stripNullsJsonClone(originalDesign) as unknown), host);
     const piecesToRemove = clusterPieceIds.map((g) => ({ guid: g }));
-    const connectionsToRemove = (originalDesign._connections || [])
+    const connectionsToRemove = (orig._connections || [])
       .filter((connection) => {
         const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
         const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
@@ -10840,20 +10864,24 @@ export class KitImpl {
       })
       .map((c) => ({ guid: c.guid }));
     const updatedExternalConnections = externalConnections.map((connection) => {
-      const connectedInCluster = clusterPieceIds.includes(connection.connected.piece.guid);
-      const connectingInCluster = clusterPieceIds.includes(connection.connecting.piece.guid);
+      const base =
+        connection instanceof Connection
+          ? connection.toPlain()
+          : ConnectionSchema.parse(stripNullsJsonClone(connection) as unknown);
+      const connectedInCluster = clusterPieceIds.includes(base.connected.piece.guid);
+      const connectingInCluster = clusterPieceIds.includes(base.connecting.piece.guid);
       if (connectedInCluster) {
-        return { ...connection, connected: { ...connection.connected, designPiece: { guid: clusteredDesign.guid } } };
+        return { ...base, connected: { ...base.connected, designPiece: { guid: clusteredDesign.guid } } };
       } else if (connectingInCluster) {
-        return { ...connection, connecting: { ...connection.connecting, designPiece: { guid: clusteredDesign.guid } } };
+        return { ...base, connecting: { ...base.connecting, designPiece: { guid: clusteredDesign.guid } } };
       }
-      return connection;
+      return base;
     });
     const forward: DesignDiff = {
       pieces: { removed: piecesToRemove },
       connections: { removed: connectionsToRemove, added: updatedExternalConnections },
     };
-    const backward = inverseDesignDiff(originalDesign, forward);
+    const backward = inverseDesignDiff(orig, forward);
     return { forward, backward };
   }
 
@@ -21038,6 +21066,17 @@ if (shouldRunEmbeddedJsTests) {
     return design;
   };
 
+  /** Clone kit and replace one design after local mutation (keeps {@link KitImpl} methods ÔÇö object spread would drop the prototype). */
+  const kitWithSwappedDesign = (source: KitImpl, designGuid: string, mutate: (detached: Design) => void): KitImpl => {
+    const k = duplicateKitForIsolation(source);
+    const row = k.designs!.find((d) => d.guid === designGuid);
+    if (!row) throw new Error(`design ${designGuid} not found`);
+    const copy = detachDesignForLocalMutation(row);
+    mutate(copy);
+    k.designs = k.designs!.map((d) => (d.guid === designGuid ? copy : d));
+    return k;
+  };
+
   const getTestNodePaths = async () => {
     const { dirname, resolve } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
@@ -21089,11 +21128,13 @@ if (shouldRunEmbeddedJsTests) {
 
       kit.setActiveTransaction(t1);
 
-      const nct = kit.findDesign({ name: "Nakagin Capsule Tower" });
-      expect(nct).toBeDefined();
-      if (!nct) throw new Error("missing design");
-
-      nct.flatten();
+      {
+        const nct0 = kit.findDesign({ name: "Nakagin Capsule Tower" });
+        expect(nct0).toBeDefined();
+        if (!nct0) throw new Error("missing design");
+        nct0.flatten();
+      }
+      const nct = kit.findDesign({ name: "Nakagin Capsule Tower" })!;
       const oldConnections = nct.connections();
       expect(Array.isArray(oldConnections)).toBe(true);
 
@@ -21114,20 +21155,23 @@ if (shouldRunEmbeddedJsTests) {
       const primaryGuid = primary.guid;
 
       primary.delete();
-      expect(nct.findPiece(primaryGuid)).toBeUndefined();
+      expect(kit.findDesign({ name: "Nakagin Capsule Tower" })!.findPiece(primaryGuid)).toBeUndefined();
 
       kit.transaction.undo();
-      expect(nct.findPiece(primaryGuid)).toBeDefined();
+      expect(kit.findDesign({ name: "Nakagin Capsule Tower" })!.findPiece(primaryGuid)).toBeDefined();
 
       kit.setActiveTransaction(t2);
-      const anotherPiece = nct.getPieces().find((p) => p.guid !== primaryGuid) ?? nct.getPieces()[0];
+      const nct2 = kit.findDesign({ name: "Nakagin Capsule Tower" })!;
+      const anotherPiece = nct2.getPieces().find((p) => p.guid !== primaryGuid) ?? nct2.getPieces()[0];
       expect(anotherPiece).toBeDefined();
       if (!anotherPiece) throw new Error("missing secondary piece");
 
       const typeBefore = anotherPiece.type?.guid;
-      anotherPiece.changeType(c1TA[1]);
-      expect(anotherPiece.type?.guid).toBe(c1TA[1].guid);
-      expect(anotherPiece.type?.guid).not.toBe(typeBefore);
+      const altType = kit.requireType(c1TA[1].guid);
+      anotherPiece.changeType(altType);
+      const anotherAfter = kit.findDesign({ name: "Nakagin Capsule Tower" })!.findPiece(anotherPiece.guid)!;
+      expect(anotherAfter.type?.guid).toBe(altType.guid);
+      expect(anotherAfter.type?.guid).not.toBe(typeBefore);
 
       kit.unsetActiveTransaction();
 
@@ -21135,7 +21179,7 @@ if (shouldRunEmbeddedJsTests) {
       kit.finalizeTransaction(t2);
 
       kit.undo();
-      const secondaryAfterUndo = nct.findPiece(anotherPiece.guid);
+      const secondaryAfterUndo = kit.findDesign({ name: "Nakagin Capsule Tower" })!.findPiece(anotherAfter.guid);
       expect(secondaryAfterUndo?.type?.guid).toBe(typeBefore);
     });
 
@@ -21981,14 +22025,16 @@ if (shouldRunEmbeddedJsTests) {
       } as Design;
 
       const hostKit = asKitInstance(MetabolismKit as unknown as KitImpl);
-      const { clusteredDesign, externalConnections } = hostKit.createClusteredDesignFromDesign(design as Design, ["piece-a", "piece-b"], "Cluster");
-      const change = hostKit.replaceClusterWithDesignChange(design as Design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
-      const updatedDesign = detachDesignForLocalMutation(design);
+      const designRow = new Design(DesignSchema.parse(stripNullsJsonClone(design) as unknown), hostKit);
+      const { clusteredDesign, externalConnections } = hostKit.createClusteredDesignFromDesign(designRow, ["piece-a", "piece-b"], "Cluster");
+      const change = hostKit.replaceClusterWithDesignChange(designRow, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
+      const updatedDesign = detachDesignForLocalMutation(designRow);
       updatedDesign.applyDiff(change.forward);
 
       const clusterConnection = updatedDesign._connections?.find((c) => c.guid === "conn-bc");
-      expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);
-      expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();
+      // Stub uses the nested design guid on the wire; {@link Side.designPiece} getter resolves a Piece, so use wire id.
+      expect(clusterConnection?.connecting.wireDesignPieceId()?.guid).toBe(clusteredDesign.guid);
+      expect(clusterConnection?.connected.wireDesignPieceId()).toBeUndefined();
 
       const included = getIncludedDesigns(updatedDesign);
       expect(included.length).toBe(1);
@@ -22116,12 +22162,8 @@ if (shouldRunEmbeddedJsTests) {
       // No connection updates needed (only root selected, no connected pieces)
       expect(dragDiff.connections?.updated?.length ?? 0).toBe(0);
 
-      // Step 5: Apply the diff to the raw design (sketchpad calls updatePieces + updateConnections)
-      const updatedDesign = detachDesignForLocalMutation(design);
-      updatedDesign.applyDiff(dragDiff);
-
-      // Step 6: Recompute metadata (simulates reactive chain: store update -> re-flatten)
-      const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      // Step 5ÔÇô6: Apply the diff on an isolated kit row (object spread would drop {@link KitImpl} methods).
+      const updatedKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(dragDiff));
       const postMetaResult = updatedKit.piecesMetadataFor(design.guid);
       expect(postMetaResult.ok).toBe(true);
       if (!postMetaResult.ok) return;
@@ -22233,9 +22275,8 @@ if (shouldRunEmbeddedJsTests) {
         kitDiff.designs.updated[0].diff.connections = { updated: connectionDiffUpdates };
       }
 
-      // Step 6: Apply kitDiff to kit (same as InMemoryKitStore.apply)
-      const storeKit = duplicateKitForIsolation(kit);
-      applyKitDiff(storeKit, kitDiff);
+      // Step 6: Apply kitDiff (applyKitDiff returns a new isolated graph; assign ÔÇö do not drop the return value)
+      const storeKit = applyKitDiff(kit, kitDiff);
 
       // Step 7: Recompute metadata (same as usePiecesMetadataMap)
       const postMetaResult = storeKit.piecesMetadataFor(design.guid);
@@ -22261,9 +22302,7 @@ if (shouldRunEmbeddedJsTests) {
 
       // Step 10: Verify local re-flatten (visualPositions) matches store re-flatten
       // This is the key test ÔÇö if these differ, the useEffect overwrites with wrong positions
-      const localUpdatedDesign = detachDesignForLocalMutation(design);
-      localUpdatedDesign.applyDiff(dragDiff);
-      const localUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? localUpdatedDesign : d)) };
+      const localUpdatedKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(dragDiff));
       const localMetaResult = localUpdatedKit.piecesMetadataFor(design.guid);
       expect(localMetaResult.ok).toBe(true);
       if (!localMetaResult.ok) return;
@@ -22346,17 +22385,13 @@ if (shouldRunEmbeddedJsTests) {
       expect(sketchpadDragDiff.connections!.updated![0].diff.v).toBeCloseTo(nativeDragDiff.connections!.updated![0].diff.v!, 6);
 
       // Step 5a: Sketchpad re-flatten
-      const sketchpadUpdatedDesign = detachDesignForLocalMutation(design);
-      sketchpadUpdatedDesign.applyDiff(sketchpadDragDiff);
-      const sketchpadUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? sketchpadUpdatedDesign : d)) };
+      const sketchpadUpdatedKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(sketchpadDragDiff));
       const sketchpadPostMeta = sketchpadUpdatedKit.piecesMetadataFor(design.guid);
       expect(sketchpadPostMeta.ok).toBe(true);
       if (!sketchpadPostMeta.ok) return;
 
       // Step 5b: nativeDragPieces re-flatten
-      const nativeUpdatedDesign = detachDesignForLocalMutation(design);
-      nativeUpdatedDesign.applyDiff(nativeDragDiff);
-      const nativeUpdatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? nativeUpdatedDesign : d)) };
+      const nativeUpdatedKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(nativeDragDiff));
       const nativePostMeta = nativeUpdatedKit.piecesMetadataFor(design.guid);
       expect(nativePostMeta.ok).toBe(true);
       if (!nativePostMeta.ok) return;
@@ -22382,8 +22417,7 @@ if (shouldRunEmbeddedJsTests) {
           updated: [{ design: { guid: design.guid }, diff: { connections: { updated: connectionDiffUpdates } } }],
         },
       };
-      const storeKit = duplicateKitForIsolation(kit);
-      applyKitDiff(storeKit, kitDiff);
+      const storeKit = applyKitDiff(kit, kitDiff);
       const storeMetaResult = storeKit.piecesMetadataFor(design.guid);
       expect(storeMetaResult.ok).toBe(true);
       if (!storeMetaResult.ok) return;
@@ -22471,9 +22505,7 @@ if (shouldRunEmbeddedJsTests) {
       const scaledDragDiff: DesignDiff = {
         connections: { updated: [{ connection: { guid: conn.guid }, diff: scaledConnDiff }] },
       };
-      const updatedDesign = detachDesignForLocalMutation(design);
-      updatedDesign.applyDiff(scaledDragDiff);
-      const updatedKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? updatedDesign : d)) };
+      const updatedKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(scaledDragDiff));
       const postMeta = updatedKit.piecesMetadataFor(design.guid);
       expect(postMeta.ok).toBe(true);
       if (!postMeta.ok) return;
@@ -22490,9 +22522,7 @@ if (shouldRunEmbeddedJsTests) {
         const unscaledDragDiff: DesignDiff = {
           connections: { updated: [{ connection: { guid: conn.guid }, diff: { u: centerOffsetU, v: centerOffsetV } }] },
         };
-        const unscaledDesign = detachDesignForLocalMutation(design);
-        unscaledDesign.applyDiff(unscaledDragDiff);
-        const unscaledKit: KitImpl = { ...kit, designs: (kit.designs ?? []).map((d) => (d.guid === design.guid ? unscaledDesign : d)) };
+        const unscaledKit = kitWithSwappedDesign(kit, design.guid, (copy) => copy.applyDiff(unscaledDragDiff));
         const unscaledMeta = unscaledKit.piecesMetadataFor(design.guid);
         expect(unscaledMeta.ok).toBe(true);
         if (!unscaledMeta.ok) return;
