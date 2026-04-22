@@ -16,7 +16,18 @@ export interface VcsIdCallbacks {
   readonly onAltId?: IdCallback;
 }
 
-/** Best-effort extraction of ids from `KitStoreCommandResult` JSON (camelCase). */
+/** String field from an object, preferring camelCase then serde/Rust `snake_case` wire names. */
+function pickStr(obj: unknown, ...keys: string[]): string | undefined {
+  if (obj == null || typeof obj !== "object") return;
+  const o = obj as Record<string, unknown>;
+  for (const k of keys) {
+    const v = o[k];
+    if (typeof v === "string" && v.length > 0) return v;
+  }
+  return;
+}
+
+/** Best-effort extraction of ids from `KitStoreCommand` result JSON (camelCase and/or Rust serde snake_case). */
 export function applyKitStoreCommandResultIds(r: unknown, on: VcsIdCallbacks): void {
   if (r == null || typeof r !== "object") return;
   const o = r as Record<string, unknown>;
@@ -29,38 +40,43 @@ export function applyKitStoreCommandResultIds(r: unknown, on: VcsIdCallbacks): v
   const a = idOf(o.newAlternative);
   if (a) on.onAltId?.(a);
 
-  const sess = o.executeSessionCommands as { results?: unknown[] } | undefined;
+  const sess = (o.executeSessionCommands ?? o.execute_session_commands) as { results?: unknown[] } | undefined;
   if (sess?.results) for (const item of sess.results) walkSession(item, on);
 
-  const alt = o.executeKitAlternativeCommands as { results?: unknown[] } | undefined;
+  const alt = (o.executeKitAlternativeCommands ?? o.execute_kit_alternative_commands) as { results?: unknown[] } | undefined;
   if (alt?.results) for (const item of alt.results) walkAlternative(item, on);
 }
 
 function walkSession(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const nd = it.newDraft as { draftId?: string } | undefined;
-  if (nd?.draftId) on.onDraftId?.(nd.draftId);
+  const nd = it.newDraft ?? it.new_draft;
+  const draftId = pickStr(nd, "draftId", "draft_id");
+  if (draftId) on.onDraftId?.(draftId);
 
-  const ekd = it.executeKitDraftCommands as { results?: unknown[] } | undefined;
+  const ekd = (it.executeKitDraftCommands ?? it.execute_kit_draft_commands) as { results?: unknown[] } | undefined;
   if (ekd?.results) for (const d of ekd.results) walkDraft(d, on);
 }
 
 function walkDraft(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const st = it.startTransaction as { transactionId?: string } | undefined;
-  if (st?.transactionId) on.onTxId?.(st.transactionId);
-  const fin = it.finalizeToKitCheckpoint as { checkpointId?: string } | undefined;
-  if (fin?.checkpointId) on.onCpId?.(fin.checkpointId);
+  const st = it.startTransaction ?? it.start_transaction;
+  const tx = pickStr(st, "transactionId", "transaction_id");
+  if (tx) on.onTxId?.(tx);
+  const fin = it.finalizeToKitCheckpoint ?? it.finalize_to_kit_checkpoint;
+  const cp = pickStr(fin, "checkpointId", "checkpoint_id");
+  if (cp) on.onCpId?.(cp);
   void it.executeTransactionCommands;
+  void it.execute_transaction_commands;
 }
 
 function walkAlternative(item: unknown, on: VcsIdCallbacks): void {
   if (item == null || typeof item !== "object") return;
   const it = item as Record<string, unknown>;
-  const u = it.unifyKitCheckpointsToSingleKitCheckpoint as { newCheckpointId?: string } | undefined;
-  if (u?.newCheckpointId) on.onCpId?.(u.newCheckpointId);
+  const u = it.unifyKitCheckpointsToSingleKitCheckpoint ?? it.unify_kit_checkpoints_to_single_kit_checkpoint;
+  const ncp = pickStr(u, "newCheckpointId", "new_checkpoint_id");
+  if (ncp) on.onCpId?.(ncp);
 }
 
 export const HistoryControls: React.FC<{

@@ -19771,9 +19771,6 @@ export interface KitStoreClient {
   redo(): Promise<SetResult>;
   canUndo(): Promise<boolean>;
   canRedo(): Promise<boolean>;
-  beginTx(): Promise<SetResult>;
-  commitTx(): Promise<SetResult>;
-  abortTx(): Promise<SetResult>;
   subscribe(cb: (ev: any) => void): () => void;
   dispose(): void;
 }
@@ -19967,18 +19964,6 @@ export class FallbackKitStoreClient implements KitStoreClient {
     } catch {
       return false;
     }
-  }
-
-  async beginTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.beginTx());
-  }
-
-  async commitTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.commitTx());
-  }
-
-  async abortTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(this.handle.abortTx());
   }
 
   private unwrapQuery(raw: any) {
@@ -20420,18 +20405,6 @@ export class WorkerKitStoreClient implements KitStoreClient {
     } catch {
       return false;
     }
-  }
-
-  async beginTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(Promise.resolve(this.api.beginTx()));
-  }
-
-  async commitTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(Promise.resolve(this.api.commitTx()));
-  }
-
-  async abortTx(): Promise<SetResult> {
-    return this.settleMutateAndRefresh(Promise.resolve(this.api.abortTx()));
   }
 
   private unwrapQuery(raw: any) {

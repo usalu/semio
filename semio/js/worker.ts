@@ -146,18 +146,6 @@ const api = {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     return handle.canRedo();
   },
-  beginTx() {
-    if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.beginTx()));
-  },
-  commitTx() {
-    if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.commitTx()));
-  },
-  abortTx() {
-    if (!handle) throw new Error("KitStoreHandle not initialized");
-    return settle(Promise.resolve(handle.abortTx()));
-  },
   subscribe(cb: (ev: unknown) => void) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     const proxy = Comlink.proxy(cb);

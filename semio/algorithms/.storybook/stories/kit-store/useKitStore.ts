@@ -5,7 +5,6 @@
 import * as React from "react";
 
 import { ensureSemioWasm, KitStoreHandle } from "./semioWasm";
-import { normalizeKitJsonForSemioRsWasm } from "./normalizeKitForSemioRsWasm";
 
 import type { LoggedEvent } from "./EventsFeed";
 
@@ -62,7 +61,7 @@ export function useKitStore(seedKit: unknown) {
     void (async () => {
       try {
         await ensureSemioWasm();
-        const h = KitStoreHandle.create(normalizeKitJsonForSemioRsWasm(seedKit));
+        const h = KitStoreHandle.create(seedKit);
         if (cancelled) {
           h.free();
           return;

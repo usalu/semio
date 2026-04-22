@@ -1654,65 +1654,6 @@ export function useCanRedo(): SchemaHookTriad<boolean> {
 	return [v, noopAsyncSet, st] as const;
 }
 
-export function useTransaction(): {
-	begin: () => Promise<SetResult>;
-	commit: () => Promise<SetResult>;
-	abort: () => Promise<SetResult>;
-	status: WriteStatus;
-} {
-	const runtime = useKitRuntime();
-	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
-	const begin = React.useCallback(async () => {
-		if (!runtime.kitClient || !runtime.canWrite) {
-			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
-			setStatus({ kind: "error", pending: 0, lastError: e });
-			return { ok: false, error: e } as const;
-		}
-		setStatus({ kind: "pending", pending: 1 });
-		const r = await runtime.kitClient.beginTx();
-		if (!r.ok) {
-			runtime.pushSetRejection(r.error);
-			setStatus({ kind: "error", pending: 0, lastError: r.error });
-			return r;
-		}
-		setStatus({ kind: "idle", pending: 0 });
-		return r;
-	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
-	const commit = React.useCallback(async () => {
-		if (!runtime.kitClient || !runtime.canWrite) {
-			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
-			setStatus({ kind: "error", pending: 0, lastError: e });
-			return { ok: false, error: e } as const;
-		}
-		setStatus({ kind: "pending", pending: 1 });
-		const r = await runtime.kitClient.commitTx();
-		if (!r.ok) {
-			runtime.pushSetRejection(r.error);
-			setStatus({ kind: "error", pending: 0, lastError: r.error });
-			return r;
-		}
-		setStatus({ kind: "idle", pending: 0 });
-		return r;
-	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
-	const abort = React.useCallback(async () => {
-		if (!runtime.kitClient || !runtime.canWrite) {
-			const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
-			setStatus({ kind: "error", pending: 0, lastError: e });
-			return { ok: false, error: e } as const;
-		}
-		setStatus({ kind: "pending", pending: 1 });
-		const r = await runtime.kitClient.abortTx();
-		if (!r.ok) {
-			runtime.pushSetRejection(r.error);
-			setStatus({ kind: "error", pending: 0, lastError: r.error });
-			return r;
-		}
-		setStatus({ kind: "idle", pending: 0 });
-		return r;
-	}, [runtime.kitClient, runtime.canWrite, runtime.pushSetRejection]);
-	return { begin, commit, abort, status };
-}
-
 function useKitAddToKit(childKind: string): {
 	run: (dto: unknown) => Promise<SetResult>;
 	status: WriteStatus;

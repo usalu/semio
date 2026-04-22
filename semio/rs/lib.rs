@@ -10640,10 +10640,6 @@ pub mod kit {
         undo_future: Vec<UndoStep>,
         /// When &gt; 0, `with_undo` does not record and does not clear redo (replace/undo path).
         undo_inhibit: u32,
-        /// Nested command transaction: batch one undo record on `commit_tx`.
-        tx_depth: u32,
-        /// Snapshot at outermost `begin_tx` for batched undo (JSON `KitFullDto`).
-        tx_before: Option<serde_json::Value>,
         // --- Kit version control (see `kit_store_command`, `kit_checkpoint`, …) ---
         /// Root snapshot; materialization replays `checkpoints` from here.
         pub initial: KitFullDto,
@@ -10829,8 +10825,6 @@ pub mod kit {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                tx_depth: 0,
-                tx_before: None,
                 initial: KitFullDto::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
@@ -11302,7 +11296,7 @@ pub mod kit {
             }
         }
 
-        /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo/transaction state.
+        /// 🌐 Replace the entire kit graph with `d`, keeping `event_bus` and undo / VCS state.
         pub fn replace_from_full_dto(kit: &KitStoreRef, d: KitFullDto) -> SetResult {
             let new_arc = Self::from_full_dto(d);
             let mut merged = match Arc::try_unwrap(new_arc) {
@@ -11321,20 +11315,27 @@ pub mod kit {
             merged.event_bus = bus;
             {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let preserve =
-                    (g.undo_past.clone(), g.undo_future.clone(), g.undo_inhibit, g.tx_depth, g.tx_before.clone(), g.initial.clone(), g.checkpoints.clone(), g.alternatives.clone(), g.the_kit_head.clone(), g.sessions.clone(), g.children.clone());
+                let preserve = (
+                    g.undo_past.clone(),
+                    g.undo_future.clone(),
+                    g.undo_inhibit,
+                    g.initial.clone(),
+                    g.checkpoints.clone(),
+                    g.alternatives.clone(),
+                    g.the_kit_head.clone(),
+                    g.sessions.clone(),
+                    g.children.clone(),
+                );
                 *g = merged;
                 g.undo_past = preserve.0;
                 g.undo_future = preserve.1;
                 g.undo_inhibit = preserve.2;
-                g.tx_depth = preserve.3;
-                g.tx_before = preserve.4;
-                g.initial = preserve.5;
-                g.checkpoints = preserve.6;
-                g.alternatives = preserve.7;
-                g.the_kit_head = preserve.8;
-                g.sessions = preserve.9;
-                g.children = preserve.10;
+                g.initial = preserve.3;
+                g.checkpoints = preserve.4;
+                g.alternatives = preserve.5;
+                g.the_kit_head = preserve.6;
+                g.sessions = preserve.7;
+                g.children = preserve.8;
             }
             event_wire::rewire_parent_kits(kit);
             event_wire::wire_graph_bus(kit);
@@ -11353,17 +11354,13 @@ pub mod kit {
             cmd.execute(kit)
         }
 
-        /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit` or active `tx` batch).
+        /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit`).
         pub fn with_undo<F>(kit: &KitStoreRef, f: F) -> SetResult
         where
             F: FnOnce() -> SetResult,
         {
             let skip = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.undo_inhibit > 0;
             if skip {
-                return f();
-            }
-            let in_tx = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.tx_depth > 0;
-            if in_tx {
                 return f();
             }
             let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
@@ -11381,66 +11378,10 @@ pub mod kit {
             Ok(())
         }
 
-        /// 🌐 WASM: run `begin_tx` / `commit_tx` / `abort_tx` around batched mutations; one undo step on commit.
-        pub fn begin_tx(kit: &KitStoreRef) -> SetResult {
-            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            if g.tx_depth == 0 {
-                g.tx_before = Some(serde_json::to_value(g.to_full_dto()).map_err(|e| SetError::Internal(format!("begin_tx snapshot: {e}")))?);
-            }
-            g.tx_depth += 1;
-            Ok(())
-        }
-
-        pub fn commit_tx(kit: &KitStoreRef) -> SetResult {
-            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            if g.tx_depth == 0 {
-                return Err(SetError::Internal("no active transaction".into()));
-            }
-            g.tx_depth -= 1;
-            if g.tx_depth == 0 {
-                let before = g.tx_before.take().ok_or_else(|| SetError::Internal("transaction missing before snapshot".into()))?;
-                let after = serde_json::to_value(g.to_full_dto()).map_err(|e| SetError::Internal(format!("commit_tx snapshot: {e}")))?;
-                if before != after {
-                    g.undo_past.push(UndoStep { before, after });
-                    if g.undo_past.len() > Self::MAX_UNDO_STEPS {
-                        g.undo_past.remove(0);
-                    }
-                    g.undo_future.clear();
-                }
-            }
-            Ok(())
-        }
-
-        pub fn abort_tx(kit: &KitStoreRef) -> SetResult {
-            let need_restore = {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                if g.tx_depth == 0 {
-                    return Err(SetError::Internal("no active transaction".into()));
-                }
-                g.tx_depth -= 1;
-                g.tx_depth == 0
-            };
-            if !need_restore {
-                return Ok(());
-            }
-            let bv = {
-                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.tx_before.take()
-            };
-            let Some(bv) = bv else {
-                return Ok(());
-            };
-            let bf: KitFullDto = serde_json::from_value(bv).map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
-            Self::replace_from_full_dto(kit, bf)
-        }
-
         /// Pop last applied state and restore `before` snapshot.
         pub fn undo(kit: &KitStoreRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                if g.tx_depth > 0 {
-                    return Err(SetError::Internal("cannot undo while a transaction is open".into()));
-                }
                 g.undo_past.pop()
             };
             let Some(step) = step else {
@@ -11474,9 +11415,6 @@ pub mod kit {
         pub fn redo(kit: &KitStoreRef) -> SetResult {
             let step = {
                 let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                if g.tx_depth > 0 {
-                    return Err(SetError::Internal("cannot redo while a transaction is open".into()));
-                }
                 g.undo_future.pop()
             };
             let Some(step) = step else {
@@ -11507,11 +11445,11 @@ pub mod kit {
         }
 
         pub fn can_undo(kit: &KitStoreRef) -> bool {
-            kit.read().map(|g| g.tx_depth == 0 && !g.undo_past.is_empty()).unwrap_or(false)
+            kit.read().map(|g| !g.undo_past.is_empty()).unwrap_or(false)
         }
 
         pub fn can_redo(kit: &KitStoreRef) -> bool {
-            kit.read().map(|g| g.tx_depth == 0 && !g.undo_future.is_empty()).unwrap_or(false)
+            kit.read().map(|g| !g.undo_future.is_empty()).unwrap_or(false)
         }
 
         /// Add a child entity under `parent` (currently `Design → Piece` only).
@@ -11696,8 +11634,6 @@ pub mod kit {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                tx_depth: 0,
-                tx_before: None,
                 initial: KitFullDto::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
@@ -11738,8 +11674,6 @@ pub mod kit {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                tx_depth: 0,
-                tx_before: None,
                 initial: KitFullDto::default(),
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
@@ -11823,8 +11757,6 @@ pub mod kit {
                 undo_past: Vec::new(),
                 undo_future: Vec::new(),
                 undo_inhibit: 0,
-                tx_depth: 0,
-                tx_before: None,
                 initial: vcs_root,
                 checkpoints: std::collections::HashMap::new(),
                 alternatives: std::collections::HashMap::new(),
@@ -18689,24 +18621,6 @@ pub mod wasm {
         #[wasm_bindgen(js_name = canRedo)]
         pub fn can_redo_wasm(&self) -> bool {
             KitStore::can_redo(&self.inner)
-        }
-
-        #[wasm_bindgen(js_name = beginTx)]
-        pub fn begin_tx_wasm(&self) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            future_to_promise(async move { js_settle_set(KitStore::begin_tx(&inner)) })
-        }
-
-        #[wasm_bindgen(js_name = commitTx)]
-        pub fn commit_tx_wasm(&self) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            future_to_promise(async move { js_settle_set(KitStore::commit_tx(&inner)) })
-        }
-
-        #[wasm_bindgen(js_name = abortTx)]
-        pub fn abort_tx_wasm(&self) -> js_sys::Promise {
-            let inner = self.inner.clone();
-            future_to_promise(async move { js_settle_set(KitStore::abort_tx(&inner)) })
         }
 
         #[wasm_bindgen(js_name = getPiecesMetadata)]
