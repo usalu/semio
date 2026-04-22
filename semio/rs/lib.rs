@@ -9,7 +9,9 @@
 #![allow(clippy::new_without_default)]
 
 pub mod read_command {
-//! Read-only kit graph commands; execute against a [`KitFullDto`] snapshot.
+//! Read-only kit graph commands. Each enum variant is a message; each command type
+//! has an inherent `execute` method against its owning snapshot object
+//! (`KitFullDto`, `TypeFullDto`, `DesignFullDto`, ...).
 use serde::{Deserialize, Serialize};
 
 use crate::connection::ConnectionFullDto;
@@ -18,7 +20,6 @@ use crate::connector::ConnectorFullDto;
 use crate::connector::ConnectorIdDto;
 use crate::design::DesignFullDto;
 use crate::design::DesignIdDto;
-use crate::id::Id;
 use crate::kit::KitFullDto;
 use crate::piece::PieceFullDto;
 use crate::piece::PieceIdDto;
@@ -192,198 +193,206 @@ pub enum ReadKitCommandResult {
     Other,
 }
 
-fn find_type(kit: &KitFullDto, id: &Id) -> Option<TypeFullDto> {
-    kit.types.iter().find(|t| t.id == *id).cloned()
-}
-
-/// Execute a single [`ReadKitCommand`] against a DTO snapshot.
-pub fn read_kit(kit: &KitFullDto, cmd: &ReadKitCommand) -> Result<ReadKitCommandResult> {
-    match cmd {
-        ReadKitCommand::Everything {} => Ok(ReadKitCommandResult::Everything { dto: kit.clone() }),
-        ReadKitCommand::Name => Ok(ReadKitCommandResult::Name {
-            name: kit.name.clone(),
-        }),
-        ReadKitCommand::Description => Ok(ReadKitCommandResult::Description {
-            description: kit.description.clone(),
-        }),
-        ReadKitCommand::Types => Ok(ReadKitCommandResult::Types {
-            list: kit.types.clone(),
-        }),
-        ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs {
-            list: kit.designs.clone(),
-        }),
-        ReadKitCommand::ReadTypeCommands { id, commands } => {
-            let t = find_type(kit, &id.id).ok_or_else(|| SemioError::NotFound {
-                kind: "Type",
-                id: id.id.clone(),
-            })?;
-            let mut results = Vec::with_capacity(commands.len());
-            for c in commands {
-                results.push(read_type(&t, c)?);
-            }
-            Ok(ReadKitCommandResult::ReadTypeCommands { results })
+/// OO surface: read commands are methods on the command enum, taking the DTO snapshot
+/// object they read against. `ReadKitCommand::execute(kit)` is the canonical entrypoint.
+impl ReadConnectorCommand {
+    pub fn execute(&self, c: &ConnectorFullDto) -> ReadConnectorCommandResult {
+        match self {
+            ReadConnectorCommand::Everything => ReadConnectorCommandResult::Everything { dto: c.clone() },
+            ReadConnectorCommand::Name => ReadConnectorCommandResult::Name { name: c.code.clone() },
+            ReadConnectorCommand::Other => ReadConnectorCommandResult::Other,
         }
-        ReadKitCommand::ReadDesignCommands { id, commands } => {
-            let d = kit
-                .designs
-                .iter()
-                .find(|x| x.id == id.id)
-                .cloned()
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Design",
-                    id: id.id.clone(),
-                })?;
-            let mut results = Vec::with_capacity(commands.len());
-            for c in commands {
-                results.push(read_design(&d, c)?);
-            }
-            Ok(ReadKitCommandResult::ReadDesignCommands { results })
-        }
-        ReadKitCommand::Files => Ok(ReadKitCommandResult::Other), // DTO has `files` via Everything
-        ReadKitCommand::Other => Ok(ReadKitCommandResult::Other),
     }
 }
 
-fn read_type(t: &TypeFullDto, cmd: &ReadTypeCommand) -> Result<ReadTypeCommandResult> {
-    match cmd {
-        ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
-        ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name {
-            name: t.name.clone(),
-        }),
-        ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors {
-            list: t.connectors.clone(),
-        }),
-        ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations {
-            list: t.representations.clone(),
-        }),
-        ReadTypeCommand::ReadConnectorCommands { id, commands } => {
-            let c = t
-                .connectors
-                .iter()
-                .find(|x| x.id == id.id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Connector",
-                    id: id.id.clone(),
-                })?;
-            let mut results = Vec::new();
-            for x in commands {
-                results.push(match x {
-                    ReadConnectorCommand::Everything => ReadConnectorCommandResult::Everything {
-                        dto: c.clone(),
-                    },
-                    ReadConnectorCommand::Name => ReadConnectorCommandResult::Name {
-                        name: c.code.clone(),
-                    },
-                    _ => ReadConnectorCommandResult::Other,
-                });
+impl ReadRepresentationCommand {
+    pub fn execute(&self, r: &RepresentationFullDto) -> ReadRepresentationCommandResult {
+        match self {
+            ReadRepresentationCommand::Everything => {
+                ReadRepresentationCommandResult::Everything { dto: r.clone() }
             }
-            Ok(ReadTypeCommandResult::ReadConnectorCommands { results })
+            ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name {
+                name: r.description.clone().unwrap_or_else(|| r.url.clone()),
+            },
+            ReadRepresentationCommand::Other => ReadRepresentationCommandResult::Other,
         }
-        ReadTypeCommand::ReadRepresentationCommands { id, commands } => {
-            let r = t
-                .representations
-                .iter()
-                .find(|x| x.id == id.id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Representation",
-                    id: id.id.clone(),
-                })?;
-            let mut results = Vec::new();
-            for x in commands {
-                results.push(match x {
-                    ReadRepresentationCommand::Everything => {
-                        ReadRepresentationCommandResult::Everything { dto: r.clone() }
+    }
+}
+
+impl ReadPortCommand {
+    pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
+        match self {
+            ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
+            ReadPortCommand::Name => ReadPortCommandResult::Name {
+                name: p.family.clone().unwrap_or_default(),
+            },
+            ReadPortCommand::Other => ReadPortCommandResult::Other,
+        }
+    }
+}
+
+impl ReadPieceCommand {
+    pub fn execute(&self, p: &PieceFullDto) -> ReadPieceCommandResult {
+        match self {
+            ReadPieceCommand::Everything => ReadPieceCommandResult::Everything { dto: p.clone() },
+            ReadPieceCommand::Name => ReadPieceCommandResult::Name {
+                name: p.name.clone().unwrap_or_default(),
+            },
+            ReadPieceCommand::Other => ReadPieceCommandResult::Other,
+        }
+    }
+}
+
+impl ReadConnectionCommand {
+    pub fn execute(&self, c: &ConnectionFullDto) -> ReadConnectionCommandResult {
+        match self {
+            ReadConnectionCommand::Everything => ReadConnectionCommandResult::Everything { dto: c.clone() },
+            ReadConnectionCommand::Other => ReadConnectionCommandResult::Other,
+        }
+    }
+}
+
+impl ReadTypeCommand {
+    pub fn execute(&self, t: &TypeFullDto) -> Result<ReadTypeCommandResult> {
+        match self {
+            ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
+            ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name { name: t.name.clone() }),
+            ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors {
+                list: t.connectors.clone(),
+            }),
+            ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations {
+                list: t.representations.clone(),
+            }),
+            ReadTypeCommand::ReadConnectorCommands { id, commands } => {
+                let c = t
+                    .connectors
+                    .iter()
+                    .find(|x| x.id == id.id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Connector",
+                        id: id.id.clone(),
+                    })?;
+                Ok(ReadTypeCommandResult::ReadConnectorCommands {
+                    results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
+                })
+            }
+            ReadTypeCommand::ReadRepresentationCommands { id, commands } => {
+                let r = t
+                    .representations
+                    .iter()
+                    .find(|x| x.id == id.id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Representation",
+                        id: id.id.clone(),
+                    })?;
+                Ok(ReadTypeCommandResult::ReadRepresentationCommands {
+                    results: commands.iter().map(|cmd| cmd.execute(r)).collect(),
+                })
+            }
+            ReadTypeCommand::ReadPortCommands { id, commands } => {
+                let p = t
+                    .ports
+                    .iter()
+                    .find(|x| x.id == id.id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Port",
+                        id: id.id.clone(),
+                    })?;
+                Ok(ReadTypeCommandResult::ReadPortCommands {
+                    results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
+                })
+            }
+            ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
+        }
+    }
+}
+
+impl ReadDesignCommand {
+    pub fn execute(&self, d: &DesignFullDto) -> Result<ReadDesignCommandResult> {
+        match self {
+            ReadDesignCommand::Everything => Ok(ReadDesignCommandResult::Everything { dto: d.clone() }),
+            ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name { name: d.name.clone() }),
+            ReadDesignCommand::ReadPieceCommands { id, commands } => {
+                let p = d
+                    .pieces
+                    .iter()
+                    .find(|x| x.id == id.id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Piece",
+                        id: id.id.clone(),
+                    })?;
+                Ok(ReadDesignCommandResult::ReadPieceCommands {
+                    results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
+                })
+            }
+            ReadDesignCommand::ReadConnectionCommands { id, commands } => {
+                let c = d
+                    .connections
+                    .iter()
+                    .find(|x| x.id == id.id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Connection",
+                        id: id.id.clone(),
+                    })?;
+                Ok(ReadDesignCommandResult::ReadConnectionCommands {
+                    results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
+                })
+            }
+            ReadDesignCommand::Other => Ok(ReadDesignCommandResult::Other),
+        }
+    }
+}
+
+impl ReadKitCommand {
+    /// Execute this read command against a materialized kit DTO.
+    pub fn execute(&self, kit: &KitFullDto) -> Result<ReadKitCommandResult> {
+        match self {
+            ReadKitCommand::Everything {} => Ok(ReadKitCommandResult::Everything { dto: kit.clone() }),
+            ReadKitCommand::Name => Ok(ReadKitCommandResult::Name { name: kit.name.clone() }),
+            ReadKitCommand::Description => Ok(ReadKitCommandResult::Description {
+                description: kit.description.clone(),
+            }),
+            ReadKitCommand::Types => Ok(ReadKitCommandResult::Types {
+                list: kit.types.clone(),
+            }),
+            ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs {
+                list: kit.designs.clone(),
+            }),
+            ReadKitCommand::ReadTypeCommands { id, commands } => {
+                let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| {
+                    SemioError::NotFound {
+                        kind: "Type",
+                        id: id.id.clone(),
                     }
-                    ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name {
-                        name: r
-                            .description
-                            .clone()
-                            .unwrap_or_else(|| r.url.clone()),
-                    },
-                    _ => ReadRepresentationCommandResult::Other,
-                });
-            }
-            Ok(ReadTypeCommandResult::ReadRepresentationCommands { results })
-        }
-        ReadTypeCommand::ReadPortCommands { id, commands } => {
-            let p = t
-                .ports
-                .iter()
-                .find(|x| x.id == id.id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Port",
-                    id: id.id.clone(),
                 })?;
-            let mut results = Vec::new();
-            for x in commands {
-                results.push(match x {
-                    ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
-                    ReadPortCommand::Name => ReadPortCommandResult::Name {
-                        name: p.family.clone().unwrap_or_default(),
-                    },
-                    _ => ReadPortCommandResult::Other,
-                });
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(t)?);
+                }
+                Ok(ReadKitCommandResult::ReadTypeCommands { results })
             }
-            Ok(ReadTypeCommandResult::ReadPortCommands { results })
-        }
-        ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
-    }
-}
-
-fn read_design(d: &DesignFullDto, cmd: &ReadDesignCommand) -> Result<ReadDesignCommandResult> {
-    match cmd {
-        ReadDesignCommand::Everything => Ok(ReadDesignCommandResult::Everything { dto: d.clone() }),
-        ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name {
-            name: d.name.clone(),
-        }),
-        ReadDesignCommand::ReadPieceCommands { id, commands } => {
-            let p = d
-                .pieces
-                .iter()
-                .find(|x| x.id == id.id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Piece",
-                    id: id.id.clone(),
-                })?;
-            let mut results = Vec::new();
-            for x in commands {
-                results.push(match x {
-                    ReadPieceCommand::Everything => ReadPieceCommandResult::Everything { dto: p.clone() },
-                    ReadPieceCommand::Name => ReadPieceCommandResult::Name {
-                        name: p.name.clone().unwrap_or_default(),
-                    },
-                    _ => ReadPieceCommandResult::Other,
-                });
-            }
-            Ok(ReadDesignCommandResult::ReadPieceCommands { results })
-        }
-        ReadDesignCommand::ReadConnectionCommands { id, commands } => {
-            let c = d
-                .connections
-                .iter()
-                .find(|x| x.id == id.id)
-                .ok_or_else(|| SemioError::NotFound {
-                    kind: "Connection",
-                    id: id.id.clone(),
-                })?;
-            let mut results = Vec::new();
-            for x in commands {
-                results.push(match x {
-                    ReadConnectionCommand::Everything => {
-                        ReadConnectionCommandResult::Everything { dto: c.clone() }
+            ReadKitCommand::ReadDesignCommands { id, commands } => {
+                let d = kit.designs.iter().find(|x| x.id == id.id).ok_or_else(|| {
+                    SemioError::NotFound {
+                        kind: "Design",
+                        id: id.id.clone(),
                     }
-                    _ => ReadConnectionCommandResult::Other,
-                });
+                })?;
+                let mut results = Vec::with_capacity(commands.len());
+                for c in commands {
+                    results.push(c.execute(d)?);
+                }
+                Ok(ReadKitCommandResult::ReadDesignCommands { results })
             }
-            Ok(ReadDesignCommandResult::ReadConnectionCommands { results })
+            ReadKitCommand::Files => Ok(ReadKitCommandResult::Other),
+            ReadKitCommand::Other => Ok(ReadKitCommandResult::Other),
         }
-        ReadDesignCommand::Other => Ok(ReadDesignCommandResult::Other),
     }
-}
 
-/// Run many read commands, preserving order.
-pub fn read_kits(kit: &KitFullDto, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandResult>> {
-    commands.iter().map(|c| read_kit(kit, c)).collect()
+    /// Run many read commands against the same snapshot, preserving order.
+    pub fn execute_many(kit: &KitFullDto, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandResult>> {
+        commands.iter().map(|c| c.execute(kit)).collect()
+    }
 }
 
 }
@@ -447,122 +456,163 @@ pub enum ChangeKitCommand {
     Other,
 }
 
-fn find_design_id_for_piece(kit: &KitStore, piece_id: &Id) -> Option<String> {
-    for d in &kit.designs {
-        if let Ok(dr) = d.read() {
-            if dr.piece(piece_id.as_str()).is_some() {
-                return Some(dr.id.to_string());
-            }
-        }
-    }
-    None
-}
-
-/// Apply one change command; caller wraps with before/after snapshot for [`crate::kit_change::KitChange`].
-pub fn apply_change_kit_command(kit: &mut KitStore, cmd: &ChangeKitCommand) -> Result<KitChangeKind> {
-    match cmd {
-        ChangeKitCommand::Name { name } => {
-            kit.set_name(name.clone())
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            Ok(KitChangeKind::SetKitMetadata)
-        }
-        ChangeKitCommand::Description { description } => {
-            kit.set_description(description.clone())
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            Ok(KitChangeKind::SetKitMetadata)
-        }
-        ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
-            let tid = type_id.id.to_string();
-            for c in commands {
-                match c {
-                    ChangeTypeCommand::Name { name } => {
-                        let t = kit
-                            .semio_type(tid.as_str())
-                            .ok_or_else(|| SemioError::NotFound {
-                                kind: "Type",
-                                id: type_id.id.clone(),
-                            })?;
-                        t.write()
-                            .map_err(|_| SemioError::LockPoisoned("type"))?
-                            .set_name(name.clone())
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    }
-                    ChangeTypeCommand::Other => {}
+impl KitStore {
+    /// Find the id of the owning design for a piece id.
+    pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
+        for d in &self.designs {
+            if let Ok(dr) = d.read() {
+                if dr.piece(piece_id.as_str()).is_some() {
+                    return Some(dr.id.to_string());
                 }
             }
-            Ok(KitChangeKind::ModifyType)
         }
-        ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
-            let dg = design_id.id.to_string();
-            for c in commands {
-                match c {
-                    ChangeDesignCommand::Name { name } => {
-                        let d = kit
-                            .design(dg.as_str())
-                            .ok_or_else(|| SemioError::NotFound {
-                                kind: "Design",
-                                id: design_id.id.clone(),
-                            })?;
-                        d.write()
-                            .map_err(|_| SemioError::LockPoisoned("design"))?
-                            .set_name(name.clone())
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    }
-                    ChangeDesignCommand::ChangePieceCommands { piece_id, commands: pcmds } => {
-                        for pc in pcmds {
-                            match pc {
-                                ChangePieceCommand::Name { name } => {
-                                    let did = find_design_id_for_piece(kit, &piece_id.id)
-                                        .ok_or_else(|| SemioError::NotFound {
-                                            kind: "Piece",
-                                            id: piece_id.id.clone(),
-                                        })?;
-                                    let full = kit.to_full_dto();
-                                    let mut p = full
-                                        .designs
-                                        .iter()
-                                        .find(|d| d.id.as_str() == did.as_str())
-                                        .and_then(|d| d.pieces.iter().find(|p| p.id == piece_id.id))
-                                        .cloned()
-                                        .ok_or_else(|| SemioError::NotFound {
-                                            kind: "Piece",
-                                            id: piece_id.id.clone(),
-                                        })?;
-                                    p.name = Some(name.clone());
-                                    let mut diff = DesignDiff::default();
-                                    diff.modified_pieces.push(p);
-                                    kit.apply_design_diff(&did, &diff)
-                                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                                }
-                                ChangePieceCommand::Fix | ChangePieceCommand::Other => {}
-                            }
-                        }
-                    }
-                    ChangeDesignCommand::Other => {}
-                }
-            }
-            Ok(KitChangeKind::ModifyDesign)
-        }
-        ChangeKitCommand::Other => Ok(KitChangeKind::Other("changeKit".into())),
+        None
     }
 }
 
-/// Apply design diff RPC shape (for future `execute` shims; kept alongside legacy RPCs).
-#[allow(dead_code)]
-pub fn apply_design_diff_cmd(kit: &mut KitStore, design_id: &str, diff: &DesignDiff) -> Result<KitChangeKind> {
-    kit.apply_design_diff(design_id, diff)
-        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-    Ok(KitChangeKind::ApplyDesignDiff)
+impl ChangePieceCommand {
+    /// Apply this piece change under the given design; mutates the live memory graph.
+    pub fn apply(&self, kit: &mut KitStore, piece_id: &Id) -> Result<()> {
+        match self {
+            ChangePieceCommand::Name { name } => {
+                let did = kit
+                    .find_design_id_for_piece(piece_id)
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Piece",
+                        id: piece_id.clone(),
+                    })?;
+                let full = kit.to_full_dto();
+                let mut p = full
+                    .designs
+                    .iter()
+                    .find(|d| d.id.as_str() == did.as_str())
+                    .and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id))
+                    .cloned()
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Piece",
+                        id: piece_id.clone(),
+                    })?;
+                p.name = Some(name.clone());
+                let mut diff = DesignDiff::default();
+                diff.modified_pieces.push(p);
+                kit.apply_design_diff(&did, &diff)
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                Ok(())
+            }
+            ChangePieceCommand::Fix | ChangePieceCommand::Other => Ok(()),
+        }
+    }
 }
 
-/// Add a piece under a design (for future `execute` shims; kept for parity with the plan's surface).
-#[allow(dead_code)]
-pub fn add_piece(kit: &mut KitStore, design_id: &str, piece: PieceFullDto) -> Result<KitChangeKind> {
-    let mut d = DesignDiff::default();
-    d.added_pieces.push(piece);
-    kit.apply_design_diff(design_id, &d)
-        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-    Ok(KitChangeKind::AddPiece)
+impl ChangeDesignCommand {
+    /// Apply this design-level change against the live kit memory graph.
+    pub fn apply(&self, kit: &mut KitStore, design_id: &Id) -> Result<()> {
+        match self {
+            ChangeDesignCommand::Name { name } => {
+                let d = kit
+                    .design(design_id.as_str())
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Design",
+                        id: design_id.clone(),
+                    })?;
+                d.write()
+                    .map_err(|_| SemioError::LockPoisoned("design"))?
+                    .set_name(name.clone())
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                Ok(())
+            }
+            ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
+                for pc in commands {
+                    pc.apply(kit, &piece_id.id)?;
+                }
+                Ok(())
+            }
+            ChangeDesignCommand::Other => Ok(()),
+        }
+    }
+}
+
+impl ChangeTypeCommand {
+    /// Apply this type-level change against the live kit memory graph.
+    pub fn apply(&self, kit: &mut KitStore, type_id: &Id) -> Result<()> {
+        match self {
+            ChangeTypeCommand::Name { name } => {
+                let t = kit
+                    .semio_type(type_id.as_str())
+                    .ok_or_else(|| SemioError::NotFound {
+                        kind: "Type",
+                        id: type_id.clone(),
+                    })?;
+                t.write()
+                    .map_err(|_| SemioError::LockPoisoned("type"))?
+                    .set_name(name.clone())
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                Ok(())
+            }
+            ChangeTypeCommand::Other => Ok(()),
+        }
+    }
+}
+
+impl ChangeKitCommand {
+    /// Apply one change command to a live [`KitStore`].
+    ///
+    /// Callers that want a `KitChange` record should snapshot before/after and diff.
+    pub fn apply(&self, kit: &mut KitStore) -> Result<KitChangeKind> {
+        match self {
+            ChangeKitCommand::Name { name } => {
+                kit.set_name(name.clone())
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                Ok(KitChangeKind::SetKitMetadata)
+            }
+            ChangeKitCommand::Description { description } => {
+                kit.set_description(description.clone())
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                Ok(KitChangeKind::SetKitMetadata)
+            }
+            ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
+                for c in commands {
+                    c.apply(kit, &type_id.id)?;
+                }
+                Ok(KitChangeKind::ModifyType)
+            }
+            ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
+                for c in commands {
+                    c.apply(kit, &design_id.id)?;
+                }
+                Ok(KitChangeKind::ModifyDesign)
+            }
+            ChangeKitCommand::Other => Ok(KitChangeKind::Other("changeKit".into())),
+        }
+    }
+}
+
+impl KitStore {
+    /// Apply a raw design diff and return the high-level `KitChangeKind`.
+    #[allow(dead_code)]
+    pub fn apply_design_diff_as_change(
+        &mut self,
+        design_id: &str,
+        diff: &DesignDiff,
+    ) -> Result<KitChangeKind> {
+        self.apply_design_diff(design_id, diff)
+            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+        Ok(KitChangeKind::ApplyDesignDiff)
+    }
+
+    /// Add a single piece to a design via a design diff, returning the `KitChangeKind`.
+    #[allow(dead_code)]
+    pub fn add_piece_as_change(
+        &mut self,
+        design_id: &str,
+        piece: PieceFullDto,
+    ) -> Result<KitChangeKind> {
+        let mut d = DesignDiff::default();
+        d.added_pieces.push(piece);
+        self.apply_design_diff(design_id, &d)
+            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+        Ok(KitChangeKind::AddPiece)
+    }
 }
 
 }
@@ -624,71 +674,114 @@ pub enum KitCheckpointCommandResult {
     Nothing,
 }
 
-/// Chain from root to `at` (inclusive): walk parents from `at` to `None`, reverse.
-pub fn checkpoint_chain_root_to_leaf(
-    at: &Id,
-    checkpoints: &HashMap<Id, KitCheckpoint>,
-) -> Vec<Id> {
-    let mut out = vec![at.clone()];
-    let mut cur = at.clone();
-    loop {
-        let parent = checkpoints
-            .get(&cur)
-            .and_then(|c| c.parent.as_ref().cloned());
+impl KitCheckpoint {
+    /// Build a new checkpoint object with a content-addressed hash.
+    pub fn new(
+        parent: Option<Id>,
+        changes: Vec<KitChange>,
+        message: Option<String>,
+    ) -> Self {
+        let id = Id::new_v7();
+        let hash = Self::compute_hash(parent.as_ref(), &id, &changes);
+        Self {
+            id,
+            parent,
+            changes,
+            message,
+            time: None,
+            authors: Vec::new(),
+            hash,
+            release: None,
+        }
+    }
+
+    /// Content-addressed hash of this checkpoint.
+    pub fn compute_hash(parent: Option<&Id>, new_id: &Id, changes: &[KitChange]) -> String {
+        let mut w = HashWriter::new();
+        w.tag("kit_cp");
         match parent {
-            None => break,
-            Some(p) if out.contains(&p) => break,
             Some(p) => {
-                out.push(p.clone());
-                cur = p;
+                w.str(p.as_str());
+            }
+            None => {
+                w.str("");
             }
         }
+        w.str(new_id.as_str());
+        w.str(
+            &changes
+                .iter()
+                .map(|c| serde_json::to_string(c).unwrap_or_default())
+                .collect::<Vec<_>>()
+                .join("\n"),
+        );
+        w.finalize()
     }
-    out.reverse();
-    out
-}
 
-pub fn materialize_dto(
-    initial: &KitFullDto,
-    checkpoints: &HashMap<Id, KitCheckpoint>,
-    at: Option<&Id>,
-) -> KitFullDto {
-    let Some(at_id) = at else {
-        return initial.clone();
-    };
-    let path = checkpoint_chain_root_to_leaf(at_id, checkpoints);
-    let mut s = initial.clone();
-    for cid in &path {
-        if let Some(cp) = checkpoints.get(cid) {
-            for ch in &cp.changes {
-                s = crate::kit_change::KitChange::apply_forward_dto(&s, ch);
+    /// Walk `self -> root` via `parent` links in `map`, returning ids from root to leaf.
+    pub fn chain_root_to_leaf(&self, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
+        Self::chain_root_to_leaf_from(&self.id, map)
+    }
+
+    /// Walk `at -> root` via `parent` links in `map`, returning ids from root to leaf.
+    pub fn chain_root_to_leaf_from(at: &Id, map: &HashMap<Id, KitCheckpoint>) -> Vec<Id> {
+        let mut out = vec![at.clone()];
+        let mut cur = at.clone();
+        loop {
+            let parent = map.get(&cur).and_then(|c| c.parent.as_ref().cloned());
+            match parent {
+                None => break,
+                Some(p) if out.contains(&p) => break,
+                Some(p) => {
+                    out.push(p.clone());
+                    cur = p;
+                }
             }
         }
+        out.reverse();
+        out
     }
-    s
-}
 
-pub fn hash_checkpoint(
-    parent: Option<&Id>,
-    new_id: &Id,
-    changes: &[KitChange],
-) -> String {
-    let mut w = HashWriter::new();
-    w.tag("kit_cp");
-    if let Some(p) = parent {
-        w.str(p.as_str());
-    } else {
-        w.str("");
+    /// Materialize the kit DTO at `at` (inclusive) by replaying all checkpoint changes
+    /// from `initial` along the parent chain.
+    pub fn materialize(
+        initial: &KitFullDto,
+        map: &HashMap<Id, KitCheckpoint>,
+        at: Option<&Id>,
+    ) -> KitFullDto {
+        let Some(at_id) = at else { return initial.clone(); };
+        let path = Self::chain_root_to_leaf_from(at_id, map);
+        let mut s = initial.clone();
+        for cid in &path {
+            if let Some(cp) = map.get(cid) {
+                for ch in &cp.changes {
+                    s = crate::kit_change::KitChange::apply_forward_dto(&s, ch);
+                }
+            }
+        }
+        s
     }
-    w.str(new_id.as_str());
-    w.str(
-        &changes
-            .iter()
-            .map(|c| serde_json::to_string(c).unwrap_or_default())
-            .collect::<Vec<_>>()
-            .join("\n"),
-    );
-    w.finalize()
+
+    /// Mark this checkpoint as a release by snapshotting the materialized kit.
+    pub fn mark_as_release(
+        &mut self,
+        initial: KitFullDto,
+        all_checkpoints: &HashMap<Id, KitCheckpoint>,
+    ) {
+        let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
+        let mut change_list: Vec<KitChange> = Vec::new();
+        for id in &path {
+            if let Some(c) = all_checkpoints.get(id) {
+                change_list.extend(c.changes.iter().cloned());
+            }
+        }
+        let computed = Some(Self::materialize(&initial, all_checkpoints, Some(&self.id)));
+        self.release = Some(MaterializedKit {
+            initial,
+            change_list,
+            computed,
+        });
+    }
 }
 
 }
@@ -706,6 +799,33 @@ pub struct KitAlternative {
     pub root: Id,
     /// Ordered checkpoint ids (may share ids with other alternatives).
     pub checkpoints: Vec<Id>,
+}
+
+impl KitAlternative {
+    /// Create a new alternative branching from `from_checkpoint`.
+    pub fn new(name: String, from_checkpoint: Id) -> Self {
+        Self {
+            id: Id::new_v7(),
+            name,
+            root: from_checkpoint.clone(),
+            checkpoints: vec![from_checkpoint],
+        }
+    }
+
+    /// Latest checkpoint id on this alternative (the working tip).
+    pub fn tip(&self) -> Option<&Id> {
+        self.checkpoints.last()
+    }
+
+    /// Append a new checkpoint id to this alternative's line.
+    pub fn append(&mut self, cp: Id) {
+        self.checkpoints.push(cp);
+    }
+
+    /// Collapse this alternative to `[root, new_tip]`.
+    pub fn collapse_to(&mut self, new_tip: Id) {
+        self.checkpoints = vec![self.root.clone(), new_tip];
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -759,6 +879,36 @@ impl Transaction {
             redo_changes: Vec::new(),
             state: TransactionState::Open,
         }
+    }
+
+    /// True while more [`KitChange`]s can be appended via [`Transaction::record`].
+    pub fn is_open(&self) -> bool {
+        matches!(self.state, TransactionState::Open)
+    }
+
+    /// Record a new change (clears redo stack, as in a standard undo/redo tree).
+    pub fn record(&mut self, change: KitChange) {
+        self.changes.push(change);
+        self.redo_changes.clear();
+    }
+
+    /// Pop the last recorded change for an undo step.
+    pub fn undo_last(&mut self) -> Option<KitChange> {
+        let ch = self.changes.pop()?;
+        self.redo_changes.push(ch.clone());
+        Some(ch)
+    }
+
+    /// Pop the last undone change for a redo step.
+    pub fn redo_last(&mut self) -> Option<KitChange> {
+        let ch = self.redo_changes.pop()?;
+        self.changes.push(ch.clone());
+        Some(ch)
+    }
+
+    /// Move this transaction to the `Finalized` state.
+    pub fn mark_finalized(&mut self) {
+        self.state = TransactionState::Finalized;
     }
 }
 
@@ -830,8 +980,101 @@ pub struct Draft {
 }
 
 impl Draft {
+    /// Build a new draft rooted at a materialized `before` snapshot.
+    pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFullDto) -> Self {
+        Self {
+            id: Id::new_v7(),
+            parent_checkpoint,
+            target_alternative,
+            before,
+            transactions: Vec::new(),
+            redo_transactions: Vec::new(),
+            open_transaction: None,
+        }
+    }
+
+    /// Id of the currently-open transaction (if any).
     pub fn open_tx_id(&self) -> Option<&Id> {
         self.open_transaction.as_ref().map(|t| &t.id)
+    }
+
+    /// True if a transaction is currently open on this draft.
+    pub fn has_open_transaction(&self) -> bool {
+        self.open_transaction.is_some()
+    }
+
+    /// Start a new transaction; fails if one is already open.
+    pub fn start_transaction(&mut self) -> crate::error::Result<Id> {
+        if self.open_transaction.is_some() {
+            return Err(crate::error::SemioError::InvalidOperation(
+                "transaction already open".into(),
+            ));
+        }
+        let tid = Id::new_v7();
+        self.open_transaction = Some(Transaction::new(tid.clone()));
+        Ok(tid)
+    }
+
+    /// Borrow the open transaction matching `txid` (if any).
+    pub fn open_transaction_mut(&mut self, txid: &Id) -> Option<&mut Transaction> {
+        self.open_transaction.as_mut().filter(|t| t.id == *txid)
+    }
+
+    /// Borrow the open transaction matching `txid` (if any).
+    pub fn open_transaction_ref(&self, txid: &Id) -> Option<&Transaction> {
+        self.open_transaction.as_ref().filter(|t| t.id == *txid)
+    }
+
+    /// Move the open transaction (if it matches `txid`) to finalized and onto the stack.
+    pub fn finalize_transaction(&mut self, txid: &Id) -> crate::error::Result<()> {
+        let mut tx = self
+            .open_transaction
+            .take()
+            .filter(|t| t.id == *txid)
+            .ok_or_else(|| crate::error::SemioError::InvalidOperation(
+                "no tx to finalize".into(),
+            ))?;
+        tx.mark_finalized();
+        self.transactions.push(tx);
+        Ok(())
+    }
+
+    /// Take the currently-open transaction without pushing it onto the stack.
+    pub fn take_open_transaction(&mut self, txid: &Id) -> crate::error::Result<Transaction> {
+        self.open_transaction
+            .take()
+            .filter(|t| t.id == *txid)
+            .ok_or_else(|| crate::error::SemioError::InvalidOperation(
+                "tx id mismatch".into(),
+            ))
+    }
+
+    /// Pop the most recent finalized transaction (for draft-level undo).
+    pub fn pop_finalized(&mut self) -> Option<Transaction> {
+        self.transactions.pop()
+    }
+
+    /// Push a transaction onto the redo stack.
+    pub fn push_redo_transaction(&mut self, tx: Transaction) {
+        self.redo_transactions.push(tx);
+    }
+
+    /// Pop the most recent entry from the redo stack.
+    pub fn pop_redo_transaction(&mut self) -> Option<Transaction> {
+        self.redo_transactions.pop()
+    }
+
+    /// Push a finalized transaction onto the main stack.
+    pub fn push_finalized(&mut self, tx: Transaction) {
+        self.transactions.push(tx);
+    }
+
+    pub fn can_undo_draft(&self) -> bool {
+        !self.transactions.is_empty()
+    }
+
+    pub fn can_redo_draft(&self) -> bool {
+        !self.redo_transactions.is_empty()
     }
 }
 
@@ -883,6 +1126,37 @@ pub struct Session {
     pub drafts: HashMap<Id, Draft>,
 }
 
+impl Session {
+    pub fn new() -> Self {
+        Self {
+            id: Id::new_v7(),
+            drafts: HashMap::new(),
+        }
+    }
+
+    pub fn with_id(id: Id) -> Self {
+        Self { id, drafts: HashMap::new() }
+    }
+
+    pub fn add_draft(&mut self, d: Draft) -> Id {
+        let did = d.id.clone();
+        self.drafts.insert(did.clone(), d);
+        did
+    }
+
+    pub fn remove_draft(&mut self, did: &Id) -> Option<Draft> {
+        self.drafts.remove(did)
+    }
+
+    pub fn draft(&self, did: &Id) -> Option<&Draft> {
+        self.drafts.get(did)
+    }
+
+    pub fn draft_mut(&mut self, did: &Id) -> Option<&mut Draft> {
+        self.drafts.get_mut(did)
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum SessionCommand {
@@ -908,7 +1182,9 @@ pub enum SessionCommandResult {
 
 }
 pub mod kit_store_command {
-//! Top-level kit store command dispatch.
+//! Top-level kit store command dispatch. Commands are methods on the command
+//! types (`KitStoreCommand::execute`, `SessionCommand::execute`, ...); the
+//! in-memory graph (`KitStore`) is the host object they act upon.
 use serde::{Deserialize, Serialize};
 
 use crate::id::Id;
@@ -916,14 +1192,50 @@ use crate::kit::KitStore;
 use crate::kit::KitStoreRef;
 use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 use crate::kit_change::{KitChange, KitChangeKind};
-use crate::kit_checkpoint::{self, KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
-use crate::kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
+use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
+use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
 use crate::kit_session::{Session, SessionCommand, SessionCommandResult};
-use crate::kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
-use crate::read_command::{self, ReadKitCommand, ReadKitCommandResult};
+use crate::kit_transaction::{TransactionCommand, TransactionCommandResult};
+use crate::read_command::{ReadKitCommand, ReadKitCommandResult};
 use crate::{error::Result, error::SemioError};
 
 type KitFullDto = crate::kit::KitFullDto;
+
+impl KitStore {
+    /// Materialize the DTO view of the main `the_kit` line.
+    pub fn the_kit_dto(&self) -> KitFullDto {
+        KitCheckpoint::materialize(&self.initial, &self.checkpoints, self.the_kit_head.as_ref())
+    }
+
+    /// Materialize a DTO at an arbitrary checkpoint (or the initial snapshot).
+    pub fn materialize_at(&self, at: Option<&Id>) -> KitFullDto {
+        KitCheckpoint::materialize(&self.initial, &self.checkpoints, at)
+    }
+
+    /// Latest checkpoint id of a given alternative, if any.
+    pub fn alternative_tip(&self, aid: &Id) -> Option<Id> {
+        self.alternatives
+            .get(aid)
+            .and_then(|a| a.tip().cloned())
+    }
+
+    /// Validate a draft base (`checkpoint`, `alternative`) pair against the live tree.
+    pub fn is_valid_draft_base(&self, cp: Option<&Id>, alt: Option<&Id>) -> bool {
+        match (alt, cp) {
+            (None, None) => self.the_kit_head.is_none(),
+            (None, Some(c)) => self.the_kit_head.as_ref() == Some(c),
+            (Some(a), Some(c)) => self.alternative_tip(a).as_ref() == Some(c),
+            (Some(_), None) => false,
+        }
+    }
+
+    /// Replace the live graph from a full DTO while preserving the VCS tree,
+    /// event bus, and legacy undo/transaction state.
+    pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
+        KitStore::replace_from_full_dto(kit, d)
+            .map_err(|e| SemioError::InvalidOperation(e.to_string()))
+    }
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -954,691 +1266,576 @@ pub enum KitStoreCommandResult {
     Nothing,
 }
 
-fn tip_alternative(store: &KitStore, alt: &Id) -> Option<Id> {
-    store
-        .alternatives
-        .get(alt)
-        .and_then(|a| a.checkpoints.last().cloned())
-}
-
-fn valid_draft_base(store: &KitStore, cp: Option<&Id>, alt: Option<&Id>) -> bool {
-    match (alt, cp) {
-        (None, None) => store.the_kit_head.is_none(),
-        (None, Some(c)) => store.the_kit_head.as_ref() == Some(c),
-        (Some(a), Some(c)) => tip_alternative(store, a).as_ref() == Some(c),
-        (Some(_), None) => false,
-    }
-}
-
-/// Replace the live graph from a full DTO while preserving VCS + event bus + legacy undo.
-pub fn replace_graph_preserve(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
-    KitStore::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
-}
-
-pub fn the_kit_dto(store: &KitStore) -> KitFullDto {
-    kit_checkpoint::materialize_dto(&store.initial, &store.checkpoints, store.the_kit_head.as_ref())
-}
-
-fn materialize_at(store: &KitStore, at: Option<&Id>) -> KitFullDto {
-    kit_checkpoint::materialize_dto(&store.initial, &store.checkpoints, at)
-}
-
-/// Top-level VCS / command entry (call with the kit write lock when batching, or this locks internally).
-pub fn execute(kit: &KitStoreRef, cmd: KitStoreCommand) -> Result<KitStoreCommandResult> {
-    match cmd {
-        KitStoreCommand::Batch { commands } => {
-            let mut out = Vec::with_capacity(commands.len());
-            for c in commands {
-                out.push(execute(kit, c)?);
-            }
-            Ok(KitStoreCommandResult::Batch { results: out })
-        }
-        KitStoreCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let dto = the_kit_dto(&g);
-            let results = read_command::read_kits(&dto, &commands)?;
-            drop(g);
-            Ok(KitStoreCommandResult::ReadKitCommands { results })
-        }
-        KitStoreCommand::NewSession => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let id = Id::new_v7();
-            g.sessions.insert(
-                id.clone(),
-                Session {
-                    id: id.clone(),
-                    drafts: Default::default(),
-                },
-            );
-            Ok(KitStoreCommandResult::NewSession { id })
-        }
-        KitStoreCommand::EndSession { id } => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            g.sessions.remove(&id);
-            Ok(KitStoreCommandResult::EndSession { ok: true })
-        }
-        KitStoreCommand::NewAlternative { from_checkpoint, name } => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if !g.checkpoints.contains_key(&from_checkpoint) {
-                return Err(SemioError::NotFound {
-                    kind: "KitCheckpoint",
-                    id: from_checkpoint,
-                });
-            }
-            let aid = Id::new_v7();
-            g.alternatives.insert(
-                aid.clone(),
-                KitAlternative {
-                    id: aid.clone(),
-                    name,
-                    root: from_checkpoint.clone(),
-                    checkpoints: vec![from_checkpoint],
-                },
-            );
-            Ok(KitStoreCommandResult::NewAlternative { id: aid })
-        }
-        KitStoreCommand::ExecuteSessionCommands { id, commands } => {
-            let mut results = Vec::new();
-            for c in commands {
-                results.push(exec_session(kit, &id, c)?);
-            }
-            Ok(KitStoreCommandResult::ExecuteSessionCommands { results })
-        }
-        KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
-            let mut results = Vec::new();
-            for c in commands {
-                results.push(exec_checkpoint(kit, &id, c)?);
-            }
-            Ok(KitStoreCommandResult::ExecuteKitCheckpointCommands { results })
-        }
-        KitStoreCommand::ExecuteKitAlternativeCommands { id, commands } => {
-            let mut results = Vec::new();
-            for c in commands {
-                results.push(exec_alternative(kit, &id, c)?);
-            }
-            Ok(KitStoreCommandResult::ExecuteKitAlternativeCommands { results })
-        }
-    }
-}
-
-fn exec_session(kit: &KitStoreRef, sid: &Id, cmd: SessionCommand) -> Result<SessionCommandResult> {
-    match cmd {
-        SessionCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let dto = the_kit_dto(&g);
-            let results = read_command::read_kits(&dto, &commands)?;
-            Ok(SessionCommandResult::ReadKitCommands { results })
-        }
-        SessionCommand::NewDraft {
-            checkpoint_id,
-            alternative_id,
-        } => {
-            let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if !g.sessions.contains_key(sid) {
-                return Err(SemioError::InvalidOperation("unknown session".into()));
-            }
-            if !valid_draft_base(&g, checkpoint_id.as_ref(), alternative_id.as_ref()) {
-                return Err(SemioError::InvalidOperation("stale or invalid draft base".into()));
-            }
-            let base = materialize_at(&g, checkpoint_id.as_ref());
-            // Reset live graph to the materialized base for this draft.
-            let dclone = base.clone();
-            let aid = Id::new_v7();
-            let draft = Draft {
-                id: aid.clone(),
-                parent_checkpoint: checkpoint_id.clone(),
-                target_alternative: alternative_id.clone(),
-                before: base,
-                transactions: vec![],
-                redo_transactions: vec![],
-                open_transaction: None,
-            };
-            drop(g);
-            replace_graph_preserve(kit, dclone)?;
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            g.sessions
-                .get_mut(sid)
-                .expect("session")
-                .drafts
-                .insert(aid.clone(), draft);
-            Ok(SessionCommandResult::NewDraft { draft_id: aid })
-        }
-        SessionCommand::ExecuteKitDraftCommands { id: did, commands } => {
-            let mut results = Vec::new();
-            for c in commands {
-                results.push(exec_draft(kit, sid, &did, c)?);
-            }
-            Ok(SessionCommandResult::ExecuteKitDraftCommands { results })
-        }
-    }
-}
-
-fn exec_draft(
-    kit: &KitStoreRef,
-    sid: &Id,
-    did: &Id,
-    cmd: KitDraftCommand,
-) -> Result<KitDraftCommandResult> {
-    match cmd {
-        KitDraftCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let dto = g.to_full_dto();
-            let results = read_command::read_kits(&dto, &commands)?;
-            Ok(KitDraftCommandResult::ReadKitCommands { results })
-        }
-        KitDraftCommand::StartTransaction => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let session = g.sessions.get_mut(sid).ok_or_else(|| {
-                SemioError::InvalidOperation("unknown session for draft tx".into())
-            })?;
-            let d = session
-                .drafts
-                .get_mut(did)
-                .ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
-            if d.open_transaction.is_some() {
-                return Err(SemioError::InvalidOperation(
-                    "transaction already open".into(),
-                ));
-            }
-            let tid = Id::new_v7();
-            d.open_transaction = Some(Transaction::new(tid.clone()));
-            Ok(KitDraftCommandResult::StartTransaction { transaction_id: tid })
-        }
-        KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
-            let mut results = Vec::new();
-            for c in commands {
-                results.push(exec_transaction(kit, sid, did, &txid, c)?);
-            }
-            Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
-        }
-        KitDraftCommand::FinalizeToKitCheckpoint { message } => finalize_draft(kit, sid, did, message),
-        KitDraftCommand::Abort => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if let Some(session) = g.sessions.get_mut(sid) {
-                session.drafts.remove(did);
-            }
-            Ok(KitDraftCommandResult::Abort { ok: true })
-        }
-        KitDraftCommand::Undo { count } => draft_undo(kit, sid, did, count),
-        KitDraftCommand::Redo { count } => draft_redo(kit, sid, did, count),
-        KitDraftCommand::CanUndo { count: _ } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let can = g
-                .sessions
-                .get(sid)
-                .and_then(|s| s.drafts.get(did))
-                .map(|d| !d.transactions.is_empty())
-                .unwrap_or(false);
-            Ok(KitDraftCommandResult::CanUndo { can })
-        }
-        KitDraftCommand::CanRedo { count: _ } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let can = g
-                .sessions
-                .get(sid)
-                .and_then(|s| s.drafts.get(did))
-                .map(|d| !d.redo_transactions.is_empty())
-                .unwrap_or(false);
-            Ok(KitDraftCommandResult::CanRedo { can })
-        }
-    }
-}
-
-fn draft_undo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
-    let n = if count < 0 { i32::MAX } else { count } as usize;
-    for _ in 0..n {
-        let tx_opt = {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-            d.transactions.pop()
-        };
-        let Some(tx) = tx_opt else { break; };
-        // Roll back composite: replay backward on full tx changes in reverse order
-        for ch in tx.changes.iter().rev() {
-            KitChange::apply_backward(ch, kit)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-        }
-        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-        if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.drafts.get_mut(did)) {
-            d.redo_transactions.push(tx);
-        }
-    }
-    Ok(KitDraftCommandResult::Undo { ok: true })
-}
-
-fn draft_redo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
-    let n = if count < 0 { i32::MAX } else { count } as usize;
-    for _ in 0..n {
-        let tx_opt = {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-            d.redo_transactions.pop()
-        };
-        let Some(tx) = tx_opt else { break; };
-        for ch in &tx.changes {
-            KitChange::apply_forward(ch, kit)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-        }
-        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-        if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.drafts.get_mut(did)) {
-            d.transactions.push(tx);
-        }
-    }
-    Ok(KitDraftCommandResult::Redo { ok: true })
-}
-
-fn exec_transaction(
-    kit: &KitStoreRef,
-    sid: &Id,
-    did: &Id,
-    txid: &Id,
-    cmd: TransactionCommand,
-) -> Result<TransactionCommandResult> {
-    match cmd {
-        TransactionCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let dto = g.to_full_dto();
-            let results = read_command::read_kits(&dto, &commands)?;
-            Ok(TransactionCommandResult::ReadKitCommands { results })
-        }
-        TransactionCommand::ChangeKitCommands { commands: chs } => {
-            let mut n = 0usize;
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            {
-                let _ = g
-                    .sessions
-                    .get(sid)
-                    .and_then(|s| s.drafts.get(did))
-                    .and_then(|d| d.open_transaction.as_ref())
-                    .filter(|t| t.id == *txid && t.state == TransactionState::Open)
-                    .ok_or_else(|| {
-                        SemioError::InvalidOperation("no open matching transaction".into())
-                    })?;
-            }
-            for c in &chs {
-                let before = g.to_full_dto();
-                let kind = crate::change_command::apply_change_kit_command(&mut g, c)?;
-                let after = g.to_full_dto();
-                if let Some(mut kc) = KitChange::between(&before, &after) {
-                    kc.kind = kind;
-                    if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.drafts.get_mut(did)) {
-                        if let Some(ot) = d.open_transaction.as_mut() {
-                            if ot.id == *txid {
-                                ot.changes.push(kc);
-                                ot.redo_changes.clear();
-                                n += 1;
-                            }
-                        }
-                    }
+impl KitStoreCommand {
+    /// Top-level VCS / CRUD command dispatch.
+    ///
+    /// Locks the kit store internally as needed.
+    pub fn execute(self, kit: &KitStoreRef) -> Result<KitStoreCommandResult> {
+        match self {
+            KitStoreCommand::Batch { commands } => {
+                let mut out = Vec::with_capacity(commands.len());
+                for c in commands {
+                    out.push(c.execute(kit)?);
                 }
+                Ok(KitStoreCommandResult::Batch { results: out })
             }
-            Ok(TransactionCommandResult::ChangeKitCommands { count: n })
+            KitStoreCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let dto = g.the_kit_dto();
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(KitStoreCommandResult::ReadKitCommands { results })
+            }
+            KitStoreCommand::NewSession => {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let session = Session::new();
+                let id = session.id.clone();
+                g.sessions.insert(id.clone(), session);
+                Ok(KitStoreCommandResult::NewSession { id })
+            }
+            KitStoreCommand::EndSession { id } => {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                g.sessions.remove(&id);
+                Ok(KitStoreCommandResult::EndSession { ok: true })
+            }
+            KitStoreCommand::NewAlternative { from_checkpoint, name } => {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                if !g.checkpoints.contains_key(&from_checkpoint) {
+                    return Err(SemioError::NotFound {
+                        kind: "KitCheckpoint",
+                        id: from_checkpoint,
+                    });
+                }
+                let alt = KitAlternative::new(name, from_checkpoint);
+                let aid = alt.id.clone();
+                g.alternatives.insert(aid.clone(), alt);
+                Ok(KitStoreCommandResult::NewAlternative { id: aid })
+            }
+            KitStoreCommand::ExecuteSessionCommands { id, commands } => {
+                let mut results = Vec::new();
+                for c in commands {
+                    results.push(c.execute(kit, &id)?);
+                }
+                Ok(KitStoreCommandResult::ExecuteSessionCommands { results })
+            }
+            KitStoreCommand::ExecuteKitCheckpointCommands { id, commands } => {
+                let mut results = Vec::new();
+                for c in commands {
+                    results.push(c.execute(kit, &id)?);
+                }
+                Ok(KitStoreCommandResult::ExecuteKitCheckpointCommands { results })
+            }
+            KitStoreCommand::ExecuteKitAlternativeCommands { id, commands } => {
+                let mut results = Vec::new();
+                for c in commands {
+                    results.push(c.execute(kit, &id)?);
+                }
+                Ok(KitStoreCommandResult::ExecuteKitAlternativeCommands { results })
+            }
         }
-        TransactionCommand::Finalize => {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-            let mut tx = d
-                .open_transaction
-                .take()
-                .filter(|t| t.id == *txid)
-                .ok_or_else(|| SemioError::InvalidOperation("no tx to finalize".into()))?;
-            tx.state = TransactionState::Finalized;
-            d.transactions.push(tx);
-            Ok(TransactionCommandResult::Finalize { ok: true })
+    }
+}
+
+impl SessionCommand {
+    /// Execute a session-scoped command against `kit[sid]`.
+    pub fn execute(self, kit: &KitStoreRef, sid: &Id) -> Result<SessionCommandResult> {
+        match self {
+            SessionCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let dto = g.the_kit_dto();
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(SessionCommandResult::ReadKitCommands { results })
+            }
+            SessionCommand::NewDraft {
+                checkpoint_id,
+                alternative_id,
+            } => {
+                let base = {
+                    let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    if !g.sessions.contains_key(sid) {
+                        return Err(SemioError::InvalidOperation("unknown session".into()));
+                    }
+                    if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
+                        return Err(SemioError::InvalidOperation(
+                            "stale or invalid draft base".into(),
+                        ));
+                    }
+                    g.materialize_at(checkpoint_id.as_ref())
+                };
+                KitStore::replace_live_graph(kit, base.clone())?;
+                let draft = crate::kit_draft::Draft::new(
+                    checkpoint_id,
+                    alternative_id,
+                    base,
+                );
+                let aid = draft.id.clone();
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                g.sessions
+                    .get_mut(sid)
+                    .expect("session")
+                    .add_draft(draft);
+                Ok(SessionCommandResult::NewDraft { draft_id: aid })
+            }
+            SessionCommand::ExecuteKitDraftCommands { id: did, commands } => {
+                let mut results = Vec::new();
+                for c in commands {
+                    results.push(c.execute(kit, sid, &did)?);
+                }
+                Ok(SessionCommandResult::ExecuteKitDraftCommands { results })
+            }
         }
-        TransactionCommand::Abort => {
-            let to_undo: Vec<KitChange> = {
+    }
+}
+
+impl KitDraftCommand {
+    /// Execute a draft-scoped command against `kit[sid][did]`.
+    pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
+        match self {
+            KitDraftCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let dto = g.to_full_dto();
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(KitDraftCommandResult::ReadKitCommands { results })
+            }
+            KitDraftCommand::StartTransaction => {
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 let d = g
                     .sessions
                     .get_mut(sid)
-                    .and_then(|s| s.drafts.get_mut(did))
-                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-                if d.open_transaction.as_ref().map(|t| t.id.clone()) != Some(txid.clone()) {
-                    return Err(SemioError::InvalidOperation("tx id mismatch abort".into()));
+                    .ok_or_else(|| SemioError::InvalidOperation("unknown session for draft tx".into()))?
+                    .draft_mut(did)
+                    .ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
+                let tid = d.start_transaction()?;
+                Ok(KitDraftCommandResult::StartTransaction { transaction_id: tid })
+            }
+            KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
+                let mut results = Vec::new();
+                for c in commands {
+                    results.push(c.execute(kit, sid, did, &txid)?);
                 }
-                d.open_transaction
-                    .as_ref()
-                    .map(|t| t.changes.clone())
-                    .unwrap_or_default()
+                Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
+            }
+            KitDraftCommand::FinalizeToKitCheckpoint { message } => {
+                Self::finalize_draft(kit, sid, did, message)
+            }
+            KitDraftCommand::Abort => {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                if let Some(session) = g.sessions.get_mut(sid) {
+                    session.remove_draft(did);
+                }
+                Ok(KitDraftCommandResult::Abort { ok: true })
+            }
+            KitDraftCommand::Undo { count } => Self::draft_undo(kit, sid, did, count),
+            KitDraftCommand::Redo { count } => Self::draft_redo(kit, sid, did, count),
+            KitDraftCommand::CanUndo { count: _ } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let can = g
+                    .sessions
+                    .get(sid)
+                    .and_then(|s| s.draft(did))
+                    .map(|d| d.can_undo_draft())
+                    .unwrap_or(false);
+                Ok(KitDraftCommandResult::CanUndo { can })
+            }
+            KitDraftCommand::CanRedo { count: _ } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let can = g
+                    .sessions
+                    .get(sid)
+                    .and_then(|s| s.draft(did))
+                    .map(|d| d.can_redo_draft())
+                    .unwrap_or(false);
+                Ok(KitDraftCommandResult::CanRedo { can })
+            }
+        }
+    }
+
+    fn draft_undo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        let n = if count < 0 { i32::MAX } else { count } as usize;
+        for _ in 0..n {
+            let tx_opt = {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                d.pop_finalized()
             };
-            for ch in to_undo.iter().rev() {
+            let Some(tx) = tx_opt else { break; };
+            for ch in tx.changes.iter().rev() {
                 KitChange::apply_backward(ch, kit)
                     .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             }
             let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            if let Some(d) = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-            {
-                d.open_transaction = None;
+            if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                d.push_redo_transaction(tx);
             }
-            Ok(TransactionCommandResult::Abort { ok: true })
         }
-        TransactionCommand::Undo => transaction_undo(kit, sid, did, txid, false),
-        TransactionCommand::UndoAll => transaction_undo(kit, sid, did, txid, true),
-        TransactionCommand::Redo => transaction_redo(kit, sid, did, txid, false),
-        TransactionCommand::RedoAll => transaction_redo(kit, sid, did, txid, true),
-        TransactionCommand::CanUndo => {
+        Ok(KitDraftCommandResult::Undo { ok: true })
+    }
+
+    fn draft_redo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
+        let n = if count < 0 { i32::MAX } else { count } as usize;
+        for _ in 0..n {
+            let tx_opt = {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                d.pop_redo_transaction()
+            };
+            let Some(tx) = tx_opt else { break; };
+            for ch in &tx.changes {
+                KitChange::apply_forward(ch, kit)
+                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            }
+            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+            if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
+                d.push_finalized(tx);
+            }
+        }
+        Ok(KitDraftCommandResult::Redo { ok: true })
+    }
+
+    fn finalize_draft(
+        kit: &KitStoreRef,
+        sid: &Id,
+        did: &Id,
+        message: String,
+    ) -> Result<KitDraftCommandResult> {
+        let (parent, alt, before, after) = {
             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let can = g
+            let d = g
                 .sessions
                 .get(sid)
-                .and_then(|s| s.drafts.get(did))
-                .and_then(|d| d.open_transaction.as_ref())
-                .filter(|t| t.id == *txid)
-                .map(|t| t.can_undo())
-                .unwrap_or(false);
-            Ok(TransactionCommandResult::CanUndo { can })
-        }
-        TransactionCommand::CanRedo => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let can = g
-                .sessions
-                .get(sid)
-                .and_then(|s| s.drafts.get(did))
-                .and_then(|d| d.open_transaction.as_ref())
-                .filter(|t| t.id == *txid)
-                .map(|t| t.can_redo())
-                .unwrap_or(false);
-            Ok(TransactionCommandResult::CanRedo { can })
-        }
-    }
-}
-
-fn transaction_undo(
-    kit: &KitStoreRef,
-    sid: &Id,
-    did: &Id,
-    txid: &Id,
-    all: bool,
-) -> Result<TransactionCommandResult> {
-    loop {
-        let done = {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-            let tx = d
-                .open_transaction
-                .as_mut()
-                .filter(|t| t.id == *txid)
-                .ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
-            if tx.changes.is_empty() {
-                return Ok(if all {
-                    TransactionCommandResult::UndoAll { ok: true }
-                } else {
-                    TransactionCommandResult::Undo { ok: true }
-                });
+                .and_then(|s| s.draft(did))
+                .ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
+            if d.has_open_transaction() {
+                return Err(SemioError::InvalidOperation(
+                    "open transaction must be closed before FinalizeToKitCheckpoint".into(),
+                ));
             }
-            let ch = tx.changes.pop().expect("pop");
-            Some(ch)
+            let after = g.to_full_dto();
+            (
+                d.parent_checkpoint.clone(),
+                d.target_alternative.clone(),
+                d.before.clone(),
+                after,
+            )
         };
-        let Some(ch) = done else { break; };
-        KitChange::apply_backward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+        let mut kc = KitChange::between(&before, &after).ok_or_else(|| {
+            SemioError::InvalidOperation("no change to finalize in draft".into())
+        })?;
+        kc.kind = KitChangeKind::Inferred;
+        let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
+        let new_id = cp.id.clone();
         {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .expect("d");
-            let tx = d.open_transaction.as_mut().expect("ot");
-            tx.redo_changes.push(ch);
-        }
-        if !all {
-            return Ok(TransactionCommandResult::Undo { ok: true });
-        }
-    }
-    Ok(TransactionCommandResult::UndoAll { ok: true })
-}
-
-fn transaction_redo(
-    kit: &KitStoreRef,
-    sid: &Id,
-    did: &Id,
-    txid: &Id,
-    all: bool,
-) -> Result<TransactionCommandResult> {
-    loop {
-        let done = {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
-            let tx = d
-                .open_transaction
-                .as_mut()
-                .filter(|t| t.id == *txid)
-                .ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
-            if tx.redo_changes.is_empty() {
-                return Ok(if all {
-                    TransactionCommandResult::RedoAll { ok: true }
-                } else {
-                    TransactionCommandResult::Redo { ok: true }
-                });
-            }
-            let ch = tx.redo_changes.pop().expect("rpop");
-            Some(ch)
-        };
-        let Some(ch) = done else { break; };
-        KitChange::apply_forward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-        {
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let d = g
-                .sessions
-                .get_mut(sid)
-                .and_then(|s| s.drafts.get_mut(did))
-                .expect("d");
-            let tx = d.open_transaction.as_mut().expect("ot");
-            tx.changes.push(ch);
-        }
-        if !all {
-            return Ok(TransactionCommandResult::Redo { ok: true });
-        }
-    }
-    Ok(TransactionCommandResult::RedoAll { ok: true })
-}
-
-fn finalize_draft(
-    kit: &KitStoreRef,
-    sid: &Id,
-    did: &Id,
-    message: String,
-) -> Result<KitDraftCommandResult> {
-    let (parent, alt, before, after) = {
-        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-        let d = g
-            .sessions
-            .get(sid)
-            .and_then(|s| s.drafts.get(did))
-            .ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
-        if d.open_transaction.is_some() {
-            return Err(SemioError::InvalidOperation(
-                "open transaction must be closed before FinalizeToKitCheckpoint".into(),
-            ));
-        }
-        let after = g.to_full_dto();
-        (
-            d.parent_checkpoint.clone(),
-            d.target_alternative.clone(),
-            d.before.clone(),
-            after,
-        )
-    };
-    let kc = KitChange::between(&before, &after).ok_or_else(|| {
-        SemioError::InvalidOperation("no change to finalize in draft".into())
-    })?;
-    let ch = {
-        let mut t = kc;
-        t.kind = KitChangeKind::Inferred;
-        t
-    };
-    let new_id = Id::new_v7();
-    let h = kit_checkpoint::hash_checkpoint(parent.as_ref(), &new_id, std::slice::from_ref(&ch));
-    let cp = KitCheckpoint {
-        id: new_id.clone(),
-        parent: parent.clone(),
-        changes: vec![ch],
-        message: Some(message),
-        time: None,
-        authors: vec![],
-        hash: h,
-        release: None,
-    };
-    {
-        let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-        g.checkpoints.insert(new_id.clone(), cp);
-        g.children
-            .entry(parent.clone())
-            .or_default()
-            .push(new_id.clone());
-        if let Some(aid) = alt {
-            if let Some(a) = g.alternatives.get_mut(&aid) {
-                a.checkpoints.push(new_id.clone());
-            } else {
-                return Err(SemioError::InvalidOperation("target alternative missing".into()));
-            }
-        } else {
-            g.the_kit_head = Some(new_id.clone());
-        }
-        g.sessions
-            .get_mut(sid)
-            .expect("s")
-            .drafts
-            .remove(did);
-    }
-    Ok(KitDraftCommandResult::FinalizeToKitCheckpoint {
-        checkpoint_id: new_id,
-    })
-}
-
-fn exec_checkpoint(kit: &KitStoreRef, cpid: &Id, cmd: KitCheckpointCommand) -> Result<KitCheckpointCommandResult> {
-    match cmd {
-        KitCheckpointCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let dto = materialize_at(&g, Some(cpid));
-            let results = read_command::read_kits(&dto, &commands)?;
-            Ok(KitCheckpointCommandResult::ReadKitCommands { results })
-        }
-        KitCheckpointCommand::MarkAsRelease => {
-            let init = {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                g.initial.clone()
-            };
-            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let path =
-                kit_checkpoint::checkpoint_chain_root_to_leaf(cpid, &g.checkpoints);
-            let mut cl: Vec<KitChange> = Vec::new();
-            for id in &path {
-                if let Some(c) = g.checkpoints.get(id) {
-                    for ch in &c.changes {
-                        cl.push(ch.clone());
-                    }
-                }
-            }
-            let snapshot =
-                kit_checkpoint::materialize_dto(&init, &g.checkpoints, Some(cpid));
-            let cp = g.checkpoints.get_mut(cpid).ok_or_else(|| SemioError::NotFound {
-                kind: "KitCheckpoint",
-                id: cpid.clone(),
-            })?;
-            let mk = MaterializedKit {
-                initial: init,
-                change_list: cl,
-                computed: Some(snapshot),
-            };
-            cp.release = Some(mk);
-            Ok(KitCheckpointCommandResult::MarkAsRelease { ok: true })
-        }
-    }
-}
-
-fn exec_alternative(kit: &KitStoreRef, aid: &Id, cmd: KitAlternativeCommand) -> Result<KitAlternativeCommandResult> {
-    match cmd {
-        KitAlternativeCommand::ReadKitCommands { commands } => {
-            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-            let tip = g
-                .alternatives
-                .get(aid)
-                .and_then(|a| a.checkpoints.last());
-            let dto = if let Some(t) = tip {
-                materialize_at(&g, Some(t))
-            } else {
-                the_kit_dto(&g)
-            };
-            let results = read_command::read_kits(&dto, &commands)?;
-            Ok(KitAlternativeCommandResult::ReadKitCommands { results })
-        }
-        KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
-            let (root, before_dto, after_dto) = {
-                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let alt = g.alternatives.get(aid).ok_or_else(|| {
-                    SemioError::NotFound {
-                        kind: "KitAlternative",
-                        id: aid.clone(),
-                    }
-                })?;
-                if alt.checkpoints.is_empty() {
-                    return Err(SemioError::InvalidOperation("empty alternative".into()));
-                }
-                let r = alt.checkpoints[0].clone();
-                let t = alt
-                    .checkpoints
-                    .last()
-                    .cloned()
-                    .expect("len checked");
-                let a = materialize_at(&g, Some(&r));
-                let b = materialize_at(&g, Some(&t));
-                (r, a, b)
-            };
-            let ch = KitChange::between(&before_dto, &after_dto)
-                .ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
-            let new_id = Id::new_v7();
-            let h = kit_checkpoint::hash_checkpoint(Some(&root), &new_id, std::slice::from_ref(&ch));
-            let mut ch2 = ch;
-            ch2.kind = KitChangeKind::UnifyCheckpoints;
-            let cp = KitCheckpoint {
-                id: new_id.clone(),
-                parent: Some(root.clone()),
-                changes: vec![ch2],
-                message: Some(message),
-                time: None,
-                authors: vec![],
-                hash: h,
-                release: None,
-            };
             let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
             g.checkpoints.insert(new_id.clone(), cp);
             g.children
-                .entry(Some(root.clone()))
+                .entry(parent.clone())
                 .or_default()
                 .push(new_id.clone());
-            if let Some(alt) = g.alternatives.get_mut(aid) {
-                alt.checkpoints = vec![root, new_id.clone()];
+            if let Some(aid) = alt {
+                if let Some(a) = g.alternatives.get_mut(&aid) {
+                    a.append(new_id.clone());
+                } else {
+                    return Err(SemioError::InvalidOperation("target alternative missing".into()));
+                }
+            } else {
+                g.the_kit_head = Some(new_id.clone());
             }
-            Ok(
-                KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint {
+            g.sessions
+                .get_mut(sid)
+                .expect("s")
+                .remove_draft(did);
+        }
+        Ok(KitDraftCommandResult::FinalizeToKitCheckpoint {
+            checkpoint_id: new_id,
+        })
+    }
+}
+
+impl TransactionCommand {
+    /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
+    pub fn execute(
+        self,
+        kit: &KitStoreRef,
+        sid: &Id,
+        did: &Id,
+        txid: &Id,
+    ) -> Result<TransactionCommandResult> {
+        match self {
+            TransactionCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let dto = g.to_full_dto();
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(TransactionCommandResult::ReadKitCommands { results })
+            }
+            TransactionCommand::ChangeKitCommands { commands: chs } => {
+                let mut n = 0usize;
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                {
+                    let ot = g
+                        .sessions
+                        .get(sid)
+                        .and_then(|s| s.draft(did))
+                        .and_then(|d| d.open_transaction_ref(txid))
+                        .ok_or_else(|| {
+                            SemioError::InvalidOperation("no open matching transaction".into())
+                        })?;
+                    if !ot.is_open() {
+                        return Err(SemioError::InvalidOperation(
+                            "transaction is not open".into(),
+                        ));
+                    }
+                }
+                for c in &chs {
+                    let before = g.to_full_dto();
+                    let kind = c.apply(&mut g)?;
+                    let after = g.to_full_dto();
+                    if let Some(mut kc) = KitChange::between(&before, &after) {
+                        kc.kind = kind;
+                        if let Some(tx) = g
+                            .sessions
+                            .get_mut(sid)
+                            .and_then(|s| s.draft_mut(did))
+                            .and_then(|d| d.open_transaction_mut(txid))
+                        {
+                            tx.record(kc);
+                            n += 1;
+                        }
+                    }
+                }
+                Ok(TransactionCommandResult::ChangeKitCommands { count: n })
+            }
+            TransactionCommand::Finalize => {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let d = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                d.finalize_transaction(txid)?;
+                Ok(TransactionCommandResult::Finalize { ok: true })
+            }
+            TransactionCommand::Abort => {
+                let tx = {
+                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let d = g
+                        .sessions
+                        .get_mut(sid)
+                        .and_then(|s| s.draft_mut(did))
+                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    d.take_open_transaction(txid)?
+                };
+                for ch in tx.changes.iter().rev() {
+                    KitChange::apply_backward(ch, kit)
+                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                }
+                Ok(TransactionCommandResult::Abort { ok: true })
+            }
+            TransactionCommand::Undo => Self::tx_undo(kit, sid, did, txid, false),
+            TransactionCommand::UndoAll => Self::tx_undo(kit, sid, did, txid, true),
+            TransactionCommand::Redo => Self::tx_redo(kit, sid, did, txid, false),
+            TransactionCommand::RedoAll => Self::tx_redo(kit, sid, did, txid, true),
+            TransactionCommand::CanUndo => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let can = g
+                    .sessions
+                    .get(sid)
+                    .and_then(|s| s.draft(did))
+                    .and_then(|d| d.open_transaction_ref(txid))
+                    .map(|t| t.can_undo())
+                    .unwrap_or(false);
+                Ok(TransactionCommandResult::CanUndo { can })
+            }
+            TransactionCommand::CanRedo => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let can = g
+                    .sessions
+                    .get(sid)
+                    .and_then(|s| s.draft(did))
+                    .and_then(|d| d.open_transaction_ref(txid))
+                    .map(|t| t.can_redo())
+                    .unwrap_or(false);
+                Ok(TransactionCommandResult::CanRedo { can })
+            }
+        }
+    }
+
+    fn tx_undo(
+        kit: &KitStoreRef,
+        sid: &Id,
+        did: &Id,
+        txid: &Id,
+        all: bool,
+    ) -> Result<TransactionCommandResult> {
+        loop {
+            let done = {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let tx = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .and_then(|d| d.open_transaction_mut(txid))
+                    .ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
+                if !tx.can_undo() {
+                    return Ok(if all {
+                        TransactionCommandResult::UndoAll { ok: true }
+                    } else {
+                        TransactionCommandResult::Undo { ok: true }
+                    });
+                }
+                tx.changes.pop()
+            };
+            let Some(ch) = done else { break; };
+            KitChange::apply_backward(&ch, kit)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let tx = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .and_then(|d| d.open_transaction_mut(txid))
+                    .expect("tx");
+                tx.redo_changes.push(ch);
+            }
+            if !all {
+                return Ok(TransactionCommandResult::Undo { ok: true });
+            }
+        }
+        Ok(TransactionCommandResult::UndoAll { ok: true })
+    }
+
+    fn tx_redo(
+        kit: &KitStoreRef,
+        sid: &Id,
+        did: &Id,
+        txid: &Id,
+        all: bool,
+    ) -> Result<TransactionCommandResult> {
+        loop {
+            let done = {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let tx = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .and_then(|d| d.open_transaction_mut(txid))
+                    .ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
+                if !tx.can_redo() {
+                    return Ok(if all {
+                        TransactionCommandResult::RedoAll { ok: true }
+                    } else {
+                        TransactionCommandResult::Redo { ok: true }
+                    });
+                }
+                tx.redo_changes.pop()
+            };
+            let Some(ch) = done else { break; };
+            KitChange::apply_forward(&ch, kit)
+                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            {
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let tx = g
+                    .sessions
+                    .get_mut(sid)
+                    .and_then(|s| s.draft_mut(did))
+                    .and_then(|d| d.open_transaction_mut(txid))
+                    .expect("tx");
+                tx.changes.push(ch);
+            }
+            if !all {
+                return Ok(TransactionCommandResult::Redo { ok: true });
+            }
+        }
+        Ok(TransactionCommandResult::RedoAll { ok: true })
+    }
+}
+
+impl KitCheckpointCommand {
+    /// Execute a checkpoint-scoped command.
+    pub fn execute(self, kit: &KitStoreRef, cpid: &Id) -> Result<KitCheckpointCommandResult> {
+        match self {
+            KitCheckpointCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let dto = g.materialize_at(Some(cpid));
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(KitCheckpointCommandResult::ReadKitCommands { results })
+            }
+            KitCheckpointCommand::MarkAsRelease => {
+                let init = {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    g.initial.clone()
+                };
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                if !g.checkpoints.contains_key(cpid) {
+                    return Err(SemioError::NotFound {
+                        kind: "KitCheckpoint",
+                        id: cpid.clone(),
+                    });
+                }
+                let map_snapshot = g.checkpoints.clone();
+                let cp = g.checkpoints.get_mut(cpid).expect("checked");
+                cp.mark_as_release(init, &map_snapshot);
+                Ok(KitCheckpointCommandResult::MarkAsRelease { ok: true })
+            }
+        }
+    }
+}
+
+impl KitAlternativeCommand {
+    /// Execute an alternative-scoped command.
+    pub fn execute(self, kit: &KitStoreRef, aid: &Id) -> Result<KitAlternativeCommandResult> {
+        match self {
+            KitAlternativeCommand::ReadKitCommands { commands } => {
+                let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                let tip = g.alternative_tip(aid);
+                let dto = match tip.as_ref() {
+                    Some(t) => g.materialize_at(Some(t)),
+                    None => g.the_kit_dto(),
+                };
+                let results = ReadKitCommand::execute_many(&dto, &commands)?;
+                Ok(KitAlternativeCommandResult::ReadKitCommands { results })
+            }
+            KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
+                let (root, before_dto, after_dto) = {
+                    let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                    let alt = g.alternatives.get(aid).ok_or_else(|| SemioError::NotFound {
+                        kind: "KitAlternative",
+                        id: aid.clone(),
+                    })?;
+                    if alt.checkpoints.is_empty() {
+                        return Err(SemioError::InvalidOperation("empty alternative".into()));
+                    }
+                    let r = alt.root.clone();
+                    let t = alt.tip().cloned().expect("len checked");
+                    let a = g.materialize_at(Some(&r));
+                    let b = g.materialize_at(Some(&t));
+                    (r, a, b)
+                };
+                let mut ch = KitChange::between(&before_dto, &after_dto)
+                    .ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
+                ch.kind = KitChangeKind::UnifyCheckpoints;
+                let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
+                let new_id = cp.id.clone();
+                let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                g.checkpoints.insert(new_id.clone(), cp);
+                g.children
+                    .entry(Some(root.clone()))
+                    .or_default()
+                    .push(new_id.clone());
+                if let Some(alt) = g.alternatives.get_mut(aid) {
+                    alt.collapse_to(new_id.clone());
+                }
+                Ok(KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint {
                     new_checkpoint_id: new_id,
-                },
-            )
+                })
+            }
         }
     }
 }
@@ -9471,11 +9668,13 @@ pub mod kit {
         }
 
         /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
+        ///
+        /// Delegates to the OO dispatcher [`crate::kit_store_command::KitStoreCommand::execute`].
         pub fn execute_vcs(
             kit: &KitStoreRef,
             cmd: crate::kit_store_command::KitStoreCommand,
         ) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
-            crate::kit_store_command::execute(kit, cmd)
+            cmd.execute(kit)
         }
 
         /// Record one undo step when `f` changes the graph (skips work inside `undo_inhibit` or active `tx` batch).
@@ -18360,7 +18559,7 @@ pub mod wasm {
                 .inner
                 .read()
                 .map_err(|_| JsValue::from_str("kit lock"))?;
-            let k = crate::kit_store_command::the_kit_dto(&*g);
+            let k = g.the_kit_dto();
             serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
@@ -21826,14 +22025,11 @@ mod tests {
         }
 
         fn read_type_name(dto: &crate::kit::KitFullDto, tid: &Id) -> String {
-            let r = crate::read_command::read_kit(
-                dto,
-                &ReadKitCommand::ReadTypeCommands {
-                    id: TypeIdDto { id: tid.clone() },
-                    commands: vec![ReadTypeCommand::Name],
-                },
-            )
-            .expect("read type");
+            let cmd = ReadKitCommand::ReadTypeCommands {
+                id: TypeIdDto { id: tid.clone() },
+                commands: vec![ReadTypeCommand::Name],
+            };
+            let r = cmd.execute(dto).expect("read type");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
                     match &results[0] {
@@ -21848,7 +22044,7 @@ mod tests {
         #[test]
         fn the_kit_starts_as_initial() {
             let k = KitStore::new("h");
-            assert_eq!(kit_store_command::the_kit_dto(&k), k.initial);
+            assert_eq!(k.the_kit_dto(), k.initial);
         }
 
         #[test]
@@ -21960,7 +22156,7 @@ mod tests {
             .expect("fin");
             let g = k.read().expect("g");
             assert_eq!(g.the_kit_head.is_some(), true);
-            assert_eq!(kit_store_command::the_kit_dto(&g).types[0].name, "RenT");
+            assert_eq!(g.the_kit_dto().types[0].name, "RenT");
         }
 
         #[test]
@@ -21972,14 +22168,11 @@ mod tests {
             inner.types.push(t);
             drop(inner);
             let dto = k.read().unwrap().to_full_dto();
-            let r = crate::read_command::read_kit(
-                &dto,
-                &ReadKitCommand::ReadTypeCommands {
-                    id: TypeIdDto { id: tid },
-                    commands: vec![ReadTypeCommand::Name],
-                },
-            )
-            .expect("r");
+            let cmd = ReadKitCommand::ReadTypeCommands {
+                id: TypeIdDto { id: tid },
+                commands: vec![ReadTypeCommand::Name],
+            };
+            let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
                     assert!(matches!(results[0], ReadTypeCommandResult::Name { .. }));
@@ -22560,13 +22753,9 @@ mod tests {
             let a = g.alternatives.get(&alt_id).expect("alt");
             assert_eq!(a.checkpoints.len(), 2);
             let tip = a.checkpoints.last().expect("tip");
-            let alt_dto = crate::kit_checkpoint::materialize_dto(
-                &g.initial,
-                &g.checkpoints,
-                Some(tip),
-            );
+            let alt_dto = g.materialize_at(Some(tip));
             assert_eq!(
-                read_type_name(&kit_store_command::the_kit_dto(&g), &tid),
+                read_type_name(&g.the_kit_dto(), &tid),
                 "Main1"
             );
             assert_eq!(read_type_name(&alt_dto, &tid), "Alt1");
@@ -22920,8 +23109,8 @@ mod tests {
             };
             let before_unify = {
                 let g = k.read().expect("g");
-                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l");
-                crate::kit_checkpoint::materialize_dto(&g.initial, &g.checkpoints, Some(t))
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
+                g.materialize_at(Some(&t))
             };
             let _ = KitStore::execute_vcs(
                 &k,
@@ -22935,8 +23124,8 @@ mod tests {
             .expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
-                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2");
-                crate::kit_checkpoint::materialize_dto(&g.initial, &g.checkpoints, Some(t))
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
+                g.materialize_at(Some(&t))
             };
             assert_eq!(before_unify, after_unify);
             let g = k.read().expect("g");
@@ -23072,17 +23261,14 @@ mod tests {
         fn read_command_tree_returns_nested_results() {
             let (k, tid) = make_kit_with_type();
             let dto = k.read().expect("g").to_full_dto();
-            let r = crate::read_command::read_kit(
-                &dto,
-                &ReadKitCommand::ReadTypeCommands {
-                    id: TypeIdDto { id: tid },
-                    commands: vec![
-                        ReadTypeCommand::Everything,
-                        ReadTypeCommand::Name,
-                    ],
-                },
-            )
-            .expect("r");
+            let cmd = ReadKitCommand::ReadTypeCommands {
+                id: TypeIdDto { id: tid },
+                commands: vec![
+                    ReadTypeCommand::Everything,
+                    ReadTypeCommand::Name,
+                ],
+            };
+            let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
                     assert!(matches!(&results[0], ReadTypeCommandResult::Everything { .. }));
@@ -23090,11 +23276,7 @@ mod tests {
                 }
                 _ => panic!(),
             }
-            let r2 = crate::read_command::read_kit(
-                &dto,
-                &ReadKitCommand::Everything {},
-            )
-            .expect("r2");
+            let r2 = ReadKitCommand::Everything {}.execute(&dto).expect("r2");
             assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Everything { .. }));
         }
     }

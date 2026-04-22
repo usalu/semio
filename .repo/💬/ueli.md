@@ -745,6 +745,38 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
+```rs
+ pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
+            if self.gap == v {
+                return Ok(());
+            }
+            self.gap = v;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: self.entity_ref(),
+                field: "gap",
+            });
+            self.bubble();
+            Ok(())
+        }
+```
+
+should be:
+
+```rs
+ pub fn set_gap(&mut self, v: Option<f64>) -> crate::error::SetResult {
+            if self.gap == v {
+                return Ok(());
+            }
+            self.gap = v;
+            self.emit_ev(KitEvent::FieldChanged {
+                entity: self.entity_ref(),
+                field: "gap",
+            });
+            self.bubble();
+            Ok(())
+        }
+```
+
 Alternative is a named list of checkpoints (starting from `the kit` and then more linear checkpoints). A draft is only allowed on the last checkpoint of an alternative or the last checkpoint of `the kit`. An alternative is different to git (which is just a named pointer). Multiple alternatives can shared checkpoints. Checkpoints are stored individually.
 
 Kits MUST be extended with a version-control-like system:
@@ -7441,7 +7473,7 @@ Note that TODO, STATUTE, BREACH are not shown because they can be children of mo
 
 #### 🫡commands
 
-Introduce a new command `merge prepare` that performs a special merge.
+Introduce a new command `merge prepare` that performs preparation for a special merge.
 
 `merge prepare`:
 Preconditions:

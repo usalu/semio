@@ -27665,7 +27665,8 @@ const uploadKitFileToProvider = async (kitStore: KitStore, kit: Kit, file: Semio
   // The wrapper itself always exposes embedFileBlob as a pass-through, even for
   // folder kits where filesystem writes must still happen.
   const innerCandidate = (kitStore as { store?: unknown }).store;
-  const embedTarget = typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : null;
+  const hasWrappedInnerStore = innerCandidate !== undefined && innerCandidate !== null;
+  const embedTarget = typeof (innerCandidate as any)?.embedFileBlob === "function" ? (innerCandidate as any) : !hasWrappedInnerStore && typeof (kitStore as any)?.embedFileBlob === "function" ? (kitStore as any) : null;
   if (embedTarget) {
     try {
       await embedTarget.embedFileBlob(file.id, blob);
