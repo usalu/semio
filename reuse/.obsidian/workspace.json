@@ -1,0 +1,212 @@
+{
+  "main": {
+    "id": "5f6138a70e230423",
+    "type": "split",
+    "children": [
+      {
+        "id": "badd8f1a5763fcb2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "98e5dd2c0b43ebdf",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9b82b9ed42cd339d",
+    "type": "split",
+    "children": [
+      {
+        "id": "b85aba90e8eb9282",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2adbdc0247e563f4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "f49e1341db90e915",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "583a3e61e93da4cf",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "445e91c4afc10260",
+    "type": "split",
+    "children": [
+      {
+        "id": "041b4ab9f8204d23",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f39de4cf80f29d77",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "8f2939f27f143fc3",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "1d5b488d90172609",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "0a6a1d62a460089e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "52696f50dea2c509",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "98e5dd2c0b43ebdf",
+  "lastOpenFiles": [
+    "research/Interviews/interview-sources/05_design/zusammenkunft-berlin.md",
+    "research/Interviews/interview-sources/05_design/museums-pavilion.md",
+    "research/Interviews/interview-sources/05_design",
+    "research/Interviews/interview-sources/04_engineering/iyhcc-berlin.md",
+    "research/Interviews/interview-sources/04_engineering/arup-reuse.md",
+    "research/Interviews/interview-sources/04_engineering/zrs-crclr-house.md",
+    "research/Interviews/interview-sources/04_engineering",
+    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-hdm.md",
+    "research/Interviews/interview-sources/01_digital-platforms/madaster.md",
+    "research/Interviews/interview-sources/03_material-supply/kunst-stoffe-pankow.md",
+    "research/Interviews/interview-sources/03_material-supply",
+    "research/Interviews/interview-sources/02_urban-mining/be-ware.md",
+    "research/Interviews/interview-sources/01_digital-platforms/bim-berlin-bauteilauktion.md",
+    "be-ware.md",
+    "research/Interviews/interview-sources/02_urban-mining/kunst-stoffe-berlin.md",
+    "research/Interviews/interview-sources/02_urban-mining/haus-der-materialisierung.md",
+    "research/Interviews/interview-sources/02_urban-mining",
+    "research/Interviews/interview-sources/01_digital-platforms/biz-reallabor-zirkulaeres-bauen.md",
+    "research/Interviews/interview-sources/01_digital-platforms/concular.md",
+    "research/Interviews/interview_landscape_master 2.md",
+    "research/Interviews/interview-sources/01_digital-platforms",
+    "research/Interviews/interview-sources/00_index.md",
+    "research/Interviews/interview-sources",
+    "research/Interviews/interview_sources_master.md",
+    "research/material/beton/index.md",
+    "research/Interviews",
+    "research/tragerksystem/Stützen/index.md",
+    "research/verbindung/Stahl/index.md",
+    "research/AGENTS.md",
+    "research/fallstudie/halle-2/index.md"
+  ]
+}
