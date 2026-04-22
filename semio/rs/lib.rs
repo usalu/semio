@@ -142,27 +142,13 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadTypeCommandResult {
-        Everything {
-            dto: TypeFullDto,
-        },
-        Name {
-            name: String,
-        },
-        Connectors {
-            list: Vec<ConnectorFullDto>,
-        },
-        Representations {
-            list: Vec<RepresentationFullDto>,
-        },
-        ReadConnectorCommands {
-            results: Vec<ReadConnectorCommandResult>,
-        },
-        ReadRepresentationCommands {
-            results: Vec<ReadRepresentationCommandResult>,
-        },
-        ReadPortCommands {
-            results: Vec<ReadPortCommandResult>,
-        },
+        Everything { dto: TypeFullDto },
+        Name { name: String },
+        Connectors { list: Vec<ConnectorFullDto> },
+        Representations { list: Vec<RepresentationFullDto> },
+        ReadConnectorCommands { results: Vec<ReadConnectorCommandResult> },
+        ReadRepresentationCommands { results: Vec<ReadRepresentationCommandResult> },
+        ReadPortCommands { results: Vec<ReadPortCommandResult> },
         Other,
     }
 
@@ -186,18 +172,10 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadDesignCommandResult {
-        Everything {
-            dto: DesignFullDto,
-        },
-        Name {
-            name: String,
-        },
-        ReadPieceCommands {
-            results: Vec<ReadPieceCommandResult>,
-        },
-        ReadConnectionCommands {
-            results: Vec<ReadConnectionCommandResult>,
-        },
+        Everything { dto: DesignFullDto },
+        Name { name: String },
+        ReadPieceCommands { results: Vec<ReadPieceCommandResult> },
+        ReadConnectionCommands { results: Vec<ReadConnectionCommandResult> },
         Other,
     }
 
@@ -226,27 +204,13 @@ pub mod read_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum ReadKitCommandResult {
-        Everything {
-            dto: KitFullDto,
-        },
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        Types {
-            list: Vec<TypeFullDto>,
-        },
-        Designs {
-            list: Vec<DesignFullDto>,
-        },
-        ReadTypeCommands {
-            results: Vec<ReadTypeCommandResult>,
-        },
-        ReadDesignCommands {
-            results: Vec<ReadDesignCommandResult>,
-        },
+        Everything { dto: KitFullDto },
+        Name { name: String },
+        Description { description: Option<String> },
+        Types { list: Vec<TypeFullDto> },
+        Designs { list: Vec<DesignFullDto> },
+        ReadTypeCommands { results: Vec<ReadTypeCommandResult> },
+        ReadDesignCommands { results: Vec<ReadDesignCommandResult> },
         Other,
     }
 
@@ -255,12 +219,8 @@ pub mod read_command {
     impl ReadConnectorCommand {
         pub fn execute(&self, c: &ConnectorFullDto) -> ReadConnectorCommandResult {
             match self {
-                ReadConnectorCommand::Everything => {
-                    ReadConnectorCommandResult::Everything { dto: c.clone() }
-                }
-                ReadConnectorCommand::Name => ReadConnectorCommandResult::Name {
-                    name: c.code.clone(),
-                },
+                ReadConnectorCommand::Everything => ReadConnectorCommandResult::Everything { dto: c.clone() },
+                ReadConnectorCommand::Name => ReadConnectorCommandResult::Name { name: c.code.clone() },
                 ReadConnectorCommand::Other => ReadConnectorCommandResult::Other,
             }
         }
@@ -269,12 +229,8 @@ pub mod read_command {
     impl ReadRepresentationCommand {
         pub fn execute(&self, r: &RepresentationFullDto) -> ReadRepresentationCommandResult {
             match self {
-                ReadRepresentationCommand::Everything => {
-                    ReadRepresentationCommandResult::Everything { dto: r.clone() }
-                }
-                ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name {
-                    name: r.description.clone().unwrap_or_else(|| r.url.clone()),
-                },
+                ReadRepresentationCommand::Everything => ReadRepresentationCommandResult::Everything { dto: r.clone() },
+                ReadRepresentationCommand::Name => ReadRepresentationCommandResult::Name { name: r.description.clone().unwrap_or_else(|| r.url.clone()) },
                 ReadRepresentationCommand::Other => ReadRepresentationCommandResult::Other,
             }
         }
@@ -284,9 +240,7 @@ pub mod read_command {
         pub fn execute(&self, p: &PortFullDto) -> ReadPortCommandResult {
             match self {
                 ReadPortCommand::Everything => ReadPortCommandResult::Everything { dto: p.clone() },
-                ReadPortCommand::Name => ReadPortCommandResult::Name {
-                    name: p.family.clone().unwrap_or_default(),
-                },
+                ReadPortCommand::Name => ReadPortCommandResult::Name { name: p.family.clone().unwrap_or_default() },
                 ReadPortCommand::Other => ReadPortCommandResult::Other,
             }
         }
@@ -295,12 +249,8 @@ pub mod read_command {
     impl ReadPieceCommand {
         pub fn execute(&self, p: &PieceFullDto) -> ReadPieceCommandResult {
             match self {
-                ReadPieceCommand::Everything => {
-                    ReadPieceCommandResult::Everything { dto: p.clone() }
-                }
-                ReadPieceCommand::Name => ReadPieceCommandResult::Name {
-                    name: p.name.clone().unwrap_or_default(),
-                },
+                ReadPieceCommand::Everything => ReadPieceCommandResult::Everything { dto: p.clone() },
+                ReadPieceCommand::Name => ReadPieceCommandResult::Name { name: p.name.clone().unwrap_or_default() },
                 ReadPieceCommand::Other => ReadPieceCommandResult::Other,
             }
         }
@@ -309,9 +259,7 @@ pub mod read_command {
     impl ReadConnectionCommand {
         pub fn execute(&self, c: &ConnectionFullDto) -> ReadConnectionCommandResult {
             match self {
-                ReadConnectionCommand::Everything => {
-                    ReadConnectionCommandResult::Everything { dto: c.clone() }
-                }
+                ReadConnectionCommand::Everything => ReadConnectionCommandResult::Everything { dto: c.clone() },
                 ReadConnectionCommand::Other => ReadConnectionCommandResult::Other,
             }
         }
@@ -320,52 +268,21 @@ pub mod read_command {
     impl ReadTypeCommand {
         pub fn execute(&self, t: &TypeFullDto) -> Result<ReadTypeCommandResult> {
             match self {
-                ReadTypeCommand::Everything => {
-                    Ok(ReadTypeCommandResult::Everything { dto: t.clone() })
-                }
-                ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name {
-                    name: t.name.clone(),
-                }),
-                ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors {
-                    list: t.connectors.clone(),
-                }),
-                ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations {
-                    list: t.representations.clone(),
-                }),
+                ReadTypeCommand::Everything => Ok(ReadTypeCommandResult::Everything { dto: t.clone() }),
+                ReadTypeCommand::Name => Ok(ReadTypeCommandResult::Name { name: t.name.clone() }),
+                ReadTypeCommand::Connectors => Ok(ReadTypeCommandResult::Connectors { list: t.connectors.clone() }),
+                ReadTypeCommand::Representations => Ok(ReadTypeCommandResult::Representations { list: t.representations.clone() }),
                 ReadTypeCommand::ReadConnectorCommands { id, commands } => {
-                    let c = t.connectors.iter().find(|x| x.id == id.id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Connector",
-                            id: id.id.clone(),
-                        }
-                    })?;
-                    Ok(ReadTypeCommandResult::ReadConnectorCommands {
-                        results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
-                    })
+                    let c = t.connectors.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Connector", id: id.id.clone() })?;
+                    Ok(ReadTypeCommandResult::ReadConnectorCommands { results: commands.iter().map(|cmd| cmd.execute(c)).collect() })
                 }
                 ReadTypeCommand::ReadRepresentationCommands { id, commands } => {
-                    let r = t
-                        .representations
-                        .iter()
-                        .find(|x| x.id == id.id)
-                        .ok_or_else(|| SemioError::NotFound {
-                            kind: "Representation",
-                            id: id.id.clone(),
-                        })?;
-                    Ok(ReadTypeCommandResult::ReadRepresentationCommands {
-                        results: commands.iter().map(|cmd| cmd.execute(r)).collect(),
-                    })
+                    let r = t.representations.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Representation", id: id.id.clone() })?;
+                    Ok(ReadTypeCommandResult::ReadRepresentationCommands { results: commands.iter().map(|cmd| cmd.execute(r)).collect() })
                 }
                 ReadTypeCommand::ReadPortCommands { id, commands } => {
-                    let p = t.ports.iter().find(|x| x.id == id.id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Port",
-                            id: id.id.clone(),
-                        }
-                    })?;
-                    Ok(ReadTypeCommandResult::ReadPortCommands {
-                        results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
-                    })
+                    let p = t.ports.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Port", id: id.id.clone() })?;
+                    Ok(ReadTypeCommandResult::ReadPortCommands { results: commands.iter().map(|cmd| cmd.execute(p)).collect() })
                 }
                 ReadTypeCommand::Other => Ok(ReadTypeCommandResult::Other),
             }
@@ -375,35 +292,15 @@ pub mod read_command {
     impl ReadDesignCommand {
         pub fn execute(&self, d: &DesignFullDto) -> Result<ReadDesignCommandResult> {
             match self {
-                ReadDesignCommand::Everything => {
-                    Ok(ReadDesignCommandResult::Everything { dto: d.clone() })
-                }
-                ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name {
-                    name: d.name.clone(),
-                }),
+                ReadDesignCommand::Everything => Ok(ReadDesignCommandResult::Everything { dto: d.clone() }),
+                ReadDesignCommand::Name => Ok(ReadDesignCommandResult::Name { name: d.name.clone() }),
                 ReadDesignCommand::ReadPieceCommands { id, commands } => {
-                    let p = d.pieces.iter().find(|x| x.id == id.id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Piece",
-                            id: id.id.clone(),
-                        }
-                    })?;
-                    Ok(ReadDesignCommandResult::ReadPieceCommands {
-                        results: commands.iter().map(|cmd| cmd.execute(p)).collect(),
-                    })
+                    let p = d.pieces.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: id.id.clone() })?;
+                    Ok(ReadDesignCommandResult::ReadPieceCommands { results: commands.iter().map(|cmd| cmd.execute(p)).collect() })
                 }
                 ReadDesignCommand::ReadConnectionCommands { id, commands } => {
-                    let c = d
-                        .connections
-                        .iter()
-                        .find(|x| x.id == id.id)
-                        .ok_or_else(|| SemioError::NotFound {
-                            kind: "Connection",
-                            id: id.id.clone(),
-                        })?;
-                    Ok(ReadDesignCommandResult::ReadConnectionCommands {
-                        results: commands.iter().map(|cmd| cmd.execute(c)).collect(),
-                    })
+                    let c = d.connections.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Connection", id: id.id.clone() })?;
+                    Ok(ReadDesignCommandResult::ReadConnectionCommands { results: commands.iter().map(|cmd| cmd.execute(c)).collect() })
                 }
                 ReadDesignCommand::Other => Ok(ReadDesignCommandResult::Other),
             }
@@ -414,28 +311,13 @@ pub mod read_command {
         /// Execute this read command against a materialized kit DTO.
         pub fn execute(&self, kit: &KitFullDto) -> Result<ReadKitCommandResult> {
             match self {
-                ReadKitCommand::Everything {} => {
-                    Ok(ReadKitCommandResult::Everything { dto: kit.clone() })
-                }
-                ReadKitCommand::Name => Ok(ReadKitCommandResult::Name {
-                    name: kit.name.clone(),
-                }),
-                ReadKitCommand::Description => Ok(ReadKitCommandResult::Description {
-                    description: kit.description.clone(),
-                }),
-                ReadKitCommand::Types => Ok(ReadKitCommandResult::Types {
-                    list: kit.types.clone(),
-                }),
-                ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs {
-                    list: kit.designs.clone(),
-                }),
+                ReadKitCommand::Everything {} => Ok(ReadKitCommandResult::Everything { dto: kit.clone() }),
+                ReadKitCommand::Name => Ok(ReadKitCommandResult::Name { name: kit.name.clone() }),
+                ReadKitCommand::Description => Ok(ReadKitCommandResult::Description { description: kit.description.clone() }),
+                ReadKitCommand::Types => Ok(ReadKitCommandResult::Types { list: kit.types.clone() }),
+                ReadKitCommand::Designs => Ok(ReadKitCommandResult::Designs { list: kit.designs.clone() }),
                 ReadKitCommand::ReadTypeCommands { id, commands } => {
-                    let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Type",
-                            id: id.id.clone(),
-                        }
-                    })?;
+                    let t = kit.types.iter().find(|t| t.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Type", id: id.id.clone() })?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute(t)?);
@@ -443,12 +325,7 @@ pub mod read_command {
                     Ok(ReadKitCommandResult::ReadTypeCommands { results })
                 }
                 ReadKitCommand::ReadDesignCommands { id, commands } => {
-                    let d = kit.designs.iter().find(|x| x.id == id.id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Design",
-                            id: id.id.clone(),
-                        }
-                    })?;
+                    let d = kit.designs.iter().find(|x| x.id == id.id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: id.id.clone() })?;
                     let mut results = Vec::with_capacity(commands.len());
                     for c in commands {
                         results.push(c.execute(d)?);
@@ -461,10 +338,7 @@ pub mod read_command {
         }
 
         /// Run many read commands against the same snapshot, preserving order.
-        pub fn execute_many(
-            kit: &KitFullDto,
-            commands: &[ReadKitCommand],
-        ) -> Result<Vec<ReadKitCommandResult>> {
+        pub fn execute_many(kit: &KitFullDto, commands: &[ReadKitCommand]) -> Result<Vec<ReadKitCommandResult>> {
             commands.iter().map(|c| c.execute(kit)).collect()
         }
     }
@@ -558,28 +432,13 @@ pub mod change_command {
         pub fn apply(&self, kit: &mut KitStore, piece_id: &Id) -> Result<()> {
             match self {
                 ChangePieceCommand::Name { name } => {
-                    let did = kit.find_design_id_for_piece(piece_id).ok_or_else(|| {
-                        SemioError::NotFound {
-                            kind: "Piece",
-                            id: piece_id.clone(),
-                        }
-                    })?;
+                    let did = kit.find_design_id_for_piece(piece_id).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.clone() })?;
                     let full = kit.to_full_dto();
-                    let mut p = full
-                        .designs
-                        .iter()
-                        .find(|d| d.id.as_str() == did.as_str())
-                        .and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id))
-                        .cloned()
-                        .ok_or_else(|| SemioError::NotFound {
-                            kind: "Piece",
-                            id: piece_id.clone(),
-                        })?;
+                    let mut p = full.designs.iter().find(|d| d.id.as_str() == did.as_str()).and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.clone() })?;
                     p.name = Some(name.clone());
                     let mut diff = DesignDiff::default();
                     diff.modified_pieces.push(p);
-                    kit.apply_design_diff(&did, &diff)
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    kit.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     Ok(())
                 }
                 ChangePieceCommand::Fix | ChangePieceCommand::Other => Ok(()),
@@ -592,16 +451,8 @@ pub mod change_command {
         pub fn apply(&self, kit: &mut KitStore, design_id: &Id) -> Result<()> {
             match self {
                 ChangeDesignCommand::Name { name } => {
-                    let d = kit
-                        .design(design_id.as_str())
-                        .ok_or_else(|| SemioError::NotFound {
-                            kind: "Design",
-                            id: design_id.clone(),
-                        })?;
-                    d.write()
-                        .map_err(|_| SemioError::LockPoisoned("design"))?
-                        .set_name(name.clone())
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    let d = kit.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
+                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     Ok(())
                 }
                 ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
@@ -620,16 +471,8 @@ pub mod change_command {
         pub fn apply(&self, kit: &mut KitStore, type_id: &Id) -> Result<()> {
             match self {
                 ChangeTypeCommand::Name { name } => {
-                    let t =
-                        kit.semio_type(type_id.as_str())
-                            .ok_or_else(|| SemioError::NotFound {
-                                kind: "Type",
-                                id: type_id.clone(),
-                            })?;
-                    t.write()
-                        .map_err(|_| SemioError::LockPoisoned("type"))?
-                        .set_name(name.clone())
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    let t = kit.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
+                    t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     Ok(())
                 }
                 ChangeTypeCommand::Other => Ok(()),
@@ -644,13 +487,11 @@ pub mod change_command {
         pub fn apply(&self, kit: &mut KitStore) -> Result<KitChangeKind> {
             match self {
                 ChangeKitCommand::Name { name } => {
-                    kit.set_name(name.clone())
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    kit.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     Ok(KitChangeKind::SetKitMetadata)
                 }
                 ChangeKitCommand::Description { description } => {
-                    kit.set_description(description.clone())
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    kit.set_description(description.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     Ok(KitChangeKind::SetKitMetadata)
                 }
                 ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
@@ -659,10 +500,7 @@ pub mod change_command {
                     }
                     Ok(KitChangeKind::ModifyType)
                 }
-                ChangeKitCommand::ChangeDesignCommands {
-                    design_id,
-                    commands,
-                } => {
+                ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
                     for c in commands {
                         c.apply(kit, &design_id.id)?;
                     }
@@ -676,27 +514,17 @@ pub mod change_command {
     impl KitStore {
         /// Apply a raw design diff and return the high-level `KitChangeKind`.
         #[allow(dead_code)]
-        pub fn apply_design_diff_as_change(
-            &mut self,
-            design_id: &str,
-            diff: &DesignDiff,
-        ) -> Result<KitChangeKind> {
-            self.apply_design_diff(design_id, diff)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+        pub fn apply_design_diff_as_change(&mut self, design_id: &str, diff: &DesignDiff) -> Result<KitChangeKind> {
+            self.apply_design_diff(design_id, diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             Ok(KitChangeKind::ApplyDesignDiff)
         }
 
         /// Add a single piece to a design via a design diff, returning the `KitChangeKind`.
         #[allow(dead_code)]
-        pub fn add_piece_as_change(
-            &mut self,
-            design_id: &str,
-            piece: PieceFullDto,
-        ) -> Result<KitChangeKind> {
+        pub fn add_piece_as_change(&mut self, design_id: &str, piece: PieceFullDto) -> Result<KitChangeKind> {
             let mut d = DesignDiff::default();
             d.added_pieces.push(piece);
-            self.apply_design_diff(design_id, &d)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+            self.apply_design_diff(design_id, &d).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
             Ok(KitChangeKind::AddPiece)
         }
     }
@@ -721,11 +549,7 @@ pub mod kit_checkpoint {
 
     impl MaterializedKit {
         pub fn compute(&self) -> KitFullDto {
-            self.change_list
-                .iter()
-                .fold(self.initial.clone(), |acc, c| {
-                    crate::kit_change::KitChange::apply_forward_dto(&acc, c)
-                })
+            self.change_list.iter().fold(self.initial.clone(), |acc, c| crate::kit_change::KitChange::apply_forward_dto(&acc, c))
         }
     }
 
@@ -745,21 +569,15 @@ pub mod kit_checkpoint {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitCheckpointCommand {
-        ReadKitCommands {
-            commands: Vec<crate::read_command::ReadKitCommand>,
-        },
+        ReadKitCommands { commands: Vec<crate::read_command::ReadKitCommand> },
         MarkAsRelease,
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitCheckpointCommandResult {
-        ReadKitCommands {
-            results: Vec<crate::read_command::ReadKitCommandResult>,
-        },
-        MarkAsRelease {
-            ok: bool,
-        },
+        ReadKitCommands { results: Vec<crate::read_command::ReadKitCommandResult> },
+        MarkAsRelease { ok: bool },
         Nothing,
     }
 
@@ -768,16 +586,7 @@ pub mod kit_checkpoint {
         pub fn new(parent: Option<Id>, changes: Vec<KitChange>, message: Option<String>) -> Self {
             let id = Id::new_v7();
             let hash = Self::compute_hash(parent.as_ref(), &id, &changes);
-            Self {
-                id,
-                parent,
-                changes,
-                message,
-                time: None,
-                authors: Vec::new(),
-                hash,
-                release: None,
-            }
+            Self { id, parent, changes, message, time: None, authors: Vec::new(), hash, release: None }
         }
 
         /// Content-addressed hash of this checkpoint.
@@ -793,13 +602,7 @@ pub mod kit_checkpoint {
                 }
             }
             w.str(new_id.as_str());
-            w.str(
-                &changes
-                    .iter()
-                    .map(|c| serde_json::to_string(c).unwrap_or_default())
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            );
+            w.str(&changes.iter().map(|c| serde_json::to_string(c).unwrap_or_default()).collect::<Vec<_>>().join("\n"));
             w.finalize()
         }
 
@@ -829,11 +632,7 @@ pub mod kit_checkpoint {
 
         /// Materialize the kit DTO at `at` (inclusive) by replaying all checkpoint changes
         /// from `initial` along the parent chain.
-        pub fn materialize(
-            initial: &KitFullDto,
-            map: &HashMap<Id, KitCheckpoint>,
-            at: Option<&Id>,
-        ) -> KitFullDto {
+        pub fn materialize(initial: &KitFullDto, map: &HashMap<Id, KitCheckpoint>, at: Option<&Id>) -> KitFullDto {
             let Some(at_id) = at else {
                 return initial.clone();
             };
@@ -850,11 +649,7 @@ pub mod kit_checkpoint {
         }
 
         /// Mark this checkpoint as a release by snapshotting the materialized kit.
-        pub fn mark_as_release(
-            &mut self,
-            initial: KitFullDto,
-            all_checkpoints: &HashMap<Id, KitCheckpoint>,
-        ) {
+        pub fn mark_as_release(&mut self, initial: KitFullDto, all_checkpoints: &HashMap<Id, KitCheckpoint>) {
             let path = Self::chain_root_to_leaf_from(&self.id, all_checkpoints);
             let mut change_list: Vec<KitChange> = Vec::new();
             for id in &path {
@@ -863,11 +658,7 @@ pub mod kit_checkpoint {
                 }
             }
             let computed = Some(Self::materialize(&initial, all_checkpoints, Some(&self.id)));
-            self.release = Some(MaterializedKit {
-                initial,
-                change_list,
-                computed,
-            });
+            self.release = Some(MaterializedKit { initial, change_list, computed });
         }
     }
 }
@@ -890,12 +681,7 @@ pub mod kit_alternative {
     impl KitAlternative {
         /// Create a new alternative branching from `from_checkpoint`.
         pub fn new(name: String, from_checkpoint: Id) -> Self {
-            Self {
-                id: Id::new_v7(),
-                name,
-                root: from_checkpoint.clone(),
-                checkpoints: vec![from_checkpoint],
-            }
+            Self { id: Id::new_v7(), name, root: from_checkpoint.clone(), checkpoints: vec![from_checkpoint] }
         }
 
         /// Latest checkpoint id on this alternative (the working tip).
@@ -917,23 +703,15 @@ pub mod kit_alternative {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitAlternativeCommand {
-        ReadKitCommands {
-            commands: Vec<crate::read_command::ReadKitCommand>,
-        },
-        UnifyKitCheckpointsToSingleKitCheckpoint {
-            message: String,
-        },
+        ReadKitCommands { commands: Vec<crate::read_command::ReadKitCommand> },
+        UnifyKitCheckpointsToSingleKitCheckpoint { message: String },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitAlternativeCommandResult {
-        ReadKitCommands {
-            results: Vec<crate::read_command::ReadKitCommandResult>,
-        },
-        UnifyKitCheckpointsToSingleKitCheckpoint {
-            new_checkpoint_id: Id,
-        },
+        ReadKitCommands { results: Vec<crate::read_command::ReadKitCommandResult> },
+        UnifyKitCheckpointsToSingleKitCheckpoint { new_checkpoint_id: Id },
         Nothing,
     }
 }
@@ -962,12 +740,7 @@ pub mod kit_transaction {
 
     impl Transaction {
         pub fn new(id: Id) -> Self {
-            Self {
-                id,
-                changes: Vec::new(),
-                redo_changes: Vec::new(),
-                state: TransactionState::Open,
-            }
+            Self { id, changes: Vec::new(), redo_changes: Vec::new(), state: TransactionState::Open }
         }
 
         /// True while more [`KitChange`]s can be appended via [`Transaction::record`].
@@ -1004,12 +777,8 @@ pub mod kit_transaction {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum TransactionCommand {
-        ReadKitCommands {
-            commands: Vec<ReadKitCommand>,
-        },
-        ChangeKitCommands {
-            commands: Vec<crate::change_command::ChangeKitCommand>,
-        },
+        ReadKitCommands { commands: Vec<ReadKitCommand> },
+        ChangeKitCommands { commands: Vec<crate::change_command::ChangeKitCommand> },
         Finalize,
         Abort,
         Undo,
@@ -1071,20 +840,8 @@ pub mod kit_draft {
 
     impl Draft {
         /// Build a new draft rooted at a materialized `before` snapshot.
-        pub fn new(
-            parent_checkpoint: Option<Id>,
-            target_alternative: Option<Id>,
-            before: KitFullDto,
-        ) -> Self {
-            Self {
-                id: Id::new_v7(),
-                parent_checkpoint,
-                target_alternative,
-                before,
-                transactions: Vec::new(),
-                redo_transactions: Vec::new(),
-                open_transaction: None,
-            }
+        pub fn new(parent_checkpoint: Option<Id>, target_alternative: Option<Id>, before: KitFullDto) -> Self {
+            Self { id: Id::new_v7(), parent_checkpoint, target_alternative, before, transactions: Vec::new(), redo_transactions: Vec::new(), open_transaction: None }
         }
 
         /// Id of the currently-open transaction (if any).
@@ -1100,9 +857,7 @@ pub mod kit_draft {
         /// Start a new transaction; fails if one is already open.
         pub fn start_transaction(&mut self) -> crate::error::Result<Id> {
             if self.open_transaction.is_some() {
-                return Err(crate::error::SemioError::InvalidOperation(
-                    "transaction already open".into(),
-                ));
+                return Err(crate::error::SemioError::InvalidOperation("transaction already open".into()));
             }
             let tid = Id::new_v7();
             self.open_transaction = Some(Transaction::new(tid.clone()));
@@ -1121,13 +876,7 @@ pub mod kit_draft {
 
         /// Move the open transaction (if it matches `txid`) to finalized and onto the stack.
         pub fn finalize_transaction(&mut self, txid: &Id) -> crate::error::Result<()> {
-            let mut tx = self
-                .open_transaction
-                .take()
-                .filter(|t| t.id == *txid)
-                .ok_or_else(|| {
-                    crate::error::SemioError::InvalidOperation("no tx to finalize".into())
-                })?;
+            let mut tx = self.open_transaction.take().filter(|t| t.id == *txid).ok_or_else(|| crate::error::SemioError::InvalidOperation("no tx to finalize".into()))?;
             tx.mark_finalized();
             self.transactions.push(tx);
             Ok(())
@@ -1135,10 +884,7 @@ pub mod kit_draft {
 
         /// Take the currently-open transaction without pushing it onto the stack.
         pub fn take_open_transaction(&mut self, txid: &Id) -> crate::error::Result<Transaction> {
-            self.open_transaction
-                .take()
-                .filter(|t| t.id == *txid)
-                .ok_or_else(|| crate::error::SemioError::InvalidOperation("tx id mismatch".into()))
+            self.open_transaction.take().filter(|t| t.id == *txid).ok_or_else(|| crate::error::SemioError::InvalidOperation("tx id mismatch".into()))
         }
 
         /// Pop the most recent finalized transaction (for draft-level undo).
@@ -1173,62 +919,29 @@ pub mod kit_draft {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitDraftCommand {
-        ReadKitCommands {
-            commands: Vec<ReadKitCommand>,
-        },
+        ReadKitCommands { commands: Vec<ReadKitCommand> },
         StartTransaction,
-        FinalizeToKitCheckpoint {
-            message: String,
-        },
+        FinalizeToKitCheckpoint { message: String },
         Abort,
-        Undo {
-            count: i32,
-        },
-        CanUndo {
-            count: i32,
-        },
-        Redo {
-            count: i32,
-        },
-        CanRedo {
-            count: i32,
-        },
-        ExecuteTransactionCommands {
-            id: Id,
-            commands: Vec<TransactionCommand>,
-        },
+        Undo { count: i32 },
+        CanUndo { count: i32 },
+        Redo { count: i32 },
+        CanRedo { count: i32 },
+        ExecuteTransactionCommands { id: Id, commands: Vec<TransactionCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitDraftCommandResult {
-        ReadKitCommands {
-            results: Vec<ReadKitCommandResult>,
-        },
-        StartTransaction {
-            transaction_id: Id,
-        },
-        FinalizeToKitCheckpoint {
-            checkpoint_id: Id,
-        },
-        Abort {
-            ok: bool,
-        },
-        Undo {
-            ok: bool,
-        },
-        CanUndo {
-            can: bool,
-        },
-        Redo {
-            ok: bool,
-        },
-        CanRedo {
-            can: bool,
-        },
-        ExecuteTransactionCommands {
-            results: Vec<TransactionCommandResult>,
-        },
+        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        StartTransaction { transaction_id: Id },
+        FinalizeToKitCheckpoint { checkpoint_id: Id },
+        Abort { ok: bool },
+        Undo { ok: bool },
+        CanUndo { can: bool },
+        Redo { ok: bool },
+        CanRedo { can: bool },
+        ExecuteTransactionCommands { results: Vec<TransactionCommandResult> },
         Nothing,
     }
 }
@@ -1249,17 +962,11 @@ pub mod kit_session {
 
     impl Session {
         pub fn new() -> Self {
-            Self {
-                id: Id::new_v7(),
-                drafts: HashMap::new(),
-            }
+            Self { id: Id::new_v7(), drafts: HashMap::new() }
         }
 
         pub fn with_id(id: Id) -> Self {
-            Self {
-                id,
-                drafts: HashMap::new(),
-            }
+            Self { id, drafts: HashMap::new() }
         }
 
         pub fn add_draft(&mut self, d: Draft) -> Id {
@@ -1284,17 +991,9 @@ pub mod kit_session {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum SessionCommand {
-        ReadKitCommands {
-            commands: Vec<ReadKitCommand>,
-        },
-        NewDraft {
-            checkpoint_id: Option<Id>,
-            alternative_id: Option<Id>,
-        },
-        ExecuteKitDraftCommands {
-            id: Id,
-            commands: Vec<KitDraftCommand>,
-        },
+        ReadKitCommands { commands: Vec<ReadKitCommand> },
+        NewDraft { checkpoint_id: Option<Id>, alternative_id: Option<Id> },
+        ExecuteKitDraftCommands { id: Id, commands: Vec<KitDraftCommand> },
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -1315,9 +1014,7 @@ pub mod kit_store_command {
     use crate::id::Id;
     use crate::kit::KitStore;
     use crate::kit::KitStoreRef;
-    use crate::kit_alternative::{
-        KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult,
-    };
+    use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
     use crate::kit_change::{KitChange, KitChangeKind};
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
     use crate::kit_draft::{KitDraftCommand, KitDraftCommandResult};
@@ -1357,8 +1054,7 @@ pub mod kit_store_command {
         /// Replace the live graph from a full DTO while preserving the VCS tree,
         /// event bus, and legacy undo/transaction state.
         pub fn replace_live_graph(kit: &KitStoreRef, d: KitFullDto) -> Result<()> {
-            KitStore::replace_from_full_dto(kit, d)
-                .map_err(|e| SemioError::InvalidOperation(e.to_string()))
+            KitStore::replace_from_full_dto(kit, d).map_err(|e| SemioError::InvalidOperation(e.to_string()))
         }
     }
 
@@ -1398,30 +1094,14 @@ pub mod kit_store_command {
     #[derive(Clone, Debug, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum KitStoreCommandResult {
-        ReadKitCommands {
-            results: Vec<ReadKitCommandResult>,
-        },
-        NewSession {
-            id: Id,
-        },
-        EndSession {
-            ok: bool,
-        },
-        NewAlternative {
-            id: Id,
-        },
-        ExecuteSessionCommands {
-            results: Vec<SessionCommandResult>,
-        },
-        ExecuteKitCheckpointCommands {
-            results: Vec<KitCheckpointCommandResult>,
-        },
-        ExecuteKitAlternativeCommands {
-            results: Vec<KitAlternativeCommandResult>,
-        },
-        Batch {
-            results: Vec<KitStoreCommandResult>,
-        },
+        ReadKitCommands { results: Vec<ReadKitCommandResult> },
+        NewSession { id: Id },
+        EndSession { ok: bool },
+        NewAlternative { id: Id },
+        ExecuteSessionCommands { results: Vec<SessionCommandResult> },
+        ExecuteKitCheckpointCommands { results: Vec<KitCheckpointCommandResult> },
+        ExecuteKitAlternativeCommands { results: Vec<KitAlternativeCommandResult> },
+        Batch { results: Vec<KitStoreCommandResult> },
         Nothing,
     }
 
@@ -1456,16 +1136,10 @@ pub mod kit_store_command {
                     g.sessions.remove(&id);
                     Ok(KitStoreCommandResult::EndSession { ok: true })
                 }
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint,
-                    name,
-                } => {
+                KitStoreCommand::NewAlternative { from_checkpoint, name } => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     if !g.checkpoints.contains_key(&from_checkpoint) {
-                        return Err(SemioError::NotFound {
-                            kind: "KitCheckpoint",
-                            id: from_checkpoint,
-                        });
+                        return Err(SemioError::NotFound { kind: "KitCheckpoint", id: from_checkpoint });
                     }
                     let alt = KitAlternative::new(name, from_checkpoint);
                     let aid = alt.id.clone();
@@ -1507,19 +1181,14 @@ pub mod kit_store_command {
                     let results = ReadKitCommand::execute_many(&dto, &commands)?;
                     Ok(SessionCommandResult::ReadKitCommands { results })
                 }
-                SessionCommand::NewDraft {
-                    checkpoint_id,
-                    alternative_id,
-                } => {
+                SessionCommand::NewDraft { checkpoint_id, alternative_id } => {
                     let base = {
                         let g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         if !g.sessions.contains_key(sid) {
                             return Err(SemioError::InvalidOperation("unknown session".into()));
                         }
                         if !g.is_valid_draft_base(checkpoint_id.as_ref(), alternative_id.as_ref()) {
-                            return Err(SemioError::InvalidOperation(
-                                "stale or invalid draft base".into(),
-                            ));
+                            return Err(SemioError::InvalidOperation("stale or invalid draft base".into()));
                         }
                         g.materialize_at(checkpoint_id.as_ref())
                     };
@@ -1543,12 +1212,7 @@ pub mod kit_store_command {
 
     impl KitDraftCommand {
         /// Execute a draft-scoped command against `kit[sid][did]`.
-        pub fn execute(
-            self,
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-        ) -> Result<KitDraftCommandResult> {
+        pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id) -> Result<KitDraftCommandResult> {
             match self {
                 KitDraftCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -1558,18 +1222,9 @@ pub mod kit_store_command {
                 }
                 KitDraftCommand::StartTransaction => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g
-                        .sessions
-                        .get_mut(sid)
-                        .ok_or_else(|| {
-                            SemioError::InvalidOperation("unknown session for draft tx".into())
-                        })?
-                        .draft_mut(did)
-                        .ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
+                    let d = g.sessions.get_mut(sid).ok_or_else(|| SemioError::InvalidOperation("unknown session for draft tx".into()))?.draft_mut(did).ok_or_else(|| SemioError::InvalidOperation("unknown draft".into()))?;
                     let tid = d.start_transaction()?;
-                    Ok(KitDraftCommandResult::StartTransaction {
-                        transaction_id: tid,
-                    })
+                    Ok(KitDraftCommandResult::StartTransaction { transaction_id: tid })
                 }
                 KitDraftCommand::ExecuteTransactionCommands { id: txid, commands } => {
                     let mut results = Vec::new();
@@ -1578,9 +1233,7 @@ pub mod kit_store_command {
                     }
                     Ok(KitDraftCommandResult::ExecuteTransactionCommands { results })
                 }
-                KitDraftCommand::FinalizeToKitCheckpoint { message } => {
-                    Self::finalize_draft(kit, sid, did, message)
-                }
+                KitDraftCommand::FinalizeToKitCheckpoint { message } => Self::finalize_draft(kit, sid, did, message),
                 KitDraftCommand::Abort => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     if let Some(session) = g.sessions.get_mut(sid) {
@@ -1592,50 +1245,30 @@ pub mod kit_store_command {
                 KitDraftCommand::Redo { count } => Self::draft_redo(kit, sid, did, count),
                 KitDraftCommand::CanUndo { count: _ } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g
-                        .sessions
-                        .get(sid)
-                        .and_then(|s| s.draft(did))
-                        .map(|d| d.can_undo_draft())
-                        .unwrap_or(false);
+                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).map(|d| d.can_undo_draft()).unwrap_or(false);
                     Ok(KitDraftCommandResult::CanUndo { can })
                 }
                 KitDraftCommand::CanRedo { count: _ } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g
-                        .sessions
-                        .get(sid)
-                        .and_then(|s| s.draft(did))
-                        .map(|d| d.can_redo_draft())
-                        .unwrap_or(false);
+                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).map(|d| d.can_redo_draft()).unwrap_or(false);
                     Ok(KitDraftCommandResult::CanRedo { can })
                 }
             }
         }
 
-        fn draft_undo(
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            count: i32,
-        ) -> Result<KitDraftCommandResult> {
+        fn draft_undo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.pop_finalized()
                 };
                 let Some(tx) = tx_opt else {
                     break;
                 };
                 for ch in tx.changes.iter().rev() {
-                    KitChange::apply_backward(ch, kit)
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    KitChange::apply_backward(ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 }
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
@@ -1645,29 +1278,19 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Undo { ok: true })
         }
 
-        fn draft_redo(
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            count: i32,
-        ) -> Result<KitDraftCommandResult> {
+        fn draft_redo(kit: &KitStoreRef, sid: &Id, did: &Id, count: i32) -> Result<KitDraftCommandResult> {
             let n = if count < 0 { i32::MAX } else { count } as usize;
             for _ in 0..n {
                 let tx_opt = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.pop_redo_transaction()
                 };
                 let Some(tx) = tx_opt else {
                     break;
                 };
                 for ch in &tx.changes {
-                    KitChange::apply_forward(ch, kit)
-                        .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                    KitChange::apply_forward(ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 }
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 if let Some(d) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)) {
@@ -1677,73 +1300,42 @@ pub mod kit_store_command {
             Ok(KitDraftCommandResult::Redo { ok: true })
         }
 
-        fn finalize_draft(
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            message: String,
-        ) -> Result<KitDraftCommandResult> {
+        fn finalize_draft(kit: &KitStoreRef, sid: &Id, did: &Id, message: String) -> Result<KitDraftCommandResult> {
             let (parent, alt, before, after) = {
                 let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                let d = g
-                    .sessions
-                    .get(sid)
-                    .and_then(|s| s.draft(did))
-                    .ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
+                let d = g.sessions.get(sid).and_then(|s| s.draft(did)).ok_or_else(|| SemioError::InvalidOperation("no draft to finalize".into()))?;
                 if d.has_open_transaction() {
-                    return Err(SemioError::InvalidOperation(
-                        "open transaction must be closed before FinalizeToKitCheckpoint".into(),
-                    ));
+                    return Err(SemioError::InvalidOperation("open transaction must be closed before FinalizeToKitCheckpoint".into()));
                 }
                 let after = g.to_full_dto();
-                (
-                    d.parent_checkpoint.clone(),
-                    d.target_alternative.clone(),
-                    d.before.clone(),
-                    after,
-                )
+                (d.parent_checkpoint.clone(), d.target_alternative.clone(), d.before.clone(), after)
             };
-            let mut kc = KitChange::between(&before, &after).ok_or_else(|| {
-                SemioError::InvalidOperation("no change to finalize in draft".into())
-            })?;
+            let mut kc = KitChange::between(&before, &after).ok_or_else(|| SemioError::InvalidOperation("no change to finalize in draft".into()))?;
             kc.kind = KitChangeKind::Inferred;
             let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
             let new_id = cp.id.clone();
             {
                 let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.checkpoints.insert(new_id.clone(), cp);
-                g.children
-                    .entry(parent.clone())
-                    .or_default()
-                    .push(new_id.clone());
+                g.children.entry(parent.clone()).or_default().push(new_id.clone());
                 if let Some(aid) = alt {
                     if let Some(a) = g.alternatives.get_mut(&aid) {
                         a.append(new_id.clone());
                     } else {
-                        return Err(SemioError::InvalidOperation(
-                            "target alternative missing".into(),
-                        ));
+                        return Err(SemioError::InvalidOperation("target alternative missing".into()));
                     }
                 } else {
                     g.the_kit_head = Some(new_id.clone());
                 }
                 g.sessions.get_mut(sid).expect("s").remove_draft(did);
             }
-            Ok(KitDraftCommandResult::FinalizeToKitCheckpoint {
-                checkpoint_id: new_id,
-            })
+            Ok(KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id: new_id })
         }
     }
 
     impl TransactionCommand {
         /// Execute a transaction-scoped command against `kit[sid][did][txid]`.
-        pub fn execute(
-            self,
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            txid: &Id,
-        ) -> Result<TransactionCommandResult> {
+        pub fn execute(self, kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id) -> Result<TransactionCommandResult> {
             match self {
                 TransactionCommand::ReadKitCommands { commands } => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
@@ -1755,18 +1347,9 @@ pub mod kit_store_command {
                     let mut n = 0usize;
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     {
-                        let ot = g
-                            .sessions
-                            .get(sid)
-                            .and_then(|s| s.draft(did))
-                            .and_then(|d| d.open_transaction_ref(txid))
-                            .ok_or_else(|| {
-                                SemioError::InvalidOperation("no open matching transaction".into())
-                            })?;
+                        let ot = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).ok_or_else(|| SemioError::InvalidOperation("no open matching transaction".into()))?;
                         if !ot.is_open() {
-                            return Err(SemioError::InvalidOperation(
-                                "transaction is not open".into(),
-                            ));
+                            return Err(SemioError::InvalidOperation("transaction is not open".into()));
                         }
                     }
                     for c in &chs {
@@ -1775,12 +1358,7 @@ pub mod kit_store_command {
                         let after = g.to_full_dto();
                         if let Some(mut kc) = KitChange::between(&before, &after) {
                             kc.kind = kind;
-                            if let Some(tx) = g
-                                .sessions
-                                .get_mut(sid)
-                                .and_then(|s| s.draft_mut(did))
-                                .and_then(|d| d.open_transaction_mut(txid))
-                            {
+                            if let Some(tx) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)) {
                                 tx.record(kc);
                                 n += 1;
                             }
@@ -1790,27 +1368,18 @@ pub mod kit_store_command {
                 }
                 TransactionCommand::Finalize => {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let d = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                    let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                     d.finalize_transaction(txid)?;
                     Ok(TransactionCommandResult::Finalize { ok: true })
                 }
                 TransactionCommand::Abort => {
                     let tx = {
                         let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let d = g
-                            .sessions
-                            .get_mut(sid)
-                            .and_then(|s| s.draft_mut(did))
-                            .ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
+                        let d = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).ok_or_else(|| SemioError::InvalidOperation("no draft".into()))?;
                         d.take_open_transaction(txid)?
                     };
                     for ch in tx.changes.iter().rev() {
-                        KitChange::apply_backward(ch, kit)
-                            .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        KitChange::apply_backward(ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                     }
                     Ok(TransactionCommandResult::Abort { ok: true })
                 }
@@ -1820,67 +1389,34 @@ pub mod kit_store_command {
                 TransactionCommand::RedoAll => Self::tx_redo(kit, sid, did, txid, true),
                 TransactionCommand::CanUndo => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g
-                        .sessions
-                        .get(sid)
-                        .and_then(|s| s.draft(did))
-                        .and_then(|d| d.open_transaction_ref(txid))
-                        .map(|t| t.can_undo())
-                        .unwrap_or(false);
+                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_undo()).unwrap_or(false);
                     Ok(TransactionCommandResult::CanUndo { can })
                 }
                 TransactionCommand::CanRedo => {
                     let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let can = g
-                        .sessions
-                        .get(sid)
-                        .and_then(|s| s.draft(did))
-                        .and_then(|d| d.open_transaction_ref(txid))
-                        .map(|t| t.can_redo())
-                        .unwrap_or(false);
+                    let can = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).map(|t| t.can_redo()).unwrap_or(false);
                     Ok(TransactionCommandResult::CanRedo { can })
                 }
             }
         }
 
-        fn tx_undo(
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            txid: &Id,
-            all: bool,
-        ) -> Result<TransactionCommandResult> {
+        fn tx_undo(kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .and_then(|d| d.open_transaction_mut(txid))
-                        .ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
+                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for undo".into()))?;
                     if !tx.can_undo() {
-                        return Ok(if all {
-                            TransactionCommandResult::UndoAll { ok: true }
-                        } else {
-                            TransactionCommandResult::Undo { ok: true }
-                        });
+                        return Ok(if all { TransactionCommandResult::UndoAll { ok: true } } else { TransactionCommandResult::Undo { ok: true } });
                     }
                     tx.changes.pop()
                 };
                 let Some(ch) = done else {
                     break;
                 };
-                KitChange::apply_backward(&ch, kit)
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                KitChange::apply_backward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .and_then(|d| d.open_transaction_mut(txid))
-                        .expect("tx");
+                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
                     tx.redo_changes.push(ch);
                 }
                 if !all {
@@ -1890,44 +1426,23 @@ pub mod kit_store_command {
             Ok(TransactionCommandResult::UndoAll { ok: true })
         }
 
-        fn tx_redo(
-            kit: &KitStoreRef,
-            sid: &Id,
-            did: &Id,
-            txid: &Id,
-            all: bool,
-        ) -> Result<TransactionCommandResult> {
+        fn tx_redo(kit: &KitStoreRef, sid: &Id, did: &Id, txid: &Id, all: bool) -> Result<TransactionCommandResult> {
             loop {
                 let done = {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .and_then(|d| d.open_transaction_mut(txid))
-                        .ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
+                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).ok_or_else(|| SemioError::InvalidOperation("no tx for redo".into()))?;
                     if !tx.can_redo() {
-                        return Ok(if all {
-                            TransactionCommandResult::RedoAll { ok: true }
-                        } else {
-                            TransactionCommandResult::Redo { ok: true }
-                        });
+                        return Ok(if all { TransactionCommandResult::RedoAll { ok: true } } else { TransactionCommandResult::Redo { ok: true } });
                     }
                     tx.redo_changes.pop()
                 };
                 let Some(ch) = done else {
                     break;
                 };
-                KitChange::apply_forward(&ch, kit)
-                    .map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                KitChange::apply_forward(&ch, kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
                 {
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                    let tx = g
-                        .sessions
-                        .get_mut(sid)
-                        .and_then(|s| s.draft_mut(did))
-                        .and_then(|d| d.open_transaction_mut(txid))
-                        .expect("tx");
+                    let tx = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)).expect("tx");
                     tx.changes.push(ch);
                 }
                 if !all {
@@ -1955,10 +1470,7 @@ pub mod kit_store_command {
                     };
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     if !g.checkpoints.contains_key(cpid) {
-                        return Err(SemioError::NotFound {
-                            kind: "KitCheckpoint",
-                            id: cpid.clone(),
-                        });
+                        return Err(SemioError::NotFound { kind: "KitCheckpoint", id: cpid.clone() });
                     }
                     let map_snapshot = g.checkpoints.clone();
                     let cp = g.checkpoints.get_mut(cpid).expect("checked");
@@ -1986,13 +1498,7 @@ pub mod kit_store_command {
                 KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message } => {
                     let (root, before_dto, after_dto) = {
                         let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
-                        let alt = g
-                            .alternatives
-                            .get(aid)
-                            .ok_or_else(|| SemioError::NotFound {
-                                kind: "KitAlternative",
-                                id: aid.clone(),
-                            })?;
+                        let alt = g.alternatives.get(aid).ok_or_else(|| SemioError::NotFound { kind: "KitAlternative", id: aid.clone() })?;
                         if alt.checkpoints.is_empty() {
                             return Err(SemioError::InvalidOperation("empty alternative".into()));
                         }
@@ -2002,25 +1508,17 @@ pub mod kit_store_command {
                         let b = g.materialize_at(Some(&t));
                         (r, a, b)
                     };
-                    let mut ch = KitChange::between(&before_dto, &after_dto)
-                        .ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
+                    let mut ch = KitChange::between(&before_dto, &after_dto).ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
                     ch.kind = KitChangeKind::UnifyCheckpoints;
                     let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
                     let new_id = cp.id.clone();
                     let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     g.checkpoints.insert(new_id.clone(), cp);
-                    g.children
-                        .entry(Some(root.clone()))
-                        .or_default()
-                        .push(new_id.clone());
+                    g.children.entry(Some(root.clone())).or_default().push(new_id.clone());
                     if let Some(alt) = g.alternatives.get_mut(aid) {
                         alt.collapse_to(new_id.clone());
                     }
-                    Ok(
-                        KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint {
-                            new_checkpoint_id: new_id,
-                        },
-                    )
+                    Ok(KitAlternativeCommandResult::UnifyKitCheckpointsToSingleKitCheckpoint { new_checkpoint_id: new_id })
                 }
             }
         }
@@ -2151,42 +1649,28 @@ pub mod attribute {
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::attribute_key(&key, "key") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Key,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Key), error: e.clone() });
                 return Err(e);
             }
             if self.key == key {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Key,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Key) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
 
         pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&value, "value") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Value,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Value), error: e.clone() });
                 return Err(e);
             }
             if self.value == value {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Value,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Value) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
@@ -2196,19 +1680,14 @@ pub mod attribute {
                 return Ok(());
             }
             self.definition = definition;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Definition,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Definition) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
 
         fn invalidate_local_and_bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -2276,38 +1755,21 @@ pub mod attribute {
         }
 
         pub fn to_id_dto(&self) -> AttributeIdDto {
-            AttributeIdDto {
-                id: self.id.clone(),
-            }
+            AttributeIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> AttributeMetadataDto {
-            AttributeMetadataDto {
-                id: self.id.clone(),
-                key: self.key.clone(),
-                value: self.value.clone(),
-                definition: self.definition.clone(),
-            }
+            AttributeMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), definition: self.definition.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> AttributeShallowDto {
             let m = self.to_metadata_dto();
-            AttributeShallowDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                definition: m.definition,
-            }
+            AttributeShallowDto { id: m.id, key: m.key, value: m.value, definition: m.definition }
         }
 
         pub fn to_full_dto(&self) -> AttributeFullDto {
             let m = self.to_metadata_dto();
-            AttributeFullDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                definition: m.definition,
-            }
+            AttributeFullDto { id: m.id, key: m.key, value: m.value, definition: m.definition }
         }
 
         pub fn invalidate_hash(&self) {
@@ -2323,11 +1785,7 @@ pub mod attribute {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("attr")
-                .str(self.id.as_str())
-                .str(&self.key)
-                .str(&self.value)
-                .opt_str(self.definition.as_deref());
+            w.tag("attr").str(self.id.as_str()).str(&self.key).str(&self.value).opt_str(self.definition.as_deref());
         }
     }
 }
@@ -2401,18 +1859,7 @@ pub mod author {
 
     impl AuthorStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                name: String::new(),
-                email: String::new(),
-                role: None,
-                rank: None,
-                parent_kit: None,
-                parent_design: None,
-                parent_type: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, name: String::new(), email: String::new(), role: None, rank: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -2442,42 +1889,28 @@ pub mod author {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Name,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Name), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Name) });
             self.bubble();
             Ok(())
         }
 
         pub fn set_email(&mut self, email: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::email_basic(&email, "email") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Email,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Email), error: e.clone() });
                 return Err(e);
             }
             if self.email == email {
                 return Ok(());
             }
             self.email = email;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Email,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Email) });
             self.bubble();
             Ok(())
         }
@@ -2487,10 +1920,7 @@ pub mod author {
                 return Ok(());
             }
             self.role = role;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Role,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Role) });
             self.bubble();
             Ok(())
         }
@@ -2500,19 +1930,14 @@ pub mod author {
                 return Ok(());
             }
             self.rank = rank;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Rank,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Rank) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -2545,41 +1970,21 @@ pub mod author {
         }
 
         pub fn to_id_dto(&self) -> AuthorIdDto {
-            AuthorIdDto {
-                id: self.id.clone(),
-            }
+            AuthorIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> AuthorMetadataDto {
-            AuthorMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                email: self.email.clone(),
-                role: self.role.clone(),
-                rank: self.rank,
-            }
+            AuthorMetadataDto { id: self.id.clone(), name: self.name.clone(), email: self.email.clone(), role: self.role.clone(), rank: self.rank }
         }
 
         pub fn to_shallow_dto(&self) -> AuthorShallowDto {
             let m = self.to_metadata_dto();
-            AuthorShallowDto {
-                id: m.id,
-                name: m.name,
-                email: m.email,
-                role: m.role,
-                rank: m.rank,
-            }
+            AuthorShallowDto { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
         pub fn to_full_dto(&self) -> AuthorFullDto {
             let m = self.to_metadata_dto();
-            AuthorFullDto {
-                id: m.id,
-                name: m.name,
-                email: m.email,
-                role: m.role,
-                rank: m.rank,
-            }
+            AuthorFullDto { id: m.id, name: m.name, email: m.email, role: m.role, rank: m.rank }
         }
 
         pub fn invalidate_hash(&self) {
@@ -2595,11 +2000,7 @@ pub mod author {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("author")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .str(&self.email)
-                .opt_str(self.role.as_deref());
+            w.tag("author").str(self.id.as_str()).str(&self.name).str(&self.email).opt_str(self.role.as_deref());
             if let Some(r) = self.rank {
                 w.f64(r as f64);
             }
@@ -2646,17 +2047,9 @@ pub mod benchmark {
         pub min: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub max: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "minExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
         pub min_excluded: Option<bool>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "maxExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
         pub max_excluded: Option<bool>,
     }
 
@@ -2668,17 +2061,9 @@ pub mod benchmark {
         pub min: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub max: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "minExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
         pub min_excluded: Option<bool>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "maxExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
         pub max_excluded: Option<bool>,
     }
 
@@ -2690,33 +2075,15 @@ pub mod benchmark {
         pub min: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub max: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "minExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "minExcluded")]
         pub min_excluded: Option<bool>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "maxExcluded"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "maxExcluded")]
         pub max_excluded: Option<bool>,
     }
 
     impl BenchmarkStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                name: String::new(),
-                min: None,
-                max: None,
-                min_excluded: None,
-                max_excluded: None,
-                parent_quality: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, name: String::new(), min: None, max: None, min_excluded: None, max_excluded: None, parent_quality: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -2743,10 +2110,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Name) });
             self.bubble();
             Ok(())
         }
@@ -2756,10 +2120,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.min = min;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Min,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Min) });
             self.bubble();
             Ok(())
         }
@@ -2769,10 +2130,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.max = max;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Max,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Max) });
             self.bubble();
             Ok(())
         }
@@ -2782,10 +2140,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.min_excluded = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::MinExcluded,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::MinExcluded) });
             self.bubble();
             Ok(())
         }
@@ -2795,19 +2150,14 @@ pub mod benchmark {
                 return Ok(());
             }
             self.max_excluded = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::MaxExcluded,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::MaxExcluded) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_quality {
                 if let Some(q) = w.upgrade() {
                     if let Ok(q) = q.read() {
@@ -2818,44 +2168,21 @@ pub mod benchmark {
         }
 
         pub fn to_id_dto(&self) -> BenchmarkIdDto {
-            BenchmarkIdDto {
-                id: self.id.clone(),
-            }
+            BenchmarkIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> BenchmarkMetadataDto {
-            BenchmarkMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                min: self.min,
-                max: self.max,
-                min_excluded: self.min_excluded,
-                max_excluded: self.max_excluded,
-            }
+            BenchmarkMetadataDto { id: self.id.clone(), name: self.name.clone(), min: self.min, max: self.max, min_excluded: self.min_excluded, max_excluded: self.max_excluded }
         }
 
         pub fn to_shallow_dto(&self) -> BenchmarkShallowDto {
             let m = self.to_metadata_dto();
-            BenchmarkShallowDto {
-                id: m.id,
-                name: m.name,
-                min: m.min,
-                max: m.max,
-                min_excluded: m.min_excluded,
-                max_excluded: m.max_excluded,
-            }
+            BenchmarkShallowDto { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
         }
 
         pub fn to_full_dto(&self) -> BenchmarkFullDto {
             let m = self.to_metadata_dto();
-            BenchmarkFullDto {
-                id: m.id,
-                name: m.name,
-                min: m.min,
-                max: m.max,
-                min_excluded: m.min_excluded,
-                max_excluded: m.max_excluded,
-            }
+            BenchmarkFullDto { id: m.id, name: m.name, min: m.min, max: m.max, min_excluded: m.min_excluded, max_excluded: m.max_excluded }
         }
 
         pub fn invalidate_hash(&self) {
@@ -2871,13 +2198,7 @@ pub mod benchmark {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("benchmark")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_f64(self.min)
-                .opt_f64(self.max)
-                .opt_bool(self.min_excluded)
-                .opt_bool(self.max_excluded);
+            w.tag("benchmark").str(self.id.as_str()).str(&self.name).opt_f64(self.min).opt_f64(self.max).opt_bool(self.min_excluded).opt_bool(self.max_excluded);
         }
     }
 }
@@ -2947,17 +2268,7 @@ pub mod concept {
 
     impl ConceptStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                name: String::new(),
-                description: None,
-                order: None,
-                parent_kit: None,
-                parent_design: None,
-                parent_type: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, name: String::new(), description: None, order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -2988,10 +2299,7 @@ pub mod concept {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Name) });
             self.bubble();
             Ok(())
         }
@@ -3001,10 +2309,7 @@ pub mod concept {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Description) });
             self.bubble();
             Ok(())
         }
@@ -3014,19 +2319,14 @@ pub mod concept {
                 return Ok(());
             }
             self.order = order;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Order,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Order) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -3059,38 +2359,21 @@ pub mod concept {
         }
 
         pub fn to_id_dto(&self) -> ConceptIdDto {
-            ConceptIdDto {
-                id: self.id.clone(),
-            }
+            ConceptIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> ConceptMetadataDto {
-            ConceptMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                order: self.order,
-            }
+            ConceptMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), order: self.order }
         }
 
         pub fn to_shallow_dto(&self) -> ConceptShallowDto {
             let m = self.to_metadata_dto();
-            ConceptShallowDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                order: m.order,
-            }
+            ConceptShallowDto { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
         pub fn to_full_dto(&self) -> ConceptFullDto {
             let m = self.to_metadata_dto();
-            ConceptFullDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                order: m.order,
-            }
+            ConceptFullDto { id: m.id, name: m.name, description: m.description, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -3106,10 +2389,7 @@ pub mod concept {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("concept")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref());
+            w.tag("concept").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref());
             if let Some(o) = self.order {
                 w.f64(o as f64);
             }
@@ -3247,11 +2527,7 @@ pub mod connection {
                     let pt = p.point.unwrap_or(Coordinate::ZERO);
                     let dir = p.direction.unwrap_or(Coordinate::new(0.0, 0.0, 1.0));
                     let n = dir.length();
-                    let d = if n > 1e-10 {
-                        Coordinate::new(dir.x / n, dir.y / n, dir.z / n)
-                    } else {
-                        Coordinate::new(0.0, 0.0, 1.0)
-                    };
+                    let d = if n > 1e-10 { Coordinate::new(dir.x / n, dir.y / n, dir.z / n) } else { Coordinate::new(0.0, 0.0, 1.0) };
                     return (pt, d);
                 }
             }
@@ -3260,11 +2536,7 @@ pub mod connection {
     }
 
     impl ConnectionStore {
-        pub(crate) fn empty_with_sides(
-            id: Id,
-            connected: SideStoreRef,
-            connecting: SideStoreRef,
-        ) -> Self {
+        pub(crate) fn empty_with_sides(id: Id, connected: SideStoreRef, connecting: SideStoreRef) -> Self {
             Self {
                 id,
                 connected,
@@ -3310,20 +2582,14 @@ pub mod connection {
             let Ok(kit) = kit_ref.read() else {
                 return crate::events::EventPath::from_root(vec![design_entity, connection]);
             };
-            crate::events::EventPath::from_root(vec![
-                EntityRef::new(EntityKind::Kit, kit.id.clone()),
-                design_entity,
-                connection,
-            ])
+            crate::events::EventPath::from_root(vec![EntityRef::new(EntityKind::Kit, kit.id.clone()), design_entity, connection])
         }
 
         /// Invalidate this connection and all design-level aggregates (flatten, validation).
         pub(crate) fn notify_aggregate_change(&self) {
             self.hash_cache.invalidate();
             self.child_plane_matrix.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(dr) = d.read() {
                     dr.invalidate_hash();
@@ -3333,27 +2599,12 @@ pub mod connection {
             }
         }
 
-        pub(crate) fn flatten_parent_and_child_sides(
-            &self,
-            child_id: &Id,
-        ) -> Option<(SideStoreRef, SideStoreRef)> {
-            let connected_id = self.connected.read().ok().and_then(|side| {
-                side.piece
-                    .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-            });
-            let connecting_id = self.connecting.read().ok().and_then(|side| {
-                side.piece
-                    .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-            });
+        pub(crate) fn flatten_parent_and_child_sides(&self, child_id: &Id) -> Option<(SideStoreRef, SideStoreRef)> {
+            let connected_id = self.connected.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
+            let connecting_id = self.connecting.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
             match (connected_id, connecting_id) {
-                (Some(_), Some(connecting_id)) if &connecting_id == child_id => {
-                    Some((self.connected.clone(), self.connecting.clone()))
-                }
-                (Some(connected_id), Some(_)) if &connected_id == child_id => {
-                    Some((self.connecting.clone(), self.connected.clone()))
-                }
+                (Some(_), Some(connecting_id)) if &connecting_id == child_id => Some((self.connected.clone(), self.connecting.clone())),
+                (Some(connected_id), Some(_)) if &connected_id == child_id => Some((self.connecting.clone(), self.connected.clone())),
                 _ => None,
             }
         }
@@ -3378,10 +2629,7 @@ pub mod connection {
                 return Ok(());
             }
             self.gap = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Gap,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Gap) });
             self.bubble();
             Ok(())
         }
@@ -3390,10 +2638,7 @@ pub mod connection {
                 return Ok(());
             }
             self.shift = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Shift,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Shift) });
             self.bubble();
             Ok(())
         }
@@ -3402,10 +2647,7 @@ pub mod connection {
                 return Ok(());
             }
             self.rise = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Rise,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Rise) });
             self.bubble();
             Ok(())
         }
@@ -3414,10 +2656,7 @@ pub mod connection {
                 return Ok(());
             }
             self.rotation = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Rotation,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Rotation) });
             self.bubble();
             Ok(())
         }
@@ -3426,10 +2665,7 @@ pub mod connection {
                 return Ok(());
             }
             self.turn = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Turn,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Turn) });
             self.bubble();
             Ok(())
         }
@@ -3438,10 +2674,7 @@ pub mod connection {
                 return Ok(());
             }
             self.tilt = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Tilt,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Tilt) });
             self.bubble();
             Ok(())
         }
@@ -3450,10 +2683,7 @@ pub mod connection {
                 return Ok(());
             }
             self.x = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::X,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::X) });
             self.bubble();
             Ok(())
         }
@@ -3462,10 +2692,7 @@ pub mod connection {
                 return Ok(());
             }
             self.y = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Y,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Y) });
             self.bubble();
             Ok(())
         }
@@ -3474,10 +2701,7 @@ pub mod connection {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: self.event_path(),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Description) });
             self.bubble();
             Ok(())
         }
@@ -3487,35 +2711,14 @@ pub mod connection {
         }
 
         /// World-space child plane from parent plane and connector geometry (Python `computeChildPlaneDict`).
-        pub fn compute_child_plane_for_flatten(
-            &self,
-            parent_plane: &Plane,
-            parent_connector: &ConnectorStore,
-            child_connector: &ConnectorStore,
-        ) -> Plane {
+        pub fn compute_child_plane_for_flatten(&self, parent_plane: &Plane, parent_connector: &ConnectorStore, child_connector: &ConnectorStore) -> Plane {
             let (pp, pd) = connector_anchor_ports(parent_connector);
             let (cp, cd) = connector_anchor_ports(child_connector);
-            flatten_math::compute_child_plane(
-                parent_plane,
-                pp,
-                pd,
-                cp,
-                cd,
-                self.gap.unwrap_or(0.0),
-                self.shift.unwrap_or(0.0),
-                self.rise.unwrap_or(0.0),
-                self.rotation.unwrap_or(0.0),
-                self.turn.unwrap_or(0.0),
-                self.tilt.unwrap_or(0.0),
-            )
+            flatten_math::compute_child_plane(parent_plane, pp, pd, cp, cd, self.gap.unwrap_or(0.0), self.shift.unwrap_or(0.0), self.rise.unwrap_or(0.0), self.rotation.unwrap_or(0.0), self.turn.unwrap_or(0.0), self.tilt.unwrap_or(0.0))
         }
 
         /// UV-style center for child piece (Python BFS `child_center`).
-        pub fn compute_child_center_for_flatten(
-            &self,
-            parent_center: Coordinate,
-            parent_connector: &ConnectorStore,
-        ) -> Coordinate {
+        pub fn compute_child_center_for_flatten(&self, parent_center: Coordinate, parent_connector: &ConnectorStore) -> Coordinate {
             let (_, pd) = connector_anchor_ports(parent_connector);
             let connection_u = self.x.unwrap_or(0.0);
             let connection_v = self.y.unwrap_or(0.0);
@@ -3527,24 +2730,14 @@ pub mod connection {
         }
 
         pub fn to_id_dto(&self) -> ConnectionIdDto {
-            ConnectionIdDto {
-                id: self.id.clone(),
-            }
+            ConnectionIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> ConnectionMetadataDto {
             ConnectionMetadataDto {
                 id: self.id.clone(),
-                connected: self
-                    .connected
-                    .read()
-                    .map(|s| s.to_metadata_dto())
-                    .unwrap_or_default(),
-                connecting: self
-                    .connecting
-                    .read()
-                    .map(|s| s.to_metadata_dto())
-                    .unwrap_or_default(),
+                connected: self.connected.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
+                connecting: self.connecting.read().map(|s| s.to_metadata_dto()).unwrap_or_default(),
                 gap: self.gap,
                 shift: self.shift,
                 rise: self.rise,
@@ -3572,11 +2765,7 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
             }
         }
 
@@ -3595,20 +2784,14 @@ pub mod connection {
                 x: m.x,
                 y: m.y,
                 description: m.description,
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
             }
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.child_plane_matrix.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
         }
 
         pub fn hash(&self) -> String {
@@ -3627,15 +2810,7 @@ pub mod connection {
             if let Ok(s) = self.connecting.read() {
                 s.hash_into(w);
             }
-            w.opt_f64(self.gap)
-                .opt_f64(self.shift)
-                .opt_f64(self.rise)
-                .opt_f64(self.rotation)
-                .opt_f64(self.turn)
-                .opt_f64(self.tilt)
-                .opt_f64(self.x)
-                .opt_f64(self.y)
-                .opt_str(self.description.as_deref());
+            w.opt_f64(self.gap).opt_f64(self.shift).opt_f64(self.rise).opt_f64(self.rotation).opt_f64(self.turn).opt_f64(self.tilt).opt_f64(self.x).opt_f64(self.y).opt_str(self.description.as_deref());
             for a in &self.attributes {
                 if let Ok(a) = a.read() {
                     a.hash_into(w);
@@ -3727,17 +2902,7 @@ pub mod connector {
 
     impl ConnectorStore {
         pub fn new(code: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                code: code.into(),
-                description: None,
-                port: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), code: code.into(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -3750,91 +2915,34 @@ pub mod connector {
         }
 
         pub fn from_id_dto(d: ConnectorIdDto) -> Self {
-            Self {
-                id: d.id,
-                code: String::new(),
-                description: None,
-                port: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, code: String::new(), description: None, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: ConnectorMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                code: d.code,
-                description: d.description,
-                port: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, code: d.code, description: d.description, port: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: ConnectorShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
-                id: d.id,
-                code: d.code,
-                description: d.description,
-                port: d.port,
-            });
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_shallow_dto)
-                .collect();
+            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: ConnectorFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(ConnectorMetadataDto {
-                id: d.id,
-                code: d.code,
-                description: d.description,
-                port: d.port,
-            });
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_full_dto)
-                .collect();
+            let mut s = Self::from_metadata_dto(ConnectorMetadataDto { id: d.id, code: d.code, description: d.description, port: d.port });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
         }
 
         pub fn to_id_dto(&self) -> ConnectorIdDto {
-            ConnectorIdDto {
-                id: self.id.clone(),
-            }
+            ConnectorIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> ConnectorMetadataDto {
-            let port = self
-                .port
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            ConnectorMetadataDto {
-                id: self.id.clone(),
-                code: self.code.clone(),
-                description: self.description.clone(),
-                port,
-            }
+            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
+            ConnectorMetadataDto { id: self.id.clone(), code: self.code.clone(), description: self.description.clone(), port }
         }
 
         pub fn to_shallow_dto(&self) -> ConnectorShallowDto {
@@ -3844,16 +2952,8 @@ pub mod connector {
                 code: m.code,
                 description: m.description,
                 port: m.port,
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_shallow_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
             }
         }
 
@@ -3864,36 +2964,21 @@ pub mod connector {
                 code: m.code,
                 description: m.description,
                 port: m.port,
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_full_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
             }
         }
 
         pub fn set_code(&mut self, code: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&code, "code") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Code,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Code), error: e.clone() });
                 return Err(e);
             }
             if self.code == code {
                 return Ok(());
             }
             self.code = code;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Code,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Code) });
             self.invalidate_hash();
             Ok(())
         }
@@ -3903,29 +2988,21 @@ pub mod connector {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Description) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Port,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Port) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(t) = self.parent_type.upgrade() {
                 if let Ok(tr) = t.read() {
                     tr.invalidate_hash();
@@ -3944,10 +3021,7 @@ pub mod connector {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("connector")
-                .str(self.id.as_str())
-                .str(&self.code)
-                .opt_str(self.description.as_deref());
+            w.tag("connector").str(self.id.as_str()).str(&self.code).opt_str(self.description.as_deref());
             if let Some(port) = self.port.as_ref().and_then(|p| p.upgrade()) {
                 if let Ok(port) = port.read() {
                     w.str(port.id.as_str());
@@ -3970,15 +3044,10 @@ pub mod design {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{
-        AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
-    };
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connection::{
-        ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore,
-        ConnectionStoreRef,
-    };
+    use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::{Camera, Coordinate, Location, Plane};
@@ -3987,9 +3056,7 @@ pub mod design {
     use crate::id::Id;
     use crate::kit::KitStore;
     use crate::layer::{LayerFullDto, LayerShallowDto, LayerStore, LayerStoreRef};
-    use crate::piece::{
-        PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef,
-    };
+    use crate::piece::{PieceAlternatives, PieceFullDto, PieceShallowDto, PieceStore, PieceStoreRef};
     use crate::port::PortStoreRef;
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
@@ -4166,10 +3233,7 @@ pub mod design {
         pub stats: Vec<StatFullDto>,
     }
 
-    pub(crate) fn resolve_connector_for_side(
-        side: &crate::side::SideStore,
-        typ: &crate::typ::TypeStore,
-    ) -> Option<ConnectorStoreRef> {
+    pub(crate) fn resolve_connector_for_side(side: &crate::side::SideStore, typ: &crate::typ::TypeStore) -> Option<ConnectorStoreRef> {
         if let Some(pw) = &side.port {
             if let Some(p) = pw.upgrade() {
                 if let Ok(pr) = p.read() {
@@ -4180,24 +3244,12 @@ pub mod design {
         typ.connectors.first().cloned()
     }
 
-    fn connection_from_full_dto(
-        cdto: ConnectionFullDto,
-        piece_index: &HashMap<Id, PieceStoreRef>,
-        design_weak: DesignStoreWeak,
-    ) -> ConnectionStoreRef {
-        let s1 = Arc::new(RwLock::new(SideStore::empty_shell(
-            cdto.connected.id.clone(),
-        )));
-        let s2 = Arc::new(RwLock::new(SideStore::empty_shell(
-            cdto.connecting.id.clone(),
-        )));
+    fn connection_from_full_dto(cdto: ConnectionFullDto, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
+        let s1 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connected.id.clone())));
+        let s2 = Arc::new(RwLock::new(SideStore::empty_shell(cdto.connecting.id.clone())));
         wire_side_from_dto(&cdto.connected, &s1, piece_index);
         wire_side_from_dto(&cdto.connecting, &s2, piece_index);
-        let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(
-            cdto.id.clone(),
-            s1.clone(),
-            s2.clone(),
-        )));
+        let conn = Arc::new(RwLock::new(ConnectionStore::empty_with_sides(cdto.id.clone(), s1.clone(), s2.clone())));
         {
             let mut cw = conn.write().expect("connection write");
             cw.apply_metadata_fields(ConnectionMetadataDto {
@@ -4215,11 +3267,7 @@ pub mod design {
                 description: cdto.description.clone(),
             });
             cw.parent_design = design_weak.clone();
-            cw.attributes = cdto
-                .attributes
-                .into_iter()
-                .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
-                .collect();
+            cw.attributes = cdto.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect();
         }
         if let Ok(mut s1w) = s1.write() {
             s1w.parent_connection = Some(Arc::downgrade(&conn));
@@ -4230,11 +3278,7 @@ pub mod design {
         conn
     }
 
-    fn wire_side_from_dto(
-        meta: &crate::side::SideMetadataDto,
-        side_ref: &SideStoreRef,
-        piece_index: &HashMap<Id, PieceStoreRef>,
-    ) {
+    fn wire_side_from_dto(meta: &crate::side::SideMetadataDto, side_ref: &SideStoreRef, piece_index: &HashMap<Id, PieceStoreRef>) {
         if let Ok(mut w) = side_ref.write() {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
@@ -4360,40 +3404,19 @@ pub mod design {
                 let Ok(connection_read) = connection.read() else {
                     continue;
                 };
-                let connected_id = connection_read.connected.read().ok().and_then(|side| {
-                    side.piece
-                        .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-                });
-                let connecting_id = connection_read.connecting.read().ok().and_then(|side| {
-                    side.piece
-                        .upgrade()
-                        .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-                });
-                let (Some(connected_id), Some(connecting_id)) = (connected_id, connecting_id)
-                else {
+                let connected_id = connection_read.connected.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
+                let connecting_id = connection_read.connecting.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())));
+                let (Some(connected_id), Some(connecting_id)) = (connected_id, connecting_id) else {
                     continue;
                 };
-                if !piece_index.contains_key(&connected_id)
-                    || !piece_index.contains_key(&connecting_id)
-                {
+                if !piece_index.contains_key(&connected_id) || !piece_index.contains_key(&connecting_id) {
                     continue;
                 }
-                adjacency
-                    .entry(connected_id.clone())
-                    .or_default()
-                    .push((connecting_id.clone(), connection.clone()));
-                adjacency
-                    .entry(connecting_id)
-                    .or_default()
-                    .push((connected_id, connection.clone()));
+                adjacency.entry(connected_id.clone()).or_default().push((connecting_id.clone(), connection.clone()));
+                adjacency.entry(connecting_id).or_default().push((connected_id, connection.clone()));
             }
 
-            let roots: Vec<Id> = self
-                .pieces
-                .iter()
-                .filter_map(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-                .collect();
+            let roots: Vec<Id> = self.pieces.iter().filter_map(|piece| piece.read().ok().map(|piece| piece.id.clone())).collect();
             let mut visited: HashSet<Id> = HashSet::new();
             for root in roots {
                 if !visited.insert(root.clone()) {
@@ -4402,9 +3425,7 @@ pub mod design {
                 let mut queue = VecDeque::new();
                 queue.push_back(root.clone());
                 while let Some(current) = queue.pop_front() {
-                    for (child_id, connection_ref) in
-                        adjacency.get(&current).cloned().unwrap_or_default()
-                    {
+                    for (child_id, connection_ref) in adjacency.get(&current).cloned().unwrap_or_default() {
                         if !visited.insert(child_id.clone()) {
                             continue;
                         }
@@ -4415,10 +3436,7 @@ pub mod design {
                             continue;
                         };
                         if let Ok(mut child) = child_ref.write() {
-                            child.set_flatten_parent_refs(
-                                Some(Arc::downgrade(parent_ref)),
-                                Some(Arc::downgrade(&connection_ref)),
-                            );
+                            child.set_flatten_parent_refs(Some(Arc::downgrade(parent_ref)), Some(Arc::downgrade(&connection_ref)));
                         }
                         queue.push_back(child_id);
                     }
@@ -4461,9 +3479,7 @@ pub mod design {
         /// the kit already holds its write lock, e.g. during [`KitStore::apply_design_diff`]).
         pub(crate) fn invalidate_hash_local(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
         }
 
         /// Invalidate flatten caches and emit flatten + derived events for all pieces in this design.
@@ -4488,30 +3504,15 @@ pub mod design {
             piece_ids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
             piece_ids.dedup();
             self.flatten_cache.invalidate();
-            self.emit_ev(KitEvent::FlattenInvalidated {
-                design: design_id,
-                pieces: piece_ids.clone(),
-            });
+            self.emit_ev(KitEvent::FlattenInvalidated { design: design_id, pieces: piece_ids.clone() });
             for p in &self.pieces {
                 if let Ok(pr) = p.try_read() {
                     pr.invalidate_flat_pose();
                 }
             }
             for gid in &piece_ids {
-                self.emit_ev(KitEvent::DerivedChanged {
-                    path: crate::events::EventPath::of(EntityRef::new(
-                        EntityKind::Piece,
-                        gid.clone(),
-                    )),
-                    field: EventField::FlatPlane,
-                });
-                self.emit_ev(KitEvent::DerivedChanged {
-                    path: crate::events::EventPath::of(EntityRef::new(
-                        EntityKind::Piece,
-                        gid.clone(),
-                    )),
-                    field: EventField::FlatCenter,
-                });
+                self.emit_ev(KitEvent::DerivedChanged { path: crate::events::EventPath::of(EntityRef::new(EntityKind::Piece, gid.clone())), field: EventField::Piece(crate::events::PieceField::FlatPlane) });
+                self.emit_ev(KitEvent::DerivedChanged { path: crate::events::EventPath::of(EntityRef::new(EntityKind::Piece, gid.clone())), field: EventField::Piece(crate::events::PieceField::FlatCenter) });
             }
         }
 
@@ -4535,25 +3536,16 @@ pub mod design {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Name,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Name), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Name) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4569,14 +3561,9 @@ pub mod design {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Description) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4587,14 +3574,9 @@ pub mod design {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Icon,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Icon) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4605,14 +3587,9 @@ pub mod design {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Image,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Image) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4623,14 +3600,9 @@ pub mod design {
                 return Ok(());
             }
             self.variant = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Variant,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Variant) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4641,14 +3613,9 @@ pub mod design {
                 return Ok(());
             }
             self.view = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::View,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::View) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4659,14 +3626,9 @@ pub mod design {
                 return Ok(());
             }
             self.location = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Location,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Location) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4677,14 +3639,9 @@ pub mod design {
                 return Ok(());
             }
             self.camera = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Camera,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Camera) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4695,14 +3652,9 @@ pub mod design {
                 return Ok(());
             }
             self.unit = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Unit,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Unit) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4713,14 +3665,9 @@ pub mod design {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Created,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Created) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4731,14 +3678,9 @@ pub mod design {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Updated,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Updated) });
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
             self.bubble_to_kit();
             Ok(())
@@ -4794,34 +3736,22 @@ pub mod design {
                 let Ok(s1) = conn.connecting.read() else {
                     continue;
                 };
-                let g0 = s0
-                    .piece
-                    .upgrade()
-                    .and_then(|p| p.read().ok().map(|x| x.id.clone()));
-                let g1 = s1
-                    .piece
-                    .upgrade()
-                    .and_then(|p| p.read().ok().map(|x| x.id.clone()));
+                let g0 = s0.piece.upgrade().and_then(|p| p.read().ok().map(|x| x.id.clone()));
+                let g1 = s1.piece.upgrade().and_then(|p| p.read().ok().map(|x| x.id.clone()));
                 let (Some(src), Some(tgt)) = (g0, g1) else {
                     continue;
                 };
                 if !piece_map.contains_key(&src) || !piece_map.contains_key(&tgt) {
                     continue;
                 }
-                adj.entry(src.clone())
-                    .or_default()
-                    .push((tgt.clone(), c.clone()));
+                adj.entry(src.clone()).or_default().push((tgt.clone(), c.clone()));
                 adj.entry(tgt).or_default().push((src, c.clone()));
             }
             let mut piece_planes: HashMap<Id, Plane> = HashMap::new();
             let mut centers: HashMap<Id, Coordinate> = HashMap::new();
             let mut visited: HashSet<Id> = HashSet::new();
 
-            let roots: Vec<Id> = self
-                .pieces
-                .iter()
-                .filter_map(|p| p.read().ok().map(|pr| pr.id.clone()))
-                .collect();
+            let roots: Vec<Id> = self.pieces.iter().filter_map(|p| p.read().ok().map(|pr| pr.id.clone())).collect();
             for root in roots {
                 if visited.contains(&root) {
                     continue;
@@ -4831,11 +3761,7 @@ pub mod design {
                 visited.insert(root.clone());
                 if let Some(p) = piece_map.get(&root) {
                     if let Ok(pr) = p.read() {
-                        let pl = if pr.pose.plane.is_some() && pr.pose.center.is_some() {
-                            pr.pose.plane.unwrap()
-                        } else {
-                            Plane::world_xy()
-                        };
+                        let pl = if pr.pose.plane.is_some() && pr.pose.center.is_some() { pr.pose.plane.unwrap() } else { Plane::world_xy() };
                         let ce = pr.pose.center.unwrap_or_default();
                         piece_planes.insert(root.clone(), pl);
                         centers.insert(root, ce);
@@ -4863,14 +3789,8 @@ pub mod design {
                             let Ok(s1) = conn.connecting.read() else {
                                 continue;
                             };
-                            let g0 = s0
-                                .piece
-                                .upgrade()
-                                .and_then(|p| p.read().ok().map(|x| x.id.clone()));
-                            let g1 = s1
-                                .piece
-                                .upgrade()
-                                .and_then(|p| p.read().ok().map(|x| x.id.clone()));
+                            let g0 = s0.piece.upgrade().and_then(|p| p.read().ok().map(|x| x.id.clone()));
+                            let g1 = s1.piece.upgrade().and_then(|p| p.read().ok().map(|x| x.id.clone()));
                             let (Some(a), Some(b)) = (g0, g1) else {
                                 continue;
                             };
@@ -4891,16 +3811,8 @@ pub mod design {
                         let Ok(child_piece) = child_pref.read() else {
                             continue;
                         };
-                        let parent_type_id = current_piece
-                            .type_ref
-                            .as_ref()
-                            .and_then(|w| w.upgrade())
-                            .and_then(|t| t.read().ok().map(|t| t.id.clone()));
-                        let child_type_id = child_piece
-                            .type_ref
-                            .as_ref()
-                            .and_then(|w| w.upgrade())
-                            .and_then(|t| t.read().ok().map(|t| t.id.clone()));
+                        let parent_type_id = current_piece.type_ref.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|t| t.id.clone()));
+                        let child_type_id = child_piece.type_ref.as_ref().and_then(|w| w.upgrade()).and_then(|t| t.read().ok().map(|t| t.id.clone()));
                         let (Some(ptg), Some(ctg)) = (parent_type_id, child_type_id) else {
                             continue;
                         };
@@ -4920,11 +3832,9 @@ pub mod design {
                         };
                         let Ok(pcr) = pc.read() else { continue };
                         let Ok(ccr) = cc.read() else { continue };
-                        let child_plane =
-                            conn.compute_child_plane_for_flatten(&current_plane, &pcr, &ccr);
+                        let child_plane = conn.compute_child_plane_for_flatten(&current_plane, &pcr, &ccr);
                         let parent_center = centers.get(&current).copied().unwrap_or_default();
-                        let child_center =
-                            conn.compute_child_center_for_flatten(parent_center, &pcr);
+                        let child_center = conn.compute_child_center_for_flatten(parent_center, &pcr);
                         piece_planes.insert(child_id.clone(), child_plane);
                         centers.insert(child_id.clone(), child_center);
                         visited.insert(child_id.clone());
@@ -4932,10 +3842,7 @@ pub mod design {
                     }
                 }
             }
-            piece_planes
-                .into_iter()
-                .filter_map(|(g, pl)| centers.get(&g).map(|c| (g, (pl, *c))))
-                .collect()
+            piece_planes.into_iter().filter_map(|(g, pl)| centers.get(&g).map(|c| (g, (pl, *c)))).collect()
         }
 
         pub fn hash(&self) -> String {
@@ -4947,13 +3854,7 @@ pub mod design {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("design")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref())
-                .opt_str(self.variant.as_deref())
-                .opt_str(self.view.as_deref())
-                .opt_str(self.unit.as_deref());
+            w.tag("design").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.variant.as_deref()).opt_str(self.view.as_deref()).opt_str(self.unit.as_deref());
             for p in &self.pieces {
                 if let Ok(p) = p.read() {
                     p.hash_into(w);
@@ -5012,58 +3913,35 @@ pub mod design {
         }
 
         pub fn piece(&self, id: &str) -> Option<PieceStoreRef> {
-            self.pieces
-                .iter()
-                .find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.pieces.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn connection(&self, id: &str) -> Option<ConnectionStoreRef> {
-            self.connections
-                .iter()
-                .find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.connections.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn layer(&self, id: &str) -> Option<LayerStoreRef> {
-            self.layers
-                .iter()
-                .find(|l| l.read().map(|l| l.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.layers.iter().find(|l| l.read().map(|l| l.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn group(&self, id: &str) -> Option<GroupStoreRef> {
-            self.groups
-                .iter()
-                .find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.groups.iter().find(|g| g.read().map(|g| g.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         // #region 🔁PieceAlternatives
         fn side_piece_id(side: &SideStoreRef) -> Option<Id> {
-            side.read().ok().and_then(|side| {
-                side.piece
-                    .upgrade()
-                    .and_then(|piece| piece.read().ok().map(|piece| piece.id.clone()))
-            })
+            side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.read().ok().map(|piece| piece.id.clone())))
         }
 
         fn side_port_ref(side: &SideStoreRef) -> Option<PortStoreRef> {
-            side.read()
-                .ok()
-                .and_then(|side| side.port.as_ref().and_then(|port| port.upgrade()))
+            side.read().ok().and_then(|side| side.port.as_ref().and_then(|port| port.upgrade()))
         }
 
         fn connector_port_ref(connector: &ConnectorStoreRef) -> Option<PortStoreRef> {
-            connector
-                .read()
-                .ok()
-                .and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
+            connector.read().ok().and_then(|connector| connector.port.as_ref().and_then(|port| port.upgrade()))
         }
 
-        fn candidate_type_available_ports(
-            candidate_type: &TypeStoreRef,
-        ) -> Option<Vec<PortStoreRef>> {
+        fn candidate_type_available_ports(candidate_type: &TypeStoreRef) -> Option<Vec<PortStoreRef>> {
             let candidate_type = candidate_type.read().ok()?;
             let mut available_ports = Vec::with_capacity(candidate_type.connectors.len());
             for connector in &candidate_type.connectors {
@@ -5072,20 +3950,15 @@ pub mod design {
             Some(available_ports)
         }
 
-        fn candidate_design_available_ports(
-            candidate_design: &DesignStoreRef,
-        ) -> Option<Vec<PortStoreRef>> {
+        fn candidate_design_available_ports(candidate_design: &DesignStoreRef) -> Option<Vec<PortStoreRef>> {
             let candidate_design = candidate_design.read().ok()?;
             let mut consumed_by_piece_port: HashMap<(Id, Id), usize> = HashMap::new();
             for connection in &candidate_design.connections {
                 let connection = connection.read().ok()?;
                 for side in [&connection.connected, &connection.connecting] {
                     let piece_id = Self::side_piece_id(side)?;
-                    let port_id = Self::side_port_ref(side)
-                        .and_then(|port| port.read().ok().map(|port| port.id.clone()))?;
-                    *consumed_by_piece_port
-                        .entry((piece_id, port_id))
-                        .or_default() += 1;
+                    let port_id = Self::side_port_ref(side).and_then(|port| port.read().ok().map(|port| port.id.clone()))?;
+                    *consumed_by_piece_port.entry((piece_id, port_id)).or_default() += 1;
                 }
             }
 
@@ -5093,10 +3966,7 @@ pub mod design {
             for piece in &candidate_design.pieces {
                 let piece = piece.read().ok()?;
                 let piece_id = piece.id.clone();
-                let type_ref = piece
-                    .type_ref
-                    .as_ref()
-                    .and_then(|type_ref| type_ref.upgrade())?;
+                let type_ref = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade())?;
                 drop(piece);
 
                 let mut piece_ports = Self::candidate_type_available_ports(&type_ref)?;
@@ -5104,9 +3974,7 @@ pub mod design {
                     let Some(port_id) = port.read().ok().map(|port| port.id.clone()) else {
                         return false;
                     };
-                    let consumed = consumed_by_piece_port
-                        .entry((piece_id.clone(), port_id))
-                        .or_default();
+                    let consumed = consumed_by_piece_port.entry((piece_id.clone(), port_id)).or_default();
                     if *consumed == 0 {
                         return true;
                     }
@@ -5116,19 +3984,13 @@ pub mod design {
                 available_ports.extend(piece_ports);
             }
 
-            if consumed_by_piece_port
-                .values()
-                .any(|remaining| *remaining > 0)
-            {
+            if consumed_by_piece_port.values().any(|remaining| *remaining > 0) {
                 return None;
             }
             Some(available_ports)
         }
 
-        fn ports_are_compatible(
-            candidate_port: &PortStoreRef,
-            required_port: &PortStoreRef,
-        ) -> bool {
+        fn ports_are_compatible(candidate_port: &PortStoreRef, required_port: &PortStoreRef) -> bool {
             let Ok(candidate_port) = candidate_port.read() else {
                 return false;
             };
@@ -5144,21 +4006,10 @@ pub mod design {
             let Some(required_family) = required_port.family.as_deref() else {
                 return false;
             };
-            candidate_family == required_family
-                || candidate_port
-                    .compatible_families
-                    .iter()
-                    .any(|family| family == required_family)
-                || required_port
-                    .compatible_families
-                    .iter()
-                    .any(|family| family == candidate_family)
+            candidate_family == required_family || candidate_port.compatible_families.iter().any(|family| family == required_family) || required_port.compatible_families.iter().any(|family| family == candidate_family)
         }
 
-        fn can_satisfy_port_requirements(
-            required_ports: &[Option<PortStoreRef>],
-            available_ports: &[PortStoreRef],
-        ) -> bool {
+        fn can_satisfy_port_requirements(required_ports: &[Option<PortStoreRef>], available_ports: &[PortStoreRef]) -> bool {
             if required_ports.is_empty() {
                 return true;
             }
@@ -5171,13 +4022,7 @@ pub mod design {
                 let Some(required_port) = required_port else {
                     return false;
                 };
-                let matching_indexes: Vec<usize> = available_ports
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(index, candidate_port)| {
-                        Self::ports_are_compatible(candidate_port, required_port).then_some(index)
-                    })
-                    .collect();
+                let matching_indexes: Vec<usize> = available_ports.iter().enumerate().filter_map(|(index, candidate_port)| Self::ports_are_compatible(candidate_port, required_port).then_some(index)).collect();
                 if matching_indexes.is_empty() {
                     return false;
                 }
@@ -5187,11 +4032,7 @@ pub mod design {
             requirement_options.sort_by_key(Vec::len);
             let mut used_available_indexes = vec![false; available_ports.len()];
 
-            fn match_requirement(
-                requirement_index: usize,
-                requirement_options: &[Vec<usize>],
-                used_available_indexes: &mut [bool],
-            ) -> bool {
+            fn match_requirement(requirement_index: usize, requirement_options: &[Vec<usize>], used_available_indexes: &mut [bool]) -> bool {
                 if requirement_index >= requirement_options.len() {
                     return true;
                 }
@@ -5200,11 +4041,7 @@ pub mod design {
                         continue;
                     }
                     used_available_indexes[*candidate_index] = true;
-                    if match_requirement(
-                        requirement_index + 1,
-                        requirement_options,
-                        used_available_indexes,
-                    ) {
+                    if match_requirement(requirement_index + 1, requirement_options, used_available_indexes) {
                         return true;
                     }
                     used_available_indexes[*candidate_index] = false;
@@ -5215,30 +4052,19 @@ pub mod design {
             match_requirement(0, &requirement_options, &mut used_available_indexes)
         }
 
-        fn boundary_requirement_ports(
-            &self,
-            selected_piece_ids: &HashSet<Id>,
-        ) -> Vec<Option<PortStoreRef>> {
+        fn boundary_requirement_ports(&self, selected_piece_ids: &HashSet<Id>) -> Vec<Option<PortStoreRef>> {
             let mut required_ports = Vec::new();
             for connection in &self.connections {
                 let Ok(connection) = connection.read() else {
                     required_ports.push(None);
                     continue;
                 };
-                let connected_selected = Self::side_piece_id(&connection.connected)
-                    .map(|id| selected_piece_ids.contains(&id))
-                    .unwrap_or(false);
-                let connecting_selected = Self::side_piece_id(&connection.connecting)
-                    .map(|id| selected_piece_ids.contains(&id))
-                    .unwrap_or(false);
+                let connected_selected = Self::side_piece_id(&connection.connected).map(|id| selected_piece_ids.contains(&id)).unwrap_or(false);
+                let connecting_selected = Self::side_piece_id(&connection.connecting).map(|id| selected_piece_ids.contains(&id)).unwrap_or(false);
                 if connected_selected == connecting_selected {
                     continue;
                 }
-                let other_side = if connected_selected {
-                    &connection.connecting
-                } else {
-                    &connection.connected
-                };
+                let other_side = if connected_selected { &connection.connecting } else { &connection.connected };
                 required_ports.push(Self::side_port_ref(other_side));
             }
             required_ports
@@ -5251,11 +4077,7 @@ pub mod design {
             let Ok(piece) = piece_ref.read() else {
                 return vec![None];
             };
-            let Some(type_ref) = piece
-                .type_ref
-                .as_ref()
-                .and_then(|type_ref| type_ref.upgrade())
-            else {
+            let Some(type_ref) = piece.type_ref.as_ref().and_then(|type_ref| type_ref.upgrade()) else {
                 return vec![None];
             };
             let Ok(type_ref) = type_ref.read() else {
@@ -5264,18 +4086,11 @@ pub mod design {
             if type_ref.connectors.is_empty() {
                 return Vec::new();
             }
-            type_ref
-                .connectors
-                .iter()
-                .map(Self::connector_port_ref)
-                .collect()
+            type_ref.connectors.iter().map(Self::connector_port_ref).collect()
         }
 
         /// 🔁Returns replacement kinds and designs for a piece selection while preserving connector-valid boundaries.
-        pub(crate) fn replaceable_catalog_candidates(
-            &self,
-            selection_piece_ids: &[Id],
-        ) -> PieceAlternatives {
+        pub(crate) fn replaceable_catalog_candidates(&self, selection_piece_ids: &[Id]) -> PieceAlternatives {
             let Some(parent_kit) = self.parent_kit.upgrade() else {
                 return PieceAlternatives::default();
             };
@@ -5293,24 +4108,8 @@ pub mod design {
 
             let mut alternatives = PieceAlternatives::default();
             if selection_piece_ids.is_empty() {
-                alternatives.types = parent_kit
-                    .types
-                    .iter()
-                    .filter_map(|candidate_type| {
-                        Self::candidate_type_available_ports(candidate_type)
-                            .filter(|available_ports| available_ports.is_empty())
-                            .map(|_| candidate_type.clone())
-                    })
-                    .collect();
-                alternatives.designs = parent_kit
-                    .designs
-                    .iter()
-                    .filter_map(|candidate_design| {
-                        Self::candidate_design_available_ports(candidate_design)
-                            .filter(|available_ports| available_ports.is_empty())
-                            .map(|_| candidate_design.clone())
-                    })
-                    .collect();
+                alternatives.types = parent_kit.types.iter().filter_map(|candidate_type| Self::candidate_type_available_ports(candidate_type).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_type.clone())).collect();
+                alternatives.designs = parent_kit.designs.iter().filter_map(|candidate_design| Self::candidate_design_available_ports(candidate_design).filter(|available_ports| available_ports.is_empty()).map(|_| candidate_design.clone())).collect();
                 return alternatives;
             }
 
@@ -5319,8 +4118,7 @@ pub mod design {
                 .iter()
                 .filter_map(|candidate_type| {
                     let available_ports = Self::candidate_type_available_ports(candidate_type)?;
-                    Self::can_satisfy_port_requirements(&required_ports, &available_ports)
-                        .then_some(candidate_type.clone())
+                    Self::can_satisfy_port_requirements(&required_ports, &available_ports).then_some(candidate_type.clone())
                 })
                 .collect();
             alternatives.designs = parent_kit
@@ -5328,8 +4126,7 @@ pub mod design {
                 .iter()
                 .filter_map(|candidate_design| {
                     let available_ports = Self::candidate_design_available_ports(candidate_design)?;
-                    Self::can_satisfy_port_requirements(&required_ports, &available_ports)
-                        .then_some(candidate_design.clone())
+                    Self::can_satisfy_port_requirements(&required_ports, &available_ports).then_some(candidate_design.clone())
                 })
                 .collect();
             alternatives
@@ -5346,29 +4143,13 @@ pub mod design {
         pub(crate) fn delete_pieces_inner(&mut self, piece_ids: &[Id], invalidate: bool) -> usize {
             let parent = self.entity_ref();
             for g in piece_ids {
-                self.emit_ev(KitEvent::ChildRemoved {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Piece, g.clone()),
-                });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, g.clone()) });
             }
             let before = self.pieces.len();
-            self.pieces.retain(|p| {
-                p.read()
-                    .map(|p| !piece_ids.iter().any(|g| *g == p.id))
-                    .unwrap_or(true)
-            });
+            self.pieces.retain(|p| p.read().map(|p| !piece_ids.iter().any(|g| *g == p.id)).unwrap_or(true));
             self.connections.retain(|c| {
                 if let Ok(c) = c.read() {
-                    let touches = |s: &SideStoreRef| -> bool {
-                        s.read()
-                            .ok()
-                            .and_then(|side| {
-                                side.piece
-                                    .upgrade()
-                                    .and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))
-                            })
-                            .unwrap_or(false)
-                    };
+                    let touches = |s: &SideStoreRef| -> bool { s.read().ok().and_then(|side| side.piece.upgrade().and_then(|p| p.read().ok().map(|p| piece_ids.contains(&p.id)))).unwrap_or(false) };
                     !(touches(&c.connected) || touches(&c.connecting))
                 } else {
                     true
@@ -5387,25 +4168,15 @@ pub mod design {
             crate::diff::DesignDiff::between(&self.to_full_dto(), &other.to_full_dto())
         }
 
-        pub fn apply_diff(
-            &mut self,
-            diff: &crate::diff::DesignDiff,
-            type_index: &HashMap<Id, TypeStoreRef>,
-            design_weak: DesignStoreWeak,
-        ) -> crate::error::Result<()> {
+        pub fn apply_diff(&mut self, diff: &crate::diff::DesignDiff, type_index: &HashMap<Id, TypeStoreRef>, design_weak: DesignStoreWeak) -> crate::error::Result<()> {
             let parent = self.entity_ref();
             for id in &diff.removed_connections {
-                self.emit_ev(KitEvent::ChildRemoved {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, id.id.clone()),
-                });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, id.id.clone()) });
             }
             for id in &diff.removed_connections {
-                self.connections
-                    .retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
+                self.connections.retain(|c| c.read().map(|c| c.id != id.id).unwrap_or(true));
             }
-            let removed_piece_ids: Vec<Id> =
-                diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
+            let removed_piece_ids: Vec<Id> = diff.removed_pieces.iter().map(|p| p.id.clone()).collect();
             if !removed_piece_ids.is_empty() {
                 self.delete_pieces_inner(&removed_piece_ids, false);
             }
@@ -5414,10 +4185,7 @@ pub mod design {
                 if let Ok(mut pw) = pref.write() {
                     pw.apply_full_dto(p.clone(), design_weak.clone(), type_index);
                 }
-                self.emit_ev(KitEvent::ChildAdded {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Piece, p.id.clone()),
-                });
+                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Piece, p.id.clone()) });
                 self.pieces.push(pref);
             }
             for p in &diff.modified_pieces {
@@ -5434,32 +4202,14 @@ pub mod design {
                 }
             }
             for c in &diff.added_connections {
-                self.connections.push(connection_from_full_dto(
-                    c.clone(),
-                    &piece_index,
-                    design_weak.clone(),
-                ));
-                self.emit_ev(KitEvent::ChildAdded {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
-                });
+                self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
             }
             for c in &diff.modified_connections {
-                self.emit_ev(KitEvent::ChildRemoved {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
-                });
-                self.connections
-                    .retain(|x| x.read().map(|x| x.id != c.id).unwrap_or(true));
-                self.connections.push(connection_from_full_dto(
-                    c.clone(),
-                    &piece_index,
-                    design_weak.clone(),
-                ));
-                self.emit_ev(KitEvent::ChildAdded {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, c.id.clone()),
-                });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
+                self.connections.retain(|x| x.read().map(|x| x.id != c.id).unwrap_or(true));
+                self.connections.push(connection_from_full_dto(c.clone(), &piece_index, design_weak.clone()));
+                self.emit_ev(KitEvent::ChildAdded { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, c.id.clone()) });
             }
             self.rewire_piece_flatten_parents();
             // Do not bubble hash/validation to kit here: [`KitStore::apply_design_diff`] may hold the
@@ -5470,44 +4220,24 @@ pub mod design {
         }
 
         pub fn invert_change(change: &crate::diff::DesignChange) -> crate::diff::DesignChange {
-            crate::diff::DesignChange {
-                forward: change.backward.clone(),
-                backward: change.forward.clone(),
-                author: change.author.clone(),
-                time: change.time.clone(),
-                before: change.after.clone(),
-                after: change.before.clone(),
-            }
+            crate::diff::DesignChange { forward: change.backward.clone(), backward: change.forward.clone(), author: change.author.clone(), time: change.time.clone(), before: change.after.clone(), after: change.before.clone() }
         }
 
-        pub fn validate_change(
-            &self,
-            change: &crate::diff::DesignChange,
-        ) -> crate::report::ValidationResult {
+        pub fn validate_change(&self, change: &crate::diff::DesignChange) -> crate::report::ValidationResult {
             let mut r = crate::report::ValidationResult::valid();
-            if change.before.as_ref().map(|b| b.id.clone())
-                != change.after.as_ref().map(|a| a.id.clone())
-            {
+            if change.before.as_ref().map(|b| b.id.clone()) != change.after.as_ref().map(|a| a.id.clone()) {
                 r.is_valid = false;
-                r.errors.push(
-                    "DesignChange before/after snapshots must refer to the same design id".into(),
-                );
+                r.errors.push("DesignChange before/after snapshots must refer to the same design id".into());
             }
             r
         }
 
         pub fn to_id_dto(&self) -> DesignIdDto {
-            DesignIdDto {
-                id: self.id.clone(),
-            }
+            DesignIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> DesignMetadataDto {
-            let kit = self.parent_kit.upgrade().and_then(|k| {
-                k.read()
-                    .ok()
-                    .map(|k| crate::kit::KitIdDto { id: k.id.clone() })
-            });
+            let kit = self.parent_kit.upgrade().and_then(|k| k.read().ok().map(|k| crate::kit::KitIdDto { id: k.id.clone() }));
             DesignMetadataDto {
                 id: self.id.clone(),
                 name: self.name.clone(),
@@ -5541,61 +4271,17 @@ pub mod design {
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
-                pieces: self
-                    .pieces
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                connections: self
-                    .connections
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
-                    .collect(),
-                layers: self
-                    .layers
-                    .iter()
-                    .filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto()))
-                    .collect(),
-                groups: self
-                    .groups
-                    .iter()
-                    .filter_map(|g| g.read().ok().map(|g| g.to_shallow_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
-                stats: self
-                    .stats
-                    .iter()
-                    .filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto()))
-                    .collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
+                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_shallow_dto())).collect(),
+                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_shallow_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_shallow_dto())).collect(),
             }
         }
 
@@ -5615,70 +4301,23 @@ pub mod design {
                 created: m.created,
                 updated: m.updated,
                 kit: m.kit,
-                pieces: self
-                    .pieces
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                connections: self
-                    .connections
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
-                    .collect(),
-                layers: self
-                    .layers
-                    .iter()
-                    .filter_map(|l| l.read().ok().map(|l| l.to_full_dto()))
-                    .collect(),
-                groups: self
-                    .groups
-                    .iter()
-                    .filter_map(|g| g.read().ok().map(|g| g.to_full_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_full_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
-                stats: self
-                    .stats
-                    .iter()
-                    .filter_map(|s| s.read().ok().map(|s| s.to_full_dto()))
-                    .collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                connections: self.connections.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
+                layers: self.layers.iter().filter_map(|l| l.read().ok().map(|l| l.to_full_dto())).collect(),
+                groups: self.groups.iter().filter_map(|g| g.read().ok().map(|g| g.to_full_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                stats: self.stats.iter().filter_map(|s| s.read().ok().map(|s| s.to_full_dto())).collect(),
             }
         }
 
         /// Rebuild design graph from DTO (pieces, connections with [`SideStore`] ends, nested leaves).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct designs in host code.
-        pub(crate) fn hydrate_from_full_dto(
-            d: DesignFullDto,
-            type_index: &HashMap<Id, TypeStoreRef>,
-        ) -> DesignStoreRef {
+        pub(crate) fn hydrate_from_full_dto(d: DesignFullDto, type_index: &HashMap<Id, TypeStoreRef>) -> DesignStoreRef {
             let DesignFullDto {
                 id,
                 name,
@@ -5706,27 +4345,10 @@ pub mod design {
                 stats: stat_dtos,
             } = d;
 
-            let design = Arc::new(RwLock::new(DesignStore::empty_shell(
-                id.clone(),
-                name.clone(),
-            )));
+            let design = Arc::new(RwLock::new(DesignStore::empty_shell(id.clone(), name.clone())));
             {
                 let mut dw = design.write().expect("design write");
-                dw.apply_metadata_fields(DesignMetadataDto {
-                    id,
-                    name,
-                    description,
-                    icon,
-                    image,
-                    variant,
-                    view,
-                    location,
-                    camera,
-                    unit,
-                    created,
-                    updated,
-                    kit,
-                });
+                dw.apply_metadata_fields(DesignMetadataDto { id, name, description, icon, image, variant, view, location, camera, unit, created, updated, kit });
             }
 
             let dw = Arc::downgrade(&design);
@@ -5734,10 +4356,7 @@ pub mod design {
             let piece_ids: Vec<Id> = piece_dtos.iter().map(|p| p.id.clone()).collect();
             let mut piece_index: HashMap<Id, PieceStoreRef> = HashMap::new();
             for pd in &piece_dtos {
-                piece_index.insert(
-                    pd.id.clone(),
-                    Arc::new(RwLock::new(PieceStore::empty_shell(pd.id.clone()))),
-                );
+                piece_index.insert(pd.id.clone(), Arc::new(RwLock::new(PieceStore::empty_shell(pd.id.clone()))));
             }
             for pdto in piece_dtos {
                 if let Some(p) = piece_index.get(&pdto.id) {
@@ -5747,10 +4366,7 @@ pub mod design {
                 }
             }
 
-            let pieces_ordered: Vec<PieceStoreRef> = piece_ids
-                .into_iter()
-                .filter_map(|g| piece_index.remove(&g))
-                .collect();
+            let pieces_ordered: Vec<PieceStoreRef> = piece_ids.into_iter().filter_map(|g| piece_index.remove(&g)).collect();
 
             let layers: Vec<LayerStoreRef> = layer_dtos
                 .into_iter()
@@ -5840,10 +4456,7 @@ pub mod design {
                 }
             }
 
-            let connections: Vec<ConnectionStoreRef> = connection_dtos
-                .into_iter()
-                .map(|cdto| connection_from_full_dto(cdto, &piece_index_ordered, dw.clone()))
-                .collect();
+            let connections: Vec<ConnectionStoreRef> = connection_dtos.into_iter().map(|cdto| connection_from_full_dto(cdto, &piece_index_ordered, dw.clone())).collect();
 
             {
                 let mut dw = design.write().expect("design write");
@@ -5902,35 +4515,15 @@ pub mod diff {
     pub struct DesignDiff {
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedPieces")]
         pub added_pieces: Vec<PieceFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedPieces"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedPieces")]
         pub removed_pieces: Vec<PieceIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedPieces"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedPieces")]
         pub modified_pieces: Vec<PieceFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedConnections"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedConnections")]
         pub added_connections: Vec<ConnectionFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedConnections"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedConnections")]
         pub removed_connections: Vec<ConnectionIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedConnections"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedConnections")]
         pub modified_connections: Vec<ConnectionFullDto>,
     }
 
@@ -5939,10 +4532,8 @@ pub mod diff {
         pub fn between(before: &DesignFullDto, after: &DesignFullDto) -> Self {
             let mut diff = DesignDiff::default();
 
-            let bp: HashMap<Id, &PieceFullDto> =
-                before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
-            let ap: HashMap<Id, &PieceFullDto> =
-                after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let bp: HashMap<Id, &PieceFullDto> = before.pieces.iter().map(|p| (p.id.clone(), p)).collect();
+            let ap: HashMap<Id, &PieceFullDto> = after.pieces.iter().map(|p| (p.id.clone(), p)).collect();
             let kb: HashSet<Id> = bp.keys().cloned().collect();
             let ka: HashSet<Id> = ap.keys().cloned().collect();
             for g in kb.difference(&ka) {
@@ -5959,21 +4550,12 @@ pub mod diff {
                 }
             }
 
-            let bc: HashMap<Id, &ConnectionFullDto> = before
-                .connections
-                .iter()
-                .map(|c| (c.id.clone(), c))
-                .collect();
-            let ac: HashMap<Id, &ConnectionFullDto> = after
-                .connections
-                .iter()
-                .map(|c| (c.id.clone(), c))
-                .collect();
+            let bc: HashMap<Id, &ConnectionFullDto> = before.connections.iter().map(|c| (c.id.clone(), c)).collect();
+            let ac: HashMap<Id, &ConnectionFullDto> = after.connections.iter().map(|c| (c.id.clone(), c)).collect();
             let kbc: HashSet<Id> = bc.keys().cloned().collect();
             let kac: HashSet<Id> = ac.keys().cloned().collect();
             for g in kbc.difference(&kac) {
-                diff.removed_connections
-                    .push(ConnectionIdDto { id: g.clone() });
+                diff.removed_connections.push(ConnectionIdDto { id: g.clone() });
             }
             for g in kac.difference(&kbc) {
                 diff.added_connections.push((*ac[g]).clone());
@@ -6007,11 +4589,7 @@ pub mod diff {
     }
 
     impl DesignStore {
-        pub fn delete_change(
-            &mut self,
-            piece_ids: &[Id],
-            connection_ids: &[Id],
-        ) -> SemioReport<DesignChange> {
+        pub fn delete_change(&mut self, piece_ids: &[Id], connection_ids: &[Id]) -> SemioReport<DesignChange> {
             let before = self.to_full_dto();
 
             let mut removed_pieces: Vec<PieceFullDto> = Vec::new();
@@ -6033,46 +4611,19 @@ pub mod diff {
 
             let parent = self.entity_ref();
             for cg in connection_ids {
-                self.emit_ev(KitEvent::ChildRemoved {
-                    parent: parent.clone(),
-                    child: EntityRef::new(EntityKind::Connection, cg.clone()),
-                });
+                self.emit_ev(KitEvent::ChildRemoved { parent: parent.clone(), child: EntityRef::new(EntityKind::Connection, cg.clone()) });
             }
-            self.connections.retain(|c| {
-                c.read()
-                    .map(|c| !connection_ids.iter().any(|g| *g == c.id))
-                    .unwrap_or(true)
-            });
+            self.connections.retain(|c| c.read().map(|c| !connection_ids.iter().any(|g| *g == c.id)).unwrap_or(true));
             self.rewire_piece_flatten_parents();
             let _deleted = self.delete_pieces(piece_ids);
 
             let after = self.to_full_dto();
 
-            let backward = DesignDiff {
-                added_pieces: removed_pieces.clone(),
-                added_connections: removed_connections.clone(),
-                ..DesignDiff::default()
-            };
-            let forward = DesignDiff {
-                removed_pieces: removed_pieces
-                    .iter()
-                    .map(|p| PieceIdDto { id: p.id.clone() })
-                    .collect(),
-                removed_connections: removed_connections
-                    .iter()
-                    .map(|c| ConnectionIdDto { id: c.id.clone() })
-                    .collect(),
-                ..DesignDiff::default()
-            };
+            let backward = DesignDiff { added_pieces: removed_pieces.clone(), added_connections: removed_connections.clone(), ..DesignDiff::default() };
+            let forward =
+                DesignDiff { removed_pieces: removed_pieces.iter().map(|p| PieceIdDto { id: p.id.clone() }).collect(), removed_connections: removed_connections.iter().map(|c| ConnectionIdDto { id: c.id.clone() }).collect(), ..DesignDiff::default() };
 
-            let change = DesignChange {
-                forward,
-                backward,
-                author: None,
-                time: None,
-                before: Some(before),
-                after: Some(after),
-            };
+            let change = DesignChange { forward, backward, author: None, time: None, before: Some(before), after: Some(after) };
             SemioReport::ok(change)
         }
 
@@ -6087,28 +4638,10 @@ pub mod diff {
                     modified_pieces.push(dto);
                 }
             }
-            let forward = DesignDiff {
-                modified_pieces: modified_pieces.clone(),
-                ..DesignDiff::default()
-            };
-            let backward_mod: Vec<PieceFullDto> = before
-                .pieces
-                .iter()
-                .filter(|p| modified_pieces.iter().any(|m| m.id == p.id))
-                .cloned()
-                .collect();
-            let backward = DesignDiff {
-                modified_pieces: backward_mod,
-                ..DesignDiff::default()
-            };
-            SemioReport::ok(DesignChange {
-                forward,
-                backward,
-                author: None,
-                time: None,
-                before: Some(before.clone()),
-                after: Some(before),
-            })
+            let forward = DesignDiff { modified_pieces: modified_pieces.clone(), ..DesignDiff::default() };
+            let backward_mod: Vec<PieceFullDto> = before.pieces.iter().filter(|p| modified_pieces.iter().any(|m| m.id == p.id)).cloned().collect();
+            let backward = DesignDiff { modified_pieces: backward_mod, ..DesignDiff::default() };
+            SemioReport::ok(DesignChange { forward, backward, author: None, time: None, before: Some(before.clone()), after: Some(before) })
         }
     }
 }
@@ -6157,169 +4690,65 @@ pub mod kit_diff {
         pub kit_metadata: Option<KitMetadataDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedTypes")]
         pub added_types: Vec<TypeFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedTypes"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTypes")]
         pub removed_types: Vec<TypeIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedTypes"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedTypes")]
         pub modified_types: Vec<TypeFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedDesigns"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedDesigns")]
         pub added_designs: Vec<DesignFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedDesigns"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedDesigns")]
         pub removed_designs: Vec<DesignIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "replacedFullDesigns"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "replacedFullDesigns")]
         pub replaced_full_designs: Vec<DesignFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "patchedDesigns"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "patchedDesigns")]
         pub patched_designs: Vec<DesignDiffPatch>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFiles")]
         pub added_files: Vec<FileFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedFiles"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedFiles")]
         pub removed_files: Vec<FileIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedFiles"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedFiles")]
         pub modified_files: Vec<FileFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedFolders"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedFolders")]
         pub added_folders: Vec<FolderFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedFolders"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedFolders")]
         pub removed_folders: Vec<FolderIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedFolders"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedFolders")]
         pub modified_folders: Vec<FolderFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedAuthors"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedAuthors")]
         pub added_authors: Vec<AuthorFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedAuthors"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedAuthors")]
         pub removed_authors: Vec<AuthorIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedAuthors"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedAuthors")]
         pub modified_authors: Vec<AuthorFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedConcepts"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedConcepts")]
         pub added_concepts: Vec<ConceptFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedConcepts"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedConcepts")]
         pub removed_concepts: Vec<ConceptIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedConcepts"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedConcepts")]
         pub modified_concepts: Vec<ConceptFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedTags")]
         pub added_tags: Vec<TagFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedTags")]
         pub removed_tags: Vec<TagIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedTags"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedTags")]
         pub modified_tags: Vec<TagFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedQualities"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedQualities")]
         pub added_qualities: Vec<QualityFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedQualities"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedQualities")]
         pub removed_qualities: Vec<QualityIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedQualities"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedQualities")]
         pub modified_qualities: Vec<QualityFullDto>,
         #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedProps")]
         pub added_props: Vec<PropFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedProps"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedProps")]
         pub removed_props: Vec<PropIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedProps"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedProps")]
         pub modified_props: Vec<PropFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "addedAttributes"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "addedAttributes")]
         pub added_attributes: Vec<AttributeFullDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "removedAttributes"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "removedAttributes")]
         pub removed_attributes: Vec<AttributeIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "modifiedAttributes"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "modifiedAttributes")]
         pub modified_attributes: Vec<AttributeFullDto>,
     }
 
@@ -6399,13 +4828,7 @@ pub mod kit_diff {
 
     /// Lift a single design [`DesignDiff`] into a [`KitDiff`].
     pub fn from_design_diff(design_id: Id, diff: &DesignDiff) -> KitDiff {
-        KitDiff {
-            patched_designs: vec![DesignDiffPatch {
-                design_id,
-                diff: diff.clone(),
-            }],
-            ..KitDiff::default()
-        }
+        KitDiff { patched_designs: vec![DesignDiffPatch { design_id, diff: diff.clone() }], ..KitDiff::default() }
     }
 
     fn after_to_metadata_dto(kit: &KitFullDto) -> KitMetadataDto {
@@ -6426,19 +4849,9 @@ pub mod kit_diff {
         }
     }
 
-    fn diff_designs(
-        before: &KitFullDto,
-        after: &KitFullDto,
-    ) -> (
-        Vec<DesignFullDto>,
-        Vec<DesignIdDto>,
-        Vec<DesignFullDto>,
-        Vec<DesignDiffPatch>,
-    ) {
-        let bm: HashMap<Id, &DesignFullDto> =
-            before.designs.iter().map(|d| (d.id.clone(), d)).collect();
-        let am: HashMap<Id, &DesignFullDto> =
-            after.designs.iter().map(|d| (d.id.clone(), d)).collect();
+    fn diff_designs(before: &KitFullDto, after: &KitFullDto) -> (Vec<DesignFullDto>, Vec<DesignIdDto>, Vec<DesignFullDto>, Vec<DesignDiffPatch>) {
+        let bm: HashMap<Id, &DesignFullDto> = before.designs.iter().map(|d| (d.id.clone(), d)).collect();
+        let am: HashMap<Id, &DesignFullDto> = after.designs.iter().map(|d| (d.id.clone(), d)).collect();
         let kb: HashSet<Id> = bm.keys().cloned().collect();
         let ka: HashSet<Id> = am.keys().cloned().collect();
         let mut added: Vec<DesignFullDto> = Vec::new();
@@ -6475,19 +4888,13 @@ pub mod kit_diff {
                 let mut temp = b.clone();
                 apply_design_full_dto(&mut temp, &pdd);
                 if temp == *a {
-                    patches.push(DesignDiffPatch {
-                        design_id: id.clone(),
-                        diff: pdd,
-                    });
+                    patches.push(DesignDiffPatch { design_id: id.clone(), diff: pdd });
                 } else {
                     if design_metadata_differed(b, a) {
                         merge_full_design_except_scenes(&mut temp, a);
                     }
                     if temp == *a {
-                        patches.push(DesignDiffPatch {
-                            design_id: id.clone(),
-                            diff: pdd,
-                        });
+                        patches.push(DesignDiffPatch { design_id: id.clone(), diff: pdd });
                     } else {
                         replaced.push(a.clone());
                     }
@@ -6516,11 +4923,7 @@ pub mod kit_diff {
         kit.updated = m.updated.clone();
     }
 
-    fn diff_id_list<T: PartialEq + Clone>(
-        before: &[T],
-        after: &[T],
-        get_id: impl Fn(&T) -> &Id,
-    ) -> (Vec<T>, Vec<Id>, Vec<T>) {
+    fn diff_id_list<T: PartialEq + Clone>(before: &[T], after: &[T], get_id: impl Fn(&T) -> &Id) -> (Vec<T>, Vec<Id>, Vec<T>) {
         let bm: HashMap<Id, &T> = before.iter().map(|t| (get_id(t).clone(), t)).collect();
         let am: HashMap<Id, &T> = after.iter().map(|t| (get_id(t).clone(), t)).collect();
         let kb: HashSet<Id> = bm.keys().cloned().collect();
@@ -6733,10 +5136,7 @@ pub mod kit_diff {
             d.modified_props = m_p;
             let (a_at, r_at, m_at) = diff_id_list(&before.attributes, &after.attributes, |t| &t.id);
             d.added_attributes = a_at;
-            d.removed_attributes = r_at
-                .iter()
-                .map(|i| AttributeIdDto { id: i.clone() })
-                .collect();
+            d.removed_attributes = r_at.iter().map(|i| AttributeIdDto { id: i.clone() }).collect();
             d.modified_attributes = m_at;
             let (ad, rd, rfd, pds) = diff_designs(before, after);
             d.added_designs = ad;
@@ -6753,10 +5153,7 @@ pub mod kit_diff {
 
         /// Apply to an in-memory [`KitStore`] by replacing the graph from a DTO.
         pub fn apply(&self, kit: &KitStoreRef) -> crate::error::SetResult {
-            let before = kit
-                .read()
-                .map_err(|_| crate::error::SetError::LockPoisoned("kit".into()))?
-                .to_full_dto();
+            let before = kit.read().map_err(|_| crate::error::SetError::LockPoisoned("kit".into()))?.to_full_dto();
             let after = apply_to_dto(&before, self);
             KitStore::replace_from_full_dto(kit, after)
         }
@@ -6822,15 +5219,7 @@ pub mod kit_change {
             }
             let forward = KitDiff::between(before, after);
             let backward = KitDiff::between(after, before);
-            Some(KitChange {
-                forward,
-                backward,
-                before: Some(before.clone()),
-                after: Some(after.clone()),
-                kind: KitChangeKind::Inferred,
-                author: None,
-                time: None,
-            })
+            Some(KitChange { forward, backward, before: Some(before.clone()), after: Some(after.clone()), kind: KitChangeKind::Inferred, author: None, time: None })
         }
 
         pub fn apply_forward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
@@ -6842,18 +5231,12 @@ pub mod kit_change {
         }
 
         /// Apply the forward step to a store (replaces the graph from DTO).
-        pub fn apply_forward(
-            c: &KitChange,
-            kit: &crate::kit::KitStoreRef,
-        ) -> crate::error::SetResult {
+        pub fn apply_forward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
             c.forward.apply(kit)
         }
 
         /// Apply the backward (undo) step to a store.
-        pub fn apply_backward(
-            c: &KitChange,
-            kit: &crate::kit::KitStoreRef,
-        ) -> crate::error::SetResult {
+        pub fn apply_backward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
             c.backward.apply(kit)
         }
     }
@@ -6952,9 +5335,7 @@ pub mod validate {
             return Err(SetError::IllegalName(format!("{label} cannot be empty")));
         }
         if t.len() > MAX_NAME_LEN {
-            return Err(SetError::NameTooLong(format!(
-                "{label} exceeds {MAX_NAME_LEN} chars"
-            )));
+            return Err(SetError::NameTooLong(format!("{label} exceeds {MAX_NAME_LEN} chars")));
         }
         Ok(())
     }
@@ -6968,9 +5349,7 @@ pub mod validate {
                     return Err(SetError::IllegalName(format!("{label} cannot be empty")));
                 }
                 if t.len() > MAX_NAME_LEN {
-                    return Err(SetError::NameTooLong(format!(
-                        "{label} exceeds {MAX_NAME_LEN} chars"
-                    )));
+                    return Err(SetError::NameTooLong(format!("{label} exceeds {MAX_NAME_LEN} chars")));
                 }
                 Ok(())
             }
@@ -6990,9 +5369,7 @@ pub mod validate {
             return Err(SetError::InvalidUrl(format!("{label} cannot be empty")));
         }
         if t.len() > MAX_URL_LEN {
-            return Err(SetError::InvalidUrl(format!(
-                "{label} exceeds {MAX_URL_LEN} chars"
-            )));
+            return Err(SetError::InvalidUrl(format!("{label} exceeds {MAX_URL_LEN} chars")));
         }
         if t.starts_with('/') || t.starts_with("./") {
             return Ok(());
@@ -7000,9 +5377,7 @@ pub mod validate {
         if t.contains("://") {
             return Ok(());
         }
-        Err(SetError::InvalidUrl(format!(
-            "{label} must be a URL or path"
-        )))
+        Err(SetError::InvalidUrl(format!("{label} must be a URL or path")))
     }
 
     pub fn optional_url(s: &Option<String>, label: &str) -> SetResult {
@@ -7026,9 +5401,7 @@ pub mod validate {
                     return Ok(());
                 }
                 if t.len() > MAX_URL_LEN {
-                    return Err(SetError::InvalidUrl(format!(
-                        "{label} exceeds {MAX_URL_LEN} chars"
-                    )));
+                    return Err(SetError::InvalidUrl(format!("{label} exceeds {MAX_URL_LEN} chars")));
                 }
                 Ok(())
             }
@@ -7041,9 +5414,7 @@ pub mod validate {
             return Err(SetError::InvalidValue(format!("{label} cannot be empty")));
         }
         if !t.contains('@') || t.len() < 3 {
-            return Err(SetError::InvalidValue(format!(
-                "{label} must look like an email"
-            )));
+            return Err(SetError::InvalidValue(format!("{label} must look like an email")));
         }
         Ok(())
     }
@@ -7054,9 +5425,7 @@ pub mod validate {
             return Err(SetError::IllegalName(format!("{label} cannot be empty")));
         }
         if t.len() > MAX_KEY_LEN {
-            return Err(SetError::NameTooLong(format!(
-                "{label} exceeds {MAX_KEY_LEN} chars"
-            )));
+            return Err(SetError::NameTooLong(format!("{label} exceeds {MAX_KEY_LEN} chars")));
         }
         Ok(())
     }
@@ -7111,166 +5480,94 @@ pub mod events {
         }
     }
 
-    /// 🧩Typed field discriminator for observable store mutations.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
-    pub enum EventField {
-        Camera,
-        Center,
-        Code,
-        Color,
-        CompatibleFamilies,
-        Created,
-        Definition,
-        Description,
-        DesignPiece,
-        Direction,
-        Email,
-        Family,
-        FlatCenter,
-        FlatPlane,
-        Gap,
-        Hash,
-        Hidden,
-        Homepage,
-        Icon,
-        Id,
-        Image,
-        Key,
-        Kind,
-        License,
-        Location,
-        Locked,
-        Mandatory,
-        Max,
-        MaxExcluded,
-        Mime,
-        Min,
-        MinExcluded,
-        MirrorPlane,
-        Name,
-        Order,
-        Path,
-        Piece,
-        Pieces,
-        Plane,
-        Point,
-        Port,
-        Pose,
-        Preview,
-        Rank,
-        Remote,
-        Rise,
-        Role,
-        Rotation,
-        Scale,
-        Shift,
-        Size,
-        Stock,
-        T,
-        Tilt,
-        Turn,
-        Unit,
-        Updated,
-        Uri,
-        Url,
-        Value,
-        Variant,
-        Version,
-        View,
-        Virtual,
-        Visible,
-        X,
-        Y,
-    }
-
-    impl EventField {
-        pub const fn as_str(self) -> &'static str {
-            match self {
-                Self::Camera => "camera",
-                Self::Center => "center",
-                Self::Code => "code",
-                Self::Color => "color",
-                Self::CompatibleFamilies => "compatibleFamilies",
-                Self::Created => "created",
-                Self::Definition => "definition",
-                Self::Description => "description",
-                Self::DesignPiece => "designPiece",
-                Self::Direction => "direction",
-                Self::Email => "email",
-                Self::Family => "family",
-                Self::FlatCenter => "flat_center",
-                Self::FlatPlane => "flat_plane",
-                Self::Gap => "gap",
-                Self::Hash => "hash",
-                Self::Hidden => "hidden",
-                Self::Homepage => "homepage",
-                Self::Icon => "icon",
-                Self::Id => "id",
-                Self::Image => "image",
-                Self::Key => "key",
-                Self::Kind => "type",
-                Self::License => "license",
-                Self::Location => "location",
-                Self::Locked => "locked",
-                Self::Mandatory => "mandatory",
-                Self::Max => "max",
-                Self::MaxExcluded => "maxExcluded",
-                Self::Mime => "mime",
-                Self::Min => "min",
-                Self::MinExcluded => "minExcluded",
-                Self::MirrorPlane => "mirrorPlane",
-                Self::Name => "name",
-                Self::Order => "order",
-                Self::Path => "path",
-                Self::Piece => "piece",
-                Self::Pieces => "pieces",
-                Self::Plane => "plane",
-                Self::Point => "point",
-                Self::Port => "port",
-                Self::Pose => "pose",
-                Self::Preview => "preview",
-                Self::Rank => "rank",
-                Self::Remote => "remote",
-                Self::Rise => "rise",
-                Self::Role => "role",
-                Self::Rotation => "rotation",
-                Self::Scale => "scale",
-                Self::Shift => "shift",
-                Self::Size => "size",
-                Self::Stock => "stock",
-                Self::T => "t",
-                Self::Tilt => "tilt",
-                Self::Turn => "turn",
-                Self::Unit => "unit",
-                Self::Updated => "updated",
-                Self::Uri => "uri",
-                Self::Url => "url",
-                Self::Value => "value",
-                Self::Variant => "variant",
-                Self::Version => "version",
-                Self::View => "view",
-                Self::Virtual => "virtual",
-                Self::Visible => "visible",
-                Self::X => "x",
-                Self::Y => "y",
+    macro_rules! event_field_enum {
+        ($name:ident { $($variant:ident),+ $(,)? }) => {
+            #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
+            pub enum $name {
+                $($variant),+
             }
-        }
+        };
     }
 
-    impl std::fmt::Display for EventField {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            f.write_str(self.as_str())
-        }
+    event_field_enum!(AttributeField { Key, Value, Definition });
+    event_field_enum!(AuthorField { Name, Email, Role, Rank });
+    event_field_enum!(BenchmarkField { Name, Min, Max, MinExcluded, MaxExcluded });
+    event_field_enum!(ConceptField { Name, Description, Order });
+    event_field_enum!(ConnectionField { Gap, Shift, Rise, Rotation, Turn, Tilt, X, Y, Description });
+    event_field_enum!(ConnectorField { Code, Description, Port });
+    event_field_enum!(DesignField { Name, Description, Icon, Image, Variant, View, Location, Camera, Unit, Created, Updated });
+    event_field_enum!(FileField { Url, Mime, Size, Hash, Description, Created, Updated });
+    event_field_enum!(FolderField { Path, Description });
+    event_field_enum!(GroupField { Name, Description, Color, Icon, Pieces });
+    event_field_enum!(KitField { Name, Description, Icon, Image, Preview, Version, Remote, Homepage, License, Uri, Created, Updated });
+    event_field_enum!(LayerField { Name, Description, Color, Order, Visible, Locked });
+    event_field_enum!(PieceField { Plane, Pose, Center, Color, Kind, Id, Name, Description, Scale, MirrorPlane, Hidden, Locked, FlatPlane, FlatCenter });
+    event_field_enum!(PortField { Id, Family, CompatibleFamilies, Mandatory, T, Description, Point, Direction });
+    event_field_enum!(PropField { Key, Value, Unit, Description });
+    event_field_enum!(QualityField { Key, Value, Unit, Definition, Description });
+    event_field_enum!(RepresentationField { Url, Description });
+    event_field_enum!(SideField { Piece, Port, DesignPiece });
+    event_field_enum!(StatField { Key, Value, Unit, Definition, Description });
+    event_field_enum!(TagField { Name, Order });
+    event_field_enum!(TypeField { Name, Description, Icon, Image, Variant, Stock, Virtual, Unit, Location, Created, Updated });
+
+    /// 🧩Typed field discriminator scoped by entity kind.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
+    pub enum EventField {
+        Attribute(AttributeField),
+        Author(AuthorField),
+        Benchmark(BenchmarkField),
+        Concept(ConceptField),
+        Connection(ConnectionField),
+        Connector(ConnectorField),
+        Design(DesignField),
+        File(FileField),
+        Folder(FolderField),
+        Group(GroupField),
+        Kit(KitField),
+        Layer(LayerField),
+        Piece(PieceField),
+        Port(PortField),
+        Prop(PropField),
+        Quality(QualityField),
+        Representation(RepresentationField),
+        Side(SideField),
+        Stat(StatField),
+        Tag(TagField),
+        Type(TypeField),
     }
 
-    impl serde::Serialize for EventField {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer,
-        {
-            serializer.serialize_str(self.as_str())
-        }
+    macro_rules! event_field_from {
+        ($field:ident, $variant:ident) => {
+            impl From<$field> for EventField {
+                fn from(field: $field) -> Self {
+                    Self::$variant(field)
+                }
+            }
+        };
     }
+
+    event_field_from!(AttributeField, Attribute);
+    event_field_from!(AuthorField, Author);
+    event_field_from!(BenchmarkField, Benchmark);
+    event_field_from!(ConceptField, Concept);
+    event_field_from!(ConnectionField, Connection);
+    event_field_from!(ConnectorField, Connector);
+    event_field_from!(DesignField, Design);
+    event_field_from!(FileField, File);
+    event_field_from!(FolderField, Folder);
+    event_field_from!(GroupField, Group);
+    event_field_from!(KitField, Kit);
+    event_field_from!(LayerField, Layer);
+    event_field_from!(PieceField, Piece);
+    event_field_from!(PortField, Port);
+    event_field_from!(PropField, Prop);
+    event_field_from!(QualityField, Quality);
+    event_field_from!(RepresentationField, Representation);
+    event_field_from!(SideField, Side);
+    event_field_from!(StatField, Stat);
+    event_field_from!(TagField, Tag);
+    event_field_from!(TypeField, Type);
 
     /// 🌲Typed ancestry for event cascades from kit root to changed entity.
     #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
@@ -7280,9 +5577,7 @@ pub mod events {
 
     impl EventPath {
         pub fn of(entity: EntityRef) -> Self {
-            Self {
-                entities: vec![entity],
-            }
+            Self { entities: vec![entity] }
         }
 
         pub fn from_root(entities: Vec<EntityRef>) -> Self {
@@ -7295,62 +5590,28 @@ pub mod events {
         }
 
         pub fn leaf(&self) -> &EntityRef {
-            self.entities
-                .last()
-                .expect("event paths are constructed with at least one entity")
+            self.entities.last().expect("event paths are constructed with at least one entity")
         }
     }
 
     /// 📣All observable changes on a kit graph.
     #[derive(Clone, Debug, PartialEq, serde::Serialize)]
     pub enum KitEvent {
-        Changed {
-            entity: EntityRef,
-        },
-        FieldChanged {
-            path: EventPath,
-            field: EventField,
-        },
-        ChildAdded {
-            parent: EntityRef,
-            child: EntityRef,
-        },
-        ChildRemoved {
-            parent: EntityRef,
-            child: EntityRef,
-        },
-        HashInvalidated {
-            entity: EntityRef,
-        },
-        FlattenInvalidated {
-            design: Id,
-            pieces: Vec<Id>,
-        },
+        Changed { entity: EntityRef },
+        FieldChanged { path: EventPath, field: EventField },
+        ChildAdded { parent: EntityRef, child: EntityRef },
+        ChildRemoved { parent: EntityRef, child: EntityRef },
+        HashInvalidated { entity: EntityRef },
+        FlattenInvalidated { design: Id, pieces: Vec<Id> },
         ValidationInvalidated,
-        DerivedChanged {
-            path: EventPath,
-            field: EventField,
-        },
-        SetRejected {
-            path: EventPath,
-            field: EventField,
-            error: crate::error::SetError,
-        },
+        DerivedChanged { path: EventPath, field: EventField },
+        SetRejected { path: EventPath, field: EventField, error: crate::error::SetError },
     }
 
     impl KitEvent {
         pub fn cascade(&self) -> Vec<KitEvent> {
             match self {
-                Self::FieldChanged { path, .. } | Self::DerivedChanged { path, .. }
-                    if path.entities().len() > 1 =>
-                {
-                    path.entities()
-                        .iter()
-                        .cloned()
-                        .map(|entity| Self::Changed { entity })
-                        .chain(std::iter::once(self.clone()))
-                        .collect()
-                }
+                Self::FieldChanged { path, .. } | Self::DerivedChanged { path, .. } if path.entities().len() > 1 => path.entities().iter().cloned().map(|entity| Self::Changed { entity }).chain(std::iter::once(self.clone())).collect(),
                 _ => vec![self.clone()],
             }
         }
@@ -7371,10 +5632,7 @@ pub mod events {
             let (mut sender, r) = broadcast(capacity);
             sender.set_overflow(true);
             let inactive = r.deactivate();
-            Arc::new(Self {
-                sender,
-                _inactive: inactive,
-            })
+            Arc::new(Self { sender, _inactive: inactive })
         }
 
         pub fn subscribe(&self) -> Receiver<KitEvent> {
@@ -7779,18 +6037,11 @@ pub(crate) mod flatten_math {
         let ox = m[(0, 3)];
         let oy = m[(1, 3)];
         let oz = m[(2, 3)];
-        Plane {
-            origin: Coordinate::new(ox, oy, oz),
-            x_axis: Coordinate::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]),
-            y_axis: Coordinate::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]),
-        }
+        Plane { origin: Coordinate::new(ox, oy, oz), x_axis: Coordinate::new(m[(0, 0)], m[(1, 0)], m[(2, 0)]), y_axis: Coordinate::new(m[(0, 1)], m[(1, 1)], m[(2, 1)]) }
     }
 
     // Quaternion (qx,qy,qz,qw) from two unit vectors
-    fn quat_from_unit_vectors_full(
-        v_from: Vector3<f64>,
-        v_to: Vector3<f64>,
-    ) -> (f64, f64, f64, f64) {
+    fn quat_from_unit_vectors_full(v_from: Vector3<f64>, v_to: Vector3<f64>) -> (f64, f64, f64, f64) {
         let vf = normalize(v_from);
         let vt = normalize(v_to);
         let r = vf.dot(&vt) + 1.0;
@@ -7855,11 +6106,7 @@ pub(crate) mod flatten_math {
     }
 
     fn apply_mat3_upper(m: &Matrix4<f64>, v: Vector3<f64>) -> Vector3<f64> {
-        Vector3::new(
-            m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z,
-            m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z,
-            m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z,
-        )
+        Vector3::new(m[(0, 0)] * v.x + m[(0, 1)] * v.y + m[(0, 2)] * v.z, m[(1, 0)] * v.x + m[(1, 1)] * v.y + m[(1, 2)] * v.z, m[(2, 0)] * v.x + m[(2, 1)] * v.y + m[(2, 2)] * v.z)
     }
 
     fn round_tol(x: f64) -> f64 {
@@ -7928,21 +6175,9 @@ pub(crate) mod flatten_math {
         let center_child_t = make_translation(-child_pt.x, -child_pt.y, -child_pt.z);
         let mut transform = orientation_t * center_child_t;
 
-        let gap_transform = make_translation(
-            gap_direction.x * gap,
-            gap_direction.y * gap,
-            gap_direction.z * gap,
-        );
-        let shift_transform = make_translation(
-            shift_direction.x * shift,
-            shift_direction.y * shift,
-            shift_direction.z * shift,
-        );
-        let raise_transform = make_translation(
-            raise_direction.x * rise,
-            raise_direction.y * rise,
-            raise_direction.z * rise,
-        );
+        let gap_transform = make_translation(gap_direction.x * gap, gap_direction.y * gap, gap_direction.z * gap);
+        let shift_transform = make_translation(shift_direction.x * shift, shift_direction.y * shift, shift_direction.z * shift);
+        let raise_transform = make_translation(raise_direction.x * rise, raise_direction.y * rise, raise_direction.z * rise);
         let translation_t = raise_transform * shift_transform * gap_transform;
         transform = translation_t * transform;
         let move_to_parent = make_translation(parent_pt.x, parent_pt.y, parent_pt.z);
@@ -7967,35 +6202,15 @@ pub(crate) mod flatten_math {
     pub(crate) const FLATTEN_HORIZONTAL_SCALE: f64 = 3.0633;
 
     /// UV center for child from parent center and connection u/v (matches Python BFS).
-    pub(crate) fn compute_child_center_uv(
-        parent_center: Coordinate,
-        connection_u: f64,
-        connection_v: f64,
-        parent_connector_dir_z: f64,
-        parent_t: f64,
-    ) -> Coordinate {
+    pub(crate) fn compute_child_center_uv(parent_center: Coordinate, connection_u: f64, connection_v: f64, parent_connector_dir_z: f64, parent_t: f64) -> Coordinate {
         let pu = parent_center.x;
         let pv = parent_center.y;
         if pu.abs() < FLATTEN_TOLERANCE && pv.abs() < FLATTEN_TOLERANCE {
             let angle = 2.0 * std::f64::consts::PI * parent_t;
-            Coordinate::new(
-                round_tol(FLATTEN_RADIUS * angle.sin()),
-                round_tol(FLATTEN_RADIUS * angle.cos()),
-                0.0,
-            )
+            Coordinate::new(round_tol(FLATTEN_RADIUS * angle.sin()), round_tol(FLATTEN_RADIUS * angle.cos()), 0.0)
         } else {
             let is_vertical = parent_connector_dir_z.abs() > 0.5;
-            let (cu, cv) = if is_vertical {
-                (
-                    pu + connection_u,
-                    pv + connection_v + FLATTEN_VERTICAL_V_EXTRA,
-                )
-            } else {
-                (
-                    pu + connection_u * FLATTEN_HORIZONTAL_SCALE,
-                    pv + connection_v * FLATTEN_HORIZONTAL_SCALE,
-                )
-            };
+            let (cu, cv) = if is_vertical { (pu + connection_u, pv + connection_v + FLATTEN_VERTICAL_V_EXTRA) } else { (pu + connection_u * FLATTEN_HORIZONTAL_SCALE, pv + connection_v * FLATTEN_HORIZONTAL_SCALE) };
             Coordinate::new(round_tol(cu), round_tol(cv), 0.0)
         }
     }
@@ -8090,19 +6305,7 @@ pub mod file {
 
     impl FileStore {
         pub fn new(url: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                url: url.into(),
-                mime: None,
-                size: None,
-                hash: None,
-                description: None,
-                created: None,
-                updated: None,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), url: url.into(), mime: None, size: None, hash: None, description: None, created: None, updated: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -8115,127 +6318,49 @@ pub mod file {
         }
 
         pub fn from_id_dto(d: FileIdDto) -> Self {
-            Self {
-                id: d.id,
-                url: String::new(),
-                mime: None,
-                size: None,
-                hash: None,
-                description: None,
-                created: None,
-                updated: None,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, url: String::new(), mime: None, size: None, hash: None, description: None, created: None, updated: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: FileMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                url: d.url,
-                mime: d.mime,
-                size: d.size,
-                hash: d.hash,
-                description: d.description,
-                created: d.created,
-                updated: d.updated,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: FileShallowDto) -> Self {
-            Self::from_metadata_dto(FileMetadataDto {
-                id: d.id,
-                url: d.url,
-                mime: d.mime,
-                size: d.size,
-                hash: d.hash,
-                description: d.description,
-                created: d.created,
-                updated: d.updated,
-            })
+            Self::from_metadata_dto(FileMetadataDto { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
         }
 
         pub fn from_full_dto(d: FileFullDto) -> Self {
-            Self::from_metadata_dto(FileMetadataDto {
-                id: d.id,
-                url: d.url,
-                mime: d.mime,
-                size: d.size,
-                hash: d.hash,
-                description: d.description,
-                created: d.created,
-                updated: d.updated,
-            })
+            Self::from_metadata_dto(FileMetadataDto { id: d.id, url: d.url, mime: d.mime, size: d.size, hash: d.hash, description: d.description, created: d.created, updated: d.updated })
         }
 
         pub fn to_id_dto(&self) -> FileIdDto {
-            FileIdDto {
-                id: self.id.clone(),
-            }
+            FileIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> FileMetadataDto {
-            FileMetadataDto {
-                id: self.id.clone(),
-                url: self.url.clone(),
-                mime: self.mime.clone(),
-                size: self.size,
-                hash: self.hash.clone(),
-                description: self.description.clone(),
-                created: self.created.clone(),
-                updated: self.updated.clone(),
-            }
+            FileMetadataDto { id: self.id.clone(), url: self.url.clone(), mime: self.mime.clone(), size: self.size, hash: self.hash.clone(), description: self.description.clone(), created: self.created.clone(), updated: self.updated.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> FileShallowDto {
             let m = self.to_metadata_dto();
-            FileShallowDto {
-                id: m.id,
-                url: m.url,
-                mime: m.mime,
-                size: m.size,
-                hash: m.hash,
-                description: m.description,
-                created: m.created,
-                updated: m.updated,
-            }
+            FileShallowDto { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
         }
 
         pub fn to_full_dto(&self) -> FileFullDto {
             let m = self.to_metadata_dto();
-            FileFullDto {
-                id: m.id,
-                url: m.url,
-                mime: m.mime,
-                size: m.size,
-                hash: m.hash,
-                description: m.description,
-                created: m.created,
-                updated: m.updated,
-            }
+            FileFullDto { id: m.id, url: m.url, mime: m.mime, size: m.size, hash: m.hash, description: m.description, created: m.created, updated: m.updated }
         }
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Url,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Url), error: e.clone() });
                 return Err(e);
             }
             if self.url == url {
                 return Ok(());
             }
             self.url = url;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Url,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Url) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8245,10 +6370,7 @@ pub mod file {
                 return Ok(());
             }
             self.mime = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Mime,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Mime) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8258,10 +6380,7 @@ pub mod file {
                 return Ok(());
             }
             self.size = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Size,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Size) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8271,10 +6390,7 @@ pub mod file {
                 return Ok(());
             }
             self.hash = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Hash,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Hash) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8284,10 +6400,7 @@ pub mod file {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8297,10 +6410,7 @@ pub mod file {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Created,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Created) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8310,19 +6420,14 @@ pub mod file {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Updated,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Updated) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(kr) = k.read() {
@@ -8344,11 +6449,7 @@ pub mod file {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("file")
-                .str(self.id.as_str())
-                .str(&self.url)
-                .opt_str(self.mime.as_deref())
-                .opt_str(self.hash.as_deref());
+            w.tag("file").str(self.id.as_str()).str(&self.url).opt_str(self.mime.as_deref()).opt_str(self.hash.as_deref());
             if let Some(s) = self.size {
                 w.f64(s as f64);
             }
@@ -8410,14 +6511,7 @@ pub mod folder {
 
     impl FolderStore {
         pub fn new(path: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                path: path.into(),
-                description: None,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), path: path.into(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -8430,73 +6524,37 @@ pub mod folder {
         }
 
         pub fn from_id_dto(d: FolderIdDto) -> Self {
-            Self {
-                id: d.id,
-                path: String::new(),
-                description: None,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, path: String::new(), description: None, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: FolderMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                path: d.path,
-                description: d.description,
-                parent_kit: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, path: d.path, description: d.description, parent_kit: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: FolderShallowDto) -> Self {
-            Self::from_metadata_dto(FolderMetadataDto {
-                id: d.id,
-                path: d.path,
-                description: d.description,
-            })
+            Self::from_metadata_dto(FolderMetadataDto { id: d.id, path: d.path, description: d.description })
         }
 
         pub fn from_full_dto(d: FolderFullDto) -> Self {
-            Self::from_metadata_dto(FolderMetadataDto {
-                id: d.id,
-                path: d.path,
-                description: d.description,
-            })
+            Self::from_metadata_dto(FolderMetadataDto { id: d.id, path: d.path, description: d.description })
         }
 
         pub fn to_id_dto(&self) -> FolderIdDto {
-            FolderIdDto {
-                id: self.id.clone(),
-            }
+            FolderIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> FolderMetadataDto {
-            FolderMetadataDto {
-                id: self.id.clone(),
-                path: self.path.clone(),
-                description: self.description.clone(),
-            }
+            FolderMetadataDto { id: self.id.clone(), path: self.path.clone(), description: self.description.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> FolderShallowDto {
             let m = self.to_metadata_dto();
-            FolderShallowDto {
-                id: m.id,
-                path: m.path,
-                description: m.description,
-            }
+            FolderShallowDto { id: m.id, path: m.path, description: m.description }
         }
 
         pub fn to_full_dto(&self) -> FolderFullDto {
             let m = self.to_metadata_dto();
-            FolderFullDto {
-                id: m.id,
-                path: m.path,
-                description: m.description,
-            }
+            FolderFullDto { id: m.id, path: m.path, description: m.description }
         }
 
         pub fn set_path(&mut self, path: String) -> crate::error::SetResult {
@@ -8504,10 +6562,7 @@ pub mod folder {
                 return Ok(());
             }
             self.path = path;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Path,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Folder(crate::events::FolderField::Path) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8517,19 +6572,14 @@ pub mod folder {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Folder(crate::events::FolderField::Description) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(kr) = k.read() {
@@ -8551,10 +6601,7 @@ pub mod folder {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("folder")
-                .str(self.id.as_str())
-                .str(&self.path)
-                .opt_str(self.description.as_deref());
+            w.tag("folder").str(self.id.as_str()).str(&self.path).opt_str(self.description.as_deref());
         }
     }
 }
@@ -8573,11 +6620,7 @@ pub mod geom {
     }
 
     impl Coordinate {
-        pub const ZERO: Coordinate = Coordinate {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
+        pub const ZERO: Coordinate = Coordinate { x: 0.0, y: 0.0, z: 0.0 };
 
         pub fn new(x: f64, y: f64, z: f64) -> Self {
             Self { x, y, z }
@@ -8627,11 +6670,7 @@ pub mod geom {
         }
 
         pub fn world_xy() -> Self {
-            Self {
-                origin: Coordinate::ZERO,
-                x_axis: Self::default_x_axis(),
-                y_axis: Self::default_y_axis(),
-            }
+            Self { origin: Coordinate::ZERO, x_axis: Self::default_x_axis(), y_axis: Self::default_y_axis() }
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
@@ -8756,73 +6795,27 @@ pub mod group {
 
     impl GroupStore {
         pub fn new(name: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                name: name.into(),
-                description: None,
-                color: None,
-                icon: None,
-                pieces: Vec::new(),
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), name: name.into(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_id_dto(d: GroupIdDto) -> Self {
-            Self {
-                id: d.id,
-                name: String::new(),
-                description: None,
-                color: None,
-                icon: None,
-                pieces: Vec::new(),
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, name: String::new(), description: None, color: None, icon: None, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: GroupMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                icon: d.icon,
-                pieces: Vec::new(),
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: Vec::new(), parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: GroupShallowDto) -> Self {
-            Self::from_metadata_dto(GroupMetadataDto {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                icon: d.icon,
-                pieces: d.pieces,
-            })
+            Self::from_metadata_dto(GroupMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
         }
 
         pub fn from_full_dto(d: GroupFullDto) -> Self {
-            Self::from_metadata_dto(GroupMetadataDto {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                icon: d.icon,
-                pieces: d.pieces,
-            })
+            Self::from_metadata_dto(GroupMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, icon: d.icon, pieces: d.pieces })
         }
 
         pub fn to_id_dto(&self) -> GroupIdDto {
-            GroupIdDto {
-                id: self.id.clone(),
-            }
+            GroupIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> GroupMetadataDto {
@@ -8832,37 +6825,18 @@ pub mod group {
                 description: self.description.clone(),
                 color: self.color.clone(),
                 icon: self.icon.clone(),
-                pieces: self
-                    .pieces
-                    .iter()
-                    .filter_map(|p| p.upgrade())
-                    .filter_map(|p| p.read().ok().map(|p| p.to_id_dto()))
-                    .collect(),
+                pieces: self.pieces.iter().filter_map(|p| p.upgrade()).filter_map(|p| p.read().ok().map(|p| p.to_id_dto())).collect(),
             }
         }
 
         pub fn to_shallow_dto(&self) -> GroupShallowDto {
             let m = self.to_metadata_dto();
-            GroupShallowDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                color: m.color,
-                icon: m.icon,
-                pieces: m.pieces,
-            }
+            GroupShallowDto { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
         pub fn to_full_dto(&self) -> GroupFullDto {
             let m = self.to_metadata_dto();
-            GroupFullDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                color: m.color,
-                icon: m.icon,
-                pieces: m.pieces,
-            }
+            GroupFullDto { id: m.id, name: m.name, description: m.description, color: m.color, icon: m.icon, pieces: m.pieces }
         }
 
         #[inline]
@@ -8879,10 +6853,7 @@ pub mod group {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Name) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8892,10 +6863,7 @@ pub mod group {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8905,10 +6873,7 @@ pub mod group {
                 return Ok(());
             }
             self.color = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Color,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Color) });
             self.invalidate_hash();
             Ok(())
         }
@@ -8918,29 +6883,21 @@ pub mod group {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Icon,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Icon) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) -> crate::error::SetResult {
             self.pieces = pieces;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Pieces,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Pieces) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(dr) = d.read() {
                     dr.invalidate_hash();
@@ -8959,12 +6916,7 @@ pub mod group {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("group")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref())
-                .opt_str(self.color.as_deref())
-                .opt_str(self.icon.as_deref());
+            w.tag("group").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.color.as_deref()).opt_str(self.icon.as_deref());
             for p in &self.pieces {
                 if let Some(p) = p.upgrade() {
                     if let Ok(p) = p.read() {
@@ -8984,9 +6936,7 @@ pub mod id {
 
     /// Stable identity used at serialization boundaries and as a dictionary key when
     /// resolving DTOs into the in-memory graph. Never used for in-graph traversal.
-    #[derive(
-        Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord,
-    )]
+    #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
     #[serde(transparent)]
     pub struct Id(String);
 
@@ -9077,9 +7027,7 @@ pub mod hash {
 
     impl<T> Default for Cache<T> {
         fn default() -> Self {
-            Self {
-                inner: Mutex::new(None),
-            }
+            Self { inner: Mutex::new(None) }
         }
     }
 
@@ -9110,9 +7058,7 @@ pub mod hash {
 
     impl HashWriter {
         pub fn new() -> Self {
-            Self {
-                inner: Sha256::new(),
-            }
+            Self { inner: Sha256::new() }
         }
 
         pub fn tag(&mut self, tag: &str) -> &mut Self {
@@ -9195,9 +7141,7 @@ pub mod kit {
 
     use async_broadcast::Receiver;
 
-    use crate::attribute::{
-        AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
-    };
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionIdDto};
@@ -9483,9 +7427,7 @@ pub mod kit {
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
         }
 
         pub fn invalidate_validation(&self) {
@@ -9496,21 +7438,14 @@ pub mod kit {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Name,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Name), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Name) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9526,10 +7461,7 @@ pub mod kit {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Description) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9540,10 +7472,7 @@ pub mod kit {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Icon,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Icon) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9554,10 +7483,7 @@ pub mod kit {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Image,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Image) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9568,10 +7494,7 @@ pub mod kit {
                 return Ok(());
             }
             self.preview = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Preview,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Preview) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9582,10 +7505,7 @@ pub mod kit {
                 return Ok(());
             }
             self.version = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Version,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Version) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9596,10 +7516,7 @@ pub mod kit {
                 return Ok(());
             }
             self.remote = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Remote,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Remote) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9607,21 +7524,14 @@ pub mod kit {
 
         pub fn set_homepage(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_url(&v, "homepage") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Homepage,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Homepage), error: e.clone() });
                 return Err(e);
             }
             if self.homepage == v {
                 return Ok(());
             }
             self.homepage = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Homepage,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Homepage) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9632,10 +7542,7 @@ pub mod kit {
                 return Ok(());
             }
             self.license = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::License,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::License) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9643,21 +7550,14 @@ pub mod kit {
 
         pub fn set_uri(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_opaque_uri(&v, "uri") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Uri,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Uri), error: e.clone() });
                 return Err(e);
             }
             if self.uri == v {
                 return Ok(());
             }
             self.uri = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Uri,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Uri) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9668,10 +7568,7 @@ pub mod kit {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Created,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Created) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9682,10 +7579,7 @@ pub mod kit {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Updated,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Updated) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9702,12 +7596,7 @@ pub mod kit {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("kit")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref())
-                .opt_str(self.version.as_deref())
-                .opt_str(self.license.as_deref());
+            w.tag("kit").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.version.as_deref()).opt_str(self.license.as_deref());
             for t in &self.types {
                 if let Ok(t) = t.read() {
                     t.hash_into(w);
@@ -9761,49 +7650,28 @@ pub mod kit {
         }
 
         pub fn semio_type(&self, id: &str) -> Option<TypeStoreRef> {
-            self.types
-                .iter()
-                .find(|t| t.read().map(|t| t.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.types.iter().find(|t| t.read().map(|t| t.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn design(&self, id: &str) -> Option<DesignStoreRef> {
-            self.designs
-                .iter()
-                .find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.designs.iter().find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn file(&self, id: &str) -> Option<FileStoreRef> {
-            self.files
-                .iter()
-                .find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.files.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn folder(&self, id: &str) -> Option<FolderStoreRef> {
-            self.folders
-                .iter()
-                .find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.folders.iter().find(|f| f.read().map(|f| f.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn quality(&self, id: &str) -> Option<QualityStoreRef> {
-            self.qualities
-                .iter()
-                .find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.qualities.iter().find(|q| q.read().map(|q| q.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         /// Flatten a design by id: returns a report with a [`crate::diff::DesignChange`] describing pose updates.
-        pub fn flatten_design(
-            &self,
-            design_id: &str,
-        ) -> Result<SemioReport<crate::diff::DesignChange>> {
-            let d = self.design(design_id).ok_or_else(|| SemioError::NotFound {
-                kind: "Design",
-                id: Id::from(design_id),
-            })?;
+        pub fn flatten_design(&self, design_id: &str) -> Result<SemioReport<crate::diff::DesignChange>> {
+            let d = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
             let report = match d.read() {
                 Ok(dr) => dr.flatten_change(),
                 Err(_) => return Err(SemioError::LockPoisoned("design")),
@@ -9812,24 +7680,11 @@ pub mod kit {
         }
 
         /// Apply a structural [`crate::diff::DesignDiff`] to the named design (mutable kit).
-        pub fn apply_design_diff(
-            &mut self,
-            design_id: &str,
-            diff: &crate::diff::DesignDiff,
-        ) -> Result<()> {
-            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound {
-                kind: "Design",
-                id: Id::from(design_id),
-            })?;
-            let type_index: HashMap<Id, TypeStoreRef> = self
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
-                .collect();
+        pub fn apply_design_diff(&mut self, design_id: &str, diff: &crate::diff::DesignDiff) -> Result<()> {
+            let dref = self.design(design_id).ok_or_else(|| SemioError::NotFound { kind: "Design", id: Id::from(design_id) })?;
+            let type_index: HashMap<Id, TypeStoreRef> = self.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect();
             let dw = Arc::downgrade(&dref);
-            dref.write()
-                .map_err(|_| SemioError::LockPoisoned("design"))?
-                .apply_diff(diff, &type_index, dw)?;
+            dref.write().map_err(|_| SemioError::LockPoisoned("design"))?.apply_diff(diff, &type_index, dw)?;
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -9864,83 +7719,54 @@ pub mod kit {
         }
 
         /// 🌐 Worker boundary: set one scalar field (extend match as hooks grow).
-        pub fn set_field_rpc(
-            kit: &KitStoreRef,
-            entity_kind: EntityKind,
-            id: &str,
-            field: &str,
-            value: serde_json::Value,
-        ) -> SetResult {
+        pub fn set_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str, value: serde_json::Value) -> SetResult {
             let id = id.to_string();
             let field = field.to_string();
             Self::with_undo(kit, || match entity_kind {
                 EntityKind::Kit => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     if g.id.as_str() != id {
                         return Err(SetError::NotFound(format!("kit {id}")));
                     }
                     match field.as_str() {
                         "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             g.set_name(s)
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown kit field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }
                 }
                 EntityKind::Design => {
                     let d = {
-                        let g = kit
-                            .read()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.design(id.as_str())
-                            .ok_or_else(|| SetError::NotFound(format!("design {id}")))?
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.design(id.as_str()).ok_or_else(|| SetError::NotFound(format!("design {id}")))?
                     };
-                    let mut dw = d
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let mut dw = d.write().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     match field.as_str() {
                         "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             dw.set_name(s)
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown design field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
                     }
                 }
                 EntityKind::Type => {
                     let t = {
-                        let g = kit
-                            .read()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.semio_type(id.as_str())
-                            .ok_or_else(|| SetError::NotFound(format!("type {id}")))?
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.semio_type(id.as_str()).ok_or_else(|| SetError::NotFound(format!("type {id}")))?
                     };
-                    let mut tw = t
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                    let mut tw = t.write().map_err(|_| SetError::LockPoisoned("type".into()))?;
                     match field.as_str() {
                         "name" => {
-                            let s: String = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            let s: String = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             tw.set_name(s)
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown type field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
                     }
                 }
                 EntityKind::Piece => {
                     let pref = {
-                        let g = kit
-                            .read()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                         let mut found: Option<PieceStoreRef> = None;
                         for d in &g.designs {
                             if let Ok(dr) = d.read() {
@@ -9952,41 +7778,26 @@ pub mod kit {
                         }
                         found.ok_or_else(|| SetError::NotFound(format!("piece {id}")))?
                     };
-                    let mut pw = pref
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?;
+                    let mut pw = pref.write().map_err(|_| SetError::LockPoisoned("piece".into()))?;
                     match field.as_str() {
                         "name" => {
-                            let v: Option<String> = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             pw.set_name(v)
                         }
                         "color" => {
-                            let v: Option<String> = serde_json::from_value(value)
-                                .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                            let v: Option<String> = serde_json::from_value(value).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                             pw.set_color(v)
                         }
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown piece field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
                     }
                 }
-                _ => Err(SetError::InvalidValue(format!(
-                    "set_field_rpc not implemented for {entity_kind:?}"
-                ))),
+                _ => Err(SetError::InvalidValue(format!("set_field_rpc not implemented for {entity_kind:?}"))),
             })
         }
 
         /// 🌐 Read one field as JSON (read-only).
-        pub fn get_field_rpc(
-            kit: &KitStoreRef,
-            entity_kind: EntityKind,
-            id: &str,
-            field: &str,
-        ) -> std::result::Result<serde_json::Value, SetError> {
-            let g = kit
-                .read()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+        pub fn get_field_rpc(kit: &KitStoreRef, entity_kind: EntityKind, id: &str, field: &str) -> std::result::Result<serde_json::Value, SetError> {
+            let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             match entity_kind {
                 EntityKind::Kit => {
                     if g.id.as_str() != id {
@@ -9994,9 +7805,7 @@ pub mod kit {
                     }
                     match field {
                         "name" => Ok(serde_json::json!(g.name)),
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown kit field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown kit field '{field}'"))),
                     }
                 }
                 EntityKind::Piece => {
@@ -10007,9 +7816,7 @@ pub mod kit {
                                     return match field {
                                         "name" => Ok(serde_json::to_value(&pr.name).unwrap()),
                                         "color" => Ok(serde_json::to_value(&pr.color).unwrap()),
-                                        _ => Err(SetError::InvalidValue(format!(
-                                            "unknown piece field '{field}'"
-                                        ))),
+                                        _ => Err(SetError::InvalidValue(format!("unknown piece field '{field}'"))),
                                     };
                                 }
                             }
@@ -10018,44 +7825,28 @@ pub mod kit {
                     Err(SetError::NotFound(format!("piece {id}")))
                 }
                 EntityKind::Design => {
-                    let d = g
-                        .design(id)
-                        .ok_or_else(|| SetError::NotFound(format!("design {id}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let d = g.design(id).ok_or_else(|| SetError::NotFound(format!("design {id}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     match field {
                         "name" => Ok(serde_json::json!(dr.name)),
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown design field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown design field '{field}'"))),
                     }
                 }
                 EntityKind::Type => {
-                    let t = g
-                        .semio_type(id)
-                        .ok_or_else(|| SetError::NotFound(format!("type {id}")))?;
-                    let tr = t
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("type".into()))?;
+                    let t = g.semio_type(id).ok_or_else(|| SetError::NotFound(format!("type {id}")))?;
+                    let tr = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?;
                     match field {
                         "name" => Ok(serde_json::json!(tr.name)),
-                        _ => Err(SetError::InvalidValue(format!(
-                            "unknown type field '{field}'"
-                        ))),
+                        _ => Err(SetError::InvalidValue(format!("unknown type field '{field}'"))),
                     }
                 }
-                _ => Err(SetError::InvalidValue(format!(
-                    "get_field_rpc not implemented for {entity_kind:?}"
-                ))),
+                _ => Err(SetError::InvalidValue(format!("get_field_rpc not implemented for {entity_kind:?}"))),
             }
         }
 
         fn map_semio_err(e: SemioError) -> SetError {
             match e {
-                SemioError::NotFound { kind, id } => {
-                    SetError::NotFound(format!("{} {}", kind, id.as_str()))
-                }
+                SemioError::NotFound { kind, id } => SetError::NotFound(format!("{} {}", kind, id.as_str())),
                 SemioError::LockPoisoned(s) => SetError::LockPoisoned(s.to_string()),
                 SemioError::InvalidOperation(m) => SetError::Internal(m),
                 SemioError::Json(j) => SetError::InvalidValue(j.to_string()),
@@ -10077,35 +7868,18 @@ pub mod kit {
                     Err(_) => return Err(SetError::LockPoisoned("kit".into())),
                 },
                 Err(_) => {
-                    return Err(SetError::Internal(
-                        "replace_from_full_dto: expected single owner of new kit".into(),
-                    ));
+                    return Err(SetError::Internal("replace_from_full_dto: expected single owner of new kit".into()));
                 }
             };
             let bus = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.event_bus.clone()
             };
             merged.event_bus = bus;
             {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let preserve = (
-                    g.undo_past.clone(),
-                    g.undo_future.clone(),
-                    g.undo_inhibit,
-                    g.tx_depth,
-                    g.tx_before.clone(),
-                    g.initial.clone(),
-                    g.checkpoints.clone(),
-                    g.alternatives.clone(),
-                    g.the_kit_head.clone(),
-                    g.sessions.clone(),
-                    g.children.clone(),
-                );
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let preserve =
+                    (g.undo_past.clone(), g.undo_future.clone(), g.undo_inhibit, g.tx_depth, g.tx_before.clone(), g.initial.clone(), g.checkpoints.clone(), g.alternatives.clone(), g.the_kit_head.clone(), g.sessions.clone(), g.children.clone());
                 *g = merged;
                 g.undo_past = preserve.0;
                 g.undo_future = preserve.1;
@@ -10122,9 +7896,7 @@ pub mod kit {
             event_wire::rewire_parent_kits(kit);
             event_wire::wire_graph_bus(kit);
             {
-                let g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.invalidate_hash();
                 g.invalidate_validation();
             }
@@ -10134,10 +7906,7 @@ pub mod kit {
         /// Version-control and structured command API ([`crate::kit_store_command::KitStoreCommand`]).
         ///
         /// Delegates to the OO dispatcher [`crate::kit_store_command::KitStoreCommand::execute`].
-        pub fn execute_vcs(
-            kit: &KitStoreRef,
-            cmd: crate::kit_store_command::KitStoreCommand,
-        ) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
+        pub fn execute_vcs(kit: &KitStoreRef, cmd: crate::kit_store_command::KitStoreCommand) -> crate::error::Result<crate::kit_store_command::KitStoreCommandResult> {
             cmd.execute(kit)
         }
 
@@ -10146,41 +7915,21 @@ pub mod kit {
         where
             F: FnOnce() -> SetResult,
         {
-            let skip = kit
-                .read()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?
-                .undo_inhibit
-                > 0;
+            let skip = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.undo_inhibit > 0;
             if skip {
                 return f();
             }
-            let in_tx = kit
-                .read()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?
-                .tx_depth
-                > 0;
+            let in_tx = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.tx_depth > 0;
             if in_tx {
                 return f();
             }
-            let before = serde_json::to_value(
-                kit.read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
-                    .to_full_dto(),
-            )
-            .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let before = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             f()?;
-            let after = serde_json::to_value(
-                kit.read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
-                    .to_full_dto(),
-            )
-            .map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
+            let after = serde_json::to_value(kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto()).map_err(|e| SetError::Internal(format!("undo snapshot: {e}")))?;
             if before == after {
                 return Ok(());
             }
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             g.undo_past.push(UndoStep { before, after });
             if g.undo_past.len() > Self::MAX_UNDO_STEPS {
                 g.undo_past.remove(0);
@@ -10191,33 +7940,23 @@ pub mod kit {
 
         /// 🌐 WASM: run `begin_tx` / `commit_tx` / `abort_tx` around batched mutations; one undo step on commit.
         pub fn begin_tx(kit: &KitStoreRef) -> SetResult {
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tx_depth == 0 {
-                g.tx_before = Some(
-                    serde_json::to_value(g.to_full_dto())
-                        .map_err(|e| SetError::Internal(format!("begin_tx snapshot: {e}")))?,
-                );
+                g.tx_before = Some(serde_json::to_value(g.to_full_dto()).map_err(|e| SetError::Internal(format!("begin_tx snapshot: {e}")))?);
             }
             g.tx_depth += 1;
             Ok(())
         }
 
         pub fn commit_tx(kit: &KitStoreRef) -> SetResult {
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
             if g.tx_depth == 0 {
                 return Err(SetError::Internal("no active transaction".into()));
             }
             g.tx_depth -= 1;
             if g.tx_depth == 0 {
-                let before = g.tx_before.take().ok_or_else(|| {
-                    SetError::Internal("transaction missing before snapshot".into())
-                })?;
-                let after = serde_json::to_value(g.to_full_dto())
-                    .map_err(|e| SetError::Internal(format!("commit_tx snapshot: {e}")))?;
+                let before = g.tx_before.take().ok_or_else(|| SetError::Internal("transaction missing before snapshot".into()))?;
+                let after = serde_json::to_value(g.to_full_dto()).map_err(|e| SetError::Internal(format!("commit_tx snapshot: {e}")))?;
                 if before != after {
                     g.undo_past.push(UndoStep { before, after });
                     if g.undo_past.len() > Self::MAX_UNDO_STEPS {
@@ -10231,9 +7970,7 @@ pub mod kit {
 
         pub fn abort_tx(kit: &KitStoreRef) -> SetResult {
             let need_restore = {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 if g.tx_depth == 0 {
                     return Err(SetError::Internal("no active transaction".into()));
                 }
@@ -10244,62 +7981,46 @@ pub mod kit {
                 return Ok(());
             }
             let bv = {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.tx_before.take()
             };
             let Some(bv) = bv else {
                 return Ok(());
             };
-            let bf: KitFullDto = serde_json::from_value(bv)
-                .map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
+            let bf: KitFullDto = serde_json::from_value(bv).map_err(|e| SetError::Internal(format!("abort_tx: {e}")))?;
             Self::replace_from_full_dto(kit, bf)
         }
 
         /// Pop last applied state and restore `before` snapshot.
         pub fn undo(kit: &KitStoreRef) -> SetResult {
             let step = {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 if g.tx_depth > 0 {
-                    return Err(SetError::Internal(
-                        "cannot undo while a transaction is open".into(),
-                    ));
+                    return Err(SetError::Internal("cannot undo while a transaction is open".into()));
                 }
                 g.undo_past.pop()
             };
             let Some(step) = step else {
                 return Err(SetError::Internal("nothing to undo".into()));
             };
-            let before: KitFullDto = serde_json::from_value(step.before.clone())
-                .map_err(|e| SetError::Internal(format!("undo: {e}")))?;
+            let before: KitFullDto = serde_json::from_value(step.before.clone()).map_err(|e| SetError::Internal(format!("undo: {e}")))?;
             {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit += 1;
             }
             let r = Self::replace_from_full_dto(kit, before);
             {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
             }
             match r {
                 Ok(()) => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.undo_future.push(step);
                     Ok(())
                 }
                 Err(e) => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.undo_past.push(step);
                     Err(e)
                 }
@@ -10309,46 +8030,33 @@ pub mod kit {
         /// Re-apply a popped redo step.
         pub fn redo(kit: &KitStoreRef) -> SetResult {
             let step = {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 if g.tx_depth > 0 {
-                    return Err(SetError::Internal(
-                        "cannot redo while a transaction is open".into(),
-                    ));
+                    return Err(SetError::Internal("cannot redo while a transaction is open".into()));
                 }
                 g.undo_future.pop()
             };
             let Some(step) = step else {
                 return Err(SetError::Internal("nothing to redo".into()));
             };
-            let after: KitFullDto = serde_json::from_value(step.after.clone())
-                .map_err(|e| SetError::Internal(format!("redo: {e}")))?;
+            let after: KitFullDto = serde_json::from_value(step.after.clone()).map_err(|e| SetError::Internal(format!("redo: {e}")))?;
             {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit += 1;
             }
             let r = Self::replace_from_full_dto(kit, after);
             {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.undo_inhibit = g.undo_inhibit.saturating_sub(1);
             }
             match r {
                 Ok(()) => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.undo_past.push(step);
                     Ok(())
                 }
                 Err(e) => {
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                     g.undo_future.push(step);
                     Err(e)
                 }
@@ -10356,109 +8064,67 @@ pub mod kit {
         }
 
         pub fn can_undo(kit: &KitStoreRef) -> bool {
-            kit.read()
-                .map(|g| g.tx_depth == 0 && !g.undo_past.is_empty())
-                .unwrap_or(false)
+            kit.read().map(|g| g.tx_depth == 0 && !g.undo_past.is_empty()).unwrap_or(false)
         }
 
         pub fn can_redo(kit: &KitStoreRef) -> bool {
-            kit.read()
-                .map(|g| g.tx_depth == 0 && !g.undo_future.is_empty())
-                .unwrap_or(false)
+            kit.read().map(|g| g.tx_depth == 0 && !g.undo_future.is_empty()).unwrap_or(false)
         }
 
         /// Apply a structural design diff through the same path as [`KitStore::apply_design_diff`], returning [`SetResult`].
-        pub fn apply_design_diff_rpc(
-            kit: &KitStoreRef,
-            design_id: &str,
-            diff: serde_json::Value,
-        ) -> SetResult {
+        pub fn apply_design_diff_rpc(kit: &KitStoreRef, design_id: &str, diff: serde_json::Value) -> SetResult {
             let dg = design_id.to_string();
-            let diff: DesignDiff =
-                serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+            let diff: DesignDiff = serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
             Self::with_undo(kit, || {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff)
-                    .map_err(Self::map_semio_err)
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
         }
 
         /// Apply a kit-wide [`crate::kit_diff::KitDiff`] to the current snapshot in Rust.
         pub fn apply_kit_diff_rpc(kit: &KitStoreRef, diff: serde_json::Value) -> SetResult {
-            let diff: crate::kit_diff::KitDiff =
-                serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+            let diff: crate::kit_diff::KitDiff = serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
             Self::with_undo(kit, || {
-                let before = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
-                    .to_full_dto();
+                let before = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.to_full_dto();
                 let next = crate::kit_diff::apply_to_dto(&before, &diff);
                 Self::replace_from_full_dto(kit, next)
             })
         }
 
         /// Add a child entity under `parent` (currently `Design → Piece` only).
-        pub fn add_child_rpc(
-            kit: &KitStoreRef,
-            parent_kind: EntityKind,
-            parent_id: &str,
-            child_kind: EntityKind,
-            dto: serde_json::Value,
-        ) -> SetResult {
+        pub fn add_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, dto: serde_json::Value) -> SetResult {
             let pg = parent_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => {
-                    let piece: PieceFullDto = serde_json::from_value(dto)
-                        .map_err(|e| SetError::InvalidValue(e.to_string()))?;
+                    let piece: PieceFullDto = serde_json::from_value(dto).map_err(|e| SetError::InvalidValue(e.to_string()))?;
                     Self::with_undo(kit, || {
                         let mut diff = DesignDiff::default();
                         diff.added_pieces.push(piece);
-                        let mut g = kit
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                        g.apply_design_diff(pg.as_str(), &diff)
-                            .map_err(Self::map_semio_err)
+                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                     })
                 }
-                _ => Err(SetError::InvalidValue(format!(
-                    "add_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
-                ))),
+                _ => Err(SetError::InvalidValue(format!("add_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
         /// Remove a child entity from `parent` (currently `Design → Piece` only).
-        pub fn remove_child_rpc(
-            kit: &KitStoreRef,
-            parent_kind: EntityKind,
-            parent_id: &str,
-            child_kind: EntityKind,
-            child_id: &str,
-        ) -> SetResult {
+        pub fn remove_child_rpc(kit: &KitStoreRef, parent_kind: EntityKind, parent_id: &str, child_kind: EntityKind, child_id: &str) -> SetResult {
             let pg = parent_id.to_string();
             let cg = child_id.to_string();
             match (parent_kind, child_kind) {
                 (EntityKind::Design, EntityKind::Piece) => Self::with_undo(kit, || {
                     let mut diff = DesignDiff::default();
-                    diff.removed_pieces.push(PieceIdDto {
-                        id: Id::from(cg.as_str()),
-                    });
-                    let mut g = kit
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.apply_design_diff(pg.as_str(), &diff)
-                        .map_err(Self::map_semio_err)
+                    diff.removed_pieces.push(PieceIdDto { id: Id::from(cg.as_str()) });
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
                 }),
-                _ => Err(SetError::InvalidValue(format!(
-                    "remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"
-                ))),
+                _ => Err(SetError::InvalidValue(format!("remove_child_rpc not implemented for {parent_kind:?} -> {child_kind:?}"))),
             }
         }
 
         pub fn validate(&self) -> ValidationResult {
-            self.validation_cache
-                .get_or_init(|| self.compute_validation())
+            self.validation_cache.get_or_init(|| self.compute_validation())
         }
 
         fn compute_validation(&self) -> ValidationResult {
@@ -10492,9 +8158,7 @@ pub mod kit {
                         if let Ok(r) = r.read() {
                             if r.url.trim().is_empty() {
                                 result.is_valid = false;
-                                result
-                                    .errors
-                                    .push(format!("representation {} has empty url", r.id));
+                                result.errors.push(format!("representation {} has empty url", r.id));
                             }
                             ids.push(r.id.as_str().to_string());
                         }
@@ -10516,18 +8180,14 @@ pub mod kit {
                 if let Ok(d) = d.read() {
                     if d.name.trim().is_empty() {
                         result.is_valid = false;
-                        result
-                            .errors
-                            .push(format!("design {} has empty name", d.id));
+                        result.errors.push(format!("design {} has empty name", d.id));
                     }
                     ids.push(d.id.as_str().to_string());
                     for p in &d.pieces {
                         if let Ok(p) = p.read() {
                             if p.type_ref.as_ref().and_then(|t| t.upgrade()).is_none() {
                                 result.is_valid = false;
-                                result
-                                    .errors
-                                    .push(format!("piece {} has no valid type reference", p.id));
+                                result.errors.push(format!("piece {} has no valid type reference", p.id));
                             }
                             ids.push(p.id.as_str().to_string());
                         }
@@ -10538,19 +8198,13 @@ pub mod kit {
                             if let Ok(s0) = conn.connected.read() {
                                 if s0.piece.upgrade().is_none() {
                                     result.is_valid = false;
-                                    result.errors.push(format!(
-                                        "connection {} connected side has no piece",
-                                        conn.id
-                                    ));
+                                    result.errors.push(format!("connection {} connected side has no piece", conn.id));
                                 }
                             }
                             if let Ok(s1) = conn.connecting.read() {
                                 if s1.piece.upgrade().is_none() {
                                     result.is_valid = false;
-                                    result.errors.push(format!(
-                                        "connection {} connecting side has no piece",
-                                        conn.id
-                                    ));
+                                    result.errors.push(format!("connection {} connecting side has no piece", conn.id));
                                 }
                             }
                         }
@@ -10572,10 +8226,7 @@ pub mod kit {
                 if let Ok(d) = d.read() {
                     if d.connections.len() > d.pieces.len() && !d.pieces.is_empty() {
                         result.is_valid = false;
-                        result.warnings.push(format!(
-                        "design {} has more connections than pieces (possible cycle or bad graph)",
-                        d.id
-                    ));
+                        result.warnings.push(format!("design {} has more connections than pieces (possible cycle or bad graph)", d.id));
                     }
                 }
             }
@@ -10674,31 +8325,7 @@ pub mod kit {
         /// Hydrate the full kit graph from a [`KitFullDto`].
         pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
             let vcs_root = d.clone();
-            let KitFullDto {
-                id,
-                name,
-                description,
-                icon,
-                image,
-                preview,
-                version,
-                remote,
-                homepage,
-                license,
-                uri,
-                created,
-                updated,
-                types,
-                designs,
-                files,
-                folders,
-                authors,
-                concepts,
-                tags,
-                qualities,
-                props,
-                attributes,
-            } = d;
+            let KitFullDto { id, name, description, icon, image, preview, version, remote, homepage, license, uri, created, updated, types, designs, files, folders, authors, concepts, tags, qualities, props, attributes } = d;
 
             let kit = Arc::new(RwLock::new(KitStore {
                 id: id.clone(),
@@ -10718,30 +8345,12 @@ pub mod kit {
                 designs: Vec::new(),
                 files: Vec::new(),
                 folders: Vec::new(),
-                authors: authors
-                    .into_iter()
-                    .map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a))))
-                    .collect(),
-                concepts: concepts
-                    .into_iter()
-                    .map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c))))
-                    .collect(),
-                tags: tags
-                    .into_iter()
-                    .map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t))))
-                    .collect(),
-                qualities: qualities
-                    .into_iter()
-                    .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
-                    .collect(),
-                props: props
-                    .into_iter()
-                    .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
-                    .collect(),
-                attributes: attributes
-                    .into_iter()
-                    .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
-                    .collect(),
+                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a)))).collect(),
+                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c)))).collect(),
+                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t)))).collect(),
+                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect(),
+                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
                 event_bus: EventBus::new(4096),
                 hash_cache: Cache::default(),
                 validation_cache: Cache::default(),
@@ -10792,14 +8401,8 @@ pub mod kit {
                 }
             }
 
-            let file_refs: Vec<FileStoreRef> = files
-                .into_iter()
-                .map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f))))
-                .collect();
-            let folder_refs: Vec<FolderStoreRef> = folders
-                .into_iter()
-                .map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f))))
-                .collect();
+            let file_refs: Vec<FileStoreRef> = files.into_iter().map(|f| Arc::new(RwLock::new(FileStore::from_full_dto(f)))).collect();
+            let folder_refs: Vec<FolderStoreRef> = folders.into_iter().map(|f| Arc::new(RwLock::new(FolderStore::from_full_dto(f)))).collect();
 
             let mut type_refs: Vec<TypeStoreRef> = Vec::with_capacity(types.len());
             let mut type_index: HashMap<Id, TypeStoreRef> = HashMap::new();
@@ -10844,9 +8447,7 @@ pub mod kit {
         }
 
         pub fn to_id_dto(&self) -> KitIdDto {
-            KitIdDto {
-                id: self.id.clone(),
-            }
+            KitIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> KitMetadataDto {
@@ -10883,56 +8484,16 @@ pub mod kit {
                 uri: m.uri,
                 created: m.created,
                 updated: m.updated,
-                types: self
-                    .types
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto()))
-                    .collect(),
-                designs: self
-                    .designs
-                    .iter()
-                    .filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto()))
-                    .collect(),
-                files: self
-                    .files
-                    .iter()
-                    .filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto()))
-                    .collect(),
-                folders: self
-                    .folders
-                    .iter()
-                    .filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
+                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
+                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_shallow_dto())).collect(),
+                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect(),
+                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_shallow_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
             }
         }
 
@@ -10952,75 +8513,26 @@ pub mod kit {
                 uri: m.uri,
                 created: m.created,
                 updated: m.updated,
-                types: self
-                    .types
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_full_dto()))
-                    .collect(),
-                designs: self
-                    .designs
-                    .iter()
-                    .filter_map(|d| d.read().ok().map(|d| d.to_full_dto()))
-                    .collect(),
-                files: self
-                    .files
-                    .iter()
-                    .filter_map(|f| f.read().ok().map(|f| f.to_full_dto()))
-                    .collect(),
-                folders: self
-                    .folders
-                    .iter()
-                    .filter_map(|f| f.read().ok().map(|f| f.to_full_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_full_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
+                types: self.types.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
+                designs: self.designs.iter().filter_map(|d| d.read().ok().map(|d| d.to_full_dto())).collect(),
+                files: self.files.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
+                folders: self.folders.iter().filter_map(|f| f.read().ok().map(|f| f.to_full_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
             }
         }
 
         fn domain_type_index(kit: &KitStore) -> HashMap<Id, TypeStoreRef> {
-            kit.types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone())))
-                .collect()
+            kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
         }
 
         pub fn insert_design_ref(kit: &KitStoreRef, dto: DesignFullDto) -> SetResult {
-            let mut g = kit
-                .write()
-                .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-            if g.designs.iter().any(|d| {
-                d.read()
-                    .map(|r| r.id.as_str() == dto.id.as_str())
-                    .unwrap_or(false)
-            }) {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.designs.iter().any(|d| d.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
                 return Err(SetError::DuplicateId(format!("design {}", dto.id)));
             }
             let idx = Self::domain_type_index(&g);
@@ -11039,52 +8551,24 @@ pub mod kit {
             Ok(())
         }
 
-        pub fn cluster_pieces(
-            kit: &KitStoreRef,
-            design_id: &str,
-            piece_ids: Vec<String>,
-            cluster_name: String,
-        ) -> SetResult {
+        pub fn cluster_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
-                return Err(SetError::InvalidValue(
-                    "no piece IDs provided for clustering".into(),
-                ));
+                return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
             }
             let parent_dto: DesignFullDto = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                let d = g
-                    .design(design_id)
-                    .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
-                let dr = d
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let d = g.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
+                let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                 dr.to_full_dto()
             };
 
             let cluster_set: HashSet<&str> = piece_ids.iter().map(|s| s.as_str()).collect();
-            let clustered_pieces: Vec<PieceFullDto> = parent_dto
-                .pieces
-                .iter()
-                .filter(|p| cluster_set.contains(p.id.as_str()))
-                .cloned()
-                .collect();
+            let clustered_pieces: Vec<PieceFullDto> = parent_dto.pieces.iter().filter(|p| cluster_set.contains(p.id.as_str())).cloned().collect();
             if clustered_pieces.is_empty() {
-                return Err(SetError::InvalidValue(
-                    "no pieces found matching the provided IDs".into(),
-                ));
+                return Err(SetError::InvalidValue("no pieces found matching the provided IDs".into()));
             }
 
-            let internal_connections: Vec<ConnectionFullDto> = parent_dto
-                .connections
-                .iter()
-                .filter(|c| {
-                    cluster_set.contains(c.connected.piece.id.as_str())
-                        && cluster_set.contains(c.connecting.piece.id.as_str())
-                })
-                .cloned()
-                .collect();
+            let internal_connections: Vec<ConnectionFullDto> = parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) && cluster_set.contains(c.connecting.piece.id.as_str())).cloned().collect();
 
             let external_connections: Vec<ConnectionFullDto> = parent_dto
                 .connections
@@ -11101,10 +8585,7 @@ pub mod kit {
             let clustered_dto = DesignFullDto {
                 id: new_id.clone(),
                 name: cluster_name,
-                description: Some(format!(
-                    "Clustered design with {} pieces",
-                    clustered_pieces.len()
-                )),
+                description: Some(format!("Clustered design with {} pieces", clustered_pieces.len())),
                 unit: parent_dto.unit.clone(),
                 kit: parent_dto.kit.clone(),
                 pieces: clustered_pieces,
@@ -11124,47 +8605,22 @@ pub mod kit {
                 added_connections.push(c);
             }
 
-            let removed_connections: Vec<ConnectionIdDto> = parent_dto
-                .connections
-                .iter()
-                .filter(|c| {
-                    cluster_set.contains(c.connected.piece.id.as_str())
-                        || cluster_set.contains(c.connecting.piece.id.as_str())
-                })
-                .map(|c| ConnectionIdDto { id: c.id.clone() })
-                .collect();
+            let removed_connections: Vec<ConnectionIdDto> =
+                parent_dto.connections.iter().filter(|c| cluster_set.contains(c.connected.piece.id.as_str()) || cluster_set.contains(c.connecting.piece.id.as_str())).map(|c| ConnectionIdDto { id: c.id.clone() }).collect();
 
-            let removed_pieces: Vec<PieceIdDto> = piece_ids
-                .iter()
-                .filter(|g| cluster_set.contains(g.as_str()))
-                .map(|g| PieceIdDto {
-                    id: Id::from(g.as_str()),
-                })
-                .collect();
+            let removed_pieces: Vec<PieceIdDto> = piece_ids.iter().filter(|g| cluster_set.contains(g.as_str())).map(|g| PieceIdDto { id: Id::from(g.as_str()) }).collect();
 
-            let forward = DesignDiff {
-                removed_pieces,
-                removed_connections,
-                added_connections,
-                ..Default::default()
-            };
+            let forward = DesignDiff { removed_pieces, removed_connections, added_connections, ..Default::default() };
 
             let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 Self::insert_design_ref(kit, clustered_dto)?;
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &forward)
-                    .map_err(Self::map_semio_err)
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &forward).map_err(Self::map_semio_err)
             })
         }
 
-        fn domain_has_selected_ancestor_drag(
-            piece: &str,
-            selected: &HashSet<String>,
-            parent_map: &HashMap<String, (String, String)>,
-        ) -> bool {
+        fn domain_has_selected_ancestor_drag(piece: &str, selected: &HashSet<String>, parent_map: &HashMap<String, (String, String)>) -> bool {
             let mut current = piece.to_string();
             while let Some((_, parent)) = parent_map.get(&current) {
                 if selected.contains(parent) {
@@ -11175,28 +8631,16 @@ pub mod kit {
             false
         }
 
-        pub fn drag_pieces(
-            kit: &KitStoreRef,
-            design_id: &str,
-            piece_ids: Vec<String>,
-            du: f64,
-            dv: f64,
-        ) -> SetResult {
+        pub fn drag_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, du: f64, dv: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
             let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g
-                        .design(dg.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     (dr.to_full_dto(), d.clone())
                 };
 
@@ -11208,21 +8652,12 @@ pub mod kit {
                     parent_map.insert(child, (c.id.to_string(), parent));
                 }
 
-                let fixed_ids: Vec<String> = selected
-                    .iter()
-                    .filter(|g| !parent_map.contains_key(*g))
-                    .cloned()
-                    .collect();
+                let fixed_ids: Vec<String> = selected.iter().filter(|g| !parent_map.contains_key(*g)).cloned().collect();
 
-                let design_read = design_ref
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                 for g in &fixed_ids {
                     if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                            .drag(du, dv)?;
+                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
                     }
                 }
 
@@ -11234,24 +8669,14 @@ pub mod kit {
                         continue;
                     }
                     if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                            .drag(du, dv)?;
+                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.drag(du, dv)?;
                     }
                 }
                 Ok(())
             })
         }
 
-        pub fn move_pieces(
-            kit: &KitStoreRef,
-            design_id: &str,
-            piece_ids: Vec<String>,
-            gap: f64,
-            shift: f64,
-            rise: f64,
-        ) -> SetResult {
+        pub fn move_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, gap: f64, shift: f64, rise: f64) -> SetResult {
             if piece_ids.is_empty() {
                 return Ok(());
             }
@@ -11259,39 +8684,25 @@ pub mod kit {
             let piece_ids = piece_ids;
             Self::with_undo(kit, || {
                 let (dto, design_ref): (DesignFullDto, DesignStoreRef) = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g
-                        .design(dg.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     (dr.to_full_dto(), d.clone())
                 };
 
                 let selected: HashSet<String> = piece_ids.iter().cloned().collect();
                 let mut parent_map: HashMap<String, (String, String)> = HashMap::new();
                 for c in &dto.connections {
-                    parent_map.insert(
-                        c.connecting.piece.id.to_string(),
-                        (c.id.to_string(), c.connected.piece.id.to_string()),
-                    );
+                    parent_map.insert(c.connecting.piece.id.to_string(), (c.id.to_string(), c.connected.piece.id.to_string()));
                 }
 
-                let design_read = design_ref
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                let design_read = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                 for g in &selected {
                     if Self::domain_has_selected_ancestor_drag(g, &selected, &parent_map) {
                         continue;
                     }
                     if let Some(piece) = design_read.piece(g.as_str()) {
-                        piece
-                            .write()
-                            .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                            .r#move(gap, shift, rise)?;
+                        piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.r#move(gap, shift, rise)?;
                     }
                 }
                 Ok(())
@@ -11305,60 +8716,35 @@ pub mod kit {
             let dg = design_id.to_string();
             Self::with_undo(kit, || {
                 let design_ref = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    g.design(dg.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?
                 };
 
                 let pieces: Vec<PieceStoreRef> = {
-                    let design = design_ref
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
-                    piece_ids
-                        .iter()
-                        .filter_map(|piece_id| design.piece(piece_id.as_str()))
-                        .collect()
+                    let design = design_ref.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    piece_ids.iter().filter_map(|piece_id| design.piece(piece_id.as_str())).collect()
                 };
                 for piece in pieces {
-                    piece
-                        .write()
-                        .map_err(|_| SetError::LockPoisoned("piece".into()))?
-                        .fix()?;
+                    piece.write().map_err(|_| SetError::LockPoisoned("piece".into()))?.fix()?;
                 }
                 Ok(())
             })
         }
 
-        pub fn delete_connection_in_design(
-            kit: &KitStoreRef,
-            design_id: &str,
-            connection_id: &str,
-        ) -> SetResult {
+        pub fn delete_connection_in_design(kit: &KitStoreRef, design_id: &str, connection_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
             Self::with_undo(kit, || {
-                let diff = DesignDiff {
-                    removed_connections: vec![ConnectionIdDto {
-                        id: Id::from(cg.as_str()),
-                    }],
-                    ..Default::default()
-                };
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff)
-                    .map_err(Self::map_semio_err)
+                let diff = DesignDiff { removed_connections: vec![ConnectionIdDto { id: Id::from(cg.as_str()) }], ..Default::default() };
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
         }
 
         pub fn flatten_design_apply(kit: &KitStoreRef, design_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let forward = {
-                let g = kit
-                    .read()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 let report = g.flatten_design(dg.as_str()).map_err(Self::map_semio_err)?;
                 if !report.ok {
                     return Err(SetError::Internal("flatten_design failed".into()));
@@ -11369,56 +8755,31 @@ pub mod kit {
                 change.forward
             };
             Self::with_undo(kit, || {
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &forward)
-                    .map_err(Self::map_semio_err)
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &forward).map_err(Self::map_semio_err)
             })
         }
 
         fn design_dto_by_id(kit: &KitStore, id: &str) -> Option<DesignFullDto> {
-            kit.design(id)
-                .and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
+            kit.design(id).and_then(|d| d.read().ok().map(|r| r.to_full_dto()))
         }
 
         fn domain_connection_key(c: &ConnectionFullDto) -> String {
-            format!(
-                "{}|{}|{}|{}",
-                c.id,
-                c.connected.piece.id,
-                c.connecting.piece.id,
-                c.connected
-                    .port
-                    .as_ref()
-                    .map(|p| p.id.to_string())
-                    .unwrap_or_default()
-            )
+            format!("{}|{}|{}|{}", c.id, c.connected.piece.id, c.connecting.piece.id, c.connected.port.as_ref().map(|p| p.id.to_string()).unwrap_or_default())
         }
 
         fn strip_design_piece_id(c: &ConnectionFullDto, nested: &str) -> ConnectionFullDto {
             let mut o = c.clone();
-            if o.connected
-                .design_piece
-                .as_ref()
-                .is_some_and(|d| d.id.as_str() == nested)
-            {
+            if o.connected.design_piece.as_ref().is_some_and(|d| d.id.as_str() == nested) {
                 o.connected.design_piece = None;
             }
-            if o.connecting
-                .design_piece
-                .as_ref()
-                .is_some_and(|d| d.id.as_str() == nested)
-            {
+            if o.connecting.design_piece.as_ref().is_some_and(|d| d.id.as_str() == nested) {
                 o.connecting.design_piece = None;
             }
             o
         }
 
-        fn expand_nested_design_pieces_in_dto(
-            kit: &KitStore,
-            mut design: DesignFullDto,
-        ) -> std::result::Result<DesignFullDto, SetError> {
+        fn expand_nested_design_pieces_in_dto(kit: &KitStore, mut design: DesignFullDto) -> std::result::Result<DesignFullDto, SetError> {
             let nested_ids: Vec<String> = {
                 let mut s: HashSet<String> = HashSet::new();
                 for c in &design.connections {
@@ -11437,213 +8798,98 @@ pub mod kit {
                     continue;
                 };
                 let expanded = Self::expand_nested_design_pieces_in_dto(kit, child)?;
-                let existing: HashSet<String> =
-                    design.pieces.iter().map(|p| p.id.to_string()).collect();
-                let add_p: Vec<PieceFullDto> = expanded
-                    .pieces
-                    .into_iter()
-                    .filter(|p| !existing.contains(p.id.as_str()))
-                    .collect();
-                let keys: HashSet<String> = design
-                    .connections
-                    .iter()
-                    .map(Self::domain_connection_key)
-                    .collect();
-                let add_c: Vec<ConnectionFullDto> = expanded
-                    .connections
-                    .into_iter()
-                    .filter(|c| !keys.contains(&Self::domain_connection_key(c)))
-                    .collect();
+                let existing: HashSet<String> = design.pieces.iter().map(|p| p.id.to_string()).collect();
+                let add_p: Vec<PieceFullDto> = expanded.pieces.into_iter().filter(|p| !existing.contains(p.id.as_str())).collect();
+                let keys: HashSet<String> = design.connections.iter().map(Self::domain_connection_key).collect();
+                let add_c: Vec<ConnectionFullDto> = expanded.connections.into_iter().filter(|c| !keys.contains(&Self::domain_connection_key(c))).collect();
                 design.pieces.extend(add_p);
-                let mut new_conns: Vec<ConnectionFullDto> = design
-                    .connections
-                    .iter()
-                    .map(|c| Self::strip_design_piece_id(c, &nid))
-                    .collect();
+                let mut new_conns: Vec<ConnectionFullDto> = design.connections.iter().map(|c| Self::strip_design_piece_id(c, &nid)).collect();
                 new_conns.extend(add_c);
                 design.connections = new_conns;
             }
             Ok(design)
         }
 
-        pub fn expand_nested_design(
-            kit: &KitStoreRef,
-            parent_design_id: &str,
-            nested_design_id: &str,
-        ) -> SetResult {
+        pub fn expand_nested_design(kit: &KitStoreRef, parent_design_id: &str, nested_design_id: &str) -> SetResult {
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
             Self::with_undo(kit, || {
                 let before: DesignFullDto = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g
-                        .design(pg.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g.design(pg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {pg}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     dr.to_full_dto()
                 };
 
                 let mut expanded_child: DesignFullDto = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g
-                        .design(ng.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g.design(ng.as_str()).ok_or_else(|| SetError::NotFound(format!("design {ng}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     dr.to_full_dto()
                 };
 
                 {
-                    let kg = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    expanded_child =
-                        Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
+                    let kg = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    expanded_child = Self::expand_nested_design_pieces_in_dto(&*kg, expanded_child)?;
                 }
 
-                let existing_piece: HashSet<String> =
-                    before.pieces.iter().map(|p| p.id.to_string()).collect();
-                let add_pieces: Vec<PieceFullDto> = expanded_child
-                    .pieces
-                    .into_iter()
-                    .filter(|p| !existing_piece.contains(p.id.as_str()))
-                    .collect();
+                let existing_piece: HashSet<String> = before.pieces.iter().map(|p| p.id.to_string()).collect();
+                let add_pieces: Vec<PieceFullDto> = expanded_child.pieces.into_iter().filter(|p| !existing_piece.contains(p.id.as_str())).collect();
 
-                let existing_conn_key: HashSet<String> = before
-                    .connections
-                    .iter()
-                    .map(Self::domain_connection_key)
-                    .collect();
-                let add_connections: Vec<ConnectionFullDto> = expanded_child
-                    .connections
-                    .into_iter()
-                    .filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c)))
-                    .collect();
+                let existing_conn_key: HashSet<String> = before.connections.iter().map(Self::domain_connection_key).collect();
+                let add_connections: Vec<ConnectionFullDto> = expanded_child.connections.into_iter().filter(|c| !existing_conn_key.contains(&Self::domain_connection_key(c))).collect();
 
                 let mut after = before.clone();
                 after.pieces.extend(add_pieces);
-                let mut conns: Vec<ConnectionFullDto> = after
-                    .connections
-                    .iter()
-                    .map(|c| Self::strip_design_piece_id(c, ng.as_str()))
-                    .collect();
+                let mut conns: Vec<ConnectionFullDto> = after.connections.iter().map(|c| Self::strip_design_piece_id(c, ng.as_str())).collect();
                 conns.extend(add_connections);
                 after.connections = conns;
 
                 let diff = DesignDiff::between(&before, &after);
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(pg.as_str(), &diff)
-                    .map_err(Self::map_semio_err)
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(pg.as_str(), &diff).map_err(Self::map_semio_err)
             })
         }
 
-        pub fn change_piece_type(
-            kit: &KitStoreRef,
-            design_id: &str,
-            piece_id: &str,
-            new_type_id: &str,
-        ) -> SetResult {
+        pub fn change_piece_type(kit: &KitStoreRef, design_id: &str, piece_id: &str, new_type_id: &str) -> SetResult {
             let dg = design_id.to_string();
             let piece_id = piece_id.to_string();
             let ntg = new_type_id.to_string();
             Self::with_undo(kit, || {
                 let p: PieceFullDto = {
-                    let g = kit
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                    let d = g
-                        .design(dg.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
-                    let dr = d
-                        .read()
-                        .map_err(|_| SetError::LockPoisoned("design".into()))?;
+                    let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    let d = g.design(dg.as_str()).ok_or_else(|| SetError::NotFound(format!("design {dg}")))?;
+                    let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
                     let dto = dr.to_full_dto();
-                    dto.pieces
-                        .into_iter()
-                        .find(|p| p.id.as_str() == piece_id.as_str())
-                        .ok_or_else(|| SetError::NotFound(format!("piece {piece_id}")))?
+                    dto.pieces.into_iter().find(|p| p.id.as_str() == piece_id.as_str()).ok_or_else(|| SetError::NotFound(format!("piece {piece_id}")))?
                 };
                 let mut np = p;
-                np.r#type = Some(TypeIdDto {
-                    id: Id::from(ntg.as_str()),
-                });
-                let diff = DesignDiff {
-                    modified_pieces: vec![np],
-                    ..Default::default()
-                };
-                let mut g = kit
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("kit".into()))?;
-                g.apply_design_diff(dg.as_str(), &diff)
-                    .map_err(Self::map_semio_err)
+                np.r#type = Some(TypeIdDto { id: Id::from(ntg.as_str()) });
+                let diff = DesignDiff { modified_pieces: vec![np], ..Default::default() };
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.apply_design_diff(dg.as_str(), &diff).map_err(Self::map_semio_err)
             })
         }
 
-        pub fn paste_design_selection(
-            _kit: &KitStoreRef,
-            _design_id: &str,
-            _selection_json: serde_json::Value,
-            _plane: Option<Plane>,
-        ) -> SetResult {
-            Err(SetError::InvalidValue(
-                "pasteDesignSelection: not yet implemented in Rust store".into(),
-            ))
+        pub fn paste_design_selection(_kit: &KitStoreRef, _design_id: &str, _selection_json: serde_json::Value, _plane: Option<Plane>) -> SetResult {
+            Err(SetError::InvalidValue("pasteDesignSelection: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_hanging_pieces(
-            _kit: &KitStoreRef,
-            _design_id: &str,
-            _type_ids: Vec<String>,
-            _plane: Plane,
-        ) -> SetResult {
-            Err(SetError::InvalidValue(
-                "createHangingPieces: not yet implemented in Rust store".into(),
-            ))
+        pub fn create_hanging_pieces(_kit: &KitStoreRef, _design_id: &str, _type_ids: Vec<String>, _plane: Plane) -> SetResult {
+            Err(SetError::InvalidValue("createHangingPieces: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_connected_piece(
-            _kit: &KitStoreRef,
-            _design_id: &str,
-            _parent_piece: &str,
-            _parent_port: &str,
-            _child_type: &str,
-            _child_port: &str,
-        ) -> SetResult {
-            Err(SetError::InvalidValue(
-                "createConnectedPiece: not yet implemented in Rust store".into(),
-            ))
+        pub fn create_connected_piece(_kit: &KitStoreRef, _design_id: &str, _parent_piece: &str, _parent_port: &str, _child_type: &str, _child_port: &str) -> SetResult {
+            Err(SetError::InvalidValue("createConnectedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn create_fixed_piece(
-            _kit: &KitStoreRef,
-            _design_id: &str,
-            _type_id: &str,
-            _plane: Plane,
-        ) -> SetResult {
-            Err(SetError::InvalidValue(
-                "createFixedPiece: not yet implemented in Rust store".into(),
-            ))
+        pub fn create_fixed_piece(_kit: &KitStoreRef, _design_id: &str, _type_id: &str, _plane: Plane) -> SetResult {
+            Err(SetError::InvalidValue("createFixedPiece: not yet implemented in Rust store".into()))
         }
 
-        pub fn get_pieces_metadata_json(
-            &self,
-            design_id: &str,
-        ) -> std::result::Result<serde_json::Value, SetError> {
-            let d = self
-                .design(design_id)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
-            let dr = d
-                .read()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+        pub fn get_pieces_metadata_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
+            let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
             let flat = dr.flatten_map();
 
             let mut parent_of: HashMap<Id, Id> = HashMap::new();
@@ -11656,18 +8902,10 @@ pub mod kit {
                 let Ok(s1) = conn.connecting.read() else {
                     continue;
                 };
-                let Some(pg0) = s0
-                    .piece
-                    .upgrade()
-                    .and_then(|p| p.read().ok().map(|r| r.id.clone()))
-                else {
+                let Some(pg0) = s0.piece.upgrade().and_then(|p| p.read().ok().map(|r| r.id.clone())) else {
                     continue;
                 };
-                let Some(pg1) = s1
-                    .piece
-                    .upgrade()
-                    .and_then(|p| p.read().ok().map(|r| r.id.clone()))
-                else {
+                let Some(pg1) = s1.piece.upgrade().and_then(|p| p.read().ok().map(|r| r.id.clone())) else {
                     continue;
                 };
                 parent_of.insert(pg1.clone(), pg0);
@@ -11706,93 +8944,45 @@ pub mod kit {
             for p in &dr.pieces {
                 if let Ok(pr) = p.read() {
                     let id_s = pr.id.to_string();
-                    let (plane, center) = flat
-                        .get(&pr.id)
-                        .cloned()
-                        .unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
+                    let (plane, center) = flat.get(&pr.id).cloned().unwrap_or_else(|| (Plane::world_xy(), Coordinate::ZERO));
                     let parent_piece_id = parent_of.get(&pr.id).map(|g| g.to_string());
                     let dpt = *depth.get(&pr.id).unwrap_or(&0);
-                    out.insert(
-                        id_s.clone(),
-                        PiecePlacementMetadataJson {
-                            plane,
-                            center,
-                            fixed_piece_id: id_s.clone(),
-                            parent_piece_id,
-                            depth: dpt,
-                            path: vec![id_s],
-                        },
-                    );
+                    out.insert(id_s.clone(), PiecePlacementMetadataJson { plane, center, fixed_piece_id: id_s.clone(), parent_piece_id, depth: dpt, path: vec![id_s] });
                 }
             }
             serde_json::to_value(&out).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_kit_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            serde_json::to_value(self.to_metadata_dto())
-                .map_err(|e| SetError::InvalidValue(e.to_string()))
+            serde_json::to_value(self.to_metadata_dto()).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_designs_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self
-                .designs
-                .iter()
-                .filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = self.designs.iter().filter_map(|d| d.read().ok().map(|r| r.to_shallow_dto())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_types_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self
-                .types
-                .iter()
-                .filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = self.types.iter().filter_map(|t| t.read().ok().map(|r| r.to_shallow_dto())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
         pub fn get_authors_json(&self) -> std::result::Result<serde_json::Value, SetError> {
-            let v: Vec<_> = self
-                .authors
-                .iter()
-                .filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto()))
-                .collect();
+            let v: Vec<_> = self.authors.iter().filter_map(|a| a.read().ok().map(|r| r.to_shallow_dto())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
-        pub fn get_pieces_json(
-            &self,
-            design_id: &str,
-        ) -> std::result::Result<serde_json::Value, SetError> {
-            let d = self
-                .design(design_id)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
-            let dr = d
-                .read()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
-            let v: Vec<_> = dr
-                .pieces
-                .iter()
-                .filter_map(|p| p.read().ok().map(|r| r.to_full_dto()))
-                .collect();
+        pub fn get_pieces_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
+            let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let v: Vec<_> = dr.pieces.iter().filter_map(|p| p.read().ok().map(|r| r.to_full_dto())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
 
-        pub fn get_connections_json(
-            &self,
-            design_id: &str,
-        ) -> std::result::Result<serde_json::Value, SetError> {
-            let d = self
-                .design(design_id)
-                .ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
-            let dr = d
-                .read()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
-            let v: Vec<_> = dr
-                .connections
-                .iter()
-                .filter_map(|c| c.read().ok().map(|r| r.to_full_dto()))
-                .collect();
+        pub fn get_connections_json(&self, design_id: &str) -> std::result::Result<serde_json::Value, SetError> {
+            let d = self.design(design_id).ok_or_else(|| SetError::NotFound(format!("design {design_id}")))?;
+            let dr = d.read().map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let v: Vec<_> = dr.connections.iter().filter_map(|c| c.read().ok().map(|r| r.to_full_dto())).collect();
             serde_json::to_value(&v).map_err(|e| SetError::InvalidValue(e.to_string()))
         }
     }
@@ -11879,116 +9069,41 @@ pub mod layer {
 
     impl LayerStore {
         pub fn new(name: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                name: name.into(),
-                description: None,
-                color: None,
-                order: None,
-                visible: None,
-                locked: None,
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), name: name.into(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_id_dto(d: LayerIdDto) -> Self {
-            Self {
-                id: d.id,
-                name: String::new(),
-                description: None,
-                color: None,
-                order: None,
-                visible: None,
-                locked: None,
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, name: String::new(), description: None, color: None, order: None, visible: None, locked: None, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: LayerMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                order: d.order,
-                visible: d.visible,
-                locked: d.locked,
-                parent_design: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked, parent_design: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: LayerShallowDto) -> Self {
-            Self::from_metadata_dto(LayerMetadataDto {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                order: d.order,
-                visible: d.visible,
-                locked: d.locked,
-            })
+            Self::from_metadata_dto(LayerMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
         }
 
         pub fn from_full_dto(d: LayerFullDto) -> Self {
-            Self::from_metadata_dto(LayerMetadataDto {
-                id: d.id,
-                name: d.name,
-                description: d.description,
-                color: d.color,
-                order: d.order,
-                visible: d.visible,
-                locked: d.locked,
-            })
+            Self::from_metadata_dto(LayerMetadataDto { id: d.id, name: d.name, description: d.description, color: d.color, order: d.order, visible: d.visible, locked: d.locked })
         }
 
         pub fn to_id_dto(&self) -> LayerIdDto {
-            LayerIdDto {
-                id: self.id.clone(),
-            }
+            LayerIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> LayerMetadataDto {
-            LayerMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                description: self.description.clone(),
-                color: self.color.clone(),
-                order: self.order,
-                visible: self.visible,
-                locked: self.locked,
-            }
+            LayerMetadataDto { id: self.id.clone(), name: self.name.clone(), description: self.description.clone(), color: self.color.clone(), order: self.order, visible: self.visible, locked: self.locked }
         }
 
         pub fn to_shallow_dto(&self) -> LayerShallowDto {
             let m = self.to_metadata_dto();
-            LayerShallowDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                color: m.color,
-                order: m.order,
-                visible: m.visible,
-                locked: m.locked,
-            }
+            LayerShallowDto { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
         }
 
         pub fn to_full_dto(&self) -> LayerFullDto {
             let m = self.to_metadata_dto();
-            LayerFullDto {
-                id: m.id,
-                name: m.name,
-                description: m.description,
-                color: m.color,
-                order: m.order,
-                visible: m.visible,
-                locked: m.locked,
-            }
+            LayerFullDto { id: m.id, name: m.name, description: m.description, color: m.color, order: m.order, visible: m.visible, locked: m.locked }
         }
 
         #[inline]
@@ -12005,10 +9120,7 @@ pub mod layer {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Name) });
             self.invalidate_hash();
             Ok(())
         }
@@ -12018,10 +9130,7 @@ pub mod layer {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -12031,10 +9140,7 @@ pub mod layer {
                 return Ok(());
             }
             self.color = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Color,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Color) });
             self.invalidate_hash();
             Ok(())
         }
@@ -12044,10 +9150,7 @@ pub mod layer {
                 return Ok(());
             }
             self.order = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Order,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Order) });
             self.invalidate_hash();
             Ok(())
         }
@@ -12057,10 +9160,7 @@ pub mod layer {
                 return Ok(());
             }
             self.visible = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Visible,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Visible) });
             self.invalidate_hash();
             Ok(())
         }
@@ -12070,19 +9170,14 @@ pub mod layer {
                 return Ok(());
             }
             self.locked = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Locked,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Locked) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(dr) = d.read() {
                     dr.invalidate_hash();
@@ -12101,11 +9196,7 @@ pub mod layer {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("layer")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref())
-                .opt_str(self.color.as_deref());
+            w.tag("layer").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.color.as_deref());
             if let Some(o) = self.order {
                 w.f64(o as f64);
             }
@@ -12119,9 +9210,7 @@ pub mod piece {
     use std::collections::{HashMap, HashSet, VecDeque};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{
-        AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
-    };
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::connection::ConnectionStoreWeak;
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
@@ -12208,11 +9297,7 @@ pub mod piece {
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "mirrorPlane"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub hidden: Option<bool>,
@@ -12239,11 +9324,7 @@ pub mod piece {
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "mirrorPlane"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub hidden: Option<bool>,
@@ -12274,11 +9355,7 @@ pub mod piece {
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "mirrorPlane"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub hidden: Option<bool>,
@@ -12374,12 +9451,7 @@ pub mod piece {
             self.flat_center.invalidate();
         }
 
-        pub(crate) fn apply_full_dto(
-            &mut self,
-            d: PieceFullDto,
-            design_weak: DesignStoreWeak,
-            type_index: &HashMap<Id, TypeStoreRef>,
-        ) {
+        pub(crate) fn apply_full_dto(&mut self, d: PieceFullDto, design_weak: DesignStoreWeak, type_index: &HashMap<Id, TypeStoreRef>) {
             self.apply_metadata_fields(PieceMetadataDto {
                 id: d.id,
                 name: d.name,
@@ -12403,16 +9475,8 @@ pub mod piece {
             self.parent_piece = None;
             self.parent_connection = None;
             self.parent_design = design_weak;
-            self.props = d
-                .props
-                .into_iter()
-                .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
-                .collect();
-            self.attributes = d
-                .attributes
-                .into_iter()
-                .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
-                .collect();
+            self.props = d.props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect();
+            self.attributes = d.attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect();
         }
 
         pub fn invalidate_flat_pose(&self) {
@@ -12420,11 +9484,7 @@ pub mod piece {
             self.flat_center.invalidate();
         }
 
-        pub(crate) fn set_flatten_parent_refs(
-            &mut self,
-            parent_piece: Option<PieceStoreWeak>,
-            parent_connection: Option<ConnectionStoreWeak>,
-        ) {
+        pub(crate) fn set_flatten_parent_refs(&mut self, parent_piece: Option<PieceStoreWeak>, parent_connection: Option<ConnectionStoreWeak>) {
             self.parent_piece = parent_piece;
             self.parent_connection = parent_connection;
             self.invalidate_flat_pose();
@@ -12437,24 +9497,17 @@ pub mod piece {
             let parent_plane = parent_piece.flat_plane();
             let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
             let parent_connection = parent_connection_ref.read().ok()?;
-            let (parent_side_ref, child_side_ref) =
-                parent_connection.flatten_parent_and_child_sides(&self.id)?;
+            let (parent_side_ref, child_side_ref) = parent_connection.flatten_parent_and_child_sides(&self.id)?;
             let parent_side = parent_side_ref.read().ok()?;
             let child_side = child_side_ref.read().ok()?;
             let child_type_ref = self.type_ref.as_ref()?.upgrade()?;
             let parent_type = parent_type_ref.read().ok()?;
             let child_type = child_type_ref.read().ok()?;
-            let parent_connector =
-                crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
-            let child_connector =
-                crate::design::resolve_connector_for_side(&child_side, &child_type)?;
+            let parent_connector = crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
+            let child_connector = crate::design::resolve_connector_for_side(&child_side, &child_type)?;
             let parent_connector = parent_connector.read().ok()?;
             let child_connector = child_connector.read().ok()?;
-            Some(parent_connection.compute_child_plane_for_flatten(
-                &parent_plane,
-                &parent_connector,
-                &child_connector,
-            ))
+            Some(parent_connection.compute_child_plane_for_flatten(&parent_plane, &parent_connector, &child_connector))
         }
 
         fn computed_flat_center(&self) -> Option<Coordinate> {
@@ -12464,25 +9517,18 @@ pub mod piece {
             let parent_center = parent_piece.flat_center();
             let parent_type_ref = parent_piece.type_ref.as_ref()?.upgrade()?;
             let parent_connection = parent_connection_ref.read().ok()?;
-            let (parent_side_ref, _) =
-                parent_connection.flatten_parent_and_child_sides(&self.id)?;
+            let (parent_side_ref, _) = parent_connection.flatten_parent_and_child_sides(&self.id)?;
             let parent_side = parent_side_ref.read().ok()?;
             let parent_type = parent_type_ref.read().ok()?;
-            let parent_connector =
-                crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
+            let parent_connector = crate::design::resolve_connector_for_side(&parent_side, &parent_type)?;
             let parent_connector = parent_connector.read().ok()?;
-            Some(
-                parent_connection
-                    .compute_child_center_for_flatten(parent_center, &parent_connector),
-            )
+            Some(parent_connection.compute_child_center_for_flatten(parent_center, &parent_connector))
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(dr) = d.read() {
                     dr.invalidate_hash();
@@ -12504,17 +9550,9 @@ pub mod piece {
             }
             let pose_entity = self.pose_entity_ref();
             self.pose.plane = plane;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(pose_entity.clone()),
-                field: EventField::Plane,
-            });
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: pose_entity,
-            });
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Pose,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(pose_entity.clone()), field: EventField::Piece(crate::events::PieceField::Plane) });
+            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Pose) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12526,17 +9564,9 @@ pub mod piece {
             }
             let pose_entity = self.pose_entity_ref();
             self.pose.center = center;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(pose_entity.clone()),
-                field: EventField::Center,
-            });
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: pose_entity,
-            });
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Pose,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(pose_entity.clone()), field: EventField::Piece(crate::events::PieceField::Center) });
+            self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Pose) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12547,23 +9577,14 @@ pub mod piece {
                 return Ok(());
             }
             self.color = color;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Color,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Color) });
             self.invalidate_hash();
             Ok(())
         }
 
-        pub fn set_type_weak(
-            &mut self,
-            type_ref: Option<TypeStoreWeak>,
-        ) -> crate::error::SetResult {
+        pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) -> crate::error::SetResult {
             self.type_ref = type_ref;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Kind,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Kind) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12576,15 +9597,10 @@ pub mod piece {
             let previous_id = self.id.clone();
             let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(previous_entity.clone()),
-                field: EventField::Id,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(previous_entity.clone()), field: EventField::Piece(crate::events::PieceField::Id) });
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: previous_entity,
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: previous_entity });
             if let Some(d) = self.parent_design.upgrade() {
                 if let Ok(d) = d.read() {
                     d.invalidate_hash();
@@ -12601,21 +9617,14 @@ pub mod piece {
                 Some(s) => Some(s.trim().to_string()),
             };
             if let Err(e) = crate::validate::optional_display_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Name,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Name), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Name) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12631,10 +9640,7 @@ pub mod piece {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Description) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12645,10 +9651,7 @@ pub mod piece {
                 return Ok(());
             }
             self.scale = scale;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Scale,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Scale) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12659,10 +9662,7 @@ pub mod piece {
                 return Ok(());
             }
             self.mirror_plane = mirror_plane;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::MirrorPlane,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::MirrorPlane) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12673,10 +9673,7 @@ pub mod piece {
                 return Ok(());
             }
             self.hidden = hidden;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Hidden,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Hidden) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12687,10 +9684,7 @@ pub mod piece {
                 return Ok(());
             }
             self.locked = locked;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Locked,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Locked) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -12698,33 +9692,18 @@ pub mod piece {
 
         /// World-space plane from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_plane(&self) -> Plane {
-            self.flat_plane.get_or_init(|| {
-                self.pose
-                    .plane
-                    .or_else(|| self.computed_flat_plane())
-                    .unwrap_or_else(Plane::world_xy)
-            })
+            self.flat_plane.get_or_init(|| self.pose.plane.or_else(|| self.computed_flat_plane()).unwrap_or_else(Plane::world_xy))
         }
 
         /// World-space center from explicit piece placement or cached parent/connection dependencies.
         pub fn flat_center(&self) -> Coordinate {
-            self.flat_center.get_or_init(|| {
-                self.pose
-                    .center
-                    .or_else(|| self.computed_flat_center())
-                    .unwrap_or_default()
-            })
+            self.flat_center.get_or_init(|| self.pose.center.or_else(|| self.computed_flat_center()).unwrap_or_default())
         }
 
         /// 🧭Path from the fixed (root) piece down to and including this piece, computed by
         /// recursing into the parent piece's path and appending this piece's id.
         pub fn path(&self) -> Vec<PieceIdDto> {
-            let mut path = self
-                .parent_piece
-                .as_ref()
-                .and_then(|w| w.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.path()))
-                .unwrap_or_default();
+            let mut path = self.parent_piece.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|p| p.path())).unwrap_or_default();
             path.push(self.to_id_dto());
             path
         }
@@ -12763,19 +9742,10 @@ pub mod piece {
         }
 
         fn domain_cross(a: Coordinate, b: Coordinate) -> Coordinate {
-            Coordinate::new(
-                a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x,
-            )
+            Coordinate::new(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
         }
 
-        fn domain_move_translation_world(
-            plane: &Plane,
-            gap: f64,
-            shift: f64,
-            rise: f64,
-        ) -> Coordinate {
+        fn domain_move_translation_world(plane: &Plane, gap: f64, shift: f64, rise: f64) -> Coordinate {
             let x = Self::domain_normalize_coord(plane.x_axis);
             let y = Self::domain_normalize_coord(plane.y_axis);
             let z = Self::domain_cross(x, y);
@@ -12788,34 +9758,15 @@ pub mod piece {
         }
 
         fn piece_id_from_side(side: &crate::side::SideStoreRef) -> Option<Id> {
-            side.read().ok().and_then(|side| {
-                side.piece
-                    .upgrade()
-                    .and_then(|piece| piece.try_read().ok().map(|piece| piece.id.clone()))
-            })
+            side.read().ok().and_then(|side| side.piece.upgrade().and_then(|piece| piece.try_read().ok().map(|piece| piece.id.clone())))
         }
 
-        fn connection_child_piece(
-            connection: &crate::connection::ConnectionStoreRef,
-        ) -> Option<PieceStoreRef> {
-            connection.read().ok().and_then(|connection| {
-                connection
-                    .connecting
-                    .read()
-                    .ok()
-                    .and_then(|side| side.piece.upgrade())
-            })
+        fn connection_child_piece(connection: &crate::connection::ConnectionStoreRef) -> Option<PieceStoreRef> {
+            connection.read().ok().and_then(|connection| connection.connecting.read().ok().and_then(|side| side.piece.upgrade()))
         }
 
-        fn connection_connected_matches_self(
-            connection: &crate::connection::ConnectionStoreRef,
-            self_id: &Id,
-        ) -> bool {
-            let Some(connected) = connection
-                .read()
-                .ok()
-                .map(|connection| connection.connected.clone())
-            else {
+        fn connection_connected_matches_self(connection: &crate::connection::ConnectionStoreRef, self_id: &Id) -> bool {
+            let Some(connected) = connection.read().ok().map(|connection| connection.connected.clone()) else {
                 return false;
             };
             match Self::piece_id_from_side(&connected) {
@@ -12824,112 +9775,52 @@ pub mod piece {
             }
         }
 
-        fn immediate_child_flat_pose(
-            &self,
-            connection_ref: &crate::connection::ConnectionStoreRef,
-            child: &PieceStore,
-            parent_plane: Plane,
-            parent_center: Coordinate,
-        ) -> (Plane, Coordinate) {
+        fn immediate_child_flat_pose(&self, connection_ref: &crate::connection::ConnectionStoreRef, child: &PieceStore, parent_plane: Plane, parent_center: Coordinate) -> (Plane, Coordinate) {
             let Some(parent_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Some(child_type_ref) = child.type_ref.as_ref().and_then(|t| t.upgrade()) else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(connection) = connection_ref.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(parent_side) = connection.connected.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(child_side) = connection.connecting.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(parent_type) = parent_type_ref.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(child_type) = child_type_ref.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
-            let Some(parent_connector_ref) =
-                crate::design::resolve_connector_for_side(&parent_side, &parent_type)
-            else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+            let Some(parent_connector_ref) = crate::design::resolve_connector_for_side(&parent_side, &parent_type) else {
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
-            let Some(child_connector_ref) =
-                crate::design::resolve_connector_for_side(&child_side, &child_type)
-            else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+            let Some(child_connector_ref) = crate::design::resolve_connector_for_side(&child_side, &child_type) else {
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(parent_connector) = parent_connector_ref.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
             let Ok(child_connector) = child_connector_ref.read() else {
-                return (
-                    child.pose.plane.unwrap_or_else(Plane::world_xy),
-                    child.pose.center.unwrap_or_default(),
-                );
+                return (child.pose.plane.unwrap_or_else(Plane::world_xy), child.pose.center.unwrap_or_default());
             };
-            (
-                connection.compute_child_plane_for_flatten(
-                    &parent_plane,
-                    &parent_connector,
-                    &child_connector,
-                ),
-                connection.compute_child_center_for_flatten(parent_center, &parent_connector),
-            )
+            (connection.compute_child_plane_for_flatten(&parent_plane, &parent_connector, &child_connector), connection.compute_child_center_for_flatten(parent_center, &parent_connector))
         }
 
         fn detach_flat_pose(&self) -> (Plane, Coordinate) {
-            let fallback = (
-                self.pose.plane.unwrap_or_else(Plane::world_xy),
-                self.pose.center.unwrap_or_default(),
-            );
-            let Some(parent_piece_ref) = self.parent_piece.as_ref().and_then(|p| p.upgrade())
-            else {
+            let fallback = (self.pose.plane.unwrap_or_else(Plane::world_xy), self.pose.center.unwrap_or_default());
+            let Some(parent_piece_ref) = self.parent_piece.as_ref().and_then(|p| p.upgrade()) else {
                 return fallback;
             };
-            let Some(parent_connection_ref) =
-                self.parent_connection.as_ref().and_then(|c| c.upgrade())
-            else {
+            let Some(parent_connection_ref) = self.parent_connection.as_ref().and_then(|c| c.upgrade()) else {
                 return fallback;
             };
-            let Some(parent_type_ref) = parent_piece_ref
-                .read()
-                .ok()
-                .and_then(|parent| parent.type_ref.as_ref().and_then(|t| t.upgrade()))
-            else {
+            let Some(parent_type_ref) = parent_piece_ref.read().ok().and_then(|parent| parent.type_ref.as_ref().and_then(|t| t.upgrade())) else {
                 return fallback;
             };
             let Some(child_type_ref) = self.type_ref.as_ref().and_then(|t| t.upgrade()) else {
@@ -12956,14 +9847,10 @@ pub mod piece {
             let Ok(child_type) = child_type_ref.read() else {
                 return fallback;
             };
-            let Some(parent_connector_ref) =
-                crate::design::resolve_connector_for_side(&parent_side, &parent_type)
-            else {
+            let Some(parent_connector_ref) = crate::design::resolve_connector_for_side(&parent_side, &parent_type) else {
                 return fallback;
             };
-            let Some(child_connector_ref) =
-                crate::design::resolve_connector_for_side(&child_side, &child_type)
-            else {
+            let Some(child_connector_ref) = crate::design::resolve_connector_for_side(&child_side, &child_type) else {
                 return fallback;
             };
             let Ok(parent_connector) = parent_connector_ref.read() else {
@@ -12972,16 +9859,8 @@ pub mod piece {
             let Ok(child_connector) = child_connector_ref.read() else {
                 return fallback;
             };
-            let plane = self.pose.plane.unwrap_or_else(|| {
-                connection.compute_child_plane_for_flatten(
-                    &parent_plane,
-                    &parent_connector,
-                    &child_connector,
-                )
-            });
-            let center = self.pose.center.unwrap_or_else(|| {
-                connection.compute_child_center_for_flatten(parent_center, &parent_connector)
-            });
+            let plane = self.pose.plane.unwrap_or_else(|| connection.compute_child_plane_for_flatten(&parent_plane, &parent_connector, &child_connector));
+            let center = self.pose.center.unwrap_or_else(|| connection.compute_child_center_for_flatten(parent_center, &parent_connector));
             (plane, center)
         }
 
@@ -13000,11 +9879,7 @@ pub mod piece {
                     continue;
                 }
                 for connection in &design_read.connections {
-                    let Some(connected_id) = connection
-                        .read()
-                        .ok()
-                        .and_then(|connection| Self::piece_id_from_side(&connection.connected))
-                    else {
+                    let Some(connected_id) = connection.read().ok().and_then(|connection| Self::piece_id_from_side(&connection.connected)) else {
                         continue;
                     };
                     if connected_id != parent_id {
@@ -13036,11 +9911,7 @@ pub mod piece {
                     continue;
                 }
                 for connection in &design_read.connections {
-                    let Some(connected_id) = connection
-                        .read()
-                        .ok()
-                        .and_then(|connection| Self::piece_id_from_side(&connection.connected))
-                    else {
+                    let Some(connected_id) = connection.read().ok().and_then(|connection| Self::piece_id_from_side(&connection.connected)) else {
                         continue;
                     };
                     if connected_id != parent_id {
@@ -13060,12 +9931,8 @@ pub mod piece {
         /// 🖐️Drag this piece in center-space; connected pieces update their parent connection while
         /// fixed pieces update their own center and invalidate descendant center caches.
         pub fn drag(&mut self, du: f64, dv: f64) -> SetResult {
-            if let Some(parent_connection) =
-                self.parent_connection.as_ref().and_then(|w| w.upgrade())
-            {
-                let mut connection = parent_connection
-                    .write()
-                    .map_err(|_| SetError::LockPoisoned("connection".into()))?;
+            if let Some(parent_connection) = self.parent_connection.as_ref().and_then(|w| w.upgrade()) {
+                let mut connection = parent_connection.write().map_err(|_| SetError::LockPoisoned("connection".into()))?;
                 let next_x = connection.x.unwrap_or(0.0) + du;
                 let next_y = connection.y.unwrap_or(0.0) + dv;
                 connection.set_x(Some(next_x))?;
@@ -13075,11 +9942,7 @@ pub mod piece {
                 return Ok(());
             }
 
-            let next = self
-                .pose
-                .center
-                .unwrap_or_default()
-                .add(&Coordinate::new(du, dv, 0.0));
+            let next = self.pose.center.unwrap_or_default().add(&Coordinate::new(du, dv, 0.0));
             self.set_center(Some(next))?;
             self.invalidate_flat_centers_below();
             Ok(())
@@ -13100,16 +9963,7 @@ pub mod piece {
         /// parent and child connections that made those poses implicit.
         pub fn fix(&mut self) -> SetResult {
             let (flat_plane, flat_center) = self.detach_flat_pose();
-            let parent_connection_id = self
-                .parent_connection
-                .as_ref()
-                .and_then(|connection| connection.upgrade())
-                .and_then(|connection| {
-                    connection
-                        .read()
-                        .ok()
-                        .map(|connection| connection.id.clone())
-                });
+            let parent_connection_id = self.parent_connection.as_ref().and_then(|connection| connection.upgrade()).and_then(|connection| connection.read().ok().map(|connection| connection.id.clone()));
 
             self.pose.plane = Some(flat_plane);
             self.pose.center = Some(flat_center);
@@ -13121,16 +9975,9 @@ pub mod piece {
             let Some(design_ref) = self.parent_design.upgrade() else {
                 return Ok(());
             };
-            let mut design = design_ref
-                .write()
-                .map_err(|_| SetError::LockPoisoned("design".into()))?;
+            let mut design = design_ref.write().map_err(|_| SetError::LockPoisoned("design".into()))?;
             let design_entity = design.entity_ref();
-            let child_connections: Vec<_> = design
-                .connections
-                .iter()
-                .filter(|connection| Self::connection_connected_matches_self(connection, &self.id))
-                .cloned()
-                .collect();
+            let child_connections: Vec<_> = design.connections.iter().filter(|connection| Self::connection_connected_matches_self(connection, &self.id)).cloned().collect();
 
             let mut removed_connection_ids: HashSet<Id> = HashSet::new();
             if let Some(id) = parent_connection_id {
@@ -13139,12 +9986,7 @@ pub mod piece {
             for connection in &child_connections {
                 if let Some(child_ref) = Self::connection_child_piece(connection) {
                     if let Ok(mut child) = child_ref.try_write() {
-                        let (child_plane, child_center) = self.immediate_child_flat_pose(
-                            connection,
-                            &child,
-                            flat_plane,
-                            flat_center,
-                        );
+                        let (child_plane, child_center) = self.immediate_child_flat_pose(connection, &child, flat_plane, flat_center);
                         child.pose.plane = Some(child_plane);
                         child.pose.center = Some(child_center);
                         child.parent_piece = None;
@@ -13162,17 +10004,9 @@ pub mod piece {
                 return Ok(());
             }
             for id in &removed_connection_ids {
-                design.emit_ev(KitEvent::ChildRemoved {
-                    parent: design_entity.clone(),
-                    child: EntityRef::new(EntityKind::Connection, id.clone()),
-                });
+                design.emit_ev(KitEvent::ChildRemoved { parent: design_entity.clone(), child: EntityRef::new(EntityKind::Connection, id.clone()) });
             }
-            design.connections.retain(|connection| {
-                connection
-                    .read()
-                    .map(|connection| !removed_connection_ids.contains(&connection.id))
-                    .unwrap_or(true)
-            });
+            design.connections.retain(|connection| connection.read().map(|connection| !removed_connection_ids.contains(&connection.id)).unwrap_or(true));
             design.invalidate_hash();
             design.invalidate_flatten_with_locked_piece(Some(self.id.clone()));
             design.invalidate_validation();
@@ -13189,18 +10023,13 @@ pub mod piece {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("piece")
-                .str(self.id.as_str())
-                .opt_str(self.name.as_deref())
-                .opt_str(self.description.as_deref());
+            w.tag("piece").str(self.id.as_str()).opt_str(self.name.as_deref()).opt_str(self.description.as_deref());
             self.pose.hash_into(w);
             w.opt_f64(self.scale);
             if let Some(p) = &self.mirror_plane {
                 p.hash_into(w);
             }
-            w.opt_bool(self.hidden)
-                .opt_bool(self.locked)
-                .opt_str(self.color.as_deref());
+            w.opt_bool(self.hidden).opt_bool(self.locked).opt_str(self.color.as_deref());
             for p in &self.props {
                 if let Ok(p) = p.read() {
                     p.hash_into(w);
@@ -13219,22 +10048,12 @@ pub mod piece {
         }
 
         pub fn to_id_dto(&self) -> PieceIdDto {
-            PieceIdDto {
-                id: self.id.clone(),
-            }
+            PieceIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> PieceMetadataDto {
-            let r#type = self
-                .type_ref
-                .as_ref()
-                .and_then(|t| t.upgrade())
-                .and_then(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() }));
-            let design = self.parent_design.upgrade().and_then(|d| {
-                d.read()
-                    .ok()
-                    .map(|d| crate::design::DesignIdDto { id: d.id.clone() })
-            });
+            let r#type = self.type_ref.as_ref().and_then(|t| t.upgrade()).and_then(|t| t.read().ok().map(|t| TypeIdDto { id: t.id.clone() }));
+            let design = self.parent_design.upgrade().and_then(|d| d.read().ok().map(|d| crate::design::DesignIdDto { id: d.id.clone() }));
             PieceMetadataDto {
                 id: self.id.clone(),
                 name: self.name.clone(),
@@ -13266,16 +10085,8 @@ pub mod piece {
                 color: m.color,
                 r#type: m.r#type,
                 design: m.design,
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
             }
         }
 
@@ -13294,16 +10105,8 @@ pub mod piece {
                 color: m.color,
                 r#type: m.r#type,
                 design: m.design,
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
             }
         }
     }
@@ -13358,11 +10161,7 @@ pub mod port {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "compatibleFamilies"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
         pub compatible_families: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
@@ -13381,11 +10180,7 @@ pub mod port {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "compatibleFamilies"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
         pub compatible_families: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
@@ -13408,11 +10203,7 @@ pub mod port {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
-        #[serde(
-            default,
-            skip_serializing_if = "Vec::is_empty",
-            rename = "compatibleFamilies"
-        )]
+        #[serde(default, skip_serializing_if = "Vec::is_empty", rename = "compatibleFamilies")]
         pub compatible_families: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mandatory: Option<bool>,
@@ -13495,57 +10286,21 @@ pub mod port {
         }
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto {
-                id: d.id,
-                family: d.family,
-                compatible_families: d.compatible_families,
-                mandatory: d.mandatory,
-                t: d.t,
-                description: d.description,
-                point: d.point,
-                direction: d.direction,
-            });
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_shallow_dto)
-                .collect();
+            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, family: d.family, compatible_families: d.compatible_families, mandatory: d.mandatory, t: d.t, description: d.description, point: d.point, direction: d.direction });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(PortMetadataDto {
-                id: d.id,
-                family: d.family,
-                compatible_families: d.compatible_families,
-                mandatory: d.mandatory,
-                t: d.t,
-                description: d.description,
-                point: d.point,
-                direction: d.direction,
-            });
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_full_dto)
-                .collect();
+            let mut s = Self::from_metadata_dto(PortMetadataDto { id: d.id, family: d.family, compatible_families: d.compatible_families, mandatory: d.mandatory, t: d.t, description: d.description, point: d.point, direction: d.direction });
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
         }
 
         pub fn to_id_dto(&self) -> PortIdDto {
-            PortIdDto {
-                id: self.id.clone(),
-            }
+            PortIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> PortMetadataDto {
@@ -13572,16 +10327,8 @@ pub mod port {
                 description: m.description,
                 point: m.point,
                 direction: m.direction,
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_shallow_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
             }
         }
 
@@ -13596,16 +10343,8 @@ pub mod port {
                 description: m.description,
                 point: m.point,
                 direction: m.direction,
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_full_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
             }
         }
 
@@ -13614,10 +10353,7 @@ pub mod port {
                 return Ok(());
             }
             self.id = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Id,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Id) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13627,10 +10363,7 @@ pub mod port {
                 return Ok(());
             }
             self.family = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Family,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Family) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13640,10 +10373,7 @@ pub mod port {
                 return Ok(());
             }
             self.compatible_families = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::CompatibleFamilies,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::CompatibleFamilies) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13653,10 +10383,7 @@ pub mod port {
                 return Ok(());
             }
             self.mandatory = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Mandatory,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Mandatory) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13666,10 +10393,7 @@ pub mod port {
                 return Ok(());
             }
             self.t = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::T,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::T) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13679,10 +10403,7 @@ pub mod port {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13692,10 +10413,7 @@ pub mod port {
                 return Ok(());
             }
             self.point = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Point,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Point) });
             self.invalidate_hash();
             Ok(())
         }
@@ -13705,19 +10423,14 @@ pub mod port {
                 return Ok(());
             }
             self.direction = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Direction,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Direction) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(t) = self.parent_type.upgrade() {
                 if let Ok(tr) = t.read() {
                     tr.invalidate_hash();
@@ -13736,9 +10449,7 @@ pub mod port {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("port")
-                .str(self.id.as_str())
-                .opt_str(self.family.as_deref());
+            w.tag("port").str(self.id.as_str()).opt_str(self.family.as_deref());
             for f in &self.compatible_families {
                 w.str(f);
             }
@@ -13832,18 +10543,7 @@ pub mod prop {
 
     impl PropStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                key: String::new(),
-                value: String::new(),
-                unit: None,
-                parent_kit: None,
-                parent_design: None,
-                parent_type: None,
-                parent_piece: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, key: String::new(), value: String::new(), unit: None, parent_kit: None, parent_design: None, parent_type: None, parent_piece: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -13874,10 +10574,7 @@ pub mod prop {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Key,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Key) });
             self.bubble();
             Ok(())
         }
@@ -13887,10 +10584,7 @@ pub mod prop {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Value,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Value) });
             self.bubble();
             Ok(())
         }
@@ -13900,19 +10594,14 @@ pub mod prop {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Unit,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Unit) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -13952,38 +10641,21 @@ pub mod prop {
         }
 
         pub fn to_id_dto(&self) -> PropIdDto {
-            PropIdDto {
-                id: self.id.clone(),
-            }
+            PropIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> PropMetadataDto {
-            PropMetadataDto {
-                id: self.id.clone(),
-                key: self.key.clone(),
-                value: self.value.clone(),
-                unit: self.unit.clone(),
-            }
+            PropMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> PropShallowDto {
             let m = self.to_metadata_dto();
-            PropShallowDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-            }
+            PropShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit }
         }
 
         pub fn to_full_dto(&self) -> PropFullDto {
             let m = self.to_metadata_dto();
-            PropFullDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-            }
+            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit }
         }
 
         pub fn invalidate_hash(&self) {
@@ -13999,11 +10671,7 @@ pub mod prop {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("prop")
-                .str(self.id.as_str())
-                .str(&self.key)
-                .str(&self.value)
-                .opt_str(self.unit.as_deref());
+            w.tag("prop").str(self.id.as_str()).str(&self.key).str(&self.value).opt_str(self.unit.as_deref());
         }
     }
 }
@@ -14012,9 +10680,7 @@ pub mod quality {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::benchmark::{
-        BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef,
-    };
+    use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
@@ -14144,10 +10810,7 @@ pub mod quality {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Key,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Key) });
             self.bubble();
             Ok(())
         }
@@ -14157,10 +10820,7 @@ pub mod quality {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Value,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Value) });
             self.bubble();
             Ok(())
         }
@@ -14170,10 +10830,7 @@ pub mod quality {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Unit,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Unit) });
             self.bubble();
             Ok(())
         }
@@ -14183,10 +10840,7 @@ pub mod quality {
                 return Ok(());
             }
             self.definition = definition;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Definition,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Definition) });
             self.bubble();
             Ok(())
         }
@@ -14196,10 +10850,7 @@ pub mod quality {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Description) });
             self.bubble();
             Ok(())
         }
@@ -14210,14 +10861,7 @@ pub mod quality {
 
         pub(crate) fn from_shallow_dto(d: QualityShallowDto) -> Self {
             let mut s = Self::empty_shell(d.id.clone());
-            s.apply_metadata_fields(QualityMetadataDto {
-                id: d.id,
-                key: d.key,
-                value: d.value,
-                unit: d.unit,
-                definition: d.definition,
-                description: d.description,
-            });
+            s.apply_metadata_fields(QualityMetadataDto { id: d.id, key: d.key, value: d.value, unit: d.unit, definition: d.definition, description: d.description });
             s.benchmarks = d
                 .benchmarks
                 .into_iter()
@@ -14231,36 +10875,14 @@ pub mod quality {
         }
 
         pub(crate) fn from_full_dto(d: QualityFullDto) -> Self {
-            let QualityFullDto {
-                id,
-                key,
-                value,
-                unit,
-                definition,
-                description,
-                benchmarks,
-            } = d;
+            let QualityFullDto { id, key, value, unit, definition, description, benchmarks } = d;
             let mut s = Self::empty_shell(id.clone());
-            s.apply_metadata_fields(QualityMetadataDto {
-                id,
-                key,
-                value,
-                unit,
-                definition,
-                description,
-            });
+            s.apply_metadata_fields(QualityMetadataDto { id, key, value, unit, definition, description });
             s.benchmarks = benchmarks
                 .into_iter()
                 .map(|b| {
                     let mut bs = BenchmarkStore::empty_shell(b.id.clone());
-                    bs.apply_metadata_dto(BenchmarkMetadataDto {
-                        id: b.id,
-                        name: b.name,
-                        min: b.min,
-                        max: b.max,
-                        min_excluded: b.min_excluded,
-                        max_excluded: b.max_excluded,
-                    });
+                    bs.apply_metadata_dto(BenchmarkMetadataDto { id: b.id, name: b.name, min: b.min, max: b.max, min_excluded: b.min_excluded, max_excluded: b.max_excluded });
                     Arc::new(RwLock::new(bs))
                 })
                 .collect();
@@ -14268,61 +10890,26 @@ pub mod quality {
         }
 
         pub fn to_id_dto(&self) -> QualityIdDto {
-            QualityIdDto {
-                id: self.id.clone(),
-            }
+            QualityIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> QualityMetadataDto {
-            QualityMetadataDto {
-                id: self.id.clone(),
-                key: self.key.clone(),
-                value: self.value.clone(),
-                unit: self.unit.clone(),
-                definition: self.definition.clone(),
-                description: self.description.clone(),
-            }
+            QualityMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), definition: self.definition.clone(), description: self.description.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> QualityShallowDto {
             let m = self.to_metadata_dto();
-            QualityShallowDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-                definition: m.definition,
-                description: m.description,
-                benchmarks: self
-                    .benchmarks
-                    .iter()
-                    .filter_map(|b| b.read().ok().map(|b| b.to_metadata_dto()))
-                    .collect(),
-            }
+            QualityShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_metadata_dto())).collect() }
         }
 
         pub fn to_full_dto(&self) -> QualityFullDto {
             let m = self.to_metadata_dto();
-            QualityFullDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-                definition: m.definition,
-                description: m.description,
-                benchmarks: self
-                    .benchmarks
-                    .iter()
-                    .filter_map(|b| b.read().ok().map(|b| b.to_full_dto()))
-                    .collect(),
-            }
+            QualityFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, definition: m.definition, description: m.description, benchmarks: self.benchmarks.iter().filter_map(|b| b.read().ok().map(|b| b.to_full_dto())).collect() }
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -14384,12 +10971,7 @@ pub mod quality {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("quality")
-                .str(self.id.as_str())
-                .str(&self.key)
-                .opt_str(self.value.as_deref())
-                .opt_str(self.unit.as_deref())
-                .opt_str(self.definition.as_deref());
+            w.tag("quality").str(self.id.as_str()).str(&self.key).opt_str(self.value.as_deref()).opt_str(self.unit.as_deref()).opt_str(self.definition.as_deref());
             for b in &self.benchmarks {
                 if let Ok(b) = b.read() {
                     b.hash_into(w);
@@ -14438,27 +11020,11 @@ pub mod report {
 
     impl<T> SemioReport<T> {
         pub fn ok(value: T) -> Self {
-            Self {
-                ok: true,
-                value: Some(value),
-                infos: Vec::new(),
-                warnings: Vec::new(),
-                errors: Vec::new(),
-            }
+            Self { ok: true, value: Some(value), infos: Vec::new(), warnings: Vec::new(), errors: Vec::new() }
         }
 
         pub fn err(message: impl Into<String>) -> Self {
-            Self {
-                ok: false,
-                value: None,
-                infos: Vec::new(),
-                warnings: Vec::new(),
-                errors: vec![OperationNote {
-                    severity: NoteSeverity::Error,
-                    message: message.into(),
-                    pointer: None,
-                }],
-            }
+            Self { ok: false, value: None, infos: Vec::new(), warnings: Vec::new(), errors: vec![OperationNote { severity: NoteSeverity::Error, message: message.into(), pointer: None }] }
         }
 
         pub fn with_infos(mut self, infos: Vec<OperationNote>) -> Self {
@@ -14484,19 +11050,11 @@ pub mod report {
 
     impl ValidationResult {
         pub fn valid() -> Self {
-            Self {
-                is_valid: true,
-                errors: Vec::new(),
-                warnings: Vec::new(),
-            }
+            Self { is_valid: true, errors: Vec::new(), warnings: Vec::new() }
         }
 
         pub fn with_error(msg: impl Into<String>) -> Self {
-            Self {
-                is_valid: false,
-                errors: vec![msg.into()],
-                warnings: Vec::new(),
-            }
+            Self { is_valid: false, errors: vec![msg.into()], warnings: Vec::new() }
         }
     }
 }
@@ -14580,18 +11138,7 @@ pub mod representation {
 
     impl RepresentationStore {
         pub fn new(url: impl Into<String>) -> Self {
-            Self {
-                id: Id::new_v7(),
-                url: url.into(),
-                description: None,
-                tags: Vec::new(),
-                file: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), url: url.into(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -14604,95 +11151,36 @@ pub mod representation {
         }
 
         pub fn from_id_dto(d: RepresentationIdDto) -> Self {
-            Self {
-                id: d.id,
-                url: String::new(),
-                description: None,
-                tags: Vec::new(),
-                file: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, url: String::new(), description: None, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_metadata_dto(d: RepresentationMetadataDto) -> Self {
-            Self {
-                id: d.id,
-                url: d.url,
-                description: d.description,
-                tags: Vec::new(),
-                file: None,
-                qualities: Vec::new(),
-                attributes: Vec::new(),
-                parent_type: Weak::new(),
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: d.id, url: d.url, description: d.description, tags: Vec::new(), file: None, qualities: Vec::new(), attributes: Vec::new(), parent_type: Weak::new(), event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         pub fn from_shallow_dto(d: RepresentationShallowDto) -> Self {
-            let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
-                id: d.id,
-                url: d.url,
-                description: d.description,
-                file: d.file,
-            });
+            let mut s = Self::from_metadata_dto(RepresentationMetadataDto { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_shallow_dto).collect();
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_shallow_dto)
-                .collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_shallow_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_shallow_dto).collect();
             s
         }
 
         pub fn from_full_dto(d: RepresentationFullDto) -> Self {
-            let mut s = Self::from_metadata_dto(RepresentationMetadataDto {
-                id: d.id,
-                url: d.url,
-                description: d.description,
-                file: d.file,
-            });
+            let mut s = Self::from_metadata_dto(RepresentationMetadataDto { id: d.id, url: d.url, description: d.description, file: d.file });
             s.tags = d.tags.into_iter().map(TagStore::from_full_dto).collect();
-            s.qualities = d
-                .qualities
-                .into_iter()
-                .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
-                .collect();
-            s.attributes = d
-                .attributes
-                .into_iter()
-                .map(AttributeStore::from_full_dto)
-                .collect();
+            s.qualities = d.qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect();
+            s.attributes = d.attributes.into_iter().map(AttributeStore::from_full_dto).collect();
             s
         }
 
         pub fn to_id_dto(&self) -> RepresentationIdDto {
-            RepresentationIdDto {
-                id: self.id.clone(),
-            }
+            RepresentationIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> RepresentationMetadataDto {
-            let file = self
-                .file
-                .as_ref()
-                .and_then(|f| f.upgrade())
-                .and_then(|f| f.read().ok().map(|f| f.to_id_dto()));
-            RepresentationMetadataDto {
-                id: self.id.clone(),
-                url: self.url.clone(),
-                description: self.description.clone(),
-                file,
-            }
+            let file = self.file.as_ref().and_then(|f| f.upgrade()).and_then(|f| f.read().ok().map(|f| f.to_id_dto()));
+            RepresentationMetadataDto { id: self.id.clone(), url: self.url.clone(), description: self.description.clone(), file }
         }
 
         pub fn to_shallow_dto(&self) -> RepresentationShallowDto {
@@ -14703,16 +11191,8 @@ pub mod representation {
                 description: m.description,
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_shallow_dto).collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_shallow_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_shallow_dto).collect(),
             }
         }
 
@@ -14724,36 +11204,21 @@ pub mod representation {
                 description: m.description,
                 file: m.file,
                 tags: self.tags.iter().map(TagStore::to_full_dto).collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .map(AttributeStore::to_full_dto)
-                    .collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                attributes: self.attributes.iter().map(AttributeStore::to_full_dto).collect(),
             }
         }
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Url,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Url), error: e.clone() });
                 return Err(e);
             }
             if self.url == url {
                 return Ok(());
             }
             self.url = url;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Url,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Url) });
             self.invalidate_hash();
             Ok(())
         }
@@ -14763,19 +11228,14 @@ pub mod representation {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Description) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(t) = self.parent_type.upgrade() {
                 if let Ok(tr) = t.read() {
                     tr.invalidate_hash();
@@ -14794,10 +11254,7 @@ pub mod representation {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("representation")
-                .str(self.id.as_str())
-                .str(&self.url)
-                .opt_str(self.description.as_deref());
+            w.tag("representation").str(self.id.as_str()).str(&self.url).opt_str(self.description.as_deref());
             for t in &self.tags {
                 t.hash_into(w);
             }
@@ -14856,11 +11313,7 @@ pub mod side {
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "designPiece"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
         pub design_piece: Option<crate::piece::PieceIdDto>,
     }
 
@@ -14870,11 +11323,7 @@ pub mod side {
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "designPiece"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
         pub design_piece: Option<crate::piece::PieceIdDto>,
     }
 
@@ -14884,25 +11333,13 @@ pub mod side {
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
-        #[serde(
-            default,
-            skip_serializing_if = "Option::is_none",
-            rename = "designPiece"
-        )]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
         pub design_piece: Option<crate::piece::PieceIdDto>,
     }
 
     impl SideStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                piece: Weak::new(),
-                port: None,
-                design_piece: None,
-                parent_connection: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, piece: Weak::new(), port: None, design_piece: None, parent_connection: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -14921,42 +11358,28 @@ pub mod side {
 
         pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
             self.piece = piece;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Piece,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::Piece) });
             self.bubble();
             Ok(())
         }
 
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Port,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::Port) });
             self.bubble();
             Ok(())
         }
 
-        pub fn set_design_piece_weak(
-            &mut self,
-            design_piece: Option<PieceStoreWeak>,
-        ) -> crate::error::SetResult {
+        pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) -> crate::error::SetResult {
             self.design_piece = design_piece;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::DesignPiece,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::DesignPiece) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_connection {
                 if let Some(c) = w.upgrade() {
                     if let Ok(c) = c.read() {
@@ -14967,53 +11390,24 @@ pub mod side {
         }
 
         pub fn to_id_dto(&self) -> SideIdDto {
-            SideIdDto {
-                id: self.id.clone(),
-            }
+            SideIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> SideMetadataDto {
-            let piece_id = self
-                .piece
-                .upgrade()
-                .and_then(|p| p.read().ok().map(|p| p.id.clone()))
-                .unwrap_or_default();
-            let port = self
-                .port
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            let design_piece = self
-                .design_piece
-                .as_ref()
-                .and_then(|p| p.upgrade())
-                .and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            SideMetadataDto {
-                id: self.id.clone(),
-                piece: crate::piece::PieceIdDto { id: piece_id },
-                port,
-                design_piece,
-            }
+            let piece_id = self.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone())).unwrap_or_default();
+            let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
+            let design_piece = self.design_piece.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
+            SideMetadataDto { id: self.id.clone(), piece: crate::piece::PieceIdDto { id: piece_id }, port, design_piece }
         }
 
         pub fn to_shallow_dto(&self) -> SideShallowDto {
             let m = self.to_metadata_dto();
-            SideShallowDto {
-                id: m.id,
-                piece: m.piece,
-                port: m.port,
-                design_piece: m.design_piece,
-            }
+            SideShallowDto { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
         pub fn to_full_dto(&self) -> SideFullDto {
             let m = self.to_metadata_dto();
-            SideFullDto {
-                id: m.id,
-                piece: m.piece,
-                port: m.port,
-                design_piece: m.design_piece,
-            }
+            SideFullDto { id: m.id, piece: m.piece, port: m.port, design_piece: m.design_piece }
         }
 
         pub fn invalidate_hash(&self) {
@@ -15050,15 +11444,7 @@ pub mod side {
 
     impl Default for SideStore {
         fn default() -> Self {
-            Self {
-                id: Id::new_v7(),
-                piece: Weak::new(),
-                port: None,
-                design_piece: None,
-                parent_connection: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id: Id::new_v7(), piece: Weak::new(), port: None, design_piece: None, parent_connection: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
     }
 }
@@ -15130,17 +11516,7 @@ pub mod stat {
 
     impl StatStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                key: String::new(),
-                value: String::new(),
-                unit: None,
-                description: None,
-                parent_kit: None,
-                parent_design: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, key: String::new(), value: String::new(), unit: None, description: None, parent_kit: None, parent_design: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -15172,10 +11548,7 @@ pub mod stat {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Key,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Key) });
             self.bubble();
             Ok(())
         }
@@ -15185,10 +11558,7 @@ pub mod stat {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Value,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Value) });
             self.bubble();
             Ok(())
         }
@@ -15198,10 +11568,7 @@ pub mod stat {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Unit,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Unit) });
             self.bubble();
             Ok(())
         }
@@ -15211,19 +11578,14 @@ pub mod stat {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Description) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -15249,41 +11611,21 @@ pub mod stat {
         }
 
         pub fn to_id_dto(&self) -> StatIdDto {
-            StatIdDto {
-                id: self.id.clone(),
-            }
+            StatIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> StatMetadataDto {
-            StatMetadataDto {
-                id: self.id.clone(),
-                key: self.key.clone(),
-                value: self.value.clone(),
-                unit: self.unit.clone(),
-                description: self.description.clone(),
-            }
+            StatMetadataDto { id: self.id.clone(), key: self.key.clone(), value: self.value.clone(), unit: self.unit.clone(), description: self.description.clone() }
         }
 
         pub fn to_shallow_dto(&self) -> StatShallowDto {
             let m = self.to_metadata_dto();
-            StatShallowDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-                description: m.description,
-            }
+            StatShallowDto { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
         }
 
         pub fn to_full_dto(&self) -> StatFullDto {
             let m = self.to_metadata_dto();
-            StatFullDto {
-                id: m.id,
-                key: m.key,
-                value: m.value,
-                unit: m.unit,
-                description: m.description,
-            }
+            StatFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, description: m.description }
         }
 
         pub fn invalidate_hash(&self) {
@@ -15299,12 +11641,7 @@ pub mod stat {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("stat")
-                .str(self.id.as_str())
-                .str(&self.key)
-                .str(&self.value)
-                .opt_str(self.unit.as_deref())
-                .opt_str(self.description.as_deref());
+            w.tag("stat").str(self.id.as_str()).str(&self.key).str(&self.value).opt_str(self.unit.as_deref()).opt_str(self.description.as_deref());
         }
     }
 }
@@ -15367,16 +11704,7 @@ pub mod tag {
 
     impl TagStore {
         pub(crate) fn empty_shell(id: Id) -> Self {
-            Self {
-                id,
-                name: String::new(),
-                order: None,
-                parent_kit: None,
-                parent_design: None,
-                parent_type: None,
-                event_bus: Weak::new(),
-                hash_cache: Cache::default(),
-            }
+            Self { id, name: String::new(), order: None, parent_kit: None, parent_design: None, parent_type: None, event_bus: Weak::new(), hash_cache: Cache::default() }
         }
 
         #[inline]
@@ -15414,10 +11742,7 @@ pub mod tag {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Tag(crate::events::TagField::Name) });
             self.bubble();
             Ok(())
         }
@@ -15427,19 +11752,14 @@ pub mod tag {
                 return Ok(());
             }
             self.order = order;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Order,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Tag(crate::events::TagField::Order) });
             self.bubble();
             Ok(())
         }
 
         fn bubble(&mut self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(w) = &self.parent_kit {
                 if let Some(k) = w.upgrade() {
                     if let Ok(k) = k.read() {
@@ -15472,35 +11792,21 @@ pub mod tag {
         }
 
         pub fn to_id_dto(&self) -> TagIdDto {
-            TagIdDto {
-                id: self.id.clone(),
-            }
+            TagIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> TagMetadataDto {
-            TagMetadataDto {
-                id: self.id.clone(),
-                name: self.name.clone(),
-                order: self.order,
-            }
+            TagMetadataDto { id: self.id.clone(), name: self.name.clone(), order: self.order }
         }
 
         pub fn to_shallow_dto(&self) -> TagShallowDto {
             let m = self.to_metadata_dto();
-            TagShallowDto {
-                id: m.id,
-                name: m.name,
-                order: m.order,
-            }
+            TagShallowDto { id: m.id, name: m.name, order: m.order }
         }
 
         pub fn to_full_dto(&self) -> TagFullDto {
             let m = self.to_metadata_dto();
-            TagFullDto {
-                id: m.id,
-                name: m.name,
-                order: m.order,
-            }
+            TagFullDto { id: m.id, name: m.name, order: m.order }
         }
 
         pub fn invalidate_hash(&self) {
@@ -15528,14 +11834,10 @@ pub mod typ {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::attribute::{
-        AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef,
-    };
+    use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore, AttributeStoreRef};
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
-    use crate::connector::{
-        ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef,
-    };
+    use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
     use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
     use crate::geom::Location;
     use crate::hash::{Cache, HashWriter};
@@ -15543,10 +11845,7 @@ pub mod typ {
     use crate::port::{PortFullDto, PortShallowDto, PortStore, PortStoreRef};
     use crate::prop::{PropFullDto, PropShallowDto, PropStore, PropStoreRef};
     use crate::quality::{QualityFullDto, QualityShallowDto, QualityStore, QualityStoreRef};
-    use crate::representation::{
-        RepresentationFullDto, RepresentationShallowDto, RepresentationStore,
-        RepresentationStoreRef,
-    };
+    use crate::representation::{RepresentationFullDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef};
     use crate::tag::{TagFullDto, TagShallowDto, TagStore, TagStoreRef};
 
     pub type TypeStoreRef = Arc<RwLock<TypeStore>>;
@@ -15741,9 +12040,7 @@ pub mod typ {
 
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
-            self.emit_ev(KitEvent::HashInvalidated {
-                entity: self.entity_ref(),
-            });
+            self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             if let Some(k) = self.parent_kit.upgrade() {
                 if let Ok(kr) = k.read() {
                     kr.invalidate_hash();
@@ -15762,21 +12059,14 @@ pub mod typ {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected {
-                    path: crate::events::EventPath::of(self.entity_ref()),
-                    field: EventField::Name,
-                    error: e.clone(),
-                });
+                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Name), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Name,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Name) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15792,10 +12082,7 @@ pub mod typ {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Description,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Description) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15806,10 +12093,7 @@ pub mod typ {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Icon,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Icon) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15820,10 +12104,7 @@ pub mod typ {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Image,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Image) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15834,10 +12115,7 @@ pub mod typ {
                 return Ok(());
             }
             self.variant = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Variant,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Variant) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15848,10 +12126,7 @@ pub mod typ {
                 return Ok(());
             }
             self.stock = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Stock,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Stock) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15862,10 +12137,7 @@ pub mod typ {
                 return Ok(());
             }
             self.virtual_ = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Virtual,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Virtual) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15876,10 +12148,7 @@ pub mod typ {
                 return Ok(());
             }
             self.unit = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Unit,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Unit) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15890,10 +12159,7 @@ pub mod typ {
                 return Ok(());
             }
             self.location = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Location,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Location) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15904,10 +12170,7 @@ pub mod typ {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Created,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Created) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15918,10 +12181,7 @@ pub mod typ {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged {
-                path: crate::events::EventPath::of(self.entity_ref()),
-                field: EventField::Updated,
-            });
+            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Updated) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -15938,12 +12198,7 @@ pub mod typ {
         }
 
         pub fn hash_into(&self, w: &mut HashWriter) {
-            w.tag("type")
-                .str(self.id.as_str())
-                .str(&self.name)
-                .opt_str(self.description.as_deref())
-                .opt_str(self.variant.as_deref())
-                .opt_str(self.unit.as_deref());
+            w.tag("type").str(self.id.as_str()).str(&self.name).opt_str(self.description.as_deref()).opt_str(self.variant.as_deref()).opt_str(self.unit.as_deref());
             for p in &self.ports {
                 if let Ok(p) = p.read() {
                     p.hash_into(w);
@@ -15992,41 +12247,19 @@ pub mod typ {
         }
 
         pub fn port(&self, id: &str) -> Option<PortStoreRef> {
-            self.ports
-                .iter()
-                .find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.ports.iter().find(|p| p.read().map(|p| p.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn connector(&self, id: &str) -> Option<ConnectorStoreRef> {
-            self.connectors
-                .iter()
-                .find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.connectors.iter().find(|c| c.read().map(|c| c.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn connector_for_port_id(&self, port_id: &Id) -> Option<ConnectorStoreRef> {
-            self.connectors
-                .iter()
-                .find(|c| {
-                    c.read()
-                        .ok()
-                        .and_then(|cr| {
-                            cr.port
-                                .as_ref()
-                                .and_then(|w| w.upgrade())
-                                .and_then(|p| p.read().ok().map(|pr| pr.id == *port_id))
-                        })
-                        .unwrap_or(false)
-                })
-                .cloned()
+            self.connectors.iter().find(|c| c.read().ok().and_then(|cr| cr.port.as_ref().and_then(|w| w.upgrade()).and_then(|p| p.read().ok().map(|pr| pr.id == *port_id))).unwrap_or(false)).cloned()
         }
 
         pub fn representation(&self, id: &str) -> Option<RepresentationStoreRef> {
-            self.representations
-                .iter()
-                .find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false))
-                .cloned()
+            self.representations.iter().find(|r| r.read().map(|r| r.id.as_str() == id).unwrap_or(false)).cloned()
         }
 
         pub fn from_id_dto(d: TypeIdDto) -> Self {
@@ -16089,34 +12322,8 @@ pub mod typ {
 
         /// Hydrate type graph from full DTO (ports, connectors, representations, kit link).
         /// Only [`crate::kit::KitStore::from_full_dto`] should construct types in host code.
-        pub(crate) fn hydrate_from_full_dto(
-            d: TypeFullDto,
-            kit: &Arc<RwLock<crate::kit::KitStore>>,
-            file_refs: &[crate::file::FileStoreRef],
-        ) -> TypeStoreRef {
-            let TypeFullDto {
-                id,
-                name,
-                description,
-                icon,
-                image,
-                variant,
-                stock,
-                virtual_,
-                unit,
-                location,
-                created,
-                updated,
-                ports,
-                connectors,
-                representations,
-                authors,
-                concepts,
-                tags,
-                qualities,
-                props,
-                attributes,
-            } = d;
+        pub(crate) fn hydrate_from_full_dto(d: TypeFullDto, kit: &Arc<RwLock<crate::kit::KitStore>>, file_refs: &[crate::file::FileStoreRef]) -> TypeStoreRef {
+            let TypeFullDto { id, name, description, icon, image, variant, stock, virtual_, unit, location, created, updated, ports, connectors, representations, authors, concepts, tags, qualities, props, attributes } = d;
 
             let t = Arc::new(RwLock::new(TypeStore {
                 id: id.clone(),
@@ -16132,30 +12339,12 @@ pub mod typ {
                 ports: Vec::new(),
                 connectors: Vec::new(),
                 representations: Vec::new(),
-                authors: authors
-                    .into_iter()
-                    .map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a))))
-                    .collect(),
-                concepts: concepts
-                    .into_iter()
-                    .map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c))))
-                    .collect(),
-                tags: tags
-                    .into_iter()
-                    .map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t))))
-                    .collect(),
-                qualities: qualities
-                    .into_iter()
-                    .map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q))))
-                    .collect(),
-                props: props
-                    .into_iter()
-                    .map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p))))
-                    .collect(),
-                attributes: attributes
-                    .into_iter()
-                    .map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a))))
-                    .collect(),
+                authors: authors.into_iter().map(|a| Arc::new(RwLock::new(AuthorStore::from_full_dto(a)))).collect(),
+                concepts: concepts.into_iter().map(|c| Arc::new(RwLock::new(ConceptStore::from_full_dto(c)))).collect(),
+                tags: tags.into_iter().map(|t| Arc::new(RwLock::new(TagStore::from_full_dto(t)))).collect(),
+                qualities: qualities.into_iter().map(|q| Arc::new(RwLock::new(QualityStore::from_full_dto(q)))).collect(),
+                props: props.into_iter().map(|p| Arc::new(RwLock::new(PropStore::from_full_dto(p)))).collect(),
+                attributes: attributes.into_iter().map(|a| Arc::new(RwLock::new(AttributeStore::from_full_dto(a)))).collect(),
                 created: created.clone(),
                 updated: updated.clone(),
                 parent_kit: Arc::downgrade(kit),
@@ -16179,27 +12368,20 @@ pub mod typ {
                 let mut c = ConnectorStore::from_full_dto(cdto);
                 c.parent_type = Arc::downgrade(&t);
                 if let Some(pg) = port_id {
-                    if let Some(pref) = port_refs
-                        .iter()
-                        .find(|p| p.read().map(|p| p.id == pg).unwrap_or(false))
-                    {
+                    if let Some(pref) = port_refs.iter().find(|p| p.read().map(|p| p.id == pg).unwrap_or(false)) {
                         c.port = Some(Arc::downgrade(pref));
                     }
                 }
                 connector_refs.push(Arc::new(RwLock::new(c)));
             }
 
-            let mut rep_refs: Vec<RepresentationStoreRef> =
-                Vec::with_capacity(representations.len());
+            let mut rep_refs: Vec<RepresentationStoreRef> = Vec::with_capacity(representations.len());
             for rdto in representations {
                 let file_id = rdto.file.as_ref().map(|f| f.id.clone());
                 let mut r = RepresentationStore::from_full_dto(rdto);
                 r.parent_type = Arc::downgrade(&t);
                 if let Some(fg) = file_id {
-                    if let Some(fref) = file_refs
-                        .iter()
-                        .find(|f| f.read().map(|f| f.id == fg).unwrap_or(false))
-                    {
+                    if let Some(fref) = file_refs.iter().find(|f| f.read().map(|f| f.id == fg).unwrap_or(false)) {
                         r.file = Some(Arc::downgrade(fref));
                     }
                 }
@@ -16246,9 +12428,7 @@ pub mod typ {
         }
 
         pub fn to_id_dto(&self) -> TypeIdDto {
-            TypeIdDto {
-                id: self.id.clone(),
-            }
+            TypeIdDto { id: self.id.clone() }
         }
 
         pub fn to_metadata_dto(&self) -> TypeMetadataDto {
@@ -16283,51 +12463,15 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                ports: self
-                    .ports
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                connectors: self
-                    .connectors
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
-                    .collect(),
-                representations: self
-                    .representations
-                    .iter()
-                    .filter_map(|r| r.read().ok().map(|r| r.to_shallow_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto()))
-                    .collect(),
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
+                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_shallow_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_shallow_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_shallow_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_shallow_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_shallow_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_shallow_dto())).collect(),
             }
         }
 
@@ -16346,51 +12490,15 @@ pub mod typ {
                 location: m.location,
                 created: m.created,
                 updated: m.updated,
-                ports: self
-                    .ports
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                connectors: self
-                    .connectors
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
-                    .collect(),
-                representations: self
-                    .representations
-                    .iter()
-                    .filter_map(|r| r.read().ok().map(|r| r.to_full_dto()))
-                    .collect(),
-                authors: self
-                    .authors
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
-                concepts: self
-                    .concepts
-                    .iter()
-                    .filter_map(|c| c.read().ok().map(|c| c.to_full_dto()))
-                    .collect(),
-                tags: self
-                    .tags
-                    .iter()
-                    .filter_map(|t| t.read().ok().map(|t| t.to_full_dto()))
-                    .collect(),
-                qualities: self
-                    .qualities
-                    .iter()
-                    .filter_map(|q| q.read().ok().map(|q| q.to_full_dto()))
-                    .collect(),
-                props: self
-                    .props
-                    .iter()
-                    .filter_map(|p| p.read().ok().map(|p| p.to_full_dto()))
-                    .collect(),
-                attributes: self
-                    .attributes
-                    .iter()
-                    .filter_map(|a| a.read().ok().map(|a| a.to_full_dto()))
-                    .collect(),
+                ports: self.ports.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                connectors: self.connectors.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
+                representations: self.representations.iter().filter_map(|r| r.read().ok().map(|r| r.to_full_dto())).collect(),
+                authors: self.authors.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
+                concepts: self.concepts.iter().filter_map(|c| c.read().ok().map(|c| c.to_full_dto())).collect(),
+                tags: self.tags.iter().filter_map(|t| t.read().ok().map(|t| t.to_full_dto())).collect(),
+                qualities: self.qualities.iter().filter_map(|q| q.read().ok().map(|q| q.to_full_dto())).collect(),
+                props: self.props.iter().filter_map(|p| p.read().ok().map(|p| p.to_full_dto())).collect(),
+                attributes: self.attributes.iter().filter_map(|a| a.read().ok().map(|a| a.to_full_dto())).collect(),
             }
         }
     }
@@ -16532,11 +12640,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn apply_design_diff_async(
-            this: &KitStoreRef,
-            design_id: &str,
-            diff: &DesignDiff,
-        ) -> Result<()> {
+        pub async fn apply_design_diff_async(this: &KitStoreRef, design_id: &str, diff: &DesignDiff) -> Result<()> {
             let r = (|| {
                 let mut g = this.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                 g.apply_design_diff(design_id, diff)
@@ -16544,10 +12648,7 @@ mod async_kit {
             ready(r).await
         }
 
-        pub async fn flatten_design_async(
-            this: &KitStoreRef,
-            design_id: &str,
-        ) -> Result<SemioReport<DesignChange>> {
+        pub async fn flatten_design_async(this: &KitStoreRef, design_id: &str) -> Result<SemioReport<DesignChange>> {
             let r = match this.read() {
                 Ok(g) => g.flatten_design(design_id),
                 Err(_) => Err(SemioError::LockPoisoned("kit")),
@@ -16682,79 +12783,25 @@ pub mod io {
             }
         }
 
-        fn plane_parts(
-            value: Option<&Plane>,
-        ) -> (
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-        ) {
+        fn plane_parts(value: Option<&Plane>) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
             match value {
-                Some(value) => (
-                    Some(value.origin.x),
-                    Some(value.origin.y),
-                    Some(value.origin.z),
-                    Some(value.x_axis.x),
-                    Some(value.x_axis.y),
-                    Some(value.x_axis.z),
-                    Some(value.y_axis.x),
-                    Some(value.y_axis.y),
-                    Some(value.y_axis.z),
-                ),
+                Some(value) => (Some(value.origin.x), Some(value.origin.y), Some(value.origin.z), Some(value.x_axis.x), Some(value.x_axis.y), Some(value.x_axis.z), Some(value.y_axis.x), Some(value.y_axis.y), Some(value.y_axis.z)),
                 None => (None, None, None, None, None, None, None, None, None),
             }
         }
 
-        fn camera_parts(
-            value: Option<&Camera>,
-        ) -> (
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-        ) {
+        fn camera_parts(value: Option<&Camera>) -> (Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>, Option<f64>) {
             match value {
-                Some(value) => (
-                    Some(value.position.x),
-                    Some(value.position.y),
-                    Some(value.position.z),
-                    Some(value.target.x),
-                    Some(value.target.y),
-                    Some(value.target.z),
-                    Some(value.up.x),
-                    Some(value.up.y),
-                    Some(value.up.z),
-                    Some(value.fov),
-                ),
+                Some(value) => (Some(value.position.x), Some(value.position.y), Some(value.position.z), Some(value.target.x), Some(value.target.y), Some(value.target.z), Some(value.up.x), Some(value.up.y), Some(value.up.z), Some(value.fov)),
                 None => (None, None, None, None, None, None, None, None, None, None),
             }
         }
 
-        fn coordinate_from_parts(
-            x: Option<f64>,
-            y: Option<f64>,
-            z: Option<f64>,
-        ) -> Option<Coordinate> {
+        fn coordinate_from_parts(x: Option<f64>, y: Option<f64>, z: Option<f64>) -> Option<Coordinate> {
             if x.is_none() && y.is_none() && z.is_none() {
                 return None;
             }
-            Some(Coordinate::new(
-                x.unwrap_or(0.0),
-                y.unwrap_or(0.0),
-                z.unwrap_or(0.0),
-            ))
+            Some(Coordinate::new(x.unwrap_or(0.0), y.unwrap_or(0.0), z.unwrap_or(0.0)))
         }
 
         fn location_from_parts(x: Option<f64>, y: Option<f64>) -> Option<Location> {
@@ -16764,27 +12811,8 @@ pub mod io {
             Some(Location::new(x.unwrap_or(0.0), y.unwrap_or(0.0)))
         }
 
-        fn plane_from_parts(
-            ox: Option<f64>,
-            oy: Option<f64>,
-            oz: Option<f64>,
-            xx: Option<f64>,
-            xy: Option<f64>,
-            xz: Option<f64>,
-            yx: Option<f64>,
-            yy: Option<f64>,
-            yz: Option<f64>,
-        ) -> Option<Plane> {
-            if ox.is_none()
-                && oy.is_none()
-                && oz.is_none()
-                && xx.is_none()
-                && xy.is_none()
-                && xz.is_none()
-                && yx.is_none()
-                && yy.is_none()
-                && yz.is_none()
-            {
+        fn plane_from_parts(ox: Option<f64>, oy: Option<f64>, oz: Option<f64>, xx: Option<f64>, xy: Option<f64>, xz: Option<f64>, yx: Option<f64>, yy: Option<f64>, yz: Option<f64>) -> Option<Plane> {
+            if ox.is_none() && oy.is_none() && oz.is_none() && xx.is_none() && xy.is_none() && xz.is_none() && yx.is_none() && yy.is_none() && yz.is_none() {
                 return None;
             }
             let mut plane = Plane::world_xy();
@@ -16794,29 +12822,8 @@ pub mod io {
             Some(plane)
         }
 
-        fn camera_from_parts(
-            px: Option<f64>,
-            py: Option<f64>,
-            pz: Option<f64>,
-            tx: Option<f64>,
-            ty: Option<f64>,
-            tz: Option<f64>,
-            ux: Option<f64>,
-            uy: Option<f64>,
-            uz: Option<f64>,
-            fov: Option<f64>,
-        ) -> Option<Camera> {
-            if px.is_none()
-                && py.is_none()
-                && pz.is_none()
-                && tx.is_none()
-                && ty.is_none()
-                && tz.is_none()
-                && ux.is_none()
-                && uy.is_none()
-                && uz.is_none()
-                && fov.is_none()
-            {
+        fn camera_from_parts(px: Option<f64>, py: Option<f64>, pz: Option<f64>, tx: Option<f64>, ty: Option<f64>, tz: Option<f64>, ux: Option<f64>, uy: Option<f64>, uz: Option<f64>, fov: Option<f64>) -> Option<Camera> {
+            if px.is_none() && py.is_none() && pz.is_none() && tx.is_none() && ty.is_none() && tz.is_none() && ux.is_none() && uy.is_none() && uz.is_none() && fov.is_none() {
                 return None;
             }
             Some(Camera {
@@ -16863,106 +12870,45 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_author(
-            tx: &Transaction<'_>,
-            author: &AuthorFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_author(tx: &Transaction<'_>, author: &AuthorFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO author (id, ordinal, name, email, role, rank, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![
-                    author.id.as_str(),
-                    ordinal as i64,
-                    author.name,
-                    author.email,
-                    author.role,
-                    author.rank,
-                    id_ref(scope.kit),
-                    id_ref(scope.typ),
-                    id_ref(scope.design),
-                ],
+                params![author.id.as_str(), ordinal as i64, author.name, author.email, author.role, author.rank, id_ref(scope.kit), id_ref(scope.typ), id_ref(scope.design),],
             )?;
             Ok(())
         }
 
-        fn insert_concept(
-            tx: &Transaction<'_>,
-            concept: &ConceptFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_concept(tx: &Transaction<'_>, concept: &ConceptFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO concept (id, ordinal, name, description, order_index, kit_id, type_id, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                params![
-                    concept.id.as_str(),
-                    ordinal as i64,
-                    concept.name,
-                    concept.description,
-                    concept.order,
-                    id_ref(scope.kit),
-                    id_ref(scope.typ),
-                    id_ref(scope.design),
-                ],
+                params![concept.id.as_str(), ordinal as i64, concept.name, concept.description, concept.order, id_ref(scope.kit), id_ref(scope.typ), id_ref(scope.design),],
             )?;
             Ok(())
         }
 
-        fn insert_tag(
-            tx: &Transaction<'_>,
-            tag: &TagFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_tag(tx: &Transaction<'_>, tag: &TagFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO tag (id, ordinal, name, order_index, kit_id, type_id, design_id, representation_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                params![
-                    tag.id.as_str(),
-                    ordinal as i64,
-                    tag.name,
-                    tag.order,
-                    id_ref(scope.kit),
-                    id_ref(scope.typ),
-                    id_ref(scope.design),
-                    id_ref(scope.representation),
-                ],
+                params![tag.id.as_str(), ordinal as i64, tag.name, tag.order, id_ref(scope.kit), id_ref(scope.typ), id_ref(scope.design), id_ref(scope.representation),],
             )?;
             Ok(())
         }
 
-        fn insert_benchmarks(
-            tx: &Transaction<'_>,
-            quality_id: &Id,
-            benchmarks: &[BenchmarkFullDto],
-        ) -> Result<()> {
+        fn insert_benchmarks(tx: &Transaction<'_>, quality_id: &Id, benchmarks: &[BenchmarkFullDto]) -> Result<()> {
             for (ordinal, benchmark) in benchmarks.iter().enumerate() {
                 tx.execute(
                     "INSERT INTO benchmark (id, ordinal, name, min_value, max_value, min_excluded, max_excluded, quality_id)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                    params![
-                        benchmark.id.as_str(),
-                        ordinal as i64,
-                        benchmark.name,
-                        benchmark.min,
-                        benchmark.max,
-                        opt_bool_to_int(benchmark.min_excluded),
-                        opt_bool_to_int(benchmark.max_excluded),
-                        quality_id.as_str(),
-                    ],
+                    params![benchmark.id.as_str(), ordinal as i64, benchmark.name, benchmark.min, benchmark.max, opt_bool_to_int(benchmark.min_excluded), opt_bool_to_int(benchmark.max_excluded), quality_id.as_str(),],
                 )?;
             }
             Ok(())
         }
 
-        fn insert_quality(
-            tx: &Transaction<'_>,
-            quality: &QualityFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_quality(tx: &Transaction<'_>, quality: &QualityFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO quality (
                     id, ordinal, key, value, unit, definition, description,
@@ -16987,36 +12933,16 @@ pub mod io {
             insert_benchmarks(tx, &quality.id, &quality.benchmarks)
         }
 
-        fn insert_prop(
-            tx: &Transaction<'_>,
-            prop: &PropFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_prop(tx: &Transaction<'_>, prop: &PropFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO prop (id, ordinal, key, value, unit, kit_id, type_id, design_id, piece_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![
-                    prop.id.as_str(),
-                    ordinal as i64,
-                    prop.key,
-                    prop.value,
-                    prop.unit,
-                    id_ref(scope.kit),
-                    id_ref(scope.typ),
-                    id_ref(scope.design),
-                    id_ref(scope.piece),
-                ],
+                params![prop.id.as_str(), ordinal as i64, prop.key, prop.value, prop.unit, id_ref(scope.kit), id_ref(scope.typ), id_ref(scope.design), id_ref(scope.piece),],
             )?;
             Ok(())
         }
 
-        fn insert_attribute(
-            tx: &Transaction<'_>,
-            attribute: &AttributeFullDto,
-            ordinal: usize,
-            scope: ScopeRefs<'_>,
-        ) -> Result<()> {
+        fn insert_attribute(tx: &Transaction<'_>, attribute: &AttributeFullDto, ordinal: usize, scope: ScopeRefs<'_>) -> Result<()> {
             tx.execute(
                 "INSERT INTO attribute (
                     id, ordinal, key, value, definition,
@@ -17042,12 +12968,7 @@ pub mod io {
             Ok(())
         }
 
-        fn insert_port(
-            tx: &Transaction<'_>,
-            type_id: &Id,
-            port: &PortFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_port(tx: &Transaction<'_>, type_id: &Id, port: &PortFullDto, ordinal: usize) -> Result<()> {
             let (point_x, point_y, point_z) = coordinate_parts(port.point.as_ref());
             let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
             tx.execute(
@@ -17055,179 +12976,61 @@ pub mod io {
                     id, ordinal, family, mandatory, t, description,
                     point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                params![
-                    port.id.as_str(),
-                    ordinal as i64,
-                    port.family,
-                    opt_bool_to_int(port.mandatory),
-                    port.t,
-                    port.description,
-                    point_x,
-                    point_y,
-                    point_z,
-                    dir_x,
-                    dir_y,
-                    dir_z,
-                    type_id.as_str(),
-                ],
+                params![port.id.as_str(), ordinal as i64, port.family, opt_bool_to_int(port.mandatory), port.t, port.description, point_x, point_y, point_z, dir_x, dir_y, dir_z, type_id.as_str(),],
             )?;
             for (compatible_ordinal, family) in port.compatible_families.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)",
-                    params![port.id.as_str(), compatible_ordinal as i64, family],
-                )?;
+                tx.execute("INSERT INTO port_compatible_family (port_id, ordinal, family) VALUES (?1, ?2, ?3)", params![port.id.as_str(), compatible_ordinal as i64, family])?;
             }
             for (quality_ordinal, quality) in port.qualities.iter().enumerate() {
-                insert_quality(
-                    tx,
-                    quality,
-                    quality_ordinal,
-                    ScopeRefs {
-                        port: Some(&port.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in port.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        port: Some(&port.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { port: Some(&port.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_connector(
-            tx: &Transaction<'_>,
-            type_id: &Id,
-            connector: &ConnectorFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_connector(tx: &Transaction<'_>, type_id: &Id, connector: &ConnectorFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO connector (id, ordinal, code, description, port_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![
-                    connector.id.as_str(),
-                    ordinal as i64,
-                    connector.code,
-                    connector.description,
-                    connector.port.as_ref().map(|port| port.id.as_str()),
-                    type_id.as_str(),
-                ],
+                params![connector.id.as_str(), ordinal as i64, connector.code, connector.description, connector.port.as_ref().map(|port| port.id.as_str()), type_id.as_str(),],
             )?;
             for (quality_ordinal, quality) in connector.qualities.iter().enumerate() {
-                insert_quality(
-                    tx,
-                    quality,
-                    quality_ordinal,
-                    ScopeRefs {
-                        connector: Some(&connector.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in connector.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        connector: Some(&connector.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connector: Some(&connector.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_representation(
-            tx: &Transaction<'_>,
-            type_id: &Id,
-            representation: &RepresentationFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_representation(tx: &Transaction<'_>, type_id: &Id, representation: &RepresentationFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO representation (id, ordinal, url, description, file_id, type_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![
-                    representation.id.as_str(),
-                    ordinal as i64,
-                    representation.url,
-                    representation.description,
-                    representation.file.as_ref().map(|file| file.id.as_str()),
-                    type_id.as_str(),
-                ],
+                params![representation.id.as_str(), ordinal as i64, representation.url, representation.description, representation.file.as_ref().map(|file| file.id.as_str()), type_id.as_str(),],
             )?;
             for (tag_ordinal, tag) in representation.tags.iter().enumerate() {
-                insert_tag(
-                    tx,
-                    tag,
-                    tag_ordinal,
-                    ScopeRefs {
-                        representation: Some(&representation.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_tag(tx, tag, tag_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
             }
             for (quality_ordinal, quality) in representation.qualities.iter().enumerate() {
-                insert_quality(
-                    tx,
-                    quality,
-                    quality_ordinal,
-                    ScopeRefs {
-                        representation: Some(&representation.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in representation.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        representation: Some(&representation.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { representation: Some(&representation.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_type(
-            tx: &Transaction<'_>,
-            kit_id: &Id,
-            typ: &TypeFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_type(tx: &Transaction<'_>, kit_id: &Id, typ: &TypeFullDto, ordinal: usize) -> Result<()> {
             let (location_x, location_y) = location_parts(typ.location.as_ref());
             tx.execute(
                 "INSERT INTO \"type\" (
                     id, ordinal, name, description, icon, image, variant,
                     stock, virtual, unit, location_x, location_y, created_at, updated_at, kit_id
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
-                params![
-                    typ.id.as_str(),
-                    ordinal as i64,
-                    typ.name,
-                    typ.description,
-                    typ.icon,
-                    typ.image,
-                    typ.variant,
-                    typ.stock,
-                    opt_bool_to_int(typ.virtual_),
-                    typ.unit,
-                    location_x,
-                    location_y,
-                    typ.created,
-                    typ.updated,
-                    kit_id.as_str(),
-                ],
+                params![typ.id.as_str(), ordinal as i64, typ.name, typ.description, typ.icon, typ.image, typ.variant, typ.stock, opt_bool_to_int(typ.virtual_), typ.unit, location_x, location_y, typ.created, typ.updated, kit_id.as_str(),],
             )?;
             for (port_ordinal, port) in typ.ports.iter().enumerate() {
                 insert_port(tx, &typ.id, port, port_ordinal)?;
@@ -17239,127 +13042,39 @@ pub mod io {
                 insert_representation(tx, &typ.id, representation, representation_ordinal)?;
             }
             for (author_ordinal, author) in typ.authors.iter().enumerate() {
-                insert_author(
-                    tx,
-                    author,
-                    author_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_author(tx, author, author_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             for (concept_ordinal, concept) in typ.concepts.iter().enumerate() {
-                insert_concept(
-                    tx,
-                    concept,
-                    concept_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_concept(tx, concept, concept_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             for (tag_ordinal, tag) in typ.tags.iter().enumerate() {
-                insert_tag(
-                    tx,
-                    tag,
-                    tag_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_tag(tx, tag, tag_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             for (quality_ordinal, quality) in typ.qualities.iter().enumerate() {
-                insert_quality(
-                    tx,
-                    quality,
-                    quality_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             for (prop_ordinal, prop) in typ.props.iter().enumerate() {
-                insert_prop(
-                    tx,
-                    prop,
-                    prop_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_prop(tx, prop, prop_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in typ.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        typ: Some(&typ.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { typ: Some(&typ.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_layer(
-            tx: &Transaction<'_>,
-            design_id: &Id,
-            layer: &LayerFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_layer(tx: &Transaction<'_>, design_id: &Id, layer: &LayerFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO layer (id, ordinal, name, description, color, order_index, visible, locked, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
-                params![
-                    layer.id.as_str(),
-                    ordinal as i64,
-                    layer.name,
-                    layer.description,
-                    layer.color,
-                    layer.order,
-                    opt_bool_to_int(layer.visible),
-                    opt_bool_to_int(layer.locked),
-                    design_id.as_str(),
-                ],
+                params![layer.id.as_str(), ordinal as i64, layer.name, layer.description, layer.color, layer.order, opt_bool_to_int(layer.visible), opt_bool_to_int(layer.locked), design_id.as_str(),],
             )?;
             Ok(())
         }
 
-        fn insert_piece(
-            tx: &Transaction<'_>,
-            design_id: &Id,
-            piece: &PieceFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
-            let (
-                plane_ox,
-                plane_oy,
-                plane_oz,
-                plane_xx,
-                plane_xy,
-                plane_xz,
-                plane_yx,
-                plane_yy,
-                plane_yz,
-            ) = plane_parts(piece.plane.as_ref());
+        fn insert_piece(tx: &Transaction<'_>, design_id: &Id, piece: &PieceFullDto, ordinal: usize) -> Result<()> {
+            let (plane_ox, plane_oy, plane_oz, plane_xx, plane_xy, plane_xz, plane_yx, plane_yy, plane_yz) = plane_parts(piece.plane.as_ref());
             let (center_x, center_y, center_z) = coordinate_parts(piece.center.as_ref());
-            let (
-                mirror_ox,
-                mirror_oy,
-                mirror_oz,
-                mirror_xx,
-                mirror_xy,
-                mirror_xz,
-                mirror_yx,
-                mirror_yy,
-                mirror_yz,
-            ) = plane_parts(piece.mirror_plane.as_ref());
+            let (mirror_ox, mirror_oy, mirror_oz, mirror_xx, mirror_xy, mirror_xz, mirror_yx, mirror_yy, mirror_yz) = plane_parts(piece.mirror_plane.as_ref());
             tx.execute(
                 "INSERT INTO piece (
                     id, ordinal, name, description,
@@ -17418,64 +13133,27 @@ pub mod io {
                 ],
             )?;
             for (prop_ordinal, prop) in piece.props.iter().enumerate() {
-                insert_prop(
-                    tx,
-                    prop,
-                    prop_ordinal,
-                    ScopeRefs {
-                        piece: Some(&piece.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_prop(tx, prop, prop_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in piece.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        piece: Some(&piece.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { piece: Some(&piece.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_group(
-            tx: &Transaction<'_>,
-            design_id: &Id,
-            group: &GroupFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_group(tx: &Transaction<'_>, design_id: &Id, group: &GroupFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO \"group\" (id, ordinal, name, description, color, icon, design_id)
                  VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                params![
-                    group.id.as_str(),
-                    ordinal as i64,
-                    group.name,
-                    group.description,
-                    group.color,
-                    group.icon,
-                    design_id.as_str(),
-                ],
+                params![group.id.as_str(), ordinal as i64, group.name, group.description, group.color, group.icon, design_id.as_str(),],
             )?;
             for (piece_ordinal, piece) in group.pieces.iter().enumerate() {
-                tx.execute(
-                    "INSERT INTO group_piece (group_id, piece_id, ordinal) VALUES (?1, ?2, ?3)",
-                    params![group.id.as_str(), piece.id.as_str(), piece_ordinal as i64],
-                )?;
+                tx.execute("INSERT INTO group_piece (group_id, piece_id, ordinal) VALUES (?1, ?2, ?3)", params![group.id.as_str(), piece.id.as_str(), piece_ordinal as i64])?;
             }
             Ok(())
         }
 
-        fn insert_connection(
-            tx: &Transaction<'_>,
-            design_id: &Id,
-            connection: &ConnectionFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_connection(tx: &Transaction<'_>, design_id: &Id, connection: &ConnectionFullDto, ordinal: usize) -> Result<()> {
             tx.execute(
                 "INSERT INTO connection (
                     id, ordinal,
@@ -17494,19 +13172,11 @@ pub mod io {
                     connection.connected.id.as_str(),
                     connection.connected.piece.id.as_str(),
                     connection.connected.port.as_ref().map(|port| port.id.as_str()),
-                    connection
-                        .connected
-                        .design_piece
-                        .as_ref()
-                        .map(|piece| piece.id.as_str()),
+                    connection.connected.design_piece.as_ref().map(|piece| piece.id.as_str()),
                     connection.connecting.id.as_str(),
                     connection.connecting.piece.id.as_str(),
                     connection.connecting.port.as_ref().map(|port| port.id.as_str()),
-                    connection
-                        .connecting
-                        .design_piece
-                        .as_ref()
-                        .map(|piece| piece.id.as_str()),
+                    connection.connecting.design_piece.as_ref().map(|piece| piece.id.as_str()),
                     connection.gap,
                     connection.shift,
                     connection.rise,
@@ -17520,38 +13190,14 @@ pub mod io {
                 ],
             )?;
             for (attribute_ordinal, attribute) in connection.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        connection: Some(&connection.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { connection: Some(&connection.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn insert_design(
-            tx: &Transaction<'_>,
-            kit_id: &Id,
-            design: &DesignFullDto,
-            ordinal: usize,
-        ) -> Result<()> {
+        fn insert_design(tx: &Transaction<'_>, kit_id: &Id, design: &DesignFullDto, ordinal: usize) -> Result<()> {
             let (location_x, location_y) = location_parts(design.location.as_ref());
-            let (
-                camera_px,
-                camera_py,
-                camera_pz,
-                camera_tx,
-                camera_ty,
-                camera_tz,
-                camera_ux,
-                camera_uy,
-                camera_uz,
-                camera_fov,
-            ) = camera_parts(design.camera.as_ref());
+            let (camera_px, camera_py, camera_pz, camera_tx, camera_ty, camera_tz, camera_ux, camera_uy, camera_uz, camera_fov) = camera_parts(design.camera.as_ref());
             tx.execute(
                 "INSERT INTO design (
                     id, ordinal, name, description, icon, image, variant, view,
@@ -17611,148 +13257,59 @@ pub mod io {
                 tx.execute(
                     "INSERT INTO stat (id, ordinal, key, value, unit, description, design_id)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                    params![
-                        stat.id.as_str(),
-                        stat_ordinal as i64,
-                        stat.key,
-                        stat.value,
-                        stat.unit,
-                        stat.description,
-                        design.id.as_str(),
-                    ],
+                    params![stat.id.as_str(), stat_ordinal as i64, stat.key, stat.value, stat.unit, stat.description, design.id.as_str(),],
                 )?;
             }
             for (author_ordinal, author) in design.authors.iter().enumerate() {
-                insert_author(
-                    tx,
-                    author,
-                    author_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_author(tx, author, author_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             for (concept_ordinal, concept) in design.concepts.iter().enumerate() {
-                insert_concept(
-                    tx,
-                    concept,
-                    concept_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_concept(tx, concept, concept_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             for (tag_ordinal, tag) in design.tags.iter().enumerate() {
-                insert_tag(
-                    tx,
-                    tag,
-                    tag_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_tag(tx, tag, tag_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             for (quality_ordinal, quality) in design.qualities.iter().enumerate() {
-                insert_quality(
-                    tx,
-                    quality,
-                    quality_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_quality(tx, quality, quality_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             for (prop_ordinal, prop) in design.props.iter().enumerate() {
-                insert_prop(
-                    tx,
-                    prop,
-                    prop_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_prop(tx, prop, prop_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             for (attribute_ordinal, attribute) in design.attributes.iter().enumerate() {
-                insert_attribute(
-                    tx,
-                    attribute,
-                    attribute_ordinal,
-                    ScopeRefs {
-                        design: Some(&design.id),
-                        ..ScopeRefs::default()
-                    },
-                )?;
+                insert_attribute(tx, attribute, attribute_ordinal, ScopeRefs { design: Some(&design.id), ..ScopeRefs::default() })?;
             }
             Ok(())
         }
 
-        fn load_authors_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<AuthorFullDto>> {
-            let sql = format!(
-                "SELECT id, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_authors_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AuthorFullDto>> {
+            let sql = format!("SELECT id, name, email, role, rank FROM author WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AuthorFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    name: row.get(1)?,
-                    email: row.get(2)?,
-                    role: row.get(3)?,
-                    rank: row.get(4)?,
-                });
+                values.push(AuthorFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, email: row.get(2)?, role: row.get(3)?, rank: row.get(4)? });
             }
             Ok(values)
         }
 
-        fn load_concepts_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<ConceptFullDto>> {
-            let sql = format!(
-                "SELECT id, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_concepts_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<ConceptFullDto>> {
+            let sql = format!("SELECT id, name, description, order_index FROM concept WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(ConceptFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    name: row.get(1)?,
-                    description: row.get(2)?,
-                    order: row.get(3)?,
-                });
+                values.push(ConceptFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, order: row.get(3)? });
             }
             Ok(values)
         }
 
-        fn load_tags_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<TagFullDto>> {
-            let sql = format!(
-                "SELECT id, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_tags_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<TagFullDto>> {
+            let sql = format!("SELECT id, name, order_index FROM tag WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(TagFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    name: row.get(1)?,
-                    order: row.get(2)?,
-                });
+                values.push(TagFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, order: row.get(2)? });
             }
             Ok(values)
         }
@@ -17765,84 +13322,41 @@ pub mod io {
             let mut rows = stmt.query([quality_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(BenchmarkFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    name: row.get(1)?,
-                    min: row.get(2)?,
-                    max: row.get(3)?,
-                    min_excluded: opt_int_to_bool(row.get(4)?),
-                    max_excluded: opt_int_to_bool(row.get(5)?),
-                });
+                values.push(BenchmarkFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, min: row.get(2)?, max: row.get(3)?, min_excluded: opt_int_to_bool(row.get(4)?), max_excluded: opt_int_to_bool(row.get(5)?) });
             }
             Ok(values)
         }
 
-        fn load_qualities_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<QualityFullDto>> {
-            let sql = format!(
-                "SELECT id, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_qualities_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<QualityFullDto>> {
+            let sql = format!("SELECT id, key, value, unit, definition, description FROM quality WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let quality_id = Id::from(row.get::<_, String>(0)?);
-                values.push(QualityFullDto {
-                    id: quality_id.clone(),
-                    key: row.get(1)?,
-                    value: row.get(2)?,
-                    unit: row.get(3)?,
-                    definition: row.get(4)?,
-                    description: row.get(5)?,
-                    benchmarks: load_benchmarks(conn, &quality_id)?,
-                });
+                values.push(QualityFullDto { id: quality_id.clone(), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, definition: row.get(4)?, description: row.get(5)?, benchmarks: load_benchmarks(conn, &quality_id)? });
             }
             Ok(values)
         }
 
-        fn load_props_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<PropFullDto>> {
-            let sql = format!(
-                "SELECT id, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_props_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<PropFullDto>> {
+            let sql = format!("SELECT id, key, value, unit FROM prop WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(PropFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    key: row.get(1)?,
-                    value: row.get(2)?,
-                    unit: row.get(3)?,
-                });
+                values.push(PropFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)? });
             }
             Ok(values)
         }
 
-        fn load_attributes_for_scope(
-            conn: &SqlConnection,
-            column: &str,
-            id: &Id,
-        ) -> Result<Vec<AttributeFullDto>> {
-            let sql = format!(
-                "SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal"
-            );
+        fn load_attributes_for_scope(conn: &SqlConnection, column: &str, id: &Id) -> Result<Vec<AttributeFullDto>> {
+            let sql = format!("SELECT id, key, value, definition FROM attribute WHERE {column} = ?1 ORDER BY ordinal");
             let mut stmt = conn.prepare(&sql)?;
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(AttributeFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    key: row.get(1)?,
-                    value: row.get(2)?,
-                    definition: row.get(3)?,
-                });
+                values.push(AttributeFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, definition: row.get(3)? });
             }
             Ok(values)
         }
@@ -17857,9 +13371,7 @@ pub mod io {
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                let mut compatibility_stmt = conn.prepare(
-                    "SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal",
-                )?;
+                let mut compatibility_stmt = conn.prepare("SELECT family FROM port_compatible_family WHERE port_id = ?1 ORDER BY ordinal")?;
                 let mut compatibility_rows = compatibility_stmt.query([id.as_str()])?;
                 let mut compatible_families = Vec::new();
                 while let Some(compatibility_row) = compatibility_rows.next()? {
@@ -17882,9 +13394,7 @@ pub mod io {
         }
 
         fn load_connectors(conn: &SqlConnection, type_id: &Id) -> Result<Vec<ConnectorFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal",
-            )?;
+            let mut stmt = conn.prepare("SELECT id, code, description, port_id FROM connector WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
@@ -17894,9 +13404,7 @@ pub mod io {
                     id: id.clone(),
                     code: row.get(1)?,
                     description: row.get(2)?,
-                    port: port_id.map(|value| PortIdDto {
-                        id: Id::from(value),
-                    }),
+                    port: port_id.map(|value| PortIdDto { id: Id::from(value) }),
                     qualities: load_qualities_for_scope(conn, "connector_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "connector_id", &id)?,
                 });
@@ -17904,13 +13412,8 @@ pub mod io {
             Ok(values)
         }
 
-        fn load_representations(
-            conn: &SqlConnection,
-            type_id: &Id,
-        ) -> Result<Vec<RepresentationFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, url, description, file_id FROM representation WHERE type_id = ?1 ORDER BY ordinal",
-            )?;
+        fn load_representations(conn: &SqlConnection, type_id: &Id) -> Result<Vec<RepresentationFullDto>> {
+            let mut stmt = conn.prepare("SELECT id, url, description, file_id FROM representation WHERE type_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([type_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
@@ -17920,9 +13423,7 @@ pub mod io {
                     id: id.clone(),
                     url: row.get(1)?,
                     description: row.get(2)?,
-                    file: file_id.map(|value| FileIdDto {
-                        id: Id::from(value),
-                    }),
+                    file: file_id.map(|value| FileIdDto { id: Id::from(value) }),
                     tags: load_tags_for_scope(conn, "representation_id", &id)?,
                     qualities: load_qualities_for_scope(conn, "representation_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "representation_id", &id)?,
@@ -17975,15 +13476,7 @@ pub mod io {
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(LayerFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    name: row.get(1)?,
-                    description: row.get(2)?,
-                    color: row.get(3)?,
-                    order: row.get(4)?,
-                    visible: opt_int_to_bool(row.get(5)?),
-                    locked: opt_int_to_bool(row.get(6)?),
-                });
+                values.push(LayerFullDto { id: Id::from(row.get::<_, String>(0)?), name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, order: row.get(4)?, visible: opt_int_to_bool(row.get(5)?), locked: opt_int_to_bool(row.get(6)?) });
             }
             Ok(values)
         }
@@ -18011,39 +13504,15 @@ pub mod io {
                     id: id.clone(),
                     name: row.get(1)?,
                     description: row.get(2)?,
-                    plane: plane_from_parts(
-                        row.get(3)?,
-                        row.get(4)?,
-                        row.get(5)?,
-                        row.get(6)?,
-                        row.get(7)?,
-                        row.get(8)?,
-                        row.get(9)?,
-                        row.get(10)?,
-                        row.get(11)?,
-                    ),
+                    plane: plane_from_parts(row.get(3)?, row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?, row.get(8)?, row.get(9)?, row.get(10)?, row.get(11)?),
                     center: coordinate_from_parts(row.get(12)?, row.get(13)?, row.get(14)?),
                     scale: row.get(15)?,
-                    mirror_plane: plane_from_parts(
-                        row.get(16)?,
-                        row.get(17)?,
-                        row.get(18)?,
-                        row.get(19)?,
-                        row.get(20)?,
-                        row.get(21)?,
-                        row.get(22)?,
-                        row.get(23)?,
-                        row.get(24)?,
-                    ),
+                    mirror_plane: plane_from_parts(row.get(16)?, row.get(17)?, row.get(18)?, row.get(19)?, row.get(20)?, row.get(21)?, row.get(22)?, row.get(23)?, row.get(24)?),
                     hidden: opt_int_to_bool(row.get(25)?),
                     locked: opt_int_to_bool(row.get(26)?),
                     color: row.get(27)?,
-                    r#type: type_id.map(|value| crate::typ::TypeIdDto {
-                        id: Id::from(value),
-                    }),
-                    design: design_ref_id.map(|value| crate::design::DesignIdDto {
-                        id: Id::from(value),
-                    }),
+                    r#type: type_id.map(|value| crate::typ::TypeIdDto { id: Id::from(value) }),
+                    design: design_ref_id.map(|value| crate::design::DesignIdDto { id: Id::from(value) }),
                     props: load_props_for_scope(conn, "piece_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "piece_id", &id)?,
                 });
@@ -18052,39 +13521,23 @@ pub mod io {
         }
 
         fn load_groups(conn: &SqlConnection, design_id: &Id) -> Result<Vec<GroupFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, name, description, color, icon FROM \"group\" WHERE design_id = ?1 ORDER BY ordinal",
-            )?;
+            let mut stmt = conn.prepare("SELECT id, name, description, color, icon FROM \"group\" WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                let mut piece_stmt = conn.prepare(
-                    "SELECT piece_id FROM group_piece WHERE group_id = ?1 ORDER BY ordinal",
-                )?;
+                let mut piece_stmt = conn.prepare("SELECT piece_id FROM group_piece WHERE group_id = ?1 ORDER BY ordinal")?;
                 let mut piece_rows = piece_stmt.query([id.as_str()])?;
                 let mut pieces = Vec::new();
                 while let Some(piece_row) = piece_rows.next()? {
-                    pieces.push(crate::piece::PieceIdDto {
-                        id: Id::from(piece_row.get::<_, String>(0)?),
-                    });
+                    pieces.push(crate::piece::PieceIdDto { id: Id::from(piece_row.get::<_, String>(0)?) });
                 }
-                values.push(GroupFullDto {
-                    id,
-                    name: row.get(1)?,
-                    description: row.get(2)?,
-                    color: row.get(3)?,
-                    icon: row.get(4)?,
-                    pieces,
-                });
+                values.push(GroupFullDto { id, name: row.get(1)?, description: row.get(2)?, color: row.get(3)?, icon: row.get(4)?, pieces });
             }
             Ok(values)
         }
 
-        fn load_connections(
-            conn: &SqlConnection,
-            design_id: &Id,
-        ) -> Result<Vec<ConnectionFullDto>> {
+        fn load_connections(conn: &SqlConnection, design_id: &Id) -> Result<Vec<ConnectionFullDto>> {
             let mut stmt = conn.prepare(
                 "SELECT id,
                         connected_side_id, connected_piece_id, connected_port_id, connected_design_piece_id,
@@ -18104,31 +13557,15 @@ pub mod io {
                     id: id.clone(),
                     connected: SideMetadataDto {
                         id: Id::from(row.get::<_, String>(1)?),
-                        piece: crate::piece::PieceIdDto {
-                            id: Id::from(row.get::<_, String>(2)?),
-                        },
-                        port: connected_port_id.map(|value| PortIdDto {
-                            id: Id::from(value),
-                        }),
-                        design_piece: connected_design_piece_id.map(|value| {
-                            crate::piece::PieceIdDto {
-                                id: Id::from(value),
-                            }
-                        }),
+                        piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(2)?) },
+                        port: connected_port_id.map(|value| PortIdDto { id: Id::from(value) }),
+                        design_piece: connected_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
                     },
                     connecting: SideMetadataDto {
                         id: Id::from(row.get::<_, String>(5)?),
-                        piece: crate::piece::PieceIdDto {
-                            id: Id::from(row.get::<_, String>(6)?),
-                        },
-                        port: connecting_port_id.map(|value| PortIdDto {
-                            id: Id::from(value),
-                        }),
-                        design_piece: connecting_design_piece_id.map(|value| {
-                            crate::piece::PieceIdDto {
-                                id: Id::from(value),
-                            }
-                        }),
+                        piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(6)?) },
+                        port: connecting_port_id.map(|value| PortIdDto { id: Id::from(value) }),
+                        design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
                     },
                     gap: row.get(9)?,
                     shift: row.get(10)?,
@@ -18146,19 +13583,11 @@ pub mod io {
         }
 
         fn load_stats(conn: &SqlConnection, design_id: &Id) -> Result<Vec<StatFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, key, value, unit, description FROM stat WHERE design_id = ?1 ORDER BY ordinal",
-            )?;
+            let mut stmt = conn.prepare("SELECT id, key, value, unit, description FROM stat WHERE design_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([design_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(StatFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    key: row.get(1)?,
-                    value: row.get(2)?,
-                    unit: row.get(3)?,
-                    description: row.get(4)?,
-                });
+                values.push(StatFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, description: row.get(4)? });
             }
             Ok(values)
         }
@@ -18186,18 +13615,7 @@ pub mod io {
                     variant: row.get(5)?,
                     view: row.get(6)?,
                     location: location_from_parts(row.get(7)?, row.get(8)?),
-                    camera: camera_from_parts(
-                        row.get(9)?,
-                        row.get(10)?,
-                        row.get(11)?,
-                        row.get(12)?,
-                        row.get(13)?,
-                        row.get(14)?,
-                        row.get(15)?,
-                        row.get(16)?,
-                        row.get(17)?,
-                        row.get(18)?,
-                    ),
+                    camera: camera_from_parts(row.get(9)?, row.get(10)?, row.get(11)?, row.get(12)?, row.get(13)?, row.get(14)?, row.get(15)?, row.get(16)?, row.get(17)?, row.get(18)?),
                     unit: row.get(19)?,
                     created: row.get(20)?,
                     updated: row.get(21)?,
@@ -18226,32 +13644,17 @@ pub mod io {
             let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(FileFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    url: row.get(1)?,
-                    mime: row.get(2)?,
-                    size: row.get(3)?,
-                    hash: row.get(4)?,
-                    description: row.get(5)?,
-                    created: row.get(6)?,
-                    updated: row.get(7)?,
-                });
+                values.push(FileFullDto { id: Id::from(row.get::<_, String>(0)?), url: row.get(1)?, mime: row.get(2)?, size: row.get(3)?, hash: row.get(4)?, description: row.get(5)?, created: row.get(6)?, updated: row.get(7)? });
             }
             Ok(values)
         }
 
         fn load_folders(conn: &SqlConnection, kit_id: &Id) -> Result<Vec<FolderFullDto>> {
-            let mut stmt = conn.prepare(
-                "SELECT id, path, description FROM folder WHERE kit_id = ?1 ORDER BY ordinal",
-            )?;
+            let mut stmt = conn.prepare("SELECT id, path, description FROM folder WHERE kit_id = ?1 ORDER BY ordinal")?;
             let mut rows = stmt.query([kit_id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(FolderFullDto {
-                    id: Id::from(row.get::<_, String>(0)?),
-                    path: row.get(1)?,
-                    description: row.get(2)?,
-                });
+                values.push(FolderFullDto { id: Id::from(row.get::<_, String>(0)?), path: row.get(1)?, description: row.get(2)? });
             }
             Ok(values)
         }
@@ -18262,9 +13665,7 @@ pub mod io {
                  FROM kit LIMIT 1",
             )?;
             let mut rows = stmt.query([])?;
-            let row = rows
-                .next()?
-                .expect("kit row must exist in sqlite persistence");
+            let row = rows.next()?.expect("kit row must exist in sqlite persistence");
             let id = Id::from(row.get::<_, String>(0)?);
             Ok(KitFullDto {
                 id: id.clone(),
@@ -18302,54 +13703,23 @@ pub mod io {
                 clear_schema(&tx)?;
 
                 let dto = self.to_full_dto();
-                tx.execute(
-                    "INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))",
-                    params![SCHEMA_VERSION, SCHEMA_ENGINE],
-                )?;
+                tx.execute("INSERT INTO semio_schema (schema_version, engine, created_at) VALUES (?1, ?2, datetime('now'))", params![SCHEMA_VERSION, SCHEMA_ENGINE])?;
                 tx.execute(
                     "INSERT INTO kit (
                         id, name, description, icon, image, preview, version,
                         remote, homepage, license, uri, created_at, updated_at
                      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
-                    params![
-                        dto.id.as_str(),
-                        dto.name,
-                        dto.description,
-                        dto.icon,
-                        dto.image,
-                        dto.preview,
-                        dto.version,
-                        dto.remote,
-                        dto.homepage,
-                        dto.license,
-                        dto.uri,
-                        dto.created,
-                        dto.updated,
-                    ],
+                    params![dto.id.as_str(), dto.name, dto.description, dto.icon, dto.image, dto.preview, dto.version, dto.remote, dto.homepage, dto.license, dto.uri, dto.created, dto.updated,],
                 )?;
 
                 for (ordinal, folder) in dto.folders.iter().enumerate() {
-                    tx.execute(
-                        "INSERT INTO folder (id, ordinal, path, description, kit_id) VALUES (?1, ?2, ?3, ?4, ?5)",
-                        params![folder.id.as_str(), ordinal as i64, folder.path, folder.description, dto.id.as_str()],
-                    )?;
+                    tx.execute("INSERT INTO folder (id, ordinal, path, description, kit_id) VALUES (?1, ?2, ?3, ?4, ?5)", params![folder.id.as_str(), ordinal as i64, folder.path, folder.description, dto.id.as_str()])?;
                 }
                 for (ordinal, file) in dto.files.iter().enumerate() {
                     tx.execute(
                         "INSERT INTO file (id, ordinal, url, mime, size, hash, description, created_at, updated_at, kit_id)
                          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
-                        params![
-                            file.id.as_str(),
-                            ordinal as i64,
-                            file.url,
-                            file.mime,
-                            file.size,
-                            file.hash,
-                            file.description,
-                            file.created,
-                            file.updated,
-                            dto.id.as_str(),
-                        ],
+                        params![file.id.as_str(), ordinal as i64, file.url, file.mime, file.size, file.hash, file.description, file.created, file.updated, dto.id.as_str(),],
                     )?;
                 }
                 for (ordinal, typ) in dto.types.iter().enumerate() {
@@ -18359,70 +13729,22 @@ pub mod io {
                     insert_design(&tx, &dto.id, design, ordinal)?;
                 }
                 for (ordinal, author) in dto.authors.iter().enumerate() {
-                    insert_author(
-                        &tx,
-                        author,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_author(&tx, author, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
                 for (ordinal, concept) in dto.concepts.iter().enumerate() {
-                    insert_concept(
-                        &tx,
-                        concept,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_concept(&tx, concept, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
                 for (ordinal, tag) in dto.tags.iter().enumerate() {
-                    insert_tag(
-                        &tx,
-                        tag,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_tag(&tx, tag, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
                 for (ordinal, quality) in dto.qualities.iter().enumerate() {
-                    insert_quality(
-                        &tx,
-                        quality,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_quality(&tx, quality, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
                 for (ordinal, prop) in dto.props.iter().enumerate() {
-                    insert_prop(
-                        &tx,
-                        prop,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_prop(&tx, prop, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
                 for (ordinal, attribute) in dto.attributes.iter().enumerate() {
-                    insert_attribute(
-                        &tx,
-                        attribute,
-                        ordinal,
-                        ScopeRefs {
-                            kit: Some(&dto.id),
-                            ..ScopeRefs::default()
-                        },
-                    )?;
+                    insert_attribute(&tx, attribute, ordinal, ScopeRefs { kit: Some(&dto.id), ..ScopeRefs::default() })?;
                 }
 
                 tx.commit()?;
@@ -18482,20 +13804,12 @@ pub mod io {
                 return Ok(None);
             }
             let Some(comma_index) = url.find(',') else {
-                return Err(SemioError::InvalidOperation(
-                    "invalid data URL: missing comma separator".into(),
-                ));
+                return Err(SemioError::InvalidOperation("invalid data URL: missing comma separator".into()));
             };
             let header = &url[..comma_index];
             let payload = &url[comma_index + 1..];
-            let mime = header
-                .strip_prefix("data:")
-                .and_then(|value| value.strip_suffix(";base64"))
-                .filter(|value| !value.is_empty())
-                .map(ToOwned::to_owned);
-            let bytes = STANDARD.decode(payload).map_err(|err| {
-                SemioError::InvalidOperation(format!("invalid data URL payload: {err}"))
-            })?;
+            let mime = header.strip_prefix("data:").and_then(|value| value.strip_suffix(";base64")).filter(|value| !value.is_empty()).map(ToOwned::to_owned);
+            let bytes = STANDARD.decode(payload).map_err(|err| SemioError::InvalidOperation(format!("invalid data URL payload: {err}")))?;
             Ok(Some((mime, bytes)))
         }
 
@@ -18505,11 +13819,7 @@ pub mod io {
         }
 
         fn mime_from_extension(path: &Path) -> Option<&'static str> {
-            match path
-                .extension()
-                .and_then(OsStr::to_str)
-                .map(|v| v.to_ascii_lowercase())
-            {
+            match path.extension().and_then(OsStr::to_str).map(|v| v.to_ascii_lowercase()) {
                 Some(ext) => match ext.as_str() {
                     "txt" => Some("text/plain"),
                     "json" => Some("application/json"),
@@ -18556,9 +13866,7 @@ pub mod io {
                     Component::CurDir => {}
                     Component::Normal(segment) => normalized.push(segment),
                     Component::ParentDir | Component::Prefix(_) | Component::RootDir => {
-                        return Err(SemioError::InvalidOperation(format!(
-                            "asset path must stay inside kit folder: {url}"
-                        )));
+                        return Err(SemioError::InvalidOperation(format!("asset path must stay inside kit folder: {url}")));
                     }
                 }
             }
@@ -18569,11 +13877,7 @@ pub mod io {
         }
 
         fn derived_asset_path(file: &FileFullDto) -> PathBuf {
-            let ext = Path::new(&file.url)
-                .extension()
-                .and_then(OsStr::to_str)
-                .map(|value| value.to_ascii_lowercase())
-                .unwrap_or_else(|| extension_from_mime(file.mime.as_deref()).to_string());
+            let ext = Path::new(&file.url).extension().and_then(OsStr::to_str).map(|value| value.to_ascii_lowercase()).unwrap_or_else(|| extension_from_mime(file.mime.as_deref()).to_string());
             PathBuf::from("files").join(format!("{}.{}", file.id, ext))
         }
 
@@ -18606,10 +13910,7 @@ pub mod io {
                     continue;
                 }
                 let bytes = fs::read(&full_path)?;
-                let mime = file
-                    .mime
-                    .as_deref()
-                    .or_else(|| mime_from_extension(&full_path));
+                let mime = file.mime.as_deref().or_else(|| mime_from_extension(&full_path));
                 file.url = encode_data_url(mime, &bytes);
             }
             Ok(())
@@ -18619,10 +13920,7 @@ pub mod io {
             /// Load a local kit folder containing `.semio/kit.db` and regular asset files.
             pub fn load_local_folder(folder_path: &Path) -> Result<KitStoreRef> {
                 let kit = KitStore::load_sqlite(&local_db_path(folder_path))?;
-                let mut dto = kit
-                    .read()
-                    .map_err(|_| SemioError::LockPoisoned("kit"))?
-                    .to_full_dto();
+                let mut dto = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                 hydrate_files(&mut dto, folder_path)?;
                 Ok(KitStore::from_full_dto(dto))
             }
@@ -18636,10 +13934,7 @@ pub mod io {
                 let temp_db_dir = folder_path.join(LOCAL_DIR);
                 let temp_db = NamedTempFile::new_in(&temp_db_dir)?;
                 let temp_path = temp_db.path().to_path_buf();
-                KitStore::from_full_dto(dto)
-                    .read()
-                    .map_err(|_| SemioError::LockPoisoned("kit"))?
-                    .save_sqlite(&temp_path)?;
+                KitStore::from_full_dto(dto).read().map_err(|_| SemioError::LockPoisoned("kit"))?.save_sqlite(&temp_path)?;
                 let final_db_path = local_db_path(folder_path);
                 temp_db.persist(&final_db_path).map_err(|err| err.error)?;
                 Ok(())
@@ -18694,71 +13989,41 @@ pub mod io {
         fn map_http_error(err: ureq::Error) -> SemioError {
             match err {
                 ureq::Error::Status(status, response) => {
-                    let body = response
-                        .into_string()
-                        .unwrap_or_else(|_| String::from("<unreadable response body>"));
+                    let body = response.into_string().unwrap_or_else(|_| String::from("<unreadable response body>"));
                     SemioError::Other(format!("hub request failed with status {status}: {body}"))
                 }
-                ureq::Error::Transport(error) => {
-                    SemioError::Other(format!("hub transport error: {error}"))
-                }
+                ureq::Error::Transport(error) => SemioError::Other(format!("hub transport error: {error}")),
             }
         }
 
         fn decode_json_response<T: DeserializeOwned>(response: ureq::Response) -> Result<T> {
-            response.into_json().map_err(|error| {
-                SemioError::Other(format!("failed to decode hub JSON response: {error}"))
-            })
+            response.into_json().map_err(|error| SemioError::Other(format!("failed to decode hub JSON response: {error}")))
         }
 
         fn remote_snapshot_url(hub_url: &str, session_id: &str) -> String {
-            format!(
-                "{}/sessions/{session_id}/snapshot",
-                normalize_hub_url(hub_url)
-            )
+            format!("{}/sessions/{session_id}/snapshot", normalize_hub_url(hub_url))
         }
 
         impl KitStore {
             /// Create a remote hub session seeded with the current full kit snapshot.
             pub fn create_remote_session(&self, hub_url: &str) -> Result<RemoteKitSession> {
                 let hub_url = normalize_hub_url(hub_url);
-                let request = CreateRemoteSessionRequest {
-                    kit_name: self.name.clone(),
-                    kit: serde_json::to_value(self.to_full_dto())?,
-                };
-                let response: CreateRemoteSessionResponse = decode_json_response(
-                    ureq::post(&format!("{hub_url}/sessions"))
-                        .send_json(request)
-                        .map_err(map_http_error)?,
-                )?;
-                Ok(RemoteKitSession {
-                    hub_url,
-                    session_id: response.session_id,
-                    kit_id: response.kit_id,
-                    owner_token: response.owner_token,
-                })
+                let request = CreateRemoteSessionRequest { kit_name: self.name.clone(), kit: serde_json::to_value(self.to_full_dto())? };
+                let response: CreateRemoteSessionResponse = decode_json_response(ureq::post(&format!("{hub_url}/sessions")).send_json(request).map_err(map_http_error)?)?;
+                Ok(RemoteKitSession { hub_url, session_id: response.session_id, kit_id: response.kit_id, owner_token: response.owner_token })
             }
 
             /// Load a full kit snapshot from a remote hub session.
             pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitStoreRef> {
-                let response: RemoteSnapshotResponse = decode_json_response(
-                    ureq::get(&remote_snapshot_url(hub_url, session_id))
-                        .call()
-                        .map_err(map_http_error)?,
-                )?;
+                let response: RemoteSnapshotResponse = decode_json_response(ureq::get(&remote_snapshot_url(hub_url, session_id)).call().map_err(map_http_error)?)?;
                 let dto: KitFullDto = serde_json::from_value(response.kit)?;
                 Ok(KitStore::from_full_dto(dto))
             }
 
             /// Replace the persisted hub snapshot for an existing remote session.
             pub fn save_remote_session(&self, remote: &RemoteKitSession) -> Result<()> {
-                let payload = ReplaceRemoteSnapshotRequest {
-                    kit: serde_json::to_value(self.to_full_dto())?,
-                };
-                ureq::put(&remote_snapshot_url(&remote.hub_url, &remote.session_id))
-                    .set("Authorization", &format!("Bearer {}", remote.owner_token))
-                    .send_json(payload)
-                    .map_err(map_http_error)?;
+                let payload = ReplaceRemoteSnapshotRequest { kit: serde_json::to_value(self.to_full_dto())? };
+                ureq::put(&remote_snapshot_url(&remote.hub_url, &remote.session_id)).set("Authorization", &format!("Bearer {}", remote.owner_token)).send_json(payload).map_err(map_http_error)?;
                 Ok(())
             }
         }
@@ -18786,8 +14051,7 @@ pub mod io {
             pub fn save_zip(&self, path: &Path) -> Result<()> {
                 let file = File::create(path)?;
                 let mut zip = ZipWriter::new(file);
-                let opts =
-                    SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
+                let opts = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
                 zip.start_file(KIT_JSON, opts)?;
                 zip.write_all(self.to_json_pretty()?.as_bytes())?;
                 zip.finish()?;
@@ -18807,9 +14071,7 @@ pub mod io {
                     }
                 }
                 if kit_json.is_empty() {
-                    return Err(SemioError::InvalidOperation(format!(
-                        "zip missing {KIT_JSON}"
-                    )));
+                    return Err(SemioError::InvalidOperation(format!("zip missing {KIT_JSON}")));
                 }
                 KitStore::from_json_str(&kit_json)
             }
@@ -18839,8 +14101,7 @@ pub mod wasm {
 
     fn js_settle_set(r: crate::error::SetResult) -> Result<JsValue, JsValue> {
         match r {
-            Ok(()) => serde_wasm_bindgen::to_value(&serde_json::json!({ "ok": true }))
-                .map_err(|e| JsValue::from_str(&e.to_string())),
+            Ok(()) => serde_wasm_bindgen::to_value(&serde_json::json!({ "ok": true })).map_err(|e| JsValue::from_str(&e.to_string())),
             Err(err) => serde_wasm_bindgen::to_value(&serde_json::json!({
                 "ok": false,
                 "error": err
@@ -18860,11 +14121,8 @@ pub mod wasm {
         future_to_promise(async move {
             match KitStore::from_json_str(&s) {
                 Ok(kit) => {
-                    let guard = kit
-                        .read()
-                        .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
-                    serde_wasm_bindgen::to_value(&guard.to_full_dto())
-                        .map_err(|e| JsValue::from_str(&e.to_string()))
+                    let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
+                    serde_wasm_bindgen::to_value(&guard.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
                 }
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
@@ -18874,29 +14132,20 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitToJson)]
     pub fn wasm_kit_to_json(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let kit = KitStore::from_full_dto(dto);
-            let guard = kit
-                .read()
-                .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
-            guard
-                .to_json_pretty()
-                .map(|json| JsValue::from_str(&json))
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            let guard = kit.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
+            guard.to_json_pretty().map(|json| JsValue::from_str(&json)).map_err(|e| JsValue::from_str(&e.to_string()))
         })
     }
 
     #[wasm_bindgen(js_name = kitValidate)]
     pub fn wasm_kit_validate(value: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(value).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let kit = KitStore::from_full_dto(dto);
             match KitStore::validate_async(&kit).await {
-                Ok(v) => {
-                    serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
-                }
+                Ok(v) => serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
         })
@@ -18905,10 +14154,8 @@ pub mod wasm {
     #[wasm_bindgen(js_name = kitsAreEqual)]
     pub fn wasm_kits_are_equal(a: JsValue, b: JsValue) -> js_sys::Promise {
         future_to_promise(async move {
-            let a: crate::kit::KitFullDto =
-                serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let b: crate::kit::KitFullDto =
-                serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let a: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(a).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let b: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(b).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let ka = KitStore::from_full_dto(a);
             let kb = KitStore::from_full_dto(b);
             let ga = ka.read().map_err(|_| JsValue::from_str("a poisoned"))?;
@@ -18921,12 +14168,10 @@ pub mod wasm {
     pub fn wasm_flatten_design(kit: JsValue, design_id: &str) -> js_sys::Promise {
         let design_id = design_id.to_string();
         future_to_promise(async move {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(kit).map_err(|e| JsValue::from_str(&e.to_string()))?;
             let k = KitStore::from_full_dto(dto);
             match KitStore::flatten_design_async(&k, &design_id).await {
-                Ok(rep) => serde_wasm_bindgen::to_value(&rep)
-                    .map_err(|e| JsValue::from_str(&e.to_string())),
+                Ok(rep) => serde_wasm_bindgen::to_value(&rep).map_err(|e| JsValue::from_str(&e.to_string())),
                 Err(e) => Err(JsValue::from_str(&e.to_string())),
             }
         })
@@ -18940,9 +14185,7 @@ pub mod wasm {
 
     #[wasm_bindgen(js_name = semioNormalizeName)]
     pub fn wasm_normalize_name(s: &str) -> String {
-        s.trim()
-            .to_ascii_lowercase()
-            .replace(|c: char| c.is_whitespace(), "-")
+        s.trim().to_ascii_lowercase().replace(|c: char| c.is_whitespace(), "-")
     }
 
     /// 🌐 Stateful [`KitStoreRef`] for web-worker-hosted mutations + event stream.
@@ -18955,21 +14198,14 @@ pub mod wasm {
     impl KitStoreHandle {
         #[wasm_bindgen(js_name = create)]
         pub fn create(dto: JsValue) -> Result<KitStoreHandle, JsValue> {
-            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
-            Ok(KitStoreHandle {
-                inner: KitStore::from_full_dto(dto),
-            })
+            let dto: crate::kit::KitFullDto = serde_wasm_bindgen::from_value(dto).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            Ok(KitStoreHandle { inner: KitStore::from_full_dto(dto) })
         }
 
         #[wasm_bindgen(js_name = snapshot)]
         pub fn snapshot(&self) -> Result<JsValue, JsValue> {
-            let g = self
-                .inner
-                .read()
-                .map_err(|_| JsValue::from_str("kit lock poisoned"))?;
-            serde_wasm_bindgen::to_value(&g.to_full_dto())
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?;
+            serde_wasm_bindgen::to_value(&g.to_full_dto()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         /// Structured VCS + CRUD command dispatch ([`crate::kit_store_command::KitStoreCommand`]).
@@ -18977,47 +14213,32 @@ pub mod wasm {
         #[wasm_bindgen(js_name = execute)]
         pub fn execute(&self, cmd: JsValue) -> Result<JsValue, JsValue> {
             let c: crate::kit_store_command::KitStoreCommand = if js_sys::Array::is_array(&cmd) {
-                let v: Vec<crate::kit_store_command::KitStoreCommand> =
-                    serde_wasm_bindgen::from_value(cmd)
-                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v: Vec<crate::kit_store_command::KitStoreCommand> = serde_wasm_bindgen::from_value(cmd).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 crate::kit_store_command::KitStoreCommand::Batch { commands: v }
             } else {
-                serde_wasm_bindgen::from_value(cmd)
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?
+                serde_wasm_bindgen::from_value(cmd).map_err(|e| JsValue::from_str(&e.to_string()))?
             };
-            let r = KitStore::execute_vcs(&self.inner, c)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let r = KitStore::execute_vcs(&self.inner, c).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&r).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         /// Main-line `the kit` (materialized committed checkpoints; live graph may include session draft edits).
         #[wasm_bindgen(js_name = theKitDto)]
         pub fn the_kit_dto_wasm(&self) -> Result<JsValue, JsValue> {
-            let g = self
-                .inner
-                .read()
-                .map_err(|_| JsValue::from_str("kit lock"))?;
+            let g = self.inner.read().map_err(|_| JsValue::from_str("kit lock"))?;
             let k = g.the_kit_dto();
             serde_wasm_bindgen::to_value(&k).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = getField)]
         pub fn get_field(&self, kind: &str, id: &str, field: &str) -> Result<JsValue, JsValue> {
-            let ek =
-                KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let v = KitStore::get_field_rpc(&self.inner, ek, id, field)
-                .map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let ek = KitStore::parse_entity_kind(kind).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let v = KitStore::get_field_rpc(&self.inner, ek, id, field).map_err(|e| JsValue::from_str(&e.to_string()))?;
             serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = setField)]
-        pub fn set_field(
-            &self,
-            kind: &str,
-            id: &str,
-            field: &str,
-            value: JsValue,
-        ) -> js_sys::Promise {
+        pub fn set_field(&self, kind: &str, id: &str, field: &str, value: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
             let kind = kind.to_string();
             let id = id.to_string();
@@ -19038,13 +14259,7 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = addChild)]
-        pub fn add_child(
-            &self,
-            parent_kind: &str,
-            parent_id: &str,
-            child_kind: &str,
-            dto: JsValue,
-        ) -> js_sys::Promise {
+        pub fn add_child(&self, parent_kind: &str, parent_id: &str, child_kind: &str, dto: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
             let pk = parent_kind.to_string();
             let pg = parent_id.to_string();
@@ -19069,13 +14284,7 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = removeChild)]
-        pub fn remove_child(
-            &self,
-            parent_kind: &str,
-            parent_id: &str,
-            child_kind: &str,
-            child_id: &str,
-        ) -> js_sys::Promise {
+        pub fn remove_child(&self, parent_kind: &str, parent_id: &str, child_kind: &str, child_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let pk = parent_kind.to_string();
             let pg = parent_id.to_string();
@@ -19124,53 +14333,32 @@ pub mod wasm {
         }
 
         #[wasm_bindgen(js_name = clusterPieces)]
-        pub fn cluster_pieces(
-            &self,
-            design_id: &str,
-            piece_ids: JsValue,
-            cluster_name: &str,
-        ) -> js_sys::Promise {
+        pub fn cluster_pieces(&self, design_id: &str, piece_ids: JsValue, cluster_name: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let cn = cluster_name.to_string();
             future_to_promise(async move {
-                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
-                    .map_err(|e| JsValue::from_str(&format!("clusterPieces piece_ids: {e}")))?;
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("clusterPieces piece_ids: {e}")))?;
                 js_settle_set(KitStore::cluster_pieces(&inner, &dg, ids, cn))
             })
         }
 
         #[wasm_bindgen(js_name = dragPieces)]
-        pub fn drag_pieces(
-            &self,
-            design_id: &str,
-            piece_ids: JsValue,
-            du: f64,
-            dv: f64,
-        ) -> js_sys::Promise {
+        pub fn drag_pieces(&self, design_id: &str, piece_ids: JsValue, du: f64, dv: f64) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
-                    .map_err(|e| JsValue::from_str(&format!("dragPieces piece_ids: {e}")))?;
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("dragPieces piece_ids: {e}")))?;
                 js_settle_set(KitStore::drag_pieces(&inner, &dg, ids, du, dv))
             })
         }
 
         #[wasm_bindgen(js_name = movePieces)]
-        pub fn move_pieces(
-            &self,
-            design_id: &str,
-            piece_ids: JsValue,
-            gap: f64,
-            shift: f64,
-            rise: f64,
-        ) -> js_sys::Promise {
+        pub fn move_pieces(&self, design_id: &str, piece_ids: JsValue, gap: f64, shift: f64, rise: f64) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
-                    .map_err(|e| JsValue::from_str(&format!("movePieces piece_ids: {e}")))?;
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("movePieces piece_ids: {e}")))?;
                 js_settle_set(KitStore::move_pieces(&inner, &dg, ids, gap, shift, rise))
             })
         }
@@ -19180,8 +14368,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids)
-                    .map_err(|e| JsValue::from_str(&format!("fixPieces piece_ids: {e}")))?;
+                let ids: Vec<String> = serde_wasm_bindgen::from_value(piece_ids).map_err(|e| JsValue::from_str(&format!("fixPieces piece_ids: {e}")))?;
                 js_settle_set(KitStore::fix_pieces(&inner, &dg, ids))
             })
         }
@@ -19190,23 +14377,15 @@ pub mod wasm {
         pub fn flatten_design_bind(&self, design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
-            future_to_promise(
-                async move { js_settle_set(KitStore::flatten_design_apply(&inner, &dg)) },
-            )
+            future_to_promise(async move { js_settle_set(KitStore::flatten_design_apply(&inner, &dg)) })
         }
 
         #[wasm_bindgen(js_name = expandDesign)]
-        pub fn expand_design_bind(
-            &self,
-            parent_design_id: &str,
-            nested_design_id: &str,
-        ) -> js_sys::Promise {
+        pub fn expand_design_bind(&self, parent_design_id: &str, nested_design_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let pg = parent_design_id.to_string();
             let ng = nested_design_id.to_string();
-            future_to_promise(async move {
-                js_settle_set(KitStore::expand_nested_design(&inner, &pg, &ng))
-            })
+            future_to_promise(async move { js_settle_set(KitStore::expand_nested_design(&inner, &pg, &ng)) })
         }
 
         #[wasm_bindgen(js_name = deleteConnection)]
@@ -19214,106 +14393,58 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let cg = connection_id.to_string();
-            future_to_promise(async move {
-                js_settle_set(KitStore::delete_connection_in_design(&inner, &dg, &cg))
-            })
+            future_to_promise(async move { js_settle_set(KitStore::delete_connection_in_design(&inner, &dg, &cg)) })
         }
 
         #[wasm_bindgen(js_name = changePieceType)]
-        pub fn change_piece_type(
-            &self,
-            design_id: &str,
-            piece_id: &str,
-            new_type_id: &str,
-        ) -> js_sys::Promise {
+        pub fn change_piece_type(&self, design_id: &str, piece_id: &str, new_type_id: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let pg = piece_id.to_string();
             let tg = new_type_id.to_string();
-            future_to_promise(async move {
-                js_settle_set(KitStore::change_piece_type(&inner, &dg, &pg, &tg))
-            })
+            future_to_promise(async move { js_settle_set(KitStore::change_piece_type(&inner, &dg, &pg, &tg)) })
         }
 
         #[wasm_bindgen(js_name = pasteDesignSelection)]
-        pub fn paste_design_selection(
-            &self,
-            design_id: &str,
-            selection: JsValue,
-            plane: JsValue,
-        ) -> js_sys::Promise {
+        pub fn paste_design_selection(&self, design_id: &str, selection: JsValue, plane: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let sel: serde_json::Value =
-                    serde_wasm_bindgen::from_value(selection).map_err(|e| {
-                        JsValue::from_str(&format!("pasteDesignSelection selection: {e}"))
-                    })?;
-                let pl: Option<crate::geom::Plane> = if plane.is_undefined() || plane.is_null() {
-                    None
-                } else {
-                    Some(serde_wasm_bindgen::from_value(plane).map_err(|e| {
-                        JsValue::from_str(&format!("pasteDesignSelection plane: {e}"))
-                    })?)
-                };
+                let sel: serde_json::Value = serde_wasm_bindgen::from_value(selection).map_err(|e| JsValue::from_str(&format!("pasteDesignSelection selection: {e}")))?;
+                let pl: Option<crate::geom::Plane> = if plane.is_undefined() || plane.is_null() { None } else { Some(serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("pasteDesignSelection plane: {e}")))?) };
                 js_settle_set(KitStore::paste_design_selection(&inner, &dg, sel, pl))
             })
         }
 
         #[wasm_bindgen(js_name = createHangingPieces)]
-        pub fn create_hanging_pieces(
-            &self,
-            design_id: &str,
-            type_ids: JsValue,
-            plane: JsValue,
-        ) -> js_sys::Promise {
+        pub fn create_hanging_pieces(&self, design_id: &str, type_ids: JsValue, plane: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_ids).map_err(|e| {
-                    JsValue::from_str(&format!("createHangingPieces type_ids: {e}"))
-                })?;
-                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
-                    .map_err(|e| JsValue::from_str(&format!("createHangingPieces plane: {e}")))?;
+                let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_ids).map_err(|e| JsValue::from_str(&format!("createHangingPieces type_ids: {e}")))?;
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("createHangingPieces plane: {e}")))?;
                 js_settle_set(KitStore::create_hanging_pieces(&inner, &dg, tgs, pl))
             })
         }
 
         #[wasm_bindgen(js_name = createConnectedPiece)]
-        pub fn create_connected_piece(
-            &self,
-            design_id: &str,
-            parent_piece: &str,
-            parent_port: &str,
-            child_type: &str,
-            child_port: &str,
-        ) -> js_sys::Promise {
+        pub fn create_connected_piece(&self, design_id: &str, parent_piece: &str, parent_port: &str, child_type: &str, child_port: &str) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let pp = parent_piece.to_string();
             let pport = parent_port.to_string();
             let ct = child_type.to_string();
             let cport = child_port.to_string();
-            future_to_promise(async move {
-                js_settle_set(KitStore::create_connected_piece(
-                    &inner, &dg, &pp, &pport, &ct, &cport,
-                ))
-            })
+            future_to_promise(async move { js_settle_set(KitStore::create_connected_piece(&inner, &dg, &pp, &pport, &ct, &cport)) })
         }
 
         #[wasm_bindgen(js_name = createFixedPiece)]
-        pub fn create_fixed_piece(
-            &self,
-            design_id: &str,
-            type_id: &str,
-            plane: JsValue,
-        ) -> js_sys::Promise {
+        pub fn create_fixed_piece(&self, design_id: &str, type_id: &str, plane: JsValue) -> js_sys::Promise {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             let tg = type_id.to_string();
             future_to_promise(async move {
-                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane)
-                    .map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| JsValue::from_str(&format!("createFixedPiece plane: {e}")))?;
                 js_settle_set(KitStore::create_fixed_piece(&inner, &dg, &tg, pl))
             })
         }
@@ -19363,11 +14494,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_pieces_metadata_json(&dg)
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_pieces_metadata_json(&dg).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19377,11 +14504,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_pieces_json(&dg)
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_pieces_json(&dg).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19391,11 +14514,7 @@ pub mod wasm {
             let inner = self.inner.clone();
             let dg = design_id.to_string();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_connections_json(&dg)
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_connections_json(&dg).map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19404,11 +14523,7 @@ pub mod wasm {
         pub fn get_designs_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_designs_json()
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_designs_json().map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19417,11 +14532,7 @@ pub mod wasm {
         pub fn get_types_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_types_json()
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_types_json().map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19430,11 +14541,7 @@ pub mod wasm {
         pub fn get_authors_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_authors_json()
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_authors_json().map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
@@ -19443,22 +14550,14 @@ pub mod wasm {
         pub fn get_kit_metadata_wasm(&self) -> js_sys::Promise {
             let inner = self.inner.clone();
             future_to_promise(async move {
-                let v = inner
-                    .read()
-                    .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                    .get_kit_json()
-                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                let v = inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.get_kit_json().map_err(|e| JsValue::from_str(&e.to_string()))?;
                 serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
 
         #[wasm_bindgen(js_name = subscribe)]
         pub fn subscribe(&self, callback: &js_sys::Function) -> Result<(), JsValue> {
-            let mut rx = self
-                .inner
-                .read()
-                .map_err(|_| JsValue::from_str("kit lock poisoned"))?
-                .subscribe();
+            let mut rx = self.inner.read().map_err(|_| JsValue::from_str("kit lock poisoned"))?.subscribe();
             let cb = callback.clone();
             wasm_bindgen_futures::spawn_local(async move {
                 loop {
@@ -19493,11 +14592,7 @@ mod tests {
             let kit = Arc::new(RwLock::new(KitStore::new("roundtrip-test")));
             let json = kit.read().expect("read").to_json_pretty().expect("to json");
             let kit2 = KitStore::from_json_str(&json).expect("from json");
-            assert_eq!(
-                kit.read().expect("read").hash(),
-                kit2.read().expect("read2").hash(),
-                "hash stable across JSON round-trip"
-            );
+            assert_eq!(kit.read().expect("read").hash(), kit2.read().expect("read2").hash(), "hash stable across JSON round-trip");
         }
     }
 
@@ -19533,9 +14628,7 @@ mod tests {
         use crate::side::SideMetadataDto;
         use crate::typ::{TypeFullDto, TypeIdDto};
 
-        fn kit_with_flatten_chain(
-            leaf_plane: Option<Plane>,
-        ) -> (crate::kit::KitStoreRef, Id, Id, Id, Id) {
+        fn kit_with_flatten_chain(leaf_plane: Option<Plane>) -> (crate::kit::KitStoreRef, Id, Id, Id, Id) {
             let kit_id = Id::new_v7();
             let type_id = Id::new_v7();
             let port_id = Id::new_v7();
@@ -19557,96 +14650,29 @@ mod tests {
                 types: vec![TypeFullDto {
                     id: type_id.clone(),
                     name: "typ".into(),
-                    ports: vec![PortFullDto {
-                        id: port_id.clone(),
-                        point: Some(Coordinate::ZERO),
-                        direction: Some(Coordinate::new(0.0, 0.0, 1.0)),
-                        ..Default::default()
-                    }],
-                    connectors: vec![ConnectorFullDto {
-                        id: connector_id,
-                        code: "C".into(),
-                        port: Some(PortIdDto {
-                            id: port_id.clone(),
-                        }),
-                        ..Default::default()
-                    }],
+                    ports: vec![PortFullDto { id: port_id.clone(), point: Some(Coordinate::ZERO), direction: Some(Coordinate::new(0.0, 0.0, 1.0)), ..Default::default() }],
+                    connectors: vec![ConnectorFullDto { id: connector_id, code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
                     ..Default::default()
                 }],
                 designs: vec![DesignFullDto {
                     id: design_id.clone(),
                     name: "design".into(),
                     pieces: vec![
-                        PieceFullDto {
-                            id: root_id.clone(),
-                            plane: Some(Plane::world_xy()),
-                            center: Some(Coordinate::new(5.0, 0.0, 0.0)),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        },
-                        PieceFullDto {
-                            id: middle_id.clone(),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        },
-                        PieceFullDto {
-                            id: leaf_id.clone(),
-                            plane: leaf_plane,
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        },
+                        PieceFullDto { id: root_id.clone(), plane: Some(Plane::world_xy()), center: Some(Coordinate::new(5.0, 0.0, 0.0)), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: middle_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                        PieceFullDto { id: leaf_id.clone(), plane: leaf_plane, r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                     ],
                     connections: vec![
                         ConnectionFullDto {
                             id: ab_id,
-                            connected: SideMetadataDto {
-                                id: root_side_id,
-                                piece: PieceIdDto {
-                                    id: root_id.clone(),
-                                },
-                                port: Some(PortIdDto {
-                                    id: port_id.clone(),
-                                }),
-                                design_piece: None,
-                            },
-                            connecting: SideMetadataDto {
-                                id: middle_ab_side_id,
-                                piece: PieceIdDto {
-                                    id: middle_id.clone(),
-                                },
-                                port: Some(PortIdDto {
-                                    id: port_id.clone(),
-                                }),
-                                design_piece: None,
-                            },
+                            connected: SideMetadataDto { id: root_side_id, piece: PieceIdDto { id: root_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
+                            connecting: SideMetadataDto { id: middle_ab_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
                             ..Default::default()
                         },
                         ConnectionFullDto {
                             id: bc_id,
-                            connected: SideMetadataDto {
-                                id: middle_bc_side_id,
-                                piece: PieceIdDto {
-                                    id: middle_id.clone(),
-                                },
-                                port: Some(PortIdDto {
-                                    id: port_id.clone(),
-                                }),
-                                design_piece: None,
-                            },
-                            connecting: SideMetadataDto {
-                                id: leaf_side_id,
-                                piece: PieceIdDto {
-                                    id: leaf_id.clone(),
-                                },
-                                port: Some(PortIdDto { id: port_id }),
-                                design_piece: None,
-                            },
+                            connected: SideMetadataDto { id: middle_bc_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
+                            connecting: SideMetadataDto { id: leaf_side_id, piece: PieceIdDto { id: leaf_id.clone() }, port: Some(PortIdDto { id: port_id }), design_piece: None },
                             ..Default::default()
                         },
                     ],
@@ -19667,11 +14693,7 @@ mod tests {
 
         #[test]
         fn connected_piece_flat_plane_prefers_explicit_plane() {
-            let explicit_plane = Plane {
-                origin: Coordinate::new(42.0, -3.0, 7.0),
-                x_axis: Coordinate::new(0.0, 1.0, 0.0),
-                y_axis: Coordinate::new(-1.0, 0.0, 0.0),
-            };
+            let explicit_plane = Plane { origin: Coordinate::new(42.0, -3.0, 7.0), x_axis: Coordinate::new(0.0, 1.0, 0.0), y_axis: Coordinate::new(-1.0, 0.0, 0.0) };
             let (kit, design_id, _, _, leaf_id) = kit_with_flatten_chain(Some(explicit_plane));
             let leaf = {
                 let kit_read = kit.read().expect("kit read");
@@ -19693,50 +14715,25 @@ mod tests {
 
             {
                 let design_read = design.read().expect("design read");
-                let middle = design_read
-                    .piece(middle_id.as_str())
-                    .expect("middle")
-                    .clone();
+                let middle = design_read.piece(middle_id.as_str()).expect("middle").clone();
                 let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
-                let middle_parent = middle
-                    .read()
-                    .expect("middle read")
-                    .parent_piece
-                    .as_ref()
-                    .and_then(|parent| parent.upgrade())
-                    .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
-                let leaf_parent = leaf
-                    .read()
-                    .expect("leaf read")
-                    .parent_piece
-                    .as_ref()
-                    .and_then(|parent| parent.upgrade())
-                    .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
+                let middle_parent = middle.read().expect("middle read").parent_piece.as_ref().and_then(|parent| parent.upgrade()).and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
+                let leaf_parent = leaf.read().expect("leaf read").parent_piece.as_ref().and_then(|parent| parent.upgrade()).and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
                 assert_eq!(middle_parent, Some(root_id.clone()));
                 assert_eq!(leaf_parent, Some(middle_id.clone()));
             }
 
-            design
-                .write()
-                .expect("design write")
-                .delete_pieces(&[root_id.clone()]);
+            design.write().expect("design write").delete_pieces(&[root_id.clone()]);
 
             let design_read = design.read().expect("design read after delete");
-            let middle = design_read
-                .piece(middle_id.as_str())
-                .expect("middle")
-                .clone();
+            let middle = design_read.piece(middle_id.as_str()).expect("middle").clone();
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
             let middle_read = middle.read().expect("middle read after delete");
             let leaf_read = leaf.read().expect("leaf read after delete");
             assert!(middle_read.parent_piece.is_none());
             assert!(middle_read.parent_connection.is_none());
             assert_eq!(middle_read.flat_plane(), Plane::world_xy());
-            let leaf_parent = leaf_read
-                .parent_piece
-                .as_ref()
-                .and_then(|parent| parent.upgrade())
-                .and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
+            let leaf_parent = leaf_read.parent_piece.as_ref().and_then(|parent| parent.upgrade()).and_then(|parent| parent.read().ok().map(|parent| parent.id.clone()));
             assert_eq!(leaf_parent, Some(middle_id));
             assert!(leaf_read.parent_connection.is_some());
         }
@@ -19750,42 +14747,17 @@ mod tests {
             };
             let design_read = design.read().expect("design read");
             let root = design_read.piece(root_id.as_str()).expect("root").clone();
-            let middle = design_read
-                .piece(middle_id.as_str())
-                .expect("middle")
-                .clone();
+            let middle = design_read.piece(middle_id.as_str()).expect("middle").clone();
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let root_path = root.read().expect("root read").path();
-            assert_eq!(
-                root_path,
-                vec![PieceIdDto {
-                    id: root_id.clone(),
-                }]
-            );
+            assert_eq!(root_path, vec![PieceIdDto { id: root_id.clone() }]);
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(
-                middle_path,
-                vec![
-                    PieceIdDto {
-                        id: root_id.clone(),
-                    },
-                    PieceIdDto {
-                        id: middle_id.clone(),
-                    },
-                ]
-            );
+            assert_eq!(middle_path, vec![PieceIdDto { id: root_id.clone() }, PieceIdDto { id: middle_id.clone() },]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(
-                leaf_path,
-                vec![
-                    PieceIdDto { id: root_id },
-                    PieceIdDto { id: middle_id },
-                    PieceIdDto { id: leaf_id },
-                ]
-            );
+            assert_eq!(leaf_path, vec![PieceIdDto { id: root_id }, PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]);
         }
 
         #[test]
@@ -19796,31 +14768,17 @@ mod tests {
                 kit_read.design(design_id.as_str()).expect("design").clone()
             };
 
-            design
-                .write()
-                .expect("design write")
-                .delete_pieces(&[root_id]);
+            design.write().expect("design write").delete_pieces(&[root_id]);
 
             let design_read = design.read().expect("design read after delete");
-            let middle = design_read
-                .piece(middle_id.as_str())
-                .expect("middle")
-                .clone();
+            let middle = design_read.piece(middle_id.as_str()).expect("middle").clone();
             let leaf = design_read.piece(leaf_id.as_str()).expect("leaf").clone();
 
             let middle_path = middle.read().expect("middle read").path();
-            assert_eq!(
-                middle_path,
-                vec![PieceIdDto {
-                    id: middle_id.clone(),
-                }]
-            );
+            assert_eq!(middle_path, vec![PieceIdDto { id: middle_id.clone() }]);
 
             let leaf_path = leaf.read().expect("leaf read").path();
-            assert_eq!(
-                leaf_path,
-                vec![PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]
-            );
+            assert_eq!(leaf_path, vec![PieceIdDto { id: middle_id }, PieceIdDto { id: leaf_id },]);
         }
 
         #[test]
@@ -19830,21 +14788,11 @@ mod tests {
                 let kit_read = kit.read().expect("kit read");
                 let design = kit_read.design(design_id.as_str()).expect("design");
                 let design_read = design.read().expect("design read");
-                (
-                    design_read
-                        .piece(middle_id.as_str())
-                        .expect("middle")
-                        .clone(),
-                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
-                )
+                (design_read.piece(middle_id.as_str()).expect("middle").clone(), design_read.piece(leaf_id.as_str()).expect("leaf").clone())
             };
             let before = leaf.read().expect("leaf read before").flat_center();
 
-            middle
-                .write()
-                .expect("middle write")
-                .drag(2.0, 3.0)
-                .expect("drag middle");
+            middle.write().expect("middle write").drag(2.0, 3.0).expect("drag middle");
 
             let after = leaf.read().expect("leaf read after").flat_center();
             assert!((after.x - (before.x + 2.0)).abs() < 1e-9);
@@ -19858,21 +14806,11 @@ mod tests {
                 let kit_read = kit.read().expect("kit read");
                 let design = kit_read.design(design_id.as_str()).expect("design");
                 let design_read = design.read().expect("design read");
-                (
-                    design_read
-                        .piece(middle_id.as_str())
-                        .expect("middle")
-                        .clone(),
-                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
-                )
+                (design_read.piece(middle_id.as_str()).expect("middle").clone(), design_read.piece(leaf_id.as_str()).expect("leaf").clone())
             };
             let before = leaf.read().expect("leaf read before").flat_plane();
 
-            middle
-                .write()
-                .expect("middle write")
-                .r#move(0.0, 2.0, 0.0)
-                .expect("move middle");
+            middle.write().expect("middle write").r#move(0.0, 2.0, 0.0).expect("move middle");
 
             let after = leaf.read().expect("leaf read after").flat_plane();
             assert_ne!(after, before);
@@ -19887,28 +14825,13 @@ mod tests {
             };
             let (middle, leaf) = {
                 let design_read = design.read().expect("design read");
-                (
-                    design_read
-                        .piece(middle_id.as_str())
-                        .expect("middle")
-                        .clone(),
-                    design_read.piece(leaf_id.as_str()).expect("leaf").clone(),
-                )
+                (design_read.piece(middle_id.as_str()).expect("middle").clone(), design_read.piece(leaf_id.as_str()).expect("leaf").clone())
             };
-            let flat_map = design
-                .read()
-                .expect("design read for flat map")
-                .flatten_map();
-            let (middle_plane, middle_center) =
-                flat_map.get(&middle_id).copied().expect("middle flat pose");
-            let (leaf_plane, leaf_center) =
-                flat_map.get(&leaf_id).copied().expect("leaf flat pose");
+            let flat_map = design.read().expect("design read for flat map").flatten_map();
+            let (middle_plane, middle_center) = flat_map.get(&middle_id).copied().expect("middle flat pose");
+            let (leaf_plane, leaf_center) = flat_map.get(&leaf_id).copied().expect("leaf flat pose");
 
-            middle
-                .write()
-                .expect("middle write")
-                .fix()
-                .expect("fix middle");
+            middle.write().expect("middle write").fix().expect("fix middle");
 
             let design_read = design.read().expect("design read after fix");
             assert!(design_read.connections.is_empty());
@@ -19956,13 +14879,7 @@ mod tests {
 
         #[test]
         fn author_setter_invalidates_local_hash() {
-            let mut a = AuthorStore::from_full_dto(crate::author::AuthorFullDto {
-                id: crate::Id::new_v7(),
-                name: "n".into(),
-                email: "e".into(),
-                role: None,
-                rank: None,
-            });
+            let mut a = AuthorStore::from_full_dto(crate::author::AuthorFullDto { id: crate::Id::new_v7(), name: "n".into(), email: "e".into(), role: None, rank: None });
             let h0 = a.hash();
             a.set_name("n2".into());
             let h1 = a.hash();
@@ -20013,10 +14930,7 @@ mod tests {
         }
 
         fn assets_dir() -> PathBuf {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("..")
-                .join("assets")
-                .join("semio")
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("assets").join("semio")
         }
 
         fn load_asset_text(name: &str) -> String {
@@ -20064,34 +14978,15 @@ mod tests {
             let make_port = |id: Id, family: &str, compatible_families: Vec<&str>| PortFullDto {
                 id,
                 family: Some(family.to_string()),
-                compatible_families: compatible_families
-                    .into_iter()
-                    .map(str::to_string)
-                    .collect(),
+                compatible_families: compatible_families.into_iter().map(str::to_string).collect(),
                 point: Some(Coordinate::ZERO),
                 direction: Some(Vector::new(1.0, 0.0, 0.0)),
                 ..Default::default()
             };
 
-            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto {
-                id: Id::from(id),
-                code: code.to_string(),
-                port: Some(PortIdDto {
-                    id: port_id.clone(),
-                }),
-                ..Default::default()
-            };
+            let make_connector = |id: &str, code: &str, port_id: &Id| ConnectorFullDto { id: Id::from(id), code: code.to_string(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() };
 
-            let make_type =
-                |id: Id, name: &str, ports: Vec<PortFullDto>, connectors: Vec<ConnectorFullDto>| {
-                    TypeFullDto {
-                        id,
-                        name: name.to_string(),
-                        ports,
-                        connectors,
-                        ..Default::default()
-                    }
-                };
+            let make_type = |id: Id, name: &str, ports: Vec<PortFullDto>, connectors: Vec<ConnectorFullDto>| TypeFullDto { id, name: name.to_string(), ports, connectors, ..Default::default() };
 
             let dto = KitFullDto {
                 id: Id::from("synthetic-kit"),
@@ -20100,75 +14995,31 @@ mod tests {
                     make_type(
                         selected_external_lg.clone(),
                         "selected-external-lg",
-                        vec![
-                            make_port(port_l.clone(), "L", vec![]),
-                            make_port(port_g.clone(), "G", vec![]),
-                        ],
-                        vec![
-                            make_connector("selected-external-lg-connector-0", "L", &port_l),
-                            make_connector("selected-external-lg-connector-1", "G", &port_g),
-                        ],
+                        vec![make_port(port_l.clone(), "L", vec![]), make_port(port_g.clone(), "G", vec![])],
+                        vec![make_connector("selected-external-lg-connector-0", "L", &port_l), make_connector("selected-external-lg-connector-1", "G", &port_g)],
                     ),
                     make_type(
                         selected_isolated_lg.clone(),
                         "selected-isolated-lg",
-                        vec![
-                            make_port(port_l.clone(), "L", vec![]),
-                            make_port(port_g.clone(), "G", vec![]),
-                        ],
-                        vec![
-                            make_connector("selected-isolated-lg-connector-0", "L", &port_l),
-                            make_connector("selected-isolated-lg-connector-1", "G", &port_g),
-                        ],
+                        vec![make_port(port_l.clone(), "L", vec![]), make_port(port_g.clone(), "G", vec![])],
+                        vec![make_connector("selected-isolated-lg-connector-0", "L", &port_l), make_connector("selected-isolated-lg-connector-1", "G", &port_g)],
                     ),
                     make_type(
                         selected_external_ll.clone(),
                         "selected-external-ll",
                         vec![make_port(port_l.clone(), "L", vec![])],
-                        vec![
-                            make_connector("selected-external-ll-connector-0", "L0", &port_l),
-                            make_connector("selected-external-ll-connector-1", "L1", &port_l),
-                        ],
+                        vec![make_connector("selected-external-ll-connector-0", "L0", &port_l), make_connector("selected-external-ll-connector-1", "L1", &port_l)],
                     ),
-                    make_type(
-                        neighbor_l.clone(),
-                        "neighbor-l",
-                        vec![make_port(port_l.clone(), "L", vec![])],
-                        vec![make_connector("neighbor-l-connector-0", "L", &port_l)],
-                    ),
-                    make_type(
-                        neighbor_g.clone(),
-                        "neighbor-g",
-                        vec![make_port(port_g.clone(), "G", vec![])],
-                        vec![make_connector("neighbor-g-connector-0", "G", &port_g)],
-                    ),
-                    make_type(
-                        candidate_l.clone(),
-                        "candidate-l",
-                        vec![make_port(port_l.clone(), "L", vec![])],
-                        vec![make_connector("candidate-l-connector-0", "L", &port_l)],
-                    ),
+                    make_type(neighbor_l.clone(), "neighbor-l", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("neighbor-l-connector-0", "L", &port_l)]),
+                    make_type(neighbor_g.clone(), "neighbor-g", vec![make_port(port_g.clone(), "G", vec![])], vec![make_connector("neighbor-g-connector-0", "G", &port_g)]),
+                    make_type(candidate_l.clone(), "candidate-l", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("candidate-l-connector-0", "L", &port_l)]),
                     make_type(
                         candidate_lg.clone(),
                         "candidate-lg",
-                        vec![
-                            make_port(port_l_compatible.clone(), "L-compatible", vec!["L"]),
-                            make_port(port_g.clone(), "G", vec![]),
-                        ],
-                        vec![
-                            make_connector("candidate-lg-connector-0", "LC", &port_l_compatible),
-                            make_connector("candidate-lg-connector-1", "G", &port_g),
-                        ],
+                        vec![make_port(port_l_compatible.clone(), "L-compatible", vec!["L"]), make_port(port_g.clone(), "G", vec![])],
+                        vec![make_connector("candidate-lg-connector-0", "LC", &port_l_compatible), make_connector("candidate-lg-connector-1", "G", &port_g)],
                     ),
-                    make_type(
-                        candidate_ll.clone(),
-                        "candidate-ll",
-                        vec![make_port(port_l.clone(), "L", vec![])],
-                        vec![
-                            make_connector("candidate-ll-connector-0", "L0", &port_l),
-                            make_connector("candidate-ll-connector-1", "L1", &port_l),
-                        ],
-                    ),
+                    make_type(candidate_ll.clone(), "candidate-ll", vec![make_port(port_l.clone(), "L", vec![])], vec![make_connector("candidate-ll-connector-0", "L0", &port_l), make_connector("candidate-ll-connector-1", "L1", &port_l)]),
                     make_type(connectorless.clone(), "candidate-empty", vec![], vec![]),
                 ],
                 designs: vec![
@@ -20176,126 +15027,35 @@ mod tests {
                         id: root_design.clone(),
                         name: "root-design".to_string(),
                         pieces: vec![
-                            PieceFullDto {
-                                id: piece_external_lg.clone(),
-                                name: Some("piece-external-lg".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: selected_external_lg.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_isolated_lg.clone(),
-                                name: Some("piece-isolated-lg".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: selected_isolated_lg.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_external_ll.clone(),
-                                name: Some("piece-external-ll".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: selected_external_ll.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_neighbor_l.clone(),
-                                name: Some("piece-neighbor-l".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: neighbor_l.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_neighbor_g.clone(),
-                                name: Some("piece-neighbor-g".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: neighbor_g.clone(),
-                                }),
-                                ..Default::default()
-                            },
+                            PieceFullDto { id: piece_external_lg.clone(), name: Some("piece-external-lg".to_string()), r#type: Some(TypeIdDto { id: selected_external_lg.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_isolated_lg.clone(), name: Some("piece-isolated-lg".to_string()), r#type: Some(TypeIdDto { id: selected_isolated_lg.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_external_ll.clone(), name: Some("piece-external-ll".to_string()), r#type: Some(TypeIdDto { id: selected_external_ll.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_neighbor_l.clone(), name: Some("piece-neighbor-l".to_string()), r#type: Some(TypeIdDto { id: neighbor_l.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_neighbor_g.clone(), name: Some("piece-neighbor-g".to_string()), r#type: Some(TypeIdDto { id: neighbor_g.clone() }), ..Default::default() },
                         ],
                         connections: vec![
                             ConnectionFullDto {
                                 id: Id::from("root-lg-left"),
-                                connected: SideMetadataDto {
-                                    id: Id::from("root-lg-left-selected"),
-                                    piece: PieceIdDto {
-                                        id: piece_external_lg.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
-                                connecting: SideMetadataDto {
-                                    id: Id::from("root-lg-left-neighbor"),
-                                    piece: PieceIdDto {
-                                        id: piece_neighbor_l.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
+                                connected: SideMetadataDto { id: Id::from("root-lg-left-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connecting: SideMetadataDto { id: Id::from("root-lg-left-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-lg-gable"),
-                                connected: SideMetadataDto {
-                                    id: Id::from("root-lg-gable-selected"),
-                                    piece: PieceIdDto {
-                                        id: piece_external_lg.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_g.clone() }),
-                                    design_piece: None,
-                                },
-                                connecting: SideMetadataDto {
-                                    id: Id::from("root-lg-gable-neighbor"),
-                                    piece: PieceIdDto {
-                                        id: piece_neighbor_g.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_g.clone() }),
-                                    design_piece: None,
-                                },
+                                connected: SideMetadataDto { id: Id::from("root-lg-gable-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None },
+                                connecting: SideMetadataDto { id: Id::from("root-lg-gable-neighbor"), piece: PieceIdDto { id: piece_neighbor_g.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-ll-left-0"),
-                                connected: SideMetadataDto {
-                                    id: Id::from("root-ll-left-0-selected"),
-                                    piece: PieceIdDto {
-                                        id: piece_external_ll.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
-                                connecting: SideMetadataDto {
-                                    id: Id::from("root-ll-left-0-neighbor"),
-                                    piece: PieceIdDto {
-                                        id: piece_neighbor_l.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
+                                connected: SideMetadataDto { id: Id::from("root-ll-left-0-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connecting: SideMetadataDto { id: Id::from("root-ll-left-0-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-ll-left-1"),
-                                connected: SideMetadataDto {
-                                    id: Id::from("root-ll-left-1-selected"),
-                                    piece: PieceIdDto {
-                                        id: piece_external_ll.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
-                                connecting: SideMetadataDto {
-                                    id: Id::from("root-ll-left-1-neighbor"),
-                                    piece: PieceIdDto {
-                                        id: piece_neighbor_l.clone(),
-                                    },
-                                    port: Some(PortIdDto { id: port_l.clone() }),
-                                    design_piece: None,
-                                },
+                                connected: SideMetadataDto { id: Id::from("root-ll-left-1-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connecting: SideMetadataDto { id: Id::from("root-ll-left-1-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
                                 ..Default::default()
                             },
                         ],
@@ -20304,57 +15064,20 @@ mod tests {
                     DesignFullDto {
                         id: candidate_design_free_lg.clone(),
                         name: "candidate-design-free-lg".to_string(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_candidate_free_lg.clone(),
-                            name: Some("piece-candidate-free-lg".to_string()),
-                            r#type: Some(TypeIdDto {
-                                id: candidate_lg.clone(),
-                            }),
-                            ..Default::default()
-                        }],
+                        pieces: vec![PieceFullDto { id: piece_candidate_free_lg.clone(), name: Some("piece-candidate-free-lg".to_string()), r#type: Some(TypeIdDto { id: candidate_lg.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
                     DesignFullDto {
                         id: candidate_design_consumed_lg.clone(),
                         name: "candidate-design-consumed-lg".to_string(),
                         pieces: vec![
-                            PieceFullDto {
-                                id: piece_candidate_consumed_lg.clone(),
-                                name: Some("piece-candidate-consumed-lg".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: candidate_lg.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_candidate_consumed_neighbor.clone(),
-                                name: Some("piece-candidate-consumed-neighbor".to_string()),
-                                r#type: Some(TypeIdDto {
-                                    id: neighbor_l.clone(),
-                                }),
-                                ..Default::default()
-                            },
+                            PieceFullDto { id: piece_candidate_consumed_lg.clone(), name: Some("piece-candidate-consumed-lg".to_string()), r#type: Some(TypeIdDto { id: candidate_lg.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_candidate_consumed_neighbor.clone(), name: Some("piece-candidate-consumed-neighbor".to_string()), r#type: Some(TypeIdDto { id: neighbor_l.clone() }), ..Default::default() },
                         ],
                         connections: vec![ConnectionFullDto {
                             id: Id::from("candidate-consumed-lg-left"),
-                            connected: SideMetadataDto {
-                                id: Id::from("candidate-consumed-lg-left-primary"),
-                                piece: PieceIdDto {
-                                    id: piece_candidate_consumed_lg.clone(),
-                                },
-                                port: Some(PortIdDto {
-                                    id: port_l_compatible.clone(),
-                                }),
-                                design_piece: None,
-                            },
-                            connecting: SideMetadataDto {
-                                id: Id::from("candidate-consumed-lg-left-neighbor"),
-                                piece: PieceIdDto {
-                                    id: piece_candidate_consumed_neighbor.clone(),
-                                },
-                                port: Some(PortIdDto { id: port_l.clone() }),
-                                design_piece: None,
-                            },
+                            connected: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-primary"), piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() }, port: Some(PortIdDto { id: port_l_compatible.clone() }), design_piece: None },
+                            connecting: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-neighbor"), piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -20362,14 +15085,7 @@ mod tests {
                     DesignFullDto {
                         id: candidate_design_empty.clone(),
                         name: "candidate-design-empty".to_string(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_candidate_empty.clone(),
-                            name: Some("piece-candidate-empty".to_string()),
-                            r#type: Some(TypeIdDto {
-                                id: connectorless.clone(),
-                            }),
-                            ..Default::default()
-                        }],
+                        pieces: vec![PieceFullDto { id: piece_candidate_empty.clone(), name: Some("piece-candidate-empty".to_string()), r#type: Some(TypeIdDto { id: connectorless.clone() }), ..Default::default() }],
                         ..Default::default()
                     },
                 ],
@@ -20386,10 +15102,7 @@ mod tests {
             ids.insert("candidate-l", candidate_l.clone());
             ids.insert("candidate-empty", connectorless.clone());
             ids.insert("candidate-design-free-lg", candidate_design_free_lg.clone());
-            ids.insert(
-                "candidate-design-consumed-lg",
-                candidate_design_consumed_lg.clone(),
-            );
+            ids.insert("candidate-design-consumed-lg", candidate_design_consumed_lg.clone());
             ids.insert("candidate-design-empty", candidate_design_empty.clone());
             (KitStore::from_full_dto(dto), ids)
         }
@@ -20403,36 +15116,18 @@ mod tests {
             let (kit, ids) = synthetic_replaceable_kit();
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(ids["root-design"].as_str())
-                    .expect("root design")
-                    .clone()
+                kit_read.design(ids["root-design"].as_str()).expect("root design").clone()
             };
             let piece = {
                 let design_read = design.read().expect("design read");
-                design_read
-                    .piece(ids["piece-external-lg"].as_str())
-                    .expect("selected piece")
-                    .clone()
+                design_read.piece(ids["piece-external-lg"].as_str()).expect("selected piece").clone()
             };
 
             let alternatives = piece.read().expect("piece read").alternatives();
-            assert!(contains_id(&alternatives.types, "candidate-lg", |item| {
-                item.read().expect("type read").id.clone()
-            }));
-            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").id.clone()
-            }));
-            assert!(contains_id(
-                &alternatives.designs,
-                "candidate-design-free-lg",
-                |item| item.read().expect("design read").id.clone()
-            ));
-            assert!(!contains_id(
-                &alternatives.designs,
-                "candidate-design-consumed-lg",
-                |item| item.read().expect("design read").id.clone()
-            ));
+            assert!(contains_id(&alternatives.types, "candidate-lg", |item| { item.read().expect("type read").id.clone() }));
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| { item.read().expect("type read").id.clone() }));
+            assert!(contains_id(&alternatives.designs, "candidate-design-free-lg", |item| item.read().expect("design read").id.clone()));
+            assert!(!contains_id(&alternatives.designs, "candidate-design-consumed-lg", |item| item.read().expect("design read").id.clone()));
         }
 
         #[test]
@@ -20440,22 +15135,12 @@ mod tests {
             let (kit, ids) = synthetic_replaceable_kit();
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(ids["root-design"].as_str())
-                    .expect("root design")
-                    .clone()
+                kit_read.design(ids["root-design"].as_str()).expect("root design").clone()
             };
 
-            let alternatives = design
-                .read()
-                .expect("design read")
-                .replaceable_catalog_candidates(&[ids["piece-external-ll"].clone()]);
-            assert!(contains_id(&alternatives.types, "candidate-ll", |item| {
-                item.read().expect("type read").id.clone()
-            }));
-            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").id.clone()
-            }));
+            let alternatives = design.read().expect("design read").replaceable_catalog_candidates(&[ids["piece-external-ll"].clone()]);
+            assert!(contains_id(&alternatives.types, "candidate-ll", |item| { item.read().expect("type read").id.clone() }));
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| { item.read().expect("type read").id.clone() }));
         }
 
         #[test]
@@ -20463,27 +15148,13 @@ mod tests {
             let (kit, ids) = synthetic_replaceable_kit();
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(ids["root-design"].as_str())
-                    .expect("root design")
-                    .clone()
+                kit_read.design(ids["root-design"].as_str()).expect("root design").clone()
             };
 
-            let alternatives = design
-                .read()
-                .expect("design read")
-                .replaceable_catalog_candidates(&[ids["piece-isolated-lg"].clone()]);
-            assert!(contains_id(
-                &alternatives.types,
-                "selected-isolated-lg",
-                |item| { item.read().expect("type read").id.clone() }
-            ));
-            assert!(contains_id(&alternatives.types, "candidate-lg", |item| {
-                item.read().expect("type read").id.clone()
-            }));
-            assert!(!contains_id(&alternatives.types, "candidate-l", |item| {
-                item.read().expect("type read").id.clone()
-            }));
+            let alternatives = design.read().expect("design read").replaceable_catalog_candidates(&[ids["piece-isolated-lg"].clone()]);
+            assert!(contains_id(&alternatives.types, "selected-isolated-lg", |item| { item.read().expect("type read").id.clone() }));
+            assert!(contains_id(&alternatives.types, "candidate-lg", |item| { item.read().expect("type read").id.clone() }));
+            assert!(!contains_id(&alternatives.types, "candidate-l", |item| { item.read().expect("type read").id.clone() }));
         }
 
         #[test]
@@ -20491,26 +15162,12 @@ mod tests {
             let (kit, ids) = synthetic_replaceable_kit();
             let design = {
                 let kit_read = kit.read().expect("kit read");
-                kit_read
-                    .design(ids["root-design"].as_str())
-                    .expect("root design")
-                    .clone()
+                kit_read.design(ids["root-design"].as_str()).expect("root design").clone()
             };
 
-            let alternatives = design
-                .read()
-                .expect("design read")
-                .replaceable_catalog_candidates(&[]);
-            let type_ids: Vec<Id> = alternatives
-                .types
-                .iter()
-                .map(|item| item.read().expect("type read").id.clone())
-                .collect();
-            let design_ids: Vec<Id> = alternatives
-                .designs
-                .iter()
-                .map(|item| item.read().expect("design read").id.clone())
-                .collect();
+            let alternatives = design.read().expect("design read").replaceable_catalog_candidates(&[]);
+            let type_ids: Vec<Id> = alternatives.types.iter().map(|item| item.read().expect("type read").id.clone()).collect();
+            let design_ids: Vec<Id> = alternatives.designs.iter().map(|item| item.read().expect("design read").id.clone()).collect();
 
             assert_eq!(type_ids, vec![ids["candidate-empty"].clone()]);
             assert_eq!(design_ids, vec![ids["candidate-design-empty"].clone()]);
@@ -20518,8 +15175,7 @@ mod tests {
 
         #[test]
         fn synthetic_cases_from_shared_asset_match_manual_fixture_contract() {
-            let asset: FindReplaceableCasesAsset =
-                load_asset("find-replaceable-types.cases.semio.json");
+            let asset: FindReplaceableCasesAsset = load_asset("find-replaceable-types.cases.semio.json");
             let fixture = load_asset_json(&asset.synthetic_kit);
             let synthetic_cases = asset.synthetic_cases;
             let (kit, ids) = synthetic_replaceable_kit();
@@ -20527,61 +15183,22 @@ mod tests {
             for case in synthetic_cases {
                 let design = {
                     let kit_read = kit.read().expect("kit read");
-                    kit_read
-                        .design(&case.design_id)
-                        .or_else(|| kit_read.design(ids["root-design"].as_str()))
-                        .expect("synthetic design")
-                        .clone()
+                    kit_read.design(&case.design_id).or_else(|| kit_read.design(ids["root-design"].as_str())).expect("synthetic design").clone()
                 };
-                let selected_piece_ids: Vec<Id> = case
-                    .piece_ids
-                    .iter()
-                    .map(|piece_id| Id::from(piece_id.as_str()))
-                    .collect();
-                let alternatives = design
-                    .read()
-                    .expect("design read")
-                    .replaceable_catalog_candidates(&selected_piece_ids);
+                let selected_piece_ids: Vec<Id> = case.piece_ids.iter().map(|piece_id| Id::from(piece_id.as_str())).collect();
+                let alternatives = design.read().expect("design read").replaceable_catalog_candidates(&selected_piece_ids);
 
                 for expected in &case.expected_contains_types {
-                    assert!(
-                        contains_id(&alternatives.types, expected, |item| {
-                            item.read().expect("type read").id.clone()
-                        }),
-                        "{} should include type {}",
-                        case.name,
-                        expected
-                    );
+                    assert!(contains_id(&alternatives.types, expected, |item| { item.read().expect("type read").id.clone() }), "{} should include type {}", case.name, expected);
                 }
                 for forbidden in &case.expected_not_contains_types {
-                    assert!(
-                        !contains_id(&alternatives.types, forbidden, |item| {
-                            item.read().expect("type read").id.clone()
-                        }),
-                        "{} should exclude type {}",
-                        case.name,
-                        forbidden
-                    );
+                    assert!(!contains_id(&alternatives.types, forbidden, |item| { item.read().expect("type read").id.clone() }), "{} should exclude type {}", case.name, forbidden);
                 }
                 for expected in &case.expected_contains_designs {
-                    assert!(
-                        contains_id(&alternatives.designs, expected, |item| {
-                            item.read().expect("design read").id.clone()
-                        }),
-                        "{} should include design {}",
-                        case.name,
-                        expected
-                    );
+                    assert!(contains_id(&alternatives.designs, expected, |item| { item.read().expect("design read").id.clone() }), "{} should include design {}", case.name, expected);
                 }
                 for forbidden in &case.expected_not_contains_designs {
-                    assert!(
-                        !contains_id(&alternatives.designs, forbidden, |item| {
-                            item.read().expect("design read").id.clone()
-                        }),
-                        "{} should exclude design {}",
-                        case.name,
-                        forbidden
-                    );
+                    assert!(!contains_id(&alternatives.designs, forbidden, |item| { item.read().expect("design read").id.clone() }), "{} should exclude design {}", case.name, forbidden);
                 }
             }
 
@@ -20602,16 +15219,9 @@ mod tests {
             let kit = Arc::new(RwLock::new(KitStore::new("json-file-roundtrip")));
             let dir = tempdir().expect("tempdir");
             let path = dir.path().join("kit.json");
-            kit.read()
-                .expect("read")
-                .save_json_file(&path)
-                .expect("save");
+            kit.read().expect("read").save_json_file(&path).expect("save");
             let kit2 = KitStore::load_json_file(&path).expect("load");
-            assert_eq!(
-                kit.read().expect("r1").hash(),
-                kit2.read().expect("r2").hash(),
-                "JSON file roundtrip preserves hash"
-            );
+            assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "JSON file roundtrip preserves hash");
         }
     }
 
@@ -20637,24 +15247,10 @@ mod tests {
                 types: vec![TypeFullDto {
                     id: type_id.clone(),
                     name: "Wall".into(),
-                    ports: vec![PortFullDto {
-                        id: Id::from("top"),
-                        family: Some("stack".into()),
-                        compatible_families: vec!["stack".into()],
-                        ..Default::default()
-                    }],
+                    ports: vec![PortFullDto { id: Id::from("top"), family: Some("stack".into()), compatible_families: vec!["stack".into()], ..Default::default() }],
                     ..Default::default()
                 }],
-                designs: vec![DesignFullDto {
-                    id: Id::new_v7(),
-                    name: "Plan".into(),
-                    pieces: vec![PieceFullDto {
-                        id: piece_id,
-                        r#type: Some(crate::typ::TypeIdDto { id: type_id }),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                }],
+                designs: vec![DesignFullDto { id: Id::new_v7(), name: "Plan".into(), pieces: vec![PieceFullDto { id: piece_id, r#type: Some(crate::typ::TypeIdDto { id: type_id }), ..Default::default() }], ..Default::default() }],
                 ..Default::default()
             });
             let dir = tempdir().expect("tempdir");
@@ -20662,28 +15258,13 @@ mod tests {
             kit.read().expect("read").save_sqlite(&path).expect("save");
 
             let conn = Connection::open(&path).expect("open sqlite");
-            let snapshot_table_count: i64 = conn
-                .query_row(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'semio_kit_snapshot'",
-                    [],
-                    |row| row.get(0),
-                )
-                .expect("query snapshot table count");
-            assert_eq!(
-                snapshot_table_count, 0,
-                "legacy snapshot table must not exist"
-            );
-            let port_rows: i64 = conn
-                .query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0))
-                .expect("count port rows");
+            let snapshot_table_count: i64 = conn.query_row("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'semio_kit_snapshot'", [], |row| row.get(0)).expect("query snapshot table count");
+            assert_eq!(snapshot_table_count, 0, "legacy snapshot table must not exist");
+            let port_rows: i64 = conn.query_row("SELECT COUNT(*) FROM port", [], |row| row.get(0)).expect("count port rows");
             assert_eq!(port_rows, 1, "normalized port rows should be persisted");
 
             let kit2 = KitStore::load_sqlite(&path).expect("load");
-            assert_eq!(
-                kit.read().expect("r1").hash(),
-                kit2.read().expect("r2").hash(),
-                "normalized SQLite roundtrip preserves hash"
-            );
+            assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "normalized SQLite roundtrip preserves hash");
         }
     }
 
@@ -20703,59 +15284,24 @@ mod tests {
             let dto = KitFullDto {
                 id: Id::new_v7(),
                 name: "local-folder-roundtrip".into(),
-                files: vec![FileFullDto {
-                    id: file_id.clone(),
-                    url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(),
-                    mime: Some("text/plain".into()),
-                    ..Default::default()
-                }],
-                folders: vec![FolderFullDto {
-                    id: folder_id,
-                    path: "assets/docs".into(),
-                    ..Default::default()
-                }],
+                files: vec![FileFullDto { id: file_id.clone(), url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(), mime: Some("text/plain".into()), ..Default::default() }],
+                folders: vec![FolderFullDto { id: folder_id, path: "assets/docs".into(), ..Default::default() }],
                 ..Default::default()
             };
             let kit = KitStore::from_full_dto(dto);
             let dir = tempdir().expect("tempdir");
 
-            kit.read()
-                .expect("read")
-                .save_local_folder(dir.path())
-                .expect("save local folder");
+            kit.read().expect("read").save_local_folder(dir.path()).expect("save local folder");
 
-            let persisted = KitStore::load_sqlite(&dir.path().join(".semio").join("kit.db"))
-                .expect("load persisted snapshot");
-            let persisted_file_url = persisted.read().expect("persisted read").files[0]
-                .read()
-                .expect("persisted file read")
-                .url
-                .clone();
-            assert_eq!(
-                persisted_file_url,
-                format!("files/{file_id}.txt"),
-                "local snapshot stores a regular relative file path"
-            );
-            assert!(
-                dir.path().join(&persisted_file_url).exists(),
-                "local asset file should be materialized next to the sqlite snapshot"
-            );
+            let persisted = KitStore::load_sqlite(&dir.path().join(".semio").join("kit.db")).expect("load persisted snapshot");
+            let persisted_file_url = persisted.read().expect("persisted read").files[0].read().expect("persisted file read").url.clone();
+            assert_eq!(persisted_file_url, format!("files/{file_id}.txt"), "local snapshot stores a regular relative file path");
+            assert!(dir.path().join(&persisted_file_url).exists(), "local asset file should be materialized next to the sqlite snapshot");
 
             let loaded = KitStore::load_local_folder(dir.path()).expect("load local folder");
-            let loaded_file_url = loaded.read().expect("loaded read").files[0]
-                .read()
-                .expect("loaded file read")
-                .url
-                .clone();
-            assert!(
-                loaded_file_url.starts_with("data:text/plain;base64,"),
-                "loaded local kit should rehydrate external files into embedded data URLs"
-            );
-            assert_eq!(
-                kit.read().expect("r1").hash(),
-                loaded.read().expect("r2").hash(),
-                "local folder roundtrip preserves hash after rehydration"
-            );
+            let loaded_file_url = loaded.read().expect("loaded read").files[0].read().expect("loaded file read").url.clone();
+            assert!(loaded_file_url.starts_with("data:text/plain;base64,"), "loaded local kit should rehydrate external files into embedded data URLs");
+            assert_eq!(kit.read().expect("r1").hash(), loaded.read().expect("r2").hash(), "local folder roundtrip preserves hash after rehydration");
         }
     }
 
@@ -20786,9 +15332,7 @@ mod tests {
                 }
                 buffer.extend_from_slice(&chunk[..read]);
                 if header_end.is_none() {
-                    if let Some(position) =
-                        buffer.windows(4).position(|window| window == b"\r\n\r\n")
-                    {
+                    if let Some(position) = buffer.windows(4).position(|window| window == b"\r\n\r\n") {
                         header_end = Some(position + 4);
                         let headers_text = String::from_utf8_lossy(&buffer[..position + 4]);
                         for line in headers_text.lines().skip(1) {
@@ -20808,8 +15352,7 @@ mod tests {
             }
 
             let header_end = header_end.expect("request headers");
-            let header_text =
-                String::from_utf8(buffer[..header_end].to_vec()).expect("header utf8");
+            let header_text = String::from_utf8(buffer[..header_end].to_vec()).expect("header utf8");
             let mut lines = header_text.split("\r\n");
             let request_line = lines.next().expect("request line").to_string();
             let mut headers = HashMap::new();
@@ -20827,13 +15370,8 @@ mod tests {
 
         fn write_json_response(stream: &mut TcpStream, status_line: &str, body: &Value) {
             let body = serde_json::to_vec(body).expect("serialize response body");
-            let response = format!(
-                "HTTP/1.1 {status_line}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
-                body.len()
-            );
-            stream
-                .write_all(response.as_bytes())
-                .expect("write response headers");
+            let response = format!("HTTP/1.1 {status_line}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len());
+            stream.write_all(response.as_bytes()).expect("write response headers");
             stream.write_all(&body).expect("write response body");
             stream.flush().expect("flush response");
         }
@@ -20853,11 +15391,7 @@ mod tests {
                 for _ in 0..3 {
                     let (mut stream, _) = listener.accept().expect("accept request");
                     let (request_line, headers, body) = read_http_request(&mut stream);
-                    let payload: Value = if body.is_empty() {
-                        Value::Null
-                    } else {
-                        serde_json::from_slice(&body).expect("decode request body")
-                    };
+                    let payload: Value = if body.is_empty() { Value::Null } else { serde_json::from_slice(&body).expect("decode request body") };
 
                     if request_line.starts_with("POST /sessions ") {
                         let kit = payload.get("kit").cloned().expect("create payload kit");
@@ -20872,28 +15406,13 @@ mod tests {
                                 "owner_token": owner_token,
                             }),
                         );
-                    } else if request_line
-                        .starts_with(&format!("PUT /sessions/{session_id}/snapshot "))
-                    {
-                        assert_eq!(
-                            headers.get("authorization").map(String::as_str),
-                            Some(format!("Bearer {owner_token}").as_str()),
-                            "remote snapshot update requires the owner token"
-                        );
+                    } else if request_line.starts_with(&format!("PUT /sessions/{session_id}/snapshot ")) {
+                        assert_eq!(headers.get("authorization").map(String::as_str), Some(format!("Bearer {owner_token}").as_str()), "remote snapshot update requires the owner token");
                         let kit = payload.get("kit").cloned().expect("replace payload kit");
                         *persisted_kit_for_server.lock().expect("persist update") = kit;
-                        write_json_response(
-                            &mut stream,
-                            "200 OK",
-                            &serde_json::json!({"status": "ok"}),
-                        );
-                    } else if request_line
-                        .starts_with(&format!("GET /sessions/{session_id}/snapshot "))
-                    {
-                        let kit = persisted_kit_for_server
-                            .lock()
-                            .expect("persisted snapshot")
-                            .clone();
+                        write_json_response(&mut stream, "200 OK", &serde_json::json!({"status": "ok"}));
+                    } else if request_line.starts_with(&format!("GET /sessions/{session_id}/snapshot ")) {
+                        let kit = persisted_kit_for_server.lock().expect("persisted snapshot").clone();
                         write_json_response(
                             &mut stream,
                             "200 OK",
@@ -20911,28 +15430,14 @@ mod tests {
             });
 
             let seed_kit = KitStore::new("remote-seed");
-            let remote = seed_kit
-                .create_remote_session(&hub_url)
-                .expect("create remote session");
+            let remote = seed_kit.create_remote_session(&hub_url).expect("create remote session");
             assert_eq!(remote.session_id, expected_session_id);
 
             let updated_kit = KitStore::new("remote-updated");
-            updated_kit
-                .save_remote_session(&RemoteKitSession {
-                    hub_url: remote.hub_url.clone(),
-                    session_id: remote.session_id.clone(),
-                    kit_id: remote.kit_id.clone(),
-                    owner_token: expected_owner_token,
-                })
-                .expect("save remote snapshot");
+            updated_kit.save_remote_session(&RemoteKitSession { hub_url: remote.hub_url.clone(), session_id: remote.session_id.clone(), kit_id: remote.kit_id.clone(), owner_token: expected_owner_token }).expect("save remote snapshot");
 
-            let loaded = KitStore::load_remote_session(&remote.hub_url, &remote.session_id)
-                .expect("load remote session");
-            assert_eq!(
-                updated_kit.hash(),
-                loaded.read().expect("loaded read").hash(),
-                "remote snapshot roundtrip preserves the latest saved kit"
-            );
+            let loaded = KitStore::load_remote_session(&remote.hub_url, &remote.session_id).expect("load remote session");
+            assert_eq!(updated_kit.hash(), loaded.read().expect("loaded read").hash(), "remote snapshot roundtrip preserves the latest saved kit");
 
             server.join().expect("join mock server");
         }
@@ -20953,11 +15458,7 @@ mod tests {
             let path = dir.path().join("kit.zip");
             kit.read().expect("read").save_zip(&path).expect("save zip");
             let kit2 = KitStore::load_zip(&path).expect("load zip");
-            assert_eq!(
-                kit.read().expect("r1").hash(),
-                kit2.read().expect("r2").hash(),
-                "zip kit.json preserves hash"
-            );
+            assert_eq!(kit.read().expect("r1").hash(), kit2.read().expect("r2").hash(), "zip kit.json preserves hash");
         }
     }
 
@@ -21005,23 +15506,8 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
-                    designs: vec![DesignFullDto {
-                        id: design_id.clone(),
-                        name: "des".into(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_id.clone(),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        }],
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
+                    designs: vec![DesignFullDto { id: design_id.clone(), name: "des".into(), pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
@@ -21038,26 +15524,12 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     designs: vec![DesignFullDto {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_id.clone(),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        }],
-                        layers: vec![LayerFullDto {
-                            id: layer_id.clone(),
-                            name: "L".into(),
-                            ..Default::default()
-                        }],
+                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
+                        layers: vec![LayerFullDto { id: layer_id.clone(), name: "L".into(), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -21076,29 +15548,12 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     designs: vec![DesignFullDto {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_id.clone(),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        }],
-                        groups: vec![GroupFullDto {
-                            id: group_id.clone(),
-                            name: "G".into(),
-                            pieces: vec![PieceIdDto {
-                                id: piece_id.clone(),
-                            }],
-                            ..Default::default()
-                        }],
+                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
+                        groups: vec![GroupFullDto { id: group_id.clone(), name: "G".into(), pieces: vec![PieceIdDto { id: piece_id.clone() }], ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -21118,18 +15573,8 @@ mod tests {
                     types: vec![TypeFullDto {
                         id: type_id.clone(),
                         name: "typ".into(),
-                        ports: vec![PortFullDto {
-                            id: port_id.clone(),
-                            ..Default::default()
-                        }],
-                        connectors: vec![ConnectorFullDto {
-                            id: conn_id.clone(),
-                            code: "C".into(),
-                            port: Some(PortIdDto {
-                                id: port_id.clone(),
-                            }),
-                            ..Default::default()
-                        }],
+                        ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }],
+                        connectors: vec![ConnectorFullDto { id: conn_id.clone(), code: "C".into(), port: Some(PortIdDto { id: port_id.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -21142,16 +15587,7 @@ mod tests {
             pub fn kit_with_type_only() -> (KitStoreRef, Id) {
                 let type_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
-                    id: kit_id,
-                    name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                };
+                let dto = KitFullDto { id: kit_id, name: "kit".into(), types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }], ..Default::default() };
                 (KitStore::from_full_dto(dto), type_id)
             }
 
@@ -21162,15 +15598,7 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ports: vec![PortFullDto {
-                            id: port_id.clone(),
-                            ..Default::default()
-                        }],
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ports: vec![PortFullDto { id: port_id.clone(), ..Default::default() }], ..Default::default() }],
                     ..Default::default()
                 };
                 let kit = KitStore::from_full_dto(dto);
@@ -21180,16 +15608,7 @@ mod tests {
             pub fn kit_with_file() -> (KitStoreRef, Id) {
                 let file_id = Id::new_v7();
                 let kit_id = Id::new_v7();
-                let dto = KitFullDto {
-                    id: kit_id,
-                    name: "kit".into(),
-                    files: vec![FileFullDto {
-                        id: file_id.clone(),
-                        url: "https://example.com/f".into(),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                };
+                let dto = KitFullDto { id: kit_id, name: "kit".into(), files: vec![FileFullDto { id: file_id.clone(), url: "https://example.com/f".into(), ..Default::default() }], ..Default::default() };
                 let kit = KitStore::from_full_dto(dto);
                 (kit, file_id)
             }
@@ -21208,48 +15627,18 @@ mod tests {
                 let dto = KitFullDto {
                     id: kit_id,
                     name: "kit".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     designs: vec![DesignFullDto {
                         id: design_id.clone(),
                         name: "des".into(),
                         pieces: vec![
-                            PieceFullDto {
-                                id: piece_a.clone(),
-                                r#type: Some(TypeIdDto {
-                                    id: type_id.clone(),
-                                }),
-                                ..Default::default()
-                            },
-                            PieceFullDto {
-                                id: piece_b.clone(),
-                                r#type: Some(TypeIdDto {
-                                    id: type_id.clone(),
-                                }),
-                                ..Default::default()
-                            },
+                            PieceFullDto { id: piece_a.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
+                            PieceFullDto { id: piece_b.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() },
                         ],
                         connections: vec![ConnectionFullDto {
                             id: conn_id.clone(),
-                            connected: SideMetadataDto {
-                                id: side_a,
-                                piece: PieceIdDto {
-                                    id: piece_a.clone(),
-                                },
-                                port: None,
-                                design_piece: None,
-                            },
-                            connecting: SideMetadataDto {
-                                id: side_b,
-                                piece: PieceIdDto {
-                                    id: piece_b.clone(),
-                                },
-                                port: None,
-                                design_piece: None,
-                            },
+                            connected: SideMetadataDto { id: side_a, piece: PieceIdDto { id: piece_a.clone() }, port: None, design_piece: None },
+                            connecting: SideMetadataDto { id: side_b, piece: PieceIdDto { id: piece_b.clone() }, port: None, design_piece: None },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -21261,24 +15650,10 @@ mod tests {
             }
 
             /// Design metadata change with a single piece: field change, design hash, flatten+derived, kit hash, validation.
-            pub fn assert_design_scalar_metadata_events(
-                evs: &[KitEvent],
-                design_er: EntityRef,
-                kit_er: EntityRef,
-                piece_g: &Id,
-                field: EventField,
-            ) {
+            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
-                assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == design_er && *f == field),
-                    "ev0 {:?}",
-                    evs.get(0)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == design_er),
-                    "ev1 {:?}",
-                    evs.get(1)
-                );
+                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == design_er && *f == field), "ev0 {:?}", evs.get(0));
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == design_er), "ev1 {:?}", evs.get(1));
                 assert!(
                     matches!(
                         &evs[2],
@@ -21291,7 +15666,7 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[3],
-                        KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g
+                        KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g
                     ),
                     "ev3 {:?}",
                     evs.get(3)
@@ -21299,125 +15674,51 @@ mod tests {
                 assert!(
                     matches!(
                         &evs[4],
-                        KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g
+                        KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g
                     ),
                     "ev4 {:?}",
                     evs.get(4)
                 );
-                assert!(
-                    matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er),
-                    "ev5 {:?}",
-                    evs.get(5)
-                );
-                assert!(
-                    matches!(evs[6], KitEvent::ValidationInvalidated),
-                    "ev6 {:?}",
-                    evs.get(6)
-                );
+                assert!(matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er), "ev5 {:?}", evs.get(5));
+                assert!(matches!(evs[6], KitEvent::ValidationInvalidated), "ev6 {:?}", evs.get(6));
             }
 
-            pub fn assert_piece_geometry_change(
-                evs: &[KitEvent],
-                piece_er: EntityRef,
-                design_er: EntityRef,
-                kit_er: EntityRef,
-                piece_g: &Id,
-                field: EventField,
-            ) {
+            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
                 assert_eq!(evs.len(), 7, "{evs:?}");
-                assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er)
-                );
-                assert!(
-                    matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er)
-                );
-                assert!(
-                    matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er)
-                );
-                assert!(
-                    matches!(&evs[4], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)),
-                    "ev4 {:?}",
-                    evs.get(4)
-                );
-                assert!(
-                    matches!(&evs[5], KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g)
-                );
-                assert!(
-                    matches!(&evs[6], KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g)
-                );
+                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field));
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er));
+                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er));
+                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er));
+                assert!(matches!(&evs[4], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)), "ev4 {:?}", evs.get(4));
+                assert!(matches!(&evs[5], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g));
+                assert!(matches!(&evs[6], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g));
             }
 
-            pub fn assert_piece_pose_change(
-                evs: &[KitEvent],
-                piece_er: EntityRef,
-                design_er: EntityRef,
-                kit_er: EntityRef,
-                piece_g: &Id,
-                field: EventField,
-            ) {
+            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
                 let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
                 assert_eq!(evs.len(), 9, "{evs:?}");
-                assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == pose_er && *f == field),
-                    "ev0 {:?}",
-                    evs.get(0)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == pose_er),
-                    "ev1 {:?}",
-                    evs.get(1)
-                );
-                assert!(
-                    matches!(&evs[2], KitEvent::FieldChanged { path, field: EventField::Pose } if *path.leaf() == piece_er),
-                    "ev2 {:?}",
-                    evs.get(2)
-                );
-                assert!(
-                    matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == piece_er),
-                    "ev3 {:?}",
-                    evs.get(3)
-                );
-                assert!(
-                    matches!(&evs[4], KitEvent::HashInvalidated { entity } if *entity == design_er),
-                    "ev4 {:?}",
-                    evs.get(4)
-                );
-                assert!(
-                    matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er),
-                    "ev5 {:?}",
-                    evs.get(5)
-                );
-                assert!(
-                    matches!(&evs[6], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)),
-                    "ev6 {:?}",
-                    evs.get(6)
-                );
-                assert!(
-                    matches!(&evs[7], KitEvent::DerivedChanged { path, field: EventField::FlatPlane } if path.leaf().id == *piece_g),
-                    "ev7 {:?}",
-                    evs.get(7)
-                );
-                assert!(
-                    matches!(&evs[8], KitEvent::DerivedChanged { path, field: EventField::FlatCenter } if path.leaf().id == *piece_g),
-                    "ev8 {:?}",
-                    evs.get(8)
-                );
+                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == pose_er && *f == field), "ev0 {:?}", evs.get(0));
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == pose_er), "ev1 {:?}", evs.get(1));
+                assert!(matches!(&evs[2], KitEvent::FieldChanged { path, field: EventField::Piece(crate::events::PieceField::Pose) } if *path.leaf() == piece_er), "ev2 {:?}", evs.get(2));
+                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == piece_er), "ev3 {:?}", evs.get(3));
+                assert!(matches!(&evs[4], KitEvent::HashInvalidated { entity } if *entity == design_er), "ev4 {:?}", evs.get(4));
+                assert!(matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er), "ev5 {:?}", evs.get(5));
+                assert!(matches!(&evs[6], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)), "ev6 {:?}", evs.get(6));
+                assert!(matches!(&evs[7], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g), "ev7 {:?}", evs.get(7));
+                assert!(matches!(&evs[8], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g), "ev8 {:?}", evs.get(8));
                 assert!(
                     !evs.iter().any(|event| {
                         matches!(
                             event,
                             KitEvent::FieldChanged {
                                 path,
-                                field: EventField::Plane
+                                field: EventField::Piece(crate::events::PieceField::Plane)
                             } if *path.leaf() == piece_er
                         ) || matches!(
                             event,
                             KitEvent::FieldChanged {
                                 path,
-                                field: EventField::Center
+                                field: EventField::Piece(crate::events::PieceField::Center)
                             } if *path.leaf() == piece_er
                         )
                     }),
@@ -21425,53 +15726,24 @@ mod tests {
                 );
             }
 
-            pub fn assert_piece_scalar_hash_only(
-                evs: &[KitEvent],
-                piece_er: EntityRef,
-                design_er: EntityRef,
-                kit_er: EntityRef,
-                field: EventField,
-            ) {
+            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, field: EventField) {
                 assert_eq!(evs.len(), 4, "{evs:?}");
-                assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er)
-                );
-                assert!(
-                    matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er)
-                );
-                assert!(
-                    matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er)
-                );
+                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field));
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er));
+                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er));
+                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er));
             }
 
-            pub fn assert_type_metadata_core(
-                evs: &[KitEvent],
-                typ_er: EntityRef,
-                kit_er: EntityRef,
-                field: EventField,
-            ) {
+            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityRef, kit_er: EntityRef, field: EventField) {
                 assert_eq!(evs.len(), 4, "{evs:?}");
-                assert!(
-                    matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == typ_er && *f == field)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == typ_er)
-                );
-                assert!(
-                    matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == kit_er)
-                );
+                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == typ_er && *f == field));
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == typ_er));
+                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == kit_er));
                 assert!(matches!(evs[3], KitEvent::ValidationInvalidated));
             }
 
             /// Assert the first events match: FieldChanged(field), HashInvalidated(self), ValidationInvalidated.
-            pub fn assert_kit_metadata_core(
-                evs: &[KitEvent],
-                kit_ref: EntityRef,
-                field: EventField,
-            ) {
+            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: EventField) {
                 assert!(evs.len() >= 3, "expected at least 3 events, got {:?}", evs);
                 assert!(
                     matches!(
@@ -21479,20 +15751,12 @@ mod tests {
                         KitEvent::FieldChanged { path, field: f }
                             if *path.leaf() == kit_ref && *f == field
                     ),
-                    "ev[0] want FieldChanged {{ field: {} }}, got {:?}",
+                    "ev[0] want FieldChanged {{ field: {:?} }}, got {:?}",
                     field,
                     evs.get(0)
                 );
-                assert!(
-                    matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == kit_ref),
-                    "ev[1] want HashInvalidated kit, got {:?}",
-                    evs.get(1)
-                );
-                assert!(
-                    matches!(evs[2], KitEvent::ValidationInvalidated),
-                    "ev[2] want ValidationInvalidated, got {:?}",
-                    evs.get(2)
-                );
+                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == kit_ref), "ev[1] want HashInvalidated kit, got {:?}", evs.get(1));
+                assert!(matches!(evs[2], KitEvent::ValidationInvalidated), "ev[2] want ValidationInvalidated, got {:?}", evs.get(2));
             }
         }
 
@@ -21505,17 +15769,7 @@ mod tests {
             #[test]
             fn attribute_set_value_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    attributes: vec![AttributeFullDto {
-                        id: g.clone(),
-                        key: "k".into(),
-                        value: "v".into(),
-                        definition: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), attributes: vec![AttributeFullDto { id: g.clone(), key: "k".into(), value: "v".into(), definition: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -21523,13 +15777,7 @@ mod tests {
                 };
                 a.write().unwrap().set_value("v2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Value,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Attribute(crate::events::AttributeField::Value), .. })));
             }
         }
 
@@ -21542,18 +15790,7 @@ mod tests {
             #[test]
             fn author_set_email_emits() {
                 let ag = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    authors: vec![AuthorFullDto {
-                        id: ag.clone(),
-                        name: "n".into(),
-                        email: "e@x".into(),
-                        role: None,
-                        rank: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), authors: vec![AuthorFullDto { id: ag.clone(), name: "n".into(), email: "e@x".into(), role: None, rank: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let a = {
                     let kr = kit.read().unwrap();
@@ -21561,13 +15798,7 @@ mod tests {
                 };
                 a.write().unwrap().set_email("e2@x".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Email,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Author(crate::events::AuthorField::Email), .. })));
             }
         }
 
@@ -21595,11 +15826,7 @@ mod tests {
                 let kit: KitStoreRef = Arc::new(std::sync::RwLock::new(KitStore::new("c")));
                 let k2 = kit.clone();
                 futures_lite::future::block_on(async {
-                    let _ = futures_lite::future::zip(
-                        crate::KitStore::set_name_async(&k2, "d".into()),
-                        async { k2.read().map(|_| ()).unwrap_or(()) },
-                    )
-                    .await;
+                    let _ = futures_lite::future::zip(crate::KitStore::set_name_async(&k2, "d".into()), async { k2.read().map(|_| ()).unwrap_or(()) }).await;
                 });
                 assert_eq!(kit.read().unwrap().name, "d");
             }
@@ -21637,16 +15864,7 @@ mod tests {
                         name: "t".into(),
                         ports: vec![PortFullDto {
                             id: pg.clone(),
-                            qualities: vec![QualityFullDto {
-                                id: qg.clone(),
-                                key: "qk".into(),
-                                benchmarks: vec![BenchmarkFullDto {
-                                    id: bg.clone(),
-                                    name: "bn".into(),
-                                    ..Default::default()
-                                }],
-                                ..Default::default()
-                            }],
+                            qualities: vec![QualityFullDto { id: qg.clone(), key: "qk".into(), benchmarks: vec![BenchmarkFullDto { id: bg.clone(), name: "bn".into(), ..Default::default() }], ..Default::default() }],
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -21666,13 +15884,7 @@ mod tests {
                 };
                 b.write().unwrap().set_min(Some(1.0));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Min,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Benchmark(crate::events::BenchmarkField::Min), .. })));
             }
         }
 
@@ -21685,17 +15897,7 @@ mod tests {
             #[test]
             fn concept_set_name_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    concepts: vec![ConceptFullDto {
-                        id: g.clone(),
-                        name: "c".into(),
-                        description: None,
-                        order: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), concepts: vec![ConceptFullDto { id: g.clone(), name: "c".into(), description: None, order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let c = {
                     let kr = kit.read().unwrap();
@@ -21703,13 +15905,7 @@ mod tests {
                 };
                 c.write().unwrap().set_name("c2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Name,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Concept(crate::events::ConceptField::Name), .. })));
             }
         }
 
@@ -21731,44 +15927,22 @@ mod tests {
                 let kit_er = super::common::kit_entity_ref(&kit);
                 let design_er = EntityRef::new(EntityKind::Design, dg.clone());
                 let connection_er = EntityRef::new(EntityKind::Connection, cg.clone());
-                assert!(
-                    matches!(&evs[0], KitEvent::Changed { entity } if *entity == kit_er),
-                    "ev0 {:?}",
-                    evs.get(0)
-                );
-                assert!(
-                    matches!(&evs[1], KitEvent::Changed { entity } if *entity == design_er),
-                    "ev1 {:?}",
-                    evs.get(1)
-                );
-                assert!(
-                    matches!(&evs[2], KitEvent::Changed { entity } if *entity == connection_er),
-                    "ev2 {:?}",
-                    evs.get(2)
-                );
+                assert!(matches!(&evs[0], KitEvent::Changed { entity } if *entity == kit_er), "ev0 {:?}", evs.get(0));
+                assert!(matches!(&evs[1], KitEvent::Changed { entity } if *entity == design_er), "ev1 {:?}", evs.get(1));
+                assert!(matches!(&evs[2], KitEvent::Changed { entity } if *entity == connection_er), "ev2 {:?}", evs.get(2));
                 assert!(
                     matches!(
                         &evs[3],
-                        KitEvent::FieldChanged { path, field: EventField::Gap }
+                        KitEvent::FieldChanged { path, field: EventField::Connection(crate::events::ConnectionField::Gap) }
                             if *path.leaf() == connection_er
                                 && path.entities() == [kit_er.clone(), design_er.clone(), connection_er.clone()]
                     ),
                     "ev3 {:?}",
                     evs.get(3)
                 );
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Gap,
-                        ..
-                    }
-                )));
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::FlattenInvalidated { .. })));
-                assert!(evs
-                    .iter()
-                    .any(|e| matches!(e, KitEvent::ValidationInvalidated)));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Connection(crate::events::ConnectionField::Gap), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FlattenInvalidated { .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::ValidationInvalidated)));
             }
         }
 
@@ -21783,31 +15957,16 @@ mod tests {
             fn apply_design_diff_add_piece_emits_child_added_and_hashes() {
                 let (kit, tg, dg, _) = super::common::kit_with_piece();
                 let new_piece = Id::new_v7();
-                let diff = DesignDiff {
-                    added_pieces: vec![PieceFullDto {
-                        id: new_piece.clone(),
-                        r#type: Some(TypeIdDto { id: tg.clone() }),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                };
+                let diff = DesignDiff { added_pieces: vec![PieceFullDto { id: new_piece.clone(), r#type: Some(TypeIdDto { id: tg.clone() }), ..Default::default() }], ..Default::default() };
                 let mut rx = kit.read().unwrap().subscribe();
-                kit.write()
-                    .unwrap()
-                    .apply_design_diff(dg.as_str(), &diff)
-                    .unwrap();
+                kit.write().unwrap().apply_design_diff(dg.as_str(), &diff).unwrap();
                 let evs = super::common::drain(&mut rx);
                 let child = EntityRef::new(EntityKind::Piece, new_piece);
                 assert!(evs.iter().any(|e| matches!(
                     e,
                     KitEvent::ChildAdded { child: c, .. } if *c == child
                 )));
-                assert!(
-                    evs.iter()
-                        .filter(|e| matches!(e, KitEvent::HashInvalidated { .. }))
-                        .count()
-                        >= 1
-                );
+                assert!(evs.iter().filter(|e| matches!(e, KitEvent::HashInvalidated { .. })).count() >= 1);
             }
         }
 
@@ -21826,13 +15985,7 @@ mod tests {
                 };
                 c.write().unwrap().set_code("C2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Code,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Connector(crate::events::ConnectorField::Code), .. })));
             }
         }
 
@@ -21855,72 +16008,26 @@ mod tests {
                         let mut dw = d.write().unwrap();
                         $op(&mut *dw).unwrap();
                         let evs = super::common::drain(&mut rx);
-                        super::common::assert_design_scalar_metadata_events(
-                            &evs, dre, kre, &pg, $field,
-                        );
+                        super::common::assert_design_scalar_metadata_events(&evs, dre, kre, &pg, $field);
                     }
                 };
             }
 
-            design_meta_test!(
-                design_set_name,
-                EventField::Name,
-                |d: &mut crate::DesignStore| { d.set_name("x".into()) }
-            );
-            design_meta_test!(
-                design_set_description,
-                EventField::Description,
-                |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) }
-            );
-            design_meta_test!(
-                design_set_icon,
-                EventField::Icon,
-                |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) }
-            );
-            design_meta_test!(
-                design_set_image,
-                EventField::Image,
-                |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) }
-            );
-            design_meta_test!(
-                design_set_variant,
-                EventField::Variant,
-                |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) }
-            );
-            design_meta_test!(
-                design_set_view,
-                EventField::View,
-                |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) }
-            );
-            design_meta_test!(
-                design_set_location,
-                EventField::Location,
-                |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) }
-            );
-            design_meta_test!(
-                design_set_camera,
-                EventField::Camera,
-                |d: &mut crate::DesignStore| {
-                    let mut cam = Camera::default();
-                    cam.position = Coordinate::new(0.0, 0.0, 1.0);
-                    d.set_camera(Some(cam))
-                }
-            );
-            design_meta_test!(
-                design_set_unit,
-                EventField::Unit,
-                |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) }
-            );
-            design_meta_test!(
-                design_set_created,
-                EventField::Created,
-                |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) }
-            );
-            design_meta_test!(
-                design_set_updated,
-                EventField::Updated,
-                |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) }
-            );
+            design_meta_test!(design_set_name, EventField::Design(crate::events::DesignField::Name), |d: &mut crate::DesignStore| { d.set_name("x".into()) });
+            design_meta_test!(design_set_description, EventField::Design(crate::events::DesignField::Description), |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
+            design_meta_test!(design_set_icon, EventField::Design(crate::events::DesignField::Icon), |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
+            design_meta_test!(design_set_image, EventField::Design(crate::events::DesignField::Image), |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
+            design_meta_test!(design_set_variant, EventField::Design(crate::events::DesignField::Variant), |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) });
+            design_meta_test!(design_set_view, EventField::Design(crate::events::DesignField::View), |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) });
+            design_meta_test!(design_set_location, EventField::Design(crate::events::DesignField::Location), |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) });
+            design_meta_test!(design_set_camera, EventField::Design(crate::events::DesignField::Camera), |d: &mut crate::DesignStore| {
+                let mut cam = Camera::default();
+                cam.position = Coordinate::new(0.0, 0.0, 1.0);
+                d.set_camera(Some(cam))
+            });
+            design_meta_test!(design_set_unit, EventField::Design(crate::events::DesignField::Unit), |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
+            design_meta_test!(design_set_created, EventField::Design(crate::events::DesignField::Created), |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
+            design_meta_test!(design_set_updated, EventField::Design(crate::events::DesignField::Updated), |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
         }
 
         mod file {
@@ -21936,13 +16043,7 @@ mod tests {
                 };
                 f.write().unwrap().set_mime(Some("image/png".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Mime,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::File(crate::events::FileField::Mime), .. })));
             }
         }
 
@@ -21955,16 +16056,7 @@ mod tests {
             #[test]
             fn folder_set_description_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    folders: vec![FolderFullDto {
-                        id: g.clone(),
-                        path: "/p".into(),
-                        description: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), folders: vec![FolderFullDto { id: g.clone(), path: "/p".into(), description: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let f = {
                     let kr = kit.read().unwrap();
@@ -21972,13 +16064,7 @@ mod tests {
                 };
                 f.write().unwrap().set_description(Some("d".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Description,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Folder(crate::events::FolderField::Description), .. })));
             }
         }
 
@@ -21997,13 +16083,7 @@ mod tests {
                 };
                 g.write().unwrap().set_color(Some("#000".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Color,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Group(crate::events::GroupField::Color), .. })));
             }
         }
 
@@ -22014,8 +16094,7 @@ mod tests {
                 ($fn:ident, $field:expr, $op:expr) => {
                     #[test]
                     fn $fn() {
-                        let kit =
-                            std::sync::Arc::new(std::sync::RwLock::new(crate::KitStore::new("i")));
+                        let kit = std::sync::Arc::new(std::sync::RwLock::new(crate::KitStore::new("i")));
                         let kref = super::common::kit_entity_ref(&kit);
                         let mut rx = kit.read().unwrap().subscribe();
                         {
@@ -22028,60 +16107,18 @@ mod tests {
                 };
             }
 
-            kit_meta_test!(kit_set_name, EventField::Name, |k: &mut crate::KitStore| {
-                k.set_name("a".into())
-            });
-            kit_meta_test!(
-                kit_set_description,
-                EventField::Description,
-                |k: &mut crate::KitStore| { k.set_description(Some("d".into())) }
-            );
-            kit_meta_test!(kit_set_icon, EventField::Icon, |k: &mut crate::KitStore| {
-                k.set_icon(Some("ic".into()))
-            });
-            kit_meta_test!(
-                kit_set_image,
-                EventField::Image,
-                |k: &mut crate::KitStore| { k.set_image(Some("im".into())) }
-            );
-            kit_meta_test!(
-                kit_set_preview,
-                EventField::Preview,
-                |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) }
-            );
-            kit_meta_test!(
-                kit_set_version,
-                EventField::Version,
-                |k: &mut crate::KitStore| { k.set_version(Some("1".into())) }
-            );
-            kit_meta_test!(
-                kit_set_remote,
-                EventField::Remote,
-                |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) }
-            );
-            kit_meta_test!(
-                kit_set_homepage,
-                EventField::Homepage,
-                |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) }
-            );
-            kit_meta_test!(
-                kit_set_license,
-                EventField::License,
-                |k: &mut crate::KitStore| { k.set_license(Some("l".into())) }
-            );
-            kit_meta_test!(kit_set_uri, EventField::Uri, |k: &mut crate::KitStore| {
-                k.set_uri(Some("u".into()))
-            });
-            kit_meta_test!(
-                kit_set_created,
-                EventField::Created,
-                |k: &mut crate::KitStore| { k.set_created(Some("c".into())) }
-            );
-            kit_meta_test!(
-                kit_set_updated,
-                EventField::Updated,
-                |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) }
-            );
+            kit_meta_test!(kit_set_name, EventField::Kit(crate::events::KitField::Name), |k: &mut crate::KitStore| { k.set_name("a".into()) });
+            kit_meta_test!(kit_set_description, EventField::Kit(crate::events::KitField::Description), |k: &mut crate::KitStore| { k.set_description(Some("d".into())) });
+            kit_meta_test!(kit_set_icon, EventField::Kit(crate::events::KitField::Icon), |k: &mut crate::KitStore| { k.set_icon(Some("ic".into())) });
+            kit_meta_test!(kit_set_image, EventField::Kit(crate::events::KitField::Image), |k: &mut crate::KitStore| { k.set_image(Some("im".into())) });
+            kit_meta_test!(kit_set_preview, EventField::Kit(crate::events::KitField::Preview), |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) });
+            kit_meta_test!(kit_set_version, EventField::Kit(crate::events::KitField::Version), |k: &mut crate::KitStore| { k.set_version(Some("1".into())) });
+            kit_meta_test!(kit_set_remote, EventField::Kit(crate::events::KitField::Remote), |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) });
+            kit_meta_test!(kit_set_homepage, EventField::Kit(crate::events::KitField::Homepage), |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) });
+            kit_meta_test!(kit_set_license, EventField::Kit(crate::events::KitField::License), |k: &mut crate::KitStore| { k.set_license(Some("l".into())) });
+            kit_meta_test!(kit_set_uri, EventField::Kit(crate::events::KitField::Uri), |k: &mut crate::KitStore| { k.set_uri(Some("u".into())) });
+            kit_meta_test!(kit_set_created, EventField::Kit(crate::events::KitField::Created), |k: &mut crate::KitStore| { k.set_created(Some("c".into())) });
+            kit_meta_test!(kit_set_updated, EventField::Kit(crate::events::KitField::Updated), |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) });
 
             #[test]
             fn kit_set_name_idempotent_no_events() {
@@ -22107,13 +16144,7 @@ mod tests {
                 };
                 l.write().unwrap().set_order(Some(2));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Order,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Layer(crate::events::LayerField::Order), .. })));
             }
         }
 
@@ -22162,56 +16193,20 @@ mod tests {
                         let mut pw = p.write().unwrap();
                         $op(&mut *pw).unwrap();
                         let evs = super::common::drain(&mut rx);
-                        super::common::assert_piece_geometry_change(
-                            &evs, pre, dre, kre, &pg, $field,
-                        );
+                        super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, $field);
                     }
                 };
             }
 
-            piece_pose_test!(
-                piece_set_plane,
-                EventField::Plane,
-                |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) }
-            );
-            piece_pose_test!(
-                piece_set_center,
-                EventField::Center,
-                |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) }
-            );
-            piece_geom_test!(
-                piece_set_mirror_plane,
-                EventField::MirrorPlane,
-                |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) }
-            );
-            piece_geom_test!(
-                piece_set_scale,
-                EventField::Scale,
-                |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) }
-            );
-            piece_geom_test!(
-                piece_set_hidden,
-                EventField::Hidden,
-                |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) }
-            );
-            piece_geom_test!(
-                piece_set_locked,
-                EventField::Locked,
-                |p: &mut crate::PieceStore| { p.set_locked(Some(true)) }
-            );
-            piece_geom_test!(piece_set_id, EventField::Id, |p: &mut crate::PieceStore| {
-                p.set_id("id1".into())
-            });
-            piece_geom_test!(
-                piece_set_name,
-                EventField::Name,
-                |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) }
-            );
-            piece_geom_test!(
-                piece_set_description,
-                EventField::Description,
-                |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) }
-            );
+            piece_pose_test!(piece_set_plane, EventField::Piece(crate::events::PieceField::Plane), |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) });
+            piece_pose_test!(piece_set_center, EventField::Piece(crate::events::PieceField::Center), |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) });
+            piece_geom_test!(piece_set_mirror_plane, EventField::Piece(crate::events::PieceField::MirrorPlane), |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) });
+            piece_geom_test!(piece_set_scale, EventField::Piece(crate::events::PieceField::Scale), |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) });
+            piece_geom_test!(piece_set_hidden, EventField::Piece(crate::events::PieceField::Hidden), |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) });
+            piece_geom_test!(piece_set_locked, EventField::Piece(crate::events::PieceField::Locked), |p: &mut crate::PieceStore| { p.set_locked(Some(true)) });
+            piece_geom_test!(piece_set_id, EventField::Piece(crate::events::PieceField::Id), |p: &mut crate::PieceStore| { p.set_id("id1".into()) });
+            piece_geom_test!(piece_set_name, EventField::Piece(crate::events::PieceField::Name), |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) });
+            piece_geom_test!(piece_set_description, EventField::Piece(crate::events::PieceField::Description), |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) });
 
             #[test]
             fn piece_set_color_hash_only() {
@@ -22229,13 +16224,7 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_color(Some("#fff".into()));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_scalar_hash_only(
-                    &evs,
-                    pre,
-                    dre,
-                    kre,
-                    EventField::Color,
-                );
+                super::common::assert_piece_scalar_hash_only(&evs, pre, dre, kre, EventField::Piece(crate::events::PieceField::Color));
             }
 
             #[test]
@@ -22245,12 +16234,7 @@ mod tests {
                 let dre = EntityRef::new(EntityKind::Design, dg.clone());
                 let kre = super::common::kit_entity_ref(&kit);
                 let mut rx = kit.read().unwrap().subscribe();
-                let tw = kit
-                    .read()
-                    .unwrap()
-                    .semio_type(tg.as_str())
-                    .map(|t| std::sync::Arc::downgrade(&t))
-                    .unwrap();
+                let tw = kit.read().unwrap().semio_type(tg.as_str()).map(|t| std::sync::Arc::downgrade(&t)).unwrap();
                 let p = {
                     let kr = kit.read().unwrap();
                     let d = kr.design(dg.as_str()).unwrap();
@@ -22260,14 +16244,7 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_type_weak(Some(tw));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_geometry_change(
-                    &evs,
-                    pre,
-                    dre,
-                    kre,
-                    &pg,
-                    EventField::Kind,
-                );
+                super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, EventField::Piece(crate::events::PieceField::Kind));
             }
         }
 
@@ -22286,13 +16263,7 @@ mod tests {
                 };
                 p.write().unwrap().set_family(Some("f".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Family,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Port(crate::events::PortField::Family), .. })));
             }
         }
 
@@ -22305,17 +16276,7 @@ mod tests {
             #[test]
             fn prop_set_unit_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    props: vec![PropFullDto {
-                        id: g.clone(),
-                        key: "k".into(),
-                        value: "v".into(),
-                        unit: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
                     let kr = kit.read().unwrap();
@@ -22323,13 +16284,7 @@ mod tests {
                 };
                 p.write().unwrap().set_unit(Some("u".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Unit,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Prop(crate::events::PropField::Unit), .. })));
             }
         }
 
@@ -22342,16 +16297,7 @@ mod tests {
             #[test]
             fn quality_set_key_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    qualities: vec![QualityFullDto {
-                        id: g.clone(),
-                        key: "k1".into(),
-                        ..Default::default()
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), qualities: vec![QualityFullDto { id: g.clone(), key: "k1".into(), ..Default::default() }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let q = {
                     let kr = kit.read().unwrap();
@@ -22359,13 +16305,7 @@ mod tests {
                 };
                 q.write().unwrap().set_key("k2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Key,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Quality(crate::events::QualityField::Key), .. })));
             }
         }
 
@@ -22385,20 +16325,11 @@ mod tests {
                 let kit = KitStore::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    files: vec![FileFullDto {
-                        id: fg.clone(),
-                        url: "https://f".into(),
-                        ..Default::default()
-                    }],
+                    files: vec![FileFullDto { id: fg.clone(), url: "https://f".into(), ..Default::default() }],
                     types: vec![TypeFullDto {
                         id: tg.clone(),
                         name: "t".into(),
-                        representations: vec![RepresentationFullDto {
-                            id: rg.clone(),
-                            url: "https://r".into(),
-                            file: Some(FileIdDto { id: fg.clone() }),
-                            ..Default::default()
-                        }],
+                        representations: vec![RepresentationFullDto { id: rg.clone(), url: "https://r".into(), file: Some(FileIdDto { id: fg.clone() }), ..Default::default() }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -22412,13 +16343,7 @@ mod tests {
                 };
                 r.write().unwrap().set_url("https://r2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Url,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Representation(crate::events::RepresentationField::Url), .. })));
             }
         }
 
@@ -22444,18 +16369,9 @@ mod tests {
                     let connecting = c.read().unwrap().connecting.clone();
                     connecting
                 };
-                connecting
-                    .write()
-                    .unwrap()
-                    .set_design_piece_weak(Some(weak));
+                connecting.write().unwrap().set_design_piece_weak(Some(weak));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::DesignPiece,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Side(crate::events::SideField::DesignPiece), .. })));
             }
         }
 
@@ -22477,28 +16393,12 @@ mod tests {
                 let kit = KitStore::from_full_dto(KitFullDto {
                     id: Id::new_v7(),
                     name: "k".into(),
-                    types: vec![TypeFullDto {
-                        id: type_id.clone(),
-                        name: "typ".into(),
-                        ..Default::default()
-                    }],
+                    types: vec![TypeFullDto { id: type_id.clone(), name: "typ".into(), ..Default::default() }],
                     designs: vec![DesignFullDto {
                         id: design_id.clone(),
                         name: "des".into(),
-                        pieces: vec![PieceFullDto {
-                            id: piece_id.clone(),
-                            r#type: Some(TypeIdDto {
-                                id: type_id.clone(),
-                            }),
-                            ..Default::default()
-                        }],
-                        stats: vec![StatFullDto {
-                            id: stat_id.clone(),
-                            key: "sk".into(),
-                            value: "sv".into(),
-                            description: None,
-                            unit: None,
-                        }],
+                        pieces: vec![PieceFullDto { id: piece_id.clone(), r#type: Some(TypeIdDto { id: type_id.clone() }), ..Default::default() }],
+                        stats: vec![StatFullDto { id: stat_id.clone(), key: "sk".into(), value: "sv".into(), description: None, unit: None }],
                         ..Default::default()
                     }],
                     ..Default::default()
@@ -22512,13 +16412,7 @@ mod tests {
                 };
                 s.write().unwrap().set_description(Some("d".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Description,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Stat(crate::events::StatField::Description), .. })));
             }
         }
 
@@ -22531,16 +16425,7 @@ mod tests {
             #[test]
             fn tag_set_order_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto {
-                    id: Id::new_v7(),
-                    name: "k".into(),
-                    tags: vec![TagFullDto {
-                        id: g.clone(),
-                        name: "t".into(),
-                        order: None,
-                    }],
-                    ..Default::default()
-                });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), tags: vec![TagFullDto { id: g.clone(), name: "t".into(), order: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let t = {
                     let kr = kit.read().unwrap();
@@ -22548,13 +16433,7 @@ mod tests {
                 };
                 t.write().unwrap().set_order(Some(1));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(
-                    e,
-                    KitEvent::FieldChanged {
-                        field: EventField::Order,
-                        ..
-                    }
-                )));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Tag(crate::events::TagField::Order), .. })));
             }
         }
 
@@ -22581,63 +16460,17 @@ mod tests {
                 };
             }
 
-            type_meta_test!(
-                type_set_name,
-                EventField::Name,
-                |t: &mut crate::TypeStore| { t.set_name("tn".into()) }
-            );
-            type_meta_test!(
-                type_set_description,
-                EventField::Description,
-                |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) }
-            );
-            type_meta_test!(
-                type_set_icon,
-                EventField::Icon,
-                |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) }
-            );
-            type_meta_test!(
-                type_set_image,
-                EventField::Image,
-                |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) }
-            );
-            type_meta_test!(
-                type_set_variant,
-                EventField::Variant,
-                |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) }
-            );
-            type_meta_test!(
-                type_set_stock,
-                EventField::Stock,
-                |t: &mut crate::TypeStore| { t.set_stock(Some(3)) }
-            );
-            type_meta_test!(
-                type_set_virtual,
-                EventField::Virtual,
-                |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) }
-            );
-            type_meta_test!(
-                type_set_unit,
-                EventField::Unit,
-                |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) }
-            );
-            type_meta_test!(
-                type_set_location,
-                EventField::Location,
-                |t: &mut crate::TypeStore| {
-                    t.set_location(Some(crate::geom::Location::new(1.0, 2.0)))
-                }
-            );
-            type_meta_test!(
-                type_set_created,
-                EventField::Created,
-                |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) }
-            );
-            type_meta_test!(
-                type_set_updated,
-                EventField::Updated,
-                |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) }
-            );
+            type_meta_test!(type_set_name, EventField::Type(crate::events::TypeField::Name), |t: &mut crate::TypeStore| { t.set_name("tn".into()) });
+            type_meta_test!(type_set_description, EventField::Type(crate::events::TypeField::Description), |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) });
+            type_meta_test!(type_set_icon, EventField::Type(crate::events::TypeField::Icon), |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) });
+            type_meta_test!(type_set_image, EventField::Type(crate::events::TypeField::Image), |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) });
+            type_meta_test!(type_set_variant, EventField::Type(crate::events::TypeField::Variant), |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) });
+            type_meta_test!(type_set_stock, EventField::Type(crate::events::TypeField::Stock), |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
+            type_meta_test!(type_set_virtual, EventField::Type(crate::events::TypeField::Virtual), |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
+            type_meta_test!(type_set_unit, EventField::Type(crate::events::TypeField::Unit), |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
+            type_meta_test!(type_set_location, EventField::Type(crate::events::TypeField::Location), |t: &mut crate::TypeStore| { t.set_location(Some(crate::geom::Location::new(1.0, 2.0))) });
+            type_meta_test!(type_set_created, EventField::Type(crate::events::TypeField::Created), |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
+            type_meta_test!(type_set_updated, EventField::Type(crate::events::TypeField::Updated), |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
         }
     }
 
@@ -22667,18 +16500,13 @@ mod tests {
         }
 
         fn read_type_name(dto: &crate::kit::KitFullDto, tid: &Id) -> String {
-            let cmd = ReadKitCommand::ReadTypeCommands {
-                id: TypeIdDto { id: tid.clone() },
-                commands: vec![ReadTypeCommand::Name],
-            };
+            let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::Name] };
             let r = cmd.execute(dto).expect("read type");
             match r {
-                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
-                    match &results[0] {
-                        ReadTypeCommandResult::Name { name } => name.clone(),
-                        _ => panic!("expected name"),
-                    }
-                }
+                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => match &results[0] {
+                    ReadTypeCommandResult::Name { name } => name.clone(),
+                    _ => panic!("expected name"),
+                },
                 _ => panic!("expected ReadTypeCommands"),
             }
         }
@@ -22713,53 +16541,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             KitStore::execute_vcs(
@@ -22773,19 +16571,12 @@ mod tests {
                                 id: txid,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                            type_id: TypeIdDto { id: tid },
-                                            commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                name: "RenT".into(),
-                                            }],
-                                        }],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RenT".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "m".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
                         ],
                     }],
                 },
@@ -22805,10 +16596,7 @@ mod tests {
             inner.types.push(t);
             drop(inner);
             let dto = k.read().unwrap().to_full_dto();
-            let cmd = ReadKitCommand::ReadTypeCommands {
-                id: TypeIdDto { id: tid },
-                commands: vec![ReadTypeCommand::Name],
-            };
+            let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::Name] };
             let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
@@ -22834,53 +16622,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let res = KitStore::execute_vcs(
@@ -22893,28 +16651,11 @@ mod tests {
                             id: txid,
                             commands: vec![
                                 TransactionCommand::ChangeKitCommands {
-                                    commands: vec![
-                                        crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                            type_id: TypeIdDto { id: tid.clone() },
-                                            commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                name: "Mid".into(),
-                                            }],
-                                        },
-                                    ],
+                                    commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Mid".into() }] }],
                                 },
-                                TransactionCommand::ReadKitCommands {
-                                    commands: vec![ReadKitCommand::ReadTypeCommands {
-                                        id: TypeIdDto { id: tid.clone() },
-                                        commands: vec![ReadTypeCommand::Name],
-                                    }],
-                                },
+                                TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::Name] }] },
                                 TransactionCommand::Undo,
-                                TransactionCommand::ReadKitCommands {
-                                    commands: vec![ReadKitCommand::ReadTypeCommands {
-                                        id: TypeIdDto { id: tid.clone() },
-                                        commands: vec![ReadTypeCommand::Name],
-                                    }],
-                                },
+                                TransactionCommand::ReadKitCommands { commands: vec![ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid.clone() }, commands: vec![ReadTypeCommand::Name] }] },
                             ],
                         }],
                     }],
@@ -22924,12 +16665,8 @@ mod tests {
             match res {
                 kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
                     let tr = match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results: dr,
-                        } => match &dr[0] {
-                            crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands {
-                                results: tr,
-                            } => tr,
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results: dr } => match &dr[0] {
+                            crate::kit_draft::KitDraftCommandResult::ExecuteTransactionCommands { results: tr } => tr,
                             _ => panic!(),
                         },
                         _ => panic!(),
@@ -22937,27 +16674,16 @@ mod tests {
                     // [change, read Mid, undo, read T0]
                     let (read1, read2) = (&tr[1], &tr[3]);
                     match (read1, read2) {
-                        (
-                            crate::kit_transaction::TransactionCommandResult::ReadKitCommands {
-                                results: a,
-                            },
-                            crate::kit_transaction::TransactionCommandResult::ReadKitCommands {
-                                results: b,
-                            },
-                        ) => {
+                        (crate::kit_transaction::TransactionCommandResult::ReadKitCommands { results: a }, crate::kit_transaction::TransactionCommandResult::ReadKitCommands { results: b }) => {
                             let n1 = match &a[0] {
-                                crate::read_command::ReadKitCommandResult::ReadTypeCommands {
-                                    results: r,
-                                } => match &r[0] {
+                                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results: r } => match &r[0] {
                                     ReadTypeCommandResult::Name { name } => name.as_str(),
                                     _ => panic!(),
                                 },
                                 _ => panic!(),
                             };
                             let n2 = match &b[0] {
-                                crate::read_command::ReadKitCommandResult::ReadTypeCommands {
-                                    results: r,
-                                } => match &r[0] {
+                                crate::read_command::ReadKitCommandResult::ReadTypeCommands { results: r } => match &r[0] {
                                     ReadTypeCommandResult::Name { name } => name.as_str(),
                                     _ => panic!(),
                                 },
@@ -22980,50 +16706,20 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
             let run_tx = |name: &str| {
-                let txid = match KitStore::execute_vcs(
-                    &k,
-                    KitStoreCommand::ExecuteSessionCommands {
-                        id: sid.clone(),
-                        commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                            id: did.clone(),
-                            commands: vec![KitDraftCommand::StartTransaction],
-                        }],
-                    },
-                )
-                .expect("st")
+                let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                    .expect("st")
                 {
-                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands {
-                        results,
-                    } => match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
+                    kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                            crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                             _ => panic!(),
                         },
                         _ => panic!(),
@@ -23040,14 +16736,7 @@ mod tests {
                                 id: txid,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid.clone() },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: name.into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: name.into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
@@ -23061,17 +16750,7 @@ mod tests {
             run_tx("A2");
             let dto_b = k.read().expect("g").to_full_dto();
             assert_eq!(read_type_name(&dto_b, &tid), "A2");
-            KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::Undo { count: 1 }],
-                    }],
-                },
-            )
-            .expect("undo dr");
+            KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::Undo { count: 1 }] }] }).expect("undo dr");
             let dto_a = k.read().expect("g").to_full_dto();
             assert_eq!(read_type_name(&dto_a, &tid), "A1");
         }
@@ -23083,53 +16762,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let txid = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let txid = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let cp = match KitStore::execute_vcs(
@@ -23143,40 +16792,25 @@ mod tests {
                                 id: txid,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "H".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "H".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "m".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
                         ],
                     }],
                 },
             )
             .expect("fin")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let g = k.read().expect("g");
@@ -23194,53 +16828,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did0 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let tx0 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did0.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let tx0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let cp_main = match KitStore::execute_vcs(
@@ -23254,104 +16858,52 @@ mod tests {
                                 id: tx0,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid.clone() },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "Main1".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Main1".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "m0".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m0".into() },
                         ],
                     }],
                 },
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let main_head = k.read().expect("g").the_kit_head.clone();
             // Branch from cp_main
-            let alt_id = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint: cp_main.clone(),
-                    name: "br".into(),
-                },
-            )
-            .expect("alt")
-            {
+            let alt_id = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp_main.clone(), name: "br".into() }).expect("alt") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             // Draft on alternative tip
-            let did1 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: Some(cp_main.clone()),
-                        alternative_id: Some(alt_id.clone()),
-                    }],
-                },
-            )
-            .expect("nd1")
+            let did1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp_main.clone()), alternative_id: Some(alt_id.clone()) }] }).expect("nd1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
-            let tx1 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did1.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st1")
+            let tx1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let _ = KitStore::execute_vcs(
@@ -23365,21 +16917,12 @@ mod tests {
                                 id: tx1,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid.clone() },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "Alt1".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "Alt1".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "a".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "a".into() },
                         ],
                     }],
                 },
@@ -23402,53 +16945,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let tx = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let tx = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let cp0 = match KitStore::execute_vcs(
@@ -23462,63 +16975,32 @@ mod tests {
                                 id: tx,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "C0".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "C0".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "m".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "m".into() },
                         ],
                     }],
                 },
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
-            let a1 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint: cp0.clone(),
-                    name: "a1".into(),
-                },
-            )
-            .expect("a1")
-            {
+            let a1 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0.clone(), name: "a1".into() }).expect("a1") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
-            let a2 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint: cp0,
-                    name: "a2".into(),
-                },
-            )
-            .expect("a2")
-            {
+            let a2 = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0, name: "a2".into() }).expect("a2") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
@@ -23536,53 +17018,23 @@ mod tests {
                 _ => panic!(),
             };
             // cp0 on main: T0->M
-            let did0 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let tx0 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did0.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let tx0 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did0.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let cp0 = match KitStore::execute_vcs(
@@ -23596,102 +17048,49 @@ mod tests {
                                 id: tx0,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid.clone() },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "M".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid.clone() }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "M".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "c0".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "c0".into() },
                         ],
                     }],
                 },
             )
             .expect("f0")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
-            let alt = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::NewAlternative {
-                    from_checkpoint: cp0.clone(),
-                    name: "a".into(),
-                },
-            )
-            .expect("na")
-            {
+            let alt = match KitStore::execute_vcs(&k, KitStoreCommand::NewAlternative { from_checkpoint: cp0.clone(), name: "a".into() }).expect("na") {
                 kit_store_command::KitStoreCommandResult::NewAlternative { id } => id,
                 _ => panic!(),
             };
             // extend alt: cp0 -> cp1
-            let did1 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: Some(cp0.clone()),
-                        alternative_id: Some(alt.clone()),
-                    }],
+            let did1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: Some(cp0.clone()), alternative_id: Some(alt.clone()) }] }).expect("nd1") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd1")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let tx1 = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did1.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st1")
+            let tx1 = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did1.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let _cp1 = match KitStore::execute_vcs(
@@ -23705,76 +17104,36 @@ mod tests {
                                 id: tx1,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "AltEnd".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "AltEnd".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "c1".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "c1".into() },
                         ],
                     }],
                 },
             )
             .expect("f1")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let before_unify = {
                 let g = k.read().expect("g");
-                let t = g
-                    .alternatives
-                    .get(&alt)
-                    .expect("a")
-                    .checkpoints
-                    .last()
-                    .expect("l")
-                    .clone();
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l").clone();
                 g.materialize_at(Some(&t))
             };
-            let _ = KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteKitAlternativeCommands {
-                    id: alt.clone(),
-                    commands: vec![
-                        KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint {
-                            message: "u".into(),
-                        },
-                    ],
-                },
-            )
-            .expect("unify");
+            let _ = KitStore::execute_vcs(&k, KitStoreCommand::ExecuteKitAlternativeCommands { id: alt.clone(), commands: vec![KitAlternativeCommand::UnifyKitCheckpointsToSingleKitCheckpoint { message: "u".into() }] }).expect("unify");
             let after_unify = {
                 let g = k.read().expect("g");
-                let t = g
-                    .alternatives
-                    .get(&alt)
-                    .expect("a")
-                    .checkpoints
-                    .last()
-                    .expect("l2")
-                    .clone();
+                let t = g.alternatives.get(&alt).expect("a").checkpoints.last().expect("l2").clone();
                 g.materialize_at(Some(&t))
             };
             assert_eq!(before_unify, after_unify);
@@ -23790,53 +17149,23 @@ mod tests {
                 kit_store_command::KitStoreCommandResult::NewSession { id } => id,
                 _ => panic!(),
             };
-            let did = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::NewDraft {
-                        checkpoint_id: None,
-                        alternative_id: None,
-                    }],
+            let did = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::NewDraft { checkpoint_id: None, alternative_id: None }] }).expect("nd") {
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::NewDraft { draft_id } => draft_id.clone(),
+                    _ => panic!(),
                 },
-            )
-            .expect("nd")
-            {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::NewDraft { draft_id } => {
-                            draft_id.clone()
-                        }
-                        _ => panic!(),
-                    }
-                }
                 _ => panic!(),
             };
-            let tx = match KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteSessionCommands {
-                    id: sid.clone(),
-                    commands: vec![SessionCommand::ExecuteKitDraftCommands {
-                        id: did.clone(),
-                        commands: vec![KitDraftCommand::StartTransaction],
-                    }],
-                },
-            )
-            .expect("st")
+            let tx = match KitStore::execute_vcs(&k, KitStoreCommand::ExecuteSessionCommands { id: sid.clone(), commands: vec![SessionCommand::ExecuteKitDraftCommands { id: did.clone(), commands: vec![KitDraftCommand::StartTransaction] }] })
+                .expect("st")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[0] {
-                            crate::kit_draft::KitDraftCommandResult::StartTransaction {
-                                transaction_id,
-                            } => transaction_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[0] {
+                        crate::kit_draft::KitDraftCommandResult::StartTransaction { transaction_id } => transaction_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
             let cp = match KitStore::execute_vcs(
@@ -23850,58 +17179,30 @@ mod tests {
                                 id: tx,
                                 commands: vec![
                                     TransactionCommand::ChangeKitCommands {
-                                        commands: vec![
-                                            crate::change_command::ChangeKitCommand::ChangeTypeCommands {
-                                                type_id: TypeIdDto { id: tid },
-                                                commands: vec![crate::change_command::ChangeTypeCommand::Name {
-                                                    name: "RelT".into(),
-                                                }],
-                                            },
-                                        ],
+                                        commands: vec![crate::change_command::ChangeKitCommand::ChangeTypeCommands { type_id: TypeIdDto { id: tid }, commands: vec![crate::change_command::ChangeTypeCommand::Name { name: "RelT".into() }] }],
                                     },
                                     TransactionCommand::Finalize,
                                 ],
                             },
-                            KitDraftCommand::FinalizeToKitCheckpoint {
-                                message: "r".into(),
-                            },
+                            KitDraftCommand::FinalizeToKitCheckpoint { message: "r".into() },
                         ],
                     }],
                 },
             )
             .expect("f")
             {
-                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => {
-                    match &results[0] {
-                        crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands {
-                            results,
-                        } => match &results[1] {
-                            crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint {
-                                checkpoint_id,
-                            } => checkpoint_id.clone(),
-                            _ => panic!(),
-                        },
+                kit_store_command::KitStoreCommandResult::ExecuteSessionCommands { results } => match &results[0] {
+                    crate::kit_session::SessionCommandResult::ExecuteKitDraftCommands { results } => match &results[1] {
+                        crate::kit_draft::KitDraftCommandResult::FinalizeToKitCheckpoint { checkpoint_id } => checkpoint_id.clone(),
                         _ => panic!(),
-                    }
-                }
+                    },
+                    _ => panic!(),
+                },
                 _ => panic!(),
             };
-            let _ = KitStore::execute_vcs(
-                &k,
-                KitStoreCommand::ExecuteKitCheckpointCommands {
-                    id: cp.clone(),
-                    commands: vec![KitCheckpointCommand::MarkAsRelease],
-                },
-            )
-            .expect("rel");
+            let _ = KitStore::execute_vcs(&k, KitStoreCommand::ExecuteKitCheckpointCommands { id: cp.clone(), commands: vec![KitCheckpointCommand::MarkAsRelease] }).expect("rel");
             let g = k.read().expect("g");
-            let mk = g
-                .checkpoints
-                .get(&cp)
-                .expect("cp")
-                .release
-                .as_ref()
-                .expect("mk");
+            let mk = g.checkpoints.get(&cp).expect("cp").release.as_ref().expect("mk");
             let computed = mk.compute();
             let cached = mk.computed.as_ref().expect("cached");
             assert_eq!(&computed, cached);
@@ -23911,26 +17212,17 @@ mod tests {
         fn read_command_tree_returns_nested_results() {
             let (k, tid) = make_kit_with_type();
             let dto = k.read().expect("g").to_full_dto();
-            let cmd = ReadKitCommand::ReadTypeCommands {
-                id: TypeIdDto { id: tid },
-                commands: vec![ReadTypeCommand::Everything, ReadTypeCommand::Name],
-            };
+            let cmd = ReadKitCommand::ReadTypeCommands { id: TypeIdDto { id: tid }, commands: vec![ReadTypeCommand::Everything, ReadTypeCommand::Name] };
             let r = cmd.execute(&dto).expect("r");
             match r {
                 crate::read_command::ReadKitCommandResult::ReadTypeCommands { results } => {
-                    assert!(matches!(
-                        &results[0],
-                        ReadTypeCommandResult::Everything { .. }
-                    ));
+                    assert!(matches!(&results[0], ReadTypeCommandResult::Everything { .. }));
                     assert!(matches!(&results[1], ReadTypeCommandResult::Name { .. }));
                 }
                 _ => panic!(),
             }
             let r2 = ReadKitCommand::Everything {}.execute(&dto).expect("r2");
-            assert!(matches!(
-                r2,
-                crate::read_command::ReadKitCommandResult::Everything { .. }
-            ));
+            assert!(matches!(r2, crate::read_command::ReadKitCommandResult::Everything { .. }));
         }
     }
 }
@@ -23953,108 +17245,44 @@ mod wasm_handle_tests {
     }
 }
 
-pub use attribute::{
-    AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore,
-    AttributeStoreRef, AttributeStoreWeak,
-};
-pub use author::{
-    AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef,
-    AuthorStoreWeak,
-};
-pub use benchmark::{
-    BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore,
-    BenchmarkStoreRef, BenchmarkStoreWeak,
-};
-pub use change_command::{
-    ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
-};
-pub use concept::{
-    ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore,
-    ConceptStoreRef, ConceptStoreWeak,
-};
-pub use connection::{
-    ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto,
-    ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak,
-};
-pub use connector::{
-    ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore,
-    ConnectorStoreRef, ConnectorStoreWeak,
-};
-pub use design::{
-    DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef,
-    DesignStoreWeak,
-};
+pub use attribute::{AttributeFullDto, AttributeIdDto, AttributeMetadataDto, AttributeShallowDto, AttributeStore, AttributeStoreRef, AttributeStoreWeak};
+pub use author::{AuthorFullDto, AuthorIdDto, AuthorMetadataDto, AuthorShallowDto, AuthorStore, AuthorStoreRef, AuthorStoreWeak};
+pub use benchmark::{BenchmarkFullDto, BenchmarkIdDto, BenchmarkMetadataDto, BenchmarkShallowDto, BenchmarkStore, BenchmarkStoreRef, BenchmarkStoreWeak};
+pub use change_command::{ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand};
+pub use concept::{ConceptFullDto, ConceptIdDto, ConceptMetadataDto, ConceptShallowDto, ConceptStore, ConceptStoreRef, ConceptStoreWeak};
+pub use connection::{ConnectionFullDto, ConnectionIdDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef, ConnectionStoreWeak};
+pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef, ConnectorStoreWeak};
+pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
 pub use events::{EntityKind, EntityRef, EventBus, EventField, EventPath, KitEvent};
-pub use file::{
-    FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak,
-};
-pub use folder::{
-    FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef,
-    FolderStoreWeak,
-};
+pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
+pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Location, Plane, Vector};
-pub use group::{
-    GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef,
-    GroupStoreWeak,
-};
+pub use group::{GroupFullDto, GroupIdDto, GroupMetadataDto, GroupShallowDto, GroupStore, GroupStoreRef, GroupStoreWeak};
 pub use hash::{Cache, HashWriter};
 pub use id::Id;
-pub use kit::{
-    KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak,
-};
+pub use kit::{KitFullDto, KitIdDto, KitMetadataDto, KitShallowDto, KitStore, KitStoreRef, KitStoreWeak};
 pub use kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
 pub use kit_change::{KitChange, KitChangeKind};
-pub use kit_checkpoint::{
-    KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit,
-};
-pub use kit_diff::{
-    apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,
-};
+pub use kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult, MaterializedKit};
+pub use kit_diff::{apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff};
 pub use kit_draft::{Draft, KitDraftCommand, KitDraftCommandResult};
 pub use kit_session::{Session, SessionCommand, SessionCommandResult};
 pub use kit_store_command::{KitStoreCommand, KitStoreCommandResult};
-pub use kit_transaction::{
-    Transaction, TransactionCommand, TransactionCommandResult, TransactionState,
-};
-pub use layer::{
-    LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef,
-    LayerStoreWeak,
-};
-pub use piece::{
-    PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef,
-    PieceStoreWeak,
-};
-pub use port::{
-    PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak,
-};
-pub use prop::{
-    PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak,
-};
-pub use quality::{
-    QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore,
-    QualityStoreRef, QualityStoreWeak,
-};
+pub use kit_transaction::{Transaction, TransactionCommand, TransactionCommandResult, TransactionState};
+pub use layer::{LayerFullDto, LayerIdDto, LayerMetadataDto, LayerShallowDto, LayerStore, LayerStoreRef, LayerStoreWeak};
+pub use piece::{PieceFullDto, PieceIdDto, PieceMetadataDto, PieceShallowDto, PieceStore, PieceStoreRef, PieceStoreWeak};
+pub use port::{PortFullDto, PortIdDto, PortMetadataDto, PortShallowDto, PortStore, PortStoreRef, PortStoreWeak};
+pub use prop::{PropFullDto, PropIdDto, PropMetadataDto, PropShallowDto, PropStore, PropStoreRef, PropStoreWeak};
+pub use quality::{QualityFullDto, QualityIdDto, QualityMetadataDto, QualityShallowDto, QualityStore, QualityStoreRef, QualityStoreWeak};
 pub use read_command::{
-    ReadConnectionCommand, ReadConnectionCommandResult, ReadDesignCommand, ReadDesignCommandResult,
-    ReadKitCommand, ReadKitCommandResult, ReadPieceCommand, ReadPieceCommandResult,
-    ReadPortCommand, ReadPortCommandResult, ReadTypeCommand, ReadTypeCommandResult,
+    ReadConnectionCommand, ReadConnectionCommandResult, ReadDesignCommand, ReadDesignCommandResult, ReadKitCommand, ReadKitCommandResult, ReadPieceCommand, ReadPieceCommandResult, ReadPortCommand, ReadPortCommandResult, ReadTypeCommand,
+    ReadTypeCommandResult,
 };
 pub use report::{NoteSeverity, OperationNote, SemioReport, ValidationResult};
-pub use representation::{
-    RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto,
-    RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak,
-};
-pub use side::{
-    SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak,
-};
-pub use stat::{
-    StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak,
-};
-pub use tag::{
-    TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak,
-};
-pub use typ::{
-    TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak,
-};
+pub use representation::{RepresentationFullDto, RepresentationIdDto, RepresentationMetadataDto, RepresentationShallowDto, RepresentationStore, RepresentationStoreRef, RepresentationStoreWeak};
+pub use side::{SideFullDto, SideIdDto, SideMetadataDto, SideShallowDto, SideStore, SideStoreRef, SideStoreWeak};
+pub use stat::{StatFullDto, StatIdDto, StatMetadataDto, StatShallowDto, StatStore, StatStoreRef, StatStoreWeak};
+pub use tag::{TagFullDto, TagIdDto, TagMetadataDto, TagShallowDto, TagStore, TagStoreRef, TagStoreWeak};
+pub use typ::{TypeFullDto, TypeIdDto, TypeMetadataDto, TypeShallowDto, TypeStore, TypeStoreRef, TypeStoreWeak};

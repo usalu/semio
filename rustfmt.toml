@@ -1,0 +1,8 @@
+edition = "2021"
+max_width = 250
+use_small_heuristics = "Max"
+newline_style = "Unix"
+merge_derives = true
+use_field_init_shorthand = true
+use_try_shorthand = true
+remove_nested_parens = true

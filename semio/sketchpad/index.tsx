@@ -49810,7 +49810,9 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       console.log("[Kit] Debug messages from app:");
       messages.filter((m) => m.includes("DEBUG")).forEach((m) => console.log(m));
 
+      console.log("[Kit] Waiting for metabolism text on kit route");
       await expect(page.getByText(/metabolism/i).first()).toBeVisible({ timeout: 30000 });
+      console.log("[Kit] Metabolism text confirmed on kit route");
       const invalidAccessWarnings = warnings.filter((w) => w.includes("Invalid access"));
       if (invalidAccessWarnings.length > 0) {
         console.log(`[Kit] Invalid access warning count: ${invalidAccessWarnings.length}`);
@@ -49818,17 +49820,21 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
 
       const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
       const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
+      console.log(`[Kit] Types toggle visible before optional click: ${hasTypesToggle}`);
       if (hasTypesToggle) {
         await typesToggle.click();
         await page.waitForTimeout(1000);
+        console.log("[Kit] Types toggle clicked");
       }
 
+      console.log("[Kit] Waiting for initial settle before row count");
       await page.waitForTimeout(8000);
       const initialKitRowCount = await page.locator("tr[data-row-id]").count().catch(() => 0);
       console.log(`[Kit] Initial row count after settle wait: ${initialKitRowCount}`);
       expect(initialKitRowCount).toBeGreaterThan(0);
 
       await page.waitForTimeout(2000);
+      console.log("[Kit] Attempting Tambour row click");
       const tambourRow = page.locator('[data-row-id^="type-"][data-row-id*="cc3cbc26"]').first();
       const clickedTambour = await tambourRow
         .isVisible({ timeout: 2000 })
