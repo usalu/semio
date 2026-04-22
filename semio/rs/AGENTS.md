@@ -29,7 +29,7 @@ parent. Derived data (content-addressable hashes, flatten caches) lives in
 - Type-scoped children: `port`, `connector`, `representation`.
 - Design-scoped children: `piece`, `connection`, `side`, `layer`, `group`.
 - Aggregates: `typ` (Type), `design`, `kit`.
-- Change flow: `diff` (`DesignDiff`/`DesignChange`); VCS: `read_command`, `change_command`, `kit_store_command`, `kit_session`, and related `kit_*` modules.
+- Change flow: `diff` (`DesignDiff` for patch materialization; `change_command` in [`change_command_ext.rs`](change_command_ext.rs) + [`change_command_ext2.rs`](change_command_ext2.rs) included from `lib.rs`); VCS: [`KitChange`](lib.rs) stores `Vec<ChangeKitCommand>` **forward** + **inverse** (command-list undo, not `KitDiff` snapshots); `read_command`, `kit_store_command`, `kit_session`, and related `kit_*` modules.
 - I/O: `io::json` and native-only SQLite/ZIP under `io` in `lib.rs`.
 - WASM surface: `pub mod wasm` in `lib.rs` (identical JS names, delegates to OO API).
 

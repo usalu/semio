@@ -15563,8 +15563,53 @@ const MultiWindowApp: FC = () => {
       }
       return layoutNode;
     };
-    return removeLegacySideTabsFromWindowLayout(storedWindowLayout) || defaultLayout;
+    const sanitizedLayout = removeLegacySideTabsFromWindowLayout(storedWindowLayout);
+
+    const hasWindowKind = (layout: any, windowKind: KitAppWindowKind): boolean => {
+      if (!layout) return false;
+      if (layout.type === "component" && layout.componentName === windowKind) return true;
+      if (layout.root && typeof layout.root === "object") {
+        return hasWindowKind(layout.root, windowKind);
+      }
+      if (layout.content && Array.isArray(layout.content)) {
+        return layout.content.some((item: any) => hasWindowKind(item, windowKind));
+      }
+      if (layout.contentItems && Array.isArray(layout.contentItems)) {
+        return layout.contentItems.some((item: any) => hasWindowKind(item, windowKind));
+      }
+      return false;
+    };
+
+    const hasTable = hasWindowKind(sanitizedLayout, KitAppWindowKind.Table);
+    const hasDiagram = hasWindowKind(sanitizedLayout, KitAppWindowKind.Diagram);
+    if (!hasTable || !hasDiagram) {
+      return defaultLayout;
+    }
+
+    return sanitizedLayout;
   }, [storedWindowLayout, defaultLayout]);
+
+  const storedWindowLayoutHash = useMemo(() => (storedWindowLayout === undefined ? "__undefined__" : JSON.stringify(storedWindowLayout)), [storedWindowLayout]);
+  const windowLayoutHash = useMemo(() => (windowLayout === undefined ? "__undefined__" : JSON.stringify(windowLayout)), [windowLayout]);
+
+  useEffect(() => {
+    if (!store || !storedWindowLayout) return;
+    if (windowLayout === undefined) {
+      try {
+        store.change({ windowLayout: undefined });
+      } catch (error) {
+        console.error("[KitApp] Failed to clear layout:", error);
+      }
+      return;
+    }
+    if (windowLayoutHash !== storedWindowLayoutHash) {
+      try {
+        store.change({ windowLayout });
+      } catch (error) {
+        console.error("[KitApp] Failed to migrate layout:", error);
+      }
+    }
+  }, [store, storedWindowLayout, storedWindowLayoutHash, windowLayout, windowLayoutHash]);
 
   useEffect(() => {
     if (appType !== "kit") return;
@@ -48563,10 +48608,16 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     console.log("[TEST] Navigated to:", page.url());
     expect(page.url()).toMatch(/kits\/.+/);
 
-    await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2000);
+    await waitForSketchpadSettle(page, `kit navigation ${importedKitId}`);
 
     return { errors, warnings, messages };
+  }
+
+  async function waitForSketchpadSettle(page: PlaywrightPage, label: string): Promise<void> {
+    await page
+      .waitForLoadState("networkidle", { timeout: 10000 })
+      .catch(() => console.log(`[TEST] Continuing without networkidle for ${label}`));
+    await page.waitForTimeout(2000);
   }
 
   async function initKit(page: PlaywrightPage) {
@@ -49803,8 +49854,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       await initKit(page);
       expect(errors.filter((e) => e.includes("Import error"))).toHaveLength(0);
 
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(2000);
+      await waitForSketchpadSettle(page, "Kit test init");
       await expectNoLegacyWindowTabs(page, "Kit");
 
       console.log("[Kit] Debug messages from app:");
@@ -49818,7 +49868,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
         console.log(`[Kit] Invalid access warning count: ${invalidAccessWarnings.length}`);
       }
 
-      const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
+      const typesToggle = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
       const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
       console.log(`[Kit] Types toggle visible before optional click: ${hasTypesToggle}`);
       if (hasTypesToggle) {
@@ -50239,7 +50289,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
       });
       console.log("[Kit] Initial kitApp state:", JSON.stringify(initialKitAppState));
 
-      const typesToggleAgain = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
+      const typesToggleAgain = page.locator('[id="semio.sketchpad.app.kit.toolbar.showTypes"]');
       const hasTypesToggleAgain = await typesToggleAgain.isVisible({ timeout: 5000 }).catch(() => false);
       if (hasTypesToggleAgain) {
         await typesToggleAgain.click();

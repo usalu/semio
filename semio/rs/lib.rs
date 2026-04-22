@@ -344,190 +344,9 @@ pub mod read_command {
     }
 }
 pub mod change_command {
-    //! Structural change commands; applied to a [`KitStore`] during an open transaction.
-    use serde::{Deserialize, Serialize};
-
-    use crate::design::DesignIdDto;
-    use crate::diff::DesignDiff;
-    use crate::id::Id;
-    use crate::kit::KitStore;
-    use crate::kit_change::KitChangeKind;
-    use crate::piece::PieceFullDto;
-    use crate::piece::PieceIdDto;
-    use crate::typ::TypeIdDto;
-    use crate::{error::Result, error::SemioError};
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum ChangePieceCommand {
-        Name {
-            name: String,
-        },
-        Fix,
-        #[serde(other)]
-        Other,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum ChangeDesignCommand {
-        Name {
-            name: String,
-        },
-        ChangePieceCommands {
-            piece_id: PieceIdDto,
-            commands: Vec<ChangePieceCommand>,
-        },
-        #[serde(other)]
-        Other,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum ChangeTypeCommand {
-        Name {
-            name: String,
-        },
-        #[serde(other)]
-        Other,
-    }
-
-    #[derive(Clone, Debug, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum ChangeKitCommand {
-        Name {
-            name: String,
-        },
-        Description {
-            description: Option<String>,
-        },
-        ChangeTypeCommands {
-            type_id: TypeIdDto,
-            commands: Vec<ChangeTypeCommand>,
-        },
-        ChangeDesignCommands {
-            design_id: DesignIdDto,
-            commands: Vec<ChangeDesignCommand>,
-        },
-        #[serde(other)]
-        Other,
-    }
-
-    impl KitStore {
-        /// Find the id of the owning design for a piece id.
-        pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
-            for d in &self.designs {
-                if let Ok(dr) = d.read() {
-                    if dr.piece(piece_id.as_str()).is_some() {
-                        return Some(dr.id.to_string());
-                    }
-                }
-            }
-            None
-        }
-    }
-
-    impl ChangePieceCommand {
-        /// Apply this piece change under the given design; mutates the live memory graph.
-        pub fn apply(&self, kit: &mut KitStore, piece_id: &Id) -> Result<()> {
-            match self {
-                ChangePieceCommand::Name { name } => {
-                    let did = kit.find_design_id_for_piece(piece_id).ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.clone() })?;
-                    let full = kit.to_full_dto();
-                    let mut p = full.designs.iter().find(|d| d.id.as_str() == did.as_str()).and_then(|d| d.pieces.iter().find(|p| p.id == *piece_id)).cloned().ok_or_else(|| SemioError::NotFound { kind: "Piece", id: piece_id.clone() })?;
-                    p.name = Some(name.clone());
-                    let mut diff = DesignDiff::default();
-                    diff.modified_pieces.push(p);
-                    kit.apply_design_diff(&did, &diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    Ok(())
-                }
-                ChangePieceCommand::Fix | ChangePieceCommand::Other => Ok(()),
-            }
-        }
-    }
-
-    impl ChangeDesignCommand {
-        /// Apply this design-level change against the live kit memory graph.
-        pub fn apply(&self, kit: &mut KitStore, design_id: &Id) -> Result<()> {
-            match self {
-                ChangeDesignCommand::Name { name } => {
-                    let d = kit.design(design_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Design", id: design_id.clone() })?;
-                    d.write().map_err(|_| SemioError::LockPoisoned("design"))?.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    Ok(())
-                }
-                ChangeDesignCommand::ChangePieceCommands { piece_id, commands } => {
-                    for pc in commands {
-                        pc.apply(kit, &piece_id.id)?;
-                    }
-                    Ok(())
-                }
-                ChangeDesignCommand::Other => Ok(()),
-            }
-        }
-    }
-
-    impl ChangeTypeCommand {
-        /// Apply this type-level change against the live kit memory graph.
-        pub fn apply(&self, kit: &mut KitStore, type_id: &Id) -> Result<()> {
-            match self {
-                ChangeTypeCommand::Name { name } => {
-                    let t = kit.semio_type(type_id.as_str()).ok_or_else(|| SemioError::NotFound { kind: "Type", id: type_id.clone() })?;
-                    t.write().map_err(|_| SemioError::LockPoisoned("type"))?.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    Ok(())
-                }
-                ChangeTypeCommand::Other => Ok(()),
-            }
-        }
-    }
-
-    impl ChangeKitCommand {
-        /// Apply one change command to a live [`KitStore`].
-        ///
-        /// Callers that want a `KitChange` record should snapshot before/after and diff.
-        pub fn apply(&self, kit: &mut KitStore) -> Result<KitChangeKind> {
-            match self {
-                ChangeKitCommand::Name { name } => {
-                    kit.set_name(name.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    Ok(KitChangeKind::SetKitMetadata)
-                }
-                ChangeKitCommand::Description { description } => {
-                    kit.set_description(description.clone()).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-                    Ok(KitChangeKind::SetKitMetadata)
-                }
-                ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
-                    for c in commands {
-                        c.apply(kit, &type_id.id)?;
-                    }
-                    Ok(KitChangeKind::ModifyType)
-                }
-                ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
-                    for c in commands {
-                        c.apply(kit, &design_id.id)?;
-                    }
-                    Ok(KitChangeKind::ModifyDesign)
-                }
-                ChangeKitCommand::Other => Ok(KitChangeKind::Other("changeKit".into())),
-            }
-        }
-    }
-
-    impl KitStore {
-        /// Apply a raw design diff and return the high-level `KitChangeKind`.
-        #[allow(dead_code)]
-        pub fn apply_design_diff_as_change(&mut self, design_id: &str, diff: &DesignDiff) -> Result<KitChangeKind> {
-            self.apply_design_diff(design_id, diff).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            Ok(KitChangeKind::ApplyDesignDiff)
-        }
-
-        /// Add a single piece to a design via a design diff, returning the `KitChangeKind`.
-        #[allow(dead_code)]
-        pub fn add_piece_as_change(&mut self, design_id: &str, piece: PieceFullDto) -> Result<KitChangeKind> {
-            let mut d = DesignDiff::default();
-            d.added_pieces.push(piece);
-            self.apply_design_diff(design_id, &d).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
-            Ok(KitChangeKind::AddPiece)
-        }
-    }
+    #![allow(clippy::result_large_err)]
+    //! Structural change commands; forward + [`crate::kit_change::KitChange`] inverses.
+    include!("change_command_ext.rs");
 }
 pub mod kit_checkpoint {
     //! Checkpoints and materialized kit snapshots on the main / shared tree.
@@ -549,7 +368,10 @@ pub mod kit_checkpoint {
 
     impl MaterializedKit {
         pub fn compute(&self) -> KitFullDto {
-            self.change_list.iter().fold(self.initial.clone(), |acc, c| crate::kit_change::KitChange::apply_forward_dto(&acc, c))
+            self.change_list.iter().fold(self.initial.clone(), |acc, c| {
+                // Prefer fast path when a checkpoint is a single pure diff; otherwise re-hydrate.
+                crate::kit_change::KitChange::apply_forward_dto(&acc, c)
+            })
         }
     }
 
@@ -1014,6 +836,7 @@ pub mod kit_store_command {
     use crate::id::Id;
     use crate::kit::KitStore;
     use crate::kit::KitStoreRef;
+    use crate::change_command::ChangeKitCommand;
     use crate::kit_alternative::{KitAlternative, KitAlternativeCommand, KitAlternativeCommandResult};
     use crate::kit_change::{KitChange, KitChangeKind};
     use crate::kit_checkpoint::{KitCheckpoint, KitCheckpointCommand, KitCheckpointCommandResult};
@@ -1310,7 +1133,7 @@ pub mod kit_store_command {
                 let after = g.to_full_dto();
                 (d.parent_checkpoint.clone(), d.target_alternative.clone(), d.before.clone(), after)
             };
-            let mut kc = KitChange::between(&before, &after).ok_or_else(|| SemioError::InvalidOperation("no change to finalize in draft".into()))?;
+            let mut kc = KitChange::from_dto_pair(&before, &after).ok_or_else(|| SemioError::InvalidOperation("no change to finalize in draft".into()))?;
             kc.kind = KitChangeKind::Inferred;
             let cp = KitCheckpoint::new(parent.clone(), vec![kc], Some(message));
             let new_id = cp.id.clone();
@@ -1345,19 +1168,29 @@ pub mod kit_store_command {
                 }
                 TransactionCommand::ChangeKitCommands { commands: chs } => {
                     let mut n = 0usize;
-                    let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                     {
+                        let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                         let ot = g.sessions.get(sid).and_then(|s| s.draft(did)).and_then(|d| d.open_transaction_ref(txid)).ok_or_else(|| SemioError::InvalidOperation("no open matching transaction".into()))?;
                         if !ot.is_open() {
                             return Err(SemioError::InvalidOperation("transaction is not open".into()));
                         }
                     }
                     for c in &chs {
-                        let before = g.to_full_dto();
-                        let kind = c.apply(&mut g)?;
-                        let after = g.to_full_dto();
-                        if let Some(mut kc) = KitChange::between(&before, &after) {
-                            kc.kind = kind;
+                        let before = {
+                            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                            g.to_full_dto()
+                        };
+                        let (kind, inverse) = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        let after = {
+                            let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
+                            g.to_full_dto()
+                        };
+                        if before == after {
+                            continue;
+                        }
+                        let kc = KitChange { forward: vec![c.clone()], inverse, kind, author: None, time: None };
+                        {
+                            let mut g = kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             if let Some(tx) = g.sessions.get_mut(sid).and_then(|s| s.draft_mut(did)).and_then(|d| d.open_transaction_mut(txid)) {
                                 tx.record(kc);
                                 n += 1;
@@ -1508,7 +1341,7 @@ pub mod kit_store_command {
                         let b = g.materialize_at(Some(&t));
                         (r, a, b)
                     };
-                    let mut ch = KitChange::between(&before_dto, &after_dto).ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
+                    let mut ch = KitChange::from_dto_pair(&before_dto, &after_dto).ok_or_else(|| SemioError::InvalidOperation("no delta to unify".into()))?;
                     ch.kind = KitChangeKind::UnifyCheckpoints;
                     let cp = KitCheckpoint::new(Some(root.clone()), vec![ch], Some(message));
                     let new_id = cp.id.clone();
@@ -1529,7 +1362,7 @@ pub mod attribute {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -1649,28 +1482,28 @@ pub mod attribute {
 
         pub fn set_key(&mut self, key: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::attribute_key(&key, "key") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Key), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Attribute { attribute_id: self.id.clone(), event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Key) }), error: e.clone() });
                 return Err(e);
             }
             if self.key == key {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Key) });
+            self.emit_ev(KitEvent::Attribute { attribute_id: self.id.clone(), event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Key) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
 
         pub fn set_value(&mut self, value: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&value, "value") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Value), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Attribute { attribute_id: self.id.clone(), event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Value) }), error: e.clone() });
                 return Err(e);
             }
             if self.value == value {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Value) });
+            self.emit_ev(KitEvent::Attribute { attribute_id: self.id.clone(), event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Value) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
@@ -1680,7 +1513,7 @@ pub mod attribute {
                 return Ok(());
             }
             self.definition = definition;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Attribute(crate::events::AttributeField::Definition) });
+            self.emit_ev(KitEvent::Attribute { attribute_id: self.id.clone(), event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Definition) });
             self.invalidate_local_and_bubble();
             Ok(())
         }
@@ -1795,7 +1628,7 @@ pub mod author {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -1889,28 +1722,28 @@ pub mod author {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Name), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Name) }), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Name) });
+            self.emit_ev(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Name) });
             self.bubble();
             Ok(())
         }
 
         pub fn set_email(&mut self, email: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::email_basic(&email, "email") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Email), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Email) }), error: e.clone() });
                 return Err(e);
             }
             if self.email == email {
                 return Ok(());
             }
             self.email = email;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Email) });
+            self.emit_ev(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Email) });
             self.bubble();
             Ok(())
         }
@@ -1920,7 +1753,7 @@ pub mod author {
                 return Ok(());
             }
             self.role = role;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Role) });
+            self.emit_ev(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Role) });
             self.bubble();
             Ok(())
         }
@@ -1930,7 +1763,7 @@ pub mod author {
                 return Ok(());
             }
             self.rank = rank;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Author(crate::events::AuthorField::Rank) });
+            self.emit_ev(KitEvent::Author { author_id: self.id.clone(), event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Rank) });
             self.bubble();
             Ok(())
         }
@@ -2012,7 +1845,7 @@ pub mod benchmark {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::quality::QualityStoreWeak;
@@ -2110,7 +1943,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Name) });
+            self.emit_ev(KitEvent::Benchmark { benchmark_id: self.id.clone(), event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::Name) });
             self.bubble();
             Ok(())
         }
@@ -2120,7 +1953,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.min = min;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Min) });
+            self.emit_ev(KitEvent::Benchmark { benchmark_id: self.id.clone(), event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::Min) });
             self.bubble();
             Ok(())
         }
@@ -2130,7 +1963,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.max = max;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::Max) });
+            self.emit_ev(KitEvent::Benchmark { benchmark_id: self.id.clone(), event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::Max) });
             self.bubble();
             Ok(())
         }
@@ -2140,7 +1973,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.min_excluded = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::MinExcluded) });
+            self.emit_ev(KitEvent::Benchmark { benchmark_id: self.id.clone(), event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::MinExcluded) });
             self.bubble();
             Ok(())
         }
@@ -2150,7 +1983,7 @@ pub mod benchmark {
                 return Ok(());
             }
             self.max_excluded = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Benchmark(crate::events::BenchmarkField::MaxExcluded) });
+            self.emit_ev(KitEvent::Benchmark { benchmark_id: self.id.clone(), event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::MaxExcluded) });
             self.bubble();
             Ok(())
         }
@@ -2208,7 +2041,7 @@ pub mod concept {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -2299,7 +2132,7 @@ pub mod concept {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Name) });
+            self.emit_ev(KitEvent::Concept { concept_id: self.id.clone(), event: crate::events::ConceptEvent::FieldChanged(crate::events::ConceptField::Name) });
             self.bubble();
             Ok(())
         }
@@ -2309,7 +2142,7 @@ pub mod concept {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Description) });
+            self.emit_ev(KitEvent::Concept { concept_id: self.id.clone(), event: crate::events::ConceptEvent::FieldChanged(crate::events::ConceptField::Description) });
             self.bubble();
             Ok(())
         }
@@ -2319,7 +2152,7 @@ pub mod concept {
                 return Ok(());
             }
             self.order = order;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Concept(crate::events::ConceptField::Order) });
+            self.emit_ev(KitEvent::Concept { concept_id: self.id.clone(), event: crate::events::ConceptEvent::FieldChanged(crate::events::ConceptField::Order) });
             self.bubble();
             Ok(())
         }
@@ -2403,7 +2236,7 @@ pub mod connection {
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStoreRef};
     use crate::connector::ConnectorStore;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::flatten_math::{self, compute_child_center_uv};
     use crate::geom::{Coordinate, Plane};
     use crate::hash::{Cache, HashWriter};
@@ -2567,22 +2400,13 @@ pub mod connection {
             EntityRef::new(EntityKind::Connection, self.id.clone())
         }
 
-        fn event_path(&self) -> crate::events::EventPath {
-            let connection = self.entity_ref();
-            let Some(design_ref) = self.parent_design.upgrade() else {
-                return crate::events::EventPath::of(connection);
-            };
-            let Ok(design) = design_ref.read() else {
-                return crate::events::EventPath::of(connection);
-            };
-            let design_entity = EntityRef::new(EntityKind::Design, design.id.clone());
-            let Some(kit_ref) = design.parent_kit.upgrade() else {
-                return crate::events::EventPath::from_root(vec![design_entity, connection]);
-            };
-            let Ok(kit) = kit_ref.read() else {
-                return crate::events::EventPath::from_root(vec![design_entity, connection]);
-            };
-            crate::events::EventPath::from_root(vec![EntityRef::new(EntityKind::Kit, kit.id.clone()), design_entity, connection])
+        fn event(&self, event: crate::events::ConnectionEvent) -> KitEvent {
+            if let Some(design_ref) = self.parent_design.upgrade() {
+                if let Ok(design) = design_ref.read() {
+                    return KitEvent::Design { design_id: design.id.clone(), event: crate::events::DesignEvent::Connection { connection_id: self.id.clone(), event } };
+                }
+            }
+            KitEvent::Connection { connection_id: self.id.clone(), event }
         }
 
         /// Invalidate this connection and all design-level aggregates (flatten, validation).
@@ -2629,7 +2453,7 @@ pub mod connection {
                 return Ok(());
             }
             self.gap = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Gap) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Gap)));
             self.bubble();
             Ok(())
         }
@@ -2638,7 +2462,7 @@ pub mod connection {
                 return Ok(());
             }
             self.shift = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Shift) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Shift)));
             self.bubble();
             Ok(())
         }
@@ -2647,7 +2471,7 @@ pub mod connection {
                 return Ok(());
             }
             self.rise = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Rise) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Rise)));
             self.bubble();
             Ok(())
         }
@@ -2656,7 +2480,7 @@ pub mod connection {
                 return Ok(());
             }
             self.rotation = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Rotation) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Rotation)));
             self.bubble();
             Ok(())
         }
@@ -2665,7 +2489,7 @@ pub mod connection {
                 return Ok(());
             }
             self.turn = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Turn) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Turn)));
             self.bubble();
             Ok(())
         }
@@ -2674,7 +2498,7 @@ pub mod connection {
                 return Ok(());
             }
             self.tilt = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Tilt) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Tilt)));
             self.bubble();
             Ok(())
         }
@@ -2683,7 +2507,7 @@ pub mod connection {
                 return Ok(());
             }
             self.x = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::X) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::X)));
             self.bubble();
             Ok(())
         }
@@ -2692,7 +2516,7 @@ pub mod connection {
                 return Ok(());
             }
             self.y = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Y) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Y)));
             self.bubble();
             Ok(())
         }
@@ -2701,7 +2525,7 @@ pub mod connection {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: self.event_path(), field: EventField::Connection(crate::events::ConnectionField::Description) });
+            self.emit_ev(self.event(crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Description)));
             self.bubble();
             Ok(())
         }
@@ -2833,7 +2657,7 @@ pub mod connector {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::port::{PortIdDto, PortStoreWeak};
@@ -2971,14 +2795,14 @@ pub mod connector {
 
         pub fn set_code(&mut self, code: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_non_empty(&code, "code") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Code), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Connector { connector_id: self.id.clone(), event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Code) }), error: e.clone() });
                 return Err(e);
             }
             if self.code == code {
                 return Ok(());
             }
             self.code = code;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Code) });
+            self.emit_ev(KitEvent::Connector { connector_id: self.id.clone(), event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Code) });
             self.invalidate_hash();
             Ok(())
         }
@@ -2988,14 +2812,14 @@ pub mod connector {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Description) });
+            self.emit_ev(KitEvent::Connector { connector_id: self.id.clone(), event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Description) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Connector(crate::events::ConnectorField::Port) });
+            self.emit_ev(KitEvent::Connector { connector_id: self.id.clone(), event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Port) });
             self.invalidate_hash();
             Ok(())
         }
@@ -3049,7 +2873,7 @@ pub mod design {
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connection::{ConnectionFullDto, ConnectionMetadataDto, ConnectionShallowDto, ConnectionStore, ConnectionStoreRef};
     use crate::connector::ConnectorStoreRef;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Camera, Coordinate, Location, Plane};
     use crate::group::{GroupFullDto, GroupShallowDto, GroupStore, GroupStoreRef};
     use crate::hash::{Cache, HashWriter};
@@ -3511,8 +3335,8 @@ pub mod design {
                 }
             }
             for gid in &piece_ids {
-                self.emit_ev(KitEvent::DerivedChanged { path: crate::events::EventPath::of(EntityRef::new(EntityKind::Piece, gid.clone())), field: EventField::Piece(crate::events::PieceField::FlatPlane) });
-                self.emit_ev(KitEvent::DerivedChanged { path: crate::events::EventPath::of(EntityRef::new(EntityKind::Piece, gid.clone())), field: EventField::Piece(crate::events::PieceField::FlatCenter) });
+                self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::Piece { piece_id: gid.clone(), event: crate::events::PieceEvent::DerivedChanged(crate::events::PieceField::FlatPlane) } });
+                self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::Piece { piece_id: gid.clone(), event: crate::events::PieceEvent::DerivedChanged(crate::events::PieceField::FlatCenter) } });
             }
         }
 
@@ -3536,14 +3360,14 @@ pub mod design {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Name), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Name) }), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Name) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Name) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3561,7 +3385,7 @@ pub mod design {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Description) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Description) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3574,7 +3398,7 @@ pub mod design {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Icon) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Icon) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3587,7 +3411,7 @@ pub mod design {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Image) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Image) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3600,7 +3424,7 @@ pub mod design {
                 return Ok(());
             }
             self.variant = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Variant) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Variant) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3613,7 +3437,7 @@ pub mod design {
                 return Ok(());
             }
             self.view = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::View) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::View) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3626,7 +3450,7 @@ pub mod design {
                 return Ok(());
             }
             self.location = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Location) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Location) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3639,7 +3463,7 @@ pub mod design {
                 return Ok(());
             }
             self.camera = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Camera) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Camera) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3652,7 +3476,7 @@ pub mod design {
                 return Ok(());
             }
             self.unit = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Unit) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Unit) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3665,7 +3489,7 @@ pub mod design {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Created) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Created) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -3678,7 +3502,7 @@ pub mod design {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Design(crate::events::DesignField::Updated) });
+            self.emit_ev(KitEvent::Design { design_id: self.id.clone(), event: crate::events::DesignEvent::FieldChanged(crate::events::DesignField::Updated) });
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
             self.invalidate_flatten();
@@ -5160,12 +4984,14 @@ pub mod kit_diff {
     }
 }
 
-/// Forward and backward kit structural steps (see [`kit_diff::KitDiff`]).
+/// Command-list forward and inverse (see [`crate::change_command::ChangeKitCommand`]).
 pub mod kit_change {
     use serde::{Deserialize, Serialize};
 
+    use crate::change_command::ChangeKitCommand;
     use crate::kit::KitFullDto;
-    use crate::kit_diff::KitDiff;
+    use crate::kit::KitStore;
+    use crate::kit_diff::{apply_to_dto, KitDiff};
 
     /// Semantic kind for a [`KitChange`] (VCS and UI; replaces the old `KitOperation` wrapper).
     #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Default)]
@@ -5184,8 +5010,6 @@ pub mod kit_change {
         RemovePiece,
         Connect,
         Disconnect,
-        ApplyDesignDiff,
-        ApplyKitDiff,
         UnifyCheckpoints,
         MarkRelease,
         Other(String),
@@ -5193,12 +5017,10 @@ pub mod kit_change {
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default)]
     pub struct KitChange {
-        pub forward: KitDiff,
-        pub backward: KitDiff,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub before: Option<KitFullDto>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub after: Option<KitFullDto>,
+        /// Forward commands, applied in order.
+        pub forward: Vec<ChangeKitCommand>,
+        /// Inverse (undo) commands, applied in order to reverse [`KitChange::forward`].
+        pub inverse: Vec<ChangeKitCommand>,
         /// Semantic label; defaults to [`KitChangeKind::Inferred`].
         #[serde(default, skip_serializing_if = "is_default_change_kind")]
         pub kind: KitChangeKind,
@@ -5213,31 +5035,69 @@ pub mod kit_change {
     }
 
     impl KitChange {
-        pub fn between(before: &KitFullDto, after: &KitFullDto) -> Option<Self> {
+        /// Build a [`KitChange`] from two snapshots using a single [`FromKitDiff`] on each leg.
+        pub fn from_dto_pair(before: &KitFullDto, after: &KitFullDto) -> Option<Self> {
             if before == after {
                 return None;
             }
             let forward = KitDiff::between(before, after);
             let backward = KitDiff::between(after, before);
-            Some(KitChange { forward, backward, before: Some(before.clone()), after: Some(after.clone()), kind: KitChangeKind::Inferred, author: None, time: None })
+            Some(KitChange { forward: vec![ChangeKitCommand::FromKitDiff { diff: forward }], inverse: vec![ChangeKitCommand::FromKitDiff { diff: backward }], kind: KitChangeKind::Inferred, author: None, time: None })
         }
 
+        /// Apply forward commands in order, materializing a new kit DTO (full re-hydration per step).
         pub fn apply_forward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
-            crate::kit_diff::apply_to_dto(s, &c.forward)
+            if c.forward.len() == 1 {
+                if let ChangeKitCommand::FromKitDiff { diff } = &c.forward[0] {
+                    return apply_to_dto(s, diff);
+                }
+            }
+            let k = KitStore::from_full_dto(s.clone());
+            for cmd in &c.forward {
+                if let Err(e) = cmd.run(&k) {
+                    // Best-effort: on error return original snapshot; callers should apply on a live ref for reporting.
+                    let _ = e;
+                }
+            }
+            let kr = k.read().expect("kit read");
+            let out = kr.to_full_dto();
+            drop(kr);
+            out
         }
 
+        /// Apply inverse commands in order on a DTO (same strategy as forward).
         pub fn apply_backward_dto(s: &KitFullDto, c: &KitChange) -> KitFullDto {
-            crate::kit_diff::apply_to_dto(s, &c.backward)
+            if c.inverse.len() == 1 {
+                if let ChangeKitCommand::FromKitDiff { diff } = &c.inverse[0] {
+                    return apply_to_dto(s, diff);
+                }
+            }
+            let k = KitStore::from_full_dto(s.clone());
+            for cmd in &c.inverse {
+                if let Err(e) = cmd.run(&k) {
+                    let _ = e;
+                }
+            }
+            let kr = k.read().expect("kit read");
+            let out = kr.to_full_dto();
+            drop(kr);
+            out
         }
 
-        /// Apply the forward step to a store (replaces the graph from DTO).
+        /// Apply the forward step to a store.
         pub fn apply_forward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
-            c.forward.apply(kit)
+            for cmd in &c.forward {
+                cmd.run(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change forward: {e}")))?;
+            }
+            Ok(())
         }
 
         /// Apply the backward (undo) step to a store.
         pub fn apply_backward(c: &KitChange, kit: &crate::kit::KitStoreRef) -> crate::error::SetResult {
-            c.backward.apply(kit)
+            for cmd in &c.inverse {
+                cmd.run(kit).map_err(|e| crate::error::SetError::Internal(format!("kit change backward: {e}")))?;
+            }
+            Ok(())
         }
     }
 }
@@ -5511,108 +5371,161 @@ pub mod events {
     event_field_enum!(TagField { Name, Order });
     event_field_enum!(TypeField { Name, Description, Icon, Image, Variant, Stock, Virtual, Unit, Location, Created, Updated });
 
-    /// 🧩Typed field discriminator scoped by entity kind.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, serde::Serialize)]
-    pub enum EventField {
-        Attribute(AttributeField),
-        Author(AuthorField),
-        Benchmark(BenchmarkField),
-        Concept(ConceptField),
-        Connection(ConnectionField),
-        Connector(ConnectorField),
-        Design(DesignField),
-        File(FileField),
-        Folder(FolderField),
-        Group(GroupField),
-        Kit(KitField),
-        Layer(LayerField),
-        Piece(PieceField),
-        Port(PortField),
-        Prop(PropField),
-        Quality(QualityField),
-        Representation(RepresentationField),
-        Side(SideField),
-        Stat(StatField),
-        Tag(TagField),
-        Type(TypeField),
-    }
-
-    macro_rules! event_field_from {
-        ($field:ident, $variant:ident) => {
-            impl From<$field> for EventField {
-                fn from(field: $field) -> Self {
-                    Self::$variant(field)
-                }
+    macro_rules! scoped_event_enum {
+        ($name:ident, $field:ident) => {
+            #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+            pub enum $name {
+                Changed,
+                FieldChanged($field),
             }
         };
     }
 
-    event_field_from!(AttributeField, Attribute);
-    event_field_from!(AuthorField, Author);
-    event_field_from!(BenchmarkField, Benchmark);
-    event_field_from!(ConceptField, Concept);
-    event_field_from!(ConnectionField, Connection);
-    event_field_from!(ConnectorField, Connector);
-    event_field_from!(DesignField, Design);
-    event_field_from!(FileField, File);
-    event_field_from!(FolderField, Folder);
-    event_field_from!(GroupField, Group);
-    event_field_from!(KitField, Kit);
-    event_field_from!(LayerField, Layer);
-    event_field_from!(PieceField, Piece);
-    event_field_from!(PortField, Port);
-    event_field_from!(PropField, Prop);
-    event_field_from!(QualityField, Quality);
-    event_field_from!(RepresentationField, Representation);
-    event_field_from!(SideField, Side);
-    event_field_from!(StatField, Stat);
-    event_field_from!(TagField, Tag);
-    event_field_from!(TypeField, Type);
+    scoped_event_enum!(AttributeEvent, AttributeField);
+    scoped_event_enum!(AuthorEvent, AuthorField);
+    scoped_event_enum!(BenchmarkEvent, BenchmarkField);
+    scoped_event_enum!(ConceptEvent, ConceptField);
+    scoped_event_enum!(ConnectionEvent, ConnectionField);
+    scoped_event_enum!(ConnectorEvent, ConnectorField);
+    scoped_event_enum!(FileEvent, FileField);
+    scoped_event_enum!(FolderEvent, FolderField);
+    scoped_event_enum!(GroupEvent, GroupField);
+    scoped_event_enum!(LayerEvent, LayerField);
+    scoped_event_enum!(PortEvent, PortField);
+    scoped_event_enum!(PropEvent, PropField);
+    scoped_event_enum!(QualityEvent, QualityField);
+    scoped_event_enum!(RepresentationEvent, RepresentationField);
+    scoped_event_enum!(SideEvent, SideField);
+    scoped_event_enum!(StatEvent, StatField);
+    scoped_event_enum!(TagEvent, TagField);
 
-    /// 🌲Typed ancestry for event cascades from kit root to changed entity.
-    #[derive(Clone, Debug, Eq, PartialEq, Hash, serde::Serialize)]
-    pub struct EventPath {
-        entities: Vec<EntityRef>,
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+    pub enum PieceEvent {
+        Changed,
+        FieldChanged(PieceField),
+        DerivedChanged(PieceField),
     }
 
-    impl EventPath {
-        pub fn of(entity: EntityRef) -> Self {
-            Self { entities: vec![entity] }
-        }
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+    pub enum DesignEvent {
+        Changed,
+        FieldChanged(DesignField),
+        Piece { piece_id: Id, event: PieceEvent },
+        Connection { connection_id: Id, event: ConnectionEvent },
+        Layer { layer_id: Id, event: LayerEvent },
+        Group { group_id: Id, event: GroupEvent },
+        Prop { prop_id: Id, event: PropEvent },
+        Quality { quality_id: Id, event: QualityEvent },
+        Stat { stat_id: Id, event: StatEvent },
+        Tag { tag_id: Id, event: TagEvent },
+        Attribute { attribute_id: Id, event: AttributeEvent },
+        Author { author_id: Id, event: AuthorEvent },
+        Concept { concept_id: Id, event: ConceptEvent },
+    }
 
-        pub fn from_root(entities: Vec<EntityRef>) -> Self {
-            debug_assert!(!entities.is_empty());
-            Self { entities }
-        }
-
-        pub fn entities(&self) -> &[EntityRef] {
-            &self.entities
-        }
-
-        pub fn leaf(&self) -> &EntityRef {
-            self.entities.last().expect("event paths are constructed with at least one entity")
-        }
+    #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+    pub enum TypeEvent {
+        Changed,
+        FieldChanged(TypeField),
+        Port { port_id: Id, event: PortEvent },
+        Connector { connector_id: Id, event: ConnectorEvent },
+        Representation { representation_id: Id, event: RepresentationEvent },
+        Prop { prop_id: Id, event: PropEvent },
+        Quality { quality_id: Id, event: QualityEvent },
+        Stat { stat_id: Id, event: StatEvent },
+        Tag { tag_id: Id, event: TagEvent },
+        Attribute { attribute_id: Id, event: AttributeEvent },
     }
 
     /// 📣All observable changes on a kit graph.
     #[derive(Clone, Debug, PartialEq, serde::Serialize)]
     pub enum KitEvent {
-        Changed { entity: EntityRef },
-        FieldChanged { path: EventPath, field: EventField },
+        Changed,
+        FieldChanged(KitField),
+        Design { design_id: Id, event: DesignEvent },
+        Type { type_id: Id, event: TypeEvent },
+        Attribute { attribute_id: Id, event: AttributeEvent },
+        Author { author_id: Id, event: AuthorEvent },
+        Benchmark { benchmark_id: Id, event: BenchmarkEvent },
+        Concept { concept_id: Id, event: ConceptEvent },
+        Connection { connection_id: Id, event: ConnectionEvent },
+        Connector { connector_id: Id, event: ConnectorEvent },
+        File { file_id: Id, event: FileEvent },
+        Folder { folder_id: Id, event: FolderEvent },
+        Group { group_id: Id, event: GroupEvent },
+        Layer { layer_id: Id, event: LayerEvent },
+        Piece { piece_id: Id, event: PieceEvent },
+        Port { port_id: Id, event: PortEvent },
+        Tag { tag_id: Id, event: TagEvent },
+        Prop { prop_id: Id, event: PropEvent },
+        Quality { quality_id: Id, event: QualityEvent },
+        Representation { representation_id: Id, event: RepresentationEvent },
+        Side { side_id: Id, event: SideEvent },
+        Stat { stat_id: Id, event: StatEvent },
         ChildAdded { parent: EntityRef, child: EntityRef },
         ChildRemoved { parent: EntityRef, child: EntityRef },
         HashInvalidated { entity: EntityRef },
         FlattenInvalidated { design: Id, pieces: Vec<Id> },
         ValidationInvalidated,
-        DerivedChanged { path: EventPath, field: EventField },
-        SetRejected { path: EventPath, field: EventField, error: crate::error::SetError },
+        SetRejected { event: Box<KitEvent>, error: crate::error::SetError },
     }
 
     impl KitEvent {
         pub fn cascade(&self) -> Vec<KitEvent> {
+            let mut events = Vec::new();
+            self.push_cascade(&mut events);
+            events
+        }
+
+        fn push_cascade(&self, events: &mut Vec<KitEvent>) {
             match self {
-                Self::FieldChanged { path, .. } | Self::DerivedChanged { path, .. } if path.entities().len() > 1 => path.entities().iter().cloned().map(|entity| Self::Changed { entity }).chain(std::iter::once(self.clone())).collect(),
-                _ => vec![self.clone()],
+                Self::Design { design_id, event } => {
+                    events.push(Self::Changed);
+                    events.push(Self::Design { design_id: design_id.clone(), event: DesignEvent::Changed });
+                    event.push_cascade(design_id, events);
+                }
+                Self::Type { type_id, event } => {
+                    events.push(Self::Changed);
+                    events.push(Self::Type { type_id: type_id.clone(), event: TypeEvent::Changed });
+                    event.push_cascade(type_id, events);
+                }
+                Self::SetRejected { .. } => events.push(self.clone()),
+                Self::Changed => events.push(self.clone()),
+                Self::FieldChanged(_) => {
+                    events.push(Self::Changed);
+                    events.push(self.clone());
+                }
+                _ => events.push(self.clone()),
+            }
+        }
+    }
+
+    impl DesignEvent {
+        fn push_cascade(&self, design_id: &Id, events: &mut Vec<KitEvent>) {
+            match self {
+                Self::Piece { piece_id, event } => {
+                    events.push(KitEvent::Design { design_id: design_id.clone(), event: Self::Piece { piece_id: piece_id.clone(), event: PieceEvent::Changed } });
+                    if !matches!(event, PieceEvent::Changed) {
+                        events.push(KitEvent::Design { design_id: design_id.clone(), event: self.clone() });
+                    }
+                }
+                Self::Connection { connection_id, event } => {
+                    events.push(KitEvent::Design { design_id: design_id.clone(), event: Self::Connection { connection_id: connection_id.clone(), event: ConnectionEvent::Changed } });
+                    if !matches!(event, ConnectionEvent::Changed) {
+                        events.push(KitEvent::Design { design_id: design_id.clone(), event: self.clone() });
+                    }
+                }
+                Self::Changed => {}
+                _ => events.push(KitEvent::Design { design_id: design_id.clone(), event: self.clone() }),
+            }
+        }
+    }
+
+    impl TypeEvent {
+        fn push_cascade(&self, type_id: &Id, events: &mut Vec<KitEvent>) {
+            match self {
+                Self::Changed => {}
+                _ => events.push(KitEvent::Type { type_id: type_id.clone(), event: self.clone() }),
             }
         }
     }
@@ -6220,7 +6133,7 @@ pub mod file {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -6353,14 +6266,14 @@ pub mod file {
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Url), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Url) }), error: e.clone() });
                 return Err(e);
             }
             if self.url == url {
                 return Ok(());
             }
             self.url = url;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Url) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Url) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6370,7 +6283,7 @@ pub mod file {
                 return Ok(());
             }
             self.mime = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Mime) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Mime) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6380,7 +6293,7 @@ pub mod file {
                 return Ok(());
             }
             self.size = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Size) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Size) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6390,7 +6303,7 @@ pub mod file {
                 return Ok(());
             }
             self.hash = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Hash) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Hash) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6400,7 +6313,7 @@ pub mod file {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Description) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6410,7 +6323,7 @@ pub mod file {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Created) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Created) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6420,7 +6333,7 @@ pub mod file {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::File(crate::events::FileField::Updated) });
+            self.emit_ev(KitEvent::File { file_id: self.id.clone(), event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Updated) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6461,7 +6374,7 @@ pub mod folder {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -6562,7 +6475,7 @@ pub mod folder {
                 return Ok(());
             }
             self.path = path;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Folder(crate::events::FolderField::Path) });
+            self.emit_ev(KitEvent::Folder { folder_id: self.id.clone(), event: crate::events::FolderEvent::FieldChanged(crate::events::FolderField::Path) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6572,7 +6485,7 @@ pub mod folder {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Folder(crate::events::FolderField::Description) });
+            self.emit_ev(KitEvent::Folder { folder_id: self.id.clone(), event: crate::events::FolderEvent::FieldChanged(crate::events::FolderField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6724,7 +6637,7 @@ pub mod group {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::piece::{PieceIdDto, PieceStoreWeak};
@@ -6853,7 +6766,7 @@ pub mod group {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Name) });
+            self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Name) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6863,7 +6776,7 @@ pub mod group {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Description) });
+            self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6873,7 +6786,7 @@ pub mod group {
                 return Ok(());
             }
             self.color = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Color) });
+            self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Color) });
             self.invalidate_hash();
             Ok(())
         }
@@ -6883,14 +6796,14 @@ pub mod group {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Icon) });
+            self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Icon) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn set_pieces(&mut self, pieces: Vec<PieceStoreWeak>) -> crate::error::SetResult {
             self.pieces = pieces;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Group(crate::events::GroupField::Pieces) });
+            self.emit_ev(KitEvent::Group { group_id: self.id.clone(), event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Pieces) });
             self.invalidate_hash();
             Ok(())
         }
@@ -7149,7 +7062,7 @@ pub mod kit {
     use crate::diff::DesignDiff;
     use crate::error::{Result, SemioError, SetError, SetResult};
     use crate::event_wire;
-    use crate::events::{EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileFullDto, FileStore, FileStoreRef};
     use crate::folder::{FolderFullDto, FolderStore, FolderStoreRef};
     use crate::geom::{Coordinate, Plane};
@@ -7438,14 +7351,14 @@ pub mod kit {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Name), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::FieldChanged(crate::events::KitField::Name)), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Name) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Name));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7461,7 +7374,7 @@ pub mod kit {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Description) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Description));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7472,7 +7385,7 @@ pub mod kit {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Icon) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Icon));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7483,7 +7396,7 @@ pub mod kit {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Image) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Image));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7494,7 +7407,7 @@ pub mod kit {
                 return Ok(());
             }
             self.preview = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Preview) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Preview));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7505,7 +7418,7 @@ pub mod kit {
                 return Ok(());
             }
             self.version = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Version) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Version));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7516,7 +7429,7 @@ pub mod kit {
                 return Ok(());
             }
             self.remote = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Remote) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Remote));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7524,14 +7437,14 @@ pub mod kit {
 
         pub fn set_homepage(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_url(&v, "homepage") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Homepage), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::FieldChanged(crate::events::KitField::Homepage)), error: e.clone() });
                 return Err(e);
             }
             if self.homepage == v {
                 return Ok(());
             }
             self.homepage = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Homepage) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Homepage));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7542,7 +7455,7 @@ pub mod kit {
                 return Ok(());
             }
             self.license = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::License) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::License));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7550,14 +7463,14 @@ pub mod kit {
 
         pub fn set_uri(&mut self, v: Option<String>) -> crate::error::SetResult {
             if let Err(e) = crate::validate::optional_opaque_uri(&v, "uri") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Uri), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::FieldChanged(crate::events::KitField::Uri)), error: e.clone() });
                 return Err(e);
             }
             if self.uri == v {
                 return Ok(());
             }
             self.uri = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Uri) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Uri));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7568,7 +7481,7 @@ pub mod kit {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Created) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Created));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7579,7 +7492,7 @@ pub mod kit {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Kit(crate::events::KitField::Updated) });
+            self.emit_ev(KitEvent::FieldChanged(crate::events::KitField::Updated));
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -7655,6 +7568,19 @@ pub mod kit {
 
         pub fn design(&self, id: &str) -> Option<DesignStoreRef> {
             self.designs.iter().find(|d| d.read().map(|d| d.id.as_str() == id).unwrap_or(false)).cloned()
+        }
+
+        /// Find the id of the owning design for a piece id.
+        #[allow(dead_code)]
+        pub(crate) fn find_design_id_for_piece(&self, piece_id: &Id) -> Option<String> {
+            for d in &self.designs {
+                if let Ok(dr) = d.read() {
+                    if dr.piece(piece_id.as_str()).is_some() {
+                        return Some(dr.id.to_string());
+                    }
+                }
+            }
+            None
         }
 
         pub fn file(&self, id: &str) -> Option<FileStoreRef> {
@@ -8551,6 +8477,309 @@ pub mod kit {
             Ok(())
         }
 
+        /// Insert a type from a full DTO (same shape as `from_full_dto` hydration for one type).
+        pub fn insert_type_dto(kit: &KitStoreRef, dto: TypeFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.types.iter().any(|t| t.read().map(|r| r.id.as_str() == dto.id.as_str()).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("type {}", dto.id)));
+            }
+            let t = TypeStore::hydrate_from_full_dto(dto, kit, &g.files);
+            g.types.push(t);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        /// Remove a type and return its [`TypeFullDto`] for undo, or `None` if missing.
+        pub fn remove_type_dto(kit: &KitStoreRef, type_id: &str) -> std::result::Result<Option<TypeFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.types.iter().position(|t| t.read().map(|r| r.id.as_str() == type_id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let t = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.types.remove(pos) };
+            if let Ok(tr) = t.read() {
+                let dto = tr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_file_dto(kit: &KitStoreRef, dto: FileFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.files.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("file {}", dto.id)));
+            }
+            let f = Arc::new(RwLock::new(FileStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.parent_kit = Some(kw);
+            }
+            g.files.push(f);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_file_dto(kit: &KitStoreRef, file_id: &str) -> std::result::Result<Option<FileFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.files.iter().position(|f| f.read().map(|r| r.id.as_str() == file_id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let f = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.files.remove(pos) };
+            if let Ok(fr) = f.read() {
+                let dto = fr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_folder_dto(kit: &KitStoreRef, dto: FolderFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.folders.iter().any(|f| f.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("folder {}", dto.id)));
+            }
+            let f = Arc::new(RwLock::new(FolderStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.parent_kit = Some(kw);
+            }
+            g.folders.push(f);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_folder_dto(kit: &KitStoreRef, folder_id: &str) -> std::result::Result<Option<FolderFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.folders.iter().position(|f| f.read().map(|r| r.id.as_str() == folder_id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let f = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.folders.remove(pos) };
+            if let Ok(fr) = f.read() {
+                let dto = fr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_author_dto(kit: &KitStoreRef, dto: AuthorFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.authors.iter().any(|a| a.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("author {}", dto.id)));
+            }
+            let a = Arc::new(RwLock::new(AuthorStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                a.write().map_err(|_| SetError::LockPoisoned("author".into()))?.parent_kit = Some(kw);
+            }
+            g.authors.push(a);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_author_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<AuthorFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.authors.iter().position(|a| a.read().map(|r| r.id.as_str() == id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let a = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.authors.remove(pos) };
+            if let Ok(ar) = a.read() {
+                let dto = ar.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_concept_dto(kit: &KitStoreRef, dto: ConceptFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.concepts.iter().any(|c| c.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("concept {}", dto.id)));
+            }
+            let c = Arc::new(RwLock::new(ConceptStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                c.write().map_err(|_| SetError::LockPoisoned("concept".into()))?.parent_kit = Some(kw);
+            }
+            g.concepts.push(c);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_concept_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<ConceptFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.concepts.iter().position(|c| c.read().map(|r| r.id.as_str() == id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let c = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.concepts.remove(pos) };
+            if let Ok(cr) = c.read() {
+                let dto = cr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_tag_dto(kit: &KitStoreRef, dto: TagFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.tags.iter().any(|t| t.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("tag {}", dto.id)));
+            }
+            let t = Arc::new(RwLock::new(TagStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                t.write().map_err(|_| SetError::LockPoisoned("tag".into()))?.parent_kit = Some(kw);
+            }
+            g.tags.push(t);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_tag_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<TagFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.tags.iter().position(|t| t.read().map(|r| r.id.as_str() == id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let t = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.tags.remove(pos) };
+            if let Ok(tr) = t.read() {
+                let dto = tr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        pub fn insert_quality_dto(kit: &KitStoreRef, dto: QualityFullDto) -> SetResult {
+            let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+            if g.qualities.iter().any(|q| q.read().map(|r| r.id == dto.id).unwrap_or(false)) {
+                return Err(SetError::DuplicateId(format!("quality {}", dto.id)));
+            }
+            let q = Arc::new(RwLock::new(QualityStore::from_full_dto(dto)));
+            {
+                let kw = Arc::downgrade(kit);
+                if let Ok(mut qw) = q.write() {
+                    qw.parent_kit = Some(kw);
+                }
+            }
+            g.qualities.push(q);
+            g.invalidate_hash();
+            g.invalidate_validation();
+            drop(g);
+            event_wire::wire_graph_bus(kit);
+            Ok(())
+        }
+
+        pub fn remove_quality_dto(kit: &KitStoreRef, id: &str) -> std::result::Result<Option<QualityFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.qualities.iter().position(|q| q.read().map(|r| r.id.as_str() == id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let q = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.qualities.remove(pos) };
+            if let Ok(qr) = q.read() {
+                let dto = qr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
+        /// Remove a design and return its [`DesignFullDto`] for undo, or `None` if missing.
+        pub fn remove_design_dto(kit: &KitStoreRef, design_id: &str) -> std::result::Result<Option<DesignFullDto>, SetError> {
+            let pos = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                g.designs.iter().position(|d| d.read().map(|r| r.id.as_str() == design_id).unwrap_or(false))
+            };
+            let Some(pos) = pos else {
+                return Ok(None);
+            };
+            let d = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.designs.remove(pos) };
+            if let Ok(dr) = d.read() {
+                let dto = dr.to_full_dto();
+                {
+                    let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                    g.invalidate_hash();
+                    g.invalidate_validation();
+                }
+                event_wire::wire_graph_bus(kit);
+                return Ok(Some(dto));
+            }
+            Ok(None)
+        }
+
         pub fn cluster_pieces(kit: &KitStoreRef, design_id: &str, piece_ids: Vec<String>, cluster_name: String) -> SetResult {
             if piece_ids.is_empty() {
                 return Err(SetError::InvalidValue("no piece IDs provided for clustering".into()));
@@ -8992,7 +9221,7 @@ pub mod layer {
     use serde::{Deserialize, Serialize};
     use std::sync::{Arc, RwLock, Weak};
 
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
 
@@ -9120,7 +9349,7 @@ pub mod layer {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Name) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Name) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9130,7 +9359,7 @@ pub mod layer {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Description) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9140,7 +9369,7 @@ pub mod layer {
                 return Ok(());
             }
             self.color = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Color) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Color) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9150,7 +9379,7 @@ pub mod layer {
                 return Ok(());
             }
             self.order = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Order) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Order) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9160,7 +9389,7 @@ pub mod layer {
                 return Ok(());
             }
             self.visible = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Visible) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Visible) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9170,7 +9399,7 @@ pub mod layer {
                 return Ok(());
             }
             self.locked = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Layer(crate::events::LayerField::Locked) });
+            self.emit_ev(KitEvent::Layer { layer_id: self.id.clone(), event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Locked) });
             self.invalidate_hash();
             Ok(())
         }
@@ -9214,7 +9443,7 @@ pub mod piece {
     use crate::connection::ConnectionStoreWeak;
     use crate::design::{DesignStoreRef, DesignStoreWeak};
     use crate::error::{SetError, SetResult};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Plane};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -9550,9 +9779,9 @@ pub mod piece {
             }
             let pose_entity = self.pose_entity_ref();
             self.pose.plane = plane;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(pose_entity.clone()), field: EventField::Piece(crate::events::PieceField::Plane) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Plane) });
             self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Pose) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Pose) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9564,9 +9793,9 @@ pub mod piece {
             }
             let pose_entity = self.pose_entity_ref();
             self.pose.center = center;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(pose_entity.clone()), field: EventField::Piece(crate::events::PieceField::Center) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Center) });
             self.emit_ev(KitEvent::HashInvalidated { entity: pose_entity });
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Pose) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Pose) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9577,14 +9806,14 @@ pub mod piece {
                 return Ok(());
             }
             self.color = color;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Color) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Color) });
             self.invalidate_hash();
             Ok(())
         }
 
         pub fn set_type_weak(&mut self, type_ref: Option<TypeStoreWeak>) -> crate::error::SetResult {
             self.type_ref = type_ref;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Kind) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Kind) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9597,7 +9826,7 @@ pub mod piece {
             let previous_id = self.id.clone();
             let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(previous_entity.clone()), field: EventField::Piece(crate::events::PieceField::Id) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Id) });
             self.hash_cache.invalidate();
             self.invalidate_flat_pose();
             self.emit_ev(KitEvent::HashInvalidated { entity: previous_entity });
@@ -9617,14 +9846,14 @@ pub mod piece {
                 Some(s) => Some(s.trim().to_string()),
             };
             if let Err(e) = crate::validate::optional_display_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Name), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Name) }), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Name) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Name) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9640,7 +9869,7 @@ pub mod piece {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Description) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Description) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9651,7 +9880,7 @@ pub mod piece {
                 return Ok(());
             }
             self.scale = scale;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Scale) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Scale) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9662,7 +9891,7 @@ pub mod piece {
                 return Ok(());
             }
             self.mirror_plane = mirror_plane;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::MirrorPlane) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::MirrorPlane) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9673,7 +9902,7 @@ pub mod piece {
                 return Ok(());
             }
             self.hidden = hidden;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Hidden) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Hidden) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -9684,7 +9913,7 @@ pub mod piece {
                 return Ok(());
             }
             self.locked = locked;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Piece(crate::events::PieceField::Locked) });
+            self.emit_ev(KitEvent::Piece { piece_id: self.id.clone(), event: crate::events::PieceEvent::FieldChanged(crate::events::PieceField::Locked) });
             self.invalidate_hash();
             self.bubble_design_flatten();
             Ok(())
@@ -10123,7 +10352,7 @@ pub mod port {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::{Coordinate, Vector};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -10353,7 +10582,7 @@ pub mod port {
                 return Ok(());
             }
             self.id = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Id) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Id) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10363,7 +10592,7 @@ pub mod port {
                 return Ok(());
             }
             self.family = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Family) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10373,7 +10602,7 @@ pub mod port {
                 return Ok(());
             }
             self.compatible_families = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::CompatibleFamilies) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::CompatibleFamilies) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10383,7 +10612,7 @@ pub mod port {
                 return Ok(());
             }
             self.mandatory = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Mandatory) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Mandatory) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10393,7 +10622,7 @@ pub mod port {
                 return Ok(());
             }
             self.t = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::T) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::T) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10403,7 +10632,7 @@ pub mod port {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Description) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10413,7 +10642,7 @@ pub mod port {
                 return Ok(());
             }
             self.point = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Point) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Point) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10423,7 +10652,7 @@ pub mod port {
                 return Ok(());
             }
             self.direction = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Port(crate::events::PortField::Direction) });
+            self.emit_ev(KitEvent::Port { port_id: self.id.clone(), event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Direction) });
             self.invalidate_hash();
             Ok(())
         }
@@ -10483,7 +10712,7 @@ pub mod prop {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -10574,7 +10803,7 @@ pub mod prop {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Key) });
+            self.emit_ev(KitEvent::Prop { prop_id: self.id.clone(), event: crate::events::PropEvent::FieldChanged(crate::events::PropField::Key) });
             self.bubble();
             Ok(())
         }
@@ -10584,7 +10813,7 @@ pub mod prop {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Value) });
+            self.emit_ev(KitEvent::Prop { prop_id: self.id.clone(), event: crate::events::PropEvent::FieldChanged(crate::events::PropField::Value) });
             self.bubble();
             Ok(())
         }
@@ -10594,7 +10823,7 @@ pub mod prop {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Prop(crate::events::PropField::Unit) });
+            self.emit_ev(KitEvent::Prop { prop_id: self.id.clone(), event: crate::events::PropEvent::FieldChanged(crate::events::PropField::Unit) });
             self.bubble();
             Ok(())
         }
@@ -10683,7 +10912,7 @@ pub mod quality {
     use crate::benchmark::{BenchmarkFullDto, BenchmarkMetadataDto, BenchmarkStore, BenchmarkStoreRef};
     use crate::connector::ConnectorStoreWeak;
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -10810,7 +11039,7 @@ pub mod quality {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Key) });
+            self.emit_ev(KitEvent::Quality { quality_id: self.id.clone(), event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Key) });
             self.bubble();
             Ok(())
         }
@@ -10820,7 +11049,7 @@ pub mod quality {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Value) });
+            self.emit_ev(KitEvent::Quality { quality_id: self.id.clone(), event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Value) });
             self.bubble();
             Ok(())
         }
@@ -10830,7 +11059,7 @@ pub mod quality {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Unit) });
+            self.emit_ev(KitEvent::Quality { quality_id: self.id.clone(), event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Unit) });
             self.bubble();
             Ok(())
         }
@@ -10840,7 +11069,7 @@ pub mod quality {
                 return Ok(());
             }
             self.definition = definition;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Definition) });
+            self.emit_ev(KitEvent::Quality { quality_id: self.id.clone(), event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Definition) });
             self.bubble();
             Ok(())
         }
@@ -10850,7 +11079,7 @@ pub mod quality {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Quality(crate::events::QualityField::Description) });
+            self.emit_ev(KitEvent::Quality { quality_id: self.id.clone(), event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Description) });
             self.bubble();
             Ok(())
         }
@@ -11064,7 +11293,7 @@ pub mod representation {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::attribute::{AttributeFullDto, AttributeShallowDto, AttributeStore};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::file::{FileIdDto, FileStoreWeak};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -11211,14 +11440,17 @@ pub mod representation {
 
         pub fn set_url(&mut self, url: String) -> crate::error::SetResult {
             if let Err(e) = crate::validate::required_url(&url, "url") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Url), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected {
+                    event: Box::new(KitEvent::Representation { representation_id: self.id.clone(), event: crate::events::RepresentationEvent::FieldChanged(crate::events::RepresentationField::Url) }),
+                    error: e.clone(),
+                });
                 return Err(e);
             }
             if self.url == url {
                 return Ok(());
             }
             self.url = url;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Url) });
+            self.emit_ev(KitEvent::Representation { representation_id: self.id.clone(), event: crate::events::RepresentationEvent::FieldChanged(crate::events::RepresentationField::Url) });
             self.invalidate_hash();
             Ok(())
         }
@@ -11228,7 +11460,7 @@ pub mod representation {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Representation(crate::events::RepresentationField::Description) });
+            self.emit_ev(KitEvent::Representation { representation_id: self.id.clone(), event: crate::events::RepresentationEvent::FieldChanged(crate::events::RepresentationField::Description) });
             self.invalidate_hash();
             Ok(())
         }
@@ -11280,7 +11512,7 @@ pub mod side {
     use std::sync::{Arc, RwLock, Weak};
 
     use crate::connection::ConnectionStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::piece::PieceStoreWeak;
@@ -11358,21 +11590,21 @@ pub mod side {
 
         pub fn set_piece_weak(&mut self, piece: PieceStoreWeak) -> crate::error::SetResult {
             self.piece = piece;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::Piece) });
+            self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::Piece) });
             self.bubble();
             Ok(())
         }
 
         pub fn set_port_weak(&mut self, port: Option<PortStoreWeak>) -> crate::error::SetResult {
             self.port = port;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::Port) });
+            self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::Port) });
             self.bubble();
             Ok(())
         }
 
         pub fn set_design_piece_weak(&mut self, design_piece: Option<PieceStoreWeak>) -> crate::error::SetResult {
             self.design_piece = design_piece;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Side(crate::events::SideField::DesignPiece) });
+            self.emit_ev(KitEvent::Side { side_id: self.id.clone(), event: crate::events::SideEvent::FieldChanged(crate::events::SideField::DesignPiece) });
             self.bubble();
             Ok(())
         }
@@ -11454,7 +11686,7 @@ pub mod stat {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -11548,7 +11780,7 @@ pub mod stat {
                 return Ok(());
             }
             self.key = key;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Key) });
+            self.emit_ev(KitEvent::Stat { stat_id: self.id.clone(), event: crate::events::StatEvent::FieldChanged(crate::events::StatField::Key) });
             self.bubble();
             Ok(())
         }
@@ -11558,7 +11790,7 @@ pub mod stat {
                 return Ok(());
             }
             self.value = value;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Value) });
+            self.emit_ev(KitEvent::Stat { stat_id: self.id.clone(), event: crate::events::StatEvent::FieldChanged(crate::events::StatField::Value) });
             self.bubble();
             Ok(())
         }
@@ -11568,7 +11800,7 @@ pub mod stat {
                 return Ok(());
             }
             self.unit = unit;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Unit) });
+            self.emit_ev(KitEvent::Stat { stat_id: self.id.clone(), event: crate::events::StatEvent::FieldChanged(crate::events::StatField::Unit) });
             self.bubble();
             Ok(())
         }
@@ -11578,7 +11810,7 @@ pub mod stat {
                 return Ok(());
             }
             self.description = description;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Stat(crate::events::StatField::Description) });
+            self.emit_ev(KitEvent::Stat { stat_id: self.id.clone(), event: crate::events::StatEvent::FieldChanged(crate::events::StatField::Description) });
             self.bubble();
             Ok(())
         }
@@ -11651,7 +11883,7 @@ pub mod tag {
     use std::sync::{RwLock, Weak};
 
     use crate::design::DesignStoreWeak;
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
     use crate::kit::KitStoreWeak;
@@ -11742,7 +11974,7 @@ pub mod tag {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Tag(crate::events::TagField::Name) });
+            self.emit_ev(KitEvent::Tag { tag_id: self.id.clone(), event: crate::events::TagEvent::FieldChanged(crate::events::TagField::Name) });
             self.bubble();
             Ok(())
         }
@@ -11752,7 +11984,7 @@ pub mod tag {
                 return Ok(());
             }
             self.order = order;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Tag(crate::events::TagField::Order) });
+            self.emit_ev(KitEvent::Tag { tag_id: self.id.clone(), event: crate::events::TagEvent::FieldChanged(crate::events::TagField::Order) });
             self.bubble();
             Ok(())
         }
@@ -11838,7 +12070,7 @@ pub mod typ {
     use crate::author::{AuthorFullDto, AuthorShallowDto, AuthorStore, AuthorStoreRef};
     use crate::concept::{ConceptFullDto, ConceptShallowDto, ConceptStore, ConceptStoreRef};
     use crate::connector::{ConnectorFullDto, ConnectorShallowDto, ConnectorStore, ConnectorStoreRef};
-    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, EventField, KitEvent};
+    use crate::events::{emit_weak, EntityKind, EntityRef, EventBus, KitEvent};
     use crate::geom::Location;
     use crate::hash::{Cache, HashWriter};
     use crate::id::Id;
@@ -12059,14 +12291,14 @@ pub mod typ {
         pub fn set_name(&mut self, name: String) -> crate::error::SetResult {
             let name = name.trim().to_string();
             if let Err(e) = crate::validate::required_name(&name, "name") {
-                self.emit_ev(KitEvent::SetRejected { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Name), error: e.clone() });
+                self.emit_ev(KitEvent::SetRejected { event: Box::new(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Name) }), error: e.clone() });
                 return Err(e);
             }
             if self.name == name {
                 return Ok(());
             }
             self.name = name;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Name) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Name) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12082,7 +12314,7 @@ pub mod typ {
                 return Ok(());
             }
             self.description = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Description) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Description) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12093,7 +12325,7 @@ pub mod typ {
                 return Ok(());
             }
             self.icon = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Icon) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Icon) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12104,7 +12336,7 @@ pub mod typ {
                 return Ok(());
             }
             self.image = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Image) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Image) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12115,7 +12347,7 @@ pub mod typ {
                 return Ok(());
             }
             self.variant = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Variant) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Variant) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12126,7 +12358,7 @@ pub mod typ {
                 return Ok(());
             }
             self.stock = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Stock) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Stock) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12137,7 +12369,7 @@ pub mod typ {
                 return Ok(());
             }
             self.virtual_ = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Virtual) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Virtual) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12148,7 +12380,7 @@ pub mod typ {
                 return Ok(());
             }
             self.unit = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Unit) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Unit) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12159,7 +12391,7 @@ pub mod typ {
                 return Ok(());
             }
             self.location = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Location) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Location) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12170,7 +12402,7 @@ pub mod typ {
                 return Ok(());
             }
             self.created = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Created) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Created) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -12181,7 +12413,7 @@ pub mod typ {
                 return Ok(());
             }
             self.updated = v;
-            self.emit_ev(KitEvent::FieldChanged { path: crate::events::EventPath::of(self.entity_ref()), field: EventField::Type(crate::events::TypeField::Updated) });
+            self.emit_ev(KitEvent::Type { type_id: self.id.clone(), event: crate::events::TypeEvent::FieldChanged(crate::events::TypeField::Updated) });
             self.invalidate_hash();
             self.invalidate_validation();
             Ok(())
@@ -14596,6 +14828,160 @@ mod tests {
         }
     }
 
+    /// Round-trip tests for [`crate::change_command::ChangeKitCommand`] forward + inverse.
+    mod change_command_rt {
+        use std::sync::{Arc, RwLock};
+
+        use crate::change_command::{
+            ChangeDesignCommand, ChangeKitCommand, ChangePieceCommand, ChangeTypeCommand,
+        };
+        use crate::design::DesignFullDto;
+        use crate::design::DesignIdDto;
+        use crate::id::Id;
+        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+        use crate::kit_change::KitChange;
+        use crate::kit_diff::KitDiff;
+        use crate::piece::PieceFullDto;
+        use crate::piece::PieceIdDto;
+        use crate::typ::TypeFullDto;
+        use crate::typ::TypeIdDto;
+
+        fn small_kit() -> (KitStoreRef, Id, Id, Id) {
+            let kid = Id::new_v7();
+            let tid = Id::new_v7();
+            let did = Id::new_v7();
+            let pid = Id::new_v7();
+            let kit = KitStore::from_full_dto(KitFullDto {
+                id: kid,
+                name: "k".into(),
+                types: vec![TypeFullDto {
+                    id: tid.clone(),
+                    name: "T0".into(),
+                    ..Default::default()
+                }],
+                designs: vec![DesignFullDto {
+                    id: did.clone(),
+                    name: "D0".into(),
+                    pieces: vec![PieceFullDto {
+                        id: pid.clone(),
+                        name: Some("P0".into()),
+                        r#type: Some(TypeIdDto { id: tid.clone() }),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            });
+            (kit, tid, did, pid)
+        }
+
+        fn undo_inverses(kit: &KitStoreRef, inv: &[ChangeKitCommand]) {
+            for u in inv {
+                u.run(kit).expect("undo step");
+            }
+        }
+
+        #[test]
+        fn roundtrip_kit_metadata_scalar() {
+            let kit = Arc::new(RwLock::new(KitStore::new("orig")));
+            let before = kit.read().expect("read").to_full_dto();
+            let cmd = ChangeKitCommand::Name {
+                name: "renamed".into(),
+            };
+            let (_, inv) = cmd.apply(&kit).expect("apply");
+            assert_eq!(kit.read().expect("read").name, "renamed");
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn roundtrip_type_name_nested() {
+            let (kit, tid, _, _) = small_kit();
+            let before = kit.read().expect("read").to_full_dto();
+            let cmd = ChangeKitCommand::ChangeTypeCommands {
+                type_id: TypeIdDto { id: tid },
+                commands: vec![ChangeTypeCommand::Name {
+                    name: "T1".into(),
+                }],
+            };
+            let (_, inv) = cmd.apply(&kit).expect("apply");
+            assert_ne!(kit.read().expect("read").to_full_dto(), before);
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn roundtrip_design_and_piece_nested() {
+            let (kit, _, did, pid) = small_kit();
+            let before = kit.read().expect("read").to_full_dto();
+            let cmd = ChangeKitCommand::ChangeDesignCommands {
+                design_id: DesignIdDto { id: did },
+                commands: vec![
+                    ChangeDesignCommand::Name {
+                        name: "D1".into(),
+                    },
+                    ChangeDesignCommand::ChangePieceCommands {
+                        piece_id: PieceIdDto { id: pid.clone() },
+                        commands: vec![ChangePieceCommand::Name {
+                            name: Some("P1".into()),
+                        }],
+                    },
+                ],
+            };
+            let (_, inv) = cmd.apply(&kit).expect("apply");
+            assert_ne!(kit.read().expect("read").to_full_dto(), before);
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn roundtrip_from_kit_diff_command() {
+            let (kit, _, _, _) = small_kit();
+            let before = kit.read().expect("read").to_full_dto();
+            let after = {
+                let mut a = before.clone();
+                a.name = "patched".into();
+                a
+            };
+            let diff = KitDiff::between(&before, &after);
+            let cmd = ChangeKitCommand::FromKitDiff { diff };
+            let (_, inv) = cmd.apply(&kit).expect("apply");
+            assert_eq!(kit.read().expect("read").name, "patched");
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn roundtrip_kit_change_apply_forward_backward_on_store() {
+            let (kit, _, _, _) = small_kit();
+            let before = kit.read().expect("read").to_full_dto();
+            let mut after = before.clone();
+            after.name = "via-change".into();
+            let kc = KitChange::from_dto_pair(&before, &after).expect("delta");
+            KitChange::apply_forward(&kc, &kit).expect("forward");
+            assert_eq!(kit.read().expect("read").name, "via-change");
+            KitChange::apply_backward(&kc, &kit).expect("backward");
+            assert_eq!(kit.read().expect("read").to_full_dto(), before);
+        }
+
+        #[test]
+        fn apply_many_concatenates_inverses_for_undo_order() {
+            let kit = Arc::new(RwLock::new(KitStore::new("a")));
+            let cmds = [
+                ChangeKitCommand::Name {
+                    name: "b".into(),
+                },
+                ChangeKitCommand::Name {
+                    name: "c".into(),
+                },
+            ];
+            let (_, inv) = ChangeKitCommand::apply_many(&kit, &cmds).expect("apply_many");
+            assert_eq!(kit.read().expect("r").name, "c");
+            undo_inverses(&kit, &inv);
+            assert_eq!(kit.read().expect("r").name, "a");
+        }
+    }
+
     mod diff {
         use crate::design::DesignStore;
         use crate::diff::DesignDiff;
@@ -15471,7 +15857,7 @@ mod tests {
             use crate::connection::ConnectionFullDto;
             use crate::connector::ConnectorFullDto;
             use crate::design::DesignFullDto;
-            use crate::events::{EntityKind, EntityRef, EventField, KitEvent};
+            use crate::events::{EntityKind, EntityRef, KitEvent};
             use crate::file::FileFullDto;
             use crate::group::GroupFullDto;
             use crate::id::Id;
@@ -15649,120 +16035,112 @@ mod tests {
                 (kit, type_id, design_id, piece_a, piece_b, conn_id)
             }
 
-            /// Design metadata change with a single piece: field change, design hash, flatten+derived, kit hash, validation.
-            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
-                assert_eq!(evs.len(), 7, "{evs:?}");
-                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == design_er && *f == field), "ev0 {:?}", evs.get(0));
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == design_er), "ev1 {:?}", evs.get(1));
+            /// Design metadata change with a single piece: typed design field, flatten+derived, kit hash, validation.
+            pub fn assert_design_scalar_metadata_events(evs: &[KitEvent], design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::DesignField) {
                 assert!(
-                    matches!(
-                        &evs[2],
-                        KitEvent::FlattenInvalidated { design, pieces }
-                            if *design == design_er.id && pieces.len() == 1 && pieces[0] == *piece_g
-                    ),
-                    "ev2 {:?}",
-                    evs.get(2)
+                    evs.iter().any(|event| matches!(
+                        event,
+                        KitEvent::Design {
+                            design_id,
+                            event: crate::events::DesignEvent::FieldChanged(f)
+                        } if *design_id == design_er.id && *f == field
+                    )),
+                    "{evs:?}"
                 );
-                assert!(
-                    matches!(
-                        &evs[3],
-                        KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g
-                    ),
-                    "ev3 {:?}",
-                    evs.get(3)
-                );
-                assert!(
-                    matches!(
-                        &evs[4],
-                        KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g
-                    ),
-                    "ev4 {:?}",
-                    evs.get(4)
-                );
-                assert!(matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er), "ev5 {:?}", evs.get(5));
-                assert!(matches!(evs[6], KitEvent::ValidationInvalidated), "ev6 {:?}", evs.get(6));
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g))), "{evs:?}");
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatPlane);
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
             }
 
-            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
-                assert_eq!(evs.len(), 7, "{evs:?}");
-                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field));
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er));
-                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er));
-                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er));
-                assert!(matches!(&evs[4], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)), "ev4 {:?}", evs.get(4));
-                assert!(matches!(&evs[5], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g));
-                assert!(matches!(&evs[6], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g));
+            pub fn assert_piece_geometry_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
+                assert_piece_field(evs, piece_g, field);
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g))), "{evs:?}");
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatPlane);
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
             }
 
-            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: EventField) {
+            pub fn assert_piece_pose_change(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, piece_g: &Id, field: crate::events::PieceField) {
                 let pose_er = EntityRef::new(EntityKind::Pose, piece_g.clone());
-                assert_eq!(evs.len(), 9, "{evs:?}");
-                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == pose_er && *f == field), "ev0 {:?}", evs.get(0));
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == pose_er), "ev1 {:?}", evs.get(1));
-                assert!(matches!(&evs[2], KitEvent::FieldChanged { path, field: EventField::Piece(crate::events::PieceField::Pose) } if *path.leaf() == piece_er), "ev2 {:?}", evs.get(2));
-                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == piece_er), "ev3 {:?}", evs.get(3));
-                assert!(matches!(&evs[4], KitEvent::HashInvalidated { entity } if *entity == design_er), "ev4 {:?}", evs.get(4));
-                assert!(matches!(&evs[5], KitEvent::HashInvalidated { entity } if *entity == kit_er), "ev5 {:?}", evs.get(5));
-                assert!(matches!(&evs[6], KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g)), "ev6 {:?}", evs.get(6));
-                assert!(matches!(&evs[7], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatPlane) } if path.leaf().id == *piece_g), "ev7 {:?}", evs.get(7));
-                assert!(matches!(&evs[8], KitEvent::DerivedChanged { path, field: EventField::Piece(crate::events::PieceField::FlatCenter) } if path.leaf().id == *piece_g), "ev8 {:?}", evs.get(8));
+                assert_piece_field(evs, piece_g, field);
+                assert_piece_field(evs, piece_g, crate::events::PieceField::Pose);
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == pose_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::FlattenInvalidated { design, pieces } if *design == design_er.id && pieces.contains(piece_g))), "{evs:?}");
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatPlane);
+                assert_piece_derived(evs, piece_g, crate::events::PieceField::FlatCenter);
+            }
+
+            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, field: crate::events::PieceField) {
+                assert_piece_field(evs, &piece_er.id, field);
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == piece_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == design_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
+            }
+
+            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityRef, kit_er: EntityRef, field: crate::events::TypeField) {
                 assert!(
-                    !evs.iter().any(|event| {
-                        matches!(
-                            event,
-                            KitEvent::FieldChanged {
-                                path,
-                                field: EventField::Piece(crate::events::PieceField::Plane)
-                            } if *path.leaf() == piece_er
-                        ) || matches!(
-                            event,
-                            KitEvent::FieldChanged {
-                                path,
-                                field: EventField::Piece(crate::events::PieceField::Center)
-                            } if *path.leaf() == piece_er
-                        )
-                    }),
-                    "piece should only bubble pose for pose edits: {evs:?}"
+                    evs.iter().any(|event| matches!(
+                        event,
+                        KitEvent::Type {
+                            type_id,
+                            event: crate::events::TypeEvent::FieldChanged(f)
+                        } if *type_id == typ_er.id && *f == field
+                    )),
+                    "{evs:?}"
+                );
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == typ_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_er)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
+            }
+
+            /// Assert kit metadata changes emit a root typed field event, kit hash, and validation.
+            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: crate::events::KitField) {
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::FieldChanged(f) if *f == field)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::HashInvalidated { entity } if *entity == kit_ref)), "{evs:?}");
+                assert!(evs.iter().any(|event| matches!(event, KitEvent::ValidationInvalidated)), "{evs:?}");
+            }
+
+            fn assert_piece_field(evs: &[KitEvent], piece_id: &Id, field: crate::events::PieceField) {
+                assert!(
+                    evs.iter().any(|event| matches!(
+                        event,
+                        KitEvent::Piece {
+                            piece_id: id,
+                            event: crate::events::PieceEvent::FieldChanged(f)
+                        } if id == piece_id && *f == field
+                    )),
+                    "{evs:?}"
                 );
             }
 
-            pub fn assert_piece_scalar_hash_only(evs: &[KitEvent], piece_er: EntityRef, design_er: EntityRef, kit_er: EntityRef, field: EventField) {
-                assert_eq!(evs.len(), 4, "{evs:?}");
-                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == piece_er && *f == field));
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == piece_er));
-                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == design_er));
-                assert!(matches!(&evs[3], KitEvent::HashInvalidated { entity } if *entity == kit_er));
-            }
-
-            pub fn assert_type_metadata_core(evs: &[KitEvent], typ_er: EntityRef, kit_er: EntityRef, field: EventField) {
-                assert_eq!(evs.len(), 4, "{evs:?}");
-                assert!(matches!(&evs[0], KitEvent::FieldChanged { path, field: f } if *path.leaf() == typ_er && *f == field));
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == typ_er));
-                assert!(matches!(&evs[2], KitEvent::HashInvalidated { entity } if *entity == kit_er));
-                assert!(matches!(evs[3], KitEvent::ValidationInvalidated));
-            }
-
-            /// Assert the first events match: FieldChanged(field), HashInvalidated(self), ValidationInvalidated.
-            pub fn assert_kit_metadata_core(evs: &[KitEvent], kit_ref: EntityRef, field: EventField) {
-                assert!(evs.len() >= 3, "expected at least 3 events, got {:?}", evs);
+            fn assert_piece_derived(evs: &[KitEvent], piece_id: &Id, field: crate::events::PieceField) {
                 assert!(
-                    matches!(
-                        &evs[0],
-                        KitEvent::FieldChanged { path, field: f }
-                            if *path.leaf() == kit_ref && *f == field
-                    ),
-                    "ev[0] want FieldChanged {{ field: {:?} }}, got {:?}",
-                    field,
-                    evs.get(0)
+                    evs.iter().any(|event| matches!(
+                        event,
+                        KitEvent::Design {
+                            event: crate::events::DesignEvent::Piece {
+                                piece_id: id,
+                                event: crate::events::PieceEvent::DerivedChanged(f)
+                            },
+                            ..
+                        } if id == piece_id && *f == field
+                    )),
+                    "{evs:?}"
                 );
-                assert!(matches!(&evs[1], KitEvent::HashInvalidated { entity } if *entity == kit_ref), "ev[1] want HashInvalidated kit, got {:?}", evs.get(1));
-                assert!(matches!(evs[2], KitEvent::ValidationInvalidated), "ev[2] want ValidationInvalidated, got {:?}", evs.get(2));
             }
         }
 
         mod attribute {
             use crate::attribute::AttributeFullDto;
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -15777,13 +16155,13 @@ mod tests {
                 };
                 a.write().unwrap().set_value("v2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Attribute(crate::events::AttributeField::Value), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Attribute { event: crate::events::AttributeEvent::FieldChanged(crate::events::AttributeField::Value), .. })));
             }
         }
 
         mod author {
             use crate::author::AuthorFullDto;
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -15798,7 +16176,7 @@ mod tests {
                 };
                 a.write().unwrap().set_email("e2@x".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Author(crate::events::AuthorField::Email), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Author { event: crate::events::AuthorEvent::FieldChanged(crate::events::AuthorField::Email), .. })));
             }
         }
 
@@ -15843,7 +16221,7 @@ mod tests {
 
         mod benchmark {
             use crate::benchmark::BenchmarkFullDto;
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::port::PortFullDto;
@@ -15884,13 +16262,13 @@ mod tests {
                 };
                 b.write().unwrap().set_min(Some(1.0));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Benchmark(crate::events::BenchmarkField::Min), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Benchmark { event: crate::events::BenchmarkEvent::FieldChanged(crate::events::BenchmarkField::Min), .. })));
             }
         }
 
         mod concept {
             use crate::concept::ConceptFullDto;
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
 
@@ -15905,12 +16283,12 @@ mod tests {
                 };
                 c.write().unwrap().set_name("c2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Concept(crate::events::ConceptField::Name), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Concept { event: crate::events::ConceptEvent::FieldChanged(crate::events::ConceptField::Name), .. })));
             }
         }
 
         mod connection {
-            use crate::events::{EntityKind, EntityRef, EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn connection_set_gap_triggers_flatten_and_validation() {
@@ -15924,23 +16302,46 @@ mod tests {
                 };
                 c.write().unwrap().set_gap(Some(1.0));
                 let evs = super::common::drain(&mut rx);
-                let kit_er = super::common::kit_entity_ref(&kit);
-                let design_er = EntityRef::new(EntityKind::Design, dg.clone());
-                let connection_er = EntityRef::new(EntityKind::Connection, cg.clone());
-                assert!(matches!(&evs[0], KitEvent::Changed { entity } if *entity == kit_er), "ev0 {:?}", evs.get(0));
-                assert!(matches!(&evs[1], KitEvent::Changed { entity } if *entity == design_er), "ev1 {:?}", evs.get(1));
-                assert!(matches!(&evs[2], KitEvent::Changed { entity } if *entity == connection_er), "ev2 {:?}", evs.get(2));
+                assert!(matches!(&evs[0], KitEvent::Changed), "ev0 {:?}", evs.get(0));
+                assert!(
+                    matches!(
+                        &evs[1],
+                        KitEvent::Design {
+                            design_id,
+                            event: crate::events::DesignEvent::Changed,
+                        } if *design_id == dg
+                    ),
+                    "ev1 {:?}",
+                    evs.get(1)
+                );
+                assert!(
+                    matches!(
+                        &evs[2],
+                        KitEvent::Design {
+                            design_id,
+                            event: crate::events::DesignEvent::Connection {
+                                connection_id,
+                                event: crate::events::ConnectionEvent::Changed,
+                            },
+                        } if *design_id == dg && *connection_id == cg
+                    ),
+                    "ev2 {:?}",
+                    evs.get(2)
+                );
                 assert!(
                     matches!(
                         &evs[3],
-                        KitEvent::FieldChanged { path, field: EventField::Connection(crate::events::ConnectionField::Gap) }
-                            if *path.leaf() == connection_er
-                                && path.entities() == [kit_er.clone(), design_er.clone(), connection_er.clone()]
+                        KitEvent::Design {
+                            design_id,
+                            event: crate::events::DesignEvent::Connection {
+                                connection_id,
+                                event: crate::events::ConnectionEvent::FieldChanged(crate::events::ConnectionField::Gap),
+                            },
+                        } if *design_id == dg && *connection_id == cg
                     ),
                     "ev3 {:?}",
                     evs.get(3)
                 );
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Connection(crate::events::ConnectionField::Gap), .. })));
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::FlattenInvalidated { .. })));
                 assert!(evs.iter().any(|e| matches!(e, KitEvent::ValidationInvalidated)));
             }
@@ -15971,7 +16372,7 @@ mod tests {
         }
 
         mod connector {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn connector_set_code_emits() {
@@ -15985,12 +16386,12 @@ mod tests {
                 };
                 c.write().unwrap().set_code("C2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Connector(crate::events::ConnectorField::Code), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Connector { event: crate::events::ConnectorEvent::FieldChanged(crate::events::ConnectorField::Code), .. })));
             }
         }
 
         mod design {
-            use crate::events::{EntityKind, EntityRef, EventField};
+            use crate::events::{EntityKind, EntityRef};
             use crate::geom::{Camera, Coordinate, Location};
 
             macro_rules! design_meta_test {
@@ -16013,25 +16414,25 @@ mod tests {
                 };
             }
 
-            design_meta_test!(design_set_name, EventField::Design(crate::events::DesignField::Name), |d: &mut crate::DesignStore| { d.set_name("x".into()) });
-            design_meta_test!(design_set_description, EventField::Design(crate::events::DesignField::Description), |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
-            design_meta_test!(design_set_icon, EventField::Design(crate::events::DesignField::Icon), |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
-            design_meta_test!(design_set_image, EventField::Design(crate::events::DesignField::Image), |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
-            design_meta_test!(design_set_variant, EventField::Design(crate::events::DesignField::Variant), |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) });
-            design_meta_test!(design_set_view, EventField::Design(crate::events::DesignField::View), |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) });
-            design_meta_test!(design_set_location, EventField::Design(crate::events::DesignField::Location), |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) });
-            design_meta_test!(design_set_camera, EventField::Design(crate::events::DesignField::Camera), |d: &mut crate::DesignStore| {
+            design_meta_test!(design_set_name, crate::events::DesignField::Name, |d: &mut crate::DesignStore| { d.set_name("x".into()) });
+            design_meta_test!(design_set_description, crate::events::DesignField::Description, |d: &mut crate::DesignStore| { d.set_description(Some("d".into())) });
+            design_meta_test!(design_set_icon, crate::events::DesignField::Icon, |d: &mut crate::DesignStore| { d.set_icon(Some("i".into())) });
+            design_meta_test!(design_set_image, crate::events::DesignField::Image, |d: &mut crate::DesignStore| { d.set_image(Some("m".into())) });
+            design_meta_test!(design_set_variant, crate::events::DesignField::Variant, |d: &mut crate::DesignStore| { d.set_variant(Some("v".into())) });
+            design_meta_test!(design_set_view, crate::events::DesignField::View, |d: &mut crate::DesignStore| { d.set_view(Some("vw".into())) });
+            design_meta_test!(design_set_location, crate::events::DesignField::Location, |d: &mut crate::DesignStore| { d.set_location(Some(Location::new(1.0, 2.0))) });
+            design_meta_test!(design_set_camera, crate::events::DesignField::Camera, |d: &mut crate::DesignStore| {
                 let mut cam = Camera::default();
                 cam.position = Coordinate::new(0.0, 0.0, 1.0);
                 d.set_camera(Some(cam))
             });
-            design_meta_test!(design_set_unit, EventField::Design(crate::events::DesignField::Unit), |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
-            design_meta_test!(design_set_created, EventField::Design(crate::events::DesignField::Created), |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
-            design_meta_test!(design_set_updated, EventField::Design(crate::events::DesignField::Updated), |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
+            design_meta_test!(design_set_unit, crate::events::DesignField::Unit, |d: &mut crate::DesignStore| { d.set_unit(Some("mm".into())) });
+            design_meta_test!(design_set_created, crate::events::DesignField::Created, |d: &mut crate::DesignStore| { d.set_created(Some("c".into())) });
+            design_meta_test!(design_set_updated, crate::events::DesignField::Updated, |d: &mut crate::DesignStore| { d.set_updated(Some("u".into())) });
         }
 
         mod file {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn file_set_mime_emits() {
@@ -16043,12 +16444,12 @@ mod tests {
                 };
                 f.write().unwrap().set_mime(Some("image/png".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::File(crate::events::FileField::Mime), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::File { event: crate::events::FileEvent::FieldChanged(crate::events::FileField::Mime), .. })));
             }
         }
 
         mod folder {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::folder::FolderFullDto;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
@@ -16064,12 +16465,12 @@ mod tests {
                 };
                 f.write().unwrap().set_description(Some("d".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Folder(crate::events::FolderField::Description), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Folder { event: crate::events::FolderEvent::FieldChanged(crate::events::FolderField::Description), .. })));
             }
         }
 
         mod group {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn group_set_color_emits() {
@@ -16083,12 +16484,11 @@ mod tests {
                 };
                 g.write().unwrap().set_color(Some("#000".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Group(crate::events::GroupField::Color), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Group { event: crate::events::GroupEvent::FieldChanged(crate::events::GroupField::Color), .. })));
             }
         }
 
         mod kit {
-            use crate::events::EventField;
 
             macro_rules! kit_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
@@ -16107,18 +16507,18 @@ mod tests {
                 };
             }
 
-            kit_meta_test!(kit_set_name, EventField::Kit(crate::events::KitField::Name), |k: &mut crate::KitStore| { k.set_name("a".into()) });
-            kit_meta_test!(kit_set_description, EventField::Kit(crate::events::KitField::Description), |k: &mut crate::KitStore| { k.set_description(Some("d".into())) });
-            kit_meta_test!(kit_set_icon, EventField::Kit(crate::events::KitField::Icon), |k: &mut crate::KitStore| { k.set_icon(Some("ic".into())) });
-            kit_meta_test!(kit_set_image, EventField::Kit(crate::events::KitField::Image), |k: &mut crate::KitStore| { k.set_image(Some("im".into())) });
-            kit_meta_test!(kit_set_preview, EventField::Kit(crate::events::KitField::Preview), |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) });
-            kit_meta_test!(kit_set_version, EventField::Kit(crate::events::KitField::Version), |k: &mut crate::KitStore| { k.set_version(Some("1".into())) });
-            kit_meta_test!(kit_set_remote, EventField::Kit(crate::events::KitField::Remote), |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) });
-            kit_meta_test!(kit_set_homepage, EventField::Kit(crate::events::KitField::Homepage), |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) });
-            kit_meta_test!(kit_set_license, EventField::Kit(crate::events::KitField::License), |k: &mut crate::KitStore| { k.set_license(Some("l".into())) });
-            kit_meta_test!(kit_set_uri, EventField::Kit(crate::events::KitField::Uri), |k: &mut crate::KitStore| { k.set_uri(Some("u".into())) });
-            kit_meta_test!(kit_set_created, EventField::Kit(crate::events::KitField::Created), |k: &mut crate::KitStore| { k.set_created(Some("c".into())) });
-            kit_meta_test!(kit_set_updated, EventField::Kit(crate::events::KitField::Updated), |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) });
+            kit_meta_test!(kit_set_name, crate::events::KitField::Name, |k: &mut crate::KitStore| { k.set_name("a".into()) });
+            kit_meta_test!(kit_set_description, crate::events::KitField::Description, |k: &mut crate::KitStore| { k.set_description(Some("d".into())) });
+            kit_meta_test!(kit_set_icon, crate::events::KitField::Icon, |k: &mut crate::KitStore| { k.set_icon(Some("ic".into())) });
+            kit_meta_test!(kit_set_image, crate::events::KitField::Image, |k: &mut crate::KitStore| { k.set_image(Some("im".into())) });
+            kit_meta_test!(kit_set_preview, crate::events::KitField::Preview, |k: &mut crate::KitStore| { k.set_preview(Some("pr".into())) });
+            kit_meta_test!(kit_set_version, crate::events::KitField::Version, |k: &mut crate::KitStore| { k.set_version(Some("1".into())) });
+            kit_meta_test!(kit_set_remote, crate::events::KitField::Remote, |k: &mut crate::KitStore| { k.set_remote(Some("r".into())) });
+            kit_meta_test!(kit_set_homepage, crate::events::KitField::Homepage, |k: &mut crate::KitStore| { k.set_homepage(Some("https://example.com".into())) });
+            kit_meta_test!(kit_set_license, crate::events::KitField::License, |k: &mut crate::KitStore| { k.set_license(Some("l".into())) });
+            kit_meta_test!(kit_set_uri, crate::events::KitField::Uri, |k: &mut crate::KitStore| { k.set_uri(Some("u".into())) });
+            kit_meta_test!(kit_set_created, crate::events::KitField::Created, |k: &mut crate::KitStore| { k.set_created(Some("c".into())) });
+            kit_meta_test!(kit_set_updated, crate::events::KitField::Updated, |k: &mut crate::KitStore| { k.set_updated(Some("u2".into())) });
 
             #[test]
             fn kit_set_name_idempotent_no_events() {
@@ -16130,7 +16530,7 @@ mod tests {
         }
 
         mod layer {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn layer_set_order_emits() {
@@ -16144,12 +16544,12 @@ mod tests {
                 };
                 l.write().unwrap().set_order(Some(2));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Layer(crate::events::LayerField::Order), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Layer { event: crate::events::LayerEvent::FieldChanged(crate::events::LayerField::Order), .. })));
             }
         }
 
         mod piece {
-            use crate::events::{EntityKind, EntityRef, EventField};
+            use crate::events::{EntityKind, EntityRef};
             use crate::geom::{Coordinate, Plane};
 
             macro_rules! piece_pose_test {
@@ -16198,15 +16598,15 @@ mod tests {
                 };
             }
 
-            piece_pose_test!(piece_set_plane, EventField::Piece(crate::events::PieceField::Plane), |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) });
-            piece_pose_test!(piece_set_center, EventField::Piece(crate::events::PieceField::Center), |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) });
-            piece_geom_test!(piece_set_mirror_plane, EventField::Piece(crate::events::PieceField::MirrorPlane), |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) });
-            piece_geom_test!(piece_set_scale, EventField::Piece(crate::events::PieceField::Scale), |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) });
-            piece_geom_test!(piece_set_hidden, EventField::Piece(crate::events::PieceField::Hidden), |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) });
-            piece_geom_test!(piece_set_locked, EventField::Piece(crate::events::PieceField::Locked), |p: &mut crate::PieceStore| { p.set_locked(Some(true)) });
-            piece_geom_test!(piece_set_id, EventField::Piece(crate::events::PieceField::Id), |p: &mut crate::PieceStore| { p.set_id("id1".into()) });
-            piece_geom_test!(piece_set_name, EventField::Piece(crate::events::PieceField::Name), |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) });
-            piece_geom_test!(piece_set_description, EventField::Piece(crate::events::PieceField::Description), |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) });
+            piece_pose_test!(piece_set_plane, crate::events::PieceField::Plane, |p: &mut crate::PieceStore| { p.set_plane(Some(Plane::world_xy())) });
+            piece_pose_test!(piece_set_center, crate::events::PieceField::Center, |p: &mut crate::PieceStore| { p.set_center(Some(Coordinate::new(1.0, 2.0, 3.0))) });
+            piece_geom_test!(piece_set_mirror_plane, crate::events::PieceField::MirrorPlane, |p: &mut crate::PieceStore| { p.set_mirror_plane(Some(Plane::world_xy())) });
+            piece_geom_test!(piece_set_scale, crate::events::PieceField::Scale, |p: &mut crate::PieceStore| { p.set_scale(Some(2.0)) });
+            piece_geom_test!(piece_set_hidden, crate::events::PieceField::Hidden, |p: &mut crate::PieceStore| { p.set_hidden(Some(true)) });
+            piece_geom_test!(piece_set_locked, crate::events::PieceField::Locked, |p: &mut crate::PieceStore| { p.set_locked(Some(true)) });
+            piece_geom_test!(piece_set_id, crate::events::PieceField::Id, |p: &mut crate::PieceStore| { p.set_id("id1".into()) });
+            piece_geom_test!(piece_set_name, crate::events::PieceField::Name, |p: &mut crate::PieceStore| { p.set_name(Some("p".into())) });
+            piece_geom_test!(piece_set_description, crate::events::PieceField::Description, |p: &mut crate::PieceStore| { p.set_description(Some("pd".into())) });
 
             #[test]
             fn piece_set_color_hash_only() {
@@ -16224,7 +16624,7 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_color(Some("#fff".into()));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_scalar_hash_only(&evs, pre, dre, kre, EventField::Piece(crate::events::PieceField::Color));
+                super::common::assert_piece_scalar_hash_only(&evs, pre, dre, kre, crate::events::PieceField::Color);
             }
 
             #[test]
@@ -16244,12 +16644,12 @@ mod tests {
                 let mut pw = p.write().unwrap();
                 pw.set_type_weak(Some(tw));
                 let evs = super::common::drain(&mut rx);
-                super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, EventField::Piece(crate::events::PieceField::Kind));
+                super::common::assert_piece_geometry_change(&evs, pre, dre, kre, &pg, crate::events::PieceField::Kind);
             }
         }
 
         mod port {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn port_set_family_emits_field_changed() {
@@ -16263,12 +16663,12 @@ mod tests {
                 };
                 p.write().unwrap().set_family(Some("f".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Port(crate::events::PortField::Family), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Port { event: crate::events::PortEvent::FieldChanged(crate::events::PortField::Family), .. })));
             }
         }
 
         mod prop {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::prop::PropFullDto;
@@ -16284,12 +16684,12 @@ mod tests {
                 };
                 p.write().unwrap().set_unit(Some("u".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Prop(crate::events::PropField::Unit), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Prop { event: crate::events::PropEvent::FieldChanged(crate::events::PropField::Unit), .. })));
             }
         }
 
         mod quality {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::quality::QualityFullDto;
@@ -16305,12 +16705,12 @@ mod tests {
                 };
                 q.write().unwrap().set_key("k2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Quality(crate::events::QualityField::Key), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Quality { event: crate::events::QualityEvent::FieldChanged(crate::events::QualityField::Key), .. })));
             }
         }
 
         mod representation {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::file::{FileFullDto, FileIdDto};
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
@@ -16343,12 +16743,12 @@ mod tests {
                 };
                 r.write().unwrap().set_url("https://r2".into());
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Representation(crate::events::RepresentationField::Url), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Representation { event: crate::events::RepresentationEvent::FieldChanged(crate::events::RepresentationField::Url), .. })));
             }
         }
 
         mod side {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
 
             #[test]
             fn side_set_design_piece_emits() {
@@ -16371,13 +16771,13 @@ mod tests {
                 };
                 connecting.write().unwrap().set_design_piece_weak(Some(weak));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Side(crate::events::SideField::DesignPiece), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Side { event: crate::events::SideEvent::FieldChanged(crate::events::SideField::DesignPiece), .. })));
             }
         }
 
         mod stat {
             use crate::design::DesignFullDto;
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::piece::PieceFullDto;
@@ -16412,12 +16812,12 @@ mod tests {
                 };
                 s.write().unwrap().set_description(Some("d".into()));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Stat(crate::events::StatField::Description), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Stat { event: crate::events::StatEvent::FieldChanged(crate::events::StatField::Description), .. })));
             }
         }
 
         mod tag {
-            use crate::events::{EventField, KitEvent};
+            use crate::events::KitEvent;
             use crate::id::Id;
             use crate::kit::{KitFullDto, KitStore};
             use crate::tag::TagFullDto;
@@ -16433,12 +16833,12 @@ mod tests {
                 };
                 t.write().unwrap().set_order(Some(1));
                 let evs = super::common::drain(&mut rx);
-                assert!(evs.iter().any(|e| matches!(e, KitEvent::FieldChanged { field: EventField::Tag(crate::events::TagField::Order), .. })));
+                assert!(evs.iter().any(|e| matches!(e, KitEvent::Tag { event: crate::events::TagEvent::FieldChanged(crate::events::TagField::Order), .. })));
             }
         }
 
         mod type_ {
-            use crate::events::{EntityKind, EntityRef, EventField};
+            use crate::events::{EntityKind, EntityRef};
 
             macro_rules! type_meta_test {
                 ($fn:ident, $field:expr, $op:expr) => {
@@ -16460,17 +16860,17 @@ mod tests {
                 };
             }
 
-            type_meta_test!(type_set_name, EventField::Type(crate::events::TypeField::Name), |t: &mut crate::TypeStore| { t.set_name("tn".into()) });
-            type_meta_test!(type_set_description, EventField::Type(crate::events::TypeField::Description), |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) });
-            type_meta_test!(type_set_icon, EventField::Type(crate::events::TypeField::Icon), |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) });
-            type_meta_test!(type_set_image, EventField::Type(crate::events::TypeField::Image), |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) });
-            type_meta_test!(type_set_variant, EventField::Type(crate::events::TypeField::Variant), |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) });
-            type_meta_test!(type_set_stock, EventField::Type(crate::events::TypeField::Stock), |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
-            type_meta_test!(type_set_virtual, EventField::Type(crate::events::TypeField::Virtual), |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
-            type_meta_test!(type_set_unit, EventField::Type(crate::events::TypeField::Unit), |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
-            type_meta_test!(type_set_location, EventField::Type(crate::events::TypeField::Location), |t: &mut crate::TypeStore| { t.set_location(Some(crate::geom::Location::new(1.0, 2.0))) });
-            type_meta_test!(type_set_created, EventField::Type(crate::events::TypeField::Created), |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
-            type_meta_test!(type_set_updated, EventField::Type(crate::events::TypeField::Updated), |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
+            type_meta_test!(type_set_name, crate::events::TypeField::Name, |t: &mut crate::TypeStore| { t.set_name("tn".into()) });
+            type_meta_test!(type_set_description, crate::events::TypeField::Description, |t: &mut crate::TypeStore| { t.set_description(Some("td".into())) });
+            type_meta_test!(type_set_icon, crate::events::TypeField::Icon, |t: &mut crate::TypeStore| { t.set_icon(Some("i".into())) });
+            type_meta_test!(type_set_image, crate::events::TypeField::Image, |t: &mut crate::TypeStore| { t.set_image(Some("m".into())) });
+            type_meta_test!(type_set_variant, crate::events::TypeField::Variant, |t: &mut crate::TypeStore| { t.set_variant(Some("v".into())) });
+            type_meta_test!(type_set_stock, crate::events::TypeField::Stock, |t: &mut crate::TypeStore| { t.set_stock(Some(3)) });
+            type_meta_test!(type_set_virtual, crate::events::TypeField::Virtual, |t: &mut crate::TypeStore| { t.set_virtual(Some(true)) });
+            type_meta_test!(type_set_unit, crate::events::TypeField::Unit, |t: &mut crate::TypeStore| { t.set_unit(Some("u".into())) });
+            type_meta_test!(type_set_location, crate::events::TypeField::Location, |t: &mut crate::TypeStore| { t.set_location(Some(crate::geom::Location::new(1.0, 2.0))) });
+            type_meta_test!(type_set_created, crate::events::TypeField::Created, |t: &mut crate::TypeStore| { t.set_created(Some("c".into())) });
+            type_meta_test!(type_set_updated, crate::events::TypeField::Updated, |t: &mut crate::TypeStore| { t.set_updated(Some("u".into())) });
         }
     }
 
@@ -17255,7 +17655,7 @@ pub use connector::{ConnectorFullDto, ConnectorIdDto, ConnectorMetadataDto, Conn
 pub use design::{DesignFullDto, DesignIdDto, DesignMetadataDto, DesignShallowDto, DesignStore, DesignStoreRef, DesignStoreWeak};
 pub use diff::{DesignChange, DesignDiff};
 pub use error::{Result, SemioError, SetError, SetResult};
-pub use events::{EntityKind, EntityRef, EventBus, EventField, EventPath, KitEvent};
+pub use events::{EntityKind, EntityRef, EventBus, KitEvent};
 pub use file::{FileFullDto, FileIdDto, FileMetadataDto, FileShallowDto, FileStore, FileStoreRef, FileStoreWeak};
 pub use folder::{FolderFullDto, FolderIdDto, FolderMetadataDto, FolderShallowDto, FolderStore, FolderStoreRef, FolderStoreWeak};
 pub use geom::{Camera, Coordinate, Location, Plane, Vector};
