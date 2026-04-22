@@ -284,8 +284,8 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import { KitRegistryProvider } from "@semio/react";
-import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { KitProvider, KitRegistryProvider, useKitRegistrySafe } from "@semio/react";
+import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import * as Y from "yjs";
@@ -7880,12 +7880,57 @@ type KitScope = { guid: string };
  * KitScopeContext holds the data fields for a KitScopeContext record.
  **/
 export const KitScopeContext = createContext<KitScope | null>(null);
+
+/**
+ * Registers the sketchpad kit's inner {@link KitStore} with {@link KitRegistryProvider}
+ * and wraps children with {@link KitProvider} so `@semio/react` command/query hooks work.
+ */
+function KitWasmRuntimeBridge(props: { kitGuid: string; children: React.ReactNode }): React.ReactElement {
+  const { kitGuid, children } = props;
+  const sketchpadStore = useSketchpadStore();
+  const registry = useKitRegistrySafe();
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+
+  useEffect(() => {
+    if (!registry || !sketchpadStore.hasKit(kitGuid)) return;
+    const innerStore = sketchpadStore.kit(kitGuid).store;
+    let cancelled = false;
+    void (async () => {
+      await registry.open(kitGuid, { store: innerStore });
+      if (!cancelled) bump();
+    })();
+    return () => {
+      cancelled = true;
+      registry.close(kitGuid);
+    };
+  }, [sketchpadStore, kitGuid, registry]);
+
+  if (!registry || !sketchpadStore.hasKit(kitGuid)) {
+    return React.createElement(React.Fragment, null, children);
+  }
+
+  const status = registry.status(kitGuid);
+  const entry = registry.get(kitGuid);
+  if (status === "error") {
+    return React.createElement(React.Fragment, null, children);
+  }
+  if (status !== "ready" || !entry) {
+    return React.createElement(React.Fragment, null, null);
+  }
+
+  return React.createElement(KitProvider, { kitGuid, store: entry.store, kitClient: entry.kitClient, children });
+}
+
 /**
  * React context provider scoping kit by guid.
  **/
 export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
-  return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
+  return React.createElement(
+    KitScopeContext.Provider,
+    { value },
+    React.createElement(KitWasmRuntimeBridge, { kitGuid: props.guid, children: props.children as any }),
+  );
 };
 /**
  * Hook returning the current kit scope context.

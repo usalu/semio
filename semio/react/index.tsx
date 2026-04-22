@@ -825,12 +825,23 @@ export function useKitRegistry(): KitRegistryValue {
 	return v;
 }
 
+/** Like {@link useKitRegistry} but returns `null` when no provider is mounted. */
+export function useKitRegistrySafe(): KitRegistryValue | null {
+	return React.useContext(KitRegistryContext);
+}
+
 // #endregion KitRegistry
 
 function useKitRuntime(): KitRuntimeContextValue {
 	const runtime = React.useContext(KitRuntimeContext);
 	if (!runtime) throw new Error("semio/react hooks must be used inside <KitProvider>.");
 	return runtime;
+}
+
+/** Returns the WASM worker {@link KitStoreClient} when inside {@link KitProvider}, or `null`. */
+export function useKitStoreClient(): KitStoreClient | null {
+	const runtime = useKitRuntime();
+	return runtime.kitClient;
 }
 
 export type KitProviderProps = {
@@ -1243,6 +1254,776 @@ export function useOptimistic<T>(triad: HookTriad<T>): {
 		dirty,
 	};
 }
+
+// #region 🎛️KitStoreClient command hooks (WASM / worker RPCs)
+
+export function useClusterPieces(): {
+	run: (designGuid: string, pieceGuids: string[], clusterName: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuids: string[], clusterName: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.clusterPieces(designGuid, pieceGuids, clusterName);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useDragPieces(): {
+	run: (designGuid: string, pieceGuids: string[], du: number, dv: number) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuids: string[], du: number, dv: number) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.dragPieces(designGuid, pieceGuids, du, dv);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useMovePieces(): {
+	run: (designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.movePieces(designGuid, pieceGuids, gap, shift, rise);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useFixPieces(): {
+	run: (designGuid: string, pieceGuids: string[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuids: string[]) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.fixPieces(designGuid, pieceGuids);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useFlattenDesign(): { run: (designGuid: string) => Promise<SetResult>; status: WriteStatus } {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.flattenDesign(designGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useExpandDesign(): {
+	run: (parentDesignGuid: string, nestedDesignGuid: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (parentDesignGuid: string, nestedDesignGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.expandDesign(parentDesignGuid, nestedDesignGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useDeleteConnection(): {
+	run: (designGuid: string, connectionGuid: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, connectionGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.deleteConnection(designGuid, connectionGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useChangePieceType(): {
+	run: (designGuid: string, pieceGuid: string, newTypeGuid: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuid: string, newTypeGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.changePieceType(designGuid, pieceGuid, newTypeGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function usePasteDesignSelection(): {
+	run: (designGuid: string, selection: unknown, plane?: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, selection: unknown, plane?: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.pasteDesignSelection(designGuid, selection, plane ?? null);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useCreateHangingPieces(): {
+	run: (designGuid: string, typeGuids: string[], plane: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, typeGuids: string[], plane: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.createHangingPieces(designGuid, typeGuids, plane);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useCreateConnectedPiece(): {
+	run: (designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.createConnectedPiece(designGuid, parentPiece, parentPort, childType, childPort);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useCreateFixedPiece(): {
+	run: (designGuid: string, typeGuid: string, plane: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, typeGuid: string, plane: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.createFixedPiece(designGuid, typeGuid, plane);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useDeletePiece(): {
+	run: (designGuid: string, pieceGuid: string) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuid: string) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.removeChild("Design", designGuid, "Piece", pieceGuid);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useCreatePiece(): {
+	run: (designGuid: string, piece: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, piece: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.addChild("Design", designGuid, "Piece", piece);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useAddConnection(): {
+	run: (designGuid: string, connection: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, connection: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const r = await runtime.kitClient.addChild("Design", designGuid, "Connection", connection);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useUpdatePiece(): {
+	run: (designGuid: string, pieceGuid: string, patch: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, pieceGuid: string, patch: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const diff = { pieces: { updated: [{ piece: { guid: pieceGuid }, diff: patch }] } };
+			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useUpdatePieces(): {
+	run: (designGuid: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, updates: { id: string; diff: unknown }[]) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const diff = {
+				pieces: {
+					updated: updates.map((u) => ({ piece: { guid: u.id }, diff: u.diff })),
+				},
+			};
+			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useUpdateConnection(): {
+	run: (designGuid: string, connectionGuid: string, patch: unknown) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, connectionGuid: string, patch: unknown) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const diff = { connections: { updated: [{ connection: { guid: connectionGuid }, diff: patch }] } };
+			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+export function useUpdateConnections(): {
+	run: (designGuid: string, updates: { id: string; diff: unknown }[]) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (designGuid: string, updates: { id: string; diff: unknown }[]) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			const diff = {
+				connections: {
+					updated: updates.map((u) => ({ connection: { guid: u.id }, diff: u.diff })),
+				},
+			};
+			const r = await runtime.kitClient.applyDesignDiff(designGuid, diff);
+			if (!r.ok) {
+				runtime.pushSetRejection(r.error);
+				setStatus({ kind: "error", pending: 0, lastError: r.error });
+				return r;
+			}
+			setStatus({ kind: "idle", pending: 0 });
+			return r;
+		},
+		[runtime.kitClient, runtime.canWrite, runtime.pushSetRejection],
+	);
+	return { run, status };
+}
+
+/** Flatten-derived placement map from the Rust worker (`getPiecesMetadata`). */
+export function usePiecesMetadataMap(designGuid?: string): SchemaHookTriad<Record<string, any>> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<Record<string, any>>({});
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient || !designGuid) {
+			setValue({});
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getPiecesMetadata(designGuid);
+				if (!cancelled && m && typeof m === "object") setValue(m as Record<string, any>);
+			} catch {
+				if (!cancelled) setValue({});
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => {
+			void load();
+		});
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient, designGuid]);
+	const status: WriteStatus =
+		!designGuid || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useRpcPieces(designGuid?: string): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient || !designGuid) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getPieces(designGuid);
+				if (!cancelled) setValue(Array.isArray(m) ? m : []);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient, designGuid]);
+	const status: WriteStatus =
+		!designGuid || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useRpcConnections(designGuid?: string): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient || !designGuid) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getConnections(designGuid);
+				if (!cancelled) setValue(Array.isArray(m) ? m : []);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient, designGuid]);
+	const status: WriteStatus =
+		!designGuid || !runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useRpcDesigns(): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getDesigns();
+				if (!cancelled) setValue(Array.isArray(m) ? m : []);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient]);
+	const status: WriteStatus =
+		!runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useRpcTypes(): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getTypes();
+				if (!cancelled) setValue(Array.isArray(m) ? m : []);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient]);
+	const status: WriteStatus =
+		!runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+export function useRpcAuthors(): SchemaHookTriad<any[]> {
+	const runtime = useKitRuntime();
+	const [value, setValue] = React.useState<any[]>([]);
+	const [pending, setPending] = React.useState(0);
+	React.useEffect(() => {
+		if (!runtime.kitClient) {
+			setValue([]);
+			return;
+		}
+		let cancelled = false;
+		const load = async () => {
+			setPending((p) => p + 1);
+			try {
+				const m = await runtime.kitClient.getAuthors();
+				if (!cancelled) setValue(Array.isArray(m) ? m : []);
+			} catch {
+				if (!cancelled) setValue([]);
+			} finally {
+				if (!cancelled) setPending((p) => Math.max(0, p - 1));
+			}
+		};
+		void load();
+		const unsub = runtime.kitClient.subscribe(() => void load());
+		return () => {
+			cancelled = true;
+			unsub();
+		};
+	}, [runtime.kitClient]);
+	const status: WriteStatus =
+		!runtime.kitClient
+			? { kind: "readonly", pending: 0 }
+			: pending > 0
+				? { kind: "pending", pending }
+				: { kind: "idle", pending: 0 };
+	return [value, noopAsyncSet, status] as const;
+}
+
+// #endregion 🎛️KitStoreClient command hooks
 
 export function useKitStore(): SchemaHookTriad<KitStore> {
 	const runtime = useKitRuntime();
@@ -12479,6 +13260,72 @@ if (shouldRunReactEmbeddedTests) {
 			render(React.createElement(OptProbe));
 			await waitFor(() => expect(opt).not.toBeNull());
 			expect(opt!.dirty).toBe(false);
+		});
+	});
+
+	describe("KitStoreClient stub RPC hooks", () => {
+		it("useClusterPieces forwards failures to useSetErrors", async () => {
+			const kit = asKitInstance({
+				guid: "k1",
+				name: "K",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				designs: [
+					{
+						guid: "d1",
+						name: "D",
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+						pieces: [{ guid: "p1", name: "P" }],
+						connections: [],
+					},
+				],
+			});
+			const store = new InMemoryKitStore(kit);
+			const stub: import("@semio/js").KitStoreClient = {
+				getDto: () => store.getSnapshot().kit.toJSON(),
+				getSnapshot: async () => store.getSnapshot().kit.toJSON(),
+				setField: async () => ({ ok: true } as const),
+				addChild: async () => ({ ok: true } as const),
+				removeChild: async () => ({ ok: true } as const),
+				applyDesignDiff: async () => ({ ok: true } as const),
+				clusterPieces: async () => ({ ok: false, error: { kind: "InvalidValue", message: "stub-cluster" } }),
+				dragPieces: async () => ({ ok: true } as const),
+				movePieces: async () => ({ ok: true } as const),
+				fixPieces: async () => ({ ok: true } as const),
+				flattenDesign: async () => ({ ok: true } as const),
+				expandDesign: async () => ({ ok: true } as const),
+				deleteConnection: async () => ({ ok: true } as const),
+				changePieceType: async () => ({ ok: true } as const),
+				pasteDesignSelection: async () => ({ ok: true } as const),
+				createHangingPieces: async () => ({ ok: true } as const),
+				createConnectedPiece: async () => ({ ok: true } as const),
+				createFixedPiece: async () => ({ ok: true } as const),
+				getPiecesMetadata: async () => ({}),
+				getPieces: async () => [],
+				getConnections: async () => [],
+				getDesigns: async () => [],
+				getTypes: async () => [],
+				getAuthors: async () => [],
+				getKitMetadata: async () => ({}),
+				subscribe: () => () => {},
+				dispose: () => {},
+			};
+			let seen: SetError[] = [];
+			function Probe() {
+				const { run } = useClusterPieces();
+				seen = useSetErrors();
+				const ran = React.useRef(false);
+				React.useEffect(() => {
+					if (ran.current) return;
+					ran.current = true;
+					void run("d1", ["p1"], "C");
+				}, [run]);
+				return null;
+			}
+			render(React.createElement(KitProvider, { store, kitClient: stub }, React.createElement(Probe)));
+			await waitFor(() => expect(seen.length).toBeGreaterThan(0));
+			expect(seen[0]?.message).toContain("stub-cluster");
 		});
 	});
 }

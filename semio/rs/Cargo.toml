@@ -37,3 +37,4 @@ zip = "7.2"
 tempfile = "3.21"
 walkdir = "2.5"
 base64 = "0.22"
+ureq = { version = "2.12", features = ["json"] }

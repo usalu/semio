@@ -19721,6 +19721,25 @@ export interface KitStoreClient {
   addChild(parentKind: string, parentGuid: string, childKind: string, dto: unknown): Promise<SetResult>;
   removeChild(parentKind: string, parentGuid: string, childKind: string, childGuid: string): Promise<SetResult>;
   applyDesignDiff(designGuid: string, diff: unknown): Promise<SetResult>;
+  clusterPieces(designGuid: string, pieceGuids: string[], clusterName: string): Promise<SetResult>;
+  dragPieces(designGuid: string, pieceGuids: string[], du: number, dv: number): Promise<SetResult>;
+  movePieces(designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
+  fixPieces(designGuid: string, pieceGuids: string[]): Promise<SetResult>;
+  flattenDesign(designGuid: string): Promise<SetResult>;
+  expandDesign(parentDesignGuid: string, nestedDesignGuid: string): Promise<SetResult>;
+  deleteConnection(designGuid: string, connectionGuid: string): Promise<SetResult>;
+  changePieceType(designGuid: string, pieceGuid: string, newTypeGuid: string): Promise<SetResult>;
+  pasteDesignSelection(designGuid: string, selection: unknown, plane: unknown): Promise<SetResult>;
+  createHangingPieces(designGuid: string, typeGuids: string[], plane: unknown): Promise<SetResult>;
+  createConnectedPiece(designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
+  createFixedPiece(designGuid: string, typeGuid: string, plane: unknown): Promise<SetResult>;
+  getPiecesMetadata(designGuid: string): Promise<any>;
+  getPieces(designGuid: string): Promise<any>;
+  getConnections(designGuid: string): Promise<any>;
+  getDesigns(): Promise<any>;
+  getTypes(): Promise<any>;
+  getAuthors(): Promise<any>;
+  getKitMetadata(): Promise<any>;
   subscribe(cb: (ev: any) => void): () => void;
   dispose(): void;
 }
@@ -19931,6 +19950,212 @@ export class FallbackKitStoreClient implements KitStoreClient {
       return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
     }
   }
+
+  async clusterPieces(designGuid: string, pieceGuids: string[], clusterName: string): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      const { clusteredDesign, externalConnections } = createClusteredDesign(design, pieceGuids, clusterName);
+      const designChange = replaceClusterWithDesign(design, pieceGuids, clusteredDesign, externalConnections);
+      kit._applyDiff(
+        {
+          designs: {
+            added: [clusteredDesign],
+            updated: [{ design: { guid: designGuid }, diff: designChange.forward }],
+          },
+        },
+        {},
+      );
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async dragPieces(designGuid: string, pieceGuids: string[], du: number, dv: number): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      const subPieces = pieceGuids.map((g) => design.requirePiece(g).toPlain());
+      const piecesDesign = new Design({ guid: guid(), name: "__drag_selection", pieces: subPieces }, kit);
+      const diff = dragPiecesInDesign(design, piecesDesign, { u: du, v: dv });
+      design.applyDiff(diff);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async movePieces(designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      const subPieces = pieceGuids.map((g) => design.requirePiece(g).toPlain());
+      const piecesDesign = new Design({ guid: guid(), name: "__move_selection", pieces: subPieces }, kit);
+      const diff = movePiecesInDesign(kit, design, piecesDesign, { gap, shift, rise });
+      design.applyDiff(diff);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async fixPieces(designGuid: string, pieceGuids: string[]): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const diff = fixPiecesInDesign(kit, designGuid, pieceGuids);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      design.applyDiff(diff);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async flattenDesign(designGuid: string): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      design.flatten();
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async expandDesign(parentDesignGuid: string, nestedDesignGuid: string): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const contextDesign = kit.findDesign(parentDesignGuid);
+      const referencedDesign = kit.findDesign(nestedDesignGuid);
+      if (!contextDesign || !referencedDesign) {
+        return { ok: false, error: { kind: "NotFound", message: "design" } };
+      }
+      const expandedReferencedDesign = expandDesignPieces(referencedDesign, kit);
+      const existingPieceGuids = new Set((contextDesign.pieces || []).map((piece: any) => piece.guid));
+      const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece: any) => !existingPieceGuids.has(piece.guid));
+      const existingConnections = contextDesign.connections || [];
+      const addedConnections = (expandedReferencedDesign.connections || []).filter(
+        (connection: any) => !existingConnections.some((existing: any) => areSameConnection(existing, connection)),
+      );
+      const updatedExternalConnections = (contextDesign.connections || []).map((connection: any) => {
+        if (connection.connected.designPiece?.guid === nestedDesignGuid) {
+          return { ...connection, connected: { ...connection.connected, designPiece: undefined } };
+        }
+        if (connection.connecting.designPiece?.guid === nestedDesignGuid) {
+          return { ...connection, connecting: { ...connection.connecting, designPiece: undefined } };
+        }
+        return connection;
+      });
+      const expandedDesign: any = {
+        ...contextDesign,
+        pieces: [...(contextDesign.pieces || []), ...addedPieces],
+        connections: [...updatedExternalConnections, ...addedConnections],
+      };
+      const designDiff = getDesignDiff(contextDesign, expandedDesign as any);
+      contextDesign.applyDiff(designDiff);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async deleteConnection(designGuid: string, connectionGuid: string): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designGuid}` } };
+      design.applyDiff({ connections: { removed: [{ guid: connectionGuid }] } } as any);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async changePieceType(designGuid: string, pieceGuid: string, newTypeGuid: string): Promise<SetResult> {
+    try {
+      const kit = asKitInstance(this.dto);
+      const design = kit.findDesign(designGuid);
+      const typ = kit.findType(newTypeGuid);
+      if (!design || !typ) return { ok: false, error: { kind: "NotFound", message: "design or type" } };
+      design.requirePiece(pieceGuid).changeType(typ);
+      this.emit({ ValidationInvalidated: null });
+      return { ok: true } as const;
+    } catch (e: any) {
+      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
+    }
+  }
+
+  async pasteDesignSelection(_designGuid: string, _selection: unknown, _plane: unknown): Promise<SetResult> {
+    return { ok: false, error: { kind: "InvalidValue", message: "pasteDesignSelection not implemented in FallbackKitStoreClient" } };
+  }
+
+  async createHangingPieces(_designGuid: string, _typeGuids: string[], _plane: unknown): Promise<SetResult> {
+    return { ok: false, error: { kind: "InvalidValue", message: "createHangingPieces not implemented in FallbackKitStoreClient" } };
+  }
+
+  async createConnectedPiece(_designGuid: string, _parentPiece: string, _parentPort: string, _childType: string, _childPort: string): Promise<SetResult> {
+    return { ok: false, error: { kind: "InvalidValue", message: "createConnectedPiece not implemented in FallbackKitStoreClient" } };
+  }
+
+  async createFixedPiece(_designGuid: string, _typeGuid: string, _plane: unknown): Promise<SetResult> {
+    return { ok: false, error: { kind: "InvalidValue", message: "createFixedPiece not implemented in FallbackKitStoreClient" } };
+  }
+
+  async getPiecesMetadata(designGuid: string) {
+    const kit = asKitInstance(this.dto);
+    const r = piecesMetadata(kit, designGuid);
+    if (!r.ok) {
+      throw new Error((r.errors ?? []).map((e: any) => e.message).join("; "));
+    }
+    return Object.fromEntries(r.value ?? new Map());
+  }
+
+  async getPieces(designGuid: string) {
+    const kit = asKitInstance(this.dto);
+    const d = kit.findDesign(designGuid);
+    if (!d) throw new Error(`design ${designGuid}`);
+    return (d.pieces ?? []).map((p: any) => p.toPlain());
+  }
+
+  async getConnections(designGuid: string) {
+    const kit = asKitInstance(this.dto);
+    const d = kit.findDesign(designGuid);
+    if (!d) throw new Error(`design ${designGuid}`);
+    return (d.connections ?? []).map((c: any) => c.toPlain());
+  }
+
+  async getDesigns() {
+    const kit = asKitInstance(this.dto);
+    return (kit.designs ?? []).map((d: any) => d.toShallow());
+  }
+
+  async getTypes() {
+    const kit = asKitInstance(this.dto);
+    return (kit.types ?? []).map((t: any) => t.toShallow());
+  }
+
+  async getAuthors() {
+    const kit = asKitInstance(this.dto);
+    return (kit.authors ?? []).map((a: any) => a.toPlain());
+  }
+
+  async getKitMetadata() {
+    const kit = asKitInstance(this.dto);
+    return kit.toShallow();
+  }
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
@@ -20067,6 +20292,252 @@ export class WorkerKitStoreClient implements KitStoreClient {
     } catch {
       return { ok: false, error: { kind: "Timeout", message: "timeout" } };
     }
+  }
+
+  async clusterPieces(designGuid: string, pieceGuids: string[], clusterName: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.clusterPieces(designGuid, pieceGuids, clusterName), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async dragPieces(designGuid: string, pieceGuids: string[], du: number, dv: number): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.dragPieces(designGuid, pieceGuids, du, dv), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async movePieces(designGuid: string, pieceGuids: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.movePieces(designGuid, pieceGuids, gap, shift, rise), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async fixPieces(designGuid: string, pieceGuids: string[]): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.fixPieces(designGuid, pieceGuids), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async flattenDesign(designGuid: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.flattenDesign(designGuid), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async expandDesign(parentDesignGuid: string, nestedDesignGuid: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.expandDesign(parentDesignGuid, nestedDesignGuid), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async deleteConnection(designGuid: string, connectionGuid: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.deleteConnection(designGuid, connectionGuid), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async changePieceType(designGuid: string, pieceGuid: string, newTypeGuid: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.changePieceType(designGuid, pieceGuid, newTypeGuid), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async pasteDesignSelection(designGuid: string, selection: unknown, plane: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.pasteDesignSelection(designGuid, selection, plane), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async createHangingPieces(designGuid: string, typeGuids: string[], plane: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.createHangingPieces(designGuid, typeGuids, plane), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async createConnectedPiece(designGuid: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.createConnectedPiece(designGuid, parentPiece, parentPort, childType, childPort), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async createFixedPiece(designGuid: string, typeGuid: string, plane: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.createFixedPiece(designGuid, typeGuid, plane), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  private unwrapQuery(raw: any) {
+    if (raw && typeof raw === "object" && raw.ok === false && raw.error) {
+      throw new Error(typeof raw.error?.message === "string" ? raw.error.message : JSON.stringify(raw.error));
+    }
+    return raw;
+  }
+
+  async getPiecesMetadata(designGuid: string) {
+    const raw = await withTimeout(this.api.getPiecesMetadata(designGuid), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getPieces(designGuid: string) {
+    const raw = await withTimeout(this.api.getPieces(designGuid), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getConnections(designGuid: string) {
+    const raw = await withTimeout(this.api.getConnections(designGuid), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getDesigns() {
+    const raw = await withTimeout(this.api.getDesigns(), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getTypes() {
+    const raw = await withTimeout(this.api.getTypes(), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getAuthors() {
+    const raw = await withTimeout(this.api.getAuthors(), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
+  }
+
+  async getKitMetadata() {
+    const raw = await withTimeout(this.api.getKitMetadata(), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 }
 

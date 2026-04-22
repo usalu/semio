@@ -1,0 +1,9 @@
+{
+  "title": "Implement Rust Dev And Local Kits",
+  "status": "open",
+  "description": "Implement the first concrete kit-kind slice in semio/rs, with any minimal semio/hub changes only if strictly required later. Focus this ticket on Rust dev kits (full embedded JSON file) and local kits (.semio/kit.db SQLite snapshot plus regular files). Reuse the existing KitStore JSON and SQLite boundaries, add filesystem helpers for JSON-file load/save and folder-kit load/save, and extend the existing tests in semio/rs/src/lib.rs. Do not create new test files. This is the first implementation step of the broader kit architecture plan.",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪39b9c90692a94a1692753d95180ca990"
+  ]
+}

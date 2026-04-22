@@ -11,7 +11,7 @@ pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 pub use axum::extract::{Path, State};
 pub use axum::http::StatusCode;
 pub use axum::response::{IntoResponse, Response};
-pub use axum::routing::{get, post};
+pub use axum::routing::{get, post, put};
 pub use axum::{Json, Router};
 pub use dashmap::DashMap;
 pub use futures::{SinkExt, StreamExt};
@@ -920,19 +920,92 @@ pub async fn create_pool(database_url: &str) -> PgPool {
     PgPoolOptions::new().max_connections(20).connect(database_url).await.expect("failed to connect to PostgreSQL")
 }
 
-pub async fn create_session(pool: &PgPool, session_id: Uuid, kit_id: Uuid, kit_name: &str) -> Result<Uuid, SessionError> {
+fn session_kit_guid(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
+    let guid = kit_json
+        .get("guid")
+        .and_then(|value| value.as_str())
+        .ok_or_else(|| SessionError::Validation("kit snapshot must include string guid".into()))?;
+    Uuid::parse_str(guid)
+        .map_err(|err| SessionError::Validation(format!("invalid kit guid '{guid}': {err}")))
+}
+
+fn session_kit_name<'a>(kit_json: &'a serde_json::Value) -> Result<&'a str, SessionError> {
+    kit_json
+        .get("name")
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| SessionError::Validation("kit snapshot must include string name".into()))
+}
+
+fn session_kit_string(kit_json: &serde_json::Value, field: &str) -> Option<String> {
+    kit_json
+        .get(field)
+        .and_then(|value| value.as_str())
+        .map(|value| value.to_string())
+}
+
+fn initial_session_kit(
+    fallback_kit_id: Uuid,
+    fallback_kit_name: &str,
+    initial_kit: Option<&serde_json::Value>,
+) -> Result<(Uuid, String, serde_json::Value), SessionError> {
+    match initial_kit {
+        Some(kit_json) => Ok((
+            session_kit_guid(kit_json)?,
+            session_kit_name(kit_json)?.to_string(),
+            kit_json.clone(),
+        )),
+        None => Ok((
+            fallback_kit_id,
+            fallback_kit_name.to_string(),
+            serde_json::json!({
+                "guid": fallback_kit_id,
+                "name": fallback_kit_name,
+                "types": [],
+                "designs": [],
+                "authors": [],
+                "tags": [],
+                "concepts": [],
+                "ports": [],
+                "qualities": [],
+                "folders": [],
+                "files": [],
+                "createdAt": chrono_now_iso(),
+                "updatedAt": chrono_now_iso(),
+            }),
+        )),
+    }
+}
+
+pub async fn create_session(
+    pool: &PgPool,
+    session_id: Uuid,
+    fallback_kit_id: Uuid,
+    fallback_kit_name: &str,
+    initial_kit: Option<&serde_json::Value>,
+) -> Result<Uuid, SessionError> {
+    let (kit_id, kit_name, initial_kit) =
+        initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
     let owner_token = Uuid::now_v7();
     let mut tx = pool.begin().await?;
     sqlx_core::query::query("INSERT INTO runtime.session (session_id, root_kit_id, owner_token) VALUES ($1, $2, $3)")
         .bind(session_id).bind(kit_id).bind(owner_token).execute(&mut *tx).await?;
-    sqlx_core::query::query("INSERT INTO core.kit (session_id, kit_id, name) VALUES ($1, $2, $3)")
-        .bind(session_id).bind(kit_id).bind(kit_name).execute(&mut *tx).await?;
-    // Store initial baseline snapshot at version 0
-    let initial_kit = serde_json::json!({
-        "guid": kit_id, "name": kit_name,
-        "types": [], "designs": [], "authors": [], "tags": [],
-        "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
-    });
+    sqlx_core::query::query(
+        "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .bind(&kit_name)
+        .bind(session_kit_string(&initial_kit, "version"))
+        .bind(session_kit_string(&initial_kit, "description"))
+        .bind(session_kit_string(&initial_kit, "icon"))
+        .bind(session_kit_string(&initial_kit, "image"))
+        .bind(session_kit_string(&initial_kit, "preview"))
+        .bind(session_kit_string(&initial_kit, "remote"))
+        .bind(session_kit_string(&initial_kit, "homepage"))
+        .bind(session_kit_string(&initial_kit, "license"))
+        .execute(&mut *tx).await?;
     sqlx_core::query::query(
         "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, 0, $2)"
     ).bind(session_id).bind(&initial_kit).execute(&mut *tx).await?;
@@ -964,6 +1037,56 @@ pub async fn bump_semio_version(pool: &PgPool, session_id: Uuid, new_version: Se
     sqlx_core::query::query("UPDATE runtime.session SET semio_version = $2, updated_at = now() WHERE session_id = $1")
         .bind(session_id).bind(new_version).execute(pool).await?;
     Ok(())
+}
+
+pub async fn replace_session_snapshot(
+    pool: &PgPool,
+    session_id: Uuid,
+    kit_json: &serde_json::Value,
+) -> Result<(DomainVersion, SemioVersion), SessionError> {
+    let kit_id = session_kit_guid(kit_json)?;
+    let kit_name = session_kit_name(kit_json)?.to_string();
+    let (domain_version, semio_version) = load_session_meta(pool, session_id).await?;
+    let mut tx = pool.begin().await?;
+    sqlx_core::query::query(
+        "UPDATE runtime.session SET root_kit_id = $2, updated_at = now() WHERE session_id = $1"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query("DELETE FROM core.kit WHERE session_id = $1")
+        .bind(session_id)
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query(
+        "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)"
+    )
+        .bind(session_id)
+        .bind(kit_id)
+        .bind(&kit_name)
+        .bind(session_kit_string(kit_json, "version"))
+        .bind(session_kit_string(kit_json, "description"))
+        .bind(session_kit_string(kit_json, "icon"))
+        .bind(session_kit_string(kit_json, "image"))
+        .bind(session_kit_string(kit_json, "preview"))
+        .bind(session_kit_string(kit_json, "remote"))
+        .bind(session_kit_string(kit_json, "homepage"))
+        .bind(session_kit_string(kit_json, "license"))
+        .execute(&mut *tx)
+        .await?;
+    sqlx_core::query::query(
+        "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, $2, $3)
+         ON CONFLICT (session_id, domain_version) DO UPDATE SET kit_json = $3, created_at = now()"
+    )
+        .bind(session_id)
+        .bind(domain_version)
+        .bind(kit_json)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok((domain_version, semio_version))
 }
 
 pub async fn load_session_state(pool: &PgPool, session_id: Uuid) -> Result<SessionState, SessionError> {
@@ -2119,6 +2242,8 @@ impl SessionDirectory {
 
     pub fn remove(&self, session_id: &Uuid) { self.sessions.remove(session_id); }
 
+    pub fn deactivate(&self, session_id: SessionId) { self.sessions.remove(&session_id.0); }
+
     //#region 🔖Admin Introspection
 
     /// Snapshot of all currently-active session actors with WS connection counts.
@@ -2183,7 +2308,7 @@ pub fn router(state: AppState) -> Router<()> {
     Router::new()
         .route("/health", get(health))
         .route("/sessions", post(handler_create_session))
-        .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot))
+        .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot).put(handler_put_snapshot))
         .route("/sessions/{session_id}/commands/domain", post(handler_post_domain_command))
         .route("/sessions/{session_id}/commands/semio", post(handler_post_semio_command))
         .route("/sessions/{session_id}/kit/at/{lookback}", get(handler_get_kit_at_lookback))
@@ -2201,7 +2326,10 @@ pub fn router(state: AppState) -> Router<()> {
 async fn health() -> &'static str { "ok" }
 
 #[derive(Deserialize)]
-pub struct CreateSessionRequest { kit_name: String }
+pub struct CreateSessionRequest {
+    kit_name: String,
+    kit: Option<serde_json::Value>,
+}
 
 #[derive(Serialize)]
 pub struct CreateSessionResponse { session_id: Uuid, kit_id: Uuid, owner_token: Uuid }
@@ -2211,19 +2339,38 @@ async fn handler_create_session(
 ) -> Result<Json<CreateSessionResponse>, SessionError> {
     let session_id = Uuid::now_v7();
     let kit_id = Uuid::now_v7();
-    let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name).await?;
-    Ok(Json(CreateSessionResponse { session_id, kit_id, owner_token }))
+    let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name, req.kit.as_ref()).await?;
+    let response_kit_id = req.kit.as_ref().map(session_kit_guid).transpose()?.unwrap_or(kit_id);
+    Ok(Json(CreateSessionResponse { session_id, kit_id: response_kit_id, owner_token }))
 }
 
 async fn handler_get_snapshot(
     State(state): State<AppState>, Path(session_id): Path<Uuid>,
 ) -> Result<Json<SessionSnapshot>, SessionError> {
-    let handle = state.directory.get_or_activate(SessionId(session_id)).await
-        .ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-    let (tx, rx) = oneshot::channel();
-    handle.command_tx.send(ActorMessage::GetSnapshot { reply: tx }).await.map_err(|_| SessionError::ActorGone)?;
-    let snapshot = rx.await.map_err(|_| SessionError::ActorGone)?;
-    Ok(Json(snapshot))
+    let (domain_version, semio_version) = load_session_meta(&state.pool, session_id).await?;
+    let kit = reconstruct_kit_at_version(&state.pool, session_id, domain_version).await?;
+    Ok(Json(SessionSnapshot { session_id, domain_version, semio_version, kit }))
+}
+
+#[derive(Deserialize)]
+pub struct ReplaceSnapshotRequest {
+    kit: serde_json::Value,
+}
+
+async fn handler_put_snapshot(
+    State(state): State<AppState>,
+    Path(session_id): Path<Uuid>,
+    headers: HeaderMap,
+    Json(req): Json<ReplaceSnapshotRequest>,
+) -> Result<Json<SessionSnapshot>, SessionError> {
+    let bearer = extract_bearer(&headers);
+    let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+    if access != AccessMode::Owner {
+        return Err(SessionError::Forbidden("write access requires owner token".into()));
+    }
+    let (domain_version, semio_version) = replace_session_snapshot(&state.pool, session_id, &req.kit).await?;
+    state.directory.deactivate(SessionId(session_id));
+    Ok(Json(SessionSnapshot { session_id, domain_version, semio_version, kit: req.kit }))
 }
 
 #[derive(Deserialize)]
@@ -4147,6 +4294,25 @@ use super::*;
         assert!(kit_json["designs"].as_array().unwrap().is_empty());
         assert!(kit_json["guid"].as_str().is_some());
         assert!(kit_json["createdAt"].as_str().is_some());
+    }
+
+    #[test]
+    pub fn session_kit_identity_helpers_require_guid_and_name() {
+        let guid = Uuid::now_v7();
+        let kit_json = serde_json::json!({
+            "guid": guid,
+            "name": "Remote Snapshot",
+            "description": "transport-level baseline"
+        });
+        assert_eq!(session_kit_guid(&kit_json).unwrap(), guid);
+        assert_eq!(session_kit_name(&kit_json).unwrap(), "Remote Snapshot");
+        assert_eq!(session_kit_string(&kit_json, "description").as_deref(), Some("transport-level baseline"));
+
+        let missing_guid = serde_json::json!({"name": "Broken"});
+        assert!(matches!(session_kit_guid(&missing_guid), Err(SessionError::Validation(_))));
+
+        let missing_name = serde_json::json!({"guid": guid});
+        assert!(matches!(session_kit_name(&missing_name), Err(SessionError::Validation(_))));
     }
 
     #[test]

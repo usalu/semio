@@ -8,6 +8,11 @@
 
 #![allow(clippy::new_without_default)]
 
+#[allow(dead_code)]
+mod kit_domain;
+#[allow(dead_code)]
+mod kit_queries;
+
 pub mod attribute {
     use serde::{Deserialize, Serialize};
     use std::sync::{RwLock, Weak};
@@ -11640,6 +11645,11 @@ pub mod io {
     //! transport concerns.
 
     pub mod json {
+        #[cfg(not(target_arch = "wasm32"))]
+        use std::fs;
+        #[cfg(not(target_arch = "wasm32"))]
+        use std::path::Path;
+
         use crate::error::Result;
         use crate::kit::{KitFullDto, KitStore, KitStoreRef};
 
@@ -11656,6 +11666,25 @@ pub mod io {
 
             pub fn to_json(&self) -> Result<String> {
                 Ok(serde_json::to_string(&self.to_full_dto())?)
+            }
+
+            #[cfg(not(target_arch = "wasm32"))]
+            /// Load a dev kit from a JSON file containing a fully embedded snapshot.
+            pub fn load_json_file(path: &Path) -> Result<KitStoreRef> {
+                let payload = fs::read_to_string(path)?;
+                Self::from_json_str(&payload)
+            }
+
+            #[cfg(not(target_arch = "wasm32"))]
+            /// Save a dev kit as a pretty JSON file containing the full embedded snapshot.
+            pub fn save_json_file(&self, path: &Path) -> Result<()> {
+                if let Some(parent) = path.parent() {
+                    if !parent.as_os_str().is_empty() {
+                        fs::create_dir_all(parent)?;
+                    }
+                }
+                fs::write(path, self.to_json_pretty()?)?;
+                Ok(())
             }
         }
     }
@@ -11710,6 +11739,316 @@ pub mod io {
             /// Back-compat alias for [`KitStore::save_sqlite`].
             pub fn to_sqlite(&self, path: &Path) -> Result<()> {
                 self.save_sqlite(path)
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub mod folder {
+        //! Folder-kit persistence: `.semio/kit.db` stores the authoritative JSON snapshot
+        //! while file payloads are materialized as regular files next to it.
+
+        use std::ffi::OsStr;
+        use std::fs;
+        use std::path::{Component, Path, PathBuf};
+
+        use base64::Engine as _;
+        use base64::engine::general_purpose::STANDARD;
+        use tempfile::NamedTempFile;
+
+        use crate::error::{Result, SemioError};
+        use crate::file::FileFullDto;
+        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+
+        const LOCAL_DIR: &str = ".semio";
+        const LOCAL_DB: &str = "kit.db";
+
+        fn local_db_path(folder_path: &Path) -> PathBuf {
+            folder_path.join(LOCAL_DIR).join(LOCAL_DB)
+        }
+
+        fn is_data_url(url: &str) -> bool {
+            url.starts_with("data:")
+        }
+
+        fn parse_data_url(url: &str) -> Result<Option<(Option<String>, Vec<u8>)>> {
+            if !is_data_url(url) {
+                return Ok(None);
+            }
+            let Some(comma_index) = url.find(',') else {
+                return Err(SemioError::InvalidOperation(
+                    "invalid data URL: missing comma separator".into(),
+                ));
+            };
+            let header = &url[..comma_index];
+            let payload = &url[comma_index + 1..];
+            let mime = header
+                .strip_prefix("data:")
+                .and_then(|value| value.strip_suffix(";base64"))
+                .filter(|value| !value.is_empty())
+                .map(ToOwned::to_owned);
+            let bytes = STANDARD.decode(payload).map_err(|err| {
+                SemioError::InvalidOperation(format!("invalid data URL payload: {err}"))
+            })?;
+            Ok(Some((mime, bytes)))
+        }
+
+        fn encode_data_url(mime: Option<&str>, bytes: &[u8]) -> String {
+            let mime = mime.unwrap_or("application/octet-stream");
+            format!("data:{mime};base64,{}", STANDARD.encode(bytes))
+        }
+
+        fn mime_from_extension(path: &Path) -> Option<&'static str> {
+            match path.extension().and_then(OsStr::to_str).map(|v| v.to_ascii_lowercase()) {
+                Some(ext) => match ext.as_str() {
+                    "txt" => Some("text/plain"),
+                    "json" => Some("application/json"),
+                    "csv" => Some("text/csv"),
+                    "svg" => Some("image/svg+xml"),
+                    "png" => Some("image/png"),
+                    "jpg" | "jpeg" => Some("image/jpeg"),
+                    "pdf" => Some("application/pdf"),
+                    "glb" => Some("model/gltf-binary"),
+                    "gltf" => Some("model/gltf+json"),
+                    "3dm" => Some("model/vnd.3dm"),
+                    "zip" => Some("application/zip"),
+                    _ => None,
+                },
+                None => None,
+            }
+        }
+
+        fn extension_from_mime(mime: Option<&str>) -> &'static str {
+            match mime.unwrap_or("application/octet-stream") {
+                "text/plain" => "txt",
+                "application/json" => "json",
+                "text/csv" => "csv",
+                "image/svg+xml" => "svg",
+                "image/png" => "png",
+                "image/jpeg" => "jpg",
+                "application/pdf" => "pdf",
+                "model/gltf-binary" => "glb",
+                "model/gltf+json" => "gltf",
+                "model/vnd.3dm" => "3dm",
+                "application/zip" => "zip",
+                _ => "bin",
+            }
+        }
+
+        fn normalize_relative_asset_path(url: &str) -> Result<Option<PathBuf>> {
+            let path = Path::new(url);
+            if path.is_absolute() {
+                return Ok(None);
+            }
+            let mut normalized = PathBuf::new();
+            for component in path.components() {
+                match component {
+                    Component::CurDir => {}
+                    Component::Normal(segment) => normalized.push(segment),
+                    Component::ParentDir | Component::Prefix(_) | Component::RootDir => {
+                        return Err(SemioError::InvalidOperation(format!(
+                            "asset path must stay inside kit folder: {url}"
+                        )));
+                    }
+                }
+            }
+            if normalized.as_os_str().is_empty() {
+                return Ok(None);
+            }
+            Ok(Some(normalized))
+        }
+
+        fn derived_asset_path(file: &FileFullDto) -> PathBuf {
+            let ext = Path::new(&file.url)
+                .extension()
+                .and_then(OsStr::to_str)
+                .map(|value| value.to_ascii_lowercase())
+                .unwrap_or_else(|| extension_from_mime(file.mime.as_deref()).to_string());
+            PathBuf::from("files").join(format!("{}.{}", file.guid, ext))
+        }
+
+        fn externalize_files(dto: &mut KitFullDto, folder_path: &Path) -> Result<()> {
+            for file in &mut dto.files {
+                let Some((_mime_from_url, bytes)) = parse_data_url(&file.url)? else {
+                    continue;
+                };
+                let relative_path = derived_asset_path(file);
+                let full_path = folder_path.join(&relative_path);
+                if let Some(parent) = full_path.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(&full_path, bytes)?;
+                file.url = relative_path.to_string_lossy().replace('\\', "/");
+            }
+            Ok(())
+        }
+
+        fn hydrate_files(dto: &mut KitFullDto, folder_path: &Path) -> Result<()> {
+            for file in &mut dto.files {
+                if is_data_url(&file.url) {
+                    continue;
+                }
+                let Some(relative_path) = normalize_relative_asset_path(&file.url)? else {
+                    continue;
+                };
+                let full_path = folder_path.join(&relative_path);
+                if !full_path.exists() {
+                    continue;
+                }
+                let bytes = fs::read(&full_path)?;
+                let mime = file
+                    .mime
+                    .as_deref()
+                    .or_else(|| mime_from_extension(&full_path));
+                file.url = encode_data_url(mime, &bytes);
+            }
+            Ok(())
+        }
+
+        impl KitStore {
+            /// Load a local kit folder containing `.semio/kit.db` and regular asset files.
+            pub fn load_local_folder(folder_path: &Path) -> Result<KitStoreRef> {
+                let kit = KitStore::load_sqlite(&local_db_path(folder_path))?;
+                let mut dto = kit
+                    .read()
+                    .map_err(|_| SemioError::LockPoisoned("kit"))?
+                    .to_full_dto();
+                hydrate_files(&mut dto, folder_path)?;
+                Ok(KitStore::from_full_dto(dto))
+            }
+
+            /// Save a local kit folder with `.semio/kit.db` plus externalized file payloads.
+            pub fn save_local_folder(&self, folder_path: &Path) -> Result<()> {
+                fs::create_dir_all(folder_path.join(LOCAL_DIR))?;
+                let mut dto = self.to_full_dto();
+                externalize_files(&mut dto, folder_path)?;
+
+                let temp_db_dir = folder_path.join(LOCAL_DIR);
+                let temp_db = NamedTempFile::new_in(&temp_db_dir)?;
+                let temp_path = temp_db.path().to_path_buf();
+                KitStore::from_full_dto(dto)
+                    .read()
+                    .map_err(|_| SemioError::LockPoisoned("kit"))?
+                    .save_sqlite(&temp_path)?;
+                let final_db_path = local_db_path(folder_path);
+                temp_db.persist(&final_db_path).map_err(|err| err.error)?;
+                Ok(())
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub mod remote {
+        //! Remote-kit persistence over the semio hub HTTP snapshot API.
+
+        use serde::de::DeserializeOwned;
+
+        use crate::error::{Result, SemioError};
+        use crate::kit::{KitFullDto, KitStore, KitStoreRef};
+
+        #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+        pub struct RemoteKitSession {
+            pub hub_url: String,
+            pub session_id: String,
+            pub kit_id: String,
+            pub owner_token: String,
+        }
+
+        #[derive(serde::Serialize)]
+        struct CreateRemoteSessionRequest {
+            kit_name: String,
+            kit: serde_json::Value,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct CreateRemoteSessionResponse {
+            session_id: String,
+            kit_id: String,
+            owner_token: String,
+        }
+
+        #[derive(serde::Serialize)]
+        struct ReplaceRemoteSnapshotRequest {
+            kit: serde_json::Value,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct RemoteSnapshotResponse {
+            kit: serde_json::Value,
+        }
+
+        fn normalize_hub_url(hub_url: &str) -> String {
+            hub_url.trim_end_matches('/').to_string()
+        }
+
+        fn map_http_error(err: ureq::Error) -> SemioError {
+            match err {
+                ureq::Error::Status(status, response) => {
+                    let body = response
+                        .into_string()
+                        .unwrap_or_else(|_| String::from("<unreadable response body>"));
+                    SemioError::Other(format!(
+                        "hub request failed with status {status}: {body}"
+                    ))
+                }
+                ureq::Error::Transport(error) => {
+                    SemioError::Other(format!("hub transport error: {error}"))
+                }
+            }
+        }
+
+        fn decode_json_response<T: DeserializeOwned>(response: ureq::Response) -> Result<T> {
+            response.into_json().map_err(|error| {
+                SemioError::Other(format!("failed to decode hub JSON response: {error}"))
+            })
+        }
+
+        fn remote_snapshot_url(hub_url: &str, session_id: &str) -> String {
+            format!("{}/sessions/{session_id}/snapshot", normalize_hub_url(hub_url))
+        }
+
+        impl KitStore {
+            /// Create a remote hub session seeded with the current full kit snapshot.
+            pub fn create_remote_session(&self, hub_url: &str) -> Result<RemoteKitSession> {
+                let hub_url = normalize_hub_url(hub_url);
+                let request = CreateRemoteSessionRequest {
+                    kit_name: self.name.clone(),
+                    kit: serde_json::to_value(self.to_full_dto())?,
+                };
+                let response: CreateRemoteSessionResponse = decode_json_response(
+                    ureq::post(&format!("{hub_url}/sessions"))
+                        .send_json(request)
+                        .map_err(map_http_error)?,
+                )?;
+                Ok(RemoteKitSession {
+                    hub_url,
+                    session_id: response.session_id,
+                    kit_id: response.kit_id,
+                    owner_token: response.owner_token,
+                })
+            }
+
+            /// Load a full kit snapshot from a remote hub session.
+            pub fn load_remote_session(hub_url: &str, session_id: &str) -> Result<KitStoreRef> {
+                let response: RemoteSnapshotResponse = decode_json_response(
+                    ureq::get(&remote_snapshot_url(hub_url, session_id))
+                        .call()
+                        .map_err(map_http_error)?,
+                )?;
+                let dto: KitFullDto = serde_json::from_value(response.kit)?;
+                Ok(KitStore::from_full_dto(dto))
+            }
+
+            /// Replace the persisted hub snapshot for an existing remote session.
+            pub fn save_remote_session(&self, remote: &RemoteKitSession) -> Result<()> {
+                let payload = ReplaceRemoteSnapshotRequest {
+                    kit: serde_json::to_value(self.to_full_dto())?,
+                };
+                ureq::put(&remote_snapshot_url(&remote.hub_url, &remote.session_id))
+                    .set("Authorization", &format!("Bearer {}", remote.owner_token))
+                    .send_json(payload)
+                    .map_err(map_http_error)?;
+                Ok(())
             }
         }
     }
@@ -12031,6 +12370,292 @@ pub mod wasm {
                     }
                 };
                 js_settle_set(KitStore::apply_design_diff_rpc(&inner, &dg, diff))
+            })
+        }
+
+        #[wasm_bindgen(js_name = clusterPieces)]
+        pub fn cluster_pieces(
+            &self,
+            design_guid: &str,
+            piece_guids: JsValue,
+            cluster_name: &str,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            let cn = cluster_name.to_string();
+            future_to_promise(async move {
+                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids).map_err(|e| {
+                    JsValue::from_str(&format!("clusterPieces piece_guids: {e}"))
+                })?;
+                js_settle_set(crate::kit_domain::cluster_pieces_cmd(
+                    &inner, &dg, guids, cn,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = dragPieces)]
+        pub fn drag_pieces(
+            &self,
+            design_guid: &str,
+            piece_guids: JsValue,
+            du: f64,
+            dv: f64,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
+                    .map_err(|e| JsValue::from_str(&format!("dragPieces piece_guids: {e}")))?;
+                js_settle_set(crate::kit_domain::drag_pieces_cmd(
+                    &inner, &dg, guids, du, dv,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = movePieces)]
+        pub fn move_pieces(
+            &self,
+            design_guid: &str,
+            piece_guids: JsValue,
+            gap: f64,
+            shift: f64,
+            rise: f64,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
+                    .map_err(|e| JsValue::from_str(&format!("movePieces piece_guids: {e}")))?;
+                js_settle_set(crate::kit_domain::move_pieces_cmd(
+                    &inner, &dg, guids, gap, shift, rise,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = fixPieces)]
+        pub fn fix_pieces(&self, design_guid: &str, piece_guids: JsValue) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let guids: Vec<String> = serde_wasm_bindgen::from_value(piece_guids)
+                    .map_err(|e| JsValue::from_str(&format!("fixPieces piece_guids: {e}")))?;
+                js_settle_set(crate::kit_domain::fix_pieces_cmd(&inner, &dg, guids))
+            })
+        }
+
+        #[wasm_bindgen(js_name = flattenDesign)]
+        pub fn flatten_design_bind(&self, design_guid: &str) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                js_settle_set(crate::kit_domain::flatten_design_cmd(&inner, &dg))
+            })
+        }
+
+        #[wasm_bindgen(js_name = expandDesign)]
+        pub fn expand_design_bind(
+            &self,
+            parent_design_guid: &str,
+            nested_design_guid: &str,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let pg = parent_design_guid.to_string();
+            let ng = nested_design_guid.to_string();
+            future_to_promise(async move {
+                js_settle_set(crate::kit_domain::expand_design_cmd(&inner, &pg, &ng))
+            })
+        }
+
+        #[wasm_bindgen(js_name = deleteConnection)]
+        pub fn delete_connection(&self, design_guid: &str, connection_guid: &str) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            let cg = connection_guid.to_string();
+            future_to_promise(async move {
+                js_settle_set(crate::kit_domain::delete_connection_cmd(
+                    &inner, &dg, &cg,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = changePieceType)]
+        pub fn change_piece_type(
+            &self,
+            design_guid: &str,
+            piece_guid: &str,
+            new_type_guid: &str,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            let pg = piece_guid.to_string();
+            let tg = new_type_guid.to_string();
+            future_to_promise(async move {
+                js_settle_set(crate::kit_domain::change_piece_type_cmd(
+                    &inner, &dg, &pg, &tg,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = pasteDesignSelection)]
+        pub fn paste_design_selection(
+            &self,
+            design_guid: &str,
+            selection: JsValue,
+            plane: JsValue,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let sel: serde_json::Value = serde_wasm_bindgen::from_value(selection).map_err(|e| {
+                    JsValue::from_str(&format!("pasteDesignSelection selection: {e}"))
+                })?;
+                let pl: Option<crate::geom::Plane> = if plane.is_undefined() || plane.is_null() {
+                    None
+                } else {
+                    Some(serde_wasm_bindgen::from_value(plane).map_err(|e| {
+                        JsValue::from_str(&format!("pasteDesignSelection plane: {e}"))
+                    })?)
+                };
+                js_settle_set(crate::kit_domain::paste_design_selection_cmd(
+                    &inner, &dg, sel, pl,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = createHangingPieces)]
+        pub fn create_hanging_pieces(
+            &self,
+            design_guid: &str,
+            type_guids: JsValue,
+            plane: JsValue,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let tgs: Vec<String> = serde_wasm_bindgen::from_value(type_guids).map_err(|e| {
+                    JsValue::from_str(&format!("createHangingPieces type_guids: {e}"))
+                })?;
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
+                    JsValue::from_str(&format!("createHangingPieces plane: {e}"))
+                })?;
+                js_settle_set(crate::kit_domain::create_hanging_pieces_cmd(
+                    &inner, &dg, tgs, pl,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = createConnectedPiece)]
+        pub fn create_connected_piece(
+            &self,
+            design_guid: &str,
+            parent_piece: &str,
+            parent_port: &str,
+            child_type: &str,
+            child_port: &str,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            let pp = parent_piece.to_string();
+            let pport = parent_port.to_string();
+            let ct = child_type.to_string();
+            let cport = child_port.to_string();
+            future_to_promise(async move {
+                js_settle_set(crate::kit_domain::create_connected_piece_cmd(
+                    &inner, &dg, &pp, &pport, &ct, &cport,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = createFixedPiece)]
+        pub fn create_fixed_piece(
+            &self,
+            design_guid: &str,
+            type_guid: &str,
+            plane: JsValue,
+        ) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            let tg = type_guid.to_string();
+            future_to_promise(async move {
+                let pl: crate::geom::Plane = serde_wasm_bindgen::from_value(plane).map_err(|e| {
+                    JsValue::from_str(&format!("createFixedPiece plane: {e}"))
+                })?;
+                js_settle_set(crate::kit_domain::create_fixed_piece_cmd(
+                    &inner, &dg, &tg, pl,
+                ))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getPiecesMetadata)]
+        pub fn get_pieces_metadata(&self, design_guid: &str) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_pieces_metadata_json(&inner, &dg)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getPieces)]
+        pub fn get_pieces_wasm(&self, design_guid: &str) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_pieces_json(&inner, &dg)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getConnections)]
+        pub fn get_connections_wasm(&self, design_guid: &str) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            let dg = design_guid.to_string();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_connections_json(&inner, &dg)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getDesigns)]
+        pub fn get_designs_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_designs_json(&inner)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getTypes)]
+        pub fn get_types_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_types_json(&inner)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getAuthors)]
+        pub fn get_authors_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_authors_json(&inner)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+            })
+        }
+
+        #[wasm_bindgen(js_name = getKitMetadata)]
+        pub fn get_kit_metadata_wasm(&self) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move {
+                let v = crate::kit_queries::get_kit_json(&inner)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                serde_wasm_bindgen::to_value(&v).map_err(|e| JsValue::from_str(&e.to_string()))
             })
         }
 
@@ -12368,6 +12993,29 @@ mod tests {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
+    mod io_json_file {
+        use std::sync::{Arc, RwLock};
+
+        use tempfile::tempdir;
+
+        use crate::kit::KitStore;
+
+        #[test]
+        fn json_file_roundtrip() {
+            let kit = Arc::new(RwLock::new(KitStore::new("json-file-roundtrip")));
+            let dir = tempdir().expect("tempdir");
+            let path = dir.path().join("kit.json");
+            kit.read().expect("read").save_json_file(&path).expect("save");
+            let kit2 = KitStore::load_json_file(&path).expect("load");
+            assert_eq!(
+                kit.read().expect("r1").hash(),
+                kit2.read().expect("r2").hash(),
+                "JSON file roundtrip preserves hash"
+            );
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     mod io_sqlite {
         use std::sync::{Arc, RwLock};
 
@@ -12387,6 +13035,243 @@ mod tests {
                 kit2.read().expect("r2").hash(),
                 "SQLite JSON snapshot preserves hash"
             );
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    mod io_local_folder {
+        use tempfile::tempdir;
+
+        use crate::file::FileFullDto;
+        use crate::folder::FolderFullDto;
+        use crate::guid::Guid;
+        use crate::kit::{KitFullDto, KitStore};
+
+        #[test]
+        fn local_folder_roundtrip_externalizes_and_rehydrates_assets() {
+            let file_guid = Guid::new_v7();
+            let folder_guid = Guid::new_v7();
+            let dto = KitFullDto {
+                guid: Guid::new_v7(),
+                name: "local-folder-roundtrip".into(),
+                files: vec![FileFullDto {
+                    guid: file_guid.clone(),
+                    url: "data:text/plain;base64,aGVsbG8td29ybGQ=".into(),
+                    mime: Some("text/plain".into()),
+                    ..Default::default()
+                }],
+                folders: vec![FolderFullDto {
+                    guid: folder_guid,
+                    path: "assets/docs".into(),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            };
+            let kit = KitStore::from_full_dto(dto);
+            let dir = tempdir().expect("tempdir");
+
+            kit.read()
+                .expect("read")
+                .save_local_folder(dir.path())
+                .expect("save local folder");
+
+            let persisted = KitStore::load_sqlite(&dir.path().join(".semio").join("kit.db"))
+                .expect("load persisted snapshot");
+            let persisted_file_url = persisted.read().expect("persisted read").files[0]
+                .read()
+                .expect("persisted file read")
+                .url
+                .clone();
+            assert_eq!(
+                persisted_file_url,
+                format!("files/{file_guid}.txt"),
+                "local snapshot stores a regular relative file path"
+            );
+            assert!(
+                dir.path().join(&persisted_file_url).exists(),
+                "local asset file should be materialized next to the sqlite snapshot"
+            );
+
+            let loaded = KitStore::load_local_folder(dir.path()).expect("load local folder");
+            let loaded_file_url = loaded.read().expect("loaded read").files[0]
+                .read()
+                .expect("loaded file read")
+                .url
+                .clone();
+            assert!(
+                loaded_file_url.starts_with("data:text/plain;base64,"),
+                "loaded local kit should rehydrate external files into embedded data URLs"
+            );
+            assert_eq!(
+                kit.read().expect("r1").hash(),
+                loaded.read().expect("r2").hash(),
+                "local folder roundtrip preserves hash after rehydration"
+            );
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    mod io_remote {
+        use std::collections::HashMap;
+        use std::io::{Read, Write};
+        use std::net::{TcpListener, TcpStream};
+        use std::sync::{Arc, Mutex};
+        use std::thread;
+
+        use serde_json::Value;
+
+        use crate::guid::Guid;
+        use crate::io::remote::RemoteKitSession;
+        use crate::kit::KitStore;
+
+        fn read_http_request(stream: &mut TcpStream) -> (String, HashMap<String, String>, Vec<u8>) {
+            let mut buffer = Vec::new();
+            let mut chunk = [0u8; 4096];
+            let mut header_end = None;
+            let mut content_length = 0usize;
+
+            loop {
+                let read = stream.read(&mut chunk).expect("read request chunk");
+                if read == 0 {
+                    break;
+                }
+                buffer.extend_from_slice(&chunk[..read]);
+                if header_end.is_none() {
+                    if let Some(position) = buffer.windows(4).position(|window| window == b"\r\n\r\n") {
+                        header_end = Some(position + 4);
+                        let headers_text = String::from_utf8_lossy(&buffer[..position + 4]);
+                        for line in headers_text.lines().skip(1) {
+                            if let Some((name, value)) = line.split_once(':') {
+                                if name.eq_ignore_ascii_case("content-length") {
+                                    content_length = value.trim().parse().expect("content length");
+                                }
+                            }
+                        }
+                    }
+                }
+                if let Some(end) = header_end {
+                    if buffer.len() >= end + content_length {
+                        break;
+                    }
+                }
+            }
+
+            let header_end = header_end.expect("request headers");
+            let header_text = String::from_utf8(buffer[..header_end].to_vec()).expect("header utf8");
+            let mut lines = header_text.split("\r\n");
+            let request_line = lines.next().expect("request line").to_string();
+            let mut headers = HashMap::new();
+            for line in lines {
+                if line.is_empty() {
+                    continue;
+                }
+                if let Some((name, value)) = line.split_once(':') {
+                    headers.insert(name.to_ascii_lowercase(), value.trim().to_string());
+                }
+            }
+            let body = buffer[header_end..header_end + content_length].to_vec();
+            (request_line, headers, body)
+        }
+
+        fn write_json_response(stream: &mut TcpStream, status_line: &str, body: &Value) {
+            let body = serde_json::to_vec(body).expect("serialize response body");
+            let response = format!(
+                "HTTP/1.1 {status_line}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",
+                body.len()
+            );
+            stream
+                .write_all(response.as_bytes())
+                .expect("write response headers");
+            stream.write_all(&body).expect("write response body");
+            stream.flush().expect("flush response");
+        }
+
+        #[test]
+        fn remote_session_roundtrip_over_http_snapshot_api() {
+            let listener = TcpListener::bind("127.0.0.1:0").expect("bind mock hub");
+            let hub_url = format!("http://{}", listener.local_addr().expect("local addr"));
+            let session_id = Guid::new_v7().into_string();
+            let owner_token = Guid::new_v7().into_string();
+            let expected_session_id = session_id.clone();
+            let expected_owner_token = owner_token.clone();
+            let persisted_kit = Arc::new(Mutex::new(Value::Null));
+            let persisted_kit_for_server = persisted_kit.clone();
+
+            let server = thread::spawn(move || {
+                for _ in 0..3 {
+                    let (mut stream, _) = listener.accept().expect("accept request");
+                    let (request_line, headers, body) = read_http_request(&mut stream);
+                    let payload: Value = if body.is_empty() {
+                        Value::Null
+                    } else {
+                        serde_json::from_slice(&body).expect("decode request body")
+                    };
+
+                    if request_line.starts_with("POST /sessions ") {
+                        let kit = payload.get("kit").cloned().expect("create payload kit");
+                        assert_eq!(payload["kit_name"].as_str(), kit["name"].as_str());
+                        *persisted_kit_for_server.lock().expect("persist seed") = kit.clone();
+                        write_json_response(
+                            &mut stream,
+                            "200 OK",
+                            &serde_json::json!({
+                                "session_id": session_id,
+                                "kit_id": kit["guid"],
+                                "owner_token": owner_token,
+                            }),
+                        );
+                    } else if request_line.starts_with(&format!("PUT /sessions/{session_id}/snapshot ")) {
+                        assert_eq!(
+                            headers.get("authorization").map(String::as_str),
+                            Some(format!("Bearer {owner_token}").as_str()),
+                            "remote snapshot update requires the owner token"
+                        );
+                        let kit = payload.get("kit").cloned().expect("replace payload kit");
+                        *persisted_kit_for_server.lock().expect("persist update") = kit;
+                        write_json_response(&mut stream, "200 OK", &serde_json::json!({"status": "ok"}));
+                    } else if request_line.starts_with(&format!("GET /sessions/{session_id}/snapshot ")) {
+                        let kit = persisted_kit_for_server.lock().expect("persisted snapshot").clone();
+                        write_json_response(
+                            &mut stream,
+                            "200 OK",
+                            &serde_json::json!({
+                                "session_id": session_id,
+                                "domain_version": 0,
+                                "semio_version": 0,
+                                "kit": kit,
+                            }),
+                        );
+                    } else {
+                        panic!("unexpected request: {request_line}");
+                    }
+                }
+            });
+
+            let seed_kit = KitStore::new("remote-seed");
+            let remote = seed_kit
+                .create_remote_session(&hub_url)
+                .expect("create remote session");
+            assert_eq!(remote.session_id, expected_session_id);
+
+            let updated_kit = KitStore::new("remote-updated");
+            updated_kit
+                .save_remote_session(&RemoteKitSession {
+                    hub_url: remote.hub_url.clone(),
+                    session_id: remote.session_id.clone(),
+                    kit_id: remote.kit_id.clone(),
+                    owner_token: expected_owner_token,
+                })
+                .expect("save remote snapshot");
+
+            let loaded = KitStore::load_remote_session(&remote.hub_url, &remote.session_id)
+                .expect("load remote session");
+            assert_eq!(
+                updated_kit.hash(),
+                loaded.read().expect("loaded read").hash(),
+                "remote snapshot roundtrip preserves the latest saved kit"
+            );
+
+            server.join().expect("join mock server");
         }
     }
 
