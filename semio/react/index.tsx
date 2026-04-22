@@ -2066,6 +2066,67 @@ export function useMoveToFolder(): {
 	return { run, status };
 }
 
+export type KitArtifactFolderKind = "type" | "design" | "quality" | "file" | "folder";
+
+/**
+ * Move a kit artifact into a folder (or to root) — mirrors legacy sketchpad `semio.kit.moveToFolder` / kitCommands behavior via {@link KitStoreClient.setField}.
+ */
+export function useMoveKitArtifactToFolder(): {
+	run: (artifactKind: KitArtifactFolderKind, artifactId: string, folderId: string | null) => Promise<SetResult>;
+	status: WriteStatus;
+} {
+	const runtime = useKitRuntime();
+	const [status, setStatus] = React.useState<WriteStatus>({ kind: "idle", pending: 0 });
+	const run = React.useCallback(
+		async (artifactKind: KitArtifactFolderKind, artifactId: string, folderId: string | null) => {
+			if (!runtime.kitClient || !runtime.canWrite) {
+				const e: SetError = { kind: "Readonly", message: "read-only or no kit client" };
+				setStatus({ kind: "error", pending: 0, lastError: e });
+				return { ok: false, error: e } as const;
+			}
+			setStatus({ kind: "pending", pending: 1 });
+			try {
+				let r: SetResult;
+				switch (artifactKind) {
+					case "type":
+						r = await runtime.kitClient.setField("Type", artifactId, "folder", folderId);
+						break;
+					case "design":
+						r = await runtime.kitClient.setField("Design", artifactId, "folder", folderId);
+						break;
+					case "quality":
+						r = await runtime.kitClient.setField("Quality", artifactId, "folder", folderId);
+						break;
+					case "file":
+						r = await runtime.kitClient.setField("File", artifactId, "folder", folderId ? { id: folderId } : null);
+						break;
+					case "folder":
+						r = await runtime.kitClient.setField("Folder", artifactId, "parent", folderId ? { id: folderId } : null);
+						break;
+					default: {
+						const e: SetError = { kind: "InvalidValue", message: `unknown artifact kind: ${artifactKind}` };
+						setStatus({ kind: "error", pending: 0, lastError: e });
+						return { ok: false, error: e } as const;
+					}
+				}
+				if (!r.ok) {
+					runtime.pushSetRejection(r.error);
+					setStatus({ kind: "error", pending: 0, lastError: r.error });
+					return r;
+				}
+				setStatus({ kind: "idle", pending: 0 });
+				return r;
+			} catch (e) {
+				const err: SetError = { kind: "InvalidValue", message: e instanceof Error ? e.message : String(e) };
+				setStatus({ kind: "error", pending: 0, lastError: err });
+				return { ok: false, error: err } as const;
+			}
+		},
+		[runtime],
+	);
+	return { run, status };
+}
+
 export function useImportKit(): { run: () => Promise<SetResult>; status: WriteStatus } {
 	const [status] = React.useState<WriteStatus>({ kind: "readonly", pending: 0 });
 	const run = React.useCallback(async () => {
@@ -14012,7 +14073,7 @@ const shouldRunReactEmbeddedTests =
 
 if (shouldRunReactEmbeddedTests) {
 	const { describe, expect, it } = await import("vitest");
-	const { render, waitFor } = await import("@testing-library/react");
+	const { act, render, waitFor } = await import("@testing-library/react");
 	const { InMemoryKitStore, asKitInstance } = await import("@semio/js");
 
 	describe("pipeline hooks", () => {
@@ -14162,6 +14223,34 @@ if (shouldRunReactEmbeddedTests) {
 			render(React.createElement(KitProvider, { store, kitClient: stub }, React.createElement(Probe)));
 			await waitFor(() => expect(seen.length).toBeGreaterThan(0));
 			expect(seen[0]?.message).toContain("stub-cluster");
+		});
+	});
+
+	describe("useDraft", () => {
+		it("keeps local draft and does not clear it when commit rejects", async () => {
+			const triad: HookTriad<string> = [
+				"server",
+				async (next) => {
+					const v = typeof next === "function" ? (next as (p: string) => string)("server") : next;
+					if (v === "reject")
+						return { ok: false, error: { kind: "InvalidValue", message: "rejected" } } as const;
+					return { ok: true } as const;
+				},
+				{ kind: "idle", pending: 0 },
+			];
+			let snap: ReturnType<typeof useDraft<string>> | null = null;
+			function P() {
+				snap = useDraft(triad);
+				return null;
+			}
+			render(React.createElement(P));
+			await waitFor(() => expect(snap).not.toBeNull());
+			await act(async () => {
+				snap!.setDraft("reject");
+			});
+			const r = await act(async () => snap!.commit());
+			expect(r.ok).toBe(false);
+			expect(snap!.value).toBe("reject");
 		});
 	});
 }

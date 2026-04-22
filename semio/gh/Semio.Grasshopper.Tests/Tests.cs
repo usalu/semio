@@ -163,7 +163,7 @@ public class ImportRepresentationUtilityTests
         var representation = new File3dm();
         representation.Objects.AddPoint(Point3d.Origin);
         var blob = Convert.ToBase64String(representation.ToByteArray());
-        var file = new Semio.File { Guid = "file-1", Blob = blob };
+        var file = new Semio.File { Id = "file-1", Blob = blob };
 
         var context = Utility.ImportRhinoRepresentationContextFromSemioFile(file);
 
@@ -181,7 +181,7 @@ public class ImportRepresentationUtilityTests
 
         var representation = new File3dm();
         var blob = Convert.ToBase64String(representation.ToByteArray());
-        var file = new Semio.File { Guid = "file-empty", Blob = blob, Name = "empty.3dm" };
+        var file = new Semio.File { Id = "file-empty", Blob = blob, Name = "empty.3dm" };
 
         var context = Utility.ImportRhinoRepresentationContextFromSemioFile(file);
 
@@ -199,7 +199,7 @@ public class ImportRepresentationUtilityTests
         var representation = new File3dm();
         representation.Objects.AddPoint(Point3d.Origin);
         var blob = Convert.ToBase64String(representation.ToByteArray());
-        var file = new Semio.File { Guid = "file-object-data", Blob = blob, Name = "sample.3dm" };
+        var file = new Semio.File { Id = "file-object-data", Blob = blob, Name = "sample.3dm" };
 
         var importedRepresentationObjectData = Utility.ImportRhinoRepresentationObjectDataFromSemioFile(file);
 
@@ -217,8 +217,8 @@ public class ImportRepresentationUtilityTests
             return;
 
         var representation = new File3dm();
-        var parentLayer = new Rhino.DocObjects.Layer { Name = "Parent", Id = Guid.NewGuid(), Color = Color.Red };
-        var childLayer = new Rhino.DocObjects.Layer { Name = "Child", Id = Guid.NewGuid(), ParentLayerId = parentLayer.Id, Color = Color.Blue };
+        var parentLayer = new Rhino.DocObjects.Layer { Name = "Parent", Id = __ID_NEWID__(), Color = Color.Red };
+        var childLayer = new Rhino.DocObjects.Layer { Name = "Child", Id = __ID_NEWID__(), ParentLayerId = parentLayer.Id, Color = Color.Blue };
         representation.Layers.Add(parentLayer);
         representation.Layers.Add(childLayer);
         var parentLayerIndex = 0;
@@ -248,15 +248,15 @@ public class ImportRepresentationUtilityTests
             return;
 
         var firstRepresentation = new File3dm();
-        var firstLayer = new Rhino.DocObjects.Layer { Name = "First", Id = Guid.NewGuid(), Color = Color.Red };
-        var firstChildLayer = new Rhino.DocObjects.Layer { Name = "Nested", Id = Guid.NewGuid(), ParentLayerId = firstLayer.Id, Color = Color.Orange };
+        var firstLayer = new Rhino.DocObjects.Layer { Name = "First", Id = __ID_NEWID__(), Color = Color.Red };
+        var firstChildLayer = new Rhino.DocObjects.Layer { Name = "Nested", Id = __ID_NEWID__(), ParentLayerId = firstLayer.Id, Color = Color.Orange };
         firstRepresentation.Layers.Add(firstLayer);
         firstRepresentation.Layers.Add(firstChildLayer);
         firstRepresentation.Objects.AddPoint(new Point3d(0, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
         firstRepresentation.Objects.AddPoint(new Point3d(1, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 1 });
 
         var secondRepresentation = new File3dm();
-        var secondLayer = new Rhino.DocObjects.Layer { Name = "Second", Id = Guid.NewGuid(), Color = Color.Blue };
+        var secondLayer = new Rhino.DocObjects.Layer { Name = "Second", Id = __ID_NEWID__(), Color = Color.Blue };
         secondRepresentation.Layers.Add(secondLayer);
         secondRepresentation.Objects.AddPoint(new Point3d(2, 0, 0), new Rhino.DocObjects.ObjectAttributes { LayerIndex = 0 });
 
@@ -322,7 +322,7 @@ public class RepresentationObjectToGroupComponentTests
 
         var file = new Semio.File
         {
-            Guid = "unlayered-import",
+            Id = "unlayered-import",
             Name = "unlayered.3dm",
             Blob = Convert.ToBase64String(representation.ToByteArray())
         };
@@ -424,7 +424,7 @@ public class NamingConventionTests
 #endregion 🌩️NamingConventionTests
 
 #region 🪁ExportDesignToBlocksComponentTests
-// Tests MUST verify ExportDesignToBlocks component registration, param structure, and GUID uniqueness.
+// Tests MUST verify ExportDesignToBlocks component registration, param structure, and ID uniqueness.
 public class ExportDesignToBlocksComponentTests
 {
     [Fact]
@@ -451,7 +451,7 @@ public class ExportDesignToBlocksComponentTests
     }
 
     [Fact]
-    public void ComponentGuid_ShouldBeUnique()
+    public void ComponentId_ShouldBeUnique()
     {
         var component = new ExportDesignToBlocksComponent();
         var componentKind = typeof(global::Grasshopper.Kernel.GH_Component);
@@ -459,13 +459,13 @@ public class ExportDesignToBlocksComponentTests
             .Where(kind => kind.IsClass && !kind.IsAbstract && componentKind.IsAssignableFrom(kind))
             .ToList();
 
-        var guids = allComponentKinds
-            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentGuid)
+        var ids = allComponentKinds
+            .Select(kind => (Activator.CreateInstance(kind) as global::Grasshopper.Kernel.GH_Component)?.ComponentId)
             .Where(g => g.HasValue)
             .Select(g => g!.Value)
             .ToList();
 
-        var duplicates = guids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+        var duplicates = ids.GroupBy(g => g).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
         Assert.Empty(duplicates);
     }
 

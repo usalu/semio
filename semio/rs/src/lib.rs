@@ -9064,7 +9064,6 @@ pub mod piece {
     #[derive(Debug)]
     pub struct PieceStore {
         pub id: Id,
-        pub id: Option<String>,
         pub name: Option<String>,
         pub description: Option<String>,
         pub plane: Option<Plane>,
@@ -9094,8 +9093,6 @@ pub mod piece {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceMetadataDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9127,8 +9124,6 @@ pub mod piece {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PieceShallowDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -9165,8 +9160,6 @@ pub mod piece {
     pub struct PieceFullDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub name: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -9202,7 +9195,6 @@ pub mod piece {
         pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
-                id: None,
                 name: None,
                 description: None,
                 plane: None,
@@ -9228,7 +9220,6 @@ pub mod piece {
         pub(crate) fn empty_shell(id: Id) -> Self {
             Self {
                 id,
-                id: None,
                 name: None,
                 description: None,
                 plane: None,
@@ -9262,7 +9253,6 @@ pub mod piece {
 
         pub(crate) fn apply_metadata_fields(&mut self, d: PieceMetadataDto) {
             self.id = d.id;
-            self.id = d.id;
             self.name = d.name;
             self.description = d.description;
             self.plane = d.plane;
@@ -9284,7 +9274,6 @@ pub mod piece {
             type_index: &HashMap<Id, TypeStoreRef>,
         ) {
             self.apply_metadata_fields(PieceMetadataDto {
-                id: d.id,
                 id: d.id,
                 name: d.name,
                 description: d.description,
@@ -9457,17 +9446,28 @@ pub mod piece {
             Ok(())
         }
 
-        pub fn set_id(&mut self, id: Option<String>) -> crate::error::SetResult {
+        pub fn set_id(&mut self, id: Id) -> crate::error::SetResult {
             if self.id == id {
                 return Ok(());
             }
+            let previous_id = self.id.clone();
+            let previous_entity = EntityRef::new(EntityKind::Piece, previous_id.clone());
             self.id = id;
             self.emit_ev(KitEvent::FieldChanged {
-                entity: self.entity_ref(),
+                entity: previous_entity.clone(),
                 field: "id",
             });
-            self.invalidate_hash();
-            self.bubble_design_flatten();
+            self.hash_cache.invalidate();
+            self.invalidate_flat_pose();
+            self.emit_ev(KitEvent::HashInvalidated {
+                entity: previous_entity,
+            });
+            if let Some(d) = self.parent_design.upgrade() {
+                if let Ok(d) = d.read() {
+                    d.invalidate_hash();
+                    d.invalidate_flatten_with_locked_piece(Some(previous_id));
+                }
+            }
             Ok(())
         }
 
@@ -10067,7 +10067,6 @@ pub mod piece {
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("piece")
                 .str(self.id.as_str())
-                .opt_str(self.id.as_deref())
                 .opt_str(self.name.as_deref())
                 .opt_str(self.description.as_deref());
             if let Some(p) = &self.plane {
@@ -10123,7 +10122,6 @@ pub mod piece {
             });
             PieceMetadataDto {
                 id: self.id.clone(),
-                id: self.id.clone(),
                 name: self.name.clone(),
                 description: self.description.clone(),
                 plane: self.plane,
@@ -10141,7 +10139,6 @@ pub mod piece {
         pub fn to_shallow_dto(&self) -> PieceShallowDto {
             let m = self.to_metadata_dto();
             PieceShallowDto {
-                id: m.id,
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -10170,7 +10167,6 @@ pub mod piece {
         pub fn to_full_dto(&self) -> PieceFullDto {
             let m = self.to_metadata_dto();
             PieceFullDto {
-                id: m.id,
                 id: m.id,
                 name: m.name,
                 description: m.description,
@@ -10223,7 +10219,6 @@ pub mod port {
     #[derive(Debug)]
     pub struct PortStore {
         pub id: Id,
-        pub id: Option<String>,
         pub family: Option<String>,
         pub compatible_families: Vec<String>,
         pub mandatory: Option<bool>,
@@ -10247,8 +10242,6 @@ pub mod port {
     pub struct PortMetadataDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
         #[serde(
             default,
@@ -10271,8 +10264,6 @@ pub mod port {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PortShallowDto {
         pub id: Id,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
         #[serde(
@@ -10301,8 +10292,6 @@ pub mod port {
     pub struct PortFullDto {
         pub id: Id,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub id: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub family: Option<String>,
         #[serde(
             default,
@@ -10330,7 +10319,6 @@ pub mod port {
         pub fn new() -> Self {
             Self {
                 id: Id::new_v7(),
-                id: None,
                 family: None,
                 compatible_families: Vec::new(),
                 mandatory: None,
@@ -10358,7 +10346,6 @@ pub mod port {
         pub fn from_id_dto(d: PortIdDto) -> Self {
             Self {
                 id: d.id,
-                id: None,
                 family: None,
                 compatible_families: Vec::new(),
                 mandatory: None,
@@ -10377,7 +10364,6 @@ pub mod port {
         pub fn from_metadata_dto(d: PortMetadataDto) -> Self {
             Self {
                 id: d.id,
-                id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
                 mandatory: d.mandatory,
@@ -10395,7 +10381,6 @@ pub mod port {
 
         pub fn from_shallow_dto(d: PortShallowDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto {
-                id: d.id,
                 id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
@@ -10420,7 +10405,6 @@ pub mod port {
 
         pub fn from_full_dto(d: PortFullDto) -> Self {
             let mut s = Self::from_metadata_dto(PortMetadataDto {
-                id: d.id,
                 id: d.id,
                 family: d.family,
                 compatible_families: d.compatible_families,
@@ -10452,7 +10436,6 @@ pub mod port {
         pub fn to_metadata_dto(&self) -> PortMetadataDto {
             PortMetadataDto {
                 id: self.id.clone(),
-                id: self.id.clone(),
                 family: self.family.clone(),
                 compatible_families: self.compatible_families.clone(),
                 mandatory: self.mandatory,
@@ -10466,7 +10449,6 @@ pub mod port {
         pub fn to_shallow_dto(&self) -> PortShallowDto {
             let m = self.to_metadata_dto();
             PortShallowDto {
-                id: m.id,
                 id: m.id,
                 family: m.family,
                 compatible_families: m.compatible_families,
@@ -10492,7 +10474,6 @@ pub mod port {
             let m = self.to_metadata_dto();
             PortFullDto {
                 id: m.id,
-                id: m.id,
                 family: m.family,
                 compatible_families: m.compatible_families,
                 mandatory: m.mandatory,
@@ -10513,7 +10494,7 @@ pub mod port {
             }
         }
 
-        pub fn set_id(&mut self, v: Option<String>) -> crate::error::SetResult {
+        pub fn set_id(&mut self, v: Id) -> crate::error::SetResult {
             if self.id == v {
                 return Ok(());
             }
@@ -10642,7 +10623,6 @@ pub mod port {
         pub fn hash_into(&self, w: &mut HashWriter) {
             w.tag("port")
                 .str(self.id.as_str())
-                .opt_str(self.id.as_deref())
                 .opt_str(self.family.as_deref());
             for f in &self.compatible_families {
                 w.str(f);
@@ -14057,13 +14037,12 @@ pub mod io {
             let (dir_x, dir_y, dir_z) = coordinate_parts(port.direction.as_ref());
             tx.execute(
                 "INSERT INTO port (
-                    id, ordinal, id, family, mandatory, t, description,
+                    id, ordinal, family, mandatory, t, description,
                     point_x, point_y, point_z, direction_x, direction_y, direction_z, type_id
-                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
                 params![
                     port.id.as_str(),
                     ordinal as i64,
-                    port.id,
                     port.family,
                     opt_bool_to_int(port.mandatory),
                     port.t,
@@ -14368,7 +14347,7 @@ pub mod io {
             ) = plane_parts(piece.mirror_plane.as_ref());
             tx.execute(
                 "INSERT INTO piece (
-                    id, ordinal, id, name, description,
+                    id, ordinal, name, description,
                     plane_origin_x, plane_origin_y, plane_origin_z,
                     plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
                     plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
@@ -14378,20 +14357,19 @@ pub mod io {
                     mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
                     hidden, locked, color, type_id, design_ref_id, design_id
                  ) VALUES (
-                    ?1, ?2, ?3, ?4, ?5,
-                    ?6, ?7, ?8,
-                    ?9, ?10, ?11,
-                    ?12, ?13, ?14,
-                    ?15, ?16, ?17, ?18,
-                    ?19, ?20, ?21,
-                    ?22, ?23, ?24,
-                    ?25, ?26, ?27,
-                    ?28, ?29, ?30, ?31, ?32, ?33
+                          ?1, ?2, ?3, ?4,
+                          ?5, ?6, ?7,
+                          ?8, ?9, ?10,
+                          ?11, ?12, ?13,
+                          ?14, ?15, ?16, ?17,
+                          ?18, ?19, ?20,
+                          ?21, ?22, ?23,
+                          ?24, ?25, ?26,
+                          ?27, ?28, ?29, ?30, ?31, ?32
                  )",
                 params![
                     piece.id.as_str(),
                     ordinal as i64,
-                    piece.id,
                     piece.name,
                     piece.description,
                     plane_ox,
@@ -14863,7 +14841,7 @@ pub mod io {
 
         fn load_ports(conn: &SqlConnection, type_id: &Id) -> Result<Vec<PortFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT id, id, family, mandatory, t, description,
+                "SELECT id, family, mandatory, t, description,
                         point_x, point_y, point_z, direction_x, direction_y, direction_z
                  FROM port WHERE type_id = ?1 ORDER BY ordinal",
             )?;
@@ -14881,14 +14859,13 @@ pub mod io {
                 }
                 values.push(PortFullDto {
                     id: id.clone(),
-                    id: row.get(1)?,
-                    family: row.get(2)?,
+                    family: row.get(1)?,
                     compatible_families,
-                    mandatory: opt_int_to_bool(row.get(3)?),
-                    t: row.get(4)?,
-                    description: row.get(5)?,
-                    point: coordinate_from_parts(row.get(6)?, row.get(7)?, row.get(8)?),
-                    direction: coordinate_from_parts(row.get(9)?, row.get(10)?, row.get(11)?),
+                    mandatory: opt_int_to_bool(row.get(2)?),
+                    t: row.get(3)?,
+                    description: row.get(4)?,
+                    point: coordinate_from_parts(row.get(5)?, row.get(6)?, row.get(7)?),
+                    direction: coordinate_from_parts(row.get(8)?, row.get(9)?, row.get(10)?),
                     qualities: load_qualities_for_scope(conn, "port_id", &id)?,
                     attributes: load_attributes_for_scope(conn, "port_id", &id)?,
                 });
@@ -15008,7 +14985,7 @@ pub mod io {
 
         fn load_pieces(conn: &SqlConnection, design_id: &Id) -> Result<Vec<PieceFullDto>> {
             let mut stmt = conn.prepare(
-                "SELECT id, id, name, description,
+                "SELECT id, name, description,
                         plane_origin_x, plane_origin_y, plane_origin_z,
                         plane_x_axis_x, plane_x_axis_y, plane_x_axis_z,
                         plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
@@ -15023,14 +15000,14 @@ pub mod io {
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
                 let id = Id::from(row.get::<_, String>(0)?);
-                let type_id: Option<String> = row.get(29)?;
-                let design_ref_id: Option<String> = row.get(30)?;
+                let type_id: Option<String> = row.get(28)?;
+                let design_ref_id: Option<String> = row.get(29)?;
                 values.push(PieceFullDto {
                     id: id.clone(),
-                    id: row.get(1)?,
-                    name: row.get(2)?,
-                    description: row.get(3)?,
+                    name: row.get(1)?,
+                    description: row.get(2)?,
                     plane: plane_from_parts(
+                        row.get(3)?,
                         row.get(4)?,
                         row.get(5)?,
                         row.get(6)?,
@@ -15039,11 +15016,11 @@ pub mod io {
                         row.get(9)?,
                         row.get(10)?,
                         row.get(11)?,
-                        row.get(12)?,
                     ),
-                    center: coordinate_from_parts(row.get(13)?, row.get(14)?, row.get(15)?),
-                    scale: row.get(16)?,
+                    center: coordinate_from_parts(row.get(12)?, row.get(13)?, row.get(14)?),
+                    scale: row.get(15)?,
                     mirror_plane: plane_from_parts(
+                        row.get(16)?,
                         row.get(17)?,
                         row.get(18)?,
                         row.get(19)?,
@@ -15052,11 +15029,10 @@ pub mod io {
                         row.get(22)?,
                         row.get(23)?,
                         row.get(24)?,
-                        row.get(25)?,
                     ),
-                    hidden: opt_int_to_bool(row.get(26)?),
-                    locked: opt_int_to_bool(row.get(27)?),
-                    color: row.get(28)?,
+                    hidden: opt_int_to_bool(row.get(25)?),
+                    locked: opt_int_to_bool(row.get(26)?),
+                    color: row.get(27)?,
                     r#type: type_id.map(|value| crate::typ::TypeIdDto {
                         id: Id::from(value),
                     }),
@@ -17569,8 +17545,7 @@ mod tests {
                     id: type_id.clone(),
                     name: "Wall".into(),
                     ports: vec![PortFullDto {
-                        id: Id::new_v7(),
-                        id: Some("top".into()),
+                        id: Id::from("top"),
                         family: Some("stack".into()),
                         compatible_families: vec!["stack".into()],
                         ..Default::default()
@@ -18928,7 +18903,7 @@ mod tests {
                 p.set_locked(Some(true))
             });
             piece_geom_test!(piece_set_id, "id", |p: &mut crate::PieceStore| {
-                p.set_id(Some("id1".into()))
+                p.set_id("id1".into())
             });
             piece_geom_test!(piece_set_name, "name", |p: &mut crate::PieceStore| {
                 p.set_name(Some("p".into()))

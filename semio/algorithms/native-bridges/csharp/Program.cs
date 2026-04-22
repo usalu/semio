@@ -16,9 +16,9 @@ static class NativeBridge
         [JsonProperty("op")] public string Op { get; set; } = "";
         [JsonProperty("kit")] public JToken Kit { get; set; } = new JObject();
         [JsonProperty("design")] public JToken Design { get; set; } = new JObject();
-        [JsonProperty("designGuid")] public string DesignGuid { get; set; } = "";
-        [JsonProperty("pieceGuids")] public List<string> PieceGuids { get; set; } = new();
-        [JsonProperty("connectionGuids")] public List<string> ConnectionGuids { get; set; } = new();
+        [JsonProperty("designId")] public string DesignId { get; set; } = "";
+        [JsonProperty("pieceIds")] public List<string> PieceIds { get; set; } = new();
+        [JsonProperty("connectionIds")] public List<string> ConnectionIds { get; set; } = new();
     }
 
     private sealed class BridgeResponse
@@ -43,7 +43,7 @@ static class NativeBridge
             {
                 case "flatten":
                 {
-                    var rep = Kit.FlattenDesign(kit, req.DesignGuid);
+                    var rep = Kit.FlattenDesign(kit, req.DesignId);
                     WriteOk(JToken.FromObject(rep));
                     return 0;
                 }
@@ -51,7 +51,7 @@ static class NativeBridge
                 {
                     var design = req.Design.ToObject<Design>();
                     if (design == null) throw new Exception("parse design: null");
-                    var rep = Design.DeletePiecesAndConnectionsInDesign(kit, design, req.PieceGuids ?? new List<string>(), req.ConnectionGuids ?? new List<string>());
+                    var rep = Design.DeletePiecesAndConnectionsInDesign(kit, design, req.PieceIds ?? new List<string>(), req.ConnectionIds ?? new List<string>());
                     WriteOk(JToken.FromObject(rep));
                     return 0;
                 }

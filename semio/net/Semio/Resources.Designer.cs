@@ -56,7 +56,7 @@ namespace Semio
 
 
 
-        [global::System.ComponentRepresentation.EditorBrowsableAttribute(global::System.ComponentRepresentation.EditorBrowsableState.Advanced)]
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Resources.ResourceManager ResourceManager
         {
             get
@@ -74,7 +74,7 @@ namespace Semio
 
 
 
-        [global::System.ComponentRepresentation.EditorBrowsableAttribute(global::System.ComponentRepresentation.EditorBrowsableState.Advanced)]
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Globalization.CultureInfo Culture
         {
             get

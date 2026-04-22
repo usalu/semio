@@ -278,7 +278,23 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import { KitProvider, KitRegistryProvider, useActiveKitId, useKitRegistrySafe, useKitRuntimeSafe } from "@semio/react";
+import {
+  KitProvider,
+  KitRegistryProvider,
+  useActiveKitId,
+  useCreateAuthor,
+  useCreateDesign,
+  useCreateFolder,
+  useCreatePort,
+  useCreateQuality,
+  useCreateType,
+  useKitRegistrySafe,
+  useKitRuntimeSafe,
+  useMoveKitArtifactToFolder,
+  useUpdateAuthor,
+  useUpdateDesign,
+  useUpdateType,
+} from "@semio/react";
 export { useKitStore, useKitRuntimeSafe, type KitRuntimeContextValue } from "@semio/react";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -7896,10 +7912,10 @@ export function useExplodeableDesignNodes(designId: Id): any[] {
 
 /**
  * Execute a kit command against a KitStore.
- * Looks up the command in kitCommands, builds context from snapshot, applies diff.
+ * Looks up the command in `kitCommandHandlers`, builds context from snapshot, applies diff.
  **/
 async function executeKitCommand(kitStore: KitStore, command: string, origin?: string, ...args: any[]): Promise<KitCommandResult> {
-  const callback = kitCommands[command as keyof typeof kitCommands];
+  const callback = kitCommandHandlers[command as keyof typeof kitCommandHandlers];
   if (!callback) throw new Error(`Command "${command}" not found in kit commands`);
   const context: KitCommandContext = {
     kit: kitStore.getSnapshot().kit,
@@ -8461,8 +8477,9 @@ const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
 /**
  * Command map for kit CRUD operations on authors, types, designs, and other kit entities.
+ * Internal to sketchpad — prefer {@link @semio/react} command hooks for UI.
  **/
-export const kitCommands = {
+const kitCommandHandlers = {
   "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
     return {
       diff: { authors: { added: [author] } },
@@ -12993,6 +13010,14 @@ const AppContent: FC = () => {
   const hasKit = useHasKit(kitScope?.id || "");
 
   const kit = useKit(undefined, kitScope?.id, false) as Kit;
+  const { run: moveKitArtifact } = useMoveKitArtifactToFolder();
+  const { run: runCreateDesign } = useCreateDesign();
+  const { run: runCreateType } = useCreateType();
+  const { run: runCreateQuality } = useCreateQuality();
+  const { run: runCreatePort } = useCreatePort();
+  const { run: runCreateFolder } = useCreateFolder();
+  const { run: runUpdateDesign } = useUpdateDesign();
+  const { run: runUpdateType } = useUpdateType();
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
   const kitAppCommands = useKitAppCommands();
@@ -14201,7 +14226,7 @@ const AppContent: FC = () => {
       return;
     }
 
-    if (draggedRow.kind === "designs" && kitCommands) {
+    if (draggedRow.kind === "designs") {
       const design = draggedRow.data as Design;
 
       if (targetParentId !== undefined) {
@@ -14215,40 +14240,40 @@ const AppContent: FC = () => {
             return;
           }
 
-          kitCommands.updateDesign(design.id, { parent: { id: targetParentId } });
+          void runUpdateDesign(design.id, { parent: { id: targetParentId } } as Record<string, unknown>);
         }
       } else if (targetFolderId === undefined && (design.parent || design.folder)) {
-        kitCommands.updateDesign(design.id, { parent: undefined });
+        void runUpdateDesign(design.id, { parent: undefined } as Record<string, unknown>);
         if (design.folder) {
-          kitCommands.moveToFolder("design", design.id, null);
+          void moveKitArtifact("design", design.id, null);
         }
       } else if (!design.parent) {
-        kitCommands.moveToFolder("design", design.id, targetFolderId ?? null);
+        void moveKitArtifact("design", design.id, targetFolderId ?? null);
       }
-    } else if (draggedRow.kind === "types" && kitCommands) {
+    } else if (draggedRow.kind === "types") {
       const type = draggedRow.data as Type;
 
       if (targetParentId !== undefined) {
         if (type.parent?.id !== targetParentId) {
-          kitCommands.updateType(type.id, { parent: { id: targetParentId } });
+          void runUpdateType(type.id, { parent: { id: targetParentId } } as Record<string, unknown>);
         }
       } else if (targetFolderId === undefined && (type.parent || type.folder)) {
-        kitCommands.updateType(type.id, { parent: undefined });
+        void runUpdateType(type.id, { parent: undefined } as Record<string, unknown>);
         if (type.folder) {
-          kitCommands.moveToFolder("type", type.id, null);
+          void moveKitArtifact("type", type.id, null);
         }
       } else if (!type.parent) {
-        kitCommands.moveToFolder("type", type.id, targetFolderId ?? null);
+        void moveKitArtifact("type", type.id, targetFolderId ?? null);
       }
-    } else if (draggedRow.kind === "qualities" && kitCommands) {
+    } else if (draggedRow.kind === "qualities") {
       const quality = draggedRow.data as Quality;
-      kitCommands.moveToFolder("quality", quality.id, targetFolderId ?? null);
-    } else if (draggedRow.kind === "files" && kitCommands) {
+      void moveKitArtifact("quality", quality.id, targetFolderId ?? null);
+    } else if (draggedRow.kind === "files") {
       const file = draggedRow.data as SemioFile;
-      kitCommands.moveToFolder("file", file.id, targetFolderId ?? null);
-    } else if (draggedRow.kind === "folders" && kitCommands) {
+      void moveKitArtifact("file", file.id, targetFolderId ?? null);
+    } else if (draggedRow.kind === "folders") {
       const folder = draggedRow.data as Folder;
-      kitCommands.moveToFolder("folder", folder.id, targetFolderId ?? null);
+      void moveKitArtifact("folder", folder.id, targetFolderId ?? null);
     }
 
     if (shouldExpandFolder && targetFolderId) {
@@ -14277,7 +14302,7 @@ const AppContent: FC = () => {
           pieces: [],
           connections: [],
         };
-        if (kitCommands) kitCommands.createDesign(newDesign);
+        void runCreateDesign(newDesign as unknown);
         sketchpadCommands.navigateToDesign(kit.id, newDesign.id);
         break;
       }
@@ -14289,7 +14314,7 @@ const AppContent: FC = () => {
           name: uniqueName,
           connectors: [],
         };
-        if (kitCommands) kitCommands.createType(newType);
+        void runCreateType(newType as unknown);
         sketchpadCommands.navigateToType(kit.id, newType.id);
         break;
       }
@@ -14303,7 +14328,7 @@ const AppContent: FC = () => {
           key: uniqueKey,
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createQuality(newQuality);
+        void runCreateQuality(newQuality as unknown);
         sketchpadCommands.navigateToQuality(kit.id, newQuality.id);
         break;
       }
@@ -14314,7 +14339,7 @@ const AppContent: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createPort(newPort);
+        void runCreatePort(newPort as unknown);
         setKind("ports");
         setSelectionAction?.({ ports: [newPort.id] });
         break;
@@ -14330,7 +14355,7 @@ const AppContent: FC = () => {
           id: id(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createFolder(newFolder);
+        void runCreateFolder(newFolder as unknown);
         setKind("folders");
         setSelectionAction?.({ folders: [newFolder.id] });
         break;
@@ -14354,7 +14379,7 @@ const AppContent: FC = () => {
         pieces: [],
         connections: [],
       };
-      if (kitCommands) kitCommands.createDesign(newDesign);
+      void runCreateDesign(newDesign as unknown);
       sketchpadCommands.navigateToDesign(kit.id, newDesign.id);
     } else if (row.kind === "types") {
       const type = row.data as Type;
@@ -14366,7 +14391,7 @@ const AppContent: FC = () => {
         parent: { id: type.id },
         connectors: [],
       };
-      if (kitCommands) kitCommands.createType(newType);
+      void runCreateType(newType as unknown);
       sketchpadCommands.navigateToType(kit.id, newType.id);
     }
   };
@@ -28358,7 +28383,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
     if (!connection) {
       return {};
     }
-    const connectionId = { connected: { piece: connection.connected.piece.id }, connecting: { piece: connection.connecting.piece.id } };
+    const connectionKey = { connected: { piece: connection.connected.piece.id }, connecting: { piece: connection.connecting.piece.id } };
     return {
       kitDiff: {
         designs: {
@@ -28367,7 +28392,7 @@ export const designAppCommands: Record<string, (context: DesignAppCommandContext
               design: { id: context.design.id },
               diff: {
                 connections: {
-                  updated: [{ connection: { id: connectionId }, diff: connectionDiff }],
+                  updated: [{ connection: { id: connectionKey }, diff: connectionDiff }],
                 },
               },
             },
@@ -34118,12 +34143,12 @@ const pieceNodeAreEqual = (prevProps: NodeProps<PieceNode>, nextProps: NodeProps
 const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, data }) => {
   const {
     piece,
-    piece: { id, attributes },
+    piece: { id: pieceId, attributes },
     type,
   } = data as PieceNodeProps & { diffStatus: DiffStatus };
   const connectors = type.connectors;
 
-  const renderData = usePieceRenderData(id);
+  const renderData = usePieceRenderData(pieceId);
   const isSelected = renderData.isSelected;
 
   const selectedConnector = useContext(SelectedConnectorContext);
@@ -34160,12 +34185,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
         hoverClearTimeoutRef.current = null;
       }
       if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
-      if (currentHoveredPieceIdRef.current !== id) {
-        currentHoveredPieceIdRef.current = id;
-        commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseEnter", id);
+      if (currentHoveredPieceIdRef.current !== pieceId) {
+        currentHoveredPieceIdRef.current = pieceId;
+        commands.hoverPiece("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseEnter", pieceId);
       }
     },
-    [id, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [pieceId, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   const handleMouseLeave = useCallback(
@@ -34174,7 +34199,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
       if (hoverClearTimeoutRef.current) {
         clearTimeout(hoverClearTimeoutRef.current);
       }
-      const pieceIdAtLeave = id;
+      const pieceIdAtLeave = pieceId;
       hoverClearTimeoutRef.current = setTimeout(() => {
         if (currentHoveredPieceIdRef.current === pieceIdAtLeave) {
           commands.clearHover("semio.sketchpad.app.design.canvas.diagram.pieceNode.handleMouseLeave");
@@ -34183,12 +34208,12 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
         hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [id, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [pieceId, commands, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   return (
     <PieceNodeInner
-      id={id}
+      id={pieceId}
       piece={piece}
       type={type}
       connectors={connectors}
@@ -34361,11 +34386,11 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
 const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, data }) => {
   const {
     piece,
-    piece: { id, attributes },
+    piece: { id: designPieceId, attributes },
     externalConnections,
   } = data as DesignNodeProps & { diffStatus: DiffStatus };
   const [addConnectionAction] = useDesignAppAddConnection();
-  const isSelected = useDesignAppIsPieceSelected(undefined, id);
+  const isSelected = useDesignAppIsPieceSelected(undefined, designPieceId);
   const selectedConnector = useDesignAppSelectedConnector();
   const diff = (attributes?.find((q) => q.key === "semio.diffStatus")?.value as DiffStatus) || DiffStatus.Unchanged;
 
@@ -34401,12 +34426,12 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         hoverClearTimeoutRef.current = null;
       }
       if (isPanningRef.current || isDraggingNodeRef.current || event.buttons !== 0) return;
-      if (currentHoveredPieceIdRef.current !== id) {
-        currentHoveredPieceIdRef.current = id;
-        if (hoverPiece) hoverPiece(id);
+      if (currentHoveredPieceIdRef.current !== designPieceId) {
+        currentHoveredPieceIdRef.current = designPieceId;
+        if (hoverPiece) hoverPiece(designPieceId);
       }
     },
-    [id, hoverPiece, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [designPieceId, hoverPiece, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   const handleMouseLeave = useCallback(
@@ -34416,7 +34441,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         clearTimeout(hoverClearTimeoutRef.current);
       }
 
-      const pieceIdAtLeave = id;
+      const pieceIdAtLeave = designPieceId;
       hoverClearTimeoutRef.current = setTimeout(() => {
         if (currentHoveredPieceIdRef.current === pieceIdAtLeave) {
           if (clearHover) clearHover();
@@ -34425,7 +34450,7 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
         hoverClearTimeoutRef.current = null;
       }, 50);
     },
-    [id, clearHover, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
+    [designPieceId, clearHover, hoverClearTimeoutRef, isPanningRef, isDraggingNodeRef, currentHoveredPieceIdRef],
   );
 
   const connectors: Connector[] = externalConnections.map((SemioConnection, connectorIndex) => {
@@ -34483,9 +34508,9 @@ const DesignNodeComponent: React.FC<NodeProps<DesignNode>> = React.memo(({ id, d
   });
 
   return (
-    <PieceScopeProvider id={id}>
+    <PieceScopeProvider id={designPieceId}>
       <DesignNodeInner
-        id={id}
+        id={designPieceId}
         piece={piece}
         connectors={connectors}
         isSelected={isSelected}
@@ -35119,13 +35144,13 @@ const connectionToEdge = (
   let targetConnectorId = SemioConnection.connected.connector ?? "undefined";
 
   if (SemioConnection.connecting.designPiece && allConnections) {
-    const designPieceId = SemioConnection.connecting.designPiece;
-    const designPieceId = designPieceId.id;
-    sourcePieceId = designPieceId;
+    const connectingDesignPiece = SemioConnection.connecting.designPiece;
+    const connectingDesignPieceId = connectingDesignPiece.id;
+    sourcePieceId = connectingDesignPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece?.id === designPieceId;
-      const connectingToDesign = conn.connecting.designPiece?.id === designPieceId;
+      const connectedToDesign = conn.connected.designPiece?.id === connectingDesignPieceId;
+      const connectingToDesign = conn.connecting.designPiece?.id === connectingDesignPieceId;
       return connectedToDesign || connectingToDesign;
     });
 
@@ -35140,13 +35165,13 @@ const connectionToEdge = (
   }
 
   if (SemioConnection.connected.designPiece && allConnections) {
-    const designPieceId = SemioConnection.connected.designPiece;
-    const designPieceId = designPieceId.id;
-    targetPieceId = designPieceId;
+    const connectedDesignPiece = SemioConnection.connected.designPiece;
+    const connectedDesignPieceId = connectedDesignPiece.id;
+    targetPieceId = connectedDesignPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece?.id === designPieceId;
-      const connectingToDesign = conn.connecting.designPiece?.id === designPieceId;
+      const connectedToDesign = conn.connected.designPiece?.id === connectedDesignPieceId;
+      const connectingToDesign = conn.connecting.designPiece?.id === connectedDesignPieceId;
       return connectedToDesign || connectingToDesign;
     });
 
@@ -38254,20 +38279,24 @@ const DesignWindowApp: FC<AppProps> = () => {
     const selectionPieceEntries = (selection.pieces || []) as any[];
     const selectionConnectionEntries = (selection.connections || []) as any[];
     const designConnections = design?.connections || [];
-    const knownPieceIds = [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...getIncludedDesigns(design || ({} as Design)).map((entry) => entry.id)])];
+    const knownPieceIdList = [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...getIncludedDesigns(design || ({} as Design)).map((entry) => entry.id)])];
     const knownConnectionIds = new Set(designConnections.map((entry) => entry.id));
-    const selectedPieceIds = selectionPieceEntries.map((entry) => resolveSelectionEntryIdByKnownIds(entry, knownPieceIds)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0);
-    const knownPieceIds = new Set(knownPieceIds);
-    const selectedKnownPieceIds = selectedPieceIds.filter((id) => knownPieceIds.has(id));
-    const selectedConnectionIds = selectionConnectionEntries.map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0 && knownConnectionIds.has(entry));
-    const selectedConnectionIds = selectionConnectionEntries.filter((entry) => {
-      if (typeof entry !== "object" || entry === null) return false;
-      const resolvedId = resolveSelectionEntryId(entry);
-      return resolvedId === undefined;
-    }) as ConnectionId[];
-    const idConnections = designConnections.filter((connection) => selectedConnectionIds.includes(connection.id));
-    const idConnections = designConnections.filter((connection) => selectedConnectionIds.some((connectionId) => areSameConnection(connection, connectionId as any)));
-    const selectedConnections = [...idConnections, ...idConnections.filter((connection) => !idConnections.some((idConnection) => idConnection.id === connection.id))];
+    const selectedPieceIds = selectionPieceEntries
+      .map((entry) => resolveSelectionEntryIdByKnownIds(entry, knownPieceIdList))
+      .filter((entry): entry is Id => typeof entry === "string" && entry.length > 0);
+    const knownPieceIdSet = new Set(knownPieceIdList);
+    const selectedKnownPieceIds = selectedPieceIds.filter((pid) => knownPieceIdSet.has(pid));
+    const selectedConnectionIdsResolved = selectionConnectionEntries
+      .map((entry) => resolveSelectionEntryId(entry))
+      .filter((entry): entry is Id => typeof entry === "string" && entry.length > 0 && knownConnectionIds.has(entry));
+    const connectionMatchesById = designConnections.filter((connection) => selectedConnectionIdsResolved.includes(connection.id));
+    const connectionMatchesBySameness = designConnections.filter((connection) =>
+      selectedConnectionIdsResolved.some((cid) => areSameConnection(connection, cid as any)),
+    );
+    const selectedConnections = [
+      ...connectionMatchesById,
+      ...connectionMatchesBySameness.filter((c) => !connectionMatchesById.some((o) => o.id === c.id)),
+    ];
     const primaryConnector = selection.connector ?? selection.connectors?.[0];
     const hasPieces = selectedKnownPieceIds.length > 0;
     const hasConnections = selectedConnections.length > 0;
@@ -41366,13 +41395,14 @@ export const AuthorsSection: FC = () => {
 /**
  **/
 const AuthorsSectionForm: FC = () => {
-  const tooltip = useTooltip();
-  const kitCommands = useKitCommands();
+  const { run: runUpdateType } = useUpdateType();
+  const { run: runCreateAuthor } = useCreateAuthor();
+  const { run: runUpdateAuthor } = useUpdateAuthor();
   const type = useType(undefined, undefined, true) as Type;
   const kit = useKit() as Kit | null;
 
   const updateAuthors = (authors: string[]) => {
-    kitCommands?.updateType(type.id, { authors: authors.map((a) => ({ id: a })) });
+    void runUpdateType(type.id, { authors: authors.map((a) => ({ id: a })) });
   };
 
   const hasAuthors = type?.authors && type.authors.length > 0;
@@ -41386,12 +41416,14 @@ const AuthorsSectionForm: FC = () => {
             icon: <AddIcon />,
             onClick: () => {
               const newAuthorId = id();
-              kitCommands?.createAuthor({
-                id: newAuthorId,
-                name: "",
-                email: "",
-              });
-              updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
+              void (async () => {
+                const r = await runCreateAuthor({
+                  id: newAuthorId,
+                  name: "",
+                  email: "",
+                });
+                if (r.ok) updateAuthors([...(type.authors || []).map((a) => a.id), newAuthorId]);
+              })();
             },
             id: "semio.sketchpad.common.add",
           },
@@ -41406,7 +41438,7 @@ const AuthorsSectionForm: FC = () => {
                 return {
                   id: `author-${index}`,
                   index,
-                  id: authorId.id,
+                  authorId: authorId.id,
                   name: author?.name || "",
                   email: author?.email || "",
                 };
@@ -41438,7 +41470,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.name"
                     value={item.name}
                     onChange={(e) => {
-                      kitCommands?.updateAuthor(item.id, { name: e.target.value });
+                      void runUpdateAuthor(item.authorId, { name: e.target.value });
                     }}
                     showLabel
                   />
@@ -41448,7 +41480,7 @@ const AuthorsSectionForm: FC = () => {
                     id="semio.sketchpad.app.type.panel.details.section.authors.email"
                     value={item.email}
                     onChange={(e) => {
-                      kitCommands?.updateAuthor(item.id, { email: e.target.value });
+                      void runUpdateAuthor(item.authorId, { email: e.target.value });
                     }}
                     showLabel
                   />

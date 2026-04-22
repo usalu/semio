@@ -172,7 +172,7 @@ public class BridgeProtocolTests
         var request = new ImportRepresentationRequest();
         Assert.Equal("", request.KitName);
         Assert.Equal("", request.TypeName);
-        Assert.Equal("", request.RepresentationGuid);
+        Assert.Equal("", request.RepresentationId);
         Assert.Equal("", request.FileUrl);
         Assert.NotNull(request.Tags);
         Assert.Empty(request.Tags);

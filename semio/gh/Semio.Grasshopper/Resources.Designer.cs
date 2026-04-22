@@ -48,7 +48,7 @@ namespace Semio.Grasshopper
 
 
 
-        [global::System.ComponentRepresentation.EditorBrowsableAttribute(global::System.ComponentRepresentation.EditorBrowsableState.Advanced)]
+        [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Resources.ResourceManager ResourceManager =>
             resourceMan ??= new global::System.Resources.ResourceManager("Semio.Grasshopper.Resources", typeof(Resources).Assembly);
 
@@ -56,7 +56,7 @@ namespace Semio.Grasshopper
 
 
 
-        [global::System.ComponentRepresentation.EditorBrowsableAttribute(global::System.ComponentRepresentation.EditorBrowsableState.Advanced)]
+    [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
         internal static global::System.Globalization.CultureInfo Culture
         {
             get => resourceCulture;

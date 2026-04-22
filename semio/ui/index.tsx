@@ -108,7 +108,6 @@ export interface KitPortArtifact {
 export interface KitConnectorArtifact {
   id: string;
   typeId: string;
-  id?: string;
   port?: string;
   name?: string;
   description?: string;
@@ -237,7 +236,6 @@ const buildKitDataFromKit = (kit: Kit | undefined): KitData => {
     (t.connectors ?? []).map((c) => ({
       id: c.id,
       typeId: t.id,
-      id: c.name,
       port: getReferenceId(c.port),
       name: c.name || getReferenceLabel(c.port) || "connector",
       description: c.description,
@@ -4435,7 +4433,7 @@ export function mcpMapPayloadToDesignViewerViewRepresentation(p: McpDiagramPaylo
   const hasDiagramPoints = (p.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
     id: "__mcp__",
-    pieces: p.points.map((pt) => ({ id: pt.id, id: pt.id, center: { u: pt.u, v: pt.v } })),
+    pieces: p.points.map((pt) => ({ id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: p.lines.map((l) => ({
       id: l.id,
       connected: { piece: { id: p.points.find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
@@ -5310,7 +5308,7 @@ export const McpDiagramViewer: React.FC = () => {
   const hasDiagramPoints = (payload.points?.length ?? 0) > 0;
   const fallbackDesign: Design = {
     id: "__mcp__",
-    pieces: (payload.points ?? []).map((pt) => ({ id: pt.id, id: pt.id, center: { u: pt.u, v: pt.v } })),
+    pieces: (payload.points ?? []).map((pt) => ({ id: pt.id, center: { u: pt.u, v: pt.v } })),
     connections: (payload.lines ?? []).map((l) => ({
       id: l.id,
       connected: { piece: { id: (payload.points ?? []).find((q) => q.u === l.sourceU && q.v === l.sourceV)?.id ?? "" } },
@@ -5712,8 +5710,8 @@ if ((import.meta as any).vitest) {
       const vm = mcpMapPayloadToDesignViewerViewRepresentation({
         mode: "show-diagram",
         points: [
-          { id: "p1", id: "p1", u: 0, v: 0, status: "default" },
-          { id: "p2", id: "p2", u: 3, v: 0, status: "default" },
+          { id: "p1", u: 0, v: 0, status: "default" },
+          { id: "p2", u: 3, v: 0, status: "default" },
         ],
         lines: [{ id: "c1", sourceU: 0, sourceV: 0, targetU: 3, targetV: 0, status: "default" }],
         design: { id: "dg", pieces: [{ id: "p1" }, { id: "p2" }], connections: [] } as unknown as Design,
@@ -5749,7 +5747,6 @@ if ((import.meta as any).vitest) {
       } as unknown as Design;
 
       const mkPoint = (i: number): McpDiagramPayload["points"][number] => ({
-        id: `p${i}`,
         id: `p${i}`,
         u: i,
         v: i,
@@ -5804,7 +5801,7 @@ if ((import.meta as any).vitest) {
     it("pulls richer kitArtifacts from another candidate when the scored-best shell omitted kit body", () => {
       const diagramHeavy: McpDiagramPayload = {
         mode: "show-diagram",
-        points: [{ id: "p", id: "p", u: 0, v: 0, status: "default" }],
+        points: [{ id: "p", u: 0, v: 0, status: "default" }],
         lines: [],
         capabilities: {},
       };
@@ -5937,7 +5934,6 @@ if ((import.meta as any).vitest) {
         {
           id: "connector-id",
           typeId: "kind-id",
-          id: "",
           port: "port-id",
           name: "port-id",
           description: undefined,
@@ -5946,7 +5942,6 @@ if ((import.meta as any).vitest) {
         {
           id: "named-connector-id",
           typeId: "kind-id",
-          id: undefined,
           port: "named-port-id",
           name: "Named Port",
           description: undefined,
@@ -5991,7 +5986,6 @@ if ((import.meta as any).vitest) {
         {
           id: "conn-1",
           typeId: "kind-id",
-          id: "C1",
           port: undefined,
           name: "C1",
           description: undefined,
@@ -7251,7 +7245,7 @@ const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: Algori
   const safeItems = items ?? [];
   if (safeItems.length === 0) return undefined;
   const entries = safeItems.map((item, index) => {
-    const id =
+    const baseId =
       groupKind === "pieces"
         ? resolveAlgorithmPieceDiffId(changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
         : resolveAlgorithmConnectionDiffId(changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
@@ -7259,7 +7253,7 @@ const buildAlgorithmDiffEntries = (design: Design | undefined, groupKind: Algori
       groupKind === "pieces"
         ? resolveAlgorithmPieceDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "piece" in item ? (item as { piece?: unknown }).piece : item, index)
         : resolveAlgorithmConnectionDiffLabel(design, changeKind === "updated" && item && typeof item === "object" && "connection" in item ? (item as { connection?: unknown }).connection : item, index);
-    const id = buildAlgorithmDiffEntryId(groupKind, changeKind, id);
+    const id = buildAlgorithmDiffEntryId(groupKind, changeKind, baseId);
     const detail = changeKind === "updated" && groupKind === "connections" ? buildAlgorithmConnectionUpdateDiffDetail(item, id) : changeKind === "updated" && groupKind === "pieces" ? buildAlgorithmPieceUpdateDiffDetail(item, id) : undefined;
     return { id, label, checked: !uncheckedEntryIds.has(id), detail };
   });

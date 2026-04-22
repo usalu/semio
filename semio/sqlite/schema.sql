@@ -79,7 +79,6 @@ CREATE TABLE IF NOT EXISTS type (
 CREATE TABLE IF NOT EXISTS port (
 	id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
-	id TEXT,
 	family TEXT,
 	mandatory INTEGER,
 	t REAL,
@@ -173,7 +172,6 @@ CREATE TABLE IF NOT EXISTS layer (
 CREATE TABLE IF NOT EXISTS piece (
 	id TEXT NOT NULL,
 	ordinal INTEGER NOT NULL,
-	id TEXT,
 	name TEXT,
 	description TEXT,
 	plane_origin_x REAL,

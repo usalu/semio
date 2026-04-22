@@ -43,9 +43,9 @@ using File = Semio.File;
 
 #region ⭐AssemblyAttributes
 // Assembly-level attributes required by Rhino to identify this plugin.
-// The Guid is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
+// The Id is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
-[assembly: System.Runtime.InteropServices.Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
+[assembly: __SYS_RUNTIME_ID__("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
 [assembly: PlugInDescription(DescriptionType.Address, "")]
 [assembly: PlugInDescription(DescriptionType.Country, "")]
 [assembly: PlugInDescription(DescriptionType.Email, "ueli@semio-tech.com")]
@@ -337,7 +337,7 @@ public static class LayerService
             if (!string.Equals(layer.Name, name, StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            if (parentIndex < 0 && layer.ParentLayerId == Guid.Empty)
+            if (parentIndex < 0 && layer.ParentLayerId == __ID_EMPTY__)
                 return i;
 
             if (parentIndex >= 0 && layer.ParentLayerId == doc.Layers[parentIndex].Id)
@@ -370,7 +370,7 @@ public class ImportRepresentationRequest
 {
     [JsonProperty("kitName")] public string KitName { get; set; } = "";
     [JsonProperty("typeName")] public string TypeName { get; set; } = "";
-    [JsonProperty("representationGuid")] public string RepresentationGuid { get; set; } = "";
+    [JsonProperty("representationId")] public string RepresentationId { get; set; } = "";
     [JsonProperty("fileUrl")] public string FileUrl { get; set; } = "";
     [JsonProperty("tags")] public List<string> Tags { get; set; } = new();
 }
@@ -398,7 +398,7 @@ public class ImportBinding : IBridgeBinding
 
             if (!string.IsNullOrEmpty(request.FileUrl))
             {
-                var tempPath = Path.Combine(Path.GetTempPath(), $"semio_{request.RepresentationGuid}.3dm");
+                var tempPath = Path.Combine(Path.GetTempPath(), $"semio_{request.RepresentationId}.3dm");
 
                 try
                 {
@@ -589,7 +589,7 @@ public class SemioWebViewControl : System.Windows.Controls.UserControl
 /// 👁️WpfElementHost panel wrapping SemioWebViewControl for Rhino docking.
 /// Handles panel close/reopen lifecycle by disconnecting the WPF child.
 /// </summary>
-[Guid(Constants.PanelId)]
+[__ATTR_ID__(Constants.PanelId)]
 public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
 {
     private readonly SemioWebViewControl? _webViewControl;
@@ -617,7 +617,7 @@ public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
     public static void Reinitialize(SemioWebViewControl? webViewControl)
     {
         if (webViewControl == null) return;
-        if (Panels.IsPanelVisible(typeof(SemioPanelHost).GUID)) return;
+        if (Panels.IsPanelVisible(typeof(SemioPanelHost)__DOT_ID_UPPER__)) return;
         if (LogicalTreeHelper.GetParent(webViewControl) is Border border)
         {
             border.Child = null;
@@ -626,8 +626,8 @@ public class SemioPanelHost : RhinoWindows.Controls.WpfElementHost
 
     private void PanelsOnClosed(object? sender, PanelEventArgs e)
     {
-        if (e.PanelId != typeof(SemioPanelHost).GUID) return;
-        if (!Panels.IsPanelVisible(typeof(SemioPanelHost).GUID)) return;
+        if (e.PanelId != typeof(SemioPanelHost)__DOT_ID_UPPER__) return;
+        if (!Panels.IsPanelVisible(typeof(SemioPanelHost)__DOT_ID_UPPER__)) return;
 
         Panels.Closed -= PanelsOnClosed;
 
@@ -684,7 +684,7 @@ public class ShowSemioCommand : Command
 
     protected override Result RunCommand(RhinoDoc doc, RunMode mode)
     {
-        var panelId = typeof(SemioPanelHost).GUID;
+        var panelId = typeof(SemioPanelHost)__DOT_ID_UPPER__;
 
         if (mode == RunMode.Interactive)
         {

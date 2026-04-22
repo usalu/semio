@@ -62,7 +62,7 @@ public class Semio_GrasshopperInfo : GH_AssemblyInfo
     public override Bitmap Icon => IconResources.ResolveOrPlaceholder("semio_24x24");
     public override Bitmap AssemblyIcon => IconResources.ResolveOrPlaceholder("semio_24x24");
     public override string Description => "semio within 🦗.";
-    public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
+    public override __TYPE_ID__ Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
     public override string Version => Constants.Version;
     public override string AuthorName => "Ueli Saluz";
     public override string AuthorContact => "ueli@semio-tech.com";
@@ -512,8 +512,8 @@ public static class Utility
         var tempDirectory = Path.Combine(Path.GetTempPath(), "semio-gh-import");
         Directory.CreateDirectory(tempDirectory);
 
-        var importPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}{normalizedExtension}");
-        var exportPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.3dm");
+        var importPath = Path.Combine(tempDirectory, $"{__ID_NEWID__():N}{normalizedExtension}");
+        var exportPath = Path.Combine(tempDirectory, $"{__ID_NEWID__():N}.3dm");
         try
         {
             System.IO.File.WriteAllBytes(importPath, fileBytes);
@@ -558,7 +558,7 @@ public static class Utility
         var tempDirectory = Path.Combine(Path.GetTempPath(), "semio-gh-import");
         Directory.CreateDirectory(tempDirectory);
 
-        var importPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}{normalizedExtension}");
+        var importPath = Path.Combine(tempDirectory, $"{__ID_NEWID__():N}{normalizedExtension}");
         var targetDocument = CreateTrackedHeadlessImportDocument();
         if (targetUnitSystem.HasValue)
             targetDocument.RepresentationUnitSystem = targetUnitSystem.Value;
@@ -614,7 +614,7 @@ public static class Utility
             if (requiresScaling && !RhinoMath.EpsilonEquals(unitScale, 1.0, RhinoMath.ZeroTolerance))
                 objectGeometry.Transform(Transform.Scale(Point3d.Origin, unitScale));
             var addedObjectId = targetDocument.Objects.Add(objectGeometry, objectAttributes);
-            if (addedObjectId == Guid.Empty)
+            if (addedObjectId == __ID_EMPTY__)
                 continue;
 
             var importedRhinoObject = targetDocument.Objects.FindId(addedObjectId);
@@ -652,7 +652,7 @@ public static class Utility
     {
         var targetDocument = CreateTrackedHeadlessImportDocument();
         var addedObjectId = targetDocument.Objects.Add(objectGeometry, objectAttributes);
-        if (addedObjectId == Guid.Empty)
+        if (addedObjectId == __ID_EMPTY__)
             throw new InvalidOperationException("Could not add imported Rhino representation object to target document.");
 
         return targetDocument.Objects.FindId(addedObjectId)
@@ -820,19 +820,19 @@ public static class Utility
         var representation = rhinoRepresentationObject.Representation;
         var importedObject = rhinoRepresentationObject.RepresentationObject;
 
-        var layersById = new Dictionary<Guid, Rhino.DocObjects.Layer>();
+        var layersById = new Dictionary<__TYPE_ID__, Rhino.DocObjects.Layer>();
         foreach (var layer in representation.Layers)
         {
             if (layer is not null && !layer.IsDeleted)
                 layersById[layer.Id] = layer;
         }
 
-        var layerChildren = new Dictionary<Guid, List<Rhino.DocObjects.Layer>>();
+        var layerChildren = new Dictionary<__TYPE_ID__, List<Rhino.DocObjects.Layer>>();
         foreach (var layer in layersById.Values)
         {
             var parentLayerId = layer.ParentLayerId;
-            if (parentLayerId != Guid.Empty && !layersById.ContainsKey(parentLayerId))
-                parentLayerId = Guid.Empty;
+            if (parentLayerId != __ID_EMPTY__ && !layersById.ContainsKey(parentLayerId))
+                parentLayerId = __ID_EMPTY__;
 
             if (!layerChildren.TryGetValue(parentLayerId, out var children))
             {
@@ -845,7 +845,7 @@ public static class Utility
         foreach (var children in layerChildren.Values)
             children.Sort((left, right) => string.Compare(left.Name, right.Name, StringComparison.OrdinalIgnoreCase));
 
-        var objectIdsByLayerId = new Dictionary<Guid, List<string>>();
+        var objectIdsByLayerId = new Dictionary<__TYPE_ID__, List<string>>();
         var allPieceIds = new List<string>();
         var objectCounter = 0;
         foreach (var fileObject in representation.Objects)
@@ -863,7 +863,7 @@ public static class Utility
 
         var attributes = new List<Attribute>();
 
-        List<string> BuildLayerGroupAttributes(Guid parentLayerId, string parentPath)
+        List<string> BuildLayerGroupAttributes(__TYPE_ID__ parentLayerId, string parentPath)
         {
             var recursiveIds = new List<string>();
             if (!layerChildren.TryGetValue(parentLayerId, out var children))
@@ -882,7 +882,7 @@ public static class Utility
 
                 attributes.Add(new Attribute
                 {
-                    Guid = Guid.NewGuid().ToString(),
+                    Id = __ID_NEWID__().ToString(),
                     Key = $"LayerGroup/{layerPath}",
                     Value = string.Join(",", layerIds.Distinct()),
                     Definition = "Recursive named layer group from imported Rhino representation."
@@ -892,10 +892,10 @@ public static class Utility
             return recursiveIds;
         }
 
-        var rootLayerIds = BuildLayerGroupAttributes(Guid.Empty, "");
+        var rootLayerIds = BuildLayerGroupAttributes(__ID_EMPTY__, "");
         attributes.Add(new Attribute
         {
-            Guid = Guid.NewGuid().ToString(),
+            Id = __ID_NEWID__().ToString(),
             Key = "LayerGroup",
             Value = string.Join(",", rootLayerIds.Distinct()),
             Definition = "Root named layer group containing all recursive layers."
@@ -903,10 +903,10 @@ public static class Utility
 
         return new SemioGroup
         {
-            Guid = importedObject is null ? Guid.NewGuid().ToString() : ResolveRhinoObjectId(importedObject, -1),
+            Id = importedObject is null ? __ID_NEWID__().ToString() : ResolveRhinoObjectId(importedObject, -1),
             Name = "Imported Rhino Layer Group",
             Description = "Single semio group translated from Rhino representation object with recursive named layer groups.",
-            Pieces = allPieceIds.Distinct().Select(pieceId => new PieceId { Guid = pieceId }).ToList(),
+            Pieces = allPieceIds.Distinct().Select(pieceId => new PieceId { Id = pieceId }).ToList(),
             Attributes = attributes
         };
     }
@@ -929,8 +929,8 @@ public static class Utility
         {
             foreach (var piece in group.Pieces ?? new List<PieceId>())
             {
-                if (!string.IsNullOrWhiteSpace(piece?.Guid))
-                    pieceIds.Add(piece.Guid);
+                if (!string.IsNullOrWhiteSpace(piece?.Id))
+                    pieceIds.Add(piece.Id);
             }
 
             foreach (var attribute in group.Attributes ?? new List<Attribute>())
@@ -957,7 +957,7 @@ public static class Utility
             .OrderBy(entry => entry.Key, StringComparer.OrdinalIgnoreCase)
             .Select(entry => new Attribute
             {
-                Guid = Guid.NewGuid().ToString(),
+                Id = __ID_NEWID__().ToString(),
                 Key = entry.Key,
                 Value = string.Join(",", entry.Value.OrderBy(value => value, StringComparer.OrdinalIgnoreCase)),
                 Definition = entry.Key == "LayerGroup"
@@ -968,34 +968,34 @@ public static class Utility
 
         return new SemioGroup
         {
-            Guid = translatedGroups.First().Guid,
+            Id = translatedGroups.First().Id,
             Name = "Imported Rhino Layer Group",
             Description = "Single semio group translated from Rhino representation object with recursive named layer groups.",
             Pieces = pieceIds.OrderBy(pieceId => pieceId, StringComparer.OrdinalIgnoreCase)
-                .Select(pieceId => new PieceId { Guid = pieceId })
+                .Select(pieceId => new PieceId { Id = pieceId })
                 .ToList(),
             Attributes = mergedAttributes
         };
     }
 
-    private static Guid ResolveRhinoLayerId(Rhino.FileIO.File3dm representation, Rhino.FileIO.File3dmObject fileObject)
+    private static __TYPE_ID__ ResolveRhinoLayerId(Rhino.FileIO.File3dm representation, Rhino.FileIO.File3dmObject fileObject)
     {
         var layerIndex = fileObject.Attributes?.LayerIndex ?? -1;
         if (layerIndex < 0 || layerIndex >= representation.Layers.Count)
-            return Guid.Empty;
+            return __ID_EMPTY__;
         var layer = representation.Layers[layerIndex];
-        return layer?.Id ?? Guid.Empty;
+        return layer?.Id ?? __ID_EMPTY__;
     }
 
     private static string ResolveRhinoObjectId(Rhino.FileIO.File3dmObject fileObject, int fallbackIndex)
     {
-        var objectId = fileObject.Attributes?.ObjectId ?? Guid.Empty;
-        if (objectId != Guid.Empty)
+        var objectId = fileObject.Attributes?.ObjectId ?? __ID_EMPTY__;
+        if (objectId != __ID_EMPTY__)
             return objectId.ToString();
 
         return fallbackIndex >= 0
             ? $"rhino-object-{fallbackIndex}"
-            : Guid.NewGuid().ToString();
+            : __ID_NEWID__().ToString();
     }
 
     public static IEnumerable<RhinoRepresentationObjectData> ExtractRhinoRepresentationObjectDataFromGeometryGroup(GH_GeometryGroup group)
@@ -1174,7 +1174,6 @@ internal static class GhNaming
         ["folders"] = "Di",
         ["formula"] = "Fx",
         ["geometry"] = "Ge",
-        ["guid"] = "GI",
         ["id"] = "Id",
         ["image"] = "Im",
         ["imperial"] = "Ip",
@@ -1387,11 +1386,11 @@ public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     where TEnumGoo : EnumGoo<TEnum>, new()
     where TEnum : struct, Enum
 {
-    protected EnumParam(Guid guid) : base(typeof(TEnum).Name, typeof(TEnum).Name, typeof(TEnum).Name, "Semio", "Param", GH_ParamAccess.item)
+    protected EnumParam(__TYPE_ID__ id) : base(typeof(TEnum).Name, typeof(TEnum).Name, typeof(TEnum).Name, "Semio", "Param", GH_ParamAccess.item)
     {
-        ComponentGuid = guid;
+        ComponentId = id;
     }
-    public override Guid ComponentGuid { get; }
+    public override __TYPE_ID__ ComponentId { get; }
 }
 public abstract class Component : GH_Component
 {
@@ -1782,7 +1781,7 @@ public abstract class ApplyDiffComponent<TEntityParam, TEntityGoo, TEntity, TDif
 
 public class ApplyAttributeDiffComponent : ApplyDiffComponent<AttributeParam, AttributeGoo, Attribute, AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
-    public override Guid ComponentGuid => new("4A901F8D-53C5-4F36-B32E-5FE7D038B3C1");
+    public override __TYPE_ID__ ComponentId => new("4A901F8D-53C5-4F36-B32E-5FE7D038B3C1");
     protected override string EntityName => "Attribute";
     protected override string EntityNickname => "At";
     protected override string DiffNickname => "AtΔ";
@@ -1792,7 +1791,7 @@ public class ApplyAttributeDiffComponent : ApplyDiffComponent<AttributeParam, At
 
 public class ApplyFolderDiffComponent : ApplyDiffComponent<FolderParam, FolderGoo, Folder, FolderDiffParam, FolderDiffGoo, FolderDiff>
 {
-    public override Guid ComponentGuid => new("B9D5A6E1-C51E-4B7A-B433-E83A42D5A861");
+    public override __TYPE_ID__ ComponentId => new("B9D5A6E1-C51E-4B7A-B433-E83A42D5A861");
     protected override string EntityName => "Folder";
     protected override string EntityNickname => "Fd";
     protected override string DiffNickname => "FdΔ";
@@ -1802,7 +1801,7 @@ public class ApplyFolderDiffComponent : ApplyDiffComponent<FolderParam, FolderGo
 
 public class ApplyRepresentationDiffComponent : ApplyDiffComponent<RepresentationParam, RepresentationGoo, Representation, RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public override Guid ComponentGuid => new("06D898D4-3CA6-4742-9C9F-E9BA1C5D7541");
+    public override __TYPE_ID__ ComponentId => new("06D898D4-3CA6-4742-9C9F-E9BA1C5D7541");
     protected override string EntityName => "Representation";
     protected override string EntityNickname => "Mo";
     protected override string DiffNickname => "MoΔ";
@@ -1812,7 +1811,7 @@ public class ApplyRepresentationDiffComponent : ApplyDiffComponent<Representatio
 
 public class ApplyConnectorDiffComponent : ApplyDiffComponent<ConnectorParam, ConnectorGoo, Connector, ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
-    public override Guid ComponentGuid => new("E450E49A-5ECA-4A6C-95EE-9FCA3D2C6B4A");
+    public override __TYPE_ID__ ComponentId => new("E450E49A-5ECA-4A6C-95EE-9FCA3D2C6B4A");
     protected override string EntityName => "Connector";
     protected override string EntityNickname => "Cn";
     protected override string DiffNickname => "CnΔ";
@@ -1822,7 +1821,7 @@ public class ApplyConnectorDiffComponent : ApplyDiffComponent<ConnectorParam, Co
 
 public class ApplyTypeDiffComponent : ApplyDiffComponent<TypeParam, TypeGoo, Type, TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
-    public override Guid ComponentGuid => new("A45F0A6C-1EB0-44A4-A5A7-81C4F248A873");
+    public override __TYPE_ID__ ComponentId => new("A45F0A6C-1EB0-44A4-A5A7-81C4F248A873");
     protected override string EntityName => "Type";
     protected override string EntityNickname => "Tp";
     protected override string DiffNickname => "TpΔ";
@@ -1832,7 +1831,7 @@ public class ApplyTypeDiffComponent : ApplyDiffComponent<TypeParam, TypeGoo, Typ
 
 public class ApplyPieceDiffComponent : ApplyDiffComponent<PieceParam, PieceGoo, Piece, PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
-    public override Guid ComponentGuid => new("1C29E52E-B2A7-4600-BAC2-996FF80A5015");
+    public override __TYPE_ID__ ComponentId => new("1C29E52E-B2A7-4600-BAC2-996FF80A5015");
     protected override string EntityName => "Piece";
     protected override string EntityNickname => "Pc";
     protected override string DiffNickname => "PcΔ";
@@ -1842,7 +1841,7 @@ public class ApplyPieceDiffComponent : ApplyDiffComponent<PieceParam, PieceGoo, 
 
 public class ApplySideDiffComponent : ApplyDiffComponent<SideParam, SideGoo, Side, SideDiffParam, SideDiffGoo, SideDiff>
 {
-    public override Guid ComponentGuid => new("4F2B5F8A-4AB4-4B58-B6CB-58231F8FF7BF");
+    public override __TYPE_ID__ ComponentId => new("4F2B5F8A-4AB4-4B58-B6CB-58231F8FF7BF");
     protected override string EntityName => "Side";
     protected override string EntityNickname => "Sd";
     protected override string DiffNickname => "SdΔ";
@@ -1852,7 +1851,7 @@ public class ApplySideDiffComponent : ApplyDiffComponent<SideParam, SideGoo, Sid
 
 public class ApplyConnectionDiffComponent : ApplyDiffComponent<ConnectionParam, ConnectionGoo, Connection, ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
-    public override Guid ComponentGuid => new("9F954A31-E53D-4C9A-BB2E-4A17EB8C333D");
+    public override __TYPE_ID__ ComponentId => new("9F954A31-E53D-4C9A-BB2E-4A17EB8C333D");
     protected override string EntityName => "Connection";
     protected override string EntityNickname => "Cnx";
     protected override string DiffNickname => "CnxΔ";
@@ -1862,7 +1861,7 @@ public class ApplyConnectionDiffComponent : ApplyDiffComponent<ConnectionParam, 
 
 public class ApplyDesignDiffComponent : ApplyDiffComponent<DesignParam, DesignGoo, Design, DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
-    public override Guid ComponentGuid => new("31BE87E8-045F-4F12-9651-C4C1A130D7A7");
+    public override __TYPE_ID__ ComponentId => new("31BE87E8-045F-4F12-9651-C4C1A130D7A7");
     protected override string EntityName => "Design";
     protected override string EntityNickname => "De";
     protected override string DiffNickname => "DeΔ";
@@ -2172,12 +2171,12 @@ public class AttributeParam : Param<AttributeGoo, Attribute>
     protected override string RepresentationNickname => "Atr";
     protected override string RepresentationDescription => "Key-value metadata";
     protected override string IconResourceName => "attribute_24x24";
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B94");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B94");
 }
 
 public class AttributeComponent : PassthroughComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public override Guid ComponentGuid => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
+    public override __TYPE_ID__ ComponentId => new("51146B05-ACEB-4810-AD75-10AC3E029D39");
     protected override string RepresentationName => "Attribute";
     protected override string RepresentationNickname => "Atr";
     protected override string RepresentationDescription => "Construct, deconstruct or modify an attribute.";
@@ -2185,7 +2184,7 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
@@ -2193,7 +2192,7 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the attribute.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke", "The key of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Vl?", "The optional value of the attribute.", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "Df?", "The optional definition of the attribute.", GH_ParamAccess.item);
@@ -2201,8 +2200,8 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Attribute representation)
     {
-        var guid = ""; var key = ""; var value = ""; var definition = "";
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        var id = ""; var key = ""; var value = ""; var definition = "";
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref key)) representation.Key = key;
         if (DA.GetData(4, ref value)) representation.Value = value;
         if (DA.GetData(5, ref definition)) representation.Definition = definition;
@@ -2210,7 +2209,7 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Attribute representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Key);
         DA.SetData(4, representation.Value);
         DA.SetData(5, representation.Definition);
@@ -2219,14 +2218,14 @@ public class AttributeComponent : PassthroughComponent<AttributeParam, Attribute
 
 public class SerializeAttributeComponent : SerializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8974-8588BCA75250");
+    public override __TYPE_ID__ ComponentId => new("C651F24C-BFF8-4821-8974-8588BCA75250");
     protected override string RepresentationName => "Attribute";
     protected override string RepresentationNickname => "Atr";
 }
 
 public class DeserializeAttributeComponent : DeserializeComponent<AttributeParam, AttributeGoo, Attribute>
 {
-    public override Guid ComponentGuid => new("C651F24C-BFF8-4821-8975-8588BCA75250");
+    public override __TYPE_ID__ ComponentId => new("C651F24C-BFF8-4821-8975-8588BCA75250");
     protected override string RepresentationName => "Attribute";
     protected override string RepresentationNickname => "Atr";
 }
@@ -2250,7 +2249,7 @@ public class AttributeIdGoo : IdGoo<AttributeId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -2271,7 +2270,7 @@ public class AttributeIdGoo : IdGoo<AttributeId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new AttributeId { Guid = str };
+            Value = new AttributeId { Id = str };
             return true;
         }
         return false;
@@ -2285,7 +2284,7 @@ public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
     protected override string RepresentationDescription => "Attribute identifier";
     protected override string IconResourceName => "attribute_24x24";
     protected override string IdIconResourceName => "attributeid_24x24";
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B93");
 }
 
 public class AttributeDiffGoo : DiffGoo<AttributeDiff>
@@ -2347,12 +2346,12 @@ public class AttributeDiffParam : DiffParam<AttributeDiffGoo, AttributeDiff>
     protected override string RepresentationNickname => "ADf";
     protected override string RepresentationDescription => "Attribute differences";
     protected override string IconResourceName => "attribute_diff_24x24";
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B95");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B95");
 }
 
 public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B96");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B96");
     protected override string RepresentationName => "AttributeDiff";
     protected override string RepresentationNickname => "ADf";
     protected override string RepresentationDescription => "Construct, deconstruct or modify an attribute diff.";
@@ -2361,7 +2360,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke?", "The optional key.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Va?", "The optional value.", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "Df?", "The optional definition.", GH_ParamAccess.item);
@@ -2369,7 +2368,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke?", "The optional key.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Va?", "The optional value.", GH_ParamAccess.item);
         pManager.AddTextParameter("Definition", "Df?", "The optional definition.", GH_ParamAccess.item);
@@ -2377,8 +2376,8 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void GetRepresentationData(IGH_DataAccess DA, AttributeDiff representation)
     {
-        string guid = null, key = null, value = null, definition = null;
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        string id = null, key = null, value = null, definition = null;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref key)) representation.Key = key;
         if (DA.GetData(4, ref value)) representation.Value = value;
         if (DA.GetData(5, ref definition)) representation.Definition = definition;
@@ -2386,7 +2385,7 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 
     protected override void SetRepresentationData(IGH_DataAccess DA, AttributeDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeKey()) DA.SetData(3, representation.Key);
         if (representation.ShouldSerializeValue()) DA.SetData(4, representation.Value);
         if (representation.ShouldSerializeDefinition()) DA.SetData(5, representation.Definition);
@@ -2396,13 +2395,13 @@ public class AttributeDiffComponent : DiffComponent<AttributeDiffParam, Attribut
 public class SerializeAttributeDiffComponent : SerializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
     public SerializeAttributeDiffComponent() { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B97");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B97");
 }
 
 public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeDiffParam, AttributeDiffGoo, AttributeDiff>
 {
     public DeserializeAttributeDiffComponent() { }
-    public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
+    public override __TYPE_ID__ ComponentId => new("431125C0-B98C-4122-9598-F72714AC9B98");
 }
 
 #endregion 🧲Attribute
@@ -2444,12 +2443,12 @@ public class CoordinateParam : Param<CoordinateGoo, Coordinate>
     protected override string RepresentationNickname => "DPt";
     protected override string RepresentationDescription => "2D coordinate";
     protected override string IconResourceName => "coordinate_24x24";
-    public override Guid ComponentGuid => new("4685CCE8-C629-4638-8DF6-F76A17571841");
+    public override __TYPE_ID__ ComponentId => new("4685CCE8-C629-4638-8DF6-F76A17571841");
 }
 
 public class CoordinateComponent : PassthroughComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
-    public override Guid ComponentGuid => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
+    public override __TYPE_ID__ ComponentId => new("61FB9BBE-64DE-42B2-B7EF-69CD97FDD9E3");
     protected override string RepresentationName => "Coordinate";
     protected override string RepresentationNickname => "DPt";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a 2d coordinate.";
@@ -2484,13 +2483,13 @@ public class CoordinateComponent : PassthroughComponent<CoordinateParam, Coordin
 public class SerializeCoordinateComponent : SerializeComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
     public SerializeCoordinateComponent() { }
-    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
+    public override __TYPE_ID__ ComponentId => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A99");
 }
 
 public class DeserializeCoordinateComponent : DeserializeComponent<CoordinateParam, CoordinateGoo, Coordinate>
 {
     public DeserializeCoordinateComponent() { }
-    public override Guid ComponentGuid => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
+    public override __TYPE_ID__ ComponentId => new("EDD83721-D2BD-4CF1-929F-FBB07F0A6A9A");
 }
 
 #endregion 🌥️Coordinate
@@ -2530,12 +2529,12 @@ public class LocationParam : Param<LocationGoo, Location>
     protected override string RepresentationNickname => "Loc";
     protected override string RepresentationDescription => "Geographic location";
     protected override string IconResourceName => "location_24x24";
-    public override Guid ComponentGuid => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
+    public override __TYPE_ID__ ComponentId => new("CA9DA889-398E-469B-BF1B-AD2BDFCA7957");
 }
 
 public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo, Location>
 {
-    public override Guid ComponentGuid => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
+    public override __TYPE_ID__ ComponentId => new("6F2EDF42-6E10-4944-8B05-4D41F4876ED0");
     protected override string RepresentationName => "Location";
     protected override string RepresentationNickname => "Loc";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a location.";
@@ -2543,7 +2542,7 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the location.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the location.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Longitude", "Lo", "The longitude in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Latitude", "La", "The latitude in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Altitude", "Al?", "The optional altitude.", GH_ParamAccess.item);
@@ -2552,7 +2551,7 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the location.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the location.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Longitude", "Lo", "The longitude in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Latitude", "La", "The latitude in degrees.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Altitude", "Al?", "The optional altitude.", GH_ParamAccess.item);
@@ -2561,10 +2560,10 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Location representation)
     {
-        string guid = "";
+        string id = "";
         double lon = 0, lat = 0, altitude = 0;
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref lon)) representation.Longitude = (float)lon;
         if (DA.GetData(4, ref lat)) representation.Latitude = (float)lat;
         if (DA.GetData(5, ref altitude)) representation.Altitude = (float)altitude;
@@ -2573,7 +2572,7 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Location representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Longitude);
         DA.SetData(4, representation.Latitude);
         DA.SetData(5, representation.Altitude);
@@ -2584,13 +2583,13 @@ public class LocationComponent : PassthroughComponent<LocationParam, LocationGoo
 public class SerializeLocationComponent : SerializeComponent<LocationParam, LocationGoo, Location>
 {
     public SerializeLocationComponent() { }
-    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
+    public override __TYPE_ID__ ComponentId => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D466");
 }
 
 public class DeserializeLocationComponent : DeserializeComponent<LocationParam, LocationGoo, Location>
 {
     public DeserializeLocationComponent() { }
-    public override Guid ComponentGuid => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D467");
+    public override __TYPE_ID__ ComponentId => new("DB94C7FC-3F0F-4FB4-992E-7E069C17D467");
 }
 
 #endregion ⏲️Location
@@ -2629,12 +2628,12 @@ public class AuthorParam : Param<AuthorGoo, Author>
     protected override string RepresentationNickname => "Aut";
     protected override string RepresentationDescription => "Author information";
     protected override string IconResourceName => "author_24x24";
-    public override Guid ComponentGuid => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
+    public override __TYPE_ID__ ComponentId => new("9F52380B-1812-42F7-9DAD-952C2F7A635A");
 }
 
 public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Author>
 {
-    public override Guid ComponentGuid => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
+    public override __TYPE_ID__ ComponentId => new("5143ED92-0A2C-4D0C-84ED-F90CC8450894");
     protected override string RepresentationName => "Author";
     protected override string RepresentationNickname => "Aut";
     protected override string RepresentationDescription => "Construct, deconstruct or modify an author.";
@@ -2642,7 +2641,7 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the author.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the author.", GH_ParamAccess.item);
         pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
@@ -2650,7 +2649,7 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the author.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the author.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the author.", GH_ParamAccess.item);
         pManager.AddTextParameter("Email", "Em", "The email of the author.", GH_ParamAccess.item);
         pManager.AddParameter(new AttributeParam(), "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
@@ -2658,9 +2657,9 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Author representation)
     {
-        string guid = "", name = "", email = "";
+        string id = "", name = "", email = "";
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref email)) representation.Email = email;
         if (DA.GetDataList(5, attributes)) representation.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
@@ -2668,7 +2667,7 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Author representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Email);
         DA.SetDataList(5, representation.Attributes?.Select(a => new AttributeGoo(a.DeepClone())).ToList());
@@ -2678,13 +2677,13 @@ public class AuthorComponent : PassthroughComponent<AuthorParam, AuthorGoo, Auth
 public class SerializeAuthorComponent : SerializeComponent<AuthorParam, AuthorGoo, Author>
 {
     public SerializeAuthorComponent() { }
-    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
+    public override __TYPE_ID__ ComponentId => new("99130A53-4FC1-4E64-9A46-2ACEC4634878");
 }
 
 public class DeserializeAuthorComponent : DeserializeComponent<AuthorParam, AuthorGoo, Author>
 {
     public DeserializeAuthorComponent() { }
-    public override Guid ComponentGuid => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
+    public override __TYPE_ID__ ComponentId => new("99130A53-4FC1-4E64-9A46-2ACEC4634879");
 }
 
 public class AuthorIdGoo : IdGoo<AuthorId>
@@ -2696,7 +2695,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -2707,7 +2706,7 @@ public class AuthorIdGoo : IdGoo<AuthorId>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new AuthorId { Guid = str };
+            Value = new AuthorId { Id = str };
             return true;
         }
         return false;
@@ -2721,7 +2720,7 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
     protected override string RepresentationDescription => "Author identifier";
     protected override string IconResourceName => "author_24x24";
     protected override string IdIconResourceName => "authorid_24x24";
-    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
+    public override __TYPE_ID__ ComponentId => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
 }
 
 #endregion 🤸Author
@@ -2743,7 +2742,7 @@ public class FileGoo : Goo<File>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -2754,7 +2753,7 @@ public class FileGoo : Goo<File>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new File { Guid = str, Name = str, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+            Value = new File { Id = str, Name = str, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
             return true;
         }
         return false;
@@ -2767,12 +2766,12 @@ public class FileParam : Param<FileGoo, File>
     protected override string RepresentationNickname => "Fil";
     protected override string RepresentationDescription => "File reference";
     protected override string IconResourceName => "file_24x24";
-    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
+    public override __TYPE_ID__ ComponentId => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 }
 
 public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 {
-    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
+    public override __TYPE_ID__ ComponentId => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F9");
     protected override string RepresentationName => "File";
     protected override string RepresentationNickname => "Fil";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a file.";
@@ -2781,7 +2780,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
@@ -2796,7 +2795,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the file.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the file.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote url.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder.", GH_ParamAccess.item);
@@ -2811,11 +2810,11 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, File representation)
     {
-        string guid = "", name = "", remote = "", hash = "", blob = "", createdBy = "", updatedBy = "";
+        string id = "", name = "", remote = "", hash = "", blob = "", createdBy = "", updatedBy = "";
         var folderIdGoo = new FolderIdGoo();
         int size = 0;
         DateTime createdAt = default, updatedAt = default;
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref remote)) representation.Remote = remote;
         if (DA.GetData(5, ref folderIdGoo)) representation.Folder = folderIdGoo.Value;
@@ -2830,7 +2829,7 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, File representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Remote);
         DA.SetData(5, representation.Folder is not null ? new FolderIdGoo(representation.Folder) : null);
@@ -2847,13 +2846,13 @@ public class FileComponent : PassthroughComponent<FileParam, FileGoo, File>
 public class SerializeFileComponent : SerializeComponent<FileParam, FileGoo, File>
 {
     public SerializeFileComponent() { }
-    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
+    public override __TYPE_ID__ ComponentId => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FA");
 }
 
 public class DeserializeFileComponent : DeserializeComponent<FileParam, FileGoo, File>
 {
     public DeserializeFileComponent() { }
-    public override Guid ComponentGuid => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
+    public override __TYPE_ID__ ComponentId => new("60D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7FB");
 }
 
 public class FileIdGoo : IdGoo<FileId>
@@ -2865,7 +2864,7 @@ public class FileIdGoo : IdGoo<FileId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -2881,7 +2880,7 @@ public class FileIdGoo : IdGoo<FileId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new FileId { Guid = str };
+            Value = new FileId { Id = str };
             return true;
         }
         return false;
@@ -2895,7 +2894,7 @@ public class FileIdParam : IdParam<FileIdGoo, FileId>
     protected override string RepresentationDescription => "File identifier";
     protected override string IconResourceName => "file_24x24";
     protected override string IdIconResourceName => "fileid_24x24";
-    public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
+    public override __TYPE_ID__ ComponentId => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
 }
 
 public class FileDiffGoo : DiffGoo<FileDiff>
@@ -2907,7 +2906,7 @@ public class FileDiffGoo : DiffGoo<FileDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid ?? "");
+            target = (Q)(object)new GH_String(Value.Id ?? "");
             return true;
         }
         return false;
@@ -2937,12 +2936,12 @@ public class FileDiffParam : DiffParam<FileDiffGoo, FileDiff>
     protected override string RepresentationNickname => "FD";
     protected override string RepresentationDescription => "File diff";
     protected override string IconResourceName => "filediff_24x24";
-    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
+    public override __TYPE_ID__ ComponentId => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F0");
 }
 
 public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
-    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
+    public override __TYPE_ID__ ComponentId => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F1");
     protected override string RepresentationName => "FileDiff";
     protected override string RepresentationNickname => "FD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a file diff.";
@@ -2950,7 +2949,7 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder id.", GH_ParamAccess.item);
@@ -2965,7 +2964,7 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Remote", "Rm?", "The optional remote.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Folder", "Fo?", "The optional folder id.", GH_ParamAccess.item);
@@ -2980,11 +2979,11 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 
     protected override void GetRepresentationData(IGH_DataAccess DA, FileDiff representation)
     {
-        string guid = null, name = null, remote = null, hash = null, blob = null, createdBy = null, updatedBy = null;
+        string id = null, name = null, remote = null, hash = null, blob = null, createdBy = null, updatedBy = null;
         int size = 0;
         DateTime createdAt = default, updatedAt = default;
         var folder = new FolderIdGoo();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref remote)) representation.Remote = remote;
         if (DA.GetData(5, ref folder)) representation.Folder = folder.Value.DeepClone();
@@ -2999,7 +2998,7 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 
     protected override void SetRepresentationData(IGH_DataAccess DA, FileDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeRemote()) DA.SetData(4, representation.Remote);
         if (representation.ShouldSerializeFolder()) DA.SetData(5, representation.Folder is not null ? new FolderIdGoo(representation.Folder.DeepClone()) : null);
@@ -3016,13 +3015,13 @@ public class FileDiffComponent : DiffComponent<FileDiffParam, FileDiffGoo, FileD
 public class SerializeFileDiffComponent : SerializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
     public SerializeFileDiffComponent() { }
-    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
+    public override __TYPE_ID__ ComponentId => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F2");
 }
 
 public class DeserializeFileDiffComponent : DeserializeComponent<FileDiffParam, FileDiffGoo, FileDiff>
 {
     public DeserializeFileDiffComponent() { }
-    public override Guid ComponentGuid => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
+    public override __TYPE_ID__ ComponentId => new("20D6E7F8-A9B0-C1D2-E3F4-A5B6C7D8E9F3");
 }
 
 public class FilesDiffGoo : DiffGoo<FilesDiff>
@@ -3064,12 +3063,12 @@ public class FilesDiffParam : DiffParam<FilesDiffGoo, FilesDiff>
     protected override string RepresentationNickname => "FDs";
     protected override string RepresentationDescription => "File collection diff";
     protected override string IconResourceName => "filesdiff_24x24";
-    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
+    public override __TYPE_ID__ ComponentId => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A1");
 }
 
 public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
-    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
+    public override __TYPE_ID__ ComponentId => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A2");
     protected override string RepresentationName => "FilesDiff";
     protected override string RepresentationNickname => "FDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of file diffs.";
@@ -3096,14 +3095,14 @@ public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, Fi
         var added = new List<FileGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new FileDiffUpdate { File = new FileId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new FileDiffUpdate { File = new FileId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, FilesDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new FileIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new FileDiffGoo((u.Diff ?? new FileDiff { Guid = u.File.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new FileDiffGoo((u.Diff ?? new FileDiff { Id = u.File.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new FileGoo(a.DeepClone())).ToList());
     }
 
@@ -3112,13 +3111,13 @@ public class FilesDiffComponent : DiffComponent<FilesDiffParam, FilesDiffGoo, Fi
 public class SerializeFilesDiffComponent : SerializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
     public SerializeFilesDiffComponent() { }
-    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
+    public override __TYPE_ID__ ComponentId => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A3");
 }
 
 public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam, FilesDiffGoo, FilesDiff>
 {
     public DeserializeFilesDiffComponent() { }
-    public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
+    public override __TYPE_ID__ ComponentId => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
 }
 
 #endregion 🪨File
@@ -3145,7 +3144,7 @@ public class FolderGoo : Goo<Folder>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -3166,7 +3165,7 @@ public class FolderGoo : Goo<Folder>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Folder { Guid = str };
+            Value = new Folder { Id = str };
             return true;
         }
         return false;
@@ -3179,12 +3178,12 @@ public class FolderParam : Param<FolderGoo, Folder>
     protected override string RepresentationNickname => "Fld";
     protected override string RepresentationDescription => "Folder container";
     protected override string IconResourceName => "folder_24x24";
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A0");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A0");
 }
 
 public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Folder>
 {
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A1");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A1");
     protected override string RepresentationName => "Folder";
     protected override string RepresentationNickname => "Fol";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a folder.";
@@ -3193,7 +3192,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the folder.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Parent", "Pa?", "The optional parent folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3206,7 +3205,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the folder.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the folder.", GH_ParamAccess.item);
         pManager.AddParameter(new FolderIdParam(), "Parent", "Pa?", "The optional parent folder.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3219,11 +3218,11 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Folder representation)
     {
-        string guid = "", name = "", description = "", createdBy = "", updatedBy = "";
+        string id = "", name = "", description = "", createdBy = "", updatedBy = "";
         var parentIdGoo = new FolderIdGoo();
         DateTime createdAt = default, updatedAt = default;
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref parentIdGoo)) representation.Parent = parentIdGoo.Value;
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -3236,7 +3235,7 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Folder representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Parent != null ? new FolderIdGoo(representation.Parent) : null);
         DA.SetData(5, representation.Description);
@@ -3251,13 +3250,13 @@ public class FolderComponent : PassthroughComponent<FolderParam, FolderGoo, Fold
 public class SerializeFolderComponent : SerializeComponent<FolderParam, FolderGoo, Folder>
 {
     public SerializeFolderComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A2");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A2");
 }
 
 public class DeserializeFolderComponent : DeserializeComponent<FolderParam, FolderGoo, Folder>
 {
     public DeserializeFolderComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A3");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A3");
 }
 
 public class FolderIdGoo : IdGoo<FolderId>
@@ -3269,7 +3268,7 @@ public class FolderIdGoo : IdGoo<FolderId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -3285,7 +3284,7 @@ public class FolderIdGoo : IdGoo<FolderId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new FolderId { Guid = str };
+            Value = new FolderId { Id = str };
             return true;
         }
         return false;
@@ -3299,7 +3298,7 @@ public class FolderIdParam : IdParam<FolderIdGoo, FolderId>
     protected override string RepresentationDescription => "Folder identifier";
     protected override string IconResourceName => "folder_24x24";
     protected override string IdIconResourceName => "folderid_24x24";
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A4");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A4");
 }
 
 public class FolderDiffGoo : DiffGoo<FolderDiff>
@@ -3311,7 +3310,7 @@ public class FolderDiffGoo : DiffGoo<FolderDiff>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid ?? "");
+            target = (Q)(object)new GH_String(Value.Id ?? "");
             return true;
         }
         return false;
@@ -3341,12 +3340,12 @@ public class FolderDiffParam : DiffParam<FolderDiffGoo, FolderDiff>
     protected override string RepresentationNickname => "FD";
     protected override string RepresentationDescription => "Folder diff";
     protected override string IconResourceName => "folderdiff_24x24";
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A5");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A5");
 }
 
 public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
 {
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A6");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A6");
     protected override string RepresentationName => "FolderDiff";
     protected override string RepresentationNickname => "FD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a folder diff.";
@@ -3354,7 +3353,7 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Parent", "Pa?", "The optional parent.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3367,7 +3366,7 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Parent", "Pa?", "The optional parent.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3380,11 +3379,11 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
 
     protected override void GetRepresentationData(IGH_DataAccess DA, FolderDiff representation)
     {
-        string guid = null, name = null, parent = null, description = null, createdAt = null, createdBy = null, updatedAt = null, updatedBy = null;
+        string id = null, name = null, parent = null, description = null, createdAt = null, createdBy = null, updatedAt = null, updatedBy = null;
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
-        if (DA.GetData(4, ref parent)) representation.Parent = string.IsNullOrEmpty(parent) ? null : new FolderId { Guid = parent };
+        if (DA.GetData(4, ref parent)) representation.Parent = string.IsNullOrEmpty(parent) ? null : new FolderId { Id = parent };
         if (DA.GetData(5, ref description)) representation.Description = description;
         if (DA.GetDataList(6, attributes)) representation.Attributes = attributes.Select(a => a.Value.DeepClone()).ToList();
         if (DA.GetData(7, ref createdAt)) representation.CreatedAt = createdAt;
@@ -3395,7 +3394,7 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
 
     protected override void SetRepresentationData(IGH_DataAccess DA, FolderDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeParent()) DA.SetData(4, representation.Parent);
         if (representation.ShouldSerializeDescription()) DA.SetData(5, representation.Description);
@@ -3410,13 +3409,13 @@ public class FolderDiffComponent : DiffComponent<FolderDiffParam, FolderDiffGoo,
 public class SerializeFolderDiffComponent : SerializeComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
 {
     public SerializeFolderDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A7");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A7");
 }
 
 public class DeserializeFolderDiffComponent : DeserializeComponent<FolderDiffParam, FolderDiffGoo, FolderDiff>
 {
     public DeserializeFolderDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A8");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A8");
 }
 
 public class FoldersDiffGoo : DiffGoo<FoldersDiff>
@@ -3458,12 +3457,12 @@ public class FoldersDiffParam : DiffParam<FoldersDiffGoo, FoldersDiff>
     protected override string RepresentationNickname => "FDs";
     protected override string RepresentationDescription => "Folder collection diff";
     protected override string IconResourceName => "foldersdiff_24x24";
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
 }
 
 public class FoldersDiffComponent : DiffComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
 {
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AA");
     protected override string RepresentationName => "FoldersDiff";
     protected override string RepresentationNickname => "FDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of folder diffs.";
@@ -3490,14 +3489,14 @@ public class FoldersDiffComponent : DiffComponent<FoldersDiffParam, FoldersDiffG
         var added = new List<FolderGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new FolderDiffUpdate { Folder = new FolderId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new FolderDiffUpdate { Folder = new FolderId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, FoldersDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new FolderIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new FolderDiffGoo((u.Diff ?? new FolderDiff { Guid = u.Folder.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new FolderDiffGoo((u.Diff ?? new FolderDiff { Id = u.Folder.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new FolderGoo(a.DeepClone())).ToList());
     }
 
@@ -3506,13 +3505,13 @@ public class FoldersDiffComponent : DiffComponent<FoldersDiffParam, FoldersDiffG
 public class SerializeFoldersDiffComponent : SerializeComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
 {
     public SerializeFoldersDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
 }
 
 public class DeserializeFoldersDiffComponent : DeserializeComponent<FoldersDiffParam, FoldersDiffGoo, FoldersDiff>
 {
     public DeserializeFoldersDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
 }
 
 #endregion 🪩Folder
@@ -3553,12 +3552,12 @@ public class BenchmarkParam : Param<BenchmarkGoo, Benchmark>
     protected override string RepresentationNickname => "Bmk";
     protected override string RepresentationDescription => "Performance benchmark";
     protected override string IconResourceName => "benchmark_24x24";
-    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
-    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string RepresentationName => "Benchmark";
     protected override string RepresentationNickname => "Bmk";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a benchmark.";
@@ -3566,7 +3565,7 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the benchmark.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the benchmark.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the benchmark.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
@@ -3578,7 +3577,7 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the benchmark.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the benchmark.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the benchmark.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
@@ -3590,12 +3589,12 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Benchmark representation)
     {
-        string guid = "", name = "", icon = "";
+        string id = "", name = "", icon = "";
         double min = 0, max = 0;
         bool minExcluded = false, maxExcluded = false;
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref icon)) representation.Icon = icon;
         if (DA.GetData(5, ref min)) representation.Min = (float)min;
@@ -3607,7 +3606,7 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Benchmark representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Icon);
         DA.SetData(5, representation.Min);
@@ -3621,13 +3620,13 @@ public class BenchmarkComponent : PassthroughComponent<BenchmarkParam, Benchmark
 public class SerializeBenchmarkComponent : SerializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
     public SerializeBenchmarkComponent() { }
-    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam, BenchmarkGoo, Benchmark>
 {
     public DeserializeBenchmarkComponent() { }
-    public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
 #endregion 💾Benchmark
@@ -3713,12 +3712,12 @@ public class QualityParam : Param<QualityGoo, Quality>
     protected override string RepresentationNickname => "Qal";
     protected override string RepresentationDescription => "Quality measurement";
     protected override string IconResourceName => "quality_24x24";
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Quality>
 {
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
     protected override string RepresentationName => "Quality";
     protected override string RepresentationNickname => "Qal";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a quality.";
@@ -3726,7 +3725,7 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ky", "The key of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3751,7 +3750,7 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the quality.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ky", "The key of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -3776,14 +3775,14 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Quality representation)
     {
-        string guid = "", key = "", name = "", description = "", uri = "", folder = "", si = "", imperial = "", formula = "", icon = "", image = "", unit = "";
+        string id = "", key = "", name = "", description = "", uri = "", folder = "", si = "", imperial = "", formula = "", icon = "", image = "", unit = "";
         bool scalable = false, minExcluded = true, maxExcluded = true;
         int kind = 0;
         double min = 0, max = 0, defaultValue = 0;
         var benchmarks = new List<BenchmarkGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref key)) representation.Key = key;
         if (DA.GetData(4, ref name)) representation.Name = name;
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -3808,7 +3807,7 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Quality representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Key);
         DA.SetData(4, representation.Name);
         DA.SetData(5, representation.Description);
@@ -3835,13 +3834,13 @@ public class QualityComponent : PassthroughComponent<QualityParam, QualityGoo, Q
 public class SerializeQualityComponent : SerializeComponent<QualityParam, QualityGoo, Quality>
 {
     public SerializeQualityComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C8");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C8");
 }
 
 public class DeserializeQualityComponent : DeserializeComponent<QualityParam, QualityGoo, Quality>
 {
     public DeserializeQualityComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C9");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C9");
 }
 
 public class QualityIdGoo : IdGoo<QualityId>
@@ -3863,7 +3862,7 @@ public class QualityIdGoo : IdGoo<QualityId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -3907,19 +3906,19 @@ public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
     protected override string RepresentationDescription => "Quality identifier";
     protected override string IconResourceName => "quality_24x24";
     protected override string IdIconResourceName => "qualityid_24x24";
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class SerializeQualityIdComponent : SerializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
     public SerializeQualityIdComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CA");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CA");
 }
 
 public class DeserializeQualityIdComponent : DeserializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
     public DeserializeQualityIdComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CB");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4CB");
 }
 
 public class QualityDiffGoo : DiffGoo<QualityDiff>
@@ -3986,12 +3985,12 @@ public class QualityDiffParam : DiffParam<QualityDiffGoo, QualityDiff>
     protected override string RepresentationNickname => "QD";
     protected override string RepresentationDescription => "Quality diff";
     protected override string IconResourceName => "qualitydiff_24x24";
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DA");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DA");
 }
 
 public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DB");
     protected override string RepresentationName => "QualityDiff";
     protected override string RepresentationNickname => "QD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a quality diff.";
@@ -3999,7 +3998,7 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke", "The key.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4020,7 +4019,7 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Key", "Ke", "The key.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4041,14 +4040,14 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 
     protected override void GetRepresentationData(IGH_DataAccess DA, QualityDiff representation)
     {
-        string guid = null, key = null, name = null, description = null, uri = null, si = null, imperial = null, formula = null;
+        string id = null, key = null, name = null, description = null, uri = null, si = null, imperial = null, formula = null;
         bool scalable = false, minExcluded = false, maxExcluded = false;
         int kind = 0;
         double min = 0, max = 0, @default = 0;
         var benchmarks = new List<BenchmarkGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref key)) representation.Key = key;
         if (DA.GetData(4, ref name)) representation.Name = name;
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -4069,7 +4068,7 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 
     protected override void SetRepresentationData(IGH_DataAccess DA, QualityDiff representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Key);
         DA.SetData(4, representation.Name);
         DA.SetData(5, representation.Description);
@@ -4093,13 +4092,13 @@ public class QualityDiffComponent : DiffComponent<QualityDiffParam, QualityDiffG
 public class SerializeQualityDiffComponent : SerializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
     public SerializeQualityDiffComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DC");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DC");
 }
 
 public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffParam, QualityDiffGoo, QualityDiff>
 {
     public DeserializeQualityDiffComponent() { }
-    public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DD");
+    public override __TYPE_ID__ ComponentId => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DD");
 }
 
 #endregion 🎊Quality
@@ -4121,7 +4120,7 @@ public class TagGoo : Goo<Tag>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -4137,7 +4136,7 @@ public class TagGoo : Goo<Tag>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Tag { Guid = str };
+            Value = new Tag { Id = str };
             return true;
         }
         return false;
@@ -4150,12 +4149,12 @@ public class TagParam : Param<TagGoo, Tag>
     protected override string RepresentationNickname => "Tag";
     protected override string RepresentationDescription => "Representation tag";
     protected override string IconResourceName => "tag_24x24";
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
 }
 
 public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 {
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B1");
     protected override string RepresentationName => "Tag";
     protected override string RepresentationNickname => "Tag";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a tag.";
@@ -4164,7 +4163,7 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the tag.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the tag.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the tag.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -4173,7 +4172,7 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the tag.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the tag.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the tag.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -4182,9 +4181,9 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Tag representation)
     {
-        string guid = "", name = "", description = "", icon = "";
+        string id = "", name = "", description = "", icon = "";
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref icon)) representation.Icon = icon;
@@ -4193,7 +4192,7 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Tag representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetData(5, representation.Icon);
@@ -4204,13 +4203,13 @@ public class TagComponent : PassthroughComponent<TagParam, TagGoo, Tag>
 public class SerializeTagComponent : SerializeComponent<TagParam, TagGoo, Tag>
 {
     public SerializeTagComponent() { }
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B2");
 }
 
 public class DeserializeTagComponent : DeserializeComponent<TagParam, TagGoo, Tag>
 {
     public DeserializeTagComponent() { }
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B3");
 }
 
 public class TagIdGoo : IdGoo<TagId>
@@ -4222,7 +4221,7 @@ public class TagIdGoo : IdGoo<TagId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -4238,7 +4237,7 @@ public class TagIdGoo : IdGoo<TagId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new TagId { Guid = str };
+            Value = new TagId { Id = str };
             return true;
         }
         return false;
@@ -4252,7 +4251,7 @@ public class TagIdParam : IdParam<TagIdGoo, TagId>
     protected override string RepresentationDescription => "Tag identifier";
     protected override string IconResourceName => "tag_24x24";
     protected override string IdIconResourceName => "tagid_24x24";
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
 }
 
 #endregion 🪄Tag
@@ -4269,7 +4268,7 @@ public class PropGoo : Goo<Prop>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Quality.Guid);
+            target = (Q)(object)new GH_String(Value.Quality.Id);
             return true;
         }
         return false;
@@ -4299,12 +4298,12 @@ public class PropParam : Param<PropGoo, Prop>
     protected override string RepresentationNickname => "Prp";
     protected override string RepresentationDescription => "Connector property";
     protected override string IconResourceName => "prop_24x24";
-    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 {
-    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string RepresentationName => "Prop";
     protected override string RepresentationNickname => "Prp";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a prop.";
@@ -4312,7 +4311,7 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the prop.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the prop.", GH_ParamAccess.item);
         pManager.AddParameter(new QualityIdParam(), "Quality", "Ql", "The quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Vl", "The value.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut", "The unit.", GH_ParamAccess.item);
@@ -4321,7 +4320,7 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the prop.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the prop.", GH_ParamAccess.item);
         pManager.AddParameter(new QualityIdParam(), "Quality", "Ql", "The quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Value", "Vl", "The value.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut", "The unit.", GH_ParamAccess.item);
@@ -4330,11 +4329,11 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Prop representation)
     {
-        string guid = "", value = "", unit = "";
+        string id = "", value = "", unit = "";
         var quality = new QualityIdGoo();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref quality)) representation.Quality = quality.Value.DeepClone();
         if (DA.GetData(4, ref value)) representation.Value = value;
         if (DA.GetData(5, ref unit)) representation.Unit = unit;
@@ -4343,7 +4342,7 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Prop representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, new QualityIdGoo(representation.Quality.DeepClone()));
         DA.SetData(4, representation.Value);
         DA.SetData(5, representation.Unit);
@@ -4354,13 +4353,13 @@ public class PropComponent : PassthroughComponent<PropParam, PropGoo, Prop>
 public class SerializePropComponent : SerializeComponent<PropParam, PropGoo, Prop>
 {
     public SerializePropComponent() { }
-    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo, Prop>
 {
     public DeserializePropComponent() { }
-    public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
 #endregion 🎆Prop
@@ -4386,7 +4385,7 @@ public class RepresentationGoo : Goo<Representation>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Representation { Guid = str };
+            Value = new Representation { Id = str };
             return true;
         }
         return false;
@@ -4399,12 +4398,12 @@ public class RepresentationParam : Param<RepresentationGoo, Representation>
     protected override string RepresentationNickname => "Mdl";
     protected override string RepresentationDescription => "3D representation";
     protected override string IconResourceName => "representation_24x24";
-    public override Guid ComponentGuid => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
+    public override __TYPE_ID__ ComponentId => new("895BBC91-851A-4DFC-9C83-92DFE90029E8");
 }
 
 public class RepresentationComponent : PassthroughComponent<RepresentationParam, RepresentationGoo, Representation>
 {
-    public override Guid ComponentGuid => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
+    public override __TYPE_ID__ ComponentId => new("37228B2F-70DF-44B7-A3B6-781D5AFCE122");
     protected override string RepresentationName => "Representation";
     protected override string RepresentationNickname => "Rep";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a representation.";
@@ -4413,7 +4412,7 @@ public class RepresentationComponent : PassthroughComponent<RepresentationParam,
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the representation.", GH_ParamAccess.item);
         pManager.AddParameter(new FileIdParam(), "File", "Fl", "The file of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4423,7 +4422,7 @@ public class RepresentationComponent : PassthroughComponent<RepresentationParam,
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the representation.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the representation.", GH_ParamAccess.item);
         pManager.AddParameter(new FileIdParam(), "File", "Fl", "The file of the representation.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4433,12 +4432,12 @@ public class RepresentationComponent : PassthroughComponent<RepresentationParam,
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Representation representation)
     {
-        string guid = "", name = "", description = "";
+        string id = "", name = "", description = "";
         var fileIdGoo = new FileIdGoo();
         var tagIdGoos = new List<TagIdGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref fileIdGoo)) representation.File = fileIdGoo.Value;
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -4448,7 +4447,7 @@ public class RepresentationComponent : PassthroughComponent<RepresentationParam,
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Representation representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.File is not null ? new FileIdGoo(representation.File) : null);
         DA.SetData(5, representation.Description);
@@ -4465,13 +4464,13 @@ public class RepresentationComponent : PassthroughComponent<RepresentationParam,
 public class SerializeRepresentationComponent : SerializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public SerializeRepresentationComponent() { }
-    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
+    public override __TYPE_ID__ ComponentId => new("AC6E381C-23EE-4A81-BE0F-3523AEE32046");
 }
 
 public class DeserializeRepresentationComponent : DeserializeComponent<RepresentationParam, RepresentationGoo, Representation>
 {
     public DeserializeRepresentationComponent() { }
-    public override Guid ComponentGuid => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
+    public override __TYPE_ID__ ComponentId => new("AC6E381C-23EE-4A81-BE0F-3523AEE32047");
 }
 
 public class RepresentationIdGoo : IdGoo<RepresentationId>
@@ -4514,7 +4513,7 @@ public class RepresentationIdGoo : IdGoo<RepresentationId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new RepresentationId { Guid = str };
+            Value = new RepresentationId { Id = str };
             return true;
         }
         return false;
@@ -4528,7 +4527,7 @@ public class RepresentationIdParam : IdParam<RepresentationIdGoo, Representation
     protected override string RepresentationDescription => "Representation identifier";
     protected override string IconResourceName => "representation_24x24";
     protected override string IdIconResourceName => "representationid_24x24";
-    public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
 }
 
 public class RepresentationDiffGoo : DiffGoo<RepresentationDiff>
@@ -4570,12 +4569,12 @@ public class RepresentationDiffParam : DiffParam<RepresentationDiffGoo, Represen
     protected override string RepresentationNickname => "MD";
     protected override string RepresentationDescription => "Representation diff";
     protected override string IconResourceName => "representationdiff_24x24";
-    public override Guid ComponentGuid => new("7C8E9FA0-B1C2-D3E4-F5A6-B7C8D9E0F1A2");
+    public override __TYPE_ID__ ComponentId => new("7C8E9FA0-B1C2-D3E4-F5A6-B7C8D9E0F1A2");
 }
 
 public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
-    public override Guid ComponentGuid => new("8D9FA0B1-C2D3-E4F5-A6B7-C8D9E0F1A2B3");
+    public override __TYPE_ID__ ComponentId => new("8D9FA0B1-C2D3-E4F5-A6B7-C8D9E0F1A2B3");
     protected override string RepresentationName => "RepresentationDiff";
     protected override string RepresentationNickname => "MD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a representation diff.";
@@ -4583,7 +4582,7 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new FileIdParam(), "File", "Fi?", "The optional file id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4593,7 +4592,7 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new FileIdParam(), "File", "Fi?", "The optional file id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -4603,11 +4602,11 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 
     protected override void GetRepresentationData(IGH_DataAccess DA, RepresentationDiff representation)
     {
-        string guid = null, name = null, description = null;
+        string id = null, name = null, description = null;
         var file = new FileIdGoo();
         var tags = new List<TagIdGoo>();
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref file)) representation.File = file.Value.DeepClone();
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -4617,7 +4616,7 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 
     protected override void SetRepresentationData(IGH_DataAccess DA, RepresentationDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeFile()) DA.SetData(4, representation.File is not null ? new FileIdGoo(representation.File.DeepClone()) : null);
         if (representation.ShouldSerializeDescription()) DA.SetData(5, representation.Description);
@@ -4629,13 +4628,13 @@ public class RepresentationDiffComponent : DiffComponent<RepresentationDiffParam
 public class SerializeRepresentationDiffComponent : SerializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
     public SerializeRepresentationDiffComponent() { }
-    public override Guid ComponentGuid => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
+    public override __TYPE_ID__ ComponentId => new("71E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AB");
 }
 
 public class DeserializeRepresentationDiffComponent : DeserializeComponent<RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff>
 {
     public DeserializeRepresentationDiffComponent() { }
-    public override Guid ComponentGuid => new("AFB1C2D3-E4F5-A6B7-C8D9-E0F1A2B3C4D5");
+    public override __TYPE_ID__ ComponentId => new("AFB1C2D3-E4F5-A6B7-C8D9-E0F1A2B3C4D5");
 }
 
 public class RepresentationsDiffGoo : DiffGoo<RepresentationsDiff>
@@ -4677,12 +4676,12 @@ public class RepresentationsDiffParam : DiffParam<RepresentationsDiffGoo, Repres
     protected override string RepresentationNickname => "MDs";
     protected override string RepresentationDescription => "Representation collection diff";
     protected override string IconResourceName => "representationsdiff_24x24";
-    public override Guid ComponentGuid => new("9EA0B1C2-D3E4-F5A6-B7C8-D9E0F1A2B3C4");
+    public override __TYPE_ID__ ComponentId => new("9EA0B1C2-D3E4-F5A6-B7C8-D9E0F1A2B3C4");
 }
 
 public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AD");
     protected override string RepresentationName => "RepresentationsDiff";
     protected override string RepresentationNickname => "MDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of representation diffs.";
@@ -4709,14 +4708,14 @@ public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffPar
         var added = new List<RepresentationGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new RepresentationDiffUpdate { Representation = new RepresentationId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new RepresentationDiffUpdate { Representation = new RepresentationId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, RepresentationsDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new RepresentationIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new RepresentationDiffGoo((u.Diff ?? new RepresentationDiff { Guid = u.Representation.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new RepresentationDiffGoo((u.Diff ?? new RepresentationDiff { Id = u.Representation.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new RepresentationGoo(a.DeepClone())).ToList());
     }
 
@@ -4725,13 +4724,13 @@ public class RepresentationsDiffComponent : DiffComponent<RepresentationsDiffPar
 public class SerializeRepresentationsDiffComponent : SerializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
     public SerializeRepresentationsDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AE");
 }
 
 public class DeserializeRepresentationsDiffComponent : DeserializeComponent<RepresentationsDiffParam, RepresentationsDiffGoo, RepresentationsDiff>
 {
     public DeserializeRepresentationsDiffComponent() { }
-    public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
+    public override __TYPE_ID__ ComponentId => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
 }
 
 #endregion 🧊Representation
@@ -4764,7 +4763,7 @@ public class ConnectorGoo : Goo<Connector>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -4807,12 +4806,12 @@ public class ConnectorParam : Param<ConnectorGoo, Connector>
     protected override string RepresentationNickname => "Con";
     protected override string RepresentationDescription => "Connection point";
     protected override string IconResourceName => "connector_24x24";
-    public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
+    public override __TYPE_ID__ ComponentId => new("96775DC9-9079-4A22-8376-6AB8F58C8B1B");
 }
 
 public class ConnectorComponent : PassthroughComponent<ConnectorParam, ConnectorGoo, Connector>
 {
-    public override Guid ComponentGuid => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
+    public override __TYPE_ID__ ComponentId => new("E505C90C-71F4-413F-82FE-65559D9FFAB5");
     protected override string RepresentationName => "Connector";
     protected override string RepresentationNickname => "Por";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a connector.";
@@ -4821,7 +4820,7 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the connector is mandatory.", GH_ParamAccess.item);
@@ -4835,7 +4834,7 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the connector.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the connector.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("Mandatory", "Ma?", "Whether the connector is mandatory.", GH_ParamAccess.item);
@@ -4849,7 +4848,7 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Connector representation)
     {
-        string guid = "", name = "", description = "";
+        string id = "", name = "", description = "";
         bool mandatory = false;
         var port = new PortIdGoo();
         Point3d point = Point3d.Origin;
@@ -4858,7 +4857,7 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
         var props = new List<PropGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref mandatory)) representation.Mandatory = mandatory;
@@ -4872,7 +4871,7 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Connector representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetData(5, representation.Mandatory);
@@ -4888,13 +4887,13 @@ public class ConnectorComponent : PassthroughComponent<ConnectorParam, Connector
 public class SerializeConnectorComponent : SerializeComponent<ConnectorParam, ConnectorGoo, Connector>
 {
     public SerializeConnectorComponent() { }
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1B5");
 }
 
 public class DeserializeConnectorComponent : DeserializeComponent<ConnectorParam, ConnectorGoo, Connector>
 {
     public DeserializeConnectorComponent() { }
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1B6");
 }
 
 public class ConnectorIdGoo : IdGoo<ConnectorId>
@@ -4916,7 +4915,7 @@ public class ConnectorIdGoo : IdGoo<ConnectorId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -4937,7 +4936,7 @@ public class ConnectorIdGoo : IdGoo<ConnectorId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new ConnectorId { Guid = str };
+            Value = new ConnectorId { Id = str };
             return true;
         }
         return false;
@@ -4951,7 +4950,7 @@ public class ConnectorIdParam : IdParam<ConnectorIdGoo, ConnectorId>
     protected override string RepresentationDescription => "Connector identifier";
     protected override string IconResourceName => "connector_24x24";
     protected override string IdIconResourceName => "connectorid_24x24";
-    public override Guid ComponentGuid => new("C1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6");
+    public override __TYPE_ID__ ComponentId => new("C1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6");
 }
 
 public class ConnectorDiffGoo : DiffGoo<ConnectorDiff>
@@ -4973,7 +4972,7 @@ public class ConnectorDiffGoo : DiffGoo<ConnectorDiff>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -5013,12 +5012,12 @@ public class ConnectorDiffParam : DiffParam<ConnectorDiffGoo, ConnectorDiff>
     protected override string RepresentationNickname => "CD";
     protected override string RepresentationDescription => "Connector diff";
     protected override string IconResourceName => "connectordiff_24x24";
-    public override Guid ComponentGuid => new("B0C1D2E3-F4A5-B6C7-D8E9-F0A1B2C3D4E5");
+    public override __TYPE_ID__ ComponentId => new("B0C1D2E3-F4A5-B6C7-D8E9-F0A1B2C3D4E5");
 }
 
 public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
-    public override Guid ComponentGuid => new("E3F4A5B6-C7D8-E9F0-A1B2-C3D4E5F6A7B8");
+    public override __TYPE_ID__ ComponentId => new("E3F4A5B6-C7D8-E9F0-A1B2-C3D4E5F6A7B8");
     protected override string RepresentationName => "ConnectorDiff";
     protected override string RepresentationNickname => "CD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a connector diff.";
@@ -5026,7 +5025,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new PortIdParam(), "Port", "Po?", "The optional port id.", GH_ParamAccess.item);
@@ -5040,7 +5039,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new PortIdParam(), "Port", "Po?", "The optional port id.", GH_ParamAccess.item);
@@ -5054,7 +5053,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
 
     protected override void GetRepresentationData(IGH_DataAccess DA, ConnectorDiff representation)
     {
-        string guid = null, name = null, description = null;
+        string id = null, name = null, description = null;
         bool mandatory = false;
         double t = 0;
         Point3d point = Point3d.Origin;
@@ -5062,7 +5061,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
         var port = new PortIdGoo();
         var props = new List<PropGoo>();
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref port)) representation.Port = port.Value.DeepClone();
@@ -5076,7 +5075,7 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
 
     protected override void SetRepresentationData(IGH_DataAccess DA, ConnectorDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeDescription()) DA.SetData(4, representation.Description);
         if (representation.ShouldSerializePort()) DA.SetData(5, representation.Port is not null ? new PortIdGoo(representation.Port.DeepClone()) : null);
@@ -5092,13 +5091,13 @@ public class ConnectorDiffComponent : DiffComponent<ConnectorDiffParam, Connecto
 public class SerializePortDiffComponent : SerializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public SerializePortDiffComponent() { }
-    public override Guid ComponentGuid => new("F4A5B6C7-D8E9-F0A1-B2C3-D4E5F6A7B8C9");
+    public override __TYPE_ID__ ComponentId => new("F4A5B6C7-D8E9-F0A1-B2C3-D4E5F6A7B8C9");
 }
 
 public class DeserializePortDiffComponent : DeserializeComponent<ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff>
 {
     public DeserializePortDiffComponent() { }
-    public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
+    public override __TYPE_ID__ ComponentId => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B5");
 }
 
 public class ConnectorsDiffGoo : DiffGoo<ConnectorsDiff>
@@ -5140,12 +5139,12 @@ public class ConnectorsDiffParam : DiffParam<ConnectorsDiffGoo, ConnectorsDiff>
     protected override string RepresentationNickname => "CDs";
     protected override string RepresentationDescription => "Connector collection diff";
     protected override string IconResourceName => "connectorsdiff_24x24";
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1C0");
 }
 
 public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1C1");
     protected override string RepresentationName => "ConnectorsDiff";
     protected override string RepresentationNickname => "CDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of connector diffs.";
@@ -5172,14 +5171,14 @@ public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, Connec
         var added = new List<ConnectorGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new ConnectorDiffUpdate { Connector = new ConnectorId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new ConnectorDiffUpdate { Connector = new ConnectorId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, ConnectorsDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new ConnectorIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new ConnectorDiffGoo((u.Diff ?? new ConnectorDiff { Guid = u.Connector.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new ConnectorDiffGoo((u.Diff ?? new ConnectorDiff { Id = u.Connector.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new ConnectorGoo(a.DeepClone())).ToList());
     }
 
@@ -5188,13 +5187,13 @@ public class ConnectorsDiffComponent : DiffComponent<ConnectorsDiffParam, Connec
 public class SerializePortsDiffComponent : SerializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public SerializePortsDiffComponent() { }
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1C2");
 }
 
 public class DeserializePortsDiffComponent : DeserializeComponent<ConnectorsDiffParam, ConnectorsDiffGoo, ConnectorsDiff>
 {
     public DeserializePortsDiffComponent() { }
-    public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
+    public override __TYPE_ID__ ComponentId => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
 }
 
 #endregion 🦀Connector
@@ -5216,7 +5215,7 @@ public class ConceptGoo : Goo<Concept>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -5232,7 +5231,7 @@ public class ConceptGoo : Goo<Concept>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Concept { Guid = str };
+            Value = new Concept { Id = str };
             return true;
         }
         return false;
@@ -5245,12 +5244,12 @@ public class ConceptParam : Param<ConceptGoo, Concept>
     protected override string RepresentationNickname => "Cpt";
     protected override string RepresentationDescription => "Semantic concept";
     protected override string IconResourceName => "concept_24x24";
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
 }
 
 public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, Concept>
 {
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C2");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C2");
     protected override string RepresentationName => "Concept";
     protected override string RepresentationNickname => "Con";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a concept.";
@@ -5259,7 +5258,7 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the concept.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the concept.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the concept.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -5268,7 +5267,7 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the concept.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the concept.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the concept.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -5277,9 +5276,9 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Concept representation)
     {
-        string guid = "", name = "", description = "", icon = "";
+        string id = "", name = "", description = "", icon = "";
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref icon)) representation.Icon = icon;
@@ -5288,7 +5287,7 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Concept representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetData(5, representation.Icon);
@@ -5299,13 +5298,13 @@ public class ConceptComponent : PassthroughComponent<ConceptParam, ConceptGoo, C
 public class SerializeConceptComponent : SerializeComponent<ConceptParam, ConceptGoo, Concept>
 {
     public SerializeConceptComponent() { }
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C3");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C3");
 }
 
 public class DeserializeConceptComponent : DeserializeComponent<ConceptParam, ConceptGoo, Concept>
 {
     public DeserializeConceptComponent() { }
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C4");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C4");
 }
 
 public class ConceptIdGoo : IdGoo<ConceptId>
@@ -5317,7 +5316,7 @@ public class ConceptIdGoo : IdGoo<ConceptId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -5328,7 +5327,7 @@ public class ConceptIdGoo : IdGoo<ConceptId>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new ConceptId { Guid = str };
+            Value = new ConceptId { Id = str };
             return true;
         }
         return false;
@@ -5342,7 +5341,7 @@ public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
     protected override string RepresentationDescription => "Concept identifier";
     protected override string IconResourceName => "concept_24x24";
     protected override string IdIconResourceName => "conceptid_24x24";
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
 }
 
 #endregion 🎑Concept
@@ -5364,7 +5363,7 @@ public class PortGoo : Goo<Port>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -5380,7 +5379,7 @@ public class PortGoo : Goo<Port>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Port { Guid = str };
+            Value = new Port { Id = str };
             return true;
         }
         return false;
@@ -5393,12 +5392,12 @@ public class PortParam : Param<PortGoo, Port>
     protected override string RepresentationNickname => "Ifc";
     protected override string RepresentationDescription => "Connector compatibility";
     protected override string IconResourceName => "interface_24x24";
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
 }
 
 public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 {
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
     protected override string RepresentationName => "Port";
     protected override string RepresentationNickname => "Ifc";
     protected override string RepresentationDescription => "Construct, deconstruct or modify an port.";
@@ -5407,7 +5406,7 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -5417,7 +5416,7 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the port.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -5427,10 +5426,10 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Port representation)
     {
-        string guid = "", name = "", description = "", icon = "";
+        string id = "", name = "", description = "", icon = "";
         var compatiblePorts = new List<PortIdGoo>();
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref icon)) representation.Icon = icon;
@@ -5440,7 +5439,7 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Port representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetData(5, representation.Icon);
@@ -5452,13 +5451,13 @@ public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
 {
     public SerializePortComponent() { }
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
 }
 
 public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
 {
     public DeserializePortComponent() { }
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
 }
 
 public class PortIdGoo : IdGoo<PortId>
@@ -5470,7 +5469,7 @@ public class PortIdGoo : IdGoo<PortId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -5481,7 +5480,7 @@ public class PortIdGoo : IdGoo<PortId>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new PortId { Guid = str };
+            Value = new PortId { Id = str };
             return true;
         }
         return false;
@@ -5495,7 +5494,7 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
     protected override string RepresentationDescription => "Port identifier";
     protected override string IconResourceName => "interface_24x24";
     protected override string IdIconResourceName => "interfaceid_24x24";
-    public override Guid ComponentGuid => new("78187B1A-F476-44D9-A382-DE2C47019DB8");
+    public override __TYPE_ID__ ComponentId => new("78187B1A-F476-44D9-A382-DE2C47019DB8");
 }
 
 #endregion 🎀Port
@@ -5524,8 +5523,8 @@ public class TypeGoo : Goo<Type>
         {
             piece.Value = new Piece
             {
-                Guid = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId { Guid = Value.Guid }
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId { Id = Value.Id }
             };
             return true;
         }
@@ -5553,7 +5552,7 @@ public class TypeGoo : Goo<Type>
         if (source is PieceGoo piece)
         {
             if (piece.Value.Type is null) return false;
-            Value = new Type { Guid = piece.Value.Type.Guid, Name = piece.Value.Type.Guid };
+            Value = new Type { Id = piece.Value.Type.Id, Name = piece.Value.Type.Id };
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
@@ -5571,12 +5570,12 @@ public class TypeParam : Param<TypeGoo, Type>
     protected override string RepresentationNickname => "Typ";
     protected override string RepresentationDescription => "Reusable component";
     protected override string IconResourceName => "type_24x24";
-    public override Guid ComponentGuid => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
+    public override __TYPE_ID__ ComponentId => new("301FCFFA-2160-4ACA-994F-E067C4673D45");
 }
 
 public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 {
-    public override Guid ComponentGuid => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
+    public override __TYPE_ID__ ComponentId => new("7E250257-FA4B-4B0D-B519-B0AD778A66A7");
     protected override string RepresentationName => "Type";
     protected override string RepresentationNickname => "Typ";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a type.";
@@ -5585,7 +5584,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the type.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Parent", "Pr?", "The optional parent type.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the type is abstract.", GH_ParamAccess.item);
@@ -5609,7 +5608,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the type.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the type.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the type.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Parent", "Pr?", "The optional parent type.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the type is abstract.", GH_ParamAccess.item);
@@ -5633,7 +5632,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Type representation)
     {
-        string guid = "", name = "", folder = "", description = "", icon = "", image = "", uri = "", unit = "";
+        string id = "", name = "", folder = "", description = "", icon = "", image = "", uri = "", unit = "";
         DateTime createdAt = default, updatedAt = default;
         var parent = new TypeIdGoo();
         bool isAbstract = false, virtual_ = false;
@@ -5645,7 +5644,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
         var attributes = new List<AttributeGoo>();
         var concepts = new List<ConceptIdGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref parent)) representation.Parent = parent.Value.DeepClone();
         if (DA.GetData(5, ref isAbstract)) representation.IsAbstract = isAbstract;
@@ -5669,7 +5668,7 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Type representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Parent is not null ? new TypeIdGoo(representation.Parent.DeepClone()) : null);
         DA.SetData(5, representation.IsAbstract);
@@ -5706,13 +5705,13 @@ public class TypeComponent : PassthroughComponent<TypeParam, TypeGoo, Type>
 public class SerializeTypeComponent : SerializeComponent<TypeParam, TypeGoo, Type>
 {
     public SerializeTypeComponent() { }
-    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673A");
+    public override __TYPE_ID__ ComponentId => new("BD184BB8-8124-4604-835C-E7B7C199673A");
 }
 
 public class DeserializeTypeComponent : DeserializeComponent<TypeParam, TypeGoo, Type>
 {
     public DeserializeTypeComponent() { }
-    public override Guid ComponentGuid => new("BD184BB8-8124-4604-835C-E7B7C199673B");
+    public override __TYPE_ID__ ComponentId => new("BD184BB8-8124-4604-835C-E7B7C199673B");
 }
 
 public class TypeIdGoo : IdGoo<TypeId>
@@ -5755,7 +5754,7 @@ public class TypeIdGoo : IdGoo<TypeId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new TypeId { Guid = str };
+            Value = new TypeId { Id = str };
             return true;
         }
         return false;
@@ -5769,7 +5768,7 @@ public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
     protected override string RepresentationDescription => "Type identifier";
     protected override string IconResourceName => "type_24x24";
     protected override string IdIconResourceName => "typeid_24x24";
-    public override Guid ComponentGuid => new("A1B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
 public class TypeDiffGoo : DiffGoo<TypeDiff>
@@ -5831,12 +5830,12 @@ public class TypeDiffParam : DiffParam<TypeDiffGoo, TypeDiff>
     protected override string RepresentationNickname => "TD";
     protected override string RepresentationDescription => "Type diff";
     protected override string IconResourceName => "typediff_24x24";
-    public override Guid ComponentGuid => new("C3D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
+    public override __TYPE_ID__ ComponentId => new("C3D4E5F6-A7B8-C9D0-E1F2-A3B4C5D6E7F8");
 }
 
 public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
-    public override Guid ComponentGuid => new("D4E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
+    public override __TYPE_ID__ ComponentId => new("D4E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8A9");
     protected override string RepresentationName => "TypeDiff";
     protected override string RepresentationNickname => "TD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a type diff.";
@@ -5844,7 +5843,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Parent", "Pa?", "The optional parent type.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether abstract.", GH_ParamAccess.item);
@@ -5868,7 +5867,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Parent", "Pa?", "The optional parent type.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether abstract.", GH_ParamAccess.item);
@@ -5892,7 +5891,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 
     protected override void GetRepresentationData(IGH_DataAccess DA, TypeDiff representation)
     {
-        string guid = null, name = null, folder = null, description = null, icon = null, image = null, uri = null, unit = null;
+        string id = null, name = null, folder = null, description = null, icon = null, image = null, uri = null, unit = null;
         int stock = 0;
         bool isAbstract = false, virtualValue = false;
         DateTime createdAt = default, updatedAt = default;
@@ -5904,7 +5903,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
         var attributes = new List<AttributeGoo>();
         var concepts = new List<ConceptIdGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref parent)) representation.Parent = parent.Value.DeepClone();
         if (DA.GetData(5, ref isAbstract)) representation.IsAbstract = isAbstract;
@@ -5928,7 +5927,7 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 
     protected override void SetRepresentationData(IGH_DataAccess DA, TypeDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeParent()) DA.SetData(4, representation.Parent is not null ? new TypeIdGoo(representation.Parent.DeepClone()) : null);
         if (representation.ShouldSerializeIsAbstract()) DA.SetData(5, representation.IsAbstract);
@@ -5954,13 +5953,13 @@ public class TypeDiffComponent : DiffComponent<TypeDiffParam, TypeDiffGoo, TypeD
 public class SerializeTypeDiffComponent : SerializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
     public SerializeTypeDiffComponent() { }
-    public override Guid ComponentGuid => new("E5F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
+    public override __TYPE_ID__ ComponentId => new("E5F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B0");
 }
 
 public class DeserializeTypeDiffComponent : DeserializeComponent<TypeDiffParam, TypeDiffGoo, TypeDiff>
 {
     public DeserializeTypeDiffComponent() { }
-    public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C6");
+    public override __TYPE_ID__ ComponentId => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C6");
 }
 
 public class TypesDiffGoo : DiffGoo<TypesDiff>
@@ -6002,12 +6001,12 @@ public class TypesDiffParam : DiffParam<TypesDiffGoo, TypesDiff>
     protected override string RepresentationNickname => "TDs";
     protected override string RepresentationDescription => "Type collection diff";
     protected override string IconResourceName => "typesdiff_24x24";
-    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
+    public override __TYPE_ID__ ComponentId => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B6");
 }
 
 public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
-    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
+    public override __TYPE_ID__ ComponentId => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B7");
     protected override string RepresentationName => "TypesDiff";
     protected override string RepresentationNickname => "TDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of type diffs.";
@@ -6034,14 +6033,14 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
         var added = new List<TypeGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new TypeDiffUpdate { Type = new TypeId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new TypeDiffUpdate { Type = new TypeId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, TypesDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new TypeIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new TypeDiffGoo((u.Diff ?? new TypeDiff { Guid = u.Type.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new TypeDiffGoo((u.Diff ?? new TypeDiff { Id = u.Type.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new TypeGoo(a.DeepClone())).ToList());
     }
 
@@ -6050,13 +6049,13 @@ public class TypesDiffComponent : DiffComponent<TypesDiffParam, TypesDiffGoo, Ty
 public class SerializeTypesDiffComponent : SerializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
     public SerializeTypesDiffComponent() { }
-    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B8");
+    public override __TYPE_ID__ ComponentId => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B8");
 }
 
 public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam, TypesDiffGoo, TypesDiff>
 {
     public DeserializeTypesDiffComponent() { }
-    public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B9");
+    public override __TYPE_ID__ ComponentId => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B9");
 }
 
 #endregion 🤖Type
@@ -6073,7 +6072,7 @@ public class LayerGoo : Goo<Layer>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -6103,12 +6102,12 @@ public class LayerParam : Param<LayerGoo, Layer>
     protected override string RepresentationNickname => "Lyr";
     protected override string RepresentationDescription => "Design layer";
     protected override string IconResourceName => "layer_24x24";
-    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 {
-    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string RepresentationName => "Layer";
     protected override string RepresentationNickname => "Lyr";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a layer.";
@@ -6117,7 +6116,7 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the layer.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the layer.", GH_ParamAccess.item);
         pManager.AddTextParameter("Path", "Pa", "The path of the layer.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether the layer is hidden.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsLocked", "Lk?", "Whether the layer is locked.", GH_ParamAccess.item);
@@ -6128,7 +6127,7 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the layer.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the layer.", GH_ParamAccess.item);
         pManager.AddTextParameter("Path", "Pa", "The path of the layer.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsHidden", "Hd?", "Whether the layer is hidden.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsLocked", "Lk?", "Whether the layer is locked.", GH_ParamAccess.item);
@@ -6139,11 +6138,11 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Layer representation)
     {
-        string guid = "", path = "", description = "";
+        string id = "", path = "", description = "";
         Color color = Color.Transparent;
         bool isHidden = false, isLocked = false;
         var attributes = new List<AttributeGoo>();
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref path)) representation.Path = path;
         if (DA.GetData(4, ref isHidden)) representation.IsHidden = isHidden;
         if (DA.GetData(5, ref isLocked)) representation.IsLocked = isLocked;
@@ -6154,7 +6153,7 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Layer representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Path);
         DA.SetData(4, representation.IsHidden);
         DA.SetData(5, representation.IsLocked);
@@ -6167,13 +6166,13 @@ public class LayerComponent : PassthroughComponent<LayerParam, LayerGoo, Layer>
 public class SerializeLayerComponent : SerializeComponent<LayerParam, LayerGoo, Layer>
 {
     public SerializeLayerComponent() { }
-    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerGoo, Layer>
 {
     public DeserializeLayerComponent() { }
-    public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
 #endregion ⏳Layer
@@ -6220,12 +6219,12 @@ public class GroupParam : Param<GroupGoo, SemioGroup>
     protected override string RepresentationNickname => "Grp";
     protected override string RepresentationDescription => "Piece grouping";
     protected override string IconResourceName => "group_24x24";
-    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGroup>
 {
-    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string RepresentationName => "Group";
     protected override string RepresentationNickname => "Grp";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a group.";
@@ -6234,7 +6233,7 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGr
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the group.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the group.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name of the group.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "The pieces in the group.", GH_ParamAccess.list);
@@ -6244,7 +6243,7 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGr
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the group.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the group.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name of the group.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new PieceIdParam(), "Pieces", "Pc*", "The pieces in the group.", GH_ParamAccess.list);
@@ -6254,12 +6253,12 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGr
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Group representation)
     {
-        string guid = "", name = "", description = "";
+        string id = "", name = "", description = "";
         Color color = Color.Transparent;
         var pieces = new List<PieceIdGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetDataList(5, pieces)) representation.Pieces = pieces.Select(p => p.Value.DeepClone()).ToList();
@@ -6269,7 +6268,7 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGr
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Group representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetDataList(5, representation.Pieces?.Select(p => new PieceIdGoo(p.DeepClone())).ToList());
@@ -6281,13 +6280,13 @@ public class GroupComponent : PassthroughComponent<GroupParam, GroupGoo, SemioGr
 public class SerializeGroupComponent : SerializeComponent<GroupParam, GroupGoo, Group>
 {
     public SerializeGroupComponent() { }
-    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupGoo, Group>
 {
     public DeserializeGroupComponent() { }
-    public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
 #endregion 🔍Group
@@ -6315,12 +6314,12 @@ public class PieceGoo : Goo<Piece>
         if (target is TypeGoo type)
         {
             if (Value.Type is null) return false;
-            type.Value = new Type { Guid = Value.Type.Guid, Name = Value.Type.Guid };
+            type.Value = new Type { Id = Value.Type.Id, Name = Value.Type.Id };
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -6343,14 +6342,14 @@ public class PieceGoo : Goo<Piece>
         {
             Value = new Piece
             {
-                Guid = Semio.Utility.GenerateRandomId(new Random().Next()),
-                Type = new TypeId { Guid = type.Value.Guid }
+                Id = Semio.Utility.GenerateRandomId(new Random().Next()),
+                Type = new TypeId { Id = type.Value.Id }
             };
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Piece { Guid = str };
+            Value = new Piece { Id = str };
             return true;
         }
         return false;
@@ -6363,12 +6362,12 @@ public class PieceParam : Param<PieceGoo, Piece>
     protected override string RepresentationNickname => "Pce";
     protected override string RepresentationDescription => "Design instance";
     protected override string IconResourceName => "piece_24x24";
-    public override Guid ComponentGuid => new("76F583DC-4142-4346-B1E1-6C241AF26086");
+    public override __TYPE_ID__ ComponentId => new("76F583DC-4142-4346-B1E1-6C241AF26086");
 }
 
 public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 {
-    public override Guid ComponentGuid => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
+    public override __TYPE_ID__ ComponentId => new("49CD29FC-F6EB-43D2-8C7D-E88F8520BA48");
     protected override string RepresentationName => "Piece";
     protected override string RepresentationNickname => "Pce";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a piece.";
@@ -6377,7 +6376,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
@@ -6395,7 +6394,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the piece.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Nm?", "The optional name of the piece.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type of the piece.", GH_ParamAccess.item);
@@ -6413,7 +6412,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Piece representation)
     {
-        string guid = "", name = "", description = "";
+        string id = "", name = "", description = "";
         Color color = Color.Transparent;
         var type = new TypeIdGoo();
         var design = new DesignIdGoo();
@@ -6425,7 +6424,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
         var props = new List<PropGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref type)) representation.Type = type.Value.DeepClone();
@@ -6443,7 +6442,7 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Piece representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Description);
         DA.SetData(5, representation.Type is not null ? new TypeIdGoo(representation.Type.DeepClone()) : null);
@@ -6463,13 +6462,13 @@ public class PieceComponent : PassthroughComponent<PieceParam, PieceGoo, Piece>
 public class SerializePieceComponent : SerializeComponent<PieceParam, PieceGoo, Piece>
 {
     public SerializePieceComponent() { }
-    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
+    public override __TYPE_ID__ ComponentId => new("A4EDA838-2246-4617-8298-9585ECFE00D9");
 }
 
 public class DeserializePieceComponent : DeserializeComponent<PieceParam, PieceGoo, Piece>
 {
     public DeserializePieceComponent() { }
-    public override Guid ComponentGuid => new("A4EDA838-2246-4617-8298-9585ECFE00DA");
+    public override __TYPE_ID__ ComponentId => new("A4EDA838-2246-4617-8298-9585ECFE00DA");
 }
 
 public class PieceIdGoo : IdGoo<PieceId>
@@ -6491,7 +6490,7 @@ public class PieceIdGoo : IdGoo<PieceId>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -6512,7 +6511,7 @@ public class PieceIdGoo : IdGoo<PieceId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new PieceId { Guid = str };
+            Value = new PieceId { Id = str };
             return true;
         }
         return false;
@@ -6526,7 +6525,7 @@ public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
     protected override string RepresentationDescription => "Piece identifier";
     protected override string IconResourceName => "piece_24x24";
     protected override string IdIconResourceName => "pieceid_24x24";
-    public override Guid ComponentGuid => new("F6A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
+    public override __TYPE_ID__ ComponentId => new("F6A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
 }
 
 public class PieceDiffGoo : DiffGoo<PieceDiff>
@@ -6548,7 +6547,7 @@ public class PieceDiffGoo : DiffGoo<PieceDiff>
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -6588,12 +6587,12 @@ public class PieceDiffParam : DiffParam<PieceDiffGoo, PieceDiff>
     protected override string RepresentationNickname => "PD";
     protected override string RepresentationDescription => "Piece diff";
     protected override string IconResourceName => "piecediff_24x24";
-    public override Guid ComponentGuid => new("B8C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
+    public override __TYPE_ID__ ComponentId => new("B8C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
 }
 
 public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
-    public override Guid ComponentGuid => new("C9D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
+    public override __TYPE_ID__ ComponentId => new("C9D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
     protected override string RepresentationName => "PieceDiff";
     protected override string RepresentationNickname => "PD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a piece diff.";
@@ -6601,7 +6600,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
@@ -6619,7 +6618,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddParameter(new TypeIdParam(), "Type", "Ty?", "The optional type.", GH_ParamAccess.item);
@@ -6637,7 +6636,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 
     protected override void GetRepresentationData(IGH_DataAccess DA, PieceDiff representation)
     {
-        string guid = null, name = null, description = null, color = null;
+        string id = null, name = null, description = null, color = null;
         var type = new TypeIdGoo();
         var design = new DesignIdGoo();
         Rhino.Geometry.Plane plane = Rhino.Geometry.Plane.WorldXY, mirrorPlane = Rhino.Geometry.Plane.WorldXY;
@@ -6647,7 +6646,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
         var props = new List<PropGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref type)) representation.Type = type.Value.DeepClone();
@@ -6665,7 +6664,7 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 
     protected override void SetRepresentationData(IGH_DataAccess DA, PieceDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeDescription()) DA.SetData(4, representation.Description);
         if (representation.ShouldSerializeType()) DA.SetData(5, representation.Type is not null ? new TypeIdGoo(representation.Type.DeepClone()) : null);
@@ -6685,13 +6684,13 @@ public class PieceDiffComponent : DiffComponent<PieceDiffParam, PieceDiffGoo, Pi
 public class SerializePieceDiffComponent : SerializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
     public SerializePieceDiffComponent() { }
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D6");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D6");
 }
 
 public class DeserializePieceDiffComponent : DeserializeComponent<PieceDiffParam, PieceDiffGoo, PieceDiff>
 {
     public DeserializePieceDiffComponent() { }
-    public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D7");
+    public override __TYPE_ID__ ComponentId => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D7");
 }
 
 public class PiecesDiffGoo : DiffGoo<PiecesDiff>
@@ -6733,12 +6732,12 @@ public class PiecesDiffParam : DiffParam<PiecesDiffGoo, PiecesDiff>
     protected override string RepresentationNickname => "PDs";
     protected override string RepresentationDescription => "Piece collection diff";
     protected override string IconResourceName => "piecesdiff_24x24";
-    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
+    public override __TYPE_ID__ ComponentId => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C7");
 }
 
 public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
-    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
+    public override __TYPE_ID__ ComponentId => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C8");
     protected override string RepresentationName => "PiecesDiff";
     protected override string RepresentationNickname => "PDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of piece diffs.";
@@ -6765,14 +6764,14 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
         var added = new List<PieceGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new PieceDiffUpdate { Piece = new PieceId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new PieceDiffUpdate { Piece = new PieceId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, PiecesDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new PieceIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new PieceDiffGoo((u.Diff ?? new PieceDiff { Guid = u.Piece.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new PieceDiffGoo((u.Diff ?? new PieceDiff { Id = u.Piece.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new PieceGoo(a.DeepClone())).ToList());
     }
 
@@ -6781,13 +6780,13 @@ public class PiecesDiffComponent : DiffComponent<PiecesDiffParam, PiecesDiffGoo,
 public class SerializePiecesDiffComponent : SerializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
     public SerializePiecesDiffComponent() { }
-    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C9");
+    public override __TYPE_ID__ ComponentId => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6C9");
 }
 
 public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffParam, PiecesDiffGoo, PiecesDiff>
 {
     public DeserializePiecesDiffComponent() { }
-    public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6CA");
+    public override __TYPE_ID__ ComponentId => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6CA");
 }
 
 #endregion 🎈Piece
@@ -6804,7 +6803,7 @@ public class SideGoo : Goo<Side>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Piece.Guid);
+            target = (Q)(object)new GH_String(Value.Piece.Id);
             return true;
         }
         return false;
@@ -6815,7 +6814,7 @@ public class SideGoo : Goo<Side>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Side { Piece = new PieceId { Guid = str } };
+            Value = new Side { Piece = new PieceId { Id = str } };
             return true;
         }
         return false;
@@ -6828,12 +6827,12 @@ public class SideParam : Param<SideGoo, Side>
     protected override string RepresentationNickname => "Sid";
     protected override string RepresentationDescription => "Connection side";
     protected override string IconResourceName => "side_24x24";
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
 }
 
 public class SideComponent : PassthroughComponent<SideParam, SideGoo, Side>
 {
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E7");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E7");
     protected override string RepresentationName => "Side";
     protected override string RepresentationNickname => "Sde";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a side.";
@@ -6876,13 +6875,13 @@ public class SideComponent : PassthroughComponent<SideParam, SideGoo, Side>
 public class SerializeSideComponent : SerializeComponent<SideParam, SideGoo, Side>
 {
     public SerializeSideComponent() { }
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E8");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E8");
 }
 
 public class DeserializeSideComponent : DeserializeComponent<SideParam, SideGoo, Side>
 {
     public DeserializeSideComponent() { }
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E9");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E9");
 }
 
 public class SideDiffGoo : DiffGoo<SideDiff>
@@ -6924,12 +6923,12 @@ public class SideDiffParam : DiffParam<SideDiffGoo, SideDiff>
     protected override string RepresentationNickname => "SD";
     protected override string RepresentationDescription => "Side diff";
     protected override string IconResourceName => "sidediff_24x24";
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E3");
 }
 
 public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
-    public override Guid ComponentGuid => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
+    public override __TYPE_ID__ ComponentId => new("B0C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E4");
     protected override string RepresentationName => "SideDiff";
     protected override string RepresentationNickname => "SD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a side diff.";
@@ -6975,13 +6974,13 @@ public class SideDiffComponent : DiffComponent<SideDiffParam, SideDiffGoo, SideD
 public class SerializeSideDiffComponent : SerializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
     public SerializeSideDiffComponent() { }
-    public override Guid ComponentGuid => new("B1C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
+    public override __TYPE_ID__ ComponentId => new("B1C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E5");
 }
 
 public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, SideDiffGoo, SideDiff>
 {
     public DeserializeSideDiffComponent() { }
-    public override Guid ComponentGuid => new("B2C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
+    public override __TYPE_ID__ ComponentId => new("B2C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
 }
 
 #endregion 🎺Side
@@ -7053,12 +7052,12 @@ public class ConnectionParam : Param<ConnectionGoo, Connection>
     protected override string RepresentationNickname => "Cnx";
     protected override string RepresentationDescription => "Piece connection";
     protected override string IconResourceName => "connection_24x24";
-    public override Guid ComponentGuid => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
+    public override __TYPE_ID__ ComponentId => new("8B78CE81-27D6-4A07-9BF3-D862796B2FA4");
 }
 
 public class ConnectionComponent : PassthroughComponent<ConnectionParam, ConnectionGoo, Connection>
 {
-    public override Guid ComponentGuid => new("AB212F90-124C-4985-B3EE-1C13D7827560");
+    public override __TYPE_ID__ ComponentId => new("AB212F90-124C-4985-B3EE-1C13D7827560");
     protected override string RepresentationName => "Connection";
     protected override string RepresentationNickname => "Con";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a connection.";
@@ -7067,7 +7066,7 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the connection.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the connection.", GH_ParamAccess.item);
         pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side.", GH_ParamAccess.item);
         pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -7084,7 +7083,7 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the connection.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the connection.", GH_ParamAccess.item);
         pManager.AddParameter(new SideParam(), "Connected", "Cd", "The connected side.", GH_ParamAccess.item);
         pManager.AddParameter(new SideParam(), "Connecting", "Cg", "The connecting side.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -7101,13 +7100,13 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Connection representation)
     {
-        string guid = "", description = "";
+        string id = "", description = "";
         var connected = new SideGoo();
         var connecting = new SideGoo();
         double gap = 0, shift = 0, rise = 0, rotation = 0, turn = 0, tilt = 0, u = 0, v = 0;
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref connected)) representation.Connected = connected.Value.DeepClone();
         if (DA.GetData(4, ref connecting)) representation.Connecting = connecting.Value.DeepClone();
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -7124,7 +7123,7 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Connection representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, new SideGoo(representation.Connected.DeepClone()));
         DA.SetData(4, new SideGoo(representation.Connecting.DeepClone()));
         DA.SetData(5, representation.Description);
@@ -7143,13 +7142,13 @@ public class ConnectionComponent : PassthroughComponent<ConnectionParam, Connect
 public class SerializeConnectionComponent : SerializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public SerializeConnectionComponent() { }
-    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
+    public override __TYPE_ID__ ComponentId => new("93FBA84E-79A1-4E32-BE61-A925F476DD60");
 }
 
 public class DeserializeConnectionComponent : DeserializeComponent<ConnectionParam, ConnectionGoo, Connection>
 {
     public DeserializeConnectionComponent() { }
-    public override Guid ComponentGuid => new("93FBA84E-79A1-4E32-BE61-A925F476DD61");
+    public override __TYPE_ID__ ComponentId => new("93FBA84E-79A1-4E32-BE61-A925F476DD61");
 }
 
 public class ConnectionIdGoo : IdGoo<ConnectionId>
@@ -7217,7 +7216,7 @@ public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
     protected override string RepresentationDescription => "Connection identifier";
     protected override string IconResourceName => "connection_24x24";
     protected override string IdIconResourceName => "connectionid_24x24";
-    public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
+    public override __TYPE_ID__ ComponentId => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
 public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
@@ -7279,12 +7278,12 @@ public class ConnectionDiffParam : DiffParam<ConnectionDiffGoo, ConnectionDiff>
     protected override string RepresentationNickname => "CD";
     protected override string RepresentationDescription => "Connection diff";
     protected override string IconResourceName => "connectiondiff_24x24";
-    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
+    public override __TYPE_ID__ ComponentId => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F4");
 }
 
 public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
-    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
+    public override __TYPE_ID__ ComponentId => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F5");
     protected override string RepresentationName => "ConnectionDiff";
     protected override string RepresentationNickname => "CD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a connection diff.";
@@ -7363,13 +7362,13 @@ public class ConnectionDiffComponent : DiffComponent<ConnectionDiffParam, Connec
 public class SerializeConnectionDiffComponent : SerializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
     public SerializeConnectionDiffComponent() { }
-    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F6");
+    public override __TYPE_ID__ ComponentId => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F6");
 }
 
 public class DeserializeConnectionDiffComponent : DeserializeComponent<ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff>
 {
     public DeserializeConnectionDiffComponent() { }
-    public override Guid ComponentGuid => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F7");
+    public override __TYPE_ID__ ComponentId => new("C0D0E1F2-A3B4-C5D6-E7F8-A9B0C1D2E3F7");
 }
 
 public class ConnectionsDiffGoo : DiffGoo<ConnectionsDiff>
@@ -7411,12 +7410,12 @@ public class ConnectionsDiffParam : DiffParam<ConnectionsDiffGoo, ConnectionsDif
     protected override string RepresentationNickname => "CDs";
     protected override string RepresentationDescription => "Connection collection diff";
     protected override string IconResourceName => "connectionsdiff_24x24";
-    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
+    public override __TYPE_ID__ ComponentId => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D8");
 }
 
 public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
-    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
+    public override __TYPE_ID__ ComponentId => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7D9");
     protected override string RepresentationName => "ConnectionsDiff";
     protected override string RepresentationNickname => "CDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of connection diffs.";
@@ -7495,13 +7494,13 @@ public class ConnectionsDiffComponent : DiffComponent<ConnectionsDiffParam, Conn
 public class SerializeConnectionsDiffComponent : SerializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
     public SerializeConnectionsDiffComponent() { }
-    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DA");
+    public override __TYPE_ID__ ComponentId => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DA");
 }
 
 public class DeserializeConnectionsDiffComponent : DeserializeComponent<ConnectionsDiffParam, ConnectionsDiffGoo, ConnectionsDiff>
 {
     public DeserializeConnectionsDiffComponent() { }
-    public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DB");
+    public override __TYPE_ID__ ComponentId => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DB");
 }
 
 #endregion 💡Connection
@@ -7548,12 +7547,12 @@ public class StatParam : Param<StatGoo, Stat>
     protected override string RepresentationNickname => "Sta";
     protected override string RepresentationDescription => "Design statistic";
     protected override string IconResourceName => "stat_24x24";
-    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
+    public override __TYPE_ID__ ComponentId => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
 public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 {
-    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
     protected override string RepresentationName => "Stat";
     protected override string RepresentationNickname => "Stt";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a stat.";
@@ -7562,7 +7561,7 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the stat.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the stat.", GH_ParamAccess.item);
         pManager.AddParameter(new QualityIdParam(), "Quality", "Ql?", "The quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut?", "The optional unit.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
@@ -7573,7 +7572,7 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the stat.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the stat.", GH_ParamAccess.item);
         pManager.AddParameter(new QualityIdParam(), "Quality", "Ql?", "The quality.", GH_ParamAccess.item);
         pManager.AddTextParameter("Unit", "Ut?", "The optional unit.", GH_ParamAccess.item);
         pManager.AddNumberParameter("Min", "Mi?", "The optional minimum value.", GH_ParamAccess.item);
@@ -7584,13 +7583,13 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Stat representation)
     {
-        string guid = "";
+        string id = "";
         QualityId quality = new();
         string unit = "";
         double min = 0, max = 0;
         bool minExcluded = false, maxExcluded = false;
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref quality)) representation.Quality = quality;
         if (DA.GetData(4, ref unit)) representation.Unit = unit;
         if (DA.GetData(5, ref min)) representation.Min = (float)min;
@@ -7601,7 +7600,7 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Stat representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, new QualityIdGoo(representation.Quality));
         DA.SetData(4, representation.Unit);
         DA.SetData(5, representation.Min);
@@ -7614,13 +7613,13 @@ public class StatComponent : PassthroughComponent<StatParam, StatGoo, Stat>
 public class SerializeStatComponent : SerializeComponent<StatParam, StatGoo, Stat>
 {
     public SerializeStatComponent() { }
-    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
+    public override __TYPE_ID__ ComponentId => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C6");
 }
 
 public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo, Stat>
 {
     public DeserializeStatComponent() { }
-    public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
+    public override __TYPE_ID__ ComponentId => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
 #endregion 🪵Stat
@@ -7681,12 +7680,12 @@ public class DesignParam : Param<DesignGoo, Design>
     protected override string RepresentationNickname => "Des";
     protected override string RepresentationDescription => "Assembly design";
     protected override string IconResourceName => "design_24x24";
-    public override Guid ComponentGuid => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
+    public override __TYPE_ID__ ComponentId => new("1FB90496-93F2-43DE-A558-A7D6A9FE3596");
 }
 
 public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Design>
 {
-    public override Guid ComponentGuid => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
+    public override __TYPE_ID__ ComponentId => new("AAD8D144-2EEE-48F1-A8A9-52977E86CB54");
     protected override string RepresentationName => "Design";
     protected override string RepresentationNickname => "Dsn";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a design.";
@@ -7695,7 +7694,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the design.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the design.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
@@ -7723,7 +7722,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the design.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the design.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the design.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
@@ -7751,7 +7750,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Design representation)
     {
-        string guid = "", name = "", folder = "", description = "", icon = "", image = "", unit = "", activeLayer = "";
+        string id = "", name = "", folder = "", description = "", icon = "", image = "", unit = "", activeLayer = "";
         DateTime createdAt = default, updatedAt = default;
         var parent = new DesignIdGoo();
         bool isAbstract = false, canScale = false, canMirror = false;
@@ -7766,7 +7765,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
         var stats = new List<StatGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref parent)) representation.Parent = parent.Value.DeepClone();
         if (DA.GetData(5, ref isAbstract)) representation.IsAbstract = isAbstract;
@@ -7781,7 +7780,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
         if (DA.GetData(14, ref canScale)) representation.CanScale = canScale;
         if (DA.GetData(15, ref canMirror)) representation.CanMirror = canMirror;
         if (DA.GetDataList(16, layers)) representation.Layers = layers.Select(l => l.Value.DeepClone()).ToList();
-        if (DA.GetData(17, ref activeLayer)) representation.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Guid = activeLayer };
+        if (DA.GetData(17, ref activeLayer)) representation.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Id = activeLayer };
         if (DA.GetDataList(18, pieces)) representation.Pieces = pieces.Select(p => p.Value.DeepClone()).ToList();
         if (DA.GetDataList(19, groups)) representation.Groups = groups.Select(g => g.Value.DeepClone()).ToList();
         if (DA.GetDataList(20, connections)) representation.Connections = connections.Select(c => c.Value.DeepClone()).ToList();
@@ -7794,7 +7793,7 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Design representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Parent is not null ? new DesignIdGoo(representation.Parent.DeepClone()) : null);
         DA.SetData(5, representation.IsAbstract);
@@ -7834,13 +7833,13 @@ public class DesignComponent : PassthroughComponent<DesignParam, DesignGoo, Desi
 public class SerializeDesignComponent : SerializeComponent<DesignParam, DesignGoo, Design>
 {
     public SerializeDesignComponent() { }
-    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
+    public override __TYPE_ID__ ComponentId => new("D755D6F1-27C4-441A-8856-6BA20E87DB58");
 }
 
 public class DeserializeDesignComponent : DeserializeComponent<DesignParam, DesignGoo, Design>
 {
     public DeserializeDesignComponent() { }
-    public override Guid ComponentGuid => new("D755D6F1-27C4-441A-8856-6BA20E87DB59");
+    public override __TYPE_ID__ ComponentId => new("D755D6F1-27C4-441A-8856-6BA20E87DB59");
 }
 
 public class DesignIdGoo : IdGoo<DesignId>
@@ -7883,7 +7882,7 @@ public class DesignIdGoo : IdGoo<DesignId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new DesignId { Guid = str };
+            Value = new DesignId { Id = str };
             return true;
         }
         return false;
@@ -7897,7 +7896,7 @@ public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
     protected override string RepresentationDescription => "Design identifier";
     protected override string IconResourceName => "design_24x24";
     protected override string IdIconResourceName => "designid_24x24";
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
+    public override __TYPE_ID__ ComponentId => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
 }
 
 public class DesignDiffGoo : DiffGoo<DesignDiff>
@@ -7959,12 +7958,12 @@ public class DesignDiffParam : DiffParam<DesignDiffGoo, DesignDiff>
     protected override string RepresentationNickname => "DD";
     protected override string RepresentationDescription => "Design diff";
     protected override string IconResourceName => "designdiff_24x24";
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
+    public override __TYPE_ID__ ComponentId => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A5");
 }
 
 public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
+    public override __TYPE_ID__ ComponentId => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A8");
     protected override string RepresentationName => "DesignDiff";
     protected override string RepresentationNickname => "DD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a design diff.";
@@ -7972,7 +7971,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
@@ -8000,7 +7999,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddParameter(new DesignIdParam(), "Parent", "Pa?", "The optional parent design.", GH_ParamAccess.item);
         pManager.AddBooleanParameter("IsAbstract", "Ab?", "Whether the design is abstract.", GH_ParamAccess.item);
@@ -8028,7 +8027,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 
     protected override void GetRepresentationData(IGH_DataAccess DA, DesignDiff representation)
     {
-        string guid = null, name = null, folder = null, description = null, icon = null, image = null, unit = null, activeLayer = null;
+        string id = null, name = null, folder = null, description = null, icon = null, image = null, unit = null, activeLayer = null;
         bool isAbstract = false, canScale = false, canMirror = false;
         DateTime createdAt = default, updatedAt = default;
         var parent = new DesignIdGoo();
@@ -8043,7 +8042,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
         var concepts = new List<ConceptIdGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref parent)) representation.Parent = parent.Value.DeepClone();
         if (DA.GetData(5, ref isAbstract)) representation.IsAbstract = isAbstract;
@@ -8055,7 +8054,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
         if (DA.GetData(11, ref unit)) representation.Unit = unit;
         if (DA.GetData(12, ref canScale)) representation.CanScale = canScale;
         if (DA.GetData(13, ref canMirror)) representation.CanMirror = canMirror;
-        if (DA.GetData(14, ref activeLayer)) representation.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Guid = activeLayer };
+        if (DA.GetData(14, ref activeLayer)) representation.ActiveLayer = string.IsNullOrEmpty(activeLayer) ? null : new LayerId { Id = activeLayer };
         if (DA.GetData(15, ref pieces)) representation.Pieces = pieces.Value.DeepClone();
         if (DA.GetData(16, ref connections)) representation.Connections = connections.Value.DeepClone();
         if (DA.GetDataList(17, props)) representation.Props = props.Select(p => p.Value.DeepClone()).ToList();
@@ -8071,7 +8070,7 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 
     protected override void SetRepresentationData(IGH_DataAccess DA, DesignDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeParent()) DA.SetData(4, representation.Parent is not null ? new DesignIdGoo(representation.Parent.DeepClone()) : null);
         if (representation.ShouldSerializeIsAbstract()) DA.SetData(5, representation.IsAbstract);
@@ -8101,13 +8100,13 @@ public class DesignDiffComponent : DiffComponent<DesignDiffParam, DesignDiffGoo,
 public class SerializeDesignDiffComponent : SerializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
     public SerializeDesignDiffComponent() { }
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A9");
+    public override __TYPE_ID__ ComponentId => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A9");
 }
 
 public class DeserializeDesignDiffComponent : DeserializeComponent<DesignDiffParam, DesignDiffGoo, DesignDiff>
 {
     public DeserializeDesignDiffComponent() { }
-    public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4AA");
+    public override __TYPE_ID__ ComponentId => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4AA");
 }
 
 public class DesignsDiffGoo : DiffGoo<DesignsDiff>
@@ -8149,12 +8148,12 @@ public class DesignsDiffParam : DiffParam<DesignsDiffGoo, DesignsDiff>
     protected override string RepresentationNickname => "DDs";
     protected override string RepresentationDescription => "Design collection diff";
     protected override string IconResourceName => "designsdiff_24x24";
-    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
+    public override __TYPE_ID__ ComponentId => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8E9");
 }
 
 public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
-    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
+    public override __TYPE_ID__ ComponentId => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EA");
     protected override string RepresentationName => "DesignsDiff";
     protected override string RepresentationNickname => "DDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of design diffs.";
@@ -8181,14 +8180,14 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
         var added = new List<DesignGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new DesignDiffUpdate { Design = new DesignId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new DesignDiffUpdate { Design = new DesignId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, DesignsDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new DesignIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new DesignDiffGoo((u.Diff ?? new DesignDiff { Guid = u.Design.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new DesignDiffGoo((u.Diff ?? new DesignDiff { Id = u.Design.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new DesignGoo(a.DeepClone())).ToList());
     }
 
@@ -8197,13 +8196,13 @@ public class DesignsDiffComponent : DiffComponent<DesignsDiffParam, DesignsDiffG
 public class SerializeDesignsDiffComponent : SerializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
     public SerializeDesignsDiffComponent() { }
-    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EB");
+    public override __TYPE_ID__ ComponentId => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EB");
 }
 
 public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffParam, DesignsDiffGoo, DesignsDiff>
 {
     public DeserializeDesignsDiffComponent() { }
-    public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EC");
+    public override __TYPE_ID__ ComponentId => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EC");
 }
 
 #endregion 🧬Design
@@ -8254,12 +8253,12 @@ public class KitParam : Param<KitGoo, Kit>
     protected override string RepresentationNickname => "Kit";
     protected override string RepresentationDescription => "Component library";
     protected override string IconResourceName => "kit_24x24";
-    public override Guid ComponentGuid => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
+    public override __TYPE_ID__ ComponentId => new("BA9F161E-AFE3-41D5-8644-964DD20B887B");
 }
 
 public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 {
-    public override Guid ComponentGuid => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
+    public override __TYPE_ID__ ComponentId => new("987560A8-10D4-43F6-BEBE-D71DC2FD86AF");
     protected override string RepresentationName => "Kit";
     protected override string RepresentationNickname => "Kit";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a kit.";
@@ -8268,7 +8267,7 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -8294,7 +8293,7 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gd", "The guid of the kit.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gd", "The id of the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na", "The name of the kit.", GH_ParamAccess.item);
         pManager.AddTextParameter("Version", "Vr?", "The optional version.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
@@ -8320,7 +8319,7 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, Kit representation)
     {
-        string guid = "", name = "", version = "", description = "", icon = "", image = "", remote = "", homepage = "", license = "", preview = "";
+        string id = "", name = "", version = "", description = "", icon = "", image = "", remote = "", homepage = "", license = "", preview = "";
         DateTime createdAt = default, updatedAt = default;
         var concepts = new List<ConceptGoo>();
         var tags = new List<TagGoo>();
@@ -8333,7 +8332,7 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
         var types = new List<TypeGoo>();
         var designs = new List<DesignGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref version)) representation.Version = version;
         if (DA.GetData(5, ref description)) representation.Description = description;
@@ -8359,7 +8358,7 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, Kit representation)
     {
-        DA.SetData(2, representation.Guid);
+        DA.SetData(2, representation.Id);
         DA.SetData(3, representation.Name);
         DA.SetData(4, representation.Version);
         DA.SetData(5, representation.Description);
@@ -8395,13 +8394,13 @@ public class KitComponent : PassthroughComponent<KitParam, KitGoo, Kit>
 public class SerializeKitComponent : SerializeComponent<KitParam, KitGoo, Kit>
 {
     public SerializeKitComponent() { }
-    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
+    public override __TYPE_ID__ ComponentId => new("78202ACE-A876-45AF-BA72-D1FC00FE4165");
 }
 
 public class DeserializeKitComponent : DeserializeComponent<KitParam, KitGoo, Kit>
 {
     public DeserializeKitComponent() { }
-    public override Guid ComponentGuid => new("78202ACE-A876-45AF-BA72-D1FC00FE4166");
+    public override __TYPE_ID__ ComponentId => new("78202ACE-A876-45AF-BA72-D1FC00FE4166");
 }
 
 public class KitIdGoo : IdGoo<KitId>
@@ -8413,7 +8412,7 @@ public class KitIdGoo : IdGoo<KitId>
     {
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
         {
-            target = (Q)(object)new GH_String(Value.Guid);
+            target = (Q)(object)new GH_String(Value.Id);
             return true;
         }
         return false;
@@ -8434,7 +8433,7 @@ public class KitIdGoo : IdGoo<KitId>
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new KitId { Guid = str };
+            Value = new KitId { Id = str };
             return true;
         }
         return false;
@@ -8448,7 +8447,7 @@ public class KitIdParam : IdParam<KitIdGoo, KitId>
     protected override string RepresentationDescription => "Kit identifier";
     protected override string IconResourceName => "kit_24x24";
     protected override string IdIconResourceName => "kitid_24x24";
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
+    public override __TYPE_ID__ ComponentId => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
 }
 
 public class KitDiffGoo : DiffGoo<KitDiff>
@@ -8500,12 +8499,12 @@ public class KitDiffParam : DiffParam<KitDiffGoo, KitDiff>
     protected override string RepresentationNickname => "KD";
     protected override string RepresentationDescription => "Kit diff";
     protected override string IconResourceName => "kitdiff_24x24";
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
+    public override __TYPE_ID__ ComponentId => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B2");
 }
 
 public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
+    public override __TYPE_ID__ ComponentId => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B3");
     protected override string RepresentationName => "KitDiff";
     protected override string RepresentationNickname => "KD";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a kit diff.";
@@ -8513,7 +8512,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
     protected override void RegisterRepresentationInputParams(GH_InputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -8538,7 +8537,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
     protected override void RegisterRepresentationOutputParams(GH_OutputParamManager pManager)
     {
-        pManager.AddTextParameter("Guid", "Gu?", "The optional guid.", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "Gu?", "The optional id.", GH_ParamAccess.item);
         pManager.AddTextParameter("Name", "Na?", "The optional name.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
@@ -8563,7 +8562,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
     protected override void GetRepresentationData(IGH_DataAccess DA, KitDiff representation)
     {
-        string guid = null, name = null, description = null, icon = null, image = null, preview = null, version = null, remote = null, homepage = null, license = null, createdAt = null, updatedAt = null;
+        string id = null, name = null, description = null, icon = null, image = null, preview = null, version = null, remote = null, homepage = null, license = null, createdAt = null, updatedAt = null;
         var types = new TypesDiffGoo();
         var designs = new DesignsDiffGoo();
         var files = new FilesDiffGoo();
@@ -8574,7 +8573,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
         var authors = new List<AuthorGoo>();
         var attributes = new List<AttributeGoo>();
 
-        if (DA.GetData(2, ref guid)) representation.Guid = guid;
+        if (DA.GetData(2, ref id)) representation.Id = id;
         if (DA.GetData(3, ref name)) representation.Name = name;
         if (DA.GetData(4, ref description)) representation.Description = description;
         if (DA.GetData(5, ref icon)) representation.Icon = icon;
@@ -8595,7 +8594,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
                     Tag = t.Value.DeepClone(),
                     Diff = new TagDiff
                     {
-                        Guid = t.Value.Guid,
+                        Id = t.Value.Id,
                         Name = t.Value.Name,
                         Description = t.Value.Description,
                         Icon = t.Value.Icon,
@@ -8613,7 +8612,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
                     Concept = c.Value.DeepClone(),
                     Diff = new ConceptDiff
                     {
-                        Guid = c.Value.Guid,
+                        Id = c.Value.Id,
                         Name = c.Value.Name,
                         Description = c.Value.Description,
                         Icon = c.Value.Icon,
@@ -8633,7 +8632,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
     protected override void SetRepresentationData(IGH_DataAccess DA, KitDiff representation)
     {
-        if (representation.ShouldSerializeGuid()) DA.SetData(2, representation.Guid);
+        if (representation.ShouldSerializeId()) DA.SetData(2, representation.Id);
         if (representation.ShouldSerializeName()) DA.SetData(3, representation.Name);
         if (representation.ShouldSerializeDescription()) DA.SetData(4, representation.Description);
         if (representation.ShouldSerializeIcon()) DA.SetData(5, representation.Icon);
@@ -8659,7 +8658,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
                         return new Tag
                         {
-                            Guid = update.Diff.Guid ?? update.Tag.Guid,
+                            Id = update.Diff.Id ?? update.Tag.Id,
                             Name = update.Diff.Name ?? string.Empty,
                             Description = update.Diff.Description,
                             Icon = update.Diff.Icon,
@@ -8684,7 +8683,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
                         return new Concept
                         {
-                            Guid = update.Diff.Guid ?? update.Concept.Guid,
+                            Id = update.Diff.Id ?? update.Concept.Id,
                             Name = update.Diff.Name ?? string.Empty,
                             Description = update.Diff.Description,
                             Icon = update.Diff.Icon,
@@ -8720,7 +8719,7 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 
                         return new Author
                         {
-                            Guid = update.Diff.Guid ?? update.Author.Guid,
+                            Id = update.Diff.Id ?? update.Author.Id,
                             Name = update.Diff.Name ?? string.Empty,
                             Email = update.Diff.Email ?? string.Empty,
                             Attributes = update.Diff.Attributes ?? new List<Attribute>(),
@@ -8752,13 +8751,13 @@ public class KitDiffComponent : DiffComponent<KitDiffParam, KitDiffGoo, KitDiff>
 public class SerializeKitDiffComponent : SerializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
     public SerializeKitDiffComponent() { }
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B4");
+    public override __TYPE_ID__ ComponentId => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B4");
 }
 
 public class DeserializeKitDiffComponent : DeserializeComponent<KitDiffParam, KitDiffGoo, KitDiff>
 {
     public DeserializeKitDiffComponent() { }
-    public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B5");
+    public override __TYPE_ID__ ComponentId => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B5");
 }
 
 public class KitsDiffGoo : DiffGoo<KitsDiff>
@@ -8800,12 +8799,12 @@ public class KitsDiffParam : DiffParam<KitsDiffGoo, KitsDiff>
     protected override string RepresentationNickname => "KDs";
     protected override string RepresentationDescription => "Kit collection diff";
     protected override string IconResourceName => "kitsdiff_24x24";
-    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3");
+    public override __TYPE_ID__ ComponentId => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C3");
 }
 
 public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
-    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C4");
+    public override __TYPE_ID__ ComponentId => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C4");
     protected override string RepresentationName => "KitsDiff";
     protected override string RepresentationNickname => "KDs";
     protected override string RepresentationDescription => "Construct, deconstruct or modify a collection of kit diffs.";
@@ -8832,14 +8831,14 @@ public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsD
         var added = new List<KitGoo>();
 
         if (DA.GetDataList(2, removed)) representation.Removed = removed.Select(r => r.Value.DeepClone()).ToList();
-        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new KitDiffUpdate { Kit = new KitId { Guid = u.Value.Guid ?? "" }, Diff = u.Value.DeepClone() }).ToList();
+        if (DA.GetDataList(3, updated)) representation.Updated = updated.Select(u => new KitDiffUpdate { Kit = new KitId { Id = u.Value.Id ?? "" }, Diff = u.Value.DeepClone() }).ToList();
         if (DA.GetDataList(4, added)) representation.Added = added.Select(a => a.Value.DeepClone()).ToList();
     }
 
     protected override void SetRepresentationData(IGH_DataAccess DA, KitsDiff representation)
     {
         DA.SetDataList(2, representation.Removed.Select(r => new KitIdGoo(r.DeepClone())).ToList());
-        DA.SetDataList(3, representation.Updated.Select(u => new KitDiffGoo((u.Diff ?? new KitDiff { Guid = u.Kit.Guid }).DeepClone())).ToList());
+        DA.SetDataList(3, representation.Updated.Select(u => new KitDiffGoo((u.Diff ?? new KitDiff { Id = u.Kit.Id }).DeepClone())).ToList());
         DA.SetDataList(4, representation.Added.Select(a => new KitGoo(a.DeepClone())).ToList());
     }
 
@@ -8848,13 +8847,13 @@ public class KitsDiffComponent : DiffComponent<KitsDiffParam, KitsDiffGoo, KitsD
 public class SerializeKitsDiffComponent : SerializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
     public SerializeKitsDiffComponent() { }
-    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C5");
+    public override __TYPE_ID__ ComponentId => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C5");
 }
 
 public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, KitsDiffGoo, KitsDiff>
 {
     public DeserializeKitsDiffComponent() { }
-    public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C6");
+    public override __TYPE_ID__ ComponentId => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C6");
 }
 
 #endregion 🧳Kit
@@ -8869,7 +8868,7 @@ public class AuthorDiffParam : DiffParam<AuthorDiffGoo, AuthorDiff>
     protected override string RepresentationNickname => "AuD";
     protected override string RepresentationDescription => "Author diff";
     protected override string IconResourceName => "author_24x24";
-    public override Guid ComponentGuid => new("8F239855-4077-4672-9C62-2162F6B9A301");
+    public override __TYPE_ID__ ComponentId => new("8F239855-4077-4672-9C62-2162F6B9A301");
 }
 
 public class BenchmarkDiffGoo : DiffGoo<BenchmarkDiff> { public BenchmarkDiffGoo() { } public BenchmarkDiffGoo(BenchmarkDiff value) : base(value) { } }
@@ -8879,7 +8878,7 @@ public class BenchmarkDiffParam : DiffParam<BenchmarkDiffGoo, BenchmarkDiff>
     protected override string RepresentationNickname => "BmD";
     protected override string RepresentationDescription => "Benchmark diff";
     protected override string IconResourceName => "benchmark_24x24";
-    public override Guid ComponentGuid => new("D02285B2-53A9-45EA-8F38-FCF0D6A2A301");
+    public override __TYPE_ID__ ComponentId => new("D02285B2-53A9-45EA-8F38-FCF0D6A2A301");
 }
 
 public class PortDiffGoo : DiffGoo<PortDiff> { public PortDiffGoo() { } public PortDiffGoo(PortDiff value) : base(value) { } }
@@ -8889,7 +8888,7 @@ public class PortDiffParam : DiffParam<PortDiffGoo, PortDiff>
     protected override string RepresentationNickname => "PoD";
     protected override string RepresentationDescription => "Port diff";
     protected override string IconResourceName => "port_24x24";
-    public override Guid ComponentGuid => new("A5D2AAE4-B8C6-41FD-A64F-1D4A0B27A301");
+    public override __TYPE_ID__ ComponentId => new("A5D2AAE4-B8C6-41FD-A64F-1D4A0B27A301");
 }
 
 public class PropDiffGoo : DiffGoo<PropDiff> { public PropDiffGoo() { } public PropDiffGoo(PropDiff value) : base(value) { } }
@@ -8899,7 +8898,7 @@ public class PropDiffParam : DiffParam<PropDiffGoo, PropDiff>
     protected override string RepresentationNickname => "PrD";
     protected override string RepresentationDescription => "Prop diff";
     protected override string IconResourceName => "prop_24x24";
-    public override Guid ComponentGuid => new("60B4A67D-2C6D-4730-A739-5EA66123A301");
+    public override __TYPE_ID__ ComponentId => new("60B4A67D-2C6D-4730-A739-5EA66123A301");
 }
 
 public class TagDiffGoo : DiffGoo<TagDiff> { public TagDiffGoo() { } public TagDiffGoo(TagDiff value) : base(value) { } }
@@ -8909,7 +8908,7 @@ public class TagDiffParam : DiffParam<TagDiffGoo, TagDiff>
     protected override string RepresentationNickname => "TgD";
     protected override string RepresentationDescription => "Tag diff";
     protected override string IconResourceName => "tag_24x24";
-    public override Guid ComponentGuid => new("50E1C62B-81EF-45F3-8462-57D7C68FA301");
+    public override __TYPE_ID__ ComponentId => new("50E1C62B-81EF-45F3-8462-57D7C68FA301");
 }
 
 public class ConceptDiffGoo : DiffGoo<ConceptDiff> { public ConceptDiffGoo() { } public ConceptDiffGoo(ConceptDiff value) : base(value) { } }
@@ -8919,7 +8918,7 @@ public class ConceptDiffParam : DiffParam<ConceptDiffGoo, ConceptDiff>
     protected override string RepresentationNickname => "CnD";
     protected override string RepresentationDescription => "Concept diff";
     protected override string IconResourceName => "concept_24x24";
-    public override Guid ComponentGuid => new("8DCE6E2B-4EAD-421C-B7D2-E9F5D164A301");
+    public override __TYPE_ID__ ComponentId => new("8DCE6E2B-4EAD-421C-B7D2-E9F5D164A301");
 }
 
 public class LayerDiffGoo : DiffGoo<LayerDiff> { public LayerDiffGoo() { } public LayerDiffGoo(LayerDiff value) : base(value) { } }
@@ -8929,7 +8928,7 @@ public class LayerDiffParam : DiffParam<LayerDiffGoo, LayerDiff>
     protected override string RepresentationNickname => "LyD";
     protected override string RepresentationDescription => "Layer diff";
     protected override string IconResourceName => "layer_24x24";
-    public override Guid ComponentGuid => new("4C44B36F-2854-4B53-8E34-1AD0E8DEA301");
+    public override __TYPE_ID__ ComponentId => new("4C44B36F-2854-4B53-8E34-1AD0E8DEA301");
 }
 
 public class GroupDiffGoo : DiffGoo<GroupDiff> { public GroupDiffGoo() { } public GroupDiffGoo(GroupDiff value) : base(value) { } }
@@ -8939,7 +8938,7 @@ public class GroupDiffParam : DiffParam<GroupDiffGoo, GroupDiff>
     protected override string RepresentationNickname => "GrD";
     protected override string RepresentationDescription => "Group diff";
     protected override string IconResourceName => "group_24x24";
-    public override Guid ComponentGuid => new("810B8571-BC34-485C-BAD7-C5FAEF8CA301");
+    public override __TYPE_ID__ ComponentId => new("810B8571-BC34-485C-BAD7-C5FAEF8CA301");
 }
 
 public class StatDiffGoo : DiffGoo<StatDiff> { public StatDiffGoo() { } public StatDiffGoo(StatDiff value) : base(value) { } }
@@ -8949,7 +8948,7 @@ public class StatDiffParam : DiffParam<StatDiffGoo, StatDiff>
     protected override string RepresentationNickname => "StD";
     protected override string RepresentationDescription => "Stat diff";
     protected override string IconResourceName => "stat_24x24";
-    public override Guid ComponentGuid => new("C9A3F76F-30A9-4EF1-A92B-2A83AA4CA301");
+    public override __TYPE_ID__ ComponentId => new("C9A3F76F-30A9-4EF1-A92B-2A83AA4CA301");
 }
 
 public class AttributeChangeGoo : ChangeGoo<AttributeChange> { public AttributeChangeGoo() { } public AttributeChangeGoo(AttributeChange value) : base(value) { } }
@@ -8959,11 +8958,11 @@ public class AttributeChangeParam : ChangeParam<AttributeChangeGoo, AttributeCha
     protected override string RepresentationNickname => "AtC";
     protected override string RepresentationDescription => "Attribute change";
     protected override string IconResourceName => "attribute_diff_24x24";
-    public override Guid ComponentGuid => new("0DA5D764-5322-47A2-A0BC-551C2BEACB01");
+    public override __TYPE_ID__ ComponentId => new("0DA5D764-5322-47A2-A0BC-551C2BEACB01");
 }
 public class AttributeChangeComponent : ChangeComponent<AttributeParam, AttributeGoo, Attribute, AttributeDiffParam, AttributeDiffGoo, AttributeDiff, AttributeChangeParam, AttributeChangeGoo, AttributeChange>
 {
-    public override Guid ComponentGuid => new("0DA5D764-5322-47A2-A0BC-551C2BEACB02");
+    public override __TYPE_ID__ ComponentId => new("0DA5D764-5322-47A2-A0BC-551C2BEACB02");
     protected override string EntityName => "Attribute";
     protected override string EntityNickname => "At";
     protected override string IconResourceName => "attribute_diff_24x24";
@@ -8976,11 +8975,11 @@ public class AuthorChangeParam : ChangeParam<AuthorChangeGoo, AuthorChange>
     protected override string RepresentationNickname => "AuC";
     protected override string RepresentationDescription => "Author change";
     protected override string IconResourceName => "author_24x24";
-    public override Guid ComponentGuid => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF101");
+    public override __TYPE_ID__ ComponentId => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF101");
 }
 public class AuthorChangeComponent : ChangeComponent<AuthorParam, AuthorGoo, Author, AuthorDiffParam, AuthorDiffGoo, AuthorDiff, AuthorChangeParam, AuthorChangeGoo, AuthorChange>
 {
-    public override Guid ComponentGuid => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF102");
+    public override __TYPE_ID__ ComponentId => new("3E6E5C8F-6D0D-4CA6-A06A-6F2CCB8DF102");
     protected override string EntityName => "Author";
     protected override string EntityNickname => "Au";
     protected override string IconResourceName => "author_24x24";
@@ -8993,11 +8992,11 @@ public class FileChangeParam : ChangeParam<FileChangeGoo, FileChange>
     protected override string RepresentationNickname => "FlC";
     protected override string RepresentationDescription => "File change";
     protected override string IconResourceName => "file_diff_24x24";
-    public override Guid ComponentGuid => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4101");
+    public override __TYPE_ID__ ComponentId => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4101");
 }
 public class FileChangeComponent : ChangeComponent<FileParam, FileGoo, File, FileDiffParam, FileDiffGoo, FileDiff, FileChangeParam, FileChangeGoo, FileChange>
 {
-    public override Guid ComponentGuid => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4102");
+    public override __TYPE_ID__ ComponentId => new("8F2B2F13-64C0-4A7D-9F5E-9DBA5E2F4102");
     protected override string EntityName => "File";
     protected override string EntityNickname => "Fl";
     protected override string IconResourceName => "file_diff_24x24";
@@ -9010,11 +9009,11 @@ public class FolderChangeParam : ChangeParam<FolderChangeGoo, FolderChange>
     protected override string RepresentationNickname => "FoC";
     protected override string RepresentationDescription => "Folder change";
     protected override string IconResourceName => "folder_diff_24x24";
-    public override Guid ComponentGuid => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82101");
+    public override __TYPE_ID__ ComponentId => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82101");
 }
 public class FolderChangeComponent : ChangeComponent<FolderParam, FolderGoo, Folder, FolderDiffParam, FolderDiffGoo, FolderDiff, FolderChangeParam, FolderChangeGoo, FolderChange>
 {
-    public override Guid ComponentGuid => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82102");
+    public override __TYPE_ID__ ComponentId => new("EEA0E8CF-178F-42CD-8ECA-5E3365B82102");
     protected override string EntityName => "Folder";
     protected override string EntityNickname => "Fo";
     protected override string IconResourceName => "folder_diff_24x24";
@@ -9027,11 +9026,11 @@ public class BenchmarkChangeParam : ChangeParam<BenchmarkChangeGoo, BenchmarkCha
     protected override string RepresentationNickname => "BmC";
     protected override string RepresentationDescription => "Benchmark change";
     protected override string IconResourceName => "benchmark_24x24";
-    public override Guid ComponentGuid => new("07D84C07-EE9C-4E70-B28D-D089D58D5101");
+    public override __TYPE_ID__ ComponentId => new("07D84C07-EE9C-4E70-B28D-D089D58D5101");
 }
 public class BenchmarkChangeComponent : ChangeComponent<BenchmarkParam, BenchmarkGoo, Benchmark, BenchmarkDiffParam, BenchmarkDiffGoo, BenchmarkDiff, BenchmarkChangeParam, BenchmarkChangeGoo, BenchmarkChange>
 {
-    public override Guid ComponentGuid => new("07D84C07-EE9C-4E70-B28D-D089D58D5102");
+    public override __TYPE_ID__ ComponentId => new("07D84C07-EE9C-4E70-B28D-D089D58D5102");
     protected override string EntityName => "Benchmark";
     protected override string EntityNickname => "Bm";
     protected override string IconResourceName => "benchmark_24x24";
@@ -9044,11 +9043,11 @@ public class QualityChangeParam : ChangeParam<QualityChangeGoo, QualityChange>
     protected override string RepresentationNickname => "QlC";
     protected override string RepresentationDescription => "Quality change";
     protected override string IconResourceName => "quality_diff_24x24";
-    public override Guid ComponentGuid => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC101");
+    public override __TYPE_ID__ ComponentId => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC101");
 }
 public class QualityChangeComponent : ChangeComponent<QualityParam, QualityGoo, Quality, QualityDiffParam, QualityDiffGoo, QualityDiff, QualityChangeParam, QualityChangeGoo, QualityChange>
 {
-    public override Guid ComponentGuid => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC102");
+    public override __TYPE_ID__ ComponentId => new("B5F78DDB-53A8-4A29-97A3-76F8D46AC102");
     protected override string EntityName => "Quality";
     protected override string EntityNickname => "Ql";
     protected override string IconResourceName => "quality_diff_24x24";
@@ -9061,11 +9060,11 @@ public class PortChangeParam : ChangeParam<PortChangeGoo, PortChange>
     protected override string RepresentationNickname => "PoC";
     protected override string RepresentationDescription => "Port change";
     protected override string IconResourceName => "port_24x24";
-    public override Guid ComponentGuid => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E101");
+    public override __TYPE_ID__ ComponentId => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E101");
 }
 public class PortChangeComponent : ChangeComponent<PortParam, PortGoo, Port, PortDiffParam, PortDiffGoo, PortDiff, PortChangeParam, PortChangeGoo, PortChange>
 {
-    public override Guid ComponentGuid => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E102");
+    public override __TYPE_ID__ ComponentId => new("D7FCA4AA-7099-4D0F-B66B-177A41F4E102");
     protected override string EntityName => "Port";
     protected override string EntityNickname => "Po";
     protected override string IconResourceName => "port_24x24";
@@ -9078,11 +9077,11 @@ public class PropChangeParam : ChangeParam<PropChangeGoo, PropChange>
     protected override string RepresentationNickname => "PrC";
     protected override string RepresentationDescription => "Prop change";
     protected override string IconResourceName => "prop_24x24";
-    public override Guid ComponentGuid => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7101");
+    public override __TYPE_ID__ ComponentId => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7101");
 }
 public class PropChangeComponent : ChangeComponent<PropParam, PropGoo, Prop, PropDiffParam, PropDiffGoo, PropDiff, PropChangeParam, PropChangeGoo, PropChange>
 {
-    public override Guid ComponentGuid => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7102");
+    public override __TYPE_ID__ ComponentId => new("7C6D159C-5C29-4A15-A9D0-4DB9E66D7102");
     protected override string EntityName => "Prop";
     protected override string EntityNickname => "Pr";
     protected override string IconResourceName => "prop_24x24";
@@ -9095,11 +9094,11 @@ public class TagChangeParam : ChangeParam<TagChangeGoo, TagChange>
     protected override string RepresentationNickname => "TgC";
     protected override string RepresentationDescription => "Tag change";
     protected override string IconResourceName => "tag_24x24";
-    public override Guid ComponentGuid => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8101");
+    public override __TYPE_ID__ ComponentId => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8101");
 }
 public class TagChangeComponent : ChangeComponent<TagParam, TagGoo, Tag, TagDiffParam, TagDiffGoo, TagDiff, TagChangeParam, TagChangeGoo, TagChange>
 {
-    public override Guid ComponentGuid => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8102");
+    public override __TYPE_ID__ ComponentId => new("17C0BE7A-3D72-4933-A8A6-B0D0B7AA8102");
     protected override string EntityName => "Tag";
     protected override string EntityNickname => "Tg";
     protected override string IconResourceName => "tag_24x24";
@@ -9112,11 +9111,11 @@ public class ConceptChangeParam : ChangeParam<ConceptChangeGoo, ConceptChange>
     protected override string RepresentationNickname => "CnC";
     protected override string RepresentationDescription => "Concept change";
     protected override string IconResourceName => "concept_24x24";
-    public override Guid ComponentGuid => new("CAD88735-2F40-46CB-928B-369D84928101");
+    public override __TYPE_ID__ ComponentId => new("CAD88735-2F40-46CB-928B-369D84928101");
 }
 public class ConceptChangeComponent : ChangeComponent<ConceptParam, ConceptGoo, Concept, ConceptDiffParam, ConceptDiffGoo, ConceptDiff, ConceptChangeParam, ConceptChangeGoo, ConceptChange>
 {
-    public override Guid ComponentGuid => new("CAD88735-2F40-46CB-928B-369D84928102");
+    public override __TYPE_ID__ ComponentId => new("CAD88735-2F40-46CB-928B-369D84928102");
     protected override string EntityName => "Concept";
     protected override string EntityNickname => "Cn";
     protected override string IconResourceName => "concept_24x24";
@@ -9129,11 +9128,11 @@ public class RepresentationChangeParam : ChangeParam<RepresentationChangeGoo, Re
     protected override string RepresentationNickname => "MoC";
     protected override string RepresentationDescription => "Representation change";
     protected override string IconResourceName => "representation_diff_24x24";
-    public override Guid ComponentGuid => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59101");
+    public override __TYPE_ID__ ComponentId => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59101");
 }
 public class RepresentationChangeComponent : ChangeComponent<RepresentationParam, RepresentationGoo, Representation, RepresentationDiffParam, RepresentationDiffGoo, RepresentationDiff, RepresentationChangeParam, RepresentationChangeGoo, RepresentationChange>
 {
-    public override Guid ComponentGuid => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59102");
+    public override __TYPE_ID__ ComponentId => new("71A8A53D-C8B8-43E4-918D-1D7DD7D59102");
     protected override string EntityName => "Representation";
     protected override string EntityNickname => "Mo";
     protected override string IconResourceName => "representation_diff_24x24";
@@ -9146,11 +9145,11 @@ public class ConnectorChangeParam : ChangeParam<ConnectorChangeGoo, ConnectorCha
     protected override string RepresentationNickname => "CoC";
     protected override string RepresentationDescription => "Connector change";
     protected override string IconResourceName => "connector_diff_24x24";
-    public override Guid ComponentGuid => new("7A10C866-F666-497D-8FD7-1D1AD39CA101");
+    public override __TYPE_ID__ ComponentId => new("7A10C866-F666-497D-8FD7-1D1AD39CA101");
 }
 public class ConnectorChangeComponent : ChangeComponent<ConnectorParam, ConnectorGoo, Connector, ConnectorDiffParam, ConnectorDiffGoo, ConnectorDiff, ConnectorChangeParam, ConnectorChangeGoo, ConnectorChange>
 {
-    public override Guid ComponentGuid => new("7A10C866-F666-497D-8FD7-1D1AD39CA102");
+    public override __TYPE_ID__ ComponentId => new("7A10C866-F666-497D-8FD7-1D1AD39CA102");
     protected override string EntityName => "Connector";
     protected override string EntityNickname => "Co";
     protected override string IconResourceName => "connector_diff_24x24";
@@ -9163,11 +9162,11 @@ public class TypeChangeParam : ChangeParam<TypeChangeGoo, TypeChange>
     protected override string RepresentationNickname => "TyC";
     protected override string RepresentationDescription => "Type change";
     protected override string IconResourceName => "type_diff_24x24";
-    public override Guid ComponentGuid => new("A305B34B-8153-467E-A9F8-5FA158CA9101");
+    public override __TYPE_ID__ ComponentId => new("A305B34B-8153-467E-A9F8-5FA158CA9101");
 }
 public class TypeChangeComponent : ChangeComponent<TypeParam, TypeGoo, Type, TypeDiffParam, TypeDiffGoo, TypeDiff, TypeChangeParam, TypeChangeGoo, TypeChange>
 {
-    public override Guid ComponentGuid => new("A305B34B-8153-467E-A9F8-5FA158CA9102");
+    public override __TYPE_ID__ ComponentId => new("A305B34B-8153-467E-A9F8-5FA158CA9102");
     protected override string EntityName => "Type";
     protected override string EntityNickname => "Ty";
     protected override string IconResourceName => "type_diff_24x24";
@@ -9180,11 +9179,11 @@ public class LayerChangeParam : ChangeParam<LayerChangeGoo, LayerChange>
     protected override string RepresentationNickname => "LyC";
     protected override string RepresentationDescription => "Layer change";
     protected override string IconResourceName => "layer_24x24";
-    public override Guid ComponentGuid => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A101");
+    public override __TYPE_ID__ ComponentId => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A101");
 }
 public class LayerChangeComponent : ChangeComponent<LayerParam, LayerGoo, Layer, LayerDiffParam, LayerDiffGoo, LayerDiff, LayerChangeParam, LayerChangeGoo, LayerChange>
 {
-    public override Guid ComponentGuid => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A102");
+    public override __TYPE_ID__ ComponentId => new("A61BEAB7-92A4-4862-9F4A-BBB80CD9A102");
     protected override string EntityName => "Layer";
     protected override string EntityNickname => "Ly";
     protected override string IconResourceName => "layer_24x24";
@@ -9197,11 +9196,11 @@ public class PieceChangeParam : ChangeParam<PieceChangeGoo, PieceChange>
     protected override string RepresentationNickname => "PcC";
     protected override string RepresentationDescription => "Piece change";
     protected override string IconResourceName => "piece_diff_24x24";
-    public override Guid ComponentGuid => new("836AAB61-44B5-4881-8C66-EFF8DBD4B101");
+    public override __TYPE_ID__ ComponentId => new("836AAB61-44B5-4881-8C66-EFF8DBD4B101");
 }
 public class PieceChangeComponent : ChangeComponent<PieceParam, PieceGoo, Piece, PieceDiffParam, PieceDiffGoo, PieceDiff, PieceChangeParam, PieceChangeGoo, PieceChange>
 {
-    public override Guid ComponentGuid => new("836AAB61-44B5-4881-8C66-EFF8DBD4B102");
+    public override __TYPE_ID__ ComponentId => new("836AAB61-44B5-4881-8C66-EFF8DBD4B102");
     protected override string EntityName => "Piece";
     protected override string EntityNickname => "Pc";
     protected override string IconResourceName => "piece_diff_24x24";
@@ -9214,11 +9213,11 @@ public class GroupChangeParam : ChangeParam<GroupChangeGoo, GroupChange>
     protected override string RepresentationNickname => "GrC";
     protected override string RepresentationDescription => "Group change";
     protected override string IconResourceName => "group_24x24";
-    public override Guid ComponentGuid => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C101");
+    public override __TYPE_ID__ ComponentId => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C101");
 }
 public class GroupChangeComponent : ChangeComponent<GroupParam, GroupGoo, SemioGroup, GroupDiffParam, GroupDiffGoo, GroupDiff, GroupChangeParam, GroupChangeGoo, GroupChange>
 {
-    public override Guid ComponentGuid => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C102");
+    public override __TYPE_ID__ ComponentId => new("9FE9F093-3EFF-47CE-BF1D-31E5AFD5C102");
     protected override string EntityName => "Group";
     protected override string EntityNickname => "Gr";
     protected override string IconResourceName => "group_24x24";
@@ -9231,11 +9230,11 @@ public class SideChangeParam : ChangeParam<SideChangeGoo, SideChange>
     protected override string RepresentationNickname => "SdC";
     protected override string RepresentationDescription => "Side change";
     protected override string IconResourceName => "side_diff_24x24";
-    public override Guid ComponentGuid => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D101");
+    public override __TYPE_ID__ ComponentId => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D101");
 }
 public class SideChangeComponent : ChangeComponent<SideParam, SideGoo, Side, SideDiffParam, SideDiffGoo, SideDiff, SideChangeParam, SideChangeGoo, SideChange>
 {
-    public override Guid ComponentGuid => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D102");
+    public override __TYPE_ID__ ComponentId => new("2B8B5287-8F3D-4CF9-BEEA-DF04E778D102");
     protected override string EntityName => "Side";
     protected override string EntityNickname => "Sd";
     protected override string IconResourceName => "side_diff_24x24";
@@ -9248,11 +9247,11 @@ public class ConnectionChangeParam : ChangeParam<ConnectionChangeGoo, Connection
     protected override string RepresentationNickname => "CnC";
     protected override string RepresentationDescription => "Connection change";
     protected override string IconResourceName => "connection_diff_24x24";
-    public override Guid ComponentGuid => new("59352953-A18D-4339-A81B-125A15C3E101");
+    public override __TYPE_ID__ ComponentId => new("59352953-A18D-4339-A81B-125A15C3E101");
 }
 public class ConnectionChangeComponent : ChangeComponent<ConnectionParam, ConnectionGoo, Connection, ConnectionDiffParam, ConnectionDiffGoo, ConnectionDiff, ConnectionChangeParam, ConnectionChangeGoo, ConnectionChange>
 {
-    public override Guid ComponentGuid => new("59352953-A18D-4339-A81B-125A15C3E102");
+    public override __TYPE_ID__ ComponentId => new("59352953-A18D-4339-A81B-125A15C3E102");
     protected override string EntityName => "Connection";
     protected override string EntityNickname => "Cn";
     protected override string IconResourceName => "connection_diff_24x24";
@@ -9265,11 +9264,11 @@ public class StatChangeParam : ChangeParam<StatChangeGoo, StatChange>
     protected override string RepresentationNickname => "StC";
     protected override string RepresentationDescription => "Stat change";
     protected override string IconResourceName => "stat_24x24";
-    public override Guid ComponentGuid => new("D9190DF2-A738-4FE2-9244-410C70A3F101");
+    public override __TYPE_ID__ ComponentId => new("D9190DF2-A738-4FE2-9244-410C70A3F101");
 }
 public class StatChangeComponent : ChangeComponent<StatParam, StatGoo, Stat, StatDiffParam, StatDiffGoo, StatDiff, StatChangeParam, StatChangeGoo, StatChange>
 {
-    public override Guid ComponentGuid => new("D9190DF2-A738-4FE2-9244-410C70A3F102");
+    public override __TYPE_ID__ ComponentId => new("D9190DF2-A738-4FE2-9244-410C70A3F102");
     protected override string EntityName => "Stat";
     protected override string EntityNickname => "St";
     protected override string IconResourceName => "stat_24x24";
@@ -9282,11 +9281,11 @@ public class DesignChangeParam : ChangeParam<DesignChangeGoo, DesignChange>
     protected override string RepresentationNickname => "DeC";
     protected override string RepresentationDescription => "Design change";
     protected override string IconResourceName => "design_diff_24x24";
-    public override Guid ComponentGuid => new("4F16F428-3E34-4D2D-B067-27A20A06A101");
+    public override __TYPE_ID__ ComponentId => new("4F16F428-3E34-4D2D-B067-27A20A06A101");
 }
 public class DesignChangeComponent : ChangeComponent<DesignParam, DesignGoo, Design, DesignDiffParam, DesignDiffGoo, DesignDiff, DesignChangeParam, DesignChangeGoo, DesignChange>
 {
-    public override Guid ComponentGuid => new("4F16F428-3E34-4D2D-B067-27A20A06A102");
+    public override __TYPE_ID__ ComponentId => new("4F16F428-3E34-4D2D-B067-27A20A06A102");
     protected override string EntityName => "Design";
     protected override string EntityNickname => "De";
     protected override string IconResourceName => "design_diff_24x24";
@@ -9299,11 +9298,11 @@ public class KitChangeParam : ChangeParam<KitChangeGoo, KitChange>
     protected override string RepresentationNickname => "KtC";
     protected override string RepresentationDescription => "Kit change";
     protected override string IconResourceName => "kitdiff_24x24";
-    public override Guid ComponentGuid => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB101");
+    public override __TYPE_ID__ ComponentId => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB101");
 }
 public class KitChangeComponent : ChangeComponent<KitParam, KitGoo, Kit, KitDiffParam, KitDiffGoo, KitDiff, KitChangeParam, KitChangeGoo, KitChange>
 {
-    public override Guid ComponentGuid => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB102");
+    public override __TYPE_ID__ ComponentId => new("4B4F48E0-28BA-476A-B7A5-BC325F3CB102");
     protected override string EntityName => "Kit";
     protected override string EntityNickname => "Kt";
     protected override string IconResourceName => "kitdiff_24x24";
@@ -9326,7 +9325,7 @@ public class EncodeTextComponent : ScriptingComponent
     public EncodeTextComponent()
         : base("Encode Text", ">Txt", "Encode a text.")
     { }
-    public override Guid ComponentGuid => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
+    public override __TYPE_ID__ ComponentId => new("FBDDF723-80BD-4AF9-A1EE-450A27D50ABE");
 
     protected override Bitmap Icon => Resources.encode_24x24;
 
@@ -9363,7 +9362,7 @@ public class EncodeTextComponent : ScriptingComponent
 public class DecodeTextComponent : ScriptingComponent
 {
     public DecodeTextComponent() : base("Decode Text", "<Txt", "Decode a text.") { }
-    public override Guid ComponentGuid => new("E7158D28-87DE-493F-8D78-923265C3E211");
+    public override __TYPE_ID__ ComponentId => new("E7158D28-87DE-493F-8D78-923265C3E211");
     protected override Bitmap Icon => Resources.decode_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
@@ -9399,7 +9398,7 @@ public class DecodeTextComponent : ScriptingComponent
 public class ImportRepresentationComponent : ScriptingComponent
 {
     public ImportRepresentationComponent() : base("Import Representation", "ImpRepresentation", "Imports a Rhino representation object from a semio file.") { }
-    public override Guid ComponentGuid => new("0E2A82A4-494E-4D38-9E32-FD26A1B6EC6D");
+    public override __TYPE_ID__ ComponentId => new("0E2A82A4-494E-4D38-9E32-FD26A1B6EC6D");
     protected override Bitmap Icon => Resources.representation_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -9437,7 +9436,7 @@ public class ImportRepresentationComponent : ScriptingComponent
 public class RepresentationObjectToGroupComponent : ScriptingComponent
 {
     public RepresentationObjectToGroupComponent() : base("RepresentationObject To Group", "Mo→Gr", "RepresentationObject To Group translates imported Rhino representation objects into a single native Rhino/Grasshopper group.") { }
-    public override Guid ComponentGuid => new("9C74A31E-3B07-48EC-A6C9-B16A3F1EA9DD");
+    public override __TYPE_ID__ ComponentId => new("9C74A31E-3B07-48EC-A6C9-B16A3F1EA9DD");
     protected override Bitmap Icon => Resources.group_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -9583,7 +9582,7 @@ public class RepresentationObjectToGroupComponent : ScriptingComponent
 public class GroupToRepresentationObjectComponent : ScriptingComponent
 {
     public GroupToRepresentationObjectComponent() : base("Group To Representation Object", "Gr→Mo", "Group To Representation Object extracts individual Rhino representation objects from a native Rhino/Grasshopper group.") { }
-    public override Guid ComponentGuid => new("A2B1C3D4-E5F6-4789-B1C2-D3E4F5A6B7C8");
+    public override __TYPE_ID__ ComponentId => new("A2B1C3D4-E5F6-4789-B1C2-D3E4F5A6B7C8");
     protected override Bitmap Icon => Resources.group_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
@@ -9618,7 +9617,7 @@ public class GroupToRepresentationObjectComponent : ScriptingComponent
 public class ObjectsToTextComponent : ScriptingComponent
 {
     public ObjectsToTextComponent() : base("Objects to Text", "Objs→Txt", "Converts a list of objects to a human-readable text.") { }
-    public override Guid ComponentGuid => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
+    public override __TYPE_ID__ ComponentId => new("3BE61561-8290-4965-A9A6-38ACB4EC5182");
     protected override Bitmap Icon => Resources.objects_convert_text_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -9640,7 +9639,7 @@ public class ObjectsToTextComponent : ScriptingComponent
 public class NormalizeTextComponent : ScriptingComponent
 {
     public NormalizeTextComponent() : base("Normalize Text", "⇒Txt", "Normalizes a text to different formats.") { }
-    public override Guid ComponentGuid => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
+    public override __TYPE_ID__ ComponentId => new("1417BD04-7271-4EFD-A32C-99B1D2FC8A9E");
     protected override Bitmap Icon => Resources.text_normalize_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -9676,7 +9675,7 @@ public class NormalizeTextComponent : ScriptingComponent
 public class TruncateTextComponent : ScriptingComponent
 {
     public TruncateTextComponent() : base("Truncate Text", "…Txt", "Truncates text by length and an optional termination.") { }
-    public override Guid ComponentGuid => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
+    public override __TYPE_ID__ ComponentId => new("C15BFCE9-0EF7-4367-8310-EF47CE0B8013");
     protected override Bitmap Icon => Resources.text_truncate_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -9863,7 +9862,7 @@ public class LoadKitComponent : PersistenceComponent<Unit, Kit>
     public LoadKitComponent() : base("Load Kit", "/Kit", "Load a kit from a local directory.") { }
     protected override string RunDescription => "True to load the kit.";
     protected override string SuccessDescription => "True if the kit was successfully loaded. False otherwise.";
-    public override Guid ComponentGuid => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
+    public override __TYPE_ID__ ComponentId => new("5BE3A651-581E-4595-8DAC-132F10BD87FC");
     protected override Bitmap Icon => Resources.kit_load_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override void RegisterPersitenceOutputParams(GH_OutputParamManager pManager)
@@ -9896,7 +9895,7 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
     public SaveKitComponent() : base("Save Kit", "Kit/", "Save a kit to a local directory.") { }
     protected override string RunDescription => "True to save the kit.";
     protected override string SuccessDescription => "True if the kit was successfully saved. False otherwise.";
-    public override Guid ComponentGuid => new("A7E3B651-581E-4595-8DAC-132F10BD87FC");
+    public override __TYPE_ID__ ComponentId => new("A7E3B651-581E-4595-8DAC-132F10BD87FC");
     protected override Bitmap Icon => Resources.kit_24x24;
     public override GH_Exposure Exposure => GH_Exposure.primary;
     protected override void RegisterPersitenceInputParams(GH_InputParamManager pManager)
@@ -9928,7 +9927,7 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
     public UpdateKitComponent() : base("Update Kit", "Kit↻", "Update a static kit with a kit diff and persist it to SQLite.") { }
     protected override string RunDescription => "True to update the kit.";
     protected override string SuccessDescription => "True if the kit was successfully updated. False otherwise.";
-    public override Guid ComponentGuid => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
+    public override __TYPE_ID__ ComponentId => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
     protected override Bitmap Icon => Resources.kit_diff_24x24;
     public override GH_Exposure Exposure => GH_Exposure.secondary;
     protected override void RegisterKitInputParams(GH_InputParamManager pManager)
@@ -9995,7 +9994,7 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
 public class FlattenDesignComponent : ScriptingComponent
 {
     public FlattenDesignComponent() : base("Flatten Design", "Flat", "Flattens a design.") { }
-    public override Guid ComponentGuid => new("4A6F1D2C-8B3E-49A1-B72F-1D9C8B5F6C3E");
+    public override __TYPE_ID__ ComponentId => new("4A6F1D2C-8B3E-49A1-B72F-1D9C8B5F6C3E");
     protected override Bitmap Icon => Resources.design_flatten_24x24;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -10024,12 +10023,12 @@ public class FlattenDesignComponent : ScriptingComponent
 public class ExportDesignRepresentationComponent : ScriptingComponent
 {
     public ExportDesignRepresentationComponent() : base("Export Design Representation", "ExpMdl", "Exports the 3D representation of a design to a format.") { }
-    public override Guid ComponentGuid => new("B3D4E5F6-7A8B-49C1-A2D3-E4F5A6B7C8D9");
+    public override __TYPE_ID__ ComponentId => new("B3D4E5F6-7A8B-49C1-A2D3-E4F5A6B7C8D9");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignId", "Id", "Design GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "Id", "Design ID", GH_ParamAccess.item);
         pManager.AddTextParameter("Format", "F", "Output format (.glb, .gltf, .obj, .stl, .3dm)", GH_ParamAccess.item, ".glb");
         pManager.AddTextParameter("Tags", "T", "Tags to filter representations", GH_ParamAccess.list);
         pManager[2].Optional = true;
@@ -10064,7 +10063,7 @@ public class ExportDesignRepresentationComponent : ScriptingComponent
 public class ReplaceClusterWithDesignComponent : ScriptingComponent
 {
     public ReplaceClusterWithDesignComponent() : base("Replace Cluster", "RepCl", "Replaces a cluster with a design.") { }
-    public override Guid ComponentGuid => new("7D8E2F9A-4B1C-46A3-9F1E-3C8B5A7D2C1E");
+    public override __TYPE_ID__ ComponentId => new("7D8E2F9A-4B1C-46A3-9F1E-3C8B5A7D2C1E");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -10097,13 +10096,13 @@ public class ReplaceClusterWithDesignComponent : ScriptingComponent
 
 public class FindPieceInDesignComponent : ScriptingComponent
 {
-    public FindPieceInDesignComponent() : base("Find Piece In Design", "FPiD", "Finds a piece in a design by its GUID.") { }
-    public override Guid ComponentGuid => new("8E9D0F1C-2A3B-45A9-8F7E-6C5B4A3D2E1F");
+    public FindPieceInDesignComponent() : base("Find Piece In Design", "FPiD", "Finds a piece in a design by its ID.") { }
+    public override __TYPE_ID__ ComponentId => new("8E9D0F1C-2A3B-45A9-8F7E-6C5B4A3D2E1F");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "G", "Piece GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "G", "Piece ID", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10115,10 +10114,10 @@ public class FindPieceInDesignComponent : ScriptingComponent
     {
         DesignGoo designGoo = null;
         if (!DA.GetData(0, ref designGoo)) return;
-        string pieceGuid = "";
-        if (!DA.GetData(1, ref pieceGuid)) return;
+        string pieceId = "";
+        if (!DA.GetData(1, ref pieceId)) return;
 
-        var result = Piece.FindInDesign(designGoo.Value, pieceGuid);
+        var result = Piece.FindInDesign(designGoo.Value, pieceId);
         DA.SetData(0, new PieceGoo(result));
     }
 }
@@ -10126,13 +10125,13 @@ public class FindPieceInDesignComponent : ScriptingComponent
 public class FindReplacableTypesForPieceInDesignComponent : ScriptingComponent
 {
     public FindReplacableTypesForPieceInDesignComponent() : base("Find Replacable Types (Piece)", "FRepTP", "Finds replacable types for a piece in a design.") { }
-    public override Guid ComponentGuid => new("9A0B1C2D-3E4F-56A7-B8C9-D0E1F2A3B4C5");
+    public override __TYPE_ID__ ComponentId => new("9A0B1C2D-3E4F-56A7-B8C9-D0E1F2A3B4C5");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "DG", "Design GUID", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "PG", "Piece GUID", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "DG", "Design ID", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "PG", "Piece ID", GH_ParamAccess.item);
         pManager.AddTextParameter("Variants", "V", "Variants", GH_ParamAccess.list);
 
     }
@@ -10146,14 +10145,14 @@ public class FindReplacableTypesForPieceInDesignComponent : ScriptingComponent
     {
         KitGoo kitGoo = null;
         if (!DA.GetData(0, ref kitGoo)) return;
-        string designGuid = "";
-        if (!DA.GetData(1, ref designGuid)) return;
-        string pieceGuid = "";
-        if (!DA.GetData(2, ref pieceGuid)) return;
+        string designId = "";
+        if (!DA.GetData(1, ref designId)) return;
+        string pieceId = "";
+        if (!DA.GetData(2, ref pieceId)) return;
         List<string> variants = new List<string>();
         DA.GetDataList(3, variants);
 
-        var result = Kit.FindReplacableTypesForPieceInDesign(kitGoo.Value, designGuid, pieceGuid, variants.Count > 0 ? variants.ToArray() : null);
+        var result = Kit.FindReplacableTypesForPieceInDesign(kitGoo.Value, designId, pieceId, variants.Count > 0 ? variants.ToArray() : null);
         DA.SetDataList(0, result.Select(r => new TypeGoo(r)));
     }
 }
@@ -10161,13 +10160,13 @@ public class FindReplacableTypesForPieceInDesignComponent : ScriptingComponent
 
 public class FindTagComponent : ScriptingComponent
 {
-    public FindTagComponent() : base("FindTag", "FTag", "Finds a tag by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234560");
+    public FindTagComponent() : base("FindTag", "FTag", "Finds a tag by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234560");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new TagParam(), "Tags", "T", "Tags", GH_ParamAccess.list);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10193,13 +10192,13 @@ public class FindTagComponent : ScriptingComponent
 
 public class FindConceptComponent : ScriptingComponent
 {
-    public FindConceptComponent() : base("FindConcept", "FConcept", "Finds a concept by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234561");
+    public FindConceptComponent() : base("FindConcept", "FConcept", "Finds a concept by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234561");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new ConceptParam(), "Concepts", "C", "Concepts", GH_ParamAccess.list);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10225,13 +10224,13 @@ public class FindConceptComponent : ScriptingComponent
 
 public class FindRepresentationComponent : ScriptingComponent
 {
-    public FindRepresentationComponent() : base("FindRepresentation", "FRepresentation", "Finds a representation by tag GUIDs.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234562");
+    public FindRepresentationComponent() : base("FindRepresentation", "FRepresentation", "Finds a representation by tag IDs.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234562");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new RepresentationParam(), "Representations", "M", "Representations", GH_ParamAccess.list);
-        pManager.AddTextParameter("TagGuids", "G", "TagGuids", GH_ParamAccess.list);
+        pManager.AddTextParameter("TagIds", "G", "TagIds", GH_ParamAccess.list);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10257,13 +10256,13 @@ public class FindRepresentationComponent : ScriptingComponent
 
 public class FindConnectorComponent : ScriptingComponent
 {
-    public FindConnectorComponent() : base("FindConnector", "FConnector", "Finds a connector by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234563");
+    public FindConnectorComponent() : base("FindConnector", "FConnector", "Finds a connector by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234563");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new ConnectorParam(), "Connectors", "C", "Connectors", GH_ParamAccess.list);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10289,13 +10288,13 @@ public class FindConnectorComponent : ScriptingComponent
 
 public class FindConnectorInTypeComponent : ScriptingComponent
 {
-    public FindConnectorInTypeComponent() : base("FindConnectorInType", "FCInType", "Finds a connector in a type by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234564");
+    public FindConnectorInTypeComponent() : base("FindConnectorInType", "FCInType", "Finds a connector in a type by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234564");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10321,13 +10320,13 @@ public class FindConnectorInTypeComponent : ScriptingComponent
 
 public class FindPieceComponent : ScriptingComponent
 {
-    public FindPieceComponent() : base("FindPiece", "FPiece", "Finds a piece by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234565");
+    public FindPieceComponent() : base("FindPiece", "FPiece", "Finds a piece by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234565");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new PieceParam(), "Pieces", "P", "Pieces", GH_ParamAccess.list);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10353,13 +10352,13 @@ public class FindPieceComponent : ScriptingComponent
 
 public class FindConnectionComponent : ScriptingComponent
 {
-    public FindConnectionComponent() : base("FindConnection", "FConn", "Finds a connection by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234566");
+    public FindConnectionComponent() : base("FindConnection", "FConn", "Finds a connection by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234566");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10386,12 +10385,12 @@ public class FindConnectionComponent : ScriptingComponent
 public class FindPieceConnectionsComponent : ScriptingComponent
 {
     public FindPieceConnectionsComponent() : base("FindPieceConnections", "FPConn", "Finds connections for a piece.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234567");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234567");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new ConnectionParam(), "Connections", "C", "Connections", GH_ParamAccess.list);
-        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "G", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10418,13 +10417,13 @@ public class FindPieceConnectionsComponent : ScriptingComponent
 public class FindConnectorForPieceInConnectionComponent : ScriptingComponent
 {
     public FindConnectorForPieceInConnectionComponent() : base("FindConnectorForPieceInConnection", "FCFPIC", "Finds a connector for a piece in a connection.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234568");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234568");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new TypeParam(), "Type", "T", "Type", GH_ParamAccess.item);
         pManager.AddParameter(new ConnectionParam(), "Connection", "C", "Connection", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "G", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10452,13 +10451,13 @@ public class FindConnectorForPieceInConnectionComponent : ScriptingComponent
 
 public class FindConnectionInDesignComponent : ScriptingComponent
 {
-    public FindConnectionInDesignComponent() : base("FindConnectionInDesign", "FCID", "Finds a connection in a design by GUID.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234569");
+    public FindConnectionInDesignComponent() : base("FindConnectionInDesign", "FCID", "Finds a connection in a design by ID.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234569");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10484,13 +10483,13 @@ public class FindConnectionInDesignComponent : ScriptingComponent
 
 public class FindConnectionsInDesignComponent : ScriptingComponent
 {
-    public FindConnectionsInDesignComponent() : base("FindConnectionsInDesign", "FCsID", "Finds connections in a design by GUIDs.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456A");
+    public FindConnectionsInDesignComponent() : base("FindConnectionsInDesign", "FCsID", "Finds connections in a design by IDs.") { }
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456A");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guids", "G", "Guids", GH_ParamAccess.list);
+        pManager.AddTextParameter("Ids", "G", "Ids", GH_ParamAccess.list);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10517,12 +10516,12 @@ public class FindConnectionsInDesignComponent : ScriptingComponent
 public class FindPieceConnectionsInDesignComponent : ScriptingComponent
 {
     public FindPieceConnectionsInDesignComponent() : base("FindPieceConnectionsInDesign", "FPCID", "Finds connections for a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456B");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456B");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new DesignParam(), "Design", "D", "Design", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "G", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "G", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10549,7 +10548,7 @@ public class FindPieceConnectionsInDesignComponent : ScriptingComponent
 public class FindStaleConnectionsInDesignComponent : ScriptingComponent
 {
     public FindStaleConnectionsInDesignComponent() : base("FindStaleConnectionsInDesign", "FSCID", "Finds stale connections in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456C");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456C");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -10578,12 +10577,12 @@ public class FindStaleConnectionsInDesignComponent : ScriptingComponent
 public class FindFileInKitComponent : ScriptingComponent
 {
     public FindFileInKitComponent() : base("FindFileInKit", "FFIK", "Finds a file in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456D");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456D");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10610,12 +10609,12 @@ public class FindFileInKitComponent : ScriptingComponent
 public class FindTagInKitComponent : ScriptingComponent
 {
     public FindTagInKitComponent() : base("FindTagInKit", "FTIK", "Finds a tag in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456E");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456E");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10642,12 +10641,12 @@ public class FindTagInKitComponent : ScriptingComponent
 public class FindConceptInKitComponent : ScriptingComponent
 {
     public FindConceptInKitComponent() : base("FindConceptInKit", "FCIK", "Finds a concept in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123456F");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123456F");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10674,12 +10673,12 @@ public class FindConceptInKitComponent : ScriptingComponent
 public class FindTypeInKitComponent : ScriptingComponent
 {
     public FindTypeInKitComponent() : base("FindTypeInKit", "FTyIK", "Finds a type in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234570");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234570");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10706,12 +10705,12 @@ public class FindTypeInKitComponent : ScriptingComponent
 public class FindDesignInKitComponent : ScriptingComponent
 {
     public FindDesignInKitComponent() : base("FindDesignInKit", "FDIK", "Finds a design in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234571");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234571");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10738,12 +10737,12 @@ public class FindDesignInKitComponent : ScriptingComponent
 public class FindPortInKitComponent : ScriptingComponent
 {
     public FindPortInKitComponent() : base("FindPortInKit", "FPIK", "Finds a port in a kit.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234572");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234572");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("Guid", "G", "Guid", GH_ParamAccess.item);
+        pManager.AddTextParameter("Id", "G", "Id", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10770,13 +10769,13 @@ public class FindPortInKitComponent : ScriptingComponent
 public class FindPieceTypeInDesignComponent : ScriptingComponent
 {
     public FindPieceTypeInDesignComponent() : base("FindPieceTypeInDesign", "FPTID", "Finds the type of a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234573");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234573");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "P", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10805,13 +10804,13 @@ public class FindPieceTypeInDesignComponent : ScriptingComponent
 public class FindParentPieceInDesignComponent : ScriptingComponent
 {
     public FindParentPieceInDesignComponent() : base("FindParentPieceInDesign", "FPPID", "Finds the parent piece of a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234574");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234574");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "P", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10840,13 +10839,13 @@ public class FindParentPieceInDesignComponent : ScriptingComponent
 public class FindParentConnectionForPieceInDesignComponent : ScriptingComponent
 {
     public FindParentConnectionForPieceInDesignComponent() : base("FindParentConnectionForPieceInDesign", "FPCFPI", "Finds the parent connection for a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234575");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234575");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "P", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10875,13 +10874,13 @@ public class FindParentConnectionForPieceInDesignComponent : ScriptingComponent
 public class FindChildrenPiecesInDesignComponent : ScriptingComponent
 {
     public FindChildrenPiecesInDesignComponent() : base("FindChildrenPiecesInDesign", "FCPID", "Finds the children pieces of a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234576");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234576");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "P", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10910,13 +10909,13 @@ public class FindChildrenPiecesInDesignComponent : ScriptingComponent
 public class FindUsedConnectorsByPieceInDesignComponent : ScriptingComponent
 {
     public FindUsedConnectorsByPieceInDesignComponent() : base("FindUsedConnectorsByPieceInDesign", "FUCBPID", "Finds used connectors by a piece in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234577");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234577");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuid", "P", "PieceGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceId", "P", "PieceId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -10945,13 +10944,13 @@ public class FindUsedConnectorsByPieceInDesignComponent : ScriptingComponent
 public class FindReplacableTypesForPiecesInDesignComponent : ScriptingComponent
 {
     public FindReplacableTypesForPiecesInDesignComponent() : base("FindReplacableTypesForPiecesInDesign", "FRepTPs", "Finds replacable types for pieces in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF01234578");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF01234578");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "DG", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("PieceGuids", "PG", "PieceGuids", GH_ParamAccess.list);
+        pManager.AddTextParameter("DesignId", "DG", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("PieceIds", "PG", "PieceIds", GH_ParamAccess.list);
         pManager.AddTextParameter("Variants", "V", "Variants", GH_ParamAccess.list);
 
     }
@@ -10984,7 +10983,7 @@ public class FindReplacableTypesForPiecesInDesignComponent : ScriptingComponent
 public class FindConnectionPiecesInDesignComponent : ScriptingComponent
 {
     public FindConnectionPiecesInDesignComponent() : base("Find Connection Pieces In Design", "FCPsID", "Finds the connected and connecting pieces of a connection in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123457A");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123457A");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
@@ -11018,13 +11017,13 @@ public class FindConnectionPiecesInDesignComponent : ScriptingComponent
 public class SumQualityInDesignComponent : ScriptingComponent
 {
     public SumQualityInDesignComponent() : base("SumQualityInDesign", "SQID", "Sums the values of a quality across all pieces in a design.") { }
-    public override Guid ComponentGuid => new("A1B2C3D4-1234-5678-90AB-CDEF0123457B");
+    public override __TYPE_ID__ ComponentId => new("A1B2C3D4-1234-5678-90AB-CDEF0123457B");
     protected override Bitmap Icon => null;
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignGuid", "D", "DesignGuid", GH_ParamAccess.item);
-        pManager.AddTextParameter("QualityGuid", "Q", "QualityGuid", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "D", "DesignId", GH_ParamAccess.item);
+        pManager.AddTextParameter("QualityId", "Q", "QualityId", GH_ParamAccess.item);
     }
 
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
@@ -11062,14 +11061,14 @@ public class SumQualityInDesignComponent : ScriptingComponent
 public class ExportDesignToBlocksComponent : ScriptingComponent
 {
     public ExportDesignToBlocksComponent() : base("Export Design To Blocks", "Des→Blk", "Exports a design to native Rhino block instances. Every type becomes a block definition and every piece becomes a block instance.") { }
-    public override Guid ComponentGuid => new("C4D5E6F7-8A9B-4C1D-A2E3-F4A5B6C7D8EA");
+    public override __TYPE_ID__ ComponentId => new("C4D5E6F7-8A9B-4C1D-A2E3-F4A5B6C7D8EA");
     protected override Bitmap Icon => null;
     public override GH_Exposure Exposure => GH_Exposure.primary;
 
     protected override void RegisterInputParams(GH_InputParamManager pManager)
     {
         pManager.AddParameter(new KitParam(), "Kit", "K", "Kit containing types, designs, and files.", GH_ParamAccess.item);
-        pManager.AddTextParameter("DesignId", "Id", "Design GUID to export.", GH_ParamAccess.item);
+        pManager.AddTextParameter("DesignId", "Id", "Design ID to export.", GH_ParamAccess.item);
         pManager.AddTextParameter("Tags", "T", "Tags to filter representations per type.", GH_ParamAccess.list);
         pManager[2].Optional = true;
     }
@@ -11077,7 +11076,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
     protected override void RegisterOutputParams(GH_OutputParamManager pManager)
     {
         pManager.AddGeometryParameter("BlockInstances", "BI*", "Native Rhino block instances for each piece.", GH_ParamAccess.list);
-        pManager.AddTextParameter("PieceGuids", "PG*", "Piece GUIDs corresponding to each block instance.", GH_ParamAccess.list);
+        pManager.AddTextParameter("PieceIds", "PG*", "Piece IDs corresponding to each block instance.", GH_ParamAccess.list);
         pManager.AddTextParameter("TypeNames", "TN*", "Type names corresponding to each block instance.", GH_ParamAccess.list);
     }
 
@@ -11107,35 +11106,35 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
             }
 
             var typesDict = new Dictionary<string, Type>();
-            foreach (var t in types) typesDict[t.Guid] = t;
+            foreach (var t in types) typesDict[t.Id] = t;
             var piecesDict = new Dictionary<string, Piece>();
-            foreach (var p in pieces) piecesDict[p.Guid] = p;
+            foreach (var p in pieces) piecesDict[p.Id] = p;
 
             #region 🖇️ExportDesignToBlocks_PlanePropagation
             // Build adjacency for connection-based plane propagation
-            var adjacency = new Dictionary<string, List<(Connection connection, string neighborGuid)>>();
-            foreach (var p in pieces) adjacency[p.Guid] = new List<(Connection, string)>();
+            var adjacency = new Dictionary<string, List<(Connection connection, string neighborId)>>();
+            foreach (var p in pieces) adjacency[p.Id] = new List<(Connection, string)>();
             foreach (var conn in connections)
             {
-                var connectedGuid = conn.Connected.Piece.Guid;
-                var connectingGuid = conn.Connecting.Piece.Guid;
-                if (adjacency.ContainsKey(connectedGuid))
-                    adjacency[connectedGuid].Add((conn, connectingGuid));
-                if (adjacency.ContainsKey(connectingGuid))
-                    adjacency[connectingGuid].Add((conn, connectedGuid));
+                var connectedId = conn.Connected.Piece.Id;
+                var connectingId = conn.Connecting.Piece.Id;
+                if (adjacency.ContainsKey(connectedId))
+                    adjacency[connectedId].Add((conn, connectingId));
+                if (adjacency.ContainsKey(connectingId))
+                    adjacency[connectingId].Add((conn, connectedId));
             }
 
             var piecePlanes = new Dictionary<string, Semio.Plane>();
             var visited = new HashSet<string>();
             var queue = new Queue<string>();
 
-            Type GetTypeLocal(string typeGuid) => typesDict.TryGetValue(typeGuid, out var t) ? t : null;
-            Connector GetConnectorLocal(Type type, string connectorGuid)
+            Type GetTypeLocal(string typeId) => typesDict.TryGetValue(typeId, out var t) ? t : null;
+            Connector GetConnectorLocal(Type type, string connectorId)
             {
                 if (type == null) return null;
-                if (string.IsNullOrEmpty(connectorGuid))
+                if (string.IsNullOrEmpty(connectorId))
                     return type.Connectors?.Count > 0 ? type.Connectors[0] : null;
-                return type.Connectors?.FirstOrDefault(c => c.Guid == connectorGuid);
+                return type.Connectors?.FirstOrDefault(c => c.Id == connectorId);
             }
 
             var identityPlane = new Semio.Plane
@@ -11149,44 +11148,44 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
             {
                 if (p.Plane != null && p.Center != null)
                 {
-                    piecePlanes[p.Guid] = p.Plane;
-                    visited.Add(p.Guid);
-                    queue.Enqueue(p.Guid);
+                    piecePlanes[p.Id] = p.Plane;
+                    visited.Add(p.Id);
+                    queue.Enqueue(p.Id);
                 }
             }
 
             if (queue.Count == 0 && pieces.Count > 0)
             {
-                piecePlanes[pieces[0].Guid] = identityPlane;
-                visited.Add(pieces[0].Guid);
-                queue.Enqueue(pieces[0].Guid);
+                piecePlanes[pieces[0].Id] = identityPlane;
+                visited.Add(pieces[0].Id);
+                queue.Enqueue(pieces[0].Id);
             }
 
             while (queue.Count > 0)
             {
-                var currentGuid = queue.Dequeue();
-                var currentPlane = piecePlanes[currentGuid];
-                if (!adjacency.TryGetValue(currentGuid, out var edges)) continue;
+                var currentId = queue.Dequeue();
+                var currentPlane = piecePlanes[currentId];
+                if (!adjacency.TryGetValue(currentId, out var edges)) continue;
                 foreach (var edge in edges)
                 {
-                    if (visited.Contains(edge.neighborGuid)) continue;
+                    if (visited.Contains(edge.neighborId)) continue;
                     var conn = edge.connection;
-                    var isParent = conn.Connected.Piece.Guid == currentGuid;
+                    var isParent = conn.Connected.Piece.Id == currentId;
                     if (!isParent) continue;
 
-                    var childGuid = edge.neighborGuid;
-                    var parentPiece = piecesDict[currentGuid];
-                    var childPiece = piecesDict[childGuid];
-                    var parentType = parentPiece.Type != null ? GetTypeLocal(parentPiece.Type.Guid) : null;
-                    var childType = childPiece.Type != null ? GetTypeLocal(childPiece.Type.Guid) : null;
-                    var parentConnector = GetConnectorLocal(parentType, conn.Connected.Connector?.Guid);
-                    var childConnector = GetConnectorLocal(childType, conn.Connecting.Connector?.Guid);
+                    var childId = edge.neighborId;
+                    var parentPiece = piecesDict[currentId];
+                    var childPiece = piecesDict[childId];
+                    var parentType = parentPiece.Type != null ? GetTypeLocal(parentPiece.Type.Id) : null;
+                    var childType = childPiece.Type != null ? GetTypeLocal(childPiece.Type.Id) : null;
+                    var parentConnector = GetConnectorLocal(parentType, conn.Connected.Connector?.Id);
+                    var childConnector = GetConnectorLocal(childType, conn.Connecting.Connector?.Id);
 
                     if (parentConnector != null && childConnector != null &&
                         parentConnector.Point != null && parentConnector.Direction != null &&
                         childConnector.Point != null && childConnector.Direction != null)
                     {
-                        piecePlanes[childGuid] = Utility.ComputeChildPlane(
+                        piecePlanes[childId] = Utility.ComputeChildPlane(
                             currentPlane, parentConnector.Point, parentConnector.Direction,
                             childConnector.Point, childConnector.Direction,
                             conn.Gap, conn.Shift, conn.Rise,
@@ -11194,18 +11193,18 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                     }
                     else
                     {
-                        piecePlanes[childGuid] = currentPlane;
+                        piecePlanes[childId] = currentPlane;
                     }
 
-                    visited.Add(childGuid);
-                    queue.Enqueue(childGuid);
+                    visited.Add(childId);
+                    queue.Enqueue(childId);
                 }
             }
 
             foreach (var p in pieces)
             {
-                if (!visited.Contains(p.Guid))
-                    piecePlanes[p.Guid] = identityPlane;
+                if (!visited.Contains(p.Id))
+                    piecePlanes[p.Id] = identityPlane;
             }
             #endregion 🖇️ExportDesignToBlocks_PlanePropagation
 
@@ -11223,15 +11222,15 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
 
             foreach (var piece in pieces)
             {
-                var typeGuid = piece.Type?.Guid;
-                if (string.IsNullOrEmpty(typeGuid) || typeBlockIndices.ContainsKey(typeGuid)) continue;
-                if (!typesDict.TryGetValue(typeGuid, out var type)) continue;
+                var typeId = piece.Type?.Id;
+                if (string.IsNullOrEmpty(typeId) || typeBlockIndices.ContainsKey(typeId)) continue;
+                if (!typesDict.TryGetValue(typeId, out var type)) continue;
 
-                var blockName = $"semio::{type.Name}::{type.Guid}";
+                var blockName = $"semio::{type.Name}::{type.Id}";
                 var existingDef = doc.InstanceDefinitions.Find(blockName);
                 if (existingDef != null && !existingDef.IsDeleted)
                 {
-                    typeBlockIndices[typeGuid] = existingDef.Index;
+                    typeBlockIndices[typeId] = existingDef.Index;
                     continue;
                 }
 
@@ -11241,7 +11240,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                 var representation = Kit.ExportFindMatchingRepresentation(kit, type, tags);
                 if (representation != null)
                 {
-                    var file = kit.Files?.FirstOrDefault(f => f.Guid == representation.File.Guid);
+                    var file = kit.Files?.FirstOrDefault(f => f.Id == representation.File.Id);
                     if (file?.Blob != null)
                     {
                         try
@@ -11282,21 +11281,21 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                     AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, $"Failed to create block definition for type '{type.Name}'.");
                     continue;
                 }
-                typeBlockIndices[typeGuid] = blockIdx;
+                typeBlockIndices[typeId] = blockIdx;
             }
             #endregion ⏰ExportDesignToBlocks_BlockDefinitions
 
             #region 🎯ExportDesignToBlocks_BlockInstances
             // Create block instances per piece
             var blockInstances = new List<IGH_GeometricGoo>();
-            var pieceGuids = new List<string>();
+            var pieceIds = new List<string>();
             var typeNamesList = new List<string>();
 
             foreach (var piece in pieces)
             {
-                var typeGuid = piece.Type?.Guid;
-                if (string.IsNullOrEmpty(typeGuid) || !typeBlockIndices.TryGetValue(typeGuid, out var blockIdx)) continue;
-                if (!piecePlanes.TryGetValue(piece.Guid, out var semioPlane)) continue;
+                var typeId = piece.Type?.Id;
+                if (string.IsNullOrEmpty(typeId) || !typeBlockIndices.TryGetValue(typeId, out var blockIdx)) continue;
+                if (!piecePlanes.TryGetValue(piece.Id, out var semioPlane)) continue;
 
                 var rhinoPlane = RhinoConverter.Convert(semioPlane);
 
@@ -11309,13 +11308,13 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                 var instanceRef = new InstanceReferenceGeometry(idef.Id, xform);
 
                 blockInstances.Add(GH_Convert.ToGeometricGoo(instanceRef));
-                pieceGuids.Add(piece.Guid);
-                typeNamesList.Add(typesDict.TryGetValue(typeGuid, out var tp) ? tp.Name : typeGuid);
+                pieceIds.Add(piece.Id);
+                typeNamesList.Add(typesDict.TryGetValue(typeId, out var tp) ? tp.Name : typeId);
             }
             #endregion 🎯ExportDesignToBlocks_BlockInstances
 
             DA.SetDataList(0, blockInstances);
-            DA.SetDataList(1, pieceGuids);
+            DA.SetDataList(1, pieceIds);
             DA.SetDataList(2, typeNamesList);
         }
         catch (Exception ex)
