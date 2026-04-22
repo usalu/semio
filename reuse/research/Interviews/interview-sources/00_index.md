@@ -5,6 +5,7 @@
 ### Digital Platforms
 
 - [[bim-berlin-bauteilauktion]]
+- [[bim-berlin-data-model]]
 - [[madaster]]
 - [[concular]]
 - [[biz-reallabor-zirkulaeres-bauen]]
@@ -14,6 +15,7 @@
 - [[haus-der-materialisierung]]
 - [[kunst-stoffe-berlin]]
 - [[be-ware]]
+- [[bim-berlin-reuse-pilots]]
 
 ### Material Supply
 
@@ -23,6 +25,7 @@
 ### Engineering
 
 - [[zrs-crclr-house]]
+- [[zrs-engineering]]
 - [[arup-reuse]]
 - [[iyhcc-berlin]]
 
@@ -30,6 +33,7 @@
 
 - [[museums-pavilion]]
 - [[zusammenkunft-berlin]]
+- ↳ also: [[zrs-crclr-house]], [[haus-der-materialisierung]], [[biz-reallabor-zirkulaeres-bauen]] (cross-category, tagged #design)
 
 ---
 
@@ -47,6 +51,9 @@
 
 ### Tier 2 – Important Complements
 
+- [[bim-berlin-data-model]]
+- [[bim-berlin-reuse-pilots]]
+- [[zrs-engineering]]
 - [[biz-reallabor-zirkulaeres-bauen]]
 - [[zusammenkunft-berlin]]
 - [[arup-reuse]]
