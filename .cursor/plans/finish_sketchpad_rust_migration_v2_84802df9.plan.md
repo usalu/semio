@@ -16,10 +16,10 @@ todos:
    status: completed
  - id: sketchpad_delete_kit_state
    content: "Sketchpad: delete Granular Hook Types, Entity Data Hooks, Piece/Design Derived Hooks, Targeted Kit Hooks, useKit, useKitCommands, useKitTransaction, useKitScope/KitScopeProvider, kitCommands map, executeKitCommand, KitWasmRuntimeBridge, createJsonFileKitStore/createFolderKitStore/createSessionKitStore re-exports."
-   status: in_progress
+   status: completed
  - id: sketchpad_ui_providers
    content: "Sketchpad: delete OriginProvider/FooterItemProvider/DragDropProvider/FocusProvider/PanelSectionProvider/SidePanelTabProvider; promote slices into sketchpadMachine context with typed events and fromCallback/fromPromise actors."
-   status: pending
+   status: completed
  - id: sketchpad_rewire_callsites
    content: "Sketchpad: rewire every commands.*/kitCommands.*/store.execute('semio.designApp.*') to @semio/react command hooks or actor.send; replace canSet/HookResult[2] with status.kind; wrap inputs with useDraft + useWriteIndicator."
    status: cancelled

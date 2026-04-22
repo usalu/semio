@@ -30905,7 +30905,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					inputMap := p.Args["input"].(map[string]interface{})
 					var files []string
-					if filesRaw, ok := inputMap["files"].([]interface{}); ok {
+					if filesRaw, ok := inputMap["files"].([]string); ok {
+						files = append(files, filesRaw...)
+					} else if filesRaw, ok := inputMap["files"].([]interface{}); ok {
 						for _, f := range filesRaw {
 							if s, ok := f.(string); ok {
 								files = append(files, s)

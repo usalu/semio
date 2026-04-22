@@ -258,7 +258,6 @@ import {
   ToolbarGroup,
   ToolbarItem,
   ToolbarZone,
-  Transaction,
   TransactionProvider,
   Tree,
   TreeContent,
@@ -7625,27 +7624,35 @@ export const useKitScope = (): KitScope | null => {
 export const useIsInKitScope = () => useKitScope() !== null;
 
 /**
+ * Resolves kit id: explicit param, then {@link KitScopeContext}, then {@link useActiveKitId}.
+ */
+function useSketchpadKitId(explicit?: Id): string | undefined {
+  const bridged = useContext(KitScopeContext);
+  const active = useActiveKitId();
+  if (explicit != null && String(explicit) !== "") return String(explicit);
+  if (bridged?.id) return bridged.id;
+  if (active != null && active !== "") return active;
+  return undefined;
+}
+
+/**
  * {@link KitStore} from the nearest {@link KitProvider} / {@link useKitRuntimeSafe} when the active runtime kit matches.
- * When `explicitKitId` is set (e.g. {@link useKitCommandsById}), only `runtime.kitId === explicitKitId` is required
- * so callers need not be under {@link useKitScope} as long as {@link KitProvider} is for that kit.
  */
 function useKitStoreFromProvider(explicitKitId?: string): KitStore | null {
   const runtime = useKitRuntimeSafe();
   if (!runtime) return null;
-  const kitScope = useKitScope();
-  const effectiveKitId = explicitKitId ?? kitScope?.id;
+  const effectiveKitId = useSketchpadKitId(explicitKitId as Id);
   if (!effectiveKitId) return null;
   if (runtime.kitId !== effectiveKitId) return null;
   return runtime.store;
 }
 
 /**
- * Hook for accessing kit data with optional selector.
+ * Hook for accessing kit data with optional selector (subscribes via {@link KitStore} from `@semio/react` runtime).
  **/
 export function useKit<T>(selector?: (kit: Kit) => T, id?: Id): T | Kit | null {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
-  const kitStore = useKitStoreFromProvider(resolvedId ?? undefined);
+  const resolvedId = useSketchpadKitId(id);
+  const kitStore = useKitStoreFromProvider(resolvedId);
   const subscribe = useCallback(
     (cb: () => void) => {
       if (!kitStore) return () => {};
@@ -7748,13 +7755,11 @@ const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
 const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 
 /**
- * Hook returning all types in the targeted kit.
+ * Hook returning all types in the targeted kit. Reads from {@link KitStore} (same graph as `@semio/react` triads, without requiring hooks that throw outside {@link KitProvider}).
  **/
 export function useKitTypes(id?: Id): Type[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7762,12 +7767,10 @@ export function useKitTypes(id?: Id): Type[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_TYPES;
     return kitStore.getSnapshot().kit.types ?? EMPTY_TYPES;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7775,10 +7778,8 @@ export function useKitTypes(id?: Id): Type[] {
  * Hook returning the name of the targeted kit.
  **/
 export function useKitName(id?: Id): string {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7786,12 +7787,10 @@ export function useKitName(id?: Id): string {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return "";
     return kitStore.getSnapshot().kit.name ?? "";
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7799,10 +7798,8 @@ export function useKitName(id?: Id): string {
  * Hook returning the description of the targeted kit.
  **/
 export function useKitDescription(id?: Id): string | undefined {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7810,12 +7807,10 @@ export function useKitDescription(id?: Id): string | undefined {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return undefined;
     return kitStore.getSnapshot().kit.description;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7823,10 +7818,8 @@ export function useKitDescription(id?: Id): string | undefined {
  * Hook returning all authors of the targeted kit.
  **/
 export function useKitAuthors(id?: Id): Author[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7834,13 +7827,10 @@ export function useKitAuthors(id?: Id): Author[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_AUTHORS;
-    const kit = kitStore.getSnapshot().kit;
-    return kit.authors ?? EMPTY_AUTHORS;
+    return kitStore.getSnapshot().kit.authors ?? EMPTY_AUTHORS;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7848,10 +7838,8 @@ export function useKitAuthors(id?: Id): Author[] {
  * Hook returning all files of the targeted kit.
  **/
 export function useKitFiles(id?: Id): SemioFile[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7859,13 +7847,10 @@ export function useKitFiles(id?: Id): SemioFile[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_FILES;
-    const kit = kitStore.getSnapshot().kit;
-    return kit.files ?? EMPTY_FILES;
+    return kitStore.getSnapshot().kit.files ?? EMPTY_FILES;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7873,10 +7858,8 @@ export function useKitFiles(id?: Id): SemioFile[] {
  * Hook returning all qualities of the targeted kit.
  **/
 export function useKitQualities(id?: Id): Quality[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7884,13 +7867,10 @@ export function useKitQualities(id?: Id): Quality[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_QUALITIES;
-    const kit = kitStore.getSnapshot().kit;
-    return kit.qualities ?? EMPTY_QUALITIES;
+    return kitStore.getSnapshot().kit.qualities ?? EMPTY_QUALITIES;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7898,10 +7878,8 @@ export function useKitQualities(id?: Id): Quality[] {
  * Hook returning all designs of the targeted kit.
  **/
 export function useKitDesigns(id?: Id): Design[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7909,13 +7887,10 @@ export function useKitDesigns(id?: Id): Design[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_DESIGNS;
-    const kit = kitStore.getSnapshot().kit;
-    return kit.designs ?? EMPTY_DESIGNS;
+    return kitStore.getSnapshot().kit.designs ?? EMPTY_DESIGNS;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -7930,10 +7905,8 @@ export function useDesigns(): Design[] {
  * Hook returning all folders of the targeted kit.
  **/
 export function useKitFolders(id?: Id): Folder[] {
-  const kitScope = useKitScope();
-  const resolvedId = id ?? kitScope?.id;
+  const resolvedId = useSketchpadKitId(id);
   const kitStore = useKitStoreFromProvider(resolvedId) as KitStore | null;
-
   const subscribe = useCallback(
     (callback: () => void) => {
       if (!kitStore) return () => {};
@@ -7941,13 +7914,10 @@ export function useKitFolders(id?: Id): Folder[] {
     },
     [kitStore],
   );
-
   const getSnapshot = useCallback(() => {
     if (!kitStore) return EMPTY_FOLDERS;
-    const kit = kitStore.getSnapshot().kit;
-    return kit.folders ?? EMPTY_FOLDERS;
+    return kitStore.getSnapshot().kit.folders ?? EMPTY_FOLDERS;
   }, [kitStore]);
-
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
@@ -8026,19 +7996,27 @@ export function useFileUrls(): Map<Url, Url> {
 const EMPTY_FILE_URLS: Map<Url, Url> = new Map();
 
 /**
- * Hook returning the transaction interface for the current kit.
+ * Hook returning the transaction interface for the current kit. Forwards to `kitClient` beginTx/commitTx/abortTx when available.
  **/
-export function useKitTransaction(): Transaction {
-  const kitStore = useKitStoreFromProvider();
-  if (!kitStore) {
-    return {};
-  }
-
-  return {
-    start: () => {},
-    finalize: () => {},
-    abort: () => {},
-  };
+export function useKitTransaction(): TransactionCallbacks {
+  const runtime = useKitRuntimeSafe();
+  return useMemo(() => {
+    if (!runtime?.kitClient) {
+      return { start: () => {}, finalize: () => {}, abort: () => {} };
+    }
+    const kc = runtime.kitClient;
+    return {
+      start: () => {
+        void kc.beginTx();
+      },
+      finalize: () => {
+        void kc.commitTx();
+      },
+      abort: () => {
+        void kc.abortTx();
+      },
+    };
+  }, [runtime?.kitClient]);
 }
 
 /**
@@ -8254,11 +8232,29 @@ export interface SketchpadMachineInput {
 }
 
 /**
+ * Transient UI shell state (origin, focus chrome, panel registration, dnd) owned by the sketchpad machine.
+ **/
+export interface SketchpadUiState {
+  origin: string;
+  focusItems: FocusItem[];
+  focusItemHandler: ((itemId: string) => void) | undefined;
+  panelSections: PanelSections;
+  sidePanelTabs: SidePanelTabs;
+  activeLeftTabId: string | undefined;
+  activeRightTabId: string | undefined;
+  footerItems: FooterItem[];
+  dragDrop: { activeType: Type | null; activeDesign: Design | null };
+}
+
+/**
  * Context state shape for the sketchpad XState machine.
  **/
 export interface SketchpadContext {
   id?: string;
   sketchpad: SketchpadState;
+
+  /** Navbar, side panels, footer, drag/drop, interaction origin. */
+  ui: SketchpadUiState;
 
   kits: Record<Id, AnyActorRef>;
 
@@ -8410,7 +8406,22 @@ export type SketchpadEvent =
   | { type: "FEEDBACK.RESET_FORM" }
   | { type: "FEEDBACK.SET_SUBMITTING"; isSubmitting: boolean }
   | { type: "FEEDBACK.SET_SUBMITTED"; isSubmitted: boolean }
-  | { type: "FEEDBACK.SET_ERROR"; error: string | undefined };
+  | { type: "FEEDBACK.SET_ERROR"; error: string | undefined }
+  // UI shell (sketchpad machine only — not persisted)
+  | { type: "UI.ORIGIN.SET"; origin: string }
+  | { type: "UI.FOCUS.SET_ITEMS"; items: FocusItem[] }
+  | { type: "UI.FOCUS.SET_HANDLER"; handler: ((itemId: string) => void) | undefined }
+  | { type: "UI.FOCUS.TRIGGER"; itemId: string }
+  | { type: "UI.PANEL.ADD_SECTION"; panelKey: PanelKey; section: PanelSection }
+  | { type: "UI.PANEL.REMOVE_SECTION"; panelKey: PanelKey; sectionId: string }
+  | { type: "UI.SIDEPANEL.ADD_TAB"; position: "left" | "right"; tab: SidePanelTab }
+  | { type: "UI.SIDEPANEL.REMOVE_TAB"; position: "left" | "right"; tabId: string }
+  | { type: "UI.SIDEPANEL.SET_ACTIVE_LEFT"; tabId: string }
+  | { type: "UI.SIDEPANEL.SET_ACTIVE_RIGHT"; tabId: string }
+  | { type: "UI.FOOTER.ADD"; item: FooterItem }
+  | { type: "UI.FOOTER.REMOVE"; itemId: string }
+  | { type: "UI.DRAGDROP.SET_TYPE"; draggedType: Type | null }
+  | { type: "UI.DRAGDROP.SET_DESIGN"; draggedDesign: Design | null };
 
 // #endregion ⚙️Types
 
@@ -8921,6 +8932,123 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
   return next;
 }
 
+const DEFAULT_SKETCHPAD_UI_ORIGIN = "semio.sketchpad.unknown";
+
+function createDefaultPanelSectionsForUi(): PanelSections {
+  return {
+    workbench: [],
+    details: [],
+    tools: [],
+    hud: [],
+    stats: [],
+    console: [],
+    toolbar: [],
+    leftSidePanel: [],
+    rightSidePanel: [],
+  };
+}
+
+/** Default transient UI slice for the sketchpad machine. */
+export function createDefaultSketchpadUiState(): SketchpadUiState {
+  return {
+    origin: DEFAULT_SKETCHPAD_UI_ORIGIN,
+    focusItems: [],
+    focusItemHandler: undefined,
+    panelSections: createDefaultPanelSectionsForUi(),
+    sidePanelTabs: { left: [], right: [] },
+    activeLeftTabId: undefined,
+    activeRightTabId: undefined,
+    footerItems: [],
+    dragDrop: { activeType: null, activeDesign: null },
+  };
+}
+
+function areToolbarGroupsEquivalentUi(left?: PanelSection["toolbarGroup"], right?: PanelSection["toolbarGroup"]): boolean {
+  if (left === right) return true;
+  if (!left || !right) return !left && !right;
+  return left.id === right.id && left.labelId === right.labelId && left.order === right.order;
+}
+
+function arePanelSectionsEquivalentUi(left: PanelSection, right: PanelSection): boolean {
+  const leftActionIds = left.actions?.map((action) => action.id) ?? [];
+  const rightActionIds = right.actions?.map((action) => action.id) ?? [];
+  return (
+    left.id === right.id &&
+    left.specificity === right.specificity &&
+    left.defaultOpen === right.defaultOpen &&
+    left.order === right.order &&
+    left.toolbarPlaceholder === right.toolbarPlaceholder &&
+    leftActionIds.length === rightActionIds.length &&
+    leftActionIds.every((actionId, index) => actionId === rightActionIds[index]) &&
+    areToolbarGroupsEquivalentUi(left.toolbarGroup, right.toolbarGroup)
+  );
+}
+
+function areSidePanelTabsEquivalentUi(left: SidePanelTab, right: SidePanelTab): boolean {
+  return left.id === right.id && left.icon === right.icon && left.order === right.order;
+}
+
+function areFooterItemsEquivalentUi(left: FooterItem, right: FooterItem): boolean {
+  return left.id === right.id && left.text === right.text && left.order === right.order && left.className === right.className && left.disabled === right.disabled;
+}
+
+function mergeAddPanelSection(sections: PanelSections, panelKey: PanelKey, section: PanelSection): PanelSections {
+  const currentSections = sections[panelKey] ?? [];
+  const existingSection = currentSections.find((candidate) => candidate.id === section.id);
+  if (existingSection && arePanelSectionsEquivalentUi(existingSection, section)) return sections;
+  const nextSections = [...currentSections.filter((candidate) => candidate.id !== section.id), section as any].sort((a: any, b: any) => {
+    const specificityDiff = (b.specificity ?? 0) - (a.specificity ?? 0);
+    if (specificityDiff !== 0) return specificityDiff;
+    return (a.order ?? 0) - (b.order ?? 0);
+  });
+  return { ...sections, [panelKey]: nextSections };
+}
+
+function mergeRemovePanelSection(sections: PanelSections, panelKey: PanelKey, sectionId: string): PanelSections {
+  const currentSections = sections[panelKey] ?? [];
+  const nextSections = currentSections.filter((section) => section.id !== sectionId);
+  if (nextSections.length === currentSections.length) return sections;
+  return { ...sections, [panelKey]: nextSections };
+}
+
+function mergeAddSidePanelTab(tabs: SidePanelTabs, position: "left" | "right", tab: SidePanelTab): SidePanelTabs {
+  const currentTabs = tabs[position];
+  const existingTab = currentTabs.find((candidate) => candidate.id === tab.id);
+  if (existingTab && areSidePanelTabsEquivalentUi(existingTab, tab)) return tabs;
+  const nextTabs = [...currentTabs.filter((candidate) => candidate.id !== tab.id), tab].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  return { ...tabs, [position]: nextTabs };
+}
+
+function mergeRemoveSidePanelTab(tabs: SidePanelTabs, position: "left" | "right", tabId: string): SidePanelTabs {
+  const currentTabs = tabs[position];
+  const nextTabs = currentTabs.filter((tab) => tab.id !== tabId);
+  if (nextTabs.length === currentTabs.length) return tabs;
+  return { ...tabs, [position]: nextTabs };
+}
+
+function mergeAddFooterItem(items: FooterItem[], item: FooterItem): FooterItem[] {
+  const existingItem = items.find((candidate) => candidate.id === item.id);
+  if (existingItem && areFooterItemsEquivalentUi(existingItem, item)) return items;
+  return [...items.filter((candidate) => candidate.id !== item.id), item].sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+
+function mergeRemoveFooterItem(items: FooterItem[], itemId: string): FooterItem[] {
+  const nextItems = items.filter((item) => item.id !== itemId);
+  if (nextItems.length === items.length) return items;
+  return nextItems;
+}
+
+/**
+ * Resolves the semio interaction origin id from a DOM event target.
+ */
+export function resolveOriginFromEventTarget(target: EventTarget | null): string {
+  if (!(target instanceof Element)) return DEFAULT_SKETCHPAD_UI_ORIGIN;
+  const resolved = target.closest('[id^="semio.sketchpad."]')?.getAttribute("id") ?? "";
+  if (!resolved) return DEFAULT_SKETCHPAD_UI_ORIGIN;
+  if (!resolved.startsWith("semio.sketchpad.")) return DEFAULT_SKETCHPAD_UI_ORIGIN;
+  return resolved;
+}
+
 // #endregion 🎼Helpers
 
 // #region 🖋️Sketchpad Machine
@@ -9058,7 +9186,12 @@ export const sketchpadMachine = setup({
     }),
     markDirty: () => {},
 
-    dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
+    dispatchAppEvent: assign(({ context, event }) => {
+      if (typeof (event as { type?: string }).type === "string" && (event as { type: string }).type.startsWith("UI.")) {
+        return {};
+      }
+      return executeEventHandler(context, event);
+    }),
 
     typeInit: assign(({ context, event }) => executeEventHandler(context, event)),
 
@@ -9165,6 +9298,64 @@ export const sketchpadMachine = setup({
       }
       return updates;
     }),
+
+    uiSetOrigin: assign(({ context, event }) => {
+      if (event.type !== "UI.ORIGIN.SET") return {};
+      if (context.ui.origin === event.origin) return {};
+      return { ui: { ...context.ui, origin: event.origin } };
+    }),
+    uiFocusSetItems: assign(({ context, event }) => {
+      if (event.type !== "UI.FOCUS.SET_ITEMS") return {};
+      return { ui: { ...context.ui, focusItems: event.items } };
+    }),
+    uiFocusSetHandler: assign(({ context, event }) => {
+      if (event.type !== "UI.FOCUS.SET_HANDLER") return {};
+      return { ui: { ...context.ui, focusItemHandler: event.handler } };
+    }),
+    uiFocusTrigger: ({ context, event }) => {
+      if (event.type !== "UI.FOCUS.TRIGGER") return;
+      context.ui.focusItemHandler?.(event.itemId);
+    },
+    uiPanelAddSection: assign(({ context, event }) => {
+      if (event.type !== "UI.PANEL.ADD_SECTION") return {};
+      return { ui: { ...context.ui, panelSections: mergeAddPanelSection(context.ui.panelSections, event.panelKey, event.section) } };
+    }),
+    uiPanelRemoveSection: assign(({ context, event }) => {
+      if (event.type !== "UI.PANEL.REMOVE_SECTION") return {};
+      return { ui: { ...context.ui, panelSections: mergeRemovePanelSection(context.ui.panelSections, event.panelKey, event.sectionId) } };
+    }),
+    uiSidePanelAddTab: assign(({ context, event }) => {
+      if (event.type !== "UI.SIDEPANEL.ADD_TAB") return {};
+      return { ui: { ...context.ui, sidePanelTabs: mergeAddSidePanelTab(context.ui.sidePanelTabs, event.position, event.tab) } };
+    }),
+    uiSidePanelRemoveTab: assign(({ context, event }) => {
+      if (event.type !== "UI.SIDEPANEL.REMOVE_TAB") return {};
+      return { ui: { ...context.ui, sidePanelTabs: mergeRemoveSidePanelTab(context.ui.sidePanelTabs, event.position, event.tabId) } };
+    }),
+    uiSidePanelSetActiveLeft: assign(({ context, event }) => {
+      if (event.type !== "UI.SIDEPANEL.SET_ACTIVE_LEFT") return {};
+      return { ui: { ...context.ui, activeLeftTabId: event.tabId } };
+    }),
+    uiSidePanelSetActiveRight: assign(({ context, event }) => {
+      if (event.type !== "UI.SIDEPANEL.SET_ACTIVE_RIGHT") return {};
+      return { ui: { ...context.ui, activeRightTabId: event.tabId } };
+    }),
+    uiFooterAdd: assign(({ context, event }) => {
+      if (event.type !== "UI.FOOTER.ADD") return {};
+      return { ui: { ...context.ui, footerItems: mergeAddFooterItem(context.ui.footerItems, event.item) } };
+    }),
+    uiFooterRemove: assign(({ context, event }) => {
+      if (event.type !== "UI.FOOTER.REMOVE") return {};
+      return { ui: { ...context.ui, footerItems: mergeRemoveFooterItem(context.ui.footerItems, event.itemId) } };
+    }),
+    uiDragDropSetType: assign(({ context, event }) => {
+      if (event.type !== "UI.DRAGDROP.SET_TYPE") return {};
+      return { ui: { ...context.ui, dragDrop: { ...context.ui.dragDrop, activeType: event.draggedType } } };
+    }),
+    uiDragDropSetDesign: assign(({ context, event }) => {
+      if (event.type !== "UI.DRAGDROP.SET_DESIGN") return {};
+      return { ui: { ...context.ui, dragDrop: { ...context.ui.dragDrop, activeDesign: event.draggedDesign } } };
+    }),
   },
 }).createMachine({
   id: "sketchpad",
@@ -9210,6 +9401,8 @@ export const sketchpadMachine = setup({
     },
 
     backgroundOperations: {},
+
+    ui: createDefaultSketchpadUiState(),
   }),
   on: {
     NAVIGATE: {
@@ -9272,6 +9465,20 @@ export const sketchpadMachine = setup({
     "BACKGROUND.START": { actions: "backgroundStart" },
     "BACKGROUND.COMPLETE": { actions: "backgroundComplete" },
     "BACKGROUND.FAIL": { actions: "backgroundFail" },
+    "UI.ORIGIN.SET": { actions: "uiSetOrigin" },
+    "UI.FOCUS.SET_ITEMS": { actions: "uiFocusSetItems" },
+    "UI.FOCUS.SET_HANDLER": { actions: "uiFocusSetHandler" },
+    "UI.FOCUS.TRIGGER": { actions: "uiFocusTrigger" },
+    "UI.PANEL.ADD_SECTION": { actions: "uiPanelAddSection" },
+    "UI.PANEL.REMOVE_SECTION": { actions: "uiPanelRemoveSection" },
+    "UI.SIDEPANEL.ADD_TAB": { actions: "uiSidePanelAddTab" },
+    "UI.SIDEPANEL.REMOVE_TAB": { actions: "uiSidePanelRemoveTab" },
+    "UI.SIDEPANEL.SET_ACTIVE_LEFT": { actions: "uiSidePanelSetActiveLeft" },
+    "UI.SIDEPANEL.SET_ACTIVE_RIGHT": { actions: "uiSidePanelSetActiveRight" },
+    "UI.FOOTER.ADD": { actions: "uiFooterAdd" },
+    "UI.FOOTER.REMOVE": { actions: "uiFooterRemove" },
+    "UI.DRAGDROP.SET_TYPE": { actions: "uiDragDropSetType" },
+    "UI.DRAGDROP.SET_DESIGN": { actions: "uiDragDropSetDesign" },
     "*": { actions: "dispatchAppEvent" },
   },
   states: {
@@ -21008,361 +21215,31 @@ export { appRegistry, loadAppConfigs };
 // #endregion 🎁Apps Registry
 
 // #region 🩺Navbar
-// Focus-based navigation context provider for navbar breadcrumbs and search.
+// Focus / panel / footer / origin hooks backed by `sketchpadMachine` (`context.ui`).
 
-/** FocusContextValue holds the data fields for a FocusContextValue record.
- **/
-/**
- **/
-interface FocusContextValue {
+const _emptyUiPanelSections: PanelSection[] = [];
+const _emptyUiSideTabs: SidePanelTab[] = [];
+const _emptyUiFooter: FooterItem[] = [];
+const _emptyUiFocus: FocusItem[] = [];
+
+/** Focus and navbar search integration (XState). */
+export interface FocusApi {
   focusItems: FocusItem[];
   setFocusItems: (items: FocusItem[]) => void;
   setOnFocusItem: (callback: ((itemId: string) => void) | undefined) => void;
   triggerFocusItem: (itemId: string) => void;
 }
-/**
- * FocusContext holds the data fields for a FocusContext record.
- **/
-const FocusContext = createContext<FocusContextValue | null>(null);
 
 /**
- * React context provider managing focus items and focus callbacks.
- **/
-export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [focusItems, setFocusItems] = useState<FocusItem[]>([]);
-  const onFocusItemCallbackRef = useRef<((itemId: string) => void) | undefined>(undefined);
-
-  const setFocusItemsStable = useCallback((items: FocusItem[]) => {
-    setFocusItems(items);
-  }, []);
-
-  const setOnFocusItem = useCallback((callback: ((itemId: string) => void) | undefined) => {
-    onFocusItemCallbackRef.current = callback;
-  }, []);
-
-  const triggerFocusItem = useCallback((itemId: string) => {
-    if (onFocusItemCallbackRef.current) {
-      onFocusItemCallbackRef.current(itemId);
-    }
-  }, []);
-
-  const contextValue = useMemo(
-    () => ({ focusItems, setFocusItems: setFocusItemsStable, setOnFocusItem, triggerFocusItem }),
-
-    [focusItems],
-  );
-  return <FocusContext.Provider value={contextValue}>{children}</FocusContext.Provider>;
-};
-
-/**
- * Hook returning the focus context value.
- **/
-export const useFocus = () => {
-  const context = useContext(FocusContext);
-  if (!context) throw new Error("useFocus must be used within FocusProvider");
-  return context;
-};
-
-/**
- * Hook returning the focus context value or null when outside provider.
- **/
-export const useFocusSafe = () => {
-  const context = useContext(FocusContext);
-  return context;
-};
-/**
- * PanelSectionContextValue holds the data fields for a PanelSectionContextValue record.
- **/
-interface PanelSectionContextValue {
-  sections: PanelSections;
-  addSection: (panelKey: PanelKey, section: PanelSection) => void;
-  removeSection: (panelKey: PanelKey, sectionId: string) => void;
-}
-
-/** PanelSectionContext holds the data fields for a PanelSectionContext record.
- **/
-/**
- **/
-const PanelSectionContext = createContext<PanelSectionContextValue | null>(null);
-
-const areToolbarGroupsEquivalent = (left?: PanelSection["toolbarGroup"], right?: PanelSection["toolbarGroup"]): boolean => {
-  if (left === right) return true;
-  if (!left || !right) return !left && !right;
-  return left.id === right.id && left.labelId === right.labelId && left.order === right.order;
-};
-
-const arePanelSectionsEquivalent = (left: PanelSection, right: PanelSection): boolean => {
-  const leftActionIds = left.actions?.map((action) => action.id) ?? [];
-  const rightActionIds = right.actions?.map((action) => action.id) ?? [];
-  return (
-    left.id === right.id &&
-    left.specificity === right.specificity &&
-    left.defaultOpen === right.defaultOpen &&
-    left.order === right.order &&
-    left.toolbarPlaceholder === right.toolbarPlaceholder &&
-    leftActionIds.length === rightActionIds.length &&
-    leftActionIds.every((actionId, index) => actionId === rightActionIds[index]) &&
-    areToolbarGroupsEquivalent(left.toolbarGroup, right.toolbarGroup)
-  );
-};
-
-const areSidePanelTabsEquivalent = (left: SidePanelTab, right: SidePanelTab): boolean => {
-  return left.id === right.id && left.icon === right.icon && left.order === right.order;
-};
-
-const areFooterItemsEquivalent = (left: FooterItem, right: FooterItem): boolean => {
-  return left.id === right.id && left.text === right.text && left.order === right.order && left.className === right.className && left.disabled === right.disabled;
-};
-
-/**
- * React context provider managing panel sections by panel key.
- **/
-export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [sections, setSections] = useState<PanelSections>({
-    workbench: [],
-    details: [],
-    tools: [],
-    hud: [],
-    stats: [],
-    console: [],
-    toolbar: [],
-    leftSidePanel: [],
-    rightSidePanel: [],
-  });
-
-  const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
-    setSections((prev) => {
-      const currentSections = prev[panelKey] ?? [];
-      const existingSection = currentSections.find((candidate) => candidate.id === section.id);
-      if (existingSection && arePanelSectionsEquivalent(existingSection, section)) return prev;
-      const nextSections = [...currentSections.filter((candidate) => candidate.id !== section.id), section as any].sort((a: any, b: any) => {
-        const specificityDiff = (b.specificity ?? 0) - (a.specificity ?? 0);
-        if (specificityDiff !== 0) return specificityDiff;
-        return (a.order ?? 0) - (b.order ?? 0);
-      });
-      return { ...prev, [panelKey]: nextSections };
-    });
-  }, []);
-
-  const removeSection = useCallback((panelKey: PanelKey, sectionId: string) => {
-    setSections((prev) => {
-      const currentSections = prev[panelKey] ?? [];
-      const nextSections = currentSections.filter((section) => section.id !== sectionId);
-      if (nextSections.length === currentSections.length) return prev;
-      return { ...prev, [panelKey]: nextSections };
-    });
-  }, []);
-
-  const contextValue = useMemo(() => ({ sections, addSection, removeSection }), [sections, addSection, removeSection]);
-
-  return <PanelSectionContext.Provider value={contextValue}>{children}</PanelSectionContext.Provider>;
-};
-
-/**
- * Hook returning panel sections for a given panel key.
- **/
-export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
-  const context = useContext(PanelSectionContext);
-  if (!context) throw new Error("usePanelSections must be used within PanelSectionProvider");
-  const sections = context.sections[panelKey];
-  return sections;
-};
-
-/**
- * Hook returning a callback to add a section to a panel.
- **/
-export const useAddPanelSection = () => {
-  const context = useContext(PanelSectionContext);
-  if (!context) throw new Error("useAddPanelSection must be used within PanelSectionProvider");
-  return context.addSection;
-};
-
-/**
- * Hook returning a callback to remove a section from a panel.
- *
- **/
-export const useRemovePanelSection = () => {
-  const context = useContext(PanelSectionContext);
-  if (!context) throw new Error("useRemovePanelSection must be used within PanelSectionProvider");
-  return context.removeSection;
-};
-
-// #endregion 🩺Navbar
-
-// #region 🗡️SidePanel Tabs
-// Context provider managing side panel and HUD panel tab registration.
-/**
- * SidePanelTabsState holds the data fields for a SidePanelTabsState record.
- **/
-interface SidePanelTabsState {
-  left: SidePanelTab[];
-  right: SidePanelTab[];
-}
-
-interface SidePanelTabContextValue {
-  sidePanelTabs: SidePanelTabsState;
-  addSidePanelTab: (position: "left" | "right", tab: SidePanelTab) => void;
-  removeSidePanelTab: (position: "left" | "right", tabId: string) => void;
-  activeLeftTabId: string | undefined;
-  activeRightTabId: string | undefined;
-  setActiveLeftTabId: (tabId: string) => void;
-  setActiveRightTabId: (tabId: string) => void;
-}
-/**
- * SidePanelTabContext holds the data fields for a SidePanelTabContext record.
- **/
-const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null);
-
-export const SidePanelTabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
-  const [activeLeftTabId, setActiveLeftTabId] = useState<string | undefined>(undefined);
-  const [activeRightTabId, setActiveRightTabId] = useState<string | undefined>(undefined);
-
-  const addSidePanelTab = useCallback((position: "left" | "right", tab: SidePanelTab) => {
-    setSidePanelTabs((prev) => {
-      const currentTabs = prev[position];
-      const existingTab = currentTabs.find((candidate) => candidate.id === tab.id);
-      if (existingTab && areSidePanelTabsEquivalent(existingTab, tab)) return prev;
-      const nextTabs = [...currentTabs.filter((candidate) => candidate.id !== tab.id), tab].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      return { ...prev, [position]: nextTabs };
-    });
-  }, []);
-
-  const removeSidePanelTab = useCallback((position: "left" | "right", tabId: string) => {
-    setSidePanelTabs((prev) => {
-      const currentTabs = prev[position];
-      const nextTabs = currentTabs.filter((tab) => tab.id !== tabId);
-      if (nextTabs.length === currentTabs.length) return prev;
-      return { ...prev, [position]: nextTabs };
-    });
-  }, []);
-
-  const contextValue = useMemo(
-    () => ({
-      sidePanelTabs,
-      addSidePanelTab,
-      removeSidePanelTab,
-      activeLeftTabId,
-      activeRightTabId,
-      setActiveLeftTabId,
-      setActiveRightTabId,
-    }),
-    [sidePanelTabs, addSidePanelTab, removeSidePanelTab, activeLeftTabId, activeRightTabId],
-  );
-
-  return <SidePanelTabContext.Provider value={contextValue}>{children}</SidePanelTabContext.Provider>;
-};
-
-/**
- * Hook returning side panel tabs for a given position.
- **/
-export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useSidePanelTabs must be used within SidePanelTabProvider");
-  return context.sidePanelTabs[position];
-};
-
-/**
- * Hook returning a callback to add a side panel tab.
- **/
-export const useAddSidePanelTab = () => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useAddSidePanelTab must be used within SidePanelTabProvider");
-  return context.addSidePanelTab;
-};
-
-/**
- * Hook returning a callback to remove a side panel tab.
- *
- **/
-export const useRemoveSidePanelTab = () => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useRemoveSidePanelTab must be used within SidePanelTabProvider");
-  return context.removeSidePanelTab;
-};
-
-/**
- * Hook returning the active left tab ID with setter.
- *
- **/
-export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => void] => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useActiveLeftTabId must be used within SidePanelTabProvider");
-  return [context.activeLeftTabId, context.setActiveLeftTabId];
-};
-
-/**
- * Hook returning the active right tab ID with setter.
- **/
-export const useActiveRightTabId = (): [string | undefined, (tabId: string) => void] => {
-  const context = useContext(SidePanelTabContext);
-  if (!context) throw new Error("useActiveRightTabId must be used within SidePanelTabProvider");
-  return [context.activeRightTabId, context.setActiveRightTabId];
-};
-
-// #endregion 🗡️SidePanel Tabs
-
-// #region 🏰Origin
-// Context provider for tracking the origin URL of the sketchpad instance.
-
-/** OriginStore holds the data fields for a OriginStore record.
- **/
-/**
- **/
-type OriginStore = {
-  subscribe: (callback: () => void) => () => void;
-  getOrigin: () => string;
-};
-
-/** DEFAULT_ORIGIN holds the data fields for a DEFAULT_ORIGIN record.
- **/
-/**
- **/
-const DEFAULT_ORIGIN = "semio.sketchpad.unknown";
-/**
- * createOriginStore holds the data fields for a createOriginStore record.
- **/
-function createOriginStore(): OriginStore & { setOrigin: (origin: string) => void } {
-  let origin = DEFAULT_ORIGIN;
-  const listeners = new Set<() => void>();
-  const subscribe = (callback: () => void) => {
-    listeners.add(callback);
-    return () => {
-      listeners.delete(callback);
-    };
-  };
-  const setOrigin = (next: string) => {
-    if (origin === next) return;
-    origin = next;
-    listeners.forEach((cb) => cb());
-  };
-  return { subscribe, setOrigin, getOrigin: () => origin };
-}
-/**
- **/
-function resolveOriginFromTarget(target: EventTarget | null): string {
-  if (!(target instanceof Element)) return DEFAULT_ORIGIN;
-  const resolved = target.closest('[id^="semio.sketchpad."]')?.getAttribute("id") ?? "";
-  if (!resolved) return DEFAULT_ORIGIN;
-  if (!resolved.startsWith("semio.sketchpad.")) return DEFAULT_ORIGIN;
-  return resolved;
-}
-/**
- * OriginContext holds the data fields for a OriginContext record.
- **/
-const OriginContext = createContext<OriginStore | null>(null);
-
-/**
- * React context provider tracking the UI origin of user interactions.
- **/
-export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const storeRef = useRef<ReturnType<typeof createOriginStore> | null>(null);
-  if (!storeRef.current) storeRef.current = createOriginStore();
+ * Listens to pointer/keydown/focusin and updates `ui.origin` on the sketchpad actor.
+ * Mount once under the sketchpad actor; renders nothing.
+ */
+export const OriginDocumentListener: FC = () => {
+  const actor = useSketchpadActorSafe();
   useEffect(() => {
-    const store = storeRef.current;
-    if (!store) return;
+    if (!actor) return;
     const handler = (event: Event) => {
-      store.setOrigin(resolveOriginFromTarget(event.target));
+      actor.send({ type: "UI.ORIGIN.SET", origin: resolveOriginFromEventTarget(event.target) });
     };
     document.addEventListener("pointerdown", handler, true);
     document.addEventListener("keydown", handler, true);
@@ -21372,100 +21249,279 @@ export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
       document.removeEventListener("keydown", handler, true);
       document.removeEventListener("focusin", handler, true);
     };
-  }, []);
-  return <OriginContext.Provider value={storeRef.current}>{children}</OriginContext.Provider>;
+  }, [actor]);
+  return null;
 };
+
+/**
+ * @deprecated No-op — shell state lives in the sketchpad machine. Mount {@link OriginDocumentListener} once instead.
+ */
+export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => (
+  <>
+    <OriginDocumentListener />
+    {children}
+  </>
+);
+
+/**
+ * @deprecated No-op — mount {@link OriginDocumentListener} if needed; state is in `sketchpadMachine`.
+ */
+export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
+
+/**
+ * @deprecated No-op.
+ */
+export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
+
+/**
+ * @deprecated No-op.
+ */
+export const SidePanelTabProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => <>{children}</>;
+
+/**
+ * @deprecated No-op.
+ */
+export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
+
+export const useFocus = (): FocusApi => {
+  const actor = useSketchpadActor();
+  const focusItems = useSelector(actor, (snapshot) => snapshot.context.ui.focusItems);
+  const setFocusItems = useCallback(
+    (items: FocusItem[]) => {
+      actor.send({ type: "UI.FOCUS.SET_ITEMS", items });
+    },
+    [actor],
+  );
+  const setOnFocusItem = useCallback(
+    (callback: ((itemId: string) => void) | undefined) => {
+      actor.send({ type: "UI.FOCUS.SET_HANDLER", handler: callback });
+    },
+    [actor],
+  );
+  const triggerFocusItem = useCallback(
+    (itemId: string) => {
+      actor.send({ type: "UI.FOCUS.TRIGGER", itemId });
+    },
+    [actor],
+  );
+  return useMemo(
+    () => ({ focusItems, setFocusItems, setOnFocusItem, triggerFocusItem }),
+    [focusItems, setFocusItems, setOnFocusItem, triggerFocusItem],
+  );
+};
+
+export const useFocusSafe = (): FocusApi | null => {
+  const actor = useSketchpadActorSafe();
+  const focusItems = useSyncExternalStore(
+    useCallback(
+      (onChange) => {
+        if (!actor) return () => {};
+        const s = actor.subscribe(() => onChange());
+        return () => s.unsubscribe();
+      },
+      [actor],
+    ),
+    useCallback(() => (actor ? actor.getSnapshot().context.ui.focusItems : _emptyUiFocus), [actor]),
+    () => _emptyUiFocus,
+  );
+  const setFocusItems = useCallback(
+    (items: FocusItem[]) => {
+      actor?.send({ type: "UI.FOCUS.SET_ITEMS", items });
+    },
+    [actor],
+  );
+  const setOnFocusItem = useCallback(
+    (callback: ((itemId: string) => void) | undefined) => {
+      actor?.send({ type: "UI.FOCUS.SET_HANDLER", handler: callback });
+    },
+    [actor],
+  );
+  const triggerFocusItem = useCallback(
+    (itemId: string) => {
+      actor?.send({ type: "UI.FOCUS.TRIGGER", itemId });
+    },
+    [actor],
+  );
+  return useMemo(() => {
+    if (!actor) return null;
+    return { focusItems, setFocusItems, setOnFocusItem, triggerFocusItem };
+  }, [actor, focusItems, setFocusItems, setOnFocusItem, triggerFocusItem]);
+};
+
+/**
+ * Hook returning panel sections for a given panel key.
+ **/
+export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
+  const actor = useSketchpadActor();
+  return useSelector(
+    actor,
+    useCallback((snapshot) => snapshot.context.ui.panelSections[panelKey] ?? _emptyUiPanelSections, [panelKey]),
+  );
+};
+
+/**
+ * Hook returning a callback to add a section to a panel.
+ **/
+export const useAddPanelSection = () => {
+  const actor = useSketchpadActor();
+  return useCallback(
+    (panelKey: PanelKey, section: PanelSection) => {
+      actor.send({ type: "UI.PANEL.ADD_SECTION", panelKey, section });
+    },
+    [actor],
+  );
+};
+
+/**
+ * Hook returning a callback to remove a section from a panel.
+ */
+export const useRemovePanelSection = () => {
+  const actor = useSketchpadActor();
+  return useCallback(
+    (panelKey: PanelKey, sectionId: string) => {
+      actor.send({ type: "UI.PANEL.REMOVE_SECTION", panelKey, sectionId });
+    },
+    [actor],
+  );
+};
+
+// #endregion 🩺Navbar
+
+// #region 🗡️SidePanel Tabs
+
+/**
+ * Hook returning side panel tabs for a given position.
+ **/
+export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => {
+  const actor = useSketchpadActor();
+  return useSelector(
+    actor,
+    useCallback((snapshot) => snapshot.context.ui.sidePanelTabs[position] ?? _emptyUiSideTabs, [position]),
+  );
+};
+
+/**
+ * Hook returning a callback to add a side panel tab.
+ **/
+export const useAddSidePanelTab = () => {
+  const actor = useSketchpadActor();
+  return useCallback(
+    (position: "left" | "right", tab: SidePanelTab) => {
+      actor.send({ type: "UI.SIDEPANEL.ADD_TAB", position, tab });
+    },
+    [actor],
+  );
+};
+
+/**
+ * Hook returning a callback to remove a side panel tab.
+ */
+export const useRemoveSidePanelTab = () => {
+  const actor = useSketchpadActor();
+  return useCallback(
+    (position: "left" | "right", tabId: string) => {
+      actor.send({ type: "UI.SIDEPANEL.REMOVE_TAB", position, tabId });
+    },
+    [actor],
+  );
+};
+
+/**
+ * Hook returning the active left tab ID with setter.
+ */
+export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => void] => {
+  const actor = useSketchpadActor();
+  const activeLeftTabId = useSelector(actor, (snapshot) => snapshot.context.ui.activeLeftTabId);
+  const setActiveLeftTabId = useCallback(
+    (tabId: string) => {
+      actor.send({ type: "UI.SIDEPANEL.SET_ACTIVE_LEFT", tabId });
+    },
+    [actor],
+  );
+  return [activeLeftTabId, setActiveLeftTabId];
+};
+
+/**
+ * Hook returning the active right tab ID with setter.
+ */
+export const useActiveRightTabId = (): [string | undefined, (tabId: string) => void] => {
+  const actor = useSketchpadActor();
+  const activeRightTabId = useSelector(actor, (snapshot) => snapshot.context.ui.activeRightTabId);
+  const setActiveRightTabId = useCallback(
+    (tabId: string) => {
+      actor.send({ type: "UI.SIDEPANEL.SET_ACTIVE_RIGHT", tabId });
+    },
+    [actor],
+  );
+  return [activeRightTabId, setActiveRightTabId];
+};
+
+// #endregion 🗡️SidePanel Tabs
+
+// #region 🏰Origin
 
 /**
  * Hook returning a callback that resolves the current origin string.
  **/
 export function useOrigin(): () => string {
-  const store = useContext(OriginContext);
-  return useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]);
+  const actor = useSketchpadActorSafe();
+  return useCallback(() => (actor ? actor.getSnapshot().context.ui.origin : DEFAULT_SKETCHPAD_UI_ORIGIN), [actor]);
 }
 
 /**
  * Hook returning the current origin string reactively.
  **/
 export function useOriginValue(): string {
-  const store = useContext(OriginContext);
+  const actor = useSketchpadActorSafe();
   return useSyncExternalStore(
-    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
-    useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
+    useCallback(
+      (onChange) => {
+        if (!actor) return () => {};
+        const sub = actor.subscribe(() => onChange());
+        return () => sub.unsubscribe();
+      },
+      [actor],
+    ),
+    useCallback(() => (actor ? actor.getSnapshot().context.ui.origin : DEFAULT_SKETCHPAD_UI_ORIGIN), [actor]),
+    useCallback(() => DEFAULT_SKETCHPAD_UI_ORIGIN, []),
   );
 }
 
 // #endregion 🏰Origin
 
 // #region 🔬Footer Items
-// Context provider for dynamically registering footer bar items.
-
-/** FooterItemContextValue holds the data fields for a FooterItemContextValue record.
- **/
-/**
- **/
-interface FooterItemContextValue {
-  items: FooterItem[];
-  addItem: (item: FooterItem) => void;
-  removeItem: (itemId: string) => void;
-}
-/**
- * FooterItemContext holds the data fields for a FooterItemContext record.
- **/
-const FooterItemContext = createContext<FooterItemContextValue | null>(null);
-
-/**
- * React context provider for dynamically registered footer items.
- **/
-export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<FooterItem[]>([]);
-
-  const addItem = useCallback((item: FooterItem) => {
-    setItems((prev) => {
-      const existingItem = prev.find((candidate) => candidate.id === item.id);
-      if (existingItem && areFooterItemsEquivalent(existingItem, item)) return prev;
-      const nextItems = [...prev.filter((candidate) => candidate.id !== item.id), item].sort((a, b) => (a.order || 0) - (b.order || 0));
-      return nextItems;
-    });
-  }, []);
-
-  const removeItem = useCallback((itemId: string) => {
-    setItems((prev) => {
-      const nextItems = prev.filter((item) => item.id !== itemId);
-      if (nextItems.length === prev.length) return prev;
-      return nextItems;
-    });
-  }, []);
-
-  const contextValue = useMemo(() => ({ items, addItem, removeItem }), [items, addItem, removeItem]);
-
-  return <FooterItemContext.Provider value={contextValue}>{children}</FooterItemContext.Provider>;
-};
 /**
  * Hook returning the registered footer items.
  **/
 export const useFooterItems = (): FooterItem[] => {
-  const context = useContext(FooterItemContext);
-  if (!context) throw new Error("useFooterItems must be used within FooterItemProvider");
-  return context.items;
+  const actor = useSketchpadActor();
+  return useSelector(actor, (snapshot) => snapshot.context.ui.footerItems);
 };
 
 /**
  * Hook returning a callback to add a footer item.
  **/
 export const useAddFooterItem = () => {
-  const context = useContext(FooterItemContext);
-  if (!context) throw new Error("useAddFooterItem must be used within FooterItemProvider");
-  return context.addItem;
+  const actor = useSketchpadActor();
+  return useCallback(
+    (item: FooterItem) => {
+      actor.send({ type: "UI.FOOTER.ADD", item });
+    },
+    [actor],
+  );
 };
 
 /**
  * Hook returning a callback to remove a footer item.
- **/
+ */
 export const useRemoveFooterItem = () => {
-  const context = useContext(FooterItemContext);
-  if (!context) throw new Error("useRemoveFooterItem must be used within FooterItemProvider");
-  return context.removeItem;
+  const actor = useSketchpadActor();
+  return useCallback(
+    (itemId: string) => {
+      actor.send({ type: "UI.FOOTER.REMOVE", itemId });
+    },
+    [actor],
+  );
 };
 
 // #endregion 🔬Footer Items
@@ -21621,12 +21677,8 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 // #endregion 🌍ToolGroup
 
 // #region 🌥️DragDrop
-// Context provider for drag-and-drop type placement interactions.
-
-/**
- * Interface for drag-and-drop context value.
- **/
-interface DragDropContextValue {
+/** Current drag-and-drop affordances for type/design placement (XState `ui.dragDrop`). */
+export interface DragDropApi {
   activeDraggedType: Type | null;
   activeDraggedDesign: Design | null;
   setActiveDraggedType: (type: Type | null) => void;
@@ -21634,27 +21686,30 @@ interface DragDropContextValue {
 }
 
 /**
- * React context for drag-and-drop type and design state.
- **/
-const DragDropContext = createContext<DragDropContextValue | null>(null);
+ * @deprecated No-op; drag/drop state lives in `sketchpadMachine`.
+ */
+export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => <>{children}</>;
 
-/**
- * React context provider for drag-and-drop type and design placement.
- **/
-export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
-  const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
-
-  return <DragDropContext.Provider value={{ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }}>{children}</DragDropContext.Provider>;
-};
-
-/**
- * Hook returning the drag-and-drop context value.
- **/
-export const useDragDrop = () => {
-  const context = useContext(DragDropContext);
-  if (!context) throw new Error("useDragDrop must be used within DragDropProvider");
-  return context;
+export const useDragDrop = (): DragDropApi => {
+  const actor = useSketchpadActor();
+  const activeDraggedType = useSelector(actor, (snapshot) => snapshot.context.ui.dragDrop.activeType);
+  const activeDraggedDesign = useSelector(actor, (snapshot) => snapshot.context.ui.dragDrop.activeDesign);
+  const setActiveDraggedType = useCallback(
+    (ty: Type | null) => {
+      actor.send({ type: "UI.DRAGDROP.SET_TYPE", draggedType: ty });
+    },
+    [actor],
+  );
+  const setActiveDraggedDesign = useCallback(
+    (design: Design | null) => {
+      actor.send({ type: "UI.DRAGDROP.SET_DESIGN", draggedDesign: design });
+    },
+    [actor],
+  );
+  return useMemo(
+    () => ({ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }),
+    [activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign],
+  );
 };
 
 // #endregion 🌥️DragDrop
@@ -23191,13 +23246,10 @@ export const LayoutCanvas: FC<{
       wrapped = <SketchpadScopeContext.Provider value={sketchpadScope}>{wrapped}</SketchpadScopeContext.Provider>;
     }
     wrapped = (
-      <OriginProvider>
-        <FocusProvider>
-          <PanelSectionProvider>
-            <FooterItemProvider>{wrapped}</FooterItemProvider>
-          </PanelSectionProvider>
-        </FocusProvider>
-      </OriginProvider>
+      <>
+        <OriginDocumentListener />
+        {wrapped}
+      </>
     );
 
     return wrapped;
@@ -23432,29 +23484,27 @@ export const LayoutCanvas: FC<{
               return (
                 <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0} unstable_useTransitions={false}>
                   <LayoutScopeWrapper>
-                    <DragDropProvider>
-                      <LayoutErrorBoundary
-                        windowId={windowType.id}
-                        onError={(error: Error, info: React.ErrorInfo) => {
-                          console.error("Error in window:", windowType.id, error, info);
-                        }}
+                    <LayoutErrorBoundary
+                      windowId={windowType.id}
+                      onError={(error: Error, info: React.ErrorInfo) => {
+                        console.error("Error in window:", windowType.id, error, info);
+                      }}
+                    >
+                      <Window
+                        id={windowType.id}
+                        isVisible={true}
+                        showControls={true}
+                        onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
+                        onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
+                        onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
+                        onClose={() => clickGoldenLayoutControl(".lm_close")}
+                        controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}
                       >
-                        <Window
-                          id={windowType.id}
-                          isVisible={true}
-                          showControls={true}
-                          onOpenInNewWindow={() => clickGoldenLayoutControl(".lm_popout")}
-                          onMaximize={() => clickGoldenLayoutControl(".lm_maximise")}
-                          onMinimize={() => clickGoldenLayoutControl(".lm_maximise")}
-                          onClose={() => clickGoldenLayoutControl(".lm_close")}
-                          controls={windowType.controls ? <WindowControlsGroup controls={windowType.controls} /> : undefined}
-                        >
-                          <ReactFlowProvider>
-                            <WindowComponent />
-                          </ReactFlowProvider>
-                        </Window>
-                      </LayoutErrorBoundary>
-                    </DragDropProvider>
+                        <ReactFlowProvider>
+                          <WindowComponent />
+                        </ReactFlowProvider>
+                      </Window>
+                    </LayoutErrorBoundary>
                   </LayoutScopeWrapper>
                 </MemoryRouter>
               );
@@ -24866,19 +24916,8 @@ const Sketchpad = ({
         importKitUrls={importKitUrls}
       >
         <SketchpadInteractionBridge>
-          <OriginProvider>
-            <FocusProvider>
-              <PanelSectionProvider>
-                <SidePanelTabProvider>
-                  <FooterItemProvider>
-                    <DragDropProvider>
-                      <SketchpadContent />
-                    </DragDropProvider>
-                  </FooterItemProvider>
-                </SidePanelTabProvider>
-              </PanelSectionProvider>
-            </FocusProvider>
-          </OriginProvider>
+          <OriginDocumentListener />
+          <SketchpadContent />
         </SketchpadInteractionBridge>
       </SketchpadScopeProvider>
       </KitRegistryProvider>
@@ -26208,7 +26247,7 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
  * Returns the Kit app transaction controller with start, finalize, and abort.
  *MUST provide transaction actions dispatching to the XState actor.
  **/
-export function useKitAppTransaction(): Transaction {
+export function useKitAppTransaction(): TransactionCallbacks {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
   const kitId = kitScope?.id ?? "";
@@ -38703,9 +38742,9 @@ export function useTypeAppActiveTool(): HookResult<ToolKind> {
 }
 
 /**
- * Transaction holds the data fields for a Transaction record.
- **/
-interface Transaction {
+ * Kit/type-app transaction control (start, finalize, abort) — not the @semio/ui provider type.
+ */
+interface TransactionCallbacks {
   start?: () => void;
   finalize?: () => void;
   abort?: () => void;
@@ -38715,7 +38754,7 @@ interface Transaction {
  * Returns a transaction object with start, finalize, and abort methods.
  *MUST return stub methods until XState transaction events are implemented.
  **/
-export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
+export function useTypeAppTransaction(_id?: TypeAppId): TransactionCallbacks {
   // TODO: Implement transaction via XState events
   return {
     start: () => {},
