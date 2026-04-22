@@ -7,28 +7,28 @@ todos:
    status: completed
  - id: apply_diff_on_stores
    content: Add `pub fn apply_diff(&mut self, &XDiff) -> Result<()>` to every entity store (attribute, author, benchmark, concept, connection, connector, design, file, folder, group, kit, layer, piece, port, prop, quality, representation, side, stat, tag, typ), centralizing event emission, cache invalidation, and pointer rewiring in strict remove->update->add order
-   status: in_progress
+   status: completed
  - id: commands_return_diff
    content: Change every Change*Command::apply to return (XDiff, Vec<Self> /*inverse*/), route all mutations through store.apply_diff, delete direct set_*/insert_*/remove_* usage and the FromKitDiff variant
-   status: pending
+   status: completed
  - id: apply_many_compact
    content: Rewrite ChangeKitCommand::apply_many to fold diffs via merge, add ChangeKitCommand::compact that drops empty diffs, collapses repeated scalar writes, cancels Add+Remove pairs, and merges nested ChangeXCommands
-   status: pending
+   status: completed
  - id: kit_change_trim
    content: "Trim `pub mod kit_change`: keep KitChange as command-list forward+inverse, delete from_dto_pair / apply_forward_dto / apply_backward_dto, rewrite apply_forward/apply_backward over apply_many"
-   status: pending
+   status: completed
  - id: delete_legacy
    content: Delete DesignChange, DesignStore::delete_change/flatten_change/invert_change/validate_change/diff_from, KitDiff::between/apply_to_dto/apply_metadata_to_kit_dto, apply_design_full_dto, DesignDiffPatch, apply_design_diff_rpc, apply_kit_diff_rpc, and the WASM apply_design_diff / apply_kit_diff shims
-   status: pending
+   status: completed
  - id: caller_rewire
    content: Rewire kit_transaction, kit_draft, kit_session, kit_store_command, kit_checkpoint, kit_alternative, io, wasm to the new commands-only model
-   status: pending
+   status: completed
  - id: tests
    content: Add tests for apply_diff order-of-operations, per-command diff correctness, compact preserves final state, forward+inverse round-trip; rewrite existing apply_design_diff tests as command-based
-   status: pending
+   status: completed
  - id: agents_md
    content: Update `Change flow` line in [semio/rs/AGENTS.md](semio/rs/AGENTS.md) to describe the new command->diff->central-apply pipeline
-   status: pending
+   status: completed
 isProject: false
 ---
 

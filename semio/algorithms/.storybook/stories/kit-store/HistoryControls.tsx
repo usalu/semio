@@ -65,6 +65,8 @@ function walkAlternative(item: unknown, on: VcsIdCallbacks): void {
 
 export const HistoryControls: React.FC<{
   handle: KitStoreHandle | null;
+  /** Shown in this pane when `create()` or WASM init failed (in addition to Entity pane). */
+  initErr: string | null;
   onLog: (msg: string) => void;
   sessionId: string;
   onSessionId: (s: string) => void;
@@ -78,7 +80,7 @@ export const HistoryControls: React.FC<{
   onAltId: (s: string) => void;
   msg: string;
   onMsg: (s: string) => void;
-}> = ({ handle, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg }) => {
+}> = ({ handle, initErr, onLog, sessionId, onSessionId, onDraftId, onTxId, draftId, txId, cpId, onCpId, altId, onAltId, msg, onMsg }) => {
   const ex = (label: string, o: object) => {
     if (!handle) {
       onLog("VCS: KitStore handle not ready yet (WASM still loading or init failed — see Entity ids panel).");
@@ -103,7 +105,15 @@ export const HistoryControls: React.FC<{
 
   return (
     <div className="text-foreground min-h-0 space-y-1.5 overflow-auto p-2 text-[10px]">
-      {!canVcs ? <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div> : null}
+      {initErr ? (
+        <div className="text-destructive wrap-break-word rounded border border-destructive/50 bg-destructive/5 p-1.5 text-[10px]">
+          <span className="font-medium">WASM / KitStore failed: </span>
+          {initErr}
+        </div>
+      ) : null}
+      {!initErr && !canVcs ? (
+        <div className="text-muted-foreground rounded border border-amber-600/50 bg-amber-50 p-1.5 text-[10px] dark:bg-amber-950/40">Loading WASM / KitStore… buttons stay disabled until ready.</div>
+      ) : null}
       <div className="text-muted-foreground font-medium">VCS (KitStoreCommand)</div>
       <div className="grid grid-cols-2 gap-1">
         <B disabled={!canVcs} onClick={() => ex("newSession", { newSession: null })}>

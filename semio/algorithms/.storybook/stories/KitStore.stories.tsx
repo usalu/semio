@@ -146,6 +146,7 @@ function HistoryWindow() {
     <div className="h-full min-h-0">
       <HistoryControls
         handle={s.handle}
+        initErr={s.initErr}
         onLog={s.log}
         sessionId={s.sessionId}
         onSessionId={s.setSessionId}

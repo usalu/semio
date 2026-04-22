@@ -2370,3 +2370,393 @@ fn representation_full_delta(b: &RepresentationFullDto, a: &RepresentationFullDt
     }
     d
 }
+
+// --- Merge sparse diffs into full DTOs (central `apply_diff` / kit patch) ---
+
+pub fn merge_file_diff_into_full(fd: &mut FileFullDto, d: &FileDiff) {
+    if let Some(v) = &d.url {
+        fd.url = v.clone();
+    }
+    if let Some(v) = &d.mime {
+        fd.mime = v.clone();
+    }
+    if let Some(v) = &d.size {
+        fd.size = *v;
+    }
+    if let Some(v) = &d.hash {
+        fd.hash = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.created {
+        fd.created = v.clone();
+    }
+    if let Some(v) = &d.updated {
+        fd.updated = v.clone();
+    }
+}
+
+pub fn merge_folder_diff_into_full(fd: &mut FolderFullDto, d: &FolderDiff) {
+    if let Some(v) = &d.path {
+        fd.path = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+}
+
+pub fn merge_attribute_diff_into_full(fd: &mut AttributeFullDto, d: &AttributeDiff) {
+    if let Some(v) = &d.key {
+        fd.key = v.clone();
+    }
+    if let Some(v) = &d.value {
+        fd.value = v.clone();
+    }
+    if let Some(v) = &d.definition {
+        fd.definition = v.clone();
+    }
+}
+
+pub fn merge_prop_diff_into_full(fd: &mut PropFullDto, d: &PropDiff) {
+    if let Some(v) = &d.key {
+        fd.key = v.clone();
+    }
+    if let Some(v) = &d.value {
+        fd.value = v.clone();
+    }
+    if let Some(v) = &d.unit {
+        fd.unit = v.clone();
+    }
+}
+
+pub fn merge_author_diff_into_full(fd: &mut AuthorFullDto, d: &AuthorDiff) {
+    if let Some(v) = &d.name {
+        fd.name = v.clone();
+    }
+    if let Some(v) = &d.email {
+        fd.email = v.clone();
+    }
+    if let Some(v) = &d.role {
+        fd.role = v.clone();
+    }
+    if let Some(v) = &d.rank {
+        fd.rank = *v;
+    }
+}
+
+pub fn merge_concept_diff_into_full(fd: &mut ConceptFullDto, d: &ConceptDiff) {
+    if let Some(v) = &d.name {
+        fd.name = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.order {
+        fd.order = *v;
+    }
+}
+
+pub fn merge_tag_diff_into_full(fd: &mut TagFullDto, d: &TagDiff) {
+    if let Some(v) = &d.name {
+        fd.name = v.clone();
+    }
+    if let Some(v) = &d.order {
+        fd.order = *v;
+    }
+}
+
+pub fn merge_benchmark_diff_into_full(fd: &mut BenchmarkFullDto, d: &BenchmarkDiff) {
+    if let Some(v) = &d.name {
+        fd.name = v.clone();
+    }
+    if let Some(v) = &d.min {
+        fd.min = *v;
+    }
+    if let Some(v) = &d.max {
+        fd.max = *v;
+    }
+    if let Some(v) = &d.min_excluded {
+        fd.min_excluded = *v;
+    }
+    if let Some(v) = &d.max_excluded {
+        fd.max_excluded = *v;
+    }
+}
+
+pub fn merge_benchmarks_diff_into_vec(vec: &mut Vec<BenchmarkFullDto>, d: &BenchmarksDiff) {
+    for id in &d.removed {
+        vec.retain(|b| b.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(b) = vec.iter_mut().find(|b| b.id == u.id.id) {
+            merge_benchmark_diff_into_full(b, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_quality_diff_into_full(fd: &mut QualityFullDto, d: &QualityDiff) {
+    if let Some(v) = &d.key {
+        fd.key = v.clone();
+    }
+    if let Some(v) = &d.value {
+        fd.value = v.clone();
+    }
+    if let Some(v) = &d.unit {
+        fd.unit = v.clone();
+    }
+    if let Some(v) = &d.definition {
+        fd.definition = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(b) = &d.benchmarks {
+        merge_benchmarks_diff_into_vec(&mut fd.benchmarks, b);
+    }
+}
+
+pub fn merge_attributes_coll_into_vec(vec: &mut Vec<AttributeFullDto>, d: &AttributesDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_attribute_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_props_coll_into_vec(vec: &mut Vec<PropFullDto>, d: &PropsDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_prop_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_authors_coll_into_vec(vec: &mut Vec<AuthorFullDto>, d: &AuthorsDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_author_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_concepts_coll_into_vec(vec: &mut Vec<ConceptFullDto>, d: &ConceptsDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_concept_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_tags_coll_into_vec(vec: &mut Vec<TagFullDto>, d: &TagsDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_tag_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_qualities_coll_into_vec(vec: &mut Vec<QualityFullDto>, d: &QualitiesDiff) {
+    for id in &d.removed {
+        vec.retain(|x| x.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(x) = vec.iter_mut().find(|x| x.id == u.id.id) {
+            merge_quality_diff_into_full(x, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_port_diff_into_full(fd: &mut PortFullDto, d: &PortDiff) {
+    if let Some(v) = &d.id {
+        fd.id = v.clone();
+    }
+    if let Some(v) = &d.family {
+        fd.family = v.clone();
+    }
+    if let Some(v) = &d.compatible_families {
+        fd.compatible_families = v.clone();
+    }
+    if let Some(v) = &d.mandatory {
+        fd.mandatory = *v;
+    }
+    if let Some(v) = &d.t {
+        fd.t = *v;
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.point {
+        fd.point = *v;
+    }
+    if let Some(v) = &d.direction {
+        fd.direction = *v;
+    }
+    if let Some(q) = &d.qualities {
+        merge_qualities_coll_into_vec(&mut fd.qualities, q);
+    }
+    if let Some(a) = &d.attributes {
+        merge_attributes_coll_into_vec(&mut fd.attributes, a);
+    }
+}
+
+pub fn merge_ports_diff_into_vec(vec: &mut Vec<PortFullDto>, d: &PortsDiff) {
+    for id in &d.removed {
+        vec.retain(|p| p.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(p) = vec.iter_mut().find(|p| p.id == u.id.id) {
+            merge_port_diff_into_full(p, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_connector_diff_into_full(fd: &mut ConnectorFullDto, d: &ConnectorDiff) {
+    if let Some(v) = &d.code {
+        fd.code = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.port {
+        fd.port = v.clone();
+    }
+    if let Some(q) = &d.qualities {
+        merge_qualities_coll_into_vec(&mut fd.qualities, q);
+    }
+    if let Some(a) = &d.attributes {
+        merge_attributes_coll_into_vec(&mut fd.attributes, a);
+    }
+}
+
+pub fn merge_connectors_diff_into_vec(vec: &mut Vec<ConnectorFullDto>, d: &ConnectorsDiff) {
+    for id in &d.removed {
+        vec.retain(|c| c.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(c) = vec.iter_mut().find(|c| c.id == u.id.id) {
+            merge_connector_diff_into_full(c, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+pub fn merge_representation_diff_into_full(fd: &mut RepresentationFullDto, d: &RepresentationDiff) {
+    if let Some(v) = &d.url {
+        fd.url = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.file {
+        fd.file = v.clone();
+    }
+    if let Some(t) = &d.tags {
+        merge_tags_coll_into_vec(&mut fd.tags, t);
+    }
+    if let Some(q) = &d.qualities {
+        merge_qualities_coll_into_vec(&mut fd.qualities, q);
+    }
+    if let Some(a) = &d.attributes {
+        merge_attributes_coll_into_vec(&mut fd.attributes, a);
+    }
+}
+
+pub fn merge_representations_diff_into_vec(vec: &mut Vec<RepresentationFullDto>, d: &RepresentationsDiff) {
+    for id in &d.removed {
+        vec.retain(|r| r.id != id.id);
+    }
+    for u in &d.updated {
+        if let Some(r) = vec.iter_mut().find(|r| r.id == u.id.id) {
+            merge_representation_diff_into_full(r, &u.diff);
+        }
+    }
+    vec.extend(d.added.iter().cloned());
+}
+
+/// Apply a sparse [`TypeDiff`] onto an in-memory [`TypeFullDto`] (then re-hydrate the live type).
+pub fn merge_type_diff_into_full(fd: &mut TypeFullDto, d: &TypeDiff) {
+    if let Some(v) = &d.name {
+        fd.name = v.clone();
+    }
+    if let Some(v) = &d.description {
+        fd.description = v.clone();
+    }
+    if let Some(v) = &d.icon {
+        fd.icon = v.clone();
+    }
+    if let Some(v) = &d.image {
+        fd.image = v.clone();
+    }
+    if let Some(v) = &d.variant {
+        fd.variant = v.clone();
+    }
+    if let Some(v) = &d.stock {
+        fd.stock = *v;
+    }
+    if let Some(v) = &d.type_virtual {
+        fd.virtual_ = *v;
+    }
+    if let Some(v) = &d.unit {
+        fd.unit = v.clone();
+    }
+    if let Some(v) = &d.location {
+        fd.location = *v;
+    }
+    if let Some(v) = &d.created {
+        fd.created = v.clone();
+    }
+    if let Some(v) = &d.updated {
+        fd.updated = v.clone();
+    }
+    if let Some(p) = &d.ports {
+        merge_ports_diff_into_vec(&mut fd.ports, p);
+    }
+    if let Some(c) = &d.connectors {
+        merge_connectors_diff_into_vec(&mut fd.connectors, c);
+    }
+    if let Some(r) = &d.representations {
+        merge_representations_diff_into_vec(&mut fd.representations, r);
+    }
+    if let Some(a) = &d.authors {
+        merge_authors_coll_into_vec(&mut fd.authors, a);
+    }
+    if let Some(c) = &d.concepts {
+        merge_concepts_coll_into_vec(&mut fd.concepts, c);
+    }
+    if let Some(t) = &d.tags {
+        merge_tags_coll_into_vec(&mut fd.tags, t);
+    }
+    if let Some(q) = &d.qualities {
+        merge_qualities_coll_into_vec(&mut fd.qualities, q);
+    }
+    if let Some(p) = &d.props {
+        merge_props_coll_into_vec(&mut fd.props, p);
+    }
+    if let Some(a) = &d.attributes {
+        merge_attributes_coll_into_vec(&mut fd.attributes, a);
+    }
+}

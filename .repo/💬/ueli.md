@@ -1063,7 +1063,14 @@ Requirements:
 - All methods are implemented inside the class (not just facade to pure function)
   Here is the target:
 
-### graphql
+### 💾store
+
+semio/store:
+
+Create a new rust binary (new bundle) that imports from semio/rs crate and exposes the store as a server (for non-rust and non-wasm libraries). It should work with stdio and json rpc. Same as mcp servers work. One running process as sidecar.
+Then make sure that semio/py and semio/cs use the rust store.@semio/store/bin.rs
+
+### ⭕graphql
 
 semio/graphql:
 Finish the schema. Complete all commands, etc. Take sketchpad as a reference. The complete store will use the api in the future for all ui state managment. Add all links and computed data such as a hash to every type. Etc. Dont alter the design. Dont be generic and name things the most semantic you can.

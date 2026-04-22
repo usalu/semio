@@ -446,7 +446,7 @@ pub mod change_command {
                 return Err(SemioError::NotFound { kind: "Piece", id: meta.piece.id.clone() });
             };
             let _ = w.set_piece_weak(Arc::downgrade(pref));
-            if let Some(port_id) = &meta.port {
+            if let Some(port_id) = crate::design::resolve_port_id_for_side_metadata(meta, pref) {
                 if let Ok(pc) = pref.read() {
                     if let Some(tw) = &pc.type_ref {
                         if let Some(t) = tw.upgrade() {
@@ -1631,82 +1631,138 @@ pub mod change_command {
 
     impl ChangeKitCommand {
         /// Apply the command; does not return inverses (checkpoint replay, redo).
-        pub fn run(&self, kit: &KitStoreRef) -> Result<KitChangeKind> {
-            self.apply(kit).map(|(k, _)| k)
+        pub fn run(&self, kit: &KitStoreRef) -> Result<()> {
+            self.apply(kit).map(|_| ())
         }
 
-        /// Apply and return the inverse command list to undo this step.
-        pub fn apply(&self, kit: &KitStoreRef) -> Result<(KitChangeKind, Vec<ChangeKitCommand>)> {
+        /// Declared semantic kind for VCS/UI (batch uses last non-[`KitChangeKind::Inferred`]).
+        pub fn declared_kind(&self) -> KitChangeKind {
             match self {
+                ChangeKitCommand::Name { .. }
+                | ChangeKitCommand::Description { .. }
+                | ChangeKitCommand::Icon { .. }
+                | ChangeKitCommand::Image { .. }
+                | ChangeKitCommand::Preview { .. }
+                | ChangeKitCommand::Version { .. }
+                | ChangeKitCommand::Remote { .. }
+                | ChangeKitCommand::Homepage { .. }
+                | ChangeKitCommand::License { .. }
+                | ChangeKitCommand::Uri { .. }
+                | ChangeKitCommand::Created { .. }
+                | ChangeKitCommand::Updated { .. }
+                | ChangeKitCommand::ReplaceKitFromFullDto { .. }
+                | ChangeKitCommand::AddAuthor { .. }
+                | ChangeKitCommand::RemoveAuthor { .. }
+                | ChangeKitCommand::AddConcept { .. }
+                | ChangeKitCommand::RemoveConcept { .. }
+                | ChangeKitCommand::AddTag { .. }
+                | ChangeKitCommand::RemoveTag { .. }
+                | ChangeKitCommand::AddQuality { .. }
+                | ChangeKitCommand::RemoveQuality { .. }
+                | ChangeKitCommand::AddKitProp { .. }
+                | ChangeKitCommand::RemoveKitProp { .. }
+                | ChangeKitCommand::AddKitAttribute { .. }
+                | ChangeKitCommand::RemoveKitAttribute { .. }
+                | ChangeKitCommand::ChangeFileCommands { .. }
+                | ChangeKitCommand::ChangeFolderCommands { .. }
+                | ChangeKitCommand::ChangeAuthorCommands { .. }
+                | ChangeKitCommand::ChangeConceptCommands { .. }
+                | ChangeKitCommand::ChangeTagCommands { .. }
+                | ChangeKitCommand::ChangeKitQualityCommands { .. } => KitChangeKind::SetKitMetadata,
+                ChangeKitCommand::AddType { .. } => KitChangeKind::AddType,
+                ChangeKitCommand::RemoveType { .. } => KitChangeKind::RemoveType,
+                ChangeKitCommand::AddDesign { .. } => KitChangeKind::AddDesign,
+                ChangeKitCommand::RemoveDesign { .. } => KitChangeKind::RemoveDesign,
+                ChangeKitCommand::AddFile { .. } | ChangeKitCommand::RemoveFile { .. } | ChangeKitCommand::AddFolder { .. } | ChangeKitCommand::RemoveFolder { .. } => KitChangeKind::ModifyType,
+                ChangeKitCommand::ChangeTypeCommands { .. } => KitChangeKind::ModifyType,
+                ChangeKitCommand::ChangeDesignCommands { .. } => KitChangeKind::ModifyDesign,
+            }
+        }
+
+        pub fn batch_kind(cmds: &[ChangeKitCommand]) -> KitChangeKind {
+            let mut k = KitChangeKind::Inferred;
+            for c in cmds {
+                let d = c.declared_kind();
+                if d != KitChangeKind::Inferred {
+                    k = d;
+                }
+            }
+            k
+        }
+
+        /// Apply and return `(forward kit diff, inverse command list)`.
+        pub fn apply(&self, kit: &KitStoreRef) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+            let before = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            let inv = match self {
                 ChangeKitCommand::Name { name } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.name.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_name(name.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *name { vec![] } else { vec![ChangeKitCommand::Name { name: old }] }))
+                    Ok(if old == *name { vec![] } else { vec![ChangeKitCommand::Name { name: old }] })
                 }
                 ChangeKitCommand::Description { description } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.description.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_description(description.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *description { vec![] } else { vec![ChangeKitCommand::Description { description: old }] }))
+                    Ok(if old == *description { vec![] } else { vec![ChangeKitCommand::Description { description: old }] })
                 }
                 ChangeKitCommand::Icon { icon } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.icon.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_icon(icon.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *icon { vec![] } else { vec![ChangeKitCommand::Icon { icon: old }] }))
+                    Ok(if old == *icon { vec![] } else { vec![ChangeKitCommand::Icon { icon: old }] })
                 }
                 ChangeKitCommand::Image { image } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.image.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_image(image.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *image { vec![] } else { vec![ChangeKitCommand::Image { image: old }] }))
+                    Ok(if old == *image { vec![] } else { vec![ChangeKitCommand::Image { image: old }] })
                 }
                 ChangeKitCommand::Preview { preview } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.preview.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_preview(preview.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *preview { vec![] } else { vec![ChangeKitCommand::Preview { preview: old }] }))
+                    Ok(if old == *preview { vec![] } else { vec![ChangeKitCommand::Preview { preview: old }] })
                 }
                 ChangeKitCommand::Version { version } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.version.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_version(version.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *version { vec![] } else { vec![ChangeKitCommand::Version { version: old }] }))
+                    Ok(if old == *version { vec![] } else { vec![ChangeKitCommand::Version { version: old }] })
                 }
                 ChangeKitCommand::Remote { remote } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.remote.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_remote(remote.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *remote { vec![] } else { vec![ChangeKitCommand::Remote { remote: old }] }))
+                    Ok(if old == *remote { vec![] } else { vec![ChangeKitCommand::Remote { remote: old }] })
                 }
                 ChangeKitCommand::Homepage { homepage } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.homepage.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_homepage(homepage.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *homepage { vec![] } else { vec![ChangeKitCommand::Homepage { homepage: old }] }))
+                    Ok(if old == *homepage { vec![] } else { vec![ChangeKitCommand::Homepage { homepage: old }] })
                 }
                 ChangeKitCommand::License { license } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.license.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_license(license.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *license { vec![] } else { vec![ChangeKitCommand::License { license: old }] }))
+                    Ok(if old == *license { vec![] } else { vec![ChangeKitCommand::License { license: old }] })
                 }
                 ChangeKitCommand::Uri { uri } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.uri.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_uri(uri.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *uri { vec![] } else { vec![ChangeKitCommand::Uri { uri: old }] }))
+                    Ok(if old == *uri { vec![] } else { vec![ChangeKitCommand::Uri { uri: old }] })
                 }
                 ChangeKitCommand::Created { created } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.created.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_created(created.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *created { vec![] } else { vec![ChangeKitCommand::Created { created: old }] }))
+                    Ok(if old == *created { vec![] } else { vec![ChangeKitCommand::Created { created: old }] })
                 }
                 ChangeKitCommand::Updated { updated } => {
                     let old = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.updated.clone() };
                     kit.write().map_err(|_| SemioError::LockPoisoned("kit"))?.set_updated(updated.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, if old == *updated { vec![] } else { vec![ChangeKitCommand::Updated { updated: old }] }))
+                    Ok(if old == *updated { vec![] } else { vec![ChangeKitCommand::Updated { updated: old }] })
                 }
                 ChangeKitCommand::ReplaceKitFromFullDto { dto } => {
                     let old = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
                     KitStore::replace_from_full_dto(kit, dto.clone()).map_err(se)?;
-                    Ok((KitChangeKind::Inferred, if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] }))
+                    Ok(if old == *dto { vec![] } else { vec![ChangeKitCommand::ReplaceKitFromFullDto { dto: old }] })
                 }
                 ChangeKitCommand::AddType { r#type } => {
                     let id = r#type.id.clone();
                     KitStore::insert_type_dto(kit, r#type.clone()).map_err(se)?;
-                    Ok((KitChangeKind::AddType, vec![ChangeKitCommand::RemoveType { type_id: TypeIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveType { type_id: TypeIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveType { type_id } => {
                     let snap = KitStore::remove_type_dto(kit, type_id.id.as_str()).map_err(se)?;
@@ -1715,12 +1771,12 @@ pub mod change_command {
                     } else {
                         return Err(SemioError::NotFound { kind: "Type", id: type_id.id.clone() });
                     };
-                    Ok((KitChangeKind::RemoveType, inv))
+                    Ok(inv)
                 }
                 ChangeKitCommand::AddDesign { design } => {
                     let id = design.id.clone();
                     KitStore::insert_design_ref(kit, design.clone()).map_err(se)?;
-                    Ok((KitChangeKind::AddDesign, vec![ChangeKitCommand::RemoveDesign { design_id: DesignIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveDesign { design_id: DesignIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveDesign { design_id } => {
                     let snap = KitStore::remove_design_dto(kit, design_id.id.as_str()).map_err(se)?;
@@ -1729,17 +1785,17 @@ pub mod change_command {
                     } else {
                         return Err(SemioError::NotFound { kind: "Design", id: design_id.id.clone() });
                     };
-                    Ok((KitChangeKind::RemoveDesign, inv))
+                    Ok(inv)
                 }
                 ChangeKitCommand::AddFile { file } => {
                     let id = file.id.clone();
                     KitStore::insert_file_dto(kit, file.clone()).map_err(se)?;
-                    Ok((KitChangeKind::ModifyType, vec![ChangeKitCommand::RemoveFile { file_id: FileIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveFile { file_id: FileIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveFile { file_id } => {
                     let snap = KitStore::remove_file_dto(kit, file_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::ModifyType, vec![ChangeKitCommand::AddFile { file: d }]))
+                        Ok(vec![ChangeKitCommand::AddFile { file: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "File", id: file_id.id.clone() })
                     }
@@ -1747,12 +1803,12 @@ pub mod change_command {
                 ChangeKitCommand::AddFolder { folder } => {
                     let id = folder.id.clone();
                     KitStore::insert_folder_dto(kit, folder.clone()).map_err(se)?;
-                    Ok((KitChangeKind::ModifyType, vec![ChangeKitCommand::RemoveFolder { folder_id: FolderIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveFolder { folder_id: FolderIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveFolder { folder_id } => {
                     let snap = KitStore::remove_folder_dto(kit, folder_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::ModifyType, vec![ChangeKitCommand::AddFolder { folder: d }]))
+                        Ok(vec![ChangeKitCommand::AddFolder { folder: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "Folder", id: folder_id.id.clone() })
                     }
@@ -1760,12 +1816,12 @@ pub mod change_command {
                 ChangeKitCommand::AddAuthor { author } => {
                     let id = author.id.clone();
                     KitStore::insert_author_dto(kit, author.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveAuthor { author_id: AuthorIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveAuthor { author_id } => {
                     let snap = KitStore::remove_author_dto(kit, author_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddAuthor { author: d }]))
+                        Ok(vec![ChangeKitCommand::AddAuthor { author: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "Author", id: author_id.id.clone() })
                     }
@@ -1773,12 +1829,12 @@ pub mod change_command {
                 ChangeKitCommand::AddConcept { concept } => {
                     let id = concept.id.clone();
                     KitStore::insert_concept_dto(kit, concept.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveConcept { concept_id: ConceptIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveConcept { concept_id } => {
                     let snap = KitStore::remove_concept_dto(kit, concept_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddConcept { concept: d }]))
+                        Ok(vec![ChangeKitCommand::AddConcept { concept: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "Concept", id: concept_id.id.clone() })
                     }
@@ -1786,12 +1842,12 @@ pub mod change_command {
                 ChangeKitCommand::AddTag { tag } => {
                     let id = tag.id.clone();
                     KitStore::insert_tag_dto(kit, tag.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveTag { tag_id: TagIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveTag { tag_id: TagIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveTag { tag_id } => {
                     let snap = KitStore::remove_tag_dto(kit, tag_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddTag { tag: d }]))
+                        Ok(vec![ChangeKitCommand::AddTag { tag: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "Tag", id: tag_id.id.clone() })
                     }
@@ -1799,12 +1855,12 @@ pub mod change_command {
                 ChangeKitCommand::AddQuality { quality } => {
                     let id = quality.id.clone();
                     KitStore::insert_quality_dto(kit, quality.clone()).map_err(se)?;
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveQuality { quality_id: QualityIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveQuality { quality_id: QualityIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveQuality { quality_id } => {
                     let snap = KitStore::remove_quality_dto(kit, quality_id.id.as_str()).map_err(se)?;
                     if let Some(d) = snap {
-                        Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddQuality { quality: d }]))
+                        Ok(vec![ChangeKitCommand::AddQuality { quality: d }])
                     } else {
                         Err(SemioError::NotFound { kind: "Quality", id: quality_id.id.clone() })
                     }
@@ -1823,7 +1879,7 @@ pub mod change_command {
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveKitProp { prop_id: PropIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveKitProp { prop_id: PropIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveKitProp { prop_id } => {
                     let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.props.iter().position(|p| p.read().map(|r| r.id == prop_id.id).unwrap_or(false)) };
@@ -1838,7 +1894,7 @@ pub mod change_command {
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddKitProp { prop: dto }]))
+                    Ok(vec![ChangeKitCommand::AddKitProp { prop: dto }])
                 }
                 ChangeKitCommand::AddKitAttribute { attribute } => {
                     let id = attribute.id.clone();
@@ -1854,7 +1910,7 @@ pub mod change_command {
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeIdDto { id } }]))
+                    Ok(vec![ChangeKitCommand::RemoveKitAttribute { id: AttributeIdDto { id } }])
                 }
                 ChangeKitCommand::RemoveKitAttribute { id } => {
                     let pos = { kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false)) };
@@ -1869,7 +1925,7 @@ pub mod change_command {
                         g.invalidate_validation();
                     }
                     event_wire::wire_graph_bus(kit);
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::AddKitAttribute { attribute: dto }]))
+                    Ok(vec![ChangeKitCommand::AddKitAttribute { attribute: dto }])
                 }
                 ChangeKitCommand::ChangeFileCommands { file_id, commands } => {
                     let f: FileStoreRef = kit
@@ -1883,7 +1939,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeFileCommands { file_id: file_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeFolderCommands { folder_id, commands } => {
                     let f: FolderStoreRef = kit
@@ -1897,7 +1953,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeFolderCommands { folder_id: folder_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeFolderCommands { folder_id: folder_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeAuthorCommands { author_id, commands } => {
                     let a: AuthorStoreRef = kit
@@ -1914,7 +1970,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeAuthorCommands { author_id: author_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeAuthorCommands { author_id: author_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeConceptCommands { concept_id, commands } => {
                     let c: ConceptStoreRef = kit
@@ -1931,7 +1987,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeConceptCommands { concept_id: concept_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeTagCommands { tag_id, commands } => {
                     let t: crate::tag::TagStoreRef = kit
@@ -1948,7 +2004,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeTagCommands { tag_id: tag_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeKitQualityCommands { quality_id, commands } => {
                     let q: QualityStoreRef = kit
@@ -1962,7 +2018,7 @@ pub mod change_command {
                         inv.extend(v);
                     }
                     inv.reverse();
-                    Ok((KitChangeKind::SetKitMetadata, vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: quality_id.clone(), commands: inv }]))
+                    Ok(vec![ChangeKitCommand::ChangeKitQualityCommands { quality_id: quality_id.clone(), commands: inv }])
                 }
                 ChangeKitCommand::ChangeTypeCommands { type_id, commands } => {
                     let mut inv_nested = Vec::new();
@@ -1971,7 +2027,7 @@ pub mod change_command {
                         inv_nested.extend(inv);
                     }
                     let inv_nested: Vec<ChangeTypeCommand> = inv_nested.into_iter().rev().collect();
-                    Ok((KitChangeKind::ModifyType, vec![ChangeKitCommand::ChangeTypeCommands { type_id: type_id.clone(), commands: inv_nested }]))
+                    Ok(vec![ChangeKitCommand::ChangeTypeCommands { type_id: type_id.clone(), commands: inv_nested }])
                 }
                 ChangeKitCommand::ChangeDesignCommands { design_id, commands } => {
                     let mut inv_nested = Vec::new();
@@ -1980,28 +2036,71 @@ pub mod change_command {
                         inv_nested.extend(inv);
                     }
                     let inv_nested: Vec<ChangeDesignCommand> = inv_nested.into_iter().rev().collect();
-                    Ok((KitChangeKind::ModifyDesign, vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }]))
+                    Ok(vec![ChangeKitCommand::ChangeDesignCommands { design_id: design_id.clone(), commands: inv_nested }])
                 }
-            }
+            }?;
+            let after = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?.to_full_dto();
+            Ok((crate::kit_diff::KitDiff::between(&before, &after), inv))
         }
 
         /// Apply many commands in order; inverses are concatenated in **undo order** (last command's
         /// inverses first) so that applying the returned `Vec` once reverses the whole batch.
-        pub fn apply_many(kit: &KitStoreRef, cmds: &[ChangeKitCommand]) -> Result<(KitChangeKind, Vec<ChangeKitCommand>)> {
-            let mut kind = KitChangeKind::Inferred;
+        pub fn apply_many(kit: &KitStoreRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+            let mut merged = crate::kit_diff::KitDiff::default();
             let mut groups: Vec<Vec<ChangeKitCommand>> = Vec::with_capacity(cmds.len());
             for c in cmds {
-                let (k, inv) = c.apply(kit)?;
-                if k != KitChangeKind::Inferred {
-                    kind = k;
-                }
+                let (d, inv) = c.apply(kit)?;
+                merged = merged.merge(&d);
                 groups.push(inv);
             }
             let mut out = Vec::new();
             for g in groups.into_iter().rev() {
                 out.extend(g);
             }
-            Ok((kind, out))
+            Ok((merged, out))
+        }
+
+        /// Same as [`Self::apply_many`] (merged diff + inverses); kept for call sites that want an explicit name.
+        pub fn apply_many_kit_diff(kit: &KitStoreRef, cmds: &[ChangeKitCommand]) -> Result<(crate::kit_diff::KitDiff, Vec<ChangeKitCommand>)> {
+            Self::apply_many(kit, cmds)
+        }
+
+        /// Best-effort batch simplification (extend as more patterns emerge).
+        pub fn compact(cmds: Vec<ChangeKitCommand>) -> Vec<ChangeKitCommand> {
+            let mut out: Vec<ChangeKitCommand> = Vec::with_capacity(cmds.len());
+            for c in cmds {
+                match (&c, out.last()) {
+                    (ChangeKitCommand::Name { .. }, Some(ChangeKitCommand::Name { .. }))
+                    | (ChangeKitCommand::Description { .. }, Some(ChangeKitCommand::Description { .. }))
+                    | (ChangeKitCommand::Icon { .. }, Some(ChangeKitCommand::Icon { .. }))
+                    | (ChangeKitCommand::Image { .. }, Some(ChangeKitCommand::Image { .. }))
+                    | (ChangeKitCommand::Preview { .. }, Some(ChangeKitCommand::Preview { .. }))
+                    | (ChangeKitCommand::Version { .. }, Some(ChangeKitCommand::Version { .. }))
+                    | (ChangeKitCommand::Remote { .. }, Some(ChangeKitCommand::Remote { .. }))
+                    | (ChangeKitCommand::Homepage { .. }, Some(ChangeKitCommand::Homepage { .. }))
+                    | (ChangeKitCommand::License { .. }, Some(ChangeKitCommand::License { .. }))
+                    | (ChangeKitCommand::Uri { .. }, Some(ChangeKitCommand::Uri { .. }))
+                    | (ChangeKitCommand::Created { .. }, Some(ChangeKitCommand::Created { .. }))
+                    | (ChangeKitCommand::Updated { .. }, Some(ChangeKitCommand::Updated { .. })) => {
+                        out.pop();
+                        out.push(c);
+                    }
+                    (ChangeKitCommand::RemoveType { type_id }, Some(ChangeKitCommand::AddType { r#type: t })) if t.id == type_id.id => {
+                        out.pop();
+                    }
+                    (ChangeKitCommand::AddType { r#type: t }, Some(ChangeKitCommand::RemoveType { type_id })) if t.id == type_id.id => {
+                        out.pop();
+                    }
+                    (ChangeKitCommand::RemoveDesign { design_id }, Some(ChangeKitCommand::AddDesign { design })) if design.id == design_id.id => {
+                        out.pop();
+                    }
+                    (ChangeKitCommand::AddDesign { design }, Some(ChangeKitCommand::RemoveDesign { design_id })) if design.id == design_id.id => {
+                        out.pop();
+                    }
+                    _ => out.push(c),
+                }
+            }
+            out
         }
     }
 
@@ -4505,7 +4604,8 @@ pub mod kit_store_command {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             g.to_full_dto()
                         };
-                        let (kind, inverse) = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        let (_diff, inverse) = c.apply(kit).map_err(|e| SemioError::InvalidOperation(e.to_string()))?;
+                        let kind = ChangeKitCommand::declared_kind(&c);
                         let after = {
                             let g = kit.read().map_err(|_| SemioError::LockPoisoned("kit"))?;
                             g.to_full_dto()
@@ -5001,7 +5101,9 @@ pub mod author {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorShallowDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
+        #[serde(default)]
         pub email: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub role: Option<String>,
@@ -5012,7 +5114,9 @@ pub mod author {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct AuthorFullDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
+        #[serde(default)]
         pub email: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub role: Option<String>,
@@ -5412,6 +5516,7 @@ pub mod concept {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptShallowDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5422,6 +5527,7 @@ pub mod concept {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConceptFullDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5620,9 +5726,9 @@ pub mod connection {
         pub turn: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub tilt: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "u")]
         pub x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "v")]
         pub y: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5645,9 +5751,9 @@ pub mod connection {
         pub turn: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub tilt: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "u")]
         pub x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "v")]
         pub y: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -5672,9 +5778,9 @@ pub mod connection {
         pub turn: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub tilt: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "u")]
         pub x: Option<f64>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "v")]
         pub y: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6029,6 +6135,8 @@ pub mod connector {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorShallowDto {
         pub id: Id,
+        /// Metabolism sometimes omits both; see [`ConnectorFullDto::code`].
+        #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6043,6 +6151,8 @@ pub mod connector {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct ConnectorFullDto {
         pub id: Id,
+        /// Exporters may omit a connector label; `name` in C# is an alias of our `code`.
+        #[serde(default, alias = "name")]
         pub code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -6281,9 +6391,9 @@ pub mod design {
         pub camera: Option<Camera>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub kit: Option<crate::kit::KitIdDto>,
@@ -6309,9 +6419,9 @@ pub mod design {
         pub camera: Option<Camera>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub kit: Option<crate::kit::KitIdDto>,
@@ -6359,9 +6469,9 @@ pub mod design {
         pub camera: Option<Camera>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub kit: Option<crate::kit::KitIdDto>,
@@ -6398,6 +6508,32 @@ pub mod design {
             }
         }
         typ.connectors.first().cloned()
+    }
+
+    /// Effective port for a side: explicit [`SideMetadataDto::port`], or resolved from [`SideMetadataDto::connector`] on the piece's type.
+    pub(crate) fn resolve_port_id_for_side_metadata(meta: &crate::side::SideMetadataDto, pref: &PieceStoreRef) -> Option<crate::port::PortIdDto> {
+        if let Some(p) = &meta.port {
+            return Some(p.clone());
+        }
+        let c = meta.connector.as_ref()?;
+        let pc = pref.read().ok()?;
+        let tw = pc.type_ref.as_ref()?;
+        let t = tw.upgrade()?;
+        let tr = t.read().ok()?;
+        for cstore in &tr.connectors {
+            let cread = cstore.read().ok()?;
+            if cread.id == c.id {
+                if let Some(pwk) = &cread.port {
+                    if let Some(pu) = pwk.upgrade() {
+                        if let Ok(pr) = pu.read() {
+                            return Some(crate::port::PortIdDto { id: pr.id.clone() });
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        None
     }
 
     fn connection_from_full_dto(cdto: ConnectionFullDto, piece_index: &HashMap<Id, PieceStoreRef>, design_weak: DesignStoreWeak) -> ConnectionStoreRef {
@@ -6439,7 +6575,8 @@ pub mod design {
             w.apply_metadata_dto(meta.clone());
             if let Some(pref) = piece_index.get(&meta.piece.id) {
                 let _ = w.set_piece_weak(Arc::downgrade(pref));
-                if let Some(port_id) = &meta.port {
+                let port_target = resolve_port_id_for_side_metadata(meta, pref);
+                if let Some(ref port_id) = port_target {
                     if let Ok(pc) = pref.read() {
                         if let Some(tw) = &pc.type_ref {
                             if let Some(t) = tw.upgrade() {
@@ -9462,6 +9599,8 @@ pub mod file {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FileShallowDto {
         pub id: Id,
+        /// Metabolism: payload is often in `blob` (data URL) or a human `name`; we prefer a direct `url` when present.
+        #[serde(default, alias = "blob", alias = "name")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub mime: Option<String>,
@@ -9471,13 +9610,42 @@ pub mod file {
         pub hash: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    /// Wire shape for [`FileFullDto`] (Metabolism: `name` + `blob` + `folder`, no top-level `url`).
+    #[derive(Deserialize)]
+    struct FileFullDtoWire {
+        id: Id,
+        url: Option<String>,
+        name: Option<String>,
+        #[serde(default)]
+        blob: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mime: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        size: Option<i64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        hash: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
+        created: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
+        updated: Option<String>,
+    }
+
+    impl From<FileFullDtoWire> for FileFullDto {
+        fn from(w: FileFullDtoWire) -> Self {
+            let url = w.url.or(w.blob).or(w.name).unwrap_or_default();
+            FileFullDto { id: w.id, url, mime: w.mime, size: w.size, hash: w.hash, description: w.description, created: w.created, updated: w.updated }
+        }
+    }
+
+    #[derive(Clone, Debug, Serialize, Default, PartialEq)]
     pub struct FileFullDto {
         pub id: Id,
         pub url: String,
@@ -9493,6 +9661,13 @@ pub mod file {
         pub created: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub updated: Option<String>,
+    }
+
+    impl<'de> Deserialize<'de> for FileFullDto {
+        fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+            let w = FileFullDtoWire::deserialize(deserializer)?;
+            Ok(FileFullDto::from(w))
+        }
     }
 
     impl FileStore {
@@ -9617,6 +9792,34 @@ pub mod file {
             Ok(())
         }
 
+        pub fn apply_diff(&mut self, d: &crate::diff::FileDiff) -> crate::error::SetResult {
+            if d.is_empty() {
+                return Ok(());
+            }
+            if let Some(v) = &d.url {
+                self.set_url(v.clone())?;
+            }
+            if let Some(v) = &d.mime {
+                self.set_mime(v.clone())?;
+            }
+            if let Some(v) = &d.size {
+                self.set_size(*v)?;
+            }
+            if let Some(v) = &d.hash {
+                self.set_hash(v.clone())?;
+            }
+            if let Some(v) = &d.description {
+                self.set_description(v.clone())?;
+            }
+            if let Some(v) = &d.created {
+                self.set_created(v.clone())?;
+            }
+            if let Some(v) = &d.updated {
+                self.set_updated(v.clone())?;
+            }
+            Ok(())
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -9688,6 +9891,7 @@ pub mod folder {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderShallowDto {
         pub id: Id,
+        #[serde(default, alias = "name")]
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -9696,6 +9900,7 @@ pub mod folder {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct FolderFullDto {
         pub id: Id,
+        #[serde(default, alias = "name")]
         pub path: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -9769,6 +9974,19 @@ pub mod folder {
             Ok(())
         }
 
+        pub fn apply_diff(&mut self, d: &crate::diff::FolderDiff) -> crate::error::SetResult {
+            if d.is_empty() {
+                return Ok(());
+            }
+            if let Some(v) = &d.path {
+                self.set_path(v.clone())?;
+            }
+            if let Some(v) = &d.description {
+                self.set_description(v.clone())?;
+            }
+            Ok(())
+        }
+
         pub fn invalidate_hash(&self) {
             self.hash_cache.invalidate();
             self.emit_ev(KitEvent::HashInvalidated { entity: self.entity_ref() });
@@ -9811,6 +10029,29 @@ pub mod geom {
         pub z: f64,
     }
 
+    /// Metabolism (and other exporters) use `{ u, v }` for 2D placement; map to 3D `x`, `y`, `0`.
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum PieceCenterWire {
+        Xyz { x: f64, y: f64, z: f64 },
+        Uv { u: f64, v: f64 },
+    }
+
+    impl From<PieceCenterWire> for Coordinate {
+        fn from(w: PieceCenterWire) -> Self {
+            match w {
+                PieceCenterWire::Xyz { x, y, z } => Coordinate { x, y, z },
+                PieceCenterWire::Uv { u, v } => Coordinate { x: u, y: v, z: 0.0 },
+            }
+        }
+    }
+
+    /// [`PieceFullDto`]/[`PieceMetadataDto`] `center` accepts xyz or uv wire shapes.
+    pub fn deserialize_option_piece_center<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Coordinate>, D::Error> {
+        let o: Option<PieceCenterWire> = Option::deserialize(d)?;
+        Ok(o.map(Into::into))
+    }
+
     impl Coordinate {
         pub const ZERO: Coordinate = Coordinate { x: 0.0, y: 0.0, z: 0.0 };
 
@@ -9847,9 +10088,9 @@ pub mod geom {
     pub struct Plane {
         #[serde(default)]
         pub origin: Coordinate,
-        #[serde(default = "Plane::default_x_axis")]
+        #[serde(default = "Plane::default_x_axis", rename = "xAxis")]
         pub x_axis: Vector,
-        #[serde(default = "Plane::default_y_axis")]
+        #[serde(default = "Plane::default_y_axis", rename = "yAxis")]
         pub y_axis: Vector,
     }
 
@@ -10518,9 +10759,9 @@ pub mod kit {
         pub license: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub uri: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub types: Vec<TypeFullDto>,
@@ -11508,8 +11749,47 @@ pub mod kit {
             }
         }
 
+        fn quality_key_index(qualities: &[QualityFullDto]) -> HashMap<Id, String> {
+            qualities.iter().map(|q| (q.id.clone(), q.key.clone())).collect()
+        }
+
+        fn apply_resolved_prop_key(quality_id_to_key: &HashMap<Id, String>, p: &mut PropFullDto) {
+            if !p.key.is_empty() {
+                return;
+            }
+            if let Some(qr) = &p.quality {
+                if let Some(k) = quality_id_to_key.get(&qr.id) {
+                    p.key = k.clone();
+                }
+            }
+        }
+
+        /// C# / Metabolism JSON: props use `quality: { id }` without a separate `key`; keys come from the kit's quality catalog.
+        fn wire_compat_resolve_prop_keys_in_kit_dto(d: &mut KitFullDto) {
+            let m = Self::quality_key_index(&d.qualities);
+            for p in &mut d.props {
+                Self::apply_resolved_prop_key(&m, p);
+            }
+            for t in &mut d.types {
+                for p in &mut t.props {
+                    Self::apply_resolved_prop_key(&m, p);
+                }
+            }
+            for design in &mut d.designs {
+                for p in &mut d.props {
+                    Self::apply_resolved_prop_key(&m, p);
+                }
+                for piece in &mut design.pieces {
+                    for p in &mut piece.props {
+                        Self::apply_resolved_prop_key(&m, p);
+                    }
+                }
+            }
+        }
+
         /// Hydrate the full kit graph from a [`KitFullDto`].
-        pub fn from_full_dto(d: KitFullDto) -> KitStoreRef {
+        pub fn from_full_dto(mut d: KitFullDto) -> KitStoreRef {
+            Self::wire_compat_resolve_prop_keys_in_kit_dto(&mut d);
             let vcs_root = d.clone();
             let KitFullDto { id, name, description, icon, image, preview, version, remote, homepage, license, uri, created, updated, types, designs, files, folders, authors, concepts, tags, qualities, props, attributes } = d;
 
@@ -11714,6 +11994,324 @@ pub mod kit {
 
         fn domain_type_index(kit: &KitStore) -> HashMap<Id, TypeStoreRef> {
             kit.types.iter().filter_map(|t| t.read().ok().map(|r| (r.id.clone(), t.clone()))).collect()
+        }
+
+        /// Rebuild one type from `to_full_dto` + sparse [`crate::diff::TypeDiff`] (remove → insert).
+        pub fn apply_type_diff_fragment(kit: &KitStoreRef, type_id: &Id, fragment: &crate::diff::TypeDiff) -> SetResult {
+            if fragment.is_empty() {
+                return Ok(());
+            }
+            let dto = {
+                let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                let t = g.semio_type(type_id.as_str()).ok_or_else(|| SetError::NotFound(format!("type {}", type_id)))?;
+                let dto = t.read().map_err(|_| SetError::LockPoisoned("type".into()))?.to_full_dto();
+                dto
+            };
+            let mut dto = dto;
+            crate::diff::merge_type_diff_into_full(&mut dto, fragment);
+            if KitStore::remove_type_dto(kit, type_id.as_str())?.is_none() {
+                return Err(SetError::NotFound(format!("type {}", type_id)));
+            }
+            KitStore::insert_type_dto(kit, dto)
+        }
+
+        /// Central sparse kit patch (kit metadata, then each child collection: **removed → updated → added**).
+        pub fn apply_kit_diff(kit: &KitStoreRef, diff: &crate::kit_diff::KitDiff) -> SetResult {
+            if diff.is_empty() {
+                return Ok(());
+            }
+            {
+                let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                if let Some(n) = &diff.name {
+                    g.set_name(n.clone())?;
+                }
+                if let Some(d) = &diff.description {
+                    g.set_description(d.clone())?;
+                }
+                if let Some(i) = &diff.icon {
+                    g.set_icon(i.clone())?;
+                }
+                if let Some(i) = &diff.image {
+                    g.set_image(i.clone())?;
+                }
+                if let Some(p) = &diff.preview {
+                    g.set_preview(p.clone())?;
+                }
+                if let Some(v) = &diff.version {
+                    g.set_version(v.clone())?;
+                }
+                if let Some(r) = &diff.remote {
+                    g.set_remote(r.clone())?;
+                }
+                if let Some(h) = &diff.homepage {
+                    g.set_homepage(h.clone())?;
+                }
+                if let Some(l) = &diff.license {
+                    g.set_license(l.clone())?;
+                }
+                if let Some(u) = &diff.uri {
+                    g.set_uri(u.clone())?;
+                }
+                if let Some(c) = &diff.created {
+                    g.set_created(c.clone())?;
+                }
+                if let Some(u) = &diff.updated {
+                    g.set_updated(u.clone())?;
+                }
+            }
+            if let Some(ts) = &diff.types {
+                for tid in &ts.removed {
+                    KitStore::remove_type_dto(kit, tid.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("type {}", tid.id)))?;
+                }
+                for u in &ts.updated {
+                    KitStore::apply_type_diff_fragment(kit, &u.id.id, &u.diff)?;
+                }
+                for t in &ts.added {
+                    KitStore::insert_type_dto(kit, t.clone())?;
+                }
+            }
+            if let Some(ds) = &diff.designs {
+                for id in &ds.removed {
+                    KitStore::remove_design_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("design {}", id.id)))?;
+                }
+                for u in &ds.updated {
+                    let dref = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.design(u.design_id.as_str())
+                            .ok_or_else(|| SetError::NotFound(format!("design {}", u.design_id)))?
+                            .clone()
+                    };
+                    let type_index = { let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?; Self::domain_type_index(&g) };
+                    let weak = Arc::downgrade(&dref);
+                    dref
+                        .write()
+                        .map_err(|_| SetError::LockPoisoned("design".into()))?
+                        .apply_diff(&u.diff, &type_index, weak)
+                        .map_err(|e| SetError::Internal(e.to_string()))?;
+                }
+                for d in &ds.added {
+                    KitStore::insert_design_ref(kit, d.clone())?;
+                }
+            }
+            if let Some(fs) = &diff.files {
+                for id in &fs.removed {
+                    KitStore::remove_file_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("file {}", id.id)))?;
+                }
+                for u in &fs.updated {
+                    let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.file(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("file {}", u.id.id)))?.clone();
+                    f.write().map_err(|_| SetError::LockPoisoned("file".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
+                }
+                for f in &fs.added {
+                    KitStore::insert_file_dto(kit, f.clone())?;
+                }
+            }
+            if let Some(fs) = &diff.folders {
+                for id in &fs.removed {
+                    KitStore::remove_folder_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("folder {}", id.id)))?;
+                }
+                for u in &fs.updated {
+                    let f = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?.folder(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("folder {}", u.id.id)))?.clone();
+                    f.write().map_err(|_| SetError::LockPoisoned("folder".into()))?.apply_diff(&u.diff).map_err(|e| SetError::Internal(e.to_string()))?;
+                }
+                for f in &fs.added {
+                    KitStore::insert_folder_dto(kit, f.clone())?;
+                }
+            }
+            if let Some(ad) = &diff.authors {
+                for id in &ad.removed {
+                    KitStore::remove_author_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", id.id)))?;
+                }
+                for u in &ad.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let a = g.authors.iter().find(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
+                        let dto = a.read().map_err(|_| SetError::LockPoisoned("author".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_author_diff_into_full(&mut dto, &u.diff);
+                    KitStore::remove_author_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("author {}", u.id.id)))?;
+                    KitStore::insert_author_dto(kit, dto)?;
+                }
+                for a in &ad.added {
+                    KitStore::insert_author_dto(kit, a.clone())?;
+                }
+            }
+            if let Some(cd) = &diff.concepts {
+                for id in &cd.removed {
+                    KitStore::remove_concept_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", id.id)))?;
+                }
+                for u in &cd.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let c = g.concepts.iter().find(|c| c.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
+                        let dto = c.read().map_err(|_| SetError::LockPoisoned("concept".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_concept_diff_into_full(&mut dto, &u.diff);
+                    KitStore::remove_concept_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("concept {}", u.id.id)))?;
+                    KitStore::insert_concept_dto(kit, dto)?;
+                }
+                for c in &cd.added {
+                    KitStore::insert_concept_dto(kit, c.clone())?;
+                }
+            }
+            if let Some(td) = &diff.tags {
+                for id in &td.removed {
+                    KitStore::remove_tag_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", id.id)))?;
+                }
+                for u in &td.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let t = g.tags.iter().find(|t| t.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
+                        let dto = t.read().map_err(|_| SetError::LockPoisoned("tag".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_tag_diff_into_full(&mut dto, &u.diff);
+                    KitStore::remove_tag_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("tag {}", u.id.id)))?;
+                    KitStore::insert_tag_dto(kit, dto)?;
+                }
+                for t in &td.added {
+                    KitStore::insert_tag_dto(kit, t.clone())?;
+                }
+            }
+            if let Some(qd) = &diff.qualities {
+                for id in &qd.removed {
+                    KitStore::remove_quality_dto(kit, id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", id.id)))?;
+                }
+                for u in &qd.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let q = g.quality(u.id.id.as_str()).ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
+                        let dto = q.read().map_err(|_| SetError::LockPoisoned("quality".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_quality_diff_into_full(&mut dto, &u.diff);
+                    KitStore::remove_quality_dto(kit, u.id.id.as_str())?.ok_or_else(|| SetError::NotFound(format!("quality {}", u.id.id)))?;
+                    KitStore::insert_quality_dto(kit, dto)?;
+                }
+                for q in &qd.added {
+                    KitStore::insert_quality_dto(kit, q.clone())?;
+                }
+            }
+            if let Some(pd) = &diff.props {
+                for id in &pd.removed {
+                    let pos = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.props.iter().position(|p| p.read().map(|r| r.id == id.id).unwrap_or(false))
+                    };
+                    let Some(pos) = pos else {
+                        return Err(SetError::NotFound(format!("prop {}", id.id)));
+                    };
+                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.remove(pos) };
+                    {
+                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+                for u in &pd.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let p = g.props.iter().find(|p| p.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("prop {}", u.id.id)))?;
+                        let dto = p.read().map_err(|_| SetError::LockPoisoned("prop".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_prop_diff_into_full(&mut dto, &u.diff);
+                    let pos = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.props.iter().position(|p| p.read().map(|r| r.id == u.id.id).unwrap_or(false))
+                    };
+                    let Some(pos) = pos else {
+                        return Err(SetError::NotFound(format!("prop {}", u.id.id)));
+                    };
+                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.remove(pos) };
+                    let mut p = PropStore::from_full_dto(dto);
+                    p.parent_kit = Some(Arc::downgrade(kit));
+                    kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.props.insert(pos, Arc::new(RwLock::new(p)));
+                    {
+                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+                for p in &pd.added {
+                    let id = p.id.clone();
+                    {
+                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        if g.props.iter().any(|x| x.read().map(|r| r.id == id).unwrap_or(false)) {
+                            return Err(SetError::DuplicateId(format!("prop {}", id)));
+                        }
+                        let mut prop = PropStore::from_full_dto(p.clone());
+                        prop.parent_kit = Some(Arc::downgrade(kit));
+                        g.props.push(Arc::new(RwLock::new(prop)));
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+            }
+            if let Some(ad) = &diff.attributes {
+                for id in &ad.removed {
+                    let pos = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.attributes.iter().position(|a| a.read().map(|r| r.id == id.id).unwrap_or(false))
+                    };
+                    let Some(pos) = pos else {
+                        return Err(SetError::NotFound(format!("attribute {}", id.id)));
+                    };
+                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.remove(pos) };
+                    {
+                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+                for u in &ad.updated {
+                    let mut dto = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        let a = g.attributes.iter().find(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false)).ok_or_else(|| SetError::NotFound(format!("attribute {}", u.id.id)))?;
+                        let dto = a.read().map_err(|_| SetError::LockPoisoned("attribute".into()))?.to_full_dto();
+                        dto
+                    };
+                    crate::diff::merge_attribute_diff_into_full(&mut dto, &u.diff);
+                    let pos = {
+                        let g = kit.read().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.attributes.iter().position(|a| a.read().map(|r| r.id == u.id.id).unwrap_or(false))
+                    };
+                    let Some(pos) = pos else {
+                        return Err(SetError::NotFound(format!("attribute {}", u.id.id)));
+                    };
+                    let _ = { kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.remove(pos) };
+                    let mut a = AttributeStore::from_full_dto(dto);
+                    a.parent_kit = Some(Arc::downgrade(kit));
+                    kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?.attributes.insert(pos, Arc::new(RwLock::new(a)));
+                    {
+                        let g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+                for a in &ad.added {
+                    let id = a.id.clone();
+                    {
+                        let mut g = kit.write().map_err(|_| SetError::LockPoisoned("kit".into()))?;
+                        if g.attributes.iter().any(|x| x.read().map(|r| r.id == id).unwrap_or(false)) {
+                            return Err(SetError::DuplicateId(format!("attribute {}", id)));
+                        }
+                        let mut attr = AttributeStore::from_full_dto(a.clone());
+                        attr.parent_kit = Some(Arc::downgrade(kit));
+                        g.attributes.push(Arc::new(RwLock::new(attr)));
+                        g.invalidate_hash();
+                        g.invalidate_validation();
+                    }
+                    event_wire::wire_graph_bus(kit);
+                }
+            }
+            Ok(())
         }
 
         pub fn insert_design_ref(kit: &KitStoreRef, dto: DesignFullDto) -> SetResult {
@@ -12527,6 +13125,7 @@ pub mod layer {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerMetadataDto {
         pub id: Id,
+        #[serde(default, alias = "path")]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12543,6 +13142,7 @@ pub mod layer {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerShallowDto {
         pub id: Id,
+        #[serde(default, alias = "path")]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12559,6 +13159,7 @@ pub mod layer {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct LayerFullDto {
         pub id: Id,
+        #[serde(default, alias = "path")]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -12798,15 +13399,15 @@ pub mod piece {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
         pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
         pub locked: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
@@ -12825,15 +13426,15 @@ pub mod piece {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
         pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
         pub locked: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
@@ -12856,15 +13457,15 @@ pub mod piece {
         pub description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::geom::deserialize_option_piece_center")]
         pub center: Option<Coordinate>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub scale: Option<f64>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "mirrorPlane")]
         pub mirror_plane: Option<Plane>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isHidden")]
         pub hidden: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "isLocked")]
         pub locked: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub color: Option<String>,
@@ -14071,13 +14672,19 @@ pub mod prop {
         pub unit: Option<String>,
     }
 
+    /// Wire: either `key` or `quality: { id }` (resolved to `key` from kit `qualities` in [`crate::kit::KitStore::from_full_dto`]).
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct PropFullDto {
         pub id: Id,
+        /// May be empty on wire when `quality` carries the catalog id (see [`PropFullDto::quality`]).
+        #[serde(default)]
         pub key: String,
         pub value: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
+        /// Metabolism / C#: property references a catalog [`crate::quality::QualityStore`] by id.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub quality: Option<crate::quality::QualityIdDto>,
     }
 
     impl PropStore {
@@ -14194,7 +14801,7 @@ pub mod prop {
 
         pub fn to_full_dto(&self) -> PropFullDto {
             let m = self.to_metadata_dto();
-            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit }
+            PropFullDto { id: m.id, key: m.key, value: m.value, unit: m.unit, quality: None }
         }
 
         pub fn invalidate_hash(&self) {
@@ -14646,6 +15253,7 @@ pub mod representation {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationShallowDto {
         pub id: Id,
+        #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -14662,6 +15270,8 @@ pub mod representation {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct RepresentationFullDto {
         pub id: Id,
+        /// Metabolism uses `name` (and sometimes `blob`) for the same role as our canonical `url`.
+        #[serde(default, alias = "name", alias = "blob")]
         pub url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub description: Option<String>,
@@ -14856,14 +15466,29 @@ pub mod side {
         pub id: Id,
     }
 
-    #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
+    fn new_side_dto_id() -> Id {
+        Id::new_v7()
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
     pub struct SideMetadataDto {
+        /// C# connection sides often omit; generated when materializing a [`SideStore`].
+        #[serde(default = "new_side_dto_id")]
         pub id: Id,
         pub piece: crate::piece::PieceIdDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub port: Option<crate::port::PortIdDto>,
         #[serde(default, skip_serializing_if = "Option::is_none", rename = "designPiece")]
         pub design_piece: Option<crate::piece::PieceIdDto>,
+        /// C#: `connector` on this side; we resolve the [`crate::port::PortIdDto`] in [`crate::design::wire_side_from_dto`].
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "connector")]
+        pub connector: Option<crate::connector::ConnectorIdDto>,
+    }
+
+    impl Default for SideMetadataDto {
+        fn default() -> Self {
+            Self { id: Id::new_v7(), piece: crate::piece::PieceIdDto { id: Id::new_v7() }, port: None, design_piece: None, connector: None }
+        }
     }
 
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
@@ -14946,7 +15571,7 @@ pub mod side {
             let piece_id = self.piece.upgrade().and_then(|p| p.read().ok().map(|p| p.id.clone())).unwrap_or_default();
             let port = self.port.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
             let design_piece = self.design_piece.as_ref().and_then(|p| p.upgrade()).and_then(|p| p.read().ok().map(|p| p.to_id_dto()));
-            SideMetadataDto { id: self.id.clone(), piece: crate::piece::PieceIdDto { id: piece_id }, port, design_piece }
+            SideMetadataDto { id: self.id.clone(), piece: crate::piece::PieceIdDto { id: piece_id }, port, design_piece, connector: None }
         }
 
         pub fn to_shallow_dto(&self) -> SideShallowDto {
@@ -15238,6 +15863,7 @@ pub mod tag {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagShallowDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub order: Option<i64>,
@@ -15246,6 +15872,7 @@ pub mod tag {
     #[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
     pub struct TagFullDto {
         pub id: Id,
+        #[serde(default)]
         pub name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub order: Option<i64>,
@@ -15448,15 +16075,15 @@ pub mod typ {
         pub variant: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual")]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
     }
 
@@ -15474,15 +16101,15 @@ pub mod typ {
         pub variant: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual")]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub ports: Vec<PortShallowDto>,
@@ -15518,15 +16145,15 @@ pub mod typ {
         pub variant: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub stock: Option<i64>,
-        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual")]
+        #[serde(default, skip_serializing_if = "Option::is_none", rename = "virtual", alias = "isAbstract")]
         pub virtual_: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub unit: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub location: Option<Location>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "createdAt")]
         pub created: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[serde(default, skip_serializing_if = "Option::is_none", alias = "updatedAt")]
         pub updated: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub ports: Vec<PortFullDto>,
@@ -16894,7 +17521,7 @@ pub mod io {
             let mut rows = stmt.query([id.as_str()])?;
             let mut values = Vec::new();
             while let Some(row) = rows.next()? {
-                values.push(PropFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)? });
+                values.push(PropFullDto { id: Id::from(row.get::<_, String>(0)?), key: row.get(1)?, value: row.get(2)?, unit: row.get(3)?, quality: None });
             }
             Ok(values)
         }
@@ -17109,12 +17736,14 @@ pub mod io {
                         piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(2)?) },
                         port: connected_port_id.map(|value| PortIdDto { id: Id::from(value) }),
                         design_piece: connected_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
+                        connector: None,
                     },
                     connecting: SideMetadataDto {
                         id: Id::from(row.get::<_, String>(5)?),
                         piece: crate::piece::PieceIdDto { id: Id::from(row.get::<_, String>(6)?) },
                         port: connecting_port_id.map(|value| PortIdDto { id: Id::from(value) }),
                         design_piece: connecting_design_piece_id.map(|value| crate::piece::PieceIdDto { id: Id::from(value) }),
+                        connector: None,
                     },
                     gap: row.get(9)?,
                     shift: row.get(10)?,
@@ -17778,7 +18407,8 @@ pub mod wasm {
         pub fn execute_change_kit_commands(&self, cmds: JsValue) -> Result<JsValue, JsValue> {
             use crate::change_command::ChangeKitCommand;
             let cmds: Vec<ChangeKitCommand> = serde_wasm_bindgen::from_value(cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let (kind, inverse) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let (_merged, inverse) = ChangeKitCommand::apply_many(&self.inner, &cmds).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            let kind = ChangeKitCommand::batch_kind(&cmds);
             #[derive(Serialize)]
             struct Out {
                 kind: crate::kit_change::KitChangeKind,
@@ -18294,6 +18924,41 @@ mod tests {
             undo_inverses(&kit, &inv);
             assert_eq!(kit.read().expect("r").name, "a");
         }
+
+        #[test]
+        fn compact_keeps_last_of_consecutive_kit_name() {
+            let cmds = vec![ChangeKitCommand::Name { name: "a".into() }, ChangeKitCommand::Name { name: "b".into() }];
+            let c = ChangeKitCommand::compact(cmds);
+            assert_eq!(c.len(), 1);
+            assert!(matches!(&c[0], ChangeKitCommand::Name { name } if name == "b"));
+        }
+
+        #[test]
+        fn compact_preserves_final_kit_dto() {
+            let cmds = vec![
+                ChangeKitCommand::Name { name: "n1".into() },
+                ChangeKitCommand::Name { name: "n2".into() },
+                ChangeKitCommand::Description { description: Some("d".into()) },
+                ChangeKitCommand::Description { description: None },
+            ];
+            let seed = KitStore::new("k0").to_full_dto();
+            let a = KitStore::from_full_dto(seed.clone());
+            let b = KitStore::from_full_dto(seed);
+            ChangeKitCommand::apply_many(&a, &cmds).expect("apply_many a");
+            let compacted = ChangeKitCommand::compact(cmds);
+            ChangeKitCommand::apply_many(&b, &compacted).expect("apply_many b");
+            assert_eq!(a.read().expect("r").to_full_dto(), b.read().expect("r").to_full_dto());
+        }
+
+        #[test]
+        fn apply_many_kit_diff_matches_baseline_between() {
+            let kit = Arc::new(RwLock::new(KitStore::new("k0")));
+            let before = kit.read().expect("r").to_full_dto();
+            let cmds = [ChangeKitCommand::Name { name: "k1".into() }];
+            let (diff, _) = ChangeKitCommand::apply_many_kit_diff(&kit, &cmds).expect("apply_many_kit_diff");
+            let after = kit.read().expect("r").to_full_dto();
+            assert_eq!(diff, crate::kit_diff::KitDiff::between(&before, &after));
+        }
     }
 
     mod diff {
@@ -18360,14 +19025,14 @@ mod tests {
                     connections: vec![
                         ConnectionFullDto {
                             id: ab_id,
-                            connected: SideMetadataDto { id: root_side_id, piece: PieceIdDto { id: root_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
-                            connecting: SideMetadataDto { id: middle_ab_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
+                            connected: SideMetadataDto { id: root_side_id, piece: PieceIdDto { id: root_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadataDto { id: middle_ab_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
                             ..Default::default()
                         },
                         ConnectionFullDto {
                             id: bc_id,
-                            connected: SideMetadataDto { id: middle_bc_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None },
-                            connecting: SideMetadataDto { id: leaf_side_id, piece: PieceIdDto { id: leaf_id.clone() }, port: Some(PortIdDto { id: port_id }), design_piece: None },
+                            connected: SideMetadataDto { id: middle_bc_side_id, piece: PieceIdDto { id: middle_id.clone() }, port: Some(PortIdDto { id: port_id.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadataDto { id: leaf_side_id, piece: PieceIdDto { id: leaf_id.clone() }, port: Some(PortIdDto { id: port_id }), design_piece: None, connector: None },
                             ..Default::default()
                         },
                     ],
@@ -18731,26 +19396,26 @@ mod tests {
                         connections: vec![
                             ConnectionFullDto {
                                 id: Id::from("root-lg-left"),
-                                connected: SideMetadataDto { id: Id::from("root-lg-left-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
-                                connecting: SideMetadataDto { id: Id::from("root-lg-left-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connected: SideMetadataDto { id: Id::from("root-lg-left-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadataDto { id: Id::from("root-lg-left-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-lg-gable"),
-                                connected: SideMetadataDto { id: Id::from("root-lg-gable-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None },
-                                connecting: SideMetadataDto { id: Id::from("root-lg-gable-neighbor"), piece: PieceIdDto { id: piece_neighbor_g.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None },
+                                connected: SideMetadataDto { id: Id::from("root-lg-gable-selected"), piece: PieceIdDto { id: piece_external_lg.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadataDto { id: Id::from("root-lg-gable-neighbor"), piece: PieceIdDto { id: piece_neighbor_g.clone() }, port: Some(PortIdDto { id: port_g.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-ll-left-0"),
-                                connected: SideMetadataDto { id: Id::from("root-ll-left-0-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
-                                connecting: SideMetadataDto { id: Id::from("root-ll-left-0-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connected: SideMetadataDto { id: Id::from("root-ll-left-0-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadataDto { id: Id::from("root-ll-left-0-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                             ConnectionFullDto {
                                 id: Id::from("root-ll-left-1"),
-                                connected: SideMetadataDto { id: Id::from("root-ll-left-1-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
-                                connecting: SideMetadataDto { id: Id::from("root-ll-left-1-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                                connected: SideMetadataDto { id: Id::from("root-ll-left-1-selected"), piece: PieceIdDto { id: piece_external_ll.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
+                                connecting: SideMetadataDto { id: Id::from("root-ll-left-1-neighbor"), piece: PieceIdDto { id: piece_neighbor_l.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
                                 ..Default::default()
                             },
                         ],
@@ -18771,8 +19436,8 @@ mod tests {
                         ],
                         connections: vec![ConnectionFullDto {
                             id: Id::from("candidate-consumed-lg-left"),
-                            connected: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-primary"), piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() }, port: Some(PortIdDto { id: port_l_compatible.clone() }), design_piece: None },
-                            connecting: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-neighbor"), piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None },
+                            connected: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-primary"), piece: PieceIdDto { id: piece_candidate_consumed_lg.clone() }, port: Some(PortIdDto { id: port_l_compatible.clone() }), design_piece: None, connector: None },
+                            connecting: SideMetadataDto { id: Id::from("candidate-consumed-lg-left-neighbor"), piece: PieceIdDto { id: piece_candidate_consumed_neighbor.clone() }, port: Some(PortIdDto { id: port_l.clone() }), design_piece: None, connector: None },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -19332,8 +19997,8 @@ mod tests {
                         ],
                         connections: vec![ConnectionFullDto {
                             id: conn_id.clone(),
-                            connected: SideMetadataDto { id: side_a, piece: PieceIdDto { id: piece_a.clone() }, port: None, design_piece: None },
-                            connecting: SideMetadataDto { id: side_b, piece: PieceIdDto { id: piece_b.clone() }, port: None, design_piece: None },
+                            connected: SideMetadataDto { id: side_a, piece: PieceIdDto { id: piece_a.clone() }, port: None, design_piece: None, connector: None },
+                            connecting: SideMetadataDto { id: side_b, piece: PieceIdDto { id: piece_b.clone() }, port: None, design_piece: None, connector: None },
                             ..Default::default()
                         }],
                         ..Default::default()
@@ -20060,7 +20725,7 @@ mod tests {
             #[test]
             fn prop_set_unit_emits() {
                 let g = Id::new_v7();
-                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None }], ..Default::default() });
+                let kit = KitStore::from_full_dto(KitFullDto { id: Id::new_v7(), name: "k".into(), props: vec![PropFullDto { id: g.clone(), key: "k".into(), value: "v".into(), unit: None, quality: None }], ..Default::default() });
                 let mut rx = kit.read().unwrap().subscribe();
                 let p = {
                     let kr = kit.read().unwrap();
