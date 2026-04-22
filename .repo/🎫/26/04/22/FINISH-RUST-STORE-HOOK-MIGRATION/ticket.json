@@ -1,0 +1,9 @@
+{
+  "title": "Finish Rust Store Hook Migration",
+  "status": "open",
+  "description": "Finish the architectural migration across semio/rs, semio/js, semio/react, and semio/sketchpad so that: 1) semio/sketchpad no longer uses general kit hooks and kit hooks come exclusively from semio/rs-backed surfaces, 2) semio/js contains no kit domain logic and only runtime/transport/schema glue that remains appropriate there, 3) existing sketchpad/playwright functionality is preserved, and 4) the Playwright suite passes. Investigate current ownership, refactor the minimal boundary needed, update existing tests instead of creating new ones, and verify with targeted and full Playwright runs.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪e9b23e5565a1402a8e1946f2b9e6d9d0"
+  ]
+}

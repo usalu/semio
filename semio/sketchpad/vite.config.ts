@@ -115,6 +115,7 @@ export default defineConfig(async ({ mode }) => {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store"],
       alias: [
         { find: "@semio/js", replacement: path.resolve(__dirname, "../js") },
+        { find: "@semio/rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
         { find: "@semio/ui", replacement: path.resolve(__dirname, "../ui") },
         { find: "@semio/sketchpad", replacement: path.resolve(__dirname) },
         { find: "@semio/studio", replacement: path.resolve(__dirname, "../studio") },

@@ -19677,6 +19677,7 @@ export interface KitStoreClient {
   addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
   removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
   applyDesignDiff(designId: string, diff: unknown): Promise<SetResult>;
+  applyKitDiff(diff: unknown): Promise<SetResult>;
   clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
   dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
   movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
@@ -19736,47 +19737,47 @@ function validateOptionalDisplayName(name: string | null | undefined, label: str
 
 /** In-process mirror of a subset of [`KitStore::set_field_rpc`] for Node/tests. */
 export class FallbackKitStoreClient implements KitStoreClient {
-  private dto: any;
+  private handle: any;
   private listeners: Set<(ev: any) => void> = new Set();
-  private static readonly _maxUndo = 100;
-  private _undoPast: { before: any; after: any }[] = [];
-  private _undoFuture: { before: any; after: any }[] = [];
-  private _txDepth = 0;
-  private _txSnapshot: any = null;
+  private cached: any;
+  private timeoutMs: number;
+  private subscribed = false;
 
-  constructor(initialDto: any) {
-    this.dto = initialDto;
-  }
-
-  private recordAfterMutation(before: any) {
-    if (this._txDepth > 0) return;
-    const after = structuredClone(this.dto);
-    if (JSON.stringify(before) === JSON.stringify(after)) return;
-    this._undoPast.push({ before, after });
-    if (this._undoPast.length > FallbackKitStoreClient._maxUndo) this._undoPast.shift();
-    this._undoFuture = [];
+  constructor(handle: any, cachedDto: any, timeoutMs: number) {
+    this.handle = handle;
+    this.cached = cachedDto;
+    this.timeoutMs = timeoutMs;
   }
 
   getDto() {
-    return this.dto;
+    return this.cached;
   }
 
   async getSnapshot() {
-    return this.dto;
-  }
-
-  private emit(ev: any) {
-    for (const l of this.listeners) {
-      try {
-        l(ev);
-      } catch {
-        /* ignore */
-      }
+    try {
+      this.cached = await withTimeout(Promise.resolve(this.handle.snapshot()), this.timeoutMs, "snapshot timeout");
+    } catch {
+      /* keep cached */
     }
+    return this.cached;
   }
 
   subscribe(cb: (ev: any) => void): () => void {
     this.listeners.add(cb);
+    if (!this.subscribed) {
+      this.subscribed = true;
+      void Promise.resolve(
+        this.handle.subscribe((ev: any) => {
+          for (const listener of this.listeners) {
+            try {
+              listener(ev);
+            } catch {
+              /* ignore */
+            }
+          }
+        }),
+      );
+    }
     return () => {
       this.listeners.delete(cb);
     };
@@ -19784,459 +19785,172 @@ export class FallbackKitStoreClient implements KitStoreClient {
 
   dispose() {
     this.listeners.clear();
+    if (typeof this.handle?.free === "function") {
+      try {
+        this.handle.free();
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
-  private findPiece(id: string): { piece: any; design: any } | null {
-    for (const d of this.dto.designs ?? []) {
-      const p = d.pieces?.find((x: any) => x.id === id);
-      if (p) return { piece: p, design: d };
+  private async settleMutateAndRefresh(raw: Promise<unknown> | unknown): Promise<SetResult> {
+    try {
+      const got = await withTimeout(Promise.resolve(raw), this.timeoutMs, "timeout");
+      const result = await settleSetPromise(Promise.resolve(got));
+      if (result.ok) {
+        await this.getSnapshot();
+      }
+      return result;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
     }
-    return null;
   }
 
   async setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const fin = (r: SetResult): SetResult => {
-        if (r.ok) this.recordAfterMutation(before);
-        return r;
-      };
-      if (kind === "Kit") {
-        if (this.dto.id !== id) return { ok: false, error: { kind: "NotFound", message: `kit ${id}` } };
-        if (field === "name") {
-          const s = String(value ?? "");
-          const v = validateRequiredName(s, "name");
-          if (!v.ok) {
-            this.emit({ SetRejected: { entity: { kind: "Kit", id }, field: "name", error: v.error } });
-            return v;
-          }
-          if (this.dto.name === s.trim()) return fin({ ok: true } as const);
-          this.dto.name = s.trim();
-          this.emit({ FieldChanged: { entity: { kind: "Kit", id }, field: "name" } });
-          return fin({ ok: true } as const);
-        }
-        return { ok: false, error: { kind: "InvalidValue", message: `unknown kit field '${field}'` } };
-      }
-      if (kind === "Design") {
-        const d = this.dto.designs?.find((x: any) => x.id === id);
-        if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${id}` } };
-        if (field === "name") {
-          const s = String(value ?? "");
-          const v = validateRequiredName(s, "name");
-          if (!v.ok) {
-            this.emit({ SetRejected: { entity: { kind: "Design", id }, field: "name", error: v.error } });
-            return v;
-          }
-          if (d.name === s.trim()) return fin({ ok: true } as const);
-          d.name = s.trim();
-          this.emit({ FieldChanged: { entity: { kind: "Design", id }, field: "name" } });
-          return fin({ ok: true } as const);
-        }
-        return { ok: false, error: { kind: "InvalidValue", message: `unknown design field '${field}'` } };
-      }
-      if (kind === "Type") {
-        const t = this.dto.types?.find((x: any) => x.id === id);
-        if (!t) return { ok: false, error: { kind: "NotFound", message: `type ${id}` } };
-        if (field === "name") {
-          const s = String(value ?? "");
-          const v = validateRequiredName(s, "name");
-          if (!v.ok) {
-            this.emit({ SetRejected: { entity: { kind: "Type", id }, field: "name", error: v.error } });
-            return v;
-          }
-          if (t.name === s.trim()) return fin({ ok: true } as const);
-          t.name = s.trim();
-          this.emit({ FieldChanged: { entity: { kind: "Type", id }, field: "name" } });
-          return fin({ ok: true } as const);
-        }
-        return { ok: false, error: { kind: "InvalidValue", message: `unknown type field '${field}'` } };
-      }
-      if (kind === "Piece") {
-        const hit = this.findPiece(id);
-        if (!hit) return { ok: false, error: { kind: "NotFound", message: `piece ${id}` } };
-        if (field === "name") {
-          let next: string | undefined;
-          if (value == null) next = undefined;
-          else next = String(value).trim() || undefined;
-          const v = validateOptionalDisplayName(next, "name");
-          if (!v.ok) {
-            this.emit({ SetRejected: { entity: { kind: "Piece", id }, field: "name", error: v.error } });
-            return v;
-          }
-          if (hit.piece.name === next) return fin({ ok: true } as const);
-          hit.piece.name = next;
-          this.emit({ FieldChanged: { entity: { kind: "Piece", id }, field: "name" } });
-          return fin({ ok: true } as const);
-        }
-        if (field === "color") {
-          const next = value == null ? undefined : String(value);
-          if (hit.piece.color === next) return fin({ ok: true } as const);
-          hit.piece.color = next;
-          this.emit({ FieldChanged: { entity: { kind: "Piece", id }, field: "color" } });
-          return fin({ ok: true } as const);
-        }
-        return { ok: false, error: { kind: "InvalidValue", message: `unknown piece field '${field}'` } };
-      }
-      return { ok: false, error: { kind: "InvalidValue", message: `setField not implemented for ${kind}` } };
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.setField(kind, id, field, value));
   }
 
   async addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult> {
-    const before = structuredClone(this.dto);
-    if (parentKind !== "Design" || childKind !== "Piece") {
-      return { ok: false, error: { kind: "InvalidValue", message: `addChild not implemented for ${parentKind} -> ${childKind}` } };
-    }
-    const d = this.dto.designs?.find((x: any) => x.id === parentId);
-    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${parentId}` } };
-    const piece = dto as any;
-    if (!piece?.id) return { ok: false, error: { kind: "InvalidValue", message: "piece dto needs id" } };
-    if (!d.pieces) d.pieces = [];
-    d.pieces.push(piece);
-    this.emit({ ChildAdded: { parent: { kind: "Design", id: parentId }, child: { kind: "Piece", id: piece.id } } });
-    this.recordAfterMutation(before);
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.addChild(parentKind, parentId, childKind, dto));
   }
 
   async removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult> {
-    const before = structuredClone(this.dto);
-    if (parentKind !== "Design" || childKind !== "Piece") {
-      return { ok: false, error: { kind: "InvalidValue", message: `removeChild not implemented for ${parentKind} -> ${childKind}` } };
-    }
-    const d = this.dto.designs?.find((x: any) => x.id === parentId);
-    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${parentId}` } };
-    const nBefore = d.pieces?.length ?? 0;
-    d.pieces = (d.pieces ?? []).filter((p: any) => p.id !== childId);
-    if (d.pieces.length === nBefore) return { ok: false, error: { kind: "NotFound", message: `piece ${childId}` } };
-    this.emit({ ChildRemoved: { parent: { kind: "Design", id: parentId }, child: { kind: "Piece", id: childId } } });
-    this.recordAfterMutation(before);
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.removeChild(parentKind, parentId, childKind, childId));
   }
 
-  async applyDesignDiff(designId: string, diff: any): Promise<SetResult> {
-    const before = structuredClone(this.dto);
-    const d = this.dto.designs?.find((x: any) => x.id === designId);
-    if (!d) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-    try {
-      for (const id of diff?.removedPieces ?? []) {
-        const g = typeof id === "string" ? id : id.id;
-        d.pieces = (d.pieces ?? []).filter((p: any) => p.id !== g);
-      }
-      for (const p of diff?.addedPieces ?? []) {
-        if (!d.pieces) d.pieces = [];
-        d.pieces.push(p);
-      }
-      for (const p of diff?.modifiedPieces ?? []) {
-        const idx = d.pieces?.findIndex((x: any) => x.id === p.id) ?? -1;
-        if (idx >= 0) d.pieces[idx] = p;
-      }
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+  async applyDesignDiff(designId: string, diff: unknown): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.applyDesignDiff(designId, diff));
+  }
+
+  async applyKitDiff(diff: unknown): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.applyKitDiff(diff));
   }
 
   async clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      const { clusteredDesign, externalConnections } = kit.createClusteredDesignFromDesign(design, pieceIds, clusterName);
-      const designChange = kit.replaceClusterWithDesignChange(design, pieceIds, clusteredDesign, externalConnections);
-      kit._applyDiff(
-        {
-          designs: {
-            added: [clusteredDesign],
-            updated: [{ design: { id: designId }, diff: designChange.forward }],
-          },
-        },
-        {},
-      );
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.clusterPieces(designId, pieceIds, clusterName));
   }
 
   async dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      const subPieces = pieceIds.map((g) => design.requirePiece(g).toPlain());
-      const piecesDesign = new Design({ id: id(), name: "__drag_selection", pieces: subPieces }, kit);
-      const diff = kit.dragPiecesInDesignDiff(design, piecesDesign, { u: du, v: dv });
-      design.applyDiff(diff);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.dragPieces(designId, pieceIds, du, dv));
   }
 
   async movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      const subPieces = pieceIds.map((g) => design.requirePiece(g).toPlain());
-      const piecesDesign = new Design({ id: id(), name: "__move_selection", pieces: subPieces }, kit);
-      const diff = kit.movePiecesInDesignOp(design, piecesDesign, { gap, shift, rise });
-      design.applyDiff(diff);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.movePieces(designId, pieceIds, gap, shift, rise));
   }
 
   async fixPieces(designId: string, pieceIds: string[]): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const diff = kit.fixPiecesInDesignDiff(designId, pieceIds);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      design.applyDiff(diff);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.fixPieces(designId, pieceIds));
   }
 
   async flattenDesign(designId: string): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      design.flatten();
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.flattenDesign(designId));
   }
 
   async expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const contextDesign = kit.findDesign(parentDesignId);
-      const referencedDesign = kit.findDesign(nestedDesignId);
-      if (!contextDesign || !referencedDesign) {
-        return { ok: false, error: { kind: "NotFound", message: "design" } };
-      }
-      const expandedReferencedDesign = kit.expandDesignPiecesFrom(referencedDesign);
-      const existingPieceIds = new Set((contextDesign.pieces || []).map((piece: any) => piece.id));
-      const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece: any) => !existingPieceIds.has(piece.id));
-      const existingConnections = contextDesign.connections || [];
-      const addedConnections = (expandedReferencedDesign.connections || []).filter(
-        (connection: any) => !existingConnections.some((existing: any) => areSameConnection(existing, connection)),
-      );
-      const updatedExternalConnections = (contextDesign.connections || []).map((connection: any) => {
-        if (connection.connected.designPiece?.id === nestedDesignId) {
-          return { ...connection, connected: { ...connection.connected, designPiece: undefined } };
-        }
-        if (connection.connecting.designPiece?.id === nestedDesignId) {
-          return { ...connection, connecting: { ...connection.connecting, designPiece: undefined } };
-        }
-        return connection;
-      });
-      const expandedDesign: any = {
-        ...contextDesign,
-        pieces: [...(contextDesign.pieces || []), ...addedPieces],
-        connections: [...updatedExternalConnections, ...addedConnections],
-      };
-      const designDiff = getDesignDiff(contextDesign, expandedDesign as any);
-      contextDesign.applyDiff(designDiff);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.expandDesign(parentDesignId, nestedDesignId));
   }
 
   async deleteConnection(designId: string, connectionId: string): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      if (!design) return { ok: false, error: { kind: "NotFound", message: `design ${designId}` } };
-      design.applyDiff({ connections: { removed: [{ id: connectionId }] } } as any);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.deleteConnection(designId, connectionId));
   }
 
   async changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult> {
-    try {
-      const before = structuredClone(this.dto);
-      const kit = asKitInstance(this.dto);
-      const design = kit.findDesign(designId);
-      const typ = kit.findType(newTypeId);
-      if (!design || !typ) return { ok: false, error: { kind: "NotFound", message: "design or type" } };
-      design.requirePiece(pieceId).changeType(typ);
-      this.dto = kit.toJSON() as any;
-      this.emit({ ValidationInvalidated: null });
-      this.recordAfterMutation(before);
-      return { ok: true } as const;
-    } catch (e: any) {
-      return { ok: false, error: { kind: "Internal", message: String(e?.message ?? e) } };
-    }
+    return this.settleMutateAndRefresh(this.handle.changePieceType(designId, pieceId, newTypeId));
   }
 
-  async pasteDesignSelection(_designId: string, _selection: unknown, _plane: unknown): Promise<SetResult> {
-    return { ok: false, error: { kind: "InvalidValue", message: "pasteDesignSelection not implemented in FallbackKitStoreClient" } };
+  async pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.pasteDesignSelection(designId, selection, plane));
   }
 
-  async createHangingPieces(_designId: string, _typeIds: string[], _plane: unknown): Promise<SetResult> {
-    return { ok: false, error: { kind: "InvalidValue", message: "createHangingPieces not implemented in FallbackKitStoreClient" } };
+  async createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.createHangingPieces(designId, typeIds, plane));
   }
 
-  async createConnectedPiece(_designId: string, _parentPiece: string, _parentPort: string, _childType: string, _childPort: string): Promise<SetResult> {
-    return { ok: false, error: { kind: "InvalidValue", message: "createConnectedPiece not implemented in FallbackKitStoreClient" } };
+  async createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.createConnectedPiece(designId, parentPiece, parentPort, childType, childPort));
   }
 
-  async createFixedPiece(_designId: string, _typeId: string, _plane: unknown): Promise<SetResult> {
-    return { ok: false, error: { kind: "InvalidValue", message: "createFixedPiece not implemented in FallbackKitStoreClient" } };
+  async createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult> {
+    return this.settleMutateAndRefresh(this.handle.createFixedPiece(designId, typeId, plane));
   }
 
   async undo(): Promise<SetResult> {
-    if (this._txDepth > 0) {
-      return { ok: false, error: { kind: "Internal", message: "cannot undo while a transaction is open" } };
-    }
-    const s = this._undoPast.pop();
-    if (!s) return { ok: false, error: { kind: "Internal", message: "nothing to undo" } };
-    this.dto = structuredClone(s.before);
-    this._undoFuture.push(s);
-    this.emit({ ValidationInvalidated: null });
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.undo());
   }
 
   async redo(): Promise<SetResult> {
-    if (this._txDepth > 0) {
-      return { ok: false, error: { kind: "Internal", message: "cannot redo while a transaction is open" } };
-    }
-    const s = this._undoFuture.pop();
-    if (!s) return { ok: false, error: { kind: "Internal", message: "nothing to redo" } };
-    this.dto = structuredClone(s.after);
-    this._undoPast.push(s);
-    this.emit({ ValidationInvalidated: null });
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.redo());
   }
 
   async canUndo(): Promise<boolean> {
-    return this._txDepth === 0 && this._undoPast.length > 0;
+    try {
+      return Boolean(await withTimeout(Promise.resolve(this.handle.canUndo()), this.timeoutMs, "timeout"));
+    } catch {
+      return false;
+    }
   }
 
   async canRedo(): Promise<boolean> {
-    return this._txDepth === 0 && this._undoFuture.length > 0;
+    try {
+      return Boolean(await withTimeout(Promise.resolve(this.handle.canRedo()), this.timeoutMs, "timeout"));
+    } catch {
+      return false;
+    }
   }
 
   async beginTx(): Promise<SetResult> {
-    this._txDepth += 1;
-    if (this._txDepth === 1) this._txSnapshot = structuredClone(this.dto);
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.beginTx());
   }
 
   async commitTx(): Promise<SetResult> {
-    if (this._txDepth === 0) {
-      return { ok: false, error: { kind: "Internal", message: "no active transaction" } };
-    }
-    this._txDepth -= 1;
-    if (this._txDepth === 0) {
-      const start = this._txSnapshot;
-      this._txSnapshot = null;
-      if (start !== null) {
-        const after = structuredClone(this.dto);
-        if (JSON.stringify(start) !== JSON.stringify(after)) {
-          this._undoPast.push({ before: start, after });
-          if (this._undoPast.length > FallbackKitStoreClient._maxUndo) this._undoPast.shift();
-          this._undoFuture = [];
-        }
-      }
-    }
-    return { ok: true } as const;
+    return this.settleMutateAndRefresh(this.handle.commitTx());
   }
 
   async abortTx(): Promise<SetResult> {
-    if (this._txDepth === 0) {
-      return { ok: false, error: { kind: "Internal", message: "no active transaction" } };
+    return this.settleMutateAndRefresh(this.handle.abortTx());
+  }
+
+  private unwrapQuery(raw: any) {
+    if (raw && typeof raw === "object" && raw.ok === false && raw.error) {
+      throw new Error(typeof raw.error?.message === "string" ? raw.error.message : JSON.stringify(raw.error));
     }
-    this._txDepth -= 1;
-    if (this._txDepth === 0) {
-      if (this._txSnapshot !== null) this.dto = this._txSnapshot;
-      this._txSnapshot = null;
-    }
-    return { ok: true } as const;
+    return raw;
   }
 
   async getPiecesMetadata(designId: string) {
-    const kit = asKitInstance(this.dto);
-    const r = kit.piecesMetadataFor(designId);
-    if (!r.ok) {
-      throw new Error((r.errors ?? []).map((e: any) => e.message).join("; "));
-    }
-    return Object.fromEntries(r.value ?? new Map());
+    const raw = await withTimeout(Promise.resolve(this.handle.getPiecesMetadata(designId)), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getPieces(designId: string) {
-    const kit = asKitInstance(this.dto);
-    const d = kit.findDesign(designId);
-    if (!d) throw new Error(`design ${designId}`);
-    return (d.pieces ?? []).map((p: any) => p.toPlain());
+    const raw = await withTimeout(Promise.resolve(this.handle.getPieces(designId)), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getConnections(designId: string) {
-    const kit = asKitInstance(this.dto);
-    const d = kit.findDesign(designId);
-    if (!d) throw new Error(`design ${designId}`);
-    return (d.connections ?? []).map((c: any) => c.toPlain());
+    const raw = await withTimeout(Promise.resolve(this.handle.getConnections(designId)), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getDesigns() {
-    const kit = asKitInstance(this.dto);
-    return (kit.designs ?? []).map((d: any) => d.toShallow());
+    const raw = await withTimeout(Promise.resolve(this.handle.getDesigns()), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getTypes() {
-    const kit = asKitInstance(this.dto);
-    return (kit.types ?? []).map((t: any) => t.toShallow());
+    const raw = await withTimeout(Promise.resolve(this.handle.getTypes()), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getAuthors() {
-    const kit = asKitInstance(this.dto);
-    return (kit.authors ?? []).map((a: any) => a.toPlain());
+    const raw = await withTimeout(Promise.resolve(this.handle.getAuthors()), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 
   async getKitMetadata() {
-    const kit = asKitInstance(this.dto);
-    return kit.toShallow();
+    const raw = await withTimeout(Promise.resolve(this.handle.getKitMetadata()), this.timeoutMs, "timeout");
+    return this.unwrapQuery(raw);
   }
 }
 
@@ -20362,6 +20076,23 @@ export class WorkerKitStoreClient implements KitStoreClient {
   async applyDesignDiff(designId: string, diff: unknown): Promise<SetResult> {
     try {
       const raw = await withTimeout(this.api.applyDesignDiff(designId, diff), this.timeoutMs, "timeout");
+      const r = await settleSetPromise(Promise.resolve(raw));
+      if (r.ok) {
+        try {
+          this.cached = await withTimeout(this.api.snapshot(), this.timeoutMs, "timeout");
+        } catch {
+          /* ignore */
+        }
+      }
+      return r;
+    } catch {
+      return { ok: false, error: { kind: "Timeout", message: "timeout" } };
+    }
+  }
+
+  async applyKitDiff(diff: unknown): Promise<SetResult> {
+    try {
+      const raw = await withTimeout(this.api.applyKitDiff(diff), this.timeoutMs, "timeout");
       const r = await settleSetPromise(Promise.resolve(raw));
       if (r.ok) {
         try {
@@ -20679,15 +20410,19 @@ export class WorkerKitStoreClient implements KitStoreClient {
 /** Hosts should map this import to the wasm-bindgen JS glue (see sketchpad Vite config). */
 export async function createKitStoreClient(opts: CreateKitStoreClientOptions): Promise<KitStoreClient> {
   const dto = structuredClone(asKitInstance(opts.initialKit).toJSON());
-  const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
-  if (useFallback) {
-    return new FallbackKitStoreClient(dto);
-  }
   const wasmSpecifier =
     opts.wasmSpecifier ??
     (globalThis as any).__SEMIO_WASM_SPECIFIER__ ??
     "@semio/rs-wasm";
   const timeoutMs = opts.timeoutMs ?? 60_000;
+  const useFallback = opts.forceFallback === true || typeof Worker === "undefined";
+  if (useFallback) {
+    const mod = await import(/* @vite-ignore */ wasmSpecifier);
+    if (typeof mod.default === "function") {
+      await mod.default();
+    }
+    return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
+  }
   try {
     const Comlink = await import("comlink");
     const worker =
@@ -20697,7 +20432,11 @@ export async function createKitStoreClient(opts: CreateKitStoreClientOptions): P
     await api.init(wasmSpecifier, dto);
     return new WorkerKitStoreClient(worker, api, dto, timeoutMs);
   } catch {
-    return new FallbackKitStoreClient(dto);
+    const mod = await import(/* @vite-ignore */ wasmSpecifier);
+    if (typeof mod.default === "function") {
+      await mod.default();
+    }
+    return new FallbackKitStoreClient(mod.KitStoreHandle.create(dto), dto, timeoutMs);
   }
 }
 
@@ -28018,7 +27757,7 @@ const syncKitFileCommandResult = async (kitStore: KitStore, kit: Kit, command: s
   }
 };
 
-export const semioKitCommandHandlers = {
+const semioKitCommandHandlers = {
   "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
     return {
       diff: { authors: { added: [author] } },
@@ -28472,8 +28211,21 @@ export async function executeSemioKitCommand(kitStore: KitStore, command: string
     origin,
   };
   const result = (callback as any)(context, ...args);
-  if (result.diff) {
-    kitStore.apply(result.diff, { origin });
+  if (result.diff && Object.keys(result.diff).length > 0) {
+    const client = await createKitStoreClient({
+      initialKit: context.kit,
+      forceFallback: typeof Worker === "undefined",
+    });
+    try {
+      const applyResult = await client.applyKitDiff(result.diff);
+      if (!applyResult.ok) {
+        throw new Error(applyResult.error.message);
+      }
+      const nextSnapshot = await client.getSnapshot();
+      kitStore.replace(asKitInstance(nextSnapshot), { origin });
+    } finally {
+      client.dispose();
+    }
   }
   await syncKitFileCommandResult(kitStore, context.kit, command, args, result);
   return result;

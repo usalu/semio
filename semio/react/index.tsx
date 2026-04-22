@@ -30,6 +30,8 @@ import {
 	type WriteStatus,
 	Plane,
 	Piece,
+	executeKitCommand,
+	getStoredKitFileUrls,
 } from "@semio/js";
 
 // #endregion ⚛️Imports
@@ -2936,6 +2938,125 @@ export function useKitStore(): SchemaHookTriad<KitStore> {
 export function useKitSnapshot(): SchemaHookTriad<KitStoreSnapshot> {
 	const runtime = useKitRuntime();
 	return [runtime.snapshot, noopAsyncSet, { kind: "readonly", pending: 0 }] as const;
+}
+
+const EMPTY_KIT_FILE_URLS = new Map<string, string>();
+
+/**
+ * Resolves a map of file keys to blob: URLs for the current kit (same data as the former sketchpad `useFileUrls`).
+ */
+export function useKitStoredFileUrls(): Map<string, string> {
+	const [kitStore] = useKitStore();
+	const cachedRef = React.useRef<{ key: string; map: Map<string, string> } | null>(null);
+	const subscribe = React.useCallback(
+		(callback: () => void) => {
+			if (!kitStore) return () => {};
+			return kitStore.subscribe(callback);
+		},
+		[kitStore],
+	);
+	const getSnapshot = React.useCallback(() => {
+		if (!kitStore) return EMPTY_KIT_FILE_URLS;
+		const next = getStoredKitFileUrls(kitStore);
+		const key = Array.from(next.entries())
+			.map(([k, v]) => `${k}=${v}`)
+			.join("|");
+		if (cachedRef.current?.key === key) return cachedRef.current.map;
+		cachedRef.current = { key, map: next };
+		return next;
+	}, [kitStore]);
+	return React.useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/**
+ * `executeKitCommand` bundle with a fixed `getOrigin` (kit browser / shell).
+ * Prefer granular {@link useCreateType} / etc. for new code.
+ */
+export function useKitCommands(getOrigin: () => string) {
+	const [kitStore] = useKitStore();
+	return React.useMemo(() => {
+		if (!kitStore) return null;
+		return createKitCommandEngine(kitStore, getOrigin);
+	}, [kitStore, getOrigin]);
+}
+
+/** Same commands as {@link useKitCommands}, but each call passes `origin` as the first parameter (e.g. cross-kit routing). */
+export function useKitCommandDispatchersWithOrigin(kitStore: KitStore | null) {
+	return React.useMemo(() => (kitStore ? createKitCommandEngineExplicitOrigin(kitStore) : null), [kitStore]);
+}
+
+function createKitCommandEngine(kitStore: KitStore, getOrigin: () => string) {
+	const o = getOrigin;
+	return {
+		importKit: (url: string) => executeKitCommand(kitStore, "semio.kit.import", o(), url),
+		exportKit: () => executeKitCommand(kitStore, "semio.kit.export", o()),
+		createAuthor: (author: any) => executeKitCommand(kitStore, "semio.kit.createAuthor", o(), author),
+		updateAuthor: (Id: string, authorDiff: any) => executeKitCommand(kitStore, "semio.kit.updateAuthor", o(), Id, authorDiff),
+		deleteAuthor: (Id: string) => executeKitCommand(kitStore, "semio.kit.deleteAuthor", o(), Id),
+		createType: (type: any) => executeKitCommand(kitStore, "semio.kit.createType", o(), type),
+		updateType: (id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updateType", o(), id, diff),
+		deleteType: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteType", o(), id),
+		createDesign: (design: any) => executeKitCommand(kitStore, "semio.kit.createDesign", o(), design),
+		updateDesign: (id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updateDesign", o(), id, diff),
+		deleteDesign: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteDesign", o(), id),
+		createQuality: (quality: any) => executeKitCommand(kitStore, "semio.kit.createQuality", o(), quality),
+		updateQuality: (id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updateQuality", o(), id, diff),
+		deleteQuality: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteQuality", o(), id),
+		createPort: (iface: any) => executeKitCommand(kitStore, "semio.kit.createPort", o(), iface),
+		updatePort: (id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updatePort", o(), id, diff),
+		deletePort: (id: string) => executeKitCommand(kitStore, "semio.kit.deletePort", o(), id),
+		createTag: (tag: any) => executeKitCommand(kitStore, "semio.kit.createTag", o(), tag),
+		updateTag: (id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updateTag", o(), id, diff),
+		deleteTag: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteTag", o(), id),
+		createConcept: (concept: any) => executeKitCommand(kitStore, "semio.kit.createConcept", o(), concept),
+		deleteConcept: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteConcept", o(), id),
+		addFile: (file: any, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.addFile", o(), file, blob),
+		updateFile: (url: string, fileDiff: any, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.updateFile", o(), url, fileDiff, blob),
+		removeFile: (url: string) => executeKitCommand(kitStore, "semio.kit.removeFile", o(), url),
+		createFolder: (folder: any) => executeKitCommand(kitStore, "semio.kit.createFolder", o(), folder),
+		updateFolder: (id: string, folderDiff: any) => executeKitCommand(kitStore, "semio.kit.updateFolder", o(), id, folderDiff),
+		deleteFolder: (id: string) => executeKitCommand(kitStore, "semio.kit.deleteFolder", o(), id),
+		moveToFolder: (artifactKind: string, artifactId: string, folderId: string | null) =>
+			executeKitCommand(kitStore, "semio.kit.moveToFolder", o(), artifactId, artifactKind, folderId),
+		addPiece: (design: string, piece: any) => executeKitCommand(kitStore, "semio.kit.addPiece", o(), design, piece),
+		addPieces: (design: string, pieces: any[]) => executeKitCommand(kitStore, "semio.kit.addPieces", o(), design, pieces),
+		removePiece: (design: string, piece: string) => executeKitCommand(kitStore, "semio.kit.removePiece", o(), design, piece),
+		removePieces: (design: string, pieces: string[]) => executeKitCommand(kitStore, "semio.kit.removePieces", o(), design, pieces),
+		addConnection: (design: string, connection: any) => executeKitCommand(kitStore, "semio.kit.addConnection", o(), design, connection),
+		addConnections: (design: string, connections: any[]) => executeKitCommand(kitStore, "semio.kit.addConnections", o(), design, connections),
+		removeConnection: (design: string, connection: string) => executeKitCommand(kitStore, "semio.kit.removeConnection", o(), design, connection),
+		removeConnections: (design: string, connections: string[]) => executeKitCommand(kitStore, "semio.kit.removeConnections", o(), design, connections),
+		deleteSelected: (design: string, selectedPieces: string[], selectedConnections: string[]) =>
+			executeKitCommand(kitStore, "semio.kit.deleteSelected", o(), design, selectedPieces, selectedConnections),
+	};
+}
+
+function createKitCommandEngineExplicitOrigin(kitStore: KitStore) {
+	return {
+		importKit: (origin: string, url: string) => executeKitCommand(kitStore, "semio.kit.import", origin, url),
+		exportKit: (origin: string) => executeKitCommand(kitStore, "semio.kit.export", origin),
+		createAuthor: (origin: string, author: any) => executeKitCommand(kitStore, "semio.kit.createAuthor", origin, author),
+		updateAuthor: (origin: string, authorId: string, authorDiff: any) => executeKitCommand(kitStore, "semio.kit.updateAuthor", origin, authorId, authorDiff),
+		deleteAuthor: (origin: string, authorId: string) => executeKitCommand(kitStore, "semio.kit.deleteAuthor", origin, authorId),
+		createType: (origin: string, type: any) => executeKitCommand(kitStore, "semio.kit.createType", origin, type),
+		deleteType: (origin: string, id: string) => executeKitCommand(kitStore, "semio.kit.deleteType", origin, id),
+		createDesign: (origin: string, design: any) => executeKitCommand(kitStore, "semio.kit.createDesign", origin, design),
+		updateDesign: (origin: string, id: string, diff: any) => executeKitCommand(kitStore, "semio.kit.updateDesign", origin, id, diff),
+		deleteDesign: (origin: string, id: string) => executeKitCommand(kitStore, "semio.kit.deleteDesign", origin, id),
+		addFile: (origin: string, file: any, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.addFile", origin, file, blob),
+		updateFile: (origin: string, url: string, fileDiff: any, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.updateFile", origin, url, fileDiff, blob),
+		removeFile: (origin: string, url: string) => executeKitCommand(kitStore, "semio.kit.removeFile", origin, url),
+		addPiece: (origin: string, design: string, piece: any) => executeKitCommand(kitStore, "semio.kit.addPiece", origin, design, piece),
+		addPieces: (origin: string, design: string, pieces: any[]) => executeKitCommand(kitStore, "semio.kit.addPieces", origin, design, pieces),
+		removePiece: (origin: string, design: string, piece: string) => executeKitCommand(kitStore, "semio.kit.removePiece", origin, design, piece),
+		removePieces: (origin: string, design: string, pieces: string[]) => executeKitCommand(kitStore, "semio.kit.removePieces", origin, design, pieces),
+		addConnection: (origin: string, design: string, connection: any) => executeKitCommand(kitStore, "semio.kit.addConnection", origin, design, connection),
+		addConnections: (origin: string, design: string, connections: any[]) => executeKitCommand(kitStore, "semio.kit.addConnections", origin, design, connections),
+		removeConnection: (origin: string, design: string, connection: string) => executeKitCommand(kitStore, "semio.kit.removeConnection", origin, design, connection),
+		removeConnections: (origin: string, design: string, connections: string[]) => executeKitCommand(kitStore, "semio.kit.removeConnections", origin, design, connections),
+		deleteSelected: (origin: string, design: string, selectedPieces: string[], selectedConnections: string[]) =>
+			executeKitCommand(kitStore, "semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
+	};
 }
 
 function useSchemaObjectState(typeName: string, idValue?: string): SchemaHookTriad<any> {

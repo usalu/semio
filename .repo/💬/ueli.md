@@ -745,6 +745,133 @@ Introduce a transaction mechanism that is stateful session-scoped. There can be 
 
 semio/rs:
 
+```rs
+
+pub enum ReadTypeCommand {
+  Everything {},
+  Name {},
+  Description {},
+  Connectors {},
+  Representations {},
+  ...
+  ReadConnectorCommands {id: ConnectorIdDto, commands: Vec <ReadConnectorCommand>}
+  ReadRepresentationCommands {id: RepresentationIdDto, commands: Vec <ReadRepresentationCommand>}
+  ...
+}
+
+pub enum ReadKitCommand {
+  Everything {},
+  Name {},
+  Description {},
+  Types {},
+  ...
+  ReadTypeCommands {id: TypeIdDto, commands: Vec <ReadTypeCommand>}
+  ReadDesignCommands {id: DesignIdDto, commands: Vec <ReadDesignCommand>}
+}
+
+pub enum ChangePieceCommand {
+  Name {name: String},
+  FixPiece { },
+  ...
+}
+
+pub enum ChangeDesignCommand {
+  ChangePieceCommands {piece_id: PieceIdDto, commands: Vec <ChangePieceCommand>}
+  ...
+}
+
+pub enum ChangeKitCommand {
+  Name {name: String},
+  ...
+  ChangeTypeCommands {type_id: TypeIdDto, commands: Vec <ChangeTypeCommand>},
+  ChangeDesignCommands {design_id: DesignIdDto, commands: Vec <ChangeDesignCommand>}
+  ...
+}
+
+pub enum TransactionCommand {
+
+}
+
+pub enum CheckpointCommand {
+  DraftCommands {id: DraftIdDto,  commands: Vec <DraftCommand>}
+}
+
+pub enum TransactionCommand {
+
+  ExecuteTransactionCommands {id: TransactionIdDto, commands: Vec <TransactionCommand>}
+}
+
+pub enum DraftCommand {
+  StartTransaction {},
+  FinalizeTransaction {id: TransactionIdDto},
+  AbortTransaction {id: TransactionIdDto},
+  Undo {id: TransactionIdDto},
+  UndoAll {id: TransactionIdDto},
+  CanUndo {id: TransactionIdDto},
+  Redo {id: TransactionIdDto},
+  RedoAll {id: TransactionIdDto},
+  CanRedo {id: TransactionIdDto},
+  ExecuteTransactionCommands {id: TransactionIdDto, commands: Vec <TransactionCommand>}
+}
+
+pub enum SessionCommand {
+  NewDraft {checkpoint_id: CheckpointIdDto},
+  EndDraft {id: DraftIdDto},
+  Undo {id: DraftIdDto, count: i32 }, // -1 for all
+  CanUndo {id: DraftIdDto, count: i32}, // -1 for all
+  Redo {id: DraftIdDto, count: i32}, // -1 for all
+  CanRedo {id: DraftIdDto, count: i32}, // -1 for all
+  ExecuteDraftCommands {id: DraftIdDto, commands: Vec <DraftCommand>}
+}
+
+pub enum StoreCommand {
+  NewSession {},
+  EndSession {id: SessionIdDto},
+  ExecuteSessionCommands {id: SessionIdDto, commands: Vec <SessionCommand>}
+  ReadKitCommands {commands: Vec <KitReadCommand>}
+}
+```
+
+```json
+[
+ {
+  "readKitCommands": {
+   "commands": [
+    {
+     "id": "kit1",
+     "commands": [
+      {
+       "id": "type1"
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "newSession": {}
+ },
+ {
+  "id": "session1",
+  "commands": [
+   {
+    "id": "draft1",
+    "commands": [
+     {
+      "id": "transaction1",
+      "commands": [
+       {
+        "id": "change1"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
+```
+
 Introduce pose to pieces. Pose is a container for plane and center (same as side is a container for piece, connector and designPiece). Make sure that center and plane are still independantly updatable and when e.g. center is updating no event for plane update is fired and vice versa. The parent of course updates (pose updated, piece updated, kit updated still fires.)
 Make sure alternatives() is a piece method and returns all types and designs that the piece can be replaced with. The alternatives MUST NOT create an invalid design (because of connectors that are not replaceable with compatible ones, etc). There are already descriptions about this algorithm.
 Make sure semio/algorithms runs, the tests are complete, etc.
@@ -870,6 +997,17 @@ useChildConnectionsIds():ConnectionId[]
 ### ✏️sketchpad
 
 semio/sketchpad:
+
+Recently a big architectural change was started:
+We have rust store implementation with wasm `semio/rs`, `semio/js` which uses the rust web worker, `semio/react` library which reexports the store functionality as hooks and context, and hook consumer client `semio/sketchpad`
+
+Requirements:
+
+- No general kit hooks in semio/sketchpad. kit hooks come exclusively from semio/rs.
+- No domain logic in semio/js. All domain logic is only in semio/rs.
+- Dont remove any functionality from sketchpad tests
+
+Finish it and get all playwright tests passing.
 
 The drag is increadibly unperformant.
 Make sure the drag and the rerender with flatten etc is not using any unnecessary file blobs, or recomputed unnecessary.

@@ -9,11 +9,17 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
+import path from "path";
 import { defineConfig } from "vitest/config";
 
 // Vitest configuration for the domain-only semio package.
 // Export MUST target only domain tests and avoid sketchpad/browser plugins.
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@semio/rs-wasm": path.resolve(__dirname, "../rs/pkg"),
+    },
+  },
   test: {
     name: "semio",
     environment: "node",

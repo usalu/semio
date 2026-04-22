@@ -4782,6 +4782,7 @@ pub mod kit_command {
     use crate::error::Result;
     use crate::id::Id;
     use crate::kit::{KitStore, KitStoreRef};
+    use crate::kit_diff::KitDiff;
     use crate::kit_operation::{KitOperation, KitOperationKind};
     use crate::piece::PieceFullDto;
     use crate::events::EntityKind;
@@ -4796,6 +4797,9 @@ pub mod kit_command {
         ApplyDesignDiff {
             design_id: String,
             diff: DesignDiff,
+        },
+        ApplyKitDiff {
+            diff: KitDiff,
         },
         AddChildPiece {
             design_id: String,
@@ -4846,6 +4850,34 @@ pub mod kit_command {
                         })?;
                     Ok(Some(KitOperation {
                         kind: KitOperationKind::ApplyDesignDiff,
+                        change,
+                    }))
+                }
+                BuiltinKitCommand::ApplyKitDiff { diff } => {
+                    let before = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    let next = crate::kit_diff::apply_to_dto(&before, diff);
+                    KitStore::with_undo(kit, || KitStore::replace_from_full_dto(kit, next))
+                        .map_err(|e| {
+                            crate::error::SemioError::InvalidOperation(e.to_string())
+                        })?;
+                    let after = kit
+                        .read()
+                        .map_err(|_| crate::error::SemioError::LockPoisoned("kit"))?
+                        .to_full_dto();
+                    if before == after {
+                        return Ok(None);
+                    }
+                    let change = crate::kit_change::KitChange::between(&before, &after)
+                        .ok_or_else(|| {
+                            crate::error::SemioError::InvalidOperation(
+                                "empty kit change after apply kit diff".into(),
+                            )
+                        })?;
+                    Ok(Some(KitOperation {
+                        kind: KitOperationKind::ApplyKitDiff,
                         change,
                     }))
                 }
@@ -4965,6 +4997,20 @@ pub mod kit_command {
                 diff,
             }
             .apply(kit)
+        }
+    }
+
+    /// Adapter for Rust-applied kit-wide diffs.
+    #[derive(Debug, Deserialize)]
+    pub struct ApplyKitDiffRpc {
+        pub diff: serde_json::Value,
+    }
+
+    impl KitCommand for ApplyKitDiffRpc {
+        fn apply(&self, kit: &KitStoreRef) -> Result<Option<KitOperation>> {
+            let diff: KitDiff = serde_json::from_value(self.diff.clone())
+                .map_err(crate::error::SemioError::from)?;
+            BuiltinKitCommand::ApplyKitDiff { diff }.apply(kit)
         }
     }
 
@@ -8621,6 +8667,23 @@ pub mod kit {
                     .map_err(|_| SetError::LockPoisoned("kit".into()))?;
                 g.apply_design_diff(dg.as_str(), &diff)
                     .map_err(Self::map_semio_err)
+            })
+        }
+
+        /// Apply a kit-wide [`crate::kit_diff::KitDiff`] to the current snapshot in Rust.
+        pub fn apply_kit_diff_rpc(
+            kit: &KitStoreRef,
+            diff: serde_json::Value,
+        ) -> SetResult {
+            let diff: crate::kit_diff::KitDiff =
+                serde_json::from_value(diff).map_err(|e| SetError::InvalidValue(e.to_string()))?;
+            Self::with_undo(kit, || {
+                let before = kit
+                    .read()
+                    .map_err(|_| SetError::LockPoisoned("kit".into()))?
+                    .to_full_dto();
+                let next = crate::kit_diff::apply_to_dto(&before, &diff);
+                Self::replace_from_full_dto(kit, next)
             })
         }
 
@@ -17806,6 +17869,20 @@ pub mod wasm {
             })
         }
 
+        #[wasm_bindgen(js_name = applyKitDiff)]
+        pub fn apply_kit_diff(&self, diff: JsValue) -> js_sys::Promise {
+            let inner = self.inner.clone();
+            future_to_promise(async move {
+                let diff: serde_json::Value = match serde_wasm_bindgen::from_value(diff) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        return js_settle_set(Err(SetError::InvalidValue(e.to_string())));
+                    }
+                };
+                js_settle_set(KitStore::apply_kit_diff_rpc(&inner, diff))
+            })
+        }
+
         #[wasm_bindgen(js_name = clusterPieces)]
         pub fn cluster_pieces(
             &self,
@@ -21268,7 +21345,8 @@ pub use diff::{DesignChange, DesignDiff};
 pub use history::{KitCheckpoint, KitHistory, KitHistoryFullDto, MaterializedKit};
 pub use kit_change::KitChange;
 pub use kit_command::{
-    AddChildRpc, ApplyDesignDiffRpc, BuiltinKitCommand, KitCommand, RemoveChildRpc,
+    AddChildRpc, ApplyDesignDiffRpc, ApplyKitDiffRpc, BuiltinKitCommand, KitCommand,
+    RemoveChildRpc,
 };
 pub use kit_diff::{
     apply_design_full_dto, apply_metadata_to_kit_dto, apply_to_dto, DesignDiffPatch, KitDiff,

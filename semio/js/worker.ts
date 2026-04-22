@@ -43,6 +43,10 @@ const api = {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     return settle(Promise.resolve(handle.applyDesignDiff(designId, diff)));
   },
+  applyKitDiff(diff: unknown) {
+    if (!handle) throw new Error("KitStoreHandle not initialized");
+    return settle(Promise.resolve(handle.applyKitDiff(diff)));
+  },
   clusterPieces(designId: string, pieceIds: string[], clusterName: string) {
     if (!handle) throw new Error("KitStoreHandle not initialized");
     return settle(Promise.resolve(handle.clusterPieces(designId, pieceIds, clusterName)));
