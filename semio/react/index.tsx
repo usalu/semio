@@ -100,7 +100,7 @@ type SchemaScope = {
 	path: Array<string | number>;
 };
 
-type KitRuntimeContextValue = {
+export type KitRuntimeContextValue = {
 	store: KitStore;
 	snapshot: KitStoreSnapshot;
 	state: IndexedSchemaState;
@@ -839,6 +839,11 @@ function useKitRuntime(): KitRuntimeContextValue {
 	const runtime = React.useContext(KitRuntimeContext);
 	if (!runtime) throw new Error("semio/react hooks must be used inside <KitProvider>.");
 	return runtime;
+}
+
+/** Like {@link useKitRuntime} but returns `null` outside {@link KitProvider} (no throw). */
+export function useKitRuntimeSafe(): KitRuntimeContextValue | null {
+	return React.useContext(KitRuntimeContext);
 }
 
 /** Returns the WASM worker {@link KitStoreClient} when inside {@link KitProvider}, or `null`. */
@@ -12775,9 +12780,7 @@ export const schemaHooks = Object.freeze({
 	useUserName,
 	useUserEmail,
 	useUserColor,
-	useEndKitSessionKitInteractionBackward,
 	useReconnectKitSessionKitInteraction,
-	useReconnectKitSessionKitInteractionId,
 	useDragPiecesKitInteractionIndex,
 	useDragPiecesKitInteractionKit,
 	useDragPiecesKitInteractionKind,

@@ -7790,6 +7790,17 @@ export const isConnectionInDesign = (design: Design, connection: Connection): bo
 export const findPieceInDesign = (design: Design, pieceGuid: string): Piece => design.requirePiece(pieceGuid);
 
 /**
+ * Resolves a design by guid on a kit snapshot (plain {@link Kit} / {@link KitImpl} data).
+ */
+export const findDesignInKit = (kit: { designs?: Design[] } | null | undefined, designGuid: string): Design | undefined =>
+  kit?.designs?.find((d) => d.guid === designGuid);
+
+/**
+ * Resolves a type by guid on a kit snapshot.
+ */
+export const findTypeInKit = (kit: { types?: Type[] } | null | undefined, typeGuid: string): Type | undefined => kit?.types?.find((t) => t.guid === typeGuid);
+
+/**
  * Searches for matching ConnectionInDesign entry.
  **/
 export const findConnectionInDesign = (design: Design, connectionGuid: string): Connection => design.requireConnection(connectionGuid);

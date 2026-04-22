@@ -16,7 +16,7 @@ todos:
    status: in_progress
  - id: sketchpad_callsites
    content: Rewire all commands.*, kitCommands.* and store.execute('semio.designApp.*') call sites to @semio/react command hooks or sketchpadMachine actor.send; replace canSet with status.kind; apply useOptimistic+useWriteIndicator at every input.
-   status: pending
+   status: in_progress
  - id: sketchpad_ui_machine
    content: Promote tutorial/panel/dnd/focus/origin/footer/sidePanel/openKit slices into sketchpadMachine context; reduce ad-hoc providers to useSelector reads; move I/O to fromPromise actors.
    status: pending

@@ -278,7 +278,8 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import { KitProvider, KitRegistryProvider, useActiveKitGuid, useKitRegistrySafe } from "@semio/react";
+import { KitProvider, KitRegistryProvider, useActiveKitGuid, useKitRegistrySafe, useKitRuntimeSafe } from "@semio/react";
+export { useKitStore, useKitRuntimeSafe, type KitRuntimeContextValue } from "@semio/react";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -7523,6 +7524,10 @@ export class CollaborativeKitStore {
   getSnapshot(): KitStoreSnapshot {
     return this._kitStore.getSnapshot();
   }
+  /** Kit command dispatch (shared with {@link executeKitCommand}); used by tests and imperative callers. */
+  execute<T = KitCommandResult>(command: string, origin?: string, ...args: any[]): Promise<T> {
+    return executeKitCommand(this._kitStore, command, origin, ...args) as Promise<T>;
+  }
 }
 // #endregion 🔑Entity Store Wrappers
 
@@ -7621,26 +7626,16 @@ export const useConnectionScope = () => useContext(ConnectionScopeContext);
 
 // #region ⏰Entity Data Hooks
 
-function useKitSnapshot(): Kit | null {
-  const kitStore = useKitStore() as KitStore | null;
-  const subscribe = useCallback(
-    (cb: () => void) => {
-      if (!kitStore) return () => {};
-      return kitStore.subscribe(cb);
-    },
-    [kitStore],
-  );
-  const getSnapshot = useCallback(() => {
-    if (!kitStore) return null;
-    return kitStore.getSnapshot().kit;
-  }, [kitStore]);
-  return useSyncExternalStore(subscribe, getSnapshot);
+/** Kit snapshot from {@link KitProvider} only — not {@link useSketchpadStore}. */
+function useLocalKitSnapshot(): Kit | null {
+  const runtime = useKitRuntimeSafe();
+  return runtime?.snapshot.kit ?? null;
 }
 
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author | null {
   const authorScope = useAuthorScope();
   const authorGuid = authorScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !authorGuid) return null;
   const author = kit.authors?.find((a) => a.guid === authorGuid) ?? null;
   if (!author) return null;
@@ -7650,7 +7645,7 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type | null {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !typeGuid) return null;
   const type = kit.types?.find((t) => t.guid === typeGuid) ?? null;
   if (!type) return null;
@@ -7660,7 +7655,7 @@ export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolea
 export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, deep: boolean = false): T | Quality | null {
   const qualityScope = useQualityScope();
   const qualityGuid = qualityScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !qualityGuid) return null;
   const quality = kit.qualities?.find((q) => q.guid === qualityGuid) ?? null;
   if (!quality) return null;
@@ -7670,7 +7665,7 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
 export function useDesign<T = Design>(selector?: (design: Design) => T, deep?: boolean, id?: string): T | Design | null {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !designGuid) return null;
   const design = kit.designs?.find((d) => d.guid === designGuid) ?? null;
   if (!design) return null;
@@ -7681,7 +7676,7 @@ export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boo
   const designScope = useDesignScope();
   const pieceScope = usePieceScope();
   const pieceGuid = pieceScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !pieceGuid || !designScope) return null;
   const design = kit.designs?.find((d) => d.guid === designScope.guid);
   const piece = design?.pieces?.find((p) => p.guid === pieceGuid) ?? null;
@@ -7693,7 +7688,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   const designScope = useDesignScope();
   const connectionScope = useConnectionScope();
   const connectionGuid = connectionScope?.guid ?? id;
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !connectionGuid || !designScope) return null;
   const design = kit.designs?.find((d) => d.guid === designScope.guid);
   const connection = design?.connections?.find((c) => c.guid === connectionGuid) ?? null;
@@ -7706,7 +7701,7 @@ const EMPTY_CONNECTIONS: Connection[] = [];
 
 export function usePieces(): Piece[] {
   const designScope = useDesignScope();
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !designScope) return EMPTY_PIECES;
   const design = kit.designs?.find((d) => d.guid === designScope.guid);
   return design?.pieces ?? EMPTY_PIECES;
@@ -7714,7 +7709,7 @@ export function usePieces(): Piece[] {
 
 export function useConnections(): Connection[] {
   const designScope = useDesignScope();
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   if (!kit || !designScope) return EMPTY_CONNECTIONS;
   const design = kit.designs?.find((d) => d.guid === designScope.guid);
   return design?.connections ?? EMPTY_CONNECTIONS;
@@ -7734,7 +7729,7 @@ export type PieceMetadata = {
 };
 
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   const designScope = useDesignScope();
   return useMemo(() => {
     if (!kit || !designScope) return new Map<string, PieceMetadata>();
@@ -7814,7 +7809,7 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 // #region 🎹Design Derived Hooks
 
 export function useIncludedDesigns(): Design[] {
-  const kit = useKitSnapshot();
+  const kit = useLocalKitSnapshot();
   return kit?.designs ?? [];
 }
 
@@ -7899,20 +7894,19 @@ function KitWasmRuntimeBridge(props: { kitGuid: string; children: React.ReactNod
     };
   }, [sketchpadStore, kitGuid, registry]);
 
-  if (!registry || !sketchpadStore.hasKit(kitGuid)) {
+  if (!sketchpadStore.hasKit(kitGuid)) {
     return React.createElement(React.Fragment, null, children);
   }
 
-  const status = registry.status(kitGuid);
-  const entry = registry.get(kitGuid);
-  if (status === "error") {
-    return React.createElement(React.Fragment, null, children);
+  const innerStore = sketchpadStore.kit(kitGuid).store;
+  if (registry) {
+    const status = registry.status(kitGuid);
+    const entry = registry.get(kitGuid);
+    if (status === "ready" && entry) {
+      return React.createElement(KitProvider, { kitGuid, store: entry.store, kitClient: entry.kitClient, children });
+    }
   }
-  if (status !== "ready" || !entry) {
-    return React.createElement(React.Fragment, null, null);
-  }
-
-  return React.createElement(KitProvider, { kitGuid, store: entry.store, kitClient: entry.kitClient, children });
+  return React.createElement(KitProvider, { store: innerStore, children });
 }
 
 /**
@@ -7937,15 +7931,18 @@ export const useKitScope = (): KitScope | null => {
 export const useIsInKitScope = () => useKitScope() !== null;
 
 /**
- * Hook for accessing the kit store with optional selector.
- **/
-export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore | null {
-  const store = useSketchpadStore();
+ * {@link KitStore} from the nearest {@link KitProvider} / {@link useKitRuntimeSafe} when the active runtime kit matches.
+ * When `explicitKitGuid` is set (e.g. {@link useKitCommandsById}), only `runtime.kitGuid === explicitKitGuid` is required
+ * so callers need not be under {@link useKitScope} as long as {@link KitProvider} is for that kit.
+ */
+function useKitStoreFromProvider(explicitKitGuid?: string): KitStore | null {
+  const runtime = useKitRuntimeSafe();
+  if (!runtime) return null;
   const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid ?? guid;
-  if (!kitGuid || !store.hasKit(kitGuid)) return null;
-  const kitStore = store.kit(kitGuid);
-  return selector ? selector(kitStore) : kitStore;
+  const effectiveKitGuid = explicitKitGuid ?? kitScope?.guid;
+  if (!effectiveKitGuid) return null;
+  if (runtime.kitGuid !== effectiveKitGuid) return null;
+  return runtime.store;
 }
 
 /**
@@ -7954,7 +7951,7 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string)
 export function useKit<T>(selector?: (kit: Kit) => T, guid?: Guid): T | Kit | null {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid ?? undefined) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid ?? undefined);
   const subscribe = useCallback(
     (cb: () => void) => {
       if (!kitStore) return () => {};
@@ -8062,7 +8059,7 @@ const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 export function useKitTypes(guid?: Guid): Type[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8086,7 +8083,7 @@ export function useKitTypes(guid?: Guid): Type[] {
 export function useKitName(guid?: Guid): string {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8110,7 +8107,7 @@ export function useKitName(guid?: Guid): string {
 export function useKitDescription(guid?: Guid): string | undefined {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8134,7 +8131,7 @@ export function useKitDescription(guid?: Guid): string | undefined {
 export function useKitAuthors(guid?: Guid): Author[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8159,7 +8156,7 @@ export function useKitAuthors(guid?: Guid): Author[] {
 export function useKitFiles(guid?: Guid): SemioFile[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8184,7 +8181,7 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 export function useKitQualities(guid?: Guid): Quality[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8209,7 +8206,7 @@ export function useKitQualities(guid?: Guid): Quality[] {
 export function useKitDesigns(guid?: Guid): Design[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8241,7 +8238,7 @@ export function useDesigns(): Design[] {
 export function useKitFolders(guid?: Guid): Folder[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
-  const kitStore = useKitStore(identitySelector, resolvedGuid) as KitStore | null;
+  const kitStore = useKitStoreFromProvider(resolvedGuid) as KitStore | null;
 
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8264,21 +8261,21 @@ export function useKitFolders(guid?: Guid): Folder[] {
  * Hook returning all ports of the targeted kit.
  **/
 export function useKitPorts(guid?: Guid): Port[] {
-  return useKit(selectPorts, guid, true) as Port[];
+  return useKit(selectPorts, guid) as Port[];
 }
 
 /**
  * Hook returning all tags of the targeted kit.
  **/
 export function useKitTags(guid?: Guid): Tag[] {
-  return useKit(selectTags, guid, true) as Tag[];
+  return useKit(selectTags, guid) as Tag[];
 }
 
 /**
  * Hook returning all concepts of the targeted kit.
  **/
 export function useKitConcepts(guid?: Guid): Concept[] {
-  return useKit(selectConcepts, guid, true) as Concept[];
+  return useKit(selectConcepts, guid) as Concept[];
 }
 
 /**
@@ -8311,7 +8308,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
  * Hook returning the resolved file URL map from the current kit store.
  **/
 export function useFileUrls(): Map<Url, Url> {
-  const kitStore = useKitStore(identitySelector) as KitStore | null;
+  const kitStore = useKitStoreFromProvider() as KitStore | null;
   const cachedRef = useRef<{ key: string; map: Map<string, string> } | null>(null);
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -8338,11 +8335,8 @@ const EMPTY_FILE_URLS: Map<Url, Url> = new Map();
  * Hook returning the transaction interface for the current kit.
  **/
 export function useKitTransaction(): Transaction {
-  const store = useSketchpadStore();
-  const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid;
-
-  if (!kitGuid || !store.hasKit(kitGuid)) {
+  const kitStore = useKitStoreFromProvider();
+  if (!kitStore) {
     return {};
   }
 
@@ -8357,17 +8351,11 @@ export function useKitTransaction(): Transaction {
  * Hook returning the command execution interface for the current kit.
  **/
 export function useKitCommands() {
-  const store = useSketchpadStore();
-  const kitScope = useKitScope();
-  const kitGuid = kitScope?.guid;
   const getOrigin = useOrigin();
-
-  if (!kitGuid || !store.hasKit(kitGuid)) {
-    return null;
-  }
-
-  const kitStore = store.kit(kitGuid);
-  return {
+  const kitStore = useKitStoreFromProvider();
+  return useMemo(() => {
+    if (!kitStore) return null;
+    return {
     importKit: (url: string) => executeKitCommand(kitStore, "semio.kit.import", getOrigin(), url),
     exportKit: () => executeKitCommand(kitStore, "semio.kit.export", getOrigin()),
     createAuthor: (author: Author) => executeKitCommand(kitStore, "semio.kit.createAuthor", getOrigin(), author),
@@ -8407,6 +8395,7 @@ export function useKitCommands() {
     removeConnections: (design: Guid, connections: Guid[]) => executeKitCommand(kitStore, "semio.kit.removeConnections", getOrigin(), design, connections),
     deleteSelected: (design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => executeKitCommand(kitStore, "semio.kit.deleteSelected", getOrigin(), design, selectedPieces, selectedConnections),
   };
+  }, [kitStore, getOrigin]);
 }
 
 // #endregion ⏱️Kit
@@ -21236,6 +21225,7 @@ export function useNavigate() {
  **/
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
+  const kitRuntime = useKitRuntimeSafe();
   const navigate = useNavigate();
   const reactNavigate = useReactNavigate();
   return useMemo(
@@ -21326,11 +21316,14 @@ export function useSketchpadCommands() {
         // No-op: file blob storage handled by KitStore implementation
       },
       getKitSnapshot: (kitGuid: Guid): Kit | null => {
+        if (kitRuntime?.kitGuid === kitGuid) {
+          return kitRuntime.snapshot.kit as Kit;
+        }
         if (!store.hasKit(kitGuid)) return null;
         return store.kit(kitGuid).getSnapshot().kit;
       },
     }),
-    [store, navigate, reactNavigate],
+    [store, kitRuntime, navigate, reactNavigate],
   );
 }
 
@@ -21364,35 +21357,35 @@ export function useKits(): KitShallow[] {
  * Hook returning kit command dispatchers for a specific kit by guid.
  **/
 export function useKitCommandsById(kitGuid?: string) {
-  const store = useSketchpadStore();
+  const kitStore = useKitStoreFromProvider(kitGuid);
   return useMemo(() => {
-    if (!kitGuid || !store.hasKit(kitGuid)) return null;
-    const kitStore = store.kit(kitGuid);
+    if (!kitStore) return null;
     return {
-      importKit: (origin: string, url: string) => kitStore.execute("semio.kit.import", origin, url),
-      exportKit: (origin: string) => kitStore.execute("semio.kit.export", origin),
-      createAuthor: (origin: string, author: Author) => kitStore.execute("semio.kit.createAuthor", origin, author),
-      updateAuthor: (origin: string, authorId: string, authorDiff: AuthorDiff) => kitStore.execute("semio.kit.updateAuthor", origin, authorId, authorDiff),
-      deleteAuthor: (origin: string, authorId: string) => kitStore.execute("semio.kit.deleteAuthor", origin, authorId),
-      createType: (origin: string, type: Type) => kitStore.execute("semio.kit.createType", origin, type),
-      deleteType: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteType", origin, guid),
-      createDesign: (origin: string, design: Design) => kitStore.execute("semio.kit.createDesign", origin, design),
-      updateDesign: (origin: string, guid: Guid, diff: DesignDiff) => kitStore.execute("semio.kit.updateDesign", origin, guid, diff),
-      deleteDesign: (origin: string, guid: Guid) => kitStore.execute("semio.kit.deleteDesign", origin, guid),
-      addFile: (origin: string, file: SemioFile, blob?: Blob) => kitStore.execute("semio.kit.addFile", origin, file, blob),
-      updateFile: (origin: string, url: string, fileDiff: FileDiff, blob?: Blob) => kitStore.execute("semio.kit.updateFile", origin, url, fileDiff, blob),
-      removeFile: (origin: string, url: string) => kitStore.execute("semio.kit.removeFile", origin, url),
-      addPiece: (origin: string, design: Guid, piece: Piece) => kitStore.execute("semio.kit.addPiece", origin, design, piece),
-      addPieces: (origin: string, design: Guid, pieces: Piece[]) => kitStore.execute("semio.kit.addPieces", origin, design, pieces),
-      removePiece: (origin: string, design: Guid, piece: Guid) => kitStore.execute("semio.kit.removePiece", origin, design, piece),
-      removePieces: (origin: string, design: Guid, pieces: Guid[]) => kitStore.execute("semio.kit.removePieces", origin, design, pieces),
-      addConnection: (origin: string, design: Guid, connection: Connection) => kitStore.execute("semio.kit.addConnection", origin, design, connection),
-      addConnections: (origin: string, design: Guid, connections: Connection[]) => kitStore.execute("semio.kit.addConnections", origin, design, connections),
-      removeConnection: (origin: string, design: Guid, connection: Guid) => kitStore.execute("semio.kit.removeConnection", origin, design, connection),
-      removeConnections: (origin: string, design: Guid, connections: Guid[]) => kitStore.execute("semio.kit.removeConnections", origin, design, connections),
-      deleteSelected: (origin: string, design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) => kitStore.execute("semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
+      importKit: (origin: string, url: string) => executeKitCommand(kitStore, "semio.kit.import", origin, url),
+      exportKit: (origin: string) => executeKitCommand(kitStore, "semio.kit.export", origin),
+      createAuthor: (origin: string, author: Author) => executeKitCommand(kitStore, "semio.kit.createAuthor", origin, author),
+      updateAuthor: (origin: string, authorId: string, authorDiff: AuthorDiff) => executeKitCommand(kitStore, "semio.kit.updateAuthor", origin, authorId, authorDiff),
+      deleteAuthor: (origin: string, authorId: string) => executeKitCommand(kitStore, "semio.kit.deleteAuthor", origin, authorId),
+      createType: (origin: string, type: Type) => executeKitCommand(kitStore, "semio.kit.createType", origin, type),
+      deleteType: (origin: string, guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteType", origin, guid),
+      createDesign: (origin: string, design: Design) => executeKitCommand(kitStore, "semio.kit.createDesign", origin, design),
+      updateDesign: (origin: string, guid: Guid, diff: DesignDiff) => executeKitCommand(kitStore, "semio.kit.updateDesign", origin, guid, diff),
+      deleteDesign: (origin: string, guid: Guid) => executeKitCommand(kitStore, "semio.kit.deleteDesign", origin, guid),
+      addFile: (origin: string, file: SemioFile, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.addFile", origin, file, blob),
+      updateFile: (origin: string, url: string, fileDiff: FileDiff, blob?: Blob) => executeKitCommand(kitStore, "semio.kit.updateFile", origin, url, fileDiff, blob),
+      removeFile: (origin: string, url: string) => executeKitCommand(kitStore, "semio.kit.removeFile", origin, url),
+      addPiece: (origin: string, design: Guid, piece: Piece) => executeKitCommand(kitStore, "semio.kit.addPiece", origin, design, piece),
+      addPieces: (origin: string, design: Guid, pieces: Piece[]) => executeKitCommand(kitStore, "semio.kit.addPieces", origin, design, pieces),
+      removePiece: (origin: string, design: Guid, piece: Guid) => executeKitCommand(kitStore, "semio.kit.removePiece", origin, design, piece),
+      removePieces: (origin: string, design: Guid, pieces: Guid[]) => executeKitCommand(kitStore, "semio.kit.removePieces", origin, design, pieces),
+      addConnection: (origin: string, design: Guid, connection: Connection) => executeKitCommand(kitStore, "semio.kit.addConnection", origin, design, connection),
+      addConnections: (origin: string, design: Guid, connections: Connection[]) => executeKitCommand(kitStore, "semio.kit.addConnections", origin, design, connections),
+      removeConnection: (origin: string, design: Guid, connection: Guid) => executeKitCommand(kitStore, "semio.kit.removeConnection", origin, design, connection),
+      removeConnections: (origin: string, design: Guid, connections: Guid[]) => executeKitCommand(kitStore, "semio.kit.removeConnections", origin, design, connections),
+      deleteSelected: (origin: string, design: Guid, selectedPieces: Guid[], selectedConnections: Guid[]) =>
+        executeKitCommand(kitStore, "semio.kit.deleteSelected", origin, design, selectedPieces, selectedConnections),
     };
-  }, [kitGuid, store]);
+  }, [kitStore]);
 }
 
 // #endregion 🎏Sketchpad
@@ -31701,7 +31694,7 @@ const DesignSectionForm: FC = () => {
   }, [location.pathname]);
   const scopedKitGuid = kitScope?.guid ?? pathScope.kitGuid;
   const scopedDesignGuid = designScope?.guid ?? pathScope.designGuid;
-  const kit = useKit(identitySelector, scopedKitGuid as Guid | undefined, true) as Kit | null;
+  const kit = useKit(identitySelector, scopedKitGuid as Guid | undefined) as Kit | null;
   const kitDesigns = useKitDesigns(scopedKitGuid as Guid | undefined);
   const designFromScope = useDesign() as Design | null;
   const design = useMemo(() => {
@@ -37215,7 +37208,11 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const type = useType(undefined, typeof piece.type === "string" ? piece.type : piece.type?.guid) as Type | undefined;
   const typeConcepts = type?.concepts;
   const files = useKitFiles();
-  const kitStore = useKitStore() as CollaborativeKitStore;
+  const kitStoreRaw = useKitStoreFromProvider();
+  const kitStore = useMemo(
+    () => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null),
+    [kitStoreRaw],
+  );
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const prevRepresentationGuidRef = useRef<string | null>(null);
@@ -37261,6 +37258,9 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
     }
 
     const ext = file.name?.split(".").pop() || "";
+    if (!kitStore) {
+      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
+    }
     const url = kitStore.getFileUrl(file.guid);
     if (!url) {
       return { representationUrl: null, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
@@ -37284,7 +37284,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
 
   useEffect(() => {
     setBlobUrl(representationUrl ?? null);
-    if (!fileGuid) {
+    if (!fileGuid || !kitStore) {
       return;
     }
     let cancelled = false;
@@ -40317,7 +40317,11 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
   const typeGuid = useType(selectTypeMeshGuid) as string | undefined;
 
   const files = useKitFiles();
-  const kitDataSource = useKitStore() as CollaborativeKitStore;
+  const kitStoreRaw = useKitStoreFromProvider();
+  const kitDataSource = useMemo(
+    () => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null),
+    [kitStoreRaw],
+  );
   const [selectedRepresentationGuid] = useTypeAppSelectedRepresentationGuid();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
@@ -40368,6 +40372,9 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
     const ext = file.name?.split(".").pop() || "";
 
+    if (!kitDataSource) {
+      return { representationUrl: null, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
+    }
     const url = kitDataSource.getFileUrl(file.guid);
     if (url) {
       return { representationUrl: url, fileExtension: ext, fileGuid: file.guid, representationGuid: representation.guid, selectionReason: reason };
@@ -40391,7 +40398,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   useEffect(() => {
     setBlobUrl(representationUrl ?? null);
-    if (!fileGuid) {
+    if (!fileGuid || !kitDataSource) {
       return;
     }
 

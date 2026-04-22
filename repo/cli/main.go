@@ -2452,9 +2452,10 @@ func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
 	openCmd := &cobra.Command{
-		Use:   "open [goal] [title] [prompt] [client] [llm]",
+		Use:   "open [emoji] [goal] [title] [prompt] [client] [llm]",
 		Short: "Open a new ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			emoji, _ := cmd.Flags().GetString("emoji")
 			title, _ := cmd.Flags().GetString("title")
 			prompt, _ := cmd.Flags().GetString("prompt")
 			noIssue, _ := cmd.Flags().GetBool("no-issue")
@@ -2465,6 +2466,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			issue, _ := cmd.Flags().GetString("issue")
 
 			remainingArgs := args
+			if emoji == "" && len(remainingArgs) > 0 {
+				emoji = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
 			if goal == "" && len(remainingArgs) > 0 {
 				goal = remainingArgs[0]
 				remainingArgs = remainingArgs[1:]
@@ -2481,6 +2486,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			client, remainingArgs := extractClientFromArgs(cmd, remainingArgs)
 			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
 
+			if emoji == "" {
+				return fmt.Errorf("missing emoji")
+			}
 			if title == "" {
 				return fmt.Errorf("missing title")
 			}
@@ -2494,6 +2502,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				return fmt.Errorf("missing goal. Use --goal <goal-id>")
 			}
 			input := map[string]interface{}{
+				"emoji":        emoji,
 				"title":        title,
 				"prompt":       prompt,
 				"client":       strings.ToUpper(strings.ReplaceAll(client, "-", "_")),
@@ -2531,6 +2540,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
+	openCmd.Flags().String("emoji", "", "Ticket emoji")
 	openCmd.Flags().String("title", "", "Ticket title")
 	openCmd.Flags().String("prompt", "", "Ticket prompt")
 	openCmd.Flags().String("llm", "", "LLM")
@@ -10649,6 +10659,7 @@ type FileListInput struct {
 
 // 🎫TicketOpenInput holds the data fields for a ticket open input record.
 type TicketOpenInput struct {
+	Emoji        string `json:"emoji"`
 	Title        string `json:"title"`
 	Prompt       string `json:"prompt"`
 	LLM          string `json:"llm,omitempty"`
@@ -18870,7 +18881,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Breach {
 		}
 	}
 	thirdPartyPackages := []string{
-		"react", "xstate", "yjs", "@radix-client", "@dnd-kit", "zustand", "immer",
+		"react", "xstate", "@radix-client", "@dnd-kit", "zustand", "immer",
 		"framer-motion", "lucide-react", "clsx", "tailwind", "three", "@react-three",
 	}
 	createMachineCount := 0
@@ -20393,7 +20404,7 @@ func shouldSkipTicket(prompt string) bool {
 }
 
 // 📬OpenTicket MUST complete the operation and return consistent results.
-func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
+func OpenTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -20410,7 +20421,7 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 		}
 		return latest, nil
 	}
-	return CreateTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	return CreateTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 }
 
 // ⛳OpenGoal MUST complete the operation and return consistent results.
@@ -20428,44 +20439,43 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noManagem
 	return ctx.GoalCreate(input)
 }
 
-// 🎫validateTicketTitle MUST validate the title and return the derived slug.
-// 🎫Rejects empty titles, titles missing a leading emoji, and all-caps/lowercase slug-style titles.
-func validateTicketTitle(title string) (string, error) {
+// 🎫validateTicketEmojiTitle MUST validate the emoji and title and return the derived slug.
+// 🎫Requires a non-empty emoji that extractEntityEmoji recognizes and a non-empty title.
+// 🎫Does NOT enforce any shape on the title string.
+func validateTicketEmojiTitle(emoji, title string) (string, error) {
+	emoji = strings.TrimSpace(emoji)
+	if emoji == "" {
+		return "", fmt.Errorf("ticket emoji is required")
+	}
+	extracted, remaining := extractEntityEmoji(emoji)
+	if extracted == "" || strings.TrimSpace(remaining) != "" {
+		return "", fmt.Errorf("ticket emoji must be a single emoji character")
+	}
 	title = strings.TrimSpace(title)
 	if title == "" {
 		return "", fmt.Errorf("ticket title is required")
 	}
-	emoji, remaining := extractEntityEmoji(title)
-	if emoji == "" {
-		return "", fmt.Errorf("ticket title must start with an emoji (e.g. \"🎫 Some Title on Something\")")
-	}
-	body := strings.TrimSpace(remaining)
-	if body == "" {
-		return "", fmt.Errorf("ticket title must have text after the leading emoji (e.g. \"🎫 Some Title on Something\")")
-	}
-	slug := Slugify(body)
+	slug := Slugify(title)
 	if slug == "" {
-		return "", fmt.Errorf("ticket title must contain at least one alphanumeric character after the leading emoji")
-	}
-	if body == slug {
-		return "", fmt.Errorf("ticket title must be titleized (e.g. \"🎫 Some Title on Something\") and NOT an all-caps slug")
-	}
-	if body == strings.ToLower(slug) {
-		return "", fmt.Errorf("ticket title must be titleized (e.g. \"🎫 Some Title on Something\") and NOT a slug")
+		return "", fmt.Errorf("ticket title must contain at least one alphanumeric character")
 	}
 	return slug, nil
 }
 
 // 🔁UpdateTicketTitle MUST complete the operation and return consistent results.
+// 🔁Only validates that the title is non-empty; does NOT enforce any shape on the title string.
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
 	}
-	slug, err := validateTicketTitle(title)
-	if err != nil {
-		return err
-	}
 	title = strings.TrimSpace(title)
+	if title == "" {
+		return fmt.Errorf("ticket title is required")
+	}
+	slug := Slugify(title)
+	if slug == "" {
+		return fmt.Errorf("ticket title must contain at least one alphanumeric character")
+	}
 
 	parentDir := filepath.Dir(ticket.Slug)
 	if parentDir != "." {
@@ -20494,14 +20504,15 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 // 🆕CreateTicket MUST persist the new entity and return a reference to it.
 // 🆕CreateTicket creates a new ticket and persists it.
-func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
+func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) (*Ticket, error) {
 	if goal == "" {
 		return nil, fmt.Errorf("ticket goal is required")
 	}
-	slug, err := validateTicketTitle(title)
+	slug, err := validateTicketEmojiTitle(emoji, title)
 	if err != nil {
 		return nil, err
 	}
+	emoji = strings.TrimSpace(emoji)
 	title = strings.TrimSpace(title)
 
 	now := time.Now()
@@ -20566,6 +20577,7 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 		Day:           day,
 		Slug:          slug,
 		Title:         title,
+		Emoji:         emoji,
 		Status:        TicketStatusOpen,
 		Description:   prompt,
 		Goal:          goal,
@@ -23237,11 +23249,11 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 }
 
 // 🔖ToolTicketOpen MUST complete the operation successfully.
-func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
+func ToolTicketOpen(emoji, title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noManagement bool, issue string) ToolResult {
 	repopkg.Emit(repopkg.EventTicketOpenStarting, "repo-cli", repopkg.TicketOpenPayload{
 		Title: title, Prompt: prompt, LLM: llm, Client: client, Goal: goal, Parent: parent,
 	})
-	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
+	ticket, err := OpenTicket(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	if err != nil {
 		return toolErrorResult(err)
 	}
@@ -27621,7 +27633,7 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 // 📬TicketOpen MUST return a non-nil error when the operation fails.
 // ⚫TicketOpen performs the ticket open operation on the repo context.
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
+	return OpenTicket(input.Emoji, input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoManagement, input.Issue)
 }
 
 // 🟦TicketClose MUST return a non-nil error when the operation fails.
@@ -30509,6 +30521,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	ticketOpenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketOpenInput",
 		Fields: graphql.InputObjectConfigFieldMap{
+			"emoji":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"title":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":          &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -30870,6 +30883,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					inputMap := p.Args["input"].(map[string]interface{})
 					input := TicketOpenInput{
+						Emoji:  inputMap["emoji"].(string),
 						Title:  inputMap["title"].(string),
 						Prompt: inputMap["prompt"].(string),
 						Client: inputMap["client"].(string),
@@ -32540,7 +32554,8 @@ func createMcpServer() *server.MCPServer {
 	s.AddTool(
 		mcp.NewTool("ticket_open",
 			mcp.WithDescription("Open a new ticket to track a task or bug fix. Returns the ticket path for use with ticket_close and ticket_reopen."),
-			mcp.WithString("title", mcp.Required(), mcp.Description("Titleized short title (e.g. 'Fix Mcp Descriptions'). Must NOT be a slug or all-caps.")),
+			mcp.WithString("emoji", mcp.Required(), mcp.Description("Single emoji representing the ticket (e.g. '🎫', '🐛', '✨').")),
+			mcp.WithString("title", mcp.Required(), mcp.Description("Short title for the ticket. Shape is not enforced.")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Full description of the task.")),
 			mcp.WithString("goal", mcp.Description("Goal slug to associate the ticket with.")),
 			mcp.WithString("client", mcp.Description("Agent client used for this ticket.")),
@@ -32943,17 +32958,19 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 // 🎫ticketOpen holds the data fields for a ticketOpen record.
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
+	emoji, _, _ := getStringArg(args, "emoji")
 	title, _, _ := getStringArg(args, "title")
 	prompt, _, _ := getStringArg(args, "prompt")
 	goal, _, _ := getStringArg(args, "goal")
 	client, _, _ := getStringArg(args, "client")
 	llm, _, _ := getStringArg(args, "llm")
+	noIssue, _, _ := getBoolArg(args, "no_issue")
 	noManagement, _, _ := getBoolArg(args, "no_management")
 	draft, _, _ := getStringArg(args, "draft")
 	parent, _, _ := getStringArg(args, "parent")
 	issue, _, _ := getStringArg(args, "issue")
 
-	result := ToolTicketOpen(title, prompt, llm, client, draft, noManagement, goal, parent, noManagement, issue)
+	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, noIssue, goal, parent, noManagement, issue)
 	return toolResultToMCP(result)
 }
 

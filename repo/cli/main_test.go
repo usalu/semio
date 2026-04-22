@@ -1109,26 +1109,28 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	tests := []struct {
 		name    string
+		emoji   string
 		title   string
 		wantErr bool
 	}{
-		{"Emoji Titleized Valid", "🎫 Some Title on Something", false},
-		{"Emoji Single Word Valid", "🛠️ Cleanup", false},
-		{"Emoji With Hyphen Valid", "🧩 Refactor Resource ID System to Bundle-Based Hierarchy", false},
-		{"Emoji Lowercase Valid", "🔖 some title", false},
-		{"Emoji Allcaps Valid", "🔥 FIX EVERYTHING", false},
-		{"No Emoji Titleized Invalid", "Some Title on Something", true},
-		{"No Emoji Single Word Invalid", "Cleanup", true},
-		{"No Emoji Slug Invalid", "some-slug-title", true},
-		{"No Emoji Slug with Dashes Invalid", "fix-vscode-types-version-mismatch", true},
-		{"No Emoji Uppercase Slug Invalid", "ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES", true},
-		{"Emoji Only Invalid", "🎫", true},
-		{"Emoji Slug Invalid", "🎫 SOME-SLUG-TITLE", true},
+		{"Emoji Titleized Valid", "🎫", "Some Title on Something", false},
+		{"Emoji Single Word Valid", "🛠️", "Cleanup", false},
+		{"Emoji With Hyphen Valid", "🧩", "Refactor Resource ID System to Bundle-Based Hierarchy", false},
+		{"Emoji Lowercase Valid", "🔖", "some title", false},
+		{"Emoji Allcaps Valid", "🔥", "FIX EVERYTHING", false},
+		{"Emoji Slug Valid", "🎫", "some-slug-title", false},
+		{"Emoji Dashed Slug Valid", "🎫", "fix-vscode-types-version-mismatch", false},
+		{"Emoji Uppercase Slug Valid", "🎫", "ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES", false},
+		{"Missing Emoji Invalid", "", "Some Title on Something", true},
+		{"Plain Text Emoji Invalid", "ticket", "Some Title", true},
+		{"Multiple Emoji Invalid", "🎫🎫", "Some Title", true},
+		{"Empty Title Invalid", "🎫", "", true},
+		{"Non Alphanumeric Title Invalid", "🎫", "---", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", client: COPILOT_CHAT, goal: "TEST-GOAL", noIssue: true }) { id slug year month day } }`
+			query := `mutation { ticketOpen(input: { emoji: "` + tt.emoji + `", title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", client: COPILOT_CHAT, goal: "TEST-GOAL", noIssue: true }) { id slug year month day } }`
 			result, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
@@ -6419,7 +6421,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "")
+	result := ToolTicketOpen("🎫", "Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -6448,7 +6450,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".repo", "🎫"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	first := ToolTicketOpen("🌱 Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
+	first := ToolTicketOpen("🌱", "Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -6456,7 +6458,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if !ok || seed == nil {
 		t.Fatalf("expected seeded ticket data")
 	}
-	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
+	second := ToolTicketOpen("🎫", "Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -8674,7 +8676,8 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 
 	openOut, openErr, err := executeCommand(
 		"ticket", "open",
-		"🎫 E2E Ticket Positional",
+		"🎫",
+		"E2E Ticket Positional",
 		"E2E prompt positional",
 		"cursor-chat",
 		"sonnet-4-5",
@@ -8854,9 +8857,10 @@ func TestCliWrongArgs_TicketOpen(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
-		{"missing client", []string{"ticket", "open", "--goal", "TEST", "--title", "Valid Title", "--opus-4-5", "--no-management"}},
-		{"missing goal", []string{"ticket", "open", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing emoji", []string{"ticket", "open", "--goal", "TEST", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing title", []string{"ticket", "open", "--emoji", "🎫", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"missing client", []string{"ticket", "open", "--emoji", "🎫", "--goal", "TEST", "--title", "Valid Title", "--opus-4-5", "--no-management"}},
+		{"missing goal", []string{"ticket", "open", "--emoji", "🎫", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-management"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -9203,8 +9207,9 @@ func TestCliWrongArgs_ErrorMessages(t *testing.T) {
 		expectedErr string
 	}{
 
-		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing title"},
-		{"ticket open missing goal", []string{"ticket", "open", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing goal"},
+		{"ticket open missing emoji", []string{"ticket", "open", "--goal", "TEST", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing emoji"},
+		{"ticket open missing title", []string{"ticket", "open", "--emoji", "🎫", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing title"},
+		{"ticket open missing goal", []string{"ticket", "open", "--emoji", "🎫", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-management"}, "missing goal"},
 		{"ticket close missing path", []string{"ticket", "close", "--no-management", "--summary", "s", "--files", "f"}, "missing ticket path"},
 		{"ticket close missing summary", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--files", "f"}, "missing summary"},
 		{"ticket close missing files", []string{"ticket", "close", "--no-management", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--summary", "s"}, "missing files"},
@@ -9314,7 +9319,7 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
+		{"ticket open missing title", []string{"ticket", "open", "--emoji", "🎫", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-management"}},
 		{"ticket close missing path", []string{"ticket", "close", "--no-management", "--summary", "s", "--files", "f"}},
 		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-management"}},
 		{"goal open missing title", []string{"goal", "open", "--no-management"}},
@@ -10265,9 +10270,9 @@ func TestLifecycleCommands(t *testing.T) {
 
 	for _, mode := range modes {
 		t.Run("lifecycle_"+mode, func(t *testing.T) {
-			title := "🎫 Test Lifecycle " + mode
+			title := "Test Lifecycle " + mode
 			if mode == "" {
-				title = "🎫 Test Lifecycle default"
+				title = "Test Lifecycle default"
 			}
 
 			rootCmd := NewRoot(factory)
@@ -10284,7 +10289,7 @@ func TestLifecycleCommands(t *testing.T) {
 			goalID := parseGoalCreateID(t, goalB.String())
 			defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
-			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-management"}
+			openArgs := []string{"ticket", "open", "🎫", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-management"}
 			if mode == "json" {
 				openArgs = append(openArgs, "--json")
 			} else if mode == "md" {
@@ -10746,7 +10751,7 @@ func TestTicketLifecycle_NoManagement(t *testing.T) {
 
 	testSessionIDOverride = "session-open-1"
 	defer func() { testSessionIDOverride = "" }()
-	ticket, err := OpenTicket("🎫 Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	ticket, err := OpenTicket("🎫", "Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -10940,7 +10945,7 @@ func TestTrackHookInOpenTicketUsesStableSessionIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("OpenGoal failed: %v", err)
 	}
-	ticket, err := OpenTicket("🪝 Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	ticket, err := OpenTicket("🪝", "Hook Ticket", "Hook Ticket Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -12525,7 +12530,7 @@ func TestToolFileCRUD(t *testing.T) {
 func TestToolTicketLifecycle(t *testing.T) {
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫 Test Lifecycle Ticket", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", "Test Lifecycle Ticket", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12592,7 +12597,7 @@ func TestParseTicketPath(t *testing.T) {
 func TestMcpTicketCloseAutoResolve(t *testing.T) {
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫 Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", "Test Auto Resolve Close", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -12621,7 +12626,7 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
 	setupToolTest(t)
 
-	result := ToolTicketOpen("🎫 Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	result := ToolTicketOpen("🎫", "Test Full Year Path", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
