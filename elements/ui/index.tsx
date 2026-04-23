@@ -21816,8 +21816,8 @@ export const UI: React.FC<UIProps> = ({
   const [activeAppId, setActiveAppId] = React.useState(defaultAppId ?? apps[0]?.id ?? "");
   const [leftPanelSize, setLeftPanelSize] = React.useState(280);
   const [rightPanelSize, setRightPanelSize] = React.useState(300);
-  const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>({ leftSidePanel: false, rightSidePanel: true });
-  const [mobilePanelVisible, setMobilePanelVisible] = React.useState(true);
+  const [panelVisibility, setPanelVisibility] = React.useState<UIPanelVisibility>({ leftSidePanel: false, rightSidePanel: false });
+  const [mobilePanelVisible, setMobilePanelVisible] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [findOpen, setFindOpen] = React.useState(false);
   const detectedMobile = useMediaQuery(mobileQuery);
@@ -22872,6 +22872,27 @@ if (treeVitest) {
           ],
         },
       });
+    });
+
+    it("renders application side panels closed by default", () => {
+      const TestIcon = () => <span data-testid="test-icon" />;
+      const markup = renderToStaticMarkup(
+        <UI
+          apps={[
+            {
+              id: "test",
+              label: "Test",
+              windowKinds: [{ id: "main", label: "Main", component: () => <div>Main</div> }],
+              defaultLayout: createTabStackLayout(["main"], ["Main"]),
+              leftPanelTabs: [{ id: "left", icon: TestIcon, content: <div>Left panel</div> }],
+              rightPanelTabs: [{ id: "right", icon: TestIcon, content: <div>Right panel</div> }],
+            },
+          ]}
+        />,
+      );
+
+      expect(markup).not.toContain('data-panel="leftSidePanel"');
+      expect(markup).not.toContain('data-panel="rightSidePanel"');
     });
   });
 

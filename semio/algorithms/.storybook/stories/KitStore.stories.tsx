@@ -8,13 +8,13 @@ import { Design as DesignEntity } from "@semio/js";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
-import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 import metabolismKit from "../../../assets/semio/metabolism.kit.semio.json";
+import { AlgorithmApp, WindowKind, type AlgorithmContextValue, type AlgorithmWindowDef } from "../../index";
 
 import { CommandForm } from "./kit-store/CommandForm";
-import { applyEntityPlaceholders, EntityPicker } from "./kit-store/EntityPicker";
-import { KIT_STORE_COVERAGE_ROWS, ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS } from "./kit-store/commandSchema";
+import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "./kit-store/commandSchema";
 import { DiffViewer } from "./kit-store/DiffViewer";
+import { applyEntityPlaceholders, EntityPicker } from "./kit-store/EntityPicker";
 import { EventsFeed } from "./kit-store/EventsFeed";
 import { HistoryControls, KitTreeGraph } from "./kit-store/HistoryControls";
 import { SnapshotViewer } from "./kit-store/SnapshotViewer";
@@ -139,7 +139,9 @@ function EntityWindow() {
             </li>
           ))}
         </ul>
-        <div className="mt-1 font-mono">root keys ({ALL_CHANGE_KIT_ROOT_KEYS.length}): {ALL_CHANGE_KIT_ROOT_KEYS.join(", ")}</div>
+        <div className="mt-1 font-mono">
+          root keys ({ALL_CHANGE_KIT_ROOT_KEYS.length}): {ALL_CHANGE_KIT_ROOT_KEYS.join(", ")}
+        </div>
         <div className="mt-1 font-mono">ChangeType keys ({CHANGE_TYPE_COMMAND_KEYS.length})</div>
       </div>
     </div>
@@ -187,14 +189,7 @@ function KitTreeWindow() {
   );
   return (
     <div className="h-full min-h-0">
-      <KitTreeGraph
-        handle={s.handle}
-        selection={selection}
-        selectedCheckpointId={s.cpId}
-        selectedAlternativeId={s.altId}
-        selectedSessionId={s.sessionId}
-        selectedDraftId={s.draftId}
-      />
+      <KitTreeGraph handle={s.handle} selection={selection} selectedCheckpointId={s.cpId} selectedAlternativeId={s.altId} selectedSessionId={s.sessionId} selectedDraftId={s.draftId} />
     </div>
   );
 }
@@ -278,7 +273,7 @@ function KitStoreFrame() {
 }
 
 const meta = {
-  title: "semio-algorithms/Kit/Store",
+  title: "semio-algorithms/Store",
   component: KitStoreFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

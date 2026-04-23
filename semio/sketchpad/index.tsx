@@ -23,94 +23,105 @@ import {
   areSameConnection,
   Attribute,
   Author,
-  AuthorDiff,
   AuthorId,
   buildFileTree,
   Camera,
   colorPortsForTypes,
   Concept,
-  ConceptDiff,
   Connection,
   ConnectionDiff,
   ConnectionId,
   Coordinate,
   createFolderKitStore,
   createJsonFileKitStore,
+  createKitFileObjectUrl,
   createSessionKitStore,
   Design,
   DesignDiff,
   DesignShallow,
   DiffStatus,
   executeKitCommand,
-  FileDiff,
+  fetchReadableKitFileBlob,
   findDesignInKit,
-  findRepresentation,
   findPieceInDesign,
+  findRepresentation,
   findTypeInKit,
   flattenFileTree,
-  createKitFileObjectUrl,
-  fetchReadableKitFileBlob,
+  Folder,
+  generateUniqueName,
+  getClusterableGroups,
+  getDesignDiff,
   getExistingKitFileProvider,
+  getIncludedDesigns,
   getKitFileProvider,
   getKitFileStoragePath,
   getOrCreateKitFileState,
   getReadableKitFileUrl,
   getStoredKitFileUrls,
-  isBrowserReadableFileUrl,
-  Folder,
-  FolderDiff,
-  generateUniqueName,
-  getClusterableGroups,
-  getDesignDiff,
-  getIncludedDesigns,
-  getKitDiff,
-  getSqlJs,
+  ICON_WIDTH,
   Id,
   id,
-  ICON_WIDTH,
   importKit,
   InMemoryKitStore,
   inverseKitDiff,
+  isBrowserReadableFileUrl,
   Kit,
-  type KitChange,
-  KitDiff,
-  KitSchema,
-  KitShallow,
   type KitBinaryStore,
   type KitCommandContext,
   type KitCommandResult,
+  KitDiff,
   type KitFileState,
-  type KitStore,
-  type KitStoreSnapshot,
-  type KitStoreStatus,
   type KitFolderAdapter,
   type KitJsonFileAdapter,
-  kitToSqlite,
-  Representation,
+  KitShallow,
+  type KitStore,
+  type KitStoreSnapshot,
   Piece,
   PieceDiff,
   PieceId,
   Plane,
   planeToMatrix,
   Point,
-  PortDiff,
   Quality,
   QualityDiff,
+  Representation,
   selectBestRepresentation,
   File as SemioFile,
-  sqliteToKit,
   sumQualityInDesign,
   Tag,
-  TagDiff,
   TOLERANCE,
   toSemioRotation,
   toThreeRotation,
   Type,
   TypeDiff,
   TypeShallow,
-  type UndoableKitStore,
   Vector,
 } from "@semio/js";
+import {
+  KitProvider,
+  KitRegistryProvider,
+  useActiveKitId,
+  useCreateDesign,
+  useCreateFolder,
+  useCreatePort,
+  useCreateQuality,
+  useCreateType,
+  useKitStoredFileUrls as useFileUrls,
+  useKitCommandDispatchersWithOrigin,
+  useKitCommands,
+  useKitDescription,
+  useKitHomepage,
+  useKitIcon,
+  useKitImage,
+  useKitLicense,
+  useKitName,
+  useKitRegistrySafe,
+  useKitRelease,
+  useKitRuntimeSafe,
+  useMoveKitArtifactToFolder,
+  useUpdateDesign,
+  useUpdateType,
+} from "@semio/react";
 import type {
   ConnectionLineComponentProps,
   DragEndEvent,
@@ -290,37 +301,6 @@ import {
   Window,
   WindowKind,
 } from "@semio/ui";
-import {
-  KitProvider,
-  KitRegistryProvider,
-  useActiveKitId,
-  useCreateDesign,
-  useCreateFolder,
-  useCreatePort,
-  useCreateQuality,
-  useCreateType,
-  useKit,
-  useKitAuthors,
-  useKitCommandDispatchersWithOrigin,
-  useKitCommands,
-  useKitConcepts,
-  useKitDescription,
-  useKitFolders,
-  useKitHomepage,
-  useKitIcon,
-  useKitImage,
-  useKitLicense,
-  useKitName,
-  useKitPorts,
-  useKitQualities,
-  useKitRegistrySafe,
-  useKitRelease,
-  useKitRuntimeSafe,
-  useKitStoredFileUrls as useFileUrls,
-  useMoveKitArtifactToFolder,
-  useUpdateDesign,
-  useUpdateType,
-} from "@semio/react";
 import React, { ComponentType, createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
@@ -903,13 +883,13 @@ export const EMPTY_ID_ARRAY: readonly Id[] = Object.freeze([]);
 export const EMPTY_STRING_ARRAY: readonly string[] = Object.freeze([]);
 
 /**
- * Frozen default panel visibility with only toolbar visible.
+ * Frozen default panel visibility with side and detail panels closed.
  **/
 export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   toolbar: true,
   leftSidePanel: false,
-  rightSidePanel: true,
-  details: true,
+  rightSidePanel: false,
+  details: false,
   chat: false,
   settings: false,
 });
@@ -7725,13 +7705,13 @@ function useKitStoreFromProvider(explicitKitId?: string): KitStore | null {
 // Type definitions for app state, machine input, and context structures.
 
 /**
- * Default panel visibility configuration with all panels hidden.
+ * Default panel visibility configuration with side and detail panels closed.
  **/
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: true,
   leftSidePanel: false,
-  rightSidePanel: true,
-  details: true,
+  rightSidePanel: false,
+  details: false,
 };
 
 // #region 🔬App State Types
@@ -8224,7 +8204,7 @@ export function createDefaultTransactionState(): AppTransactionState {
  **/
 export function createDefaultDesignAppState(): DesignAppState {
   return {
-    panelVisibility: { ...defaultPanelVisibility, toolbar: true, rightSidePanel: true },
+    panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
     focusedPiece: undefined,
@@ -15655,7 +15635,14 @@ const MultiWindowApp: FC = () => {
     [store],
   );
 
+  useEffect(() => {
+    console.log(
+      `[DEBUG][KitApp] appType=${appType} kitId=${kitId ?? ""} hasKit=${hasKit} hasKitApp=${kitId ? (sketchpadStore?.hasKitApp?.({ kit: kitId }) ?? false) : false} hasStore=${!!store} storedLayout=${storedWindowLayout ? "present" : "missing"}`,
+    );
+  }, [appType, hasKit, kitId, sketchpadStore, store, storedWindowLayout]);
+
   if (!hasKit) {
+    console.log(`[DEBUG][KitApp] loading state for kit ${kitId ?? ""}`);
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">Loading kit...</p>
@@ -15665,11 +15652,14 @@ const MultiWindowApp: FC = () => {
 
   return (
     <ErrorBoundary
-      fallback={
-        <div className="flex items-center justify-center h-full">
-          <p className="text-sm text-muted-foreground">Failed to load kit app</p>
-        </div>
-      }
+      fallback={(() => {
+        console.log(`[DEBUG][KitApp] error boundary fallback for kit ${kitId ?? ""}`);
+        return (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-muted-foreground">Failed to load kit app</p>
+          </div>
+        );
+      })()}
     >
       <TransactionProvider transaction={transaction}>
         <KitDropZone>
@@ -15895,64 +15885,22 @@ const KitSectionForm: FC = () => {
         <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.name" value={kit.name} onLazyChange={(value) => void setName(value)} showLabel />
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.version"
-          value={kit.version || ""}
-          placeholder={versionPlaceholder}
-          onLazyChange={(value) => void setVersion(optionalKitText(value))}
-          showLabel
-        />
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.version" value={kit.version || ""} placeholder={versionPlaceholder} onLazyChange={(value) => void setVersion(optionalKitText(value))} showLabel />
       </TreeRow>
       <TreeRow>
-        <Textarea
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.description"
-          value={kit.description || ""}
-          placeholder={descriptionPlaceholder}
-          onLazyChange={(value) => void setDescription(optionalKitText(value))}
-          showLabel
-        />
+        <Textarea lazy id="semio.sketchpad.app.kit.panel.details.section.kit.description" value={kit.description || ""} placeholder={descriptionPlaceholder} onLazyChange={(value) => void setDescription(optionalKitText(value))} showLabel />
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.icon"
-          value={kit.icon || ""}
-          placeholder={iconPlaceholder}
-          onLazyChange={(value) => void setIcon(optionalKitText(value))}
-          showLabel
-        />
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.icon" value={kit.icon || ""} placeholder={iconPlaceholder} onLazyChange={(value) => void setIcon(optionalKitText(value))} showLabel />
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.image"
-          value={kit.image || ""}
-          placeholder={imagePlaceholder}
-          onLazyChange={(value) => void setImage(optionalKitText(value))}
-          showLabel
-        />
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.image" value={kit.image || ""} placeholder={imagePlaceholder} onLazyChange={(value) => void setImage(optionalKitText(value))} showLabel />
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.homepage"
-          value={kit.homepage || ""}
-          placeholder={homepagePlaceholder}
-          onLazyChange={(value) => void setHomepage(optionalKitText(value))}
-          showLabel
-        />
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.homepage" value={kit.homepage || ""} placeholder={homepagePlaceholder} onLazyChange={(value) => void setHomepage(optionalKitText(value))} showLabel />
       </TreeRow>
       <TreeRow>
-        <Input
-          lazy
-          id="semio.sketchpad.app.kit.panel.details.section.kit.license"
-          value={kit.license || ""}
-          placeholder={licensePlaceholder}
-          onLazyChange={(value) => void setLicense(optionalKitText(value))}
-          showLabel
-        />
+        <Input lazy id="semio.sketchpad.app.kit.panel.details.section.kit.license" value={kit.license || ""} placeholder={licensePlaceholder} onLazyChange={(value) => void setLicense(optionalKitText(value))} showLabel />
       </TreeRow>
     </>
   );
@@ -18873,14 +18821,7 @@ export class SketchpadStore {
       const interactiveCandidate = rest[3] as unknown;
       const kind = kindCandidate === "temporary" || kindCandidate === "file" || kindCandidate === "folder" || kindCandidate === "remote" ? kindCandidate : undefined;
       const source = sourceCandidate && typeof sourceCandidate === "object" && (sourceCandidate as { kind?: unknown }).kind ? (sourceCandidate as InitialStateKit["source"]) : undefined;
-      const interactive =
-        typeof interactiveCandidate === "boolean"
-          ? interactiveCandidate
-          : typeof sourceCandidate === "boolean"
-            ? sourceCandidate
-            : typeof kindCandidate === "boolean"
-              ? kindCandidate
-              : true;
+      const interactive = typeof interactiveCandidate === "boolean" ? interactiveCandidate : typeof sourceCandidate === "boolean" ? sourceCandidate : typeof kindCandidate === "boolean" ? kindCandidate : true;
       const kitId = await this.createKit(kit, kind, source, interactive);
       return { kitId } as T;
     }
@@ -21028,10 +20969,7 @@ export const useFocus = (): FocusApi => {
     },
     [actor],
   );
-  return useMemo(
-    () => ({ focusItems, setFocusItems, setOnFocusItem, triggerFocusItem }),
-    [focusItems, setFocusItems, setOnFocusItem, triggerFocusItem],
-  );
+  return useMemo(() => ({ focusItems, setFocusItems, setOnFocusItem, triggerFocusItem }), [focusItems, setFocusItems, setOnFocusItem, triggerFocusItem]);
 };
 
 export const useFocusSafe = (): FocusApi | null => {
@@ -21430,10 +21368,7 @@ export const useDragDrop = (): DragDropApi => {
     },
     [actor],
   );
-  return useMemo(
-    () => ({ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }),
-    [activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign],
-  );
+  return useMemo(() => ({ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }), [activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign]);
 };
 
 // #endregion 🌥️DragDrop
@@ -24627,25 +24562,25 @@ const Sketchpad = ({
   const routerContent = (
     <GlobalNavigationBridge>
       <KitRegistryProvider>
-      <SketchpadScopeProvider
-        id={id}
-        store={store}
-        kitStore={kitStore}
-        remote={remote}
-        persistenceFactory={persistenceFactory}
-        temporaryKitStoreFactory={temporaryKitStoreFactory}
-        folderKitStoreFactory={folderKitStoreFactory}
-        fileKitStoreFactory={fileKitStoreFactory}
-        remoteKitStoreFactory={remoteKitStoreFactory}
-        desktop={desktop}
-        initialState={initialState}
-        importKitUrls={importKitUrls}
-      >
-        <SketchpadInteractionBridge>
-          <OriginDocumentListener />
-          <SketchpadContent />
-        </SketchpadInteractionBridge>
-      </SketchpadScopeProvider>
+        <SketchpadScopeProvider
+          id={id}
+          store={store}
+          kitStore={kitStore}
+          remote={remote}
+          persistenceFactory={persistenceFactory}
+          temporaryKitStoreFactory={temporaryKitStoreFactory}
+          folderKitStoreFactory={folderKitStoreFactory}
+          fileKitStoreFactory={fileKitStoreFactory}
+          remoteKitStoreFactory={remoteKitStoreFactory}
+          desktop={desktop}
+          initialState={initialState}
+          importKitUrls={importKitUrls}
+        >
+          <SketchpadInteractionBridge>
+            <OriginDocumentListener />
+            <SketchpadContent />
+          </SketchpadInteractionBridge>
+        </SketchpadScopeProvider>
       </KitRegistryProvider>
     </GlobalNavigationBridge>
   );
@@ -25147,15 +25082,15 @@ class KitAppStoreImpl extends KitDiffAppStore<KitAppState, KitAppDiff, KitAppSel
     if (!syncPanelVisibility) {
       return {
         toolbar: true,
-        rightSidePanel: true,
-        details: true,
+        rightSidePanel: false,
+        details: false,
       };
     }
     return {
       toolbar: syncPanelVisibility.get("toolbar") ?? true,
       leftSidePanel: syncPanelVisibility.get("leftSidePanel") ?? false,
-      rightSidePanel: syncPanelVisibility.get("rightSidePanel") ?? true,
-      details: syncPanelVisibility.get("details") ?? true,
+      rightSidePanel: syncPanelVisibility.get("rightSidePanel") ?? false,
+      details: syncPanelVisibility.get("details") ?? false,
       chat: syncPanelVisibility.get("chat") ?? false,
       settings: syncPanelVisibility.get("settings") ?? false,
     };
@@ -25604,7 +25539,7 @@ const kitAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: () => ({
-      panelVisibility: { toolbar: true, rightSidePanel: true, details: true },
+      panelVisibility: { toolbar: true, rightSidePanel: false, details: false },
       selection: undefined,
       hover: undefined,
       fullscreenWindow: KitAppFullscreenWindow.None,
@@ -25760,7 +25695,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   const kitId = kitScope?.id ?? id?.kit;
 
   const defaultState: KitAppState = {
-    panelVisibility: { toolbar: true, rightSidePanel: true, details: true },
+    panelVisibility: { toolbar: true, rightSidePanel: false, details: false },
     selection: undefined,
     hover: undefined,
     activeTool: ToolKind.SELECTION_NORMAL,
@@ -27558,7 +27493,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
   constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
     const defaultState: DesignAppState = {
       fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
-      panelVisibility: initialState?.panelVisibility || { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: initialState?.panelVisibility || { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
       activeTool: initialState?.activeTool || ToolKind.SELECTION_NORMAL,
       selection: initialState?.selection,
       hover: initialState?.hover,
@@ -27780,7 +27715,7 @@ const designAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DesignAppState => ({
-      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
       selection: undefined,
       hover: undefined,
       presence: undefined,
@@ -27982,7 +27917,7 @@ function useDesignAppInitialize() {
       kitId,
       designId,
       state: {
-        panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+        panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
         selection: undefined,
         hover: undefined,
         camera: undefined,
@@ -28077,7 +28012,7 @@ const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
  * EMPTY_REPRESENTATION_TAGS holds the data fields for a EMPTY_REPRESENTATION_TAGS record.
  **/
 const EMPTY_REPRESENTATION_TAGS: Record<Id, string[]> = {};
-const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, details: true, rightSidePanel: true };
+const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, details: false, rightSidePanel: false };
 
 /**
  * GranularSelectorFactory holds the data fields for a GranularSelectorFactory record.
@@ -31811,8 +31746,7 @@ const PiecesSectionForm: FC = () => {
         if (pieceMeta?.parentPieceId) {
           return (
             allConnections.find(
-              (connection) =>
-                (connection.connected.piece.id === pieceId && connection.connecting.piece.id === pieceMeta.parentPieceId) || (connection.connecting.piece.id === pieceId && connection.connected.piece.id === pieceMeta.parentPieceId),
+              (connection) => (connection.connected.piece.id === pieceId && connection.connecting.piece.id === pieceMeta.parentPieceId) || (connection.connecting.piece.id === pieceId && connection.connected.piece.id === pieceMeta.parentPieceId),
             ) || null
           );
         }
@@ -33324,13 +33258,7 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
       )}
       {showPorts &&
         connectors?.map((connector: Connector, connectorIndex: number) => (
-          <ConnectorHandle
-            key={`${id}-port-${connectorIndex}-${connector.id}`}
-            connector={connector}
-            pieceId={piece.id}
-            selected={selectedConnector?.piece === piece.id && selectedConnector?.connector === connector.id}
-            onPortClick={onPortClick}
-          />
+          <ConnectorHandle key={`${id}-port-${connectorIndex}-${connector.id}`} connector={connector} pieceId={piece.id} selected={selectedConnector?.piece === piece.id && selectedConnector?.connector === connector.id} onPortClick={onPortClick} />
         ))}
     </div>
   );
@@ -33592,13 +33520,7 @@ const DesignNodeInner: React.FC<DesignNodeInnerProps> = ({ id, piece, connectors
       </svg>
       {showPorts &&
         connectors?.map((connector: Connector, connectorIndex: number) => (
-          <ConnectorHandle
-            key={`${id}-port-${connectorIndex}-${connector.id}`}
-            connector={connector}
-            pieceId={piece.id}
-            selected={selectedConnector?.piece === piece.id && selectedConnector?.connector === connector.id}
-            onPortClick={onPortClick}
-          />
+          <ConnectorHandle key={`${id}-port-${connectorIndex}-${connector.id}`} connector={connector} pieceId={piece.id} selected={selectedConnector?.piece === piece.id && selectedConnector?.connector === connector.id} onPortClick={onPortClick} />
         ))}
     </div>
   );
@@ -34667,9 +34589,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       if (hasSelection) {
         const pieces = (design.pieces ?? []).filter((p) => selectedPieceIds.has(p.id));
         const pieceIdSet = new Set(pieces.map((p) => p.id));
-        const connections = (design.connections ?? []).filter(
-          (c) => selectedConnectionIds.has(c.id) || (c.connected?.piece?.id && c.connecting?.piece?.id && pieceIdSet.has(c.connected.piece.id) && pieceIdSet.has(c.connecting.piece.id)),
-        );
+        const connections = (design.connections ?? []).filter((c) => selectedConnectionIds.has(c.id) || (c.connected?.piece?.id && c.connecting?.piece?.id && pieceIdSet.has(c.connected.piece.id) && pieceIdSet.has(c.connecting.piece.id)));
         payload = { pieces, connections };
       } else {
         payload = { pieces: design.pieces ?? [], connections: design.connections ?? [] };
@@ -36261,10 +36181,7 @@ const PieceMesh: FC<{ highlightColor: string | null } & DesignMeshEventProps> = 
   const typeConcepts = type?.concepts;
   const [files] = useKitFiles();
   const kitStoreRaw = useKitStoreFromProvider();
-  const kitStore = useMemo(
-    () => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null),
-    [kitStoreRaw],
-  );
+  const kitStore = useMemo(() => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null), [kitStoreRaw]);
   const [selectedRepresentationTags] = useDesignAppSelectedRepresentationTags();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const prevRepresentationIdRef = useRef<string | null>(null);
@@ -37243,22 +37160,13 @@ const DesignWindowApp: FC<AppProps> = () => {
     const designConnections = design?.connections || [];
     const knownPieceIdList = [...new Set([...(design?.pieces || []).map((entry) => entry.id), ...getIncludedDesigns(design || ({} as Design)).map((entry) => entry.id)])];
     const knownConnectionIds = new Set(designConnections.map((entry) => entry.id));
-    const selectedPieceIds = selectionPieceEntries
-      .map((entry) => resolveSelectionEntryIdByKnownIds(entry, knownPieceIdList))
-      .filter((entry): entry is Id => typeof entry === "string" && entry.length > 0);
+    const selectedPieceIds = selectionPieceEntries.map((entry) => resolveSelectionEntryIdByKnownIds(entry, knownPieceIdList)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0);
     const knownPieceIdSet = new Set(knownPieceIdList);
     const selectedKnownPieceIds = selectedPieceIds.filter((pid) => knownPieceIdSet.has(pid));
-    const selectedConnectionIdsResolved = selectionConnectionEntries
-      .map((entry) => resolveSelectionEntryId(entry))
-      .filter((entry): entry is Id => typeof entry === "string" && entry.length > 0 && knownConnectionIds.has(entry));
+    const selectedConnectionIdsResolved = selectionConnectionEntries.map((entry) => resolveSelectionEntryId(entry)).filter((entry): entry is Id => typeof entry === "string" && entry.length > 0 && knownConnectionIds.has(entry));
     const connectionMatchesById = designConnections.filter((connection) => selectedConnectionIdsResolved.includes(connection.id));
-    const connectionMatchesBySameness = designConnections.filter((connection) =>
-      selectedConnectionIdsResolved.some((cid) => areSameConnection(connection, cid as any)),
-    );
-    const selectedConnections = [
-      ...connectionMatchesById,
-      ...connectionMatchesBySameness.filter((c) => !connectionMatchesById.some((o) => o.id === c.id)),
-    ];
+    const connectionMatchesBySameness = designConnections.filter((connection) => selectedConnectionIdsResolved.some((cid) => areSameConnection(connection, cid as any)));
+    const selectedConnections = [...connectionMatchesById, ...connectionMatchesBySameness.filter((c) => !connectionMatchesById.some((o) => o.id === c.id))];
     const primaryConnector = selection.connector ?? selection.connectors?.[0];
     const hasPieces = selectedKnownPieceIds.length > 0;
     const hasConnections = selectedConnections.length > 0;
@@ -37437,7 +37345,7 @@ const DesignWindowApp: FC<AppProps> = () => {
 
   const PiecesWorkbenchContent: FC = () => {
     const [ksKit] = useKitSnapshot();
-  const kit = ksKit?.kit as Kit;
+    const kit = ksKit?.kit as Kit;
     const resolveParentId = (parent: any): string | undefined => (typeof parent === "string" ? parent : parent?.id);
 
     const handleCreateTypeChild = (parentType: Type) => {
@@ -38091,7 +37999,7 @@ const typeAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): TypeAppState => ({
-      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
       activeTool: ToolKind.SELECTION_NORMAL,
       fullscreenWindow: TypeAppFullscreenWindow.None,
       selection: undefined,
@@ -39382,10 +39290,7 @@ const TypeMesh: FC<{ activeTool: ToolKind; onPortPreview: (position: THREE.Vecto
 
   const [files] = useKitFiles();
   const kitStoreRaw = useKitStoreFromProvider();
-  const kitDataSource = useMemo(
-    () => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null),
-    [kitStoreRaw],
-  );
+  const kitDataSource = useMemo(() => (kitStoreRaw ? new CollaborativeKitStore(kitStoreRaw) : null), [kitStoreRaw]);
   const [selectedRepresentationId] = useTypeAppSelectedRepresentationId();
   const [selectedRepresentationTags] = useTypeAppSelectedRepresentationTags();
   const camera = useThree((state) => state.camera);
@@ -41660,7 +41565,7 @@ function useTypeAppInitialize() {
       kitId,
       typeId,
       state: {
-        panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+        panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
         selection: undefined,
         hover: undefined,
         focusedConnector: undefined,
@@ -42400,7 +42305,7 @@ class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDi
   constructor(parent: SketchpadStore, id: QualityAppId) {
     const defaultState: QualityAppState = {
       fullscreenWindow: QualityAppFullscreenWindow.None,
-      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
       activeTool: ToolKind.SELECTION_NORMAL,
       selection: undefined,
       hover: undefined,
@@ -42566,7 +42471,7 @@ const qualityAppPlugin: AppPlugin = {
     selectors: {},
     createDefaultState: (): QualityAppState => ({
       fullscreenWindow: QualityAppFullscreenWindow.None,
-      panelVisibility: { toolbar: true, leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: { toolbar: true, leftSidePanel: false, rightSidePanel: false, details: false },
       activeTool: ToolKind.SELECTION_NORMAL,
       selection: undefined,
       hover: undefined,
@@ -44918,7 +44823,7 @@ export interface DocsCommandResult {
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
-      panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
+      panelVisibility: { leftSidePanel: false, rightSidePanel: false, details: false },
       selection: undefined,
       sectionStates: {},
     };
@@ -45075,7 +44980,7 @@ const docsAppPlugin: AppPlugin = {
   guards: {},
   selectors: {},
   createDefaultState: (): DocsAppState => ({
-    panelVisibility: { leftSidePanel: true, rightSidePanel: true, details: true },
+    panelVisibility: { leftSidePanel: false, rightSidePanel: false, details: false },
     selection: undefined,
     sectionStates: {},
   }),
@@ -48618,9 +48523,7 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   }
 
   async function waitForSketchpadSettle(page: PlaywrightPage, label: string): Promise<void> {
-    await page
-      .waitForLoadState("networkidle", { timeout: 10000 })
-      .catch(() => console.log(`[TEST] Continuing without networkidle for ${label}`));
+    await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => console.log(`[TEST] Continuing without networkidle for ${label}`));
     await page.waitForTimeout(2000);
   }
 
@@ -48663,7 +48566,10 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
     const count = await button.count().catch(() => 0);
     console.log(`[${label}] count: ${count}`);
     if (count === 0) return;
-    const ariaPressed = await button.first().getAttribute("aria-pressed").catch(() => null);
+    const ariaPressed = await button
+      .first()
+      .getAttribute("aria-pressed")
+      .catch(() => null);
     console.log(`[${label}] aria-pressed attribute: ${ariaPressed}`);
     expect(ariaPressed).toBeNull();
   }
@@ -49527,6 +49433,24 @@ if (typeof process !== "undefined" && process.release && process.release.name ==
   }
 
   test.describe("sketchpad", () => {
+    test("Default Panel Visibility Starts with Side and Detail Panels Closed", () => {
+      const defaults = [
+        EMPTY_PANEL_VISIBILITY,
+        defaultPanelVisibility,
+        createDefaultDesignAppState().panelVisibility,
+        createDefaultTypeAppState().panelVisibility,
+        createDefaultKitAppState().panelVisibility,
+        createDefaultQualityAppState().panelVisibility,
+        new DocsAppStore({} as SketchpadStore).snapshot().panelVisibility,
+      ];
+
+      for (const visibility of defaults) {
+        expect(visibility.leftSidePanel ?? false).toBe(false);
+        expect(visibility.rightSidePanel ?? false).toBe(false);
+        expect(visibility.details ?? false).toBe(false);
+      }
+    });
+
     test("Development Server Loopback Binding", async () => {
       const viteConfig =
         typeof defineSketchpadViteConfig === "function"

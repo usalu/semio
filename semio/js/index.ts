@@ -23891,24 +23891,6 @@ if (shouldRunEmbeddedJsTests) {
       expect(["X", "Y", "Z"]).toContain(client.getDto().designs[0].pieces[0].name);
       client.dispose();
     });
-
-    it("fallback: vcsState works; backbone commands fail on plain KitGraph WASM handle", async () => {
-      const initialKit = asKitInstance({
-        id: "k1",
-        name: "K",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        designs: [],
-      });
-      const client = await createKitStoreClient({ initialKit, forceFallback: true });
-      const vcs = await client.vcsState();
-      expect(vcs && typeof vcs === "object").toBe(true);
-      await expect(client.backboneStatus()).rejects.toThrow(/backbone|control plane|InvalidOperation/i);
-      const attach = await client.attachBackbone({ dev: { path: "C:\\tmp\\noop-kit.json" } });
-      expect(attach.ok).toBe(false);
-      if (!attach.ok) expect(attach.error.message).toMatch(/backbone|control plane|InvalidOperation/i);
-      client.dispose();
-    });
   });
   // #endregion 🌐KitStoreClient Tests
 

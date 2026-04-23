@@ -10,13 +10,13 @@ todos:
    status: completed
  - id: react_hooks
    content: Add useBackboneStatus/useAttachBackbone/useDetachBackbone/useListConflicts/useResolveConflict/useSyncNow in semio/react/index.tsx
-   status: in_progress
+   status: completed
  - id: algorithms_bridge
    content: Rename KitStore/KitStoreRef -> KitGraph/KitGraphRef in semio/algorithms/native-bridges/rs/src/main.rs
-   status: pending
+   status: completed
  - id: docs_align
    content: Update semio/js, semio/react, semio/algorithms AGENTS.md with the new surface
-   status: pending
+   status: completed
 isProject: false
 ---
 

@@ -740,6 +740,8 @@ Create a new bundle semio/ui that holds reusable ui components. Make sure that a
 
 semio algorithms:
 
+When starting session then draft then transaction and then sending multiple kit changes, then transaction undo should revert the last kit change. When refreshing the live snapshot it still shows the new value and doesnt revert.
+
 ---
 
 Kit/Store:
@@ -861,6 +863,55 @@ Remove all mcp tools but the start*, finish*, sum_qu\* one.
 Introduce a transaction mechanism that is stateful session-scoped. There can be only one active transaction. A transaction is global (e.g. it is no problem to do kit changes, then design, then type, then kit, etc). start_transaction, finalize_transaction, abort_transaction that keeps a stack of kit changes (they have forward and backward diff) and on abort_transaction undo all operations by unwinding all backwards diffs.
 
 ### 🟨js
+
+```ts
+export interface KitStoreClient {
+ getDto(): any;
+ getSnapshot(): Promise<any>;
+ setField(kind: string, id: string, field: string, value: unknown): Promise<SetResult>;
+ addChild(parentKind: string, parentId: string, childKind: string, dto: unknown): Promise<SetResult>;
+ removeChild(parentKind: string, parentId: string, childKind: string, childId: string): Promise<SetResult>;
+ applyDesignDiff(designId: string, diff: unknown): Promise<SetResult>;
+ applyKitDiff(diff: unknown): Promise<SetResult>;
+ clusterPieces(designId: string, pieceIds: string[], clusterName: string): Promise<SetResult>;
+ dragPieces(designId: string, pieceIds: string[], du: number, dv: number): Promise<SetResult>;
+ movePieces(designId: string, pieceIds: string[], gap: number, shift: number, rise: number): Promise<SetResult>;
+ fixPieces(designId: string, pieceIds: string[]): Promise<SetResult>;
+ flattenDesign(designId: string): Promise<SetResult>;
+ expandDesign(parentDesignId: string, nestedDesignId: string): Promise<SetResult>;
+ deleteConnection(designId: string, connectionId: string): Promise<SetResult>;
+ changePieceType(designId: string, pieceId: string, newTypeId: string): Promise<SetResult>;
+ pasteDesignSelection(designId: string, selection: unknown, plane: unknown): Promise<SetResult>;
+ createHangingPieces(designId: string, typeIds: string[], plane: unknown): Promise<SetResult>;
+ createConnectedPiece(designId: string, parentPiece: string, parentPort: string, childType: string, childPort: string): Promise<SetResult>;
+ createFixedPiece(designId: string, typeId: string, plane: unknown): Promise<SetResult>;
+ getPiecesMetadata(designId: string): Promise<any>;
+ getPieces(designId: string): Promise<any>;
+ getConnections(designId: string): Promise<any>;
+ getDesigns(): Promise<any>;
+ getTypes(): Promise<any>;
+ getAuthors(): Promise<any>;
+ getKitMetadata(): Promise<any>;
+ undo(): Promise<SetResult>;
+ redo(): Promise<SetResult>;
+ canUndo(): Promise<boolean>;
+ canRedo(): Promise<boolean>;
+ subscribe(cb: (ev: any) => void): () => void;
+ dispose(): void;
+
+ execute(cmd: unknown): Promise<KitStoreExecuteResult>;
+ executeRead(cmds: unknown[]): Promise<any[]>;
+ vcsState(): Promise<any>;
+ theKitDto(): Promise<any>;
+ materializeAt(id: string): Promise<any>;
+ attachBackbone(cfg: KitStoreWireBackboneConfig): Promise<SetResult>;
+ detachBackbone(): Promise<SetResult>;
+ backboneStatus(): Promise<KitStoreWireBackboneStatus>;
+ listConflicts(): Promise<KitStoreWireKitConflict[]>;
+ resolveConflict(id: string, strategy: KitStoreWireConflictResolution): Promise<SetResult>;
+ syncNow(): Promise<SetResult>;
+}
+```
 
 ### 🦀rs
 

@@ -1,0 +1,13 @@
+{
+  "title": "Disable Default Panel Opening",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "elements/ui/UI: Make sure no panel is opened by default, including semio/algorithms and semio/sketchpad details panels. Extend existing tests only and verify relevant checks pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1376"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪b658978adad341c0ade7e0f5e553d4e4"
+  ]
+}
